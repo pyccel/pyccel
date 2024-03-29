@@ -23,7 +23,6 @@ from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
 from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import Import, AsName
-from pyccel.ast.core import create_variable
 
 from pyccel.ast.utilities import recognised_source
 
@@ -39,6 +38,7 @@ from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 
 errors = Errors()
 error_mode = ErrorsMode()
+
 #==============================================================================
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
@@ -47,14 +47,33 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 # Useful for very coarse version differentiation.
 
 #==============================================================================
+def get_filename_from_import(module, input_folder=''):
+    """
+    Get the absolute path of a module, searching in a given folder.
 
-
-def get_filename_from_import(module,input_folder=''):
-    """Returns a valid filename with absolute path, that corresponds to the
+    Return a valid filename with an absolute path, that corresponds to the
     definition of module.
     The priority order is:
         - header files (extension == pyh)
         - python files (extension == py)
+
+    Parameters
+    ----------
+    module : str | AsName
+        Name of the module of interest.
+
+    input_folder : str
+        Relative path of the folder which should be searched for the module.
+
+    Returns
+    -------
+    str
+        Absolute path of the given module.
+
+    Raises
+    ------
+    PyccelError
+        Error raised when the module cannot be found.
     """
 
     if (isinstance(module, AsName)):
@@ -72,15 +91,13 @@ def get_filename_from_import(module,input_folder=''):
 
     filename_pyh = '{}.pyh'.format(filename)
     filename_py  = '{}.py'.format(filename)
-    folders = input_folder.split(""".""")
-    for i in range(len(folders)):
-        poss_dirname      = os.path.join( *folders[:i+1] )
-        poss_filename_pyh = os.path.join( poss_dirname, filename_pyh )
-        poss_filename_py  = os.path.join( poss_dirname, filename_py  )
-        if is_valid_filename_pyh(poss_filename_pyh):
-            return os.path.abspath(poss_filename_pyh)
-        if is_valid_filename_py(poss_filename_py):
-            return os.path.abspath(poss_filename_py)
+
+    poss_filename_pyh = os.path.join( input_folder, filename_pyh )
+    poss_filename_py  = os.path.join( input_folder, filename_py  )
+    if is_valid_filename_pyh(poss_filename_pyh):
+        return os.path.abspath(poss_filename_pyh)
+    if is_valid_filename_py(poss_filename_py):
+        return os.path.abspath(poss_filename_py)
 
     source = module
     if len(module.split(""".""")) > 1:
@@ -108,13 +125,10 @@ def get_filename_from_import(module,input_folder=''):
         return filename_py
 
     errors = Errors()
-    errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
+    raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                   severity='fatal')
 
-
-
 #==============================================================================
-
 class BasicParser(object):
     """
     Class for a basic parser.
@@ -143,8 +157,8 @@ class BasicParser(object):
 
         # represent the scope of a function
         self._scope = Scope()
-        self._current_class    = None
-        self._current_function = None
+        self._current_function_name = None
+        self._current_function = []
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
@@ -152,7 +166,7 @@ class BasicParser(object):
 
         # current position for errors
 
-        self._current_fst_node = None
+        self._current_ast_node = None
 
         # flag for blocking errors. if True, an error with this flag will cause
         # Pyccel to stop
@@ -164,8 +178,8 @@ class BasicParser(object):
 
     def __setstate__(self, state):
         copy_slots = ('_code', '_fst', '_ast', '_metavars', '_scope', '_filename',
-                '_metavars', '_scope', '_current_class', '_current_function',
-                '_syntax_done', '_semantic_done', '_current_fst_node')
+                '_metavars', '_scope', '_current_function',
+                '_syntax_done', '_semantic_done', '_current_ast_node')
 
         self.__dict__.update({s : state[s] for s in copy_slots})
 
@@ -191,18 +205,44 @@ class BasicParser(object):
 
     @property
     def filename(self):
+        """
+        The file being translated.
+
+        Get the name of the file being translated.
+        """
         return self._filename
 
     @property
     def code(self):
+        """
+        The original code.
+
+        Get the original Python code which is being translated.
+        """
         return self._code
 
     @property
     def fst(self):
+        """
+        Full syntax tree.
+
+        Get the full syntax tree describing the code. This object contains `PyccelAstNode`s
+        and is generated by the semantic stage. The full syntax tree is similar to the
+        abstract syntax tree, but additionally contains information about the types of the
+        objects etc.
+        """
         return self._fst
 
     @property
     def ast(self):
+        """
+        Abstract syntax tree.
+
+        Get the abstract syntax tree describing the code. This object contains `PyccelAstNode`s
+        and is generated by the syntactic stage. The abstract syntax tree is similar to the
+        full syntax tree, but only contains infomation about the syntax, there is no semantic
+        data (e.g. the types of variables are unknown).
+        """
         if self._ast is None:
             self._ast = self.parse()
         return self._ast
@@ -214,10 +254,6 @@ class BasicParser(object):
     @property
     def metavars(self):
         return self._metavars
-
-    @property
-    def current_class(self):
-        return self._current_class
 
     @property
     def current_function(self):
@@ -242,13 +278,21 @@ class BasicParser(object):
             return False
 
     @property
-    def current_fst_node(self):
-        return self._current_fst_node
+    def current_ast_node(self):
+        """
+        The AST for the current node.
+
+        The AST object describing the current node. This object is never set to None
+        when entering a node. Therefore if a node has no AST object (e.g. a Variable)
+        the `current_ast_node` will contain the AST of the enclosing object. It is
+        set in the `_visit` method of `SemanticParser`. This object is useful for
+        reporting errors on objects whose context is unknown (e.g. Variables).
+        """
+        return self._current_ast_node
 
     @property
     def blocking(self):
         return self._blocking
-
 
     def insert_function(self, func):
         """."""
@@ -508,9 +552,8 @@ class BasicParser(object):
         self._syntax_done   = parser.syntax_done
         self._semantic_done = parser.semantic_done
 
+
 #==============================================================================
-
-
 if __name__ == '__main__':
     import sys
 

@@ -15,6 +15,9 @@ __all__ = [
         'homogeneous_tuple_2_levels',
         'tuple_unpacking_1',
         'tuple_unpacking_2',
+        'tuple_unpacking_3',
+        'tuple_unpacking_4',
+        'tuple_unpacking_5',
         'tuple_name_clash',
         'tuples_as_indexing_basic',
         'tuples_as_indexing_var',
@@ -59,6 +62,17 @@ __all__ = [
         'tuple_negative_slice',
         'inhomogeneous_tuple_negative_slice',
         'tuple_index',
+        'tuple_homogeneous_int',
+        'tuple_homogeneous_bool',
+        'tuple_homogeneous_float',
+        'tuple_homogeneous_string',
+        'tuple_homogeneous_math',
+        'tuple_inhomogeneous_1',
+        'tuple_inhomogeneous_2',
+        'tuple_inhomogeneous_3',
+        'test_tuple_homogeneous',
+        'test_tuple_inhomogeneous',
+        'tuple_different_ranks',
         ]
 
 def homogenous_tuple_int():
@@ -121,6 +135,11 @@ def tuple_unpacking_3(x : 'int[:,:]'):
 
 def tuple_unpacking_4(x : 'int[:,:]'):
     x[:,0], x[0,:] = 2, 3
+
+def tuple_unpacking_5():
+    ai = (1,2,3)
+    a,b,c = ai
+    return a,b,c
 
 def tuple_name_clash():
     ai = (1+2j, False, 10.4)
@@ -387,3 +406,49 @@ def inhomogeneous_tuple_negative_slice():
 def tuple_index():
     a = (1,2,3,False)[2]
     return a
+
+def tuple_homogeneous_int():
+    a = tuple((1, 2, 3))
+    return a[0], a[1], a[2], len(a)
+
+def tuple_homogeneous_bool():
+    a = tuple((False, True))
+    return a[0], a[1], len(a)
+
+def tuple_homogeneous_float():
+    a = tuple((1.5, 4.3, 5.2, 7.2, 9.999))
+    return a[0], a[1], a[2], a[3], a[4], len(a)
+
+def tuple_homogeneous_string():
+    a = tuple(('hello', 'tuple', 'world', '!!'))
+    return a[0], a[1], a[2], a[3], len(a)
+
+def tuple_homogeneous_math():
+    a = tuple((4 + 5, 3 * 9, 2 ** 3))
+    return a[0], a[1], a[2], len(a)
+
+def tuple_inhomogeneous_1():
+    a = tuple((0, False, 3 + 1j))
+    return a[0], a[1], a[2], len(a)
+
+def tuple_inhomogeneous_2():
+    a = tuple((0, False, 3))
+    return a[0], a[1], a[2], len(a)
+
+def tuple_inhomogeneous_3():
+    a = tuple((0, 1.0, 3))
+    return a[0], a[1], a[2], len(a)
+
+def test_tuple_homogeneous():
+    b = (10, 20, 30, 40)
+    a = tuple(b)
+    return a[0], a[1], a[2], a[3], len(a)
+
+def test_tuple_inhomogeneous():
+    b = ( 42, True, 3.14)
+    a = tuple(b)
+    return a[0], a[1], a[2], len(a)
+
+def tuple_different_ranks():
+    a = (1,(2,3))
+    return a[0], a[1][0], a[1][1]

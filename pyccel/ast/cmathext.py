@@ -9,10 +9,11 @@ import cmath
 
 from pyccel.ast.builtins  import PythonReal, PythonImag
 from pyccel.ast.core      import PyccelFunctionDef, Module
-from pyccel.ast.datatypes import NativeBool, NativeFloat, NativeComplex
+from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat, PythonNativeComplex
+from pyccel.ast.datatypes import PrimitiveComplexType
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.literals  import LiteralInteger
-from pyccel.ast.operators import PyccelOr
+from pyccel.ast.operators import PyccelAnd, PyccelOr
 from pyccel.ast.variable  import Constant
 
 from .mathext import math_constants, MathFunctionBase
@@ -52,14 +53,13 @@ class CmathFunctionBool(MathFunctionBase):
     A super-class from which functions in the `cmath` library which
     return a boolean should inherit.
 
-    Paramters
-    ---------
-    z : PyccelAstNode
-        The expression passed as argument to the function.
+    Parameters
+    ----------
+    *args : TypedAstNode
+        The arguments passed to the function.
     """
     __slots__ = ()
-    _dtype = NativeBool()
-    _precision = -1
+    _class_type = PythonNativeBool()
 
 class CmathFunctionComplex(MathFunctionBase):
     """
@@ -68,19 +68,18 @@ class CmathFunctionComplex(MathFunctionBase):
     A super-class from which functions in the `cmath` library which
     return a complex number should inherit.
 
-    Paramters
-    ---------
-    z : PyccelAstNode
+    Parameters
+    ----------
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
-    _dtype = NativeComplex()
-    _precision = -1
     _shape = None
     _rank  = 0
     _order = None
+    _class_type = PythonNativeComplex()
 
-    def __init__(self, z : 'PyccelAstNode'):
+    def __init__(self, z : 'TypedAstNode'):
         super().__init__(z)
 
 #==============================================================================
@@ -99,7 +98,7 @@ class CmathAcos    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -115,7 +114,7 @@ class CmathAcosh   (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -131,7 +130,7 @@ class CmathAsin    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -147,7 +146,7 @@ class CmathAsinh   (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -163,7 +162,7 @@ class CmathAtan    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -179,7 +178,7 @@ class CmathAtanh    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -195,7 +194,7 @@ class CmathCos     (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -211,7 +210,7 @@ class CmathCosh    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -227,7 +226,7 @@ class CmathExp     (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -243,7 +242,7 @@ class CmathSin     (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -259,7 +258,7 @@ class CmathSinh    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -275,7 +274,7 @@ class CmathSqrt    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -291,7 +290,7 @@ class CmathTan     (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -307,7 +306,7 @@ class CmathTanh    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -325,11 +324,19 @@ class CmathIsclose (CmathFunctionBool):
 
     Parameters
     ----------
-    z : PyccelAstNode
-        The expression passed as argument to the function.
+    a : TypedAstNode
+        The first argument passed to the function.
+    b : TypedAstNode
+        The second argument passed to the function.
+    rel_tol : TypedAstNode
+        The relative tolerance.
+    abs_tol : TypedAstNode
+        The absolute tolerance.
     """
     __slots__ = ()
     name = 'isclose'
+    def __init__(self, a, b, *, rel_tol=1e-09, abs_tol=0.0):
+        super().__init__(a, b, rel_tol, abs_tol)
 
 #==============================================================================
 
@@ -341,16 +348,16 @@ class CmathIsfinite(CmathFunctionBool):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
     name = 'isfinite'
     def __new__(cls, z):
-        if z.dtype is not NativeComplex():
+        if not isinstance(z.dtype.primitive_type, PrimitiveComplexType):
             return MathIsfinite(z)
         else:
-            return PyccelOr(MathIsfinite(PythonImag(z)), MathIsfinite(PythonReal(z)))
+            return PyccelAnd(MathIsfinite(PythonImag(z)), MathIsfinite(PythonReal(z)))
 
 #==============================================================================
 
@@ -362,13 +369,13 @@ class CmathIsinf   (CmathFunctionBool):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
     name = 'isinf'
     def __new__(cls, z):
-        if z.dtype is not NativeComplex():
+        if not isinstance(z.dtype.primitive_type, PrimitiveComplexType):
             return MathIsinf(z)
         else:
             return PyccelOr(MathIsinf(PythonImag(z)), MathIsinf(PythonReal(z)))
@@ -383,13 +390,13 @@ class CmathIsnan   (CmathFunctionBool):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
     name = 'isnan'
     def __new__(cls, z):
-        if z.dtype is not NativeComplex():
+        if not isinstance(z.dtype.primitive_type, PrimitiveComplexType):
             return MathIsnan(z)
         else:
             return PyccelOr(MathIsnan(PythonImag(z)), MathIsnan(PythonReal(z)))
@@ -407,7 +414,7 @@ class CmathPhase(PyccelInternalFunction):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -423,16 +430,15 @@ class CmathPolar(PyccelInternalFunction):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
     name = 'polar'
-    _dtype = NativeFloat()
-    _precision = -1
     _shape = (LiteralInteger(2),)
     _rank  = 1
     _order = None
+    _class_type = PythonNativeFloat()
 
     def __init__(self, z):
         super().__init__(z)
@@ -445,18 +451,17 @@ class CmathRect(PyccelInternalFunction):
 
     Parameters
     ----------
-    r : PyccelAstNode
+    r : TypedAstNode
         The first argument to the function, representing the radius.
-    phi : PyccelAstNode
+    phi : TypedAstNode
         The second argument to the function, representing the polar angle.
     """
     __slots__ = ()
     name = 'rect'
-    _dtype = NativeComplex()
-    _precision = -1
     _shape = None
     _rank  = 0
     _order = None
+    _class_type = PythonNativeComplex()
     def __init__(self, r, phi):
         super().__init__(r, phi)
 
@@ -470,8 +475,8 @@ cmath_functions = [PyccelFunctionDef(v.name, v) for v in
             CmathPolar, CmathRect, CmathSin, CmathSinh, CmathSqrt, CmathTan, CmathTanh)]
 
 cmath_constants = { **math_constants,
-    'infj': Constant('complex', 'infj', value=cmath.infj),
-    'nanj': Constant('complex', 'nanj', value=cmath.nanj),
+    'infj': Constant(PythonNativeComplex(), 'infj', value=cmath.infj),
+    'nanj': Constant(PythonNativeComplex(), 'nanj', value=cmath.nanj),
     }
 
 cmath_mod = Module('cmath',

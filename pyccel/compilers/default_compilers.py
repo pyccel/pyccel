@@ -7,8 +7,13 @@ import glob
 import os
 import sys
 import sysconfig
+import subprocess
+import shutil
+
 from numpy import get_include as get_numpy_include
+
 from pyccel import __version__ as pyccel_version
+
 
 gfort_info = {'exec' : 'gfortran',
               'mpi_exec' : 'mpif90',
@@ -29,6 +34,7 @@ gfort_info = {'exec' : 'gfortran',
                   },
               'family': 'GNU',
               }
+
 if sys.platform == "win32":
     gfort_info['mpi_exec'] = 'gfortran'
     gfort_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
@@ -37,8 +43,8 @@ if sys.platform == "win32":
     gfort_info['mpi']['libdirs']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
 
 #------------------------------------------------------------
-ifort_info = {'exec' : 'ifort',
-              'mpi_exec' : 'mpiifort',
+ifort_info = {'exec' : 'ifx',
+              'mpi_exec' : 'mpiifx',
               'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-check=bounds","-g","-O0"),
@@ -75,7 +81,7 @@ pgfortran_info = {'exec' : 'pgfortran',
 
 #------------------------------------------------------------
 nvfort_info = {'exec' : 'nvfort',
-              'mpi_exec' : 'nvfort',
+              'mpi_exec' : 'mpifort',
               'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-Mbounds","-g","-O0"),
@@ -110,12 +116,19 @@ gcc_info = {'exec' : 'gcc',
                 },
             'family': 'GNU',
             }
+
 if sys.platform == "darwin":
-    gcc_info['openmp']['flags'] = ("-Xpreprocessor",'-fopenmp')
-    gcc_info['openmp']['libs'] = ('omp',)
-    gcc_info['openmp']['libdirs'] = ('/usr/local/opt/libomp/lib',)
-    gcc_info['openmp']['includes'] = ('/usr/local/opt/libomp/include',)
+    p = subprocess.run([shutil.which('brew'), '--prefix'], check=True, capture_output=True)
+    HOMEBREW_PREFIX = p.stdout.decode().strip()
+    OMP_PATH = os.path.join(HOMEBREW_PREFIX, 'opt/libomp')
+
+    gcc_info['openmp']['flags']    = ("-Xpreprocessor", '-fopenmp')
+    gcc_info['openmp']['libs']     = ('omp',)
+    gcc_info['openmp']['libdirs']  = (os.path.join(OMP_PATH, 'lib'),)
+    gcc_info['openmp']['includes'] = (os.path.join(OMP_PATH, 'include'),)
+
 elif sys.platform == "win32":
+
     gcc_info['mpi_exec'] = 'gcc'
     gcc_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
     gcc_info['mpi']['libs']     = ('msmpi',)
@@ -123,8 +136,8 @@ elif sys.platform == "win32":
     gcc_info['mpi']['libdirs']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
 
 #------------------------------------------------------------
-icc_info = {'exec' : 'icc',
-            'mpi_exec' : 'mpiicc',
+icc_info = {'exec' : 'icx',
+            'mpi_exec' : 'mpiicx',
             'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-funroll-loops",),
@@ -158,7 +171,7 @@ pgcc_info = {'exec' : 'pgcc',
 
 #------------------------------------------------------------
 nvc_info = {'exec' : 'nvc',
-            'mpi_exec' : 'nvc',
+            'mpi_exec' : 'mpicc',
             'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-Munroll",),

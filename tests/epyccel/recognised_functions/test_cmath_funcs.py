@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from cmath import nanj, infj, pi
+import os
 import sys
 
 import pytest
@@ -254,9 +255,11 @@ def test_tanh_phrase(language):
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="isfinite not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
+@pytest.mark.skipif(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Nan not correctly passed to intel function')
 def test_isfinite_call(language): # isfinite
     @template('T', [float, complex])
     def isfinite_call(x : 'T'):
@@ -283,7 +286,8 @@ def test_isfinite_call(language): # isfinite
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="isinf not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_isinf_call(language): # isinf

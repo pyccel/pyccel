@@ -127,7 +127,7 @@ More complex cases include functions with array arguments or results, optional v
 
 Array arguments and results are handled similarly to array module variables, by adding additional variables for the shape and stride information. Strides are not used for results as pointers cannot be returned from functions.
 
-Optional arguments are passed as C pointers. An if/else block then determines whether the pointer is assigned or not. This can be quite lengthy, however it is unavoidable for compilation with intel, or nvidia. It is also unavoidable for arrays as it is important not to index an array (to access the strides) which is not present.
+Optional arguments are passed as C pointers. An if/else block then determines whether the pointer is assigned or not. This can be quite lengthy, however it is unavoidable for compilation with Intel, or NVIDIA. It is also unavoidable for arrays as it is important not to index an array (to access the strides) which is not present.
 
 Finally the most complex cases such as functions as arguments are simply not printed. Instead these cases raise warnings or errors to alert the user that support is missing.
 
@@ -359,11 +359,9 @@ int bind_c_f(void*, int64_t, int64_t, void*, int64_t*);
 
 ### Class module variables
 
-**Class module variables are not yet wrapped. This describes the future implementation**
+Unlike Fortran, C does not have classes in the language. The wrapper therefore cannot pass the class to C via a description. Instead the wrapper prints a function which returns a pointer to the module variable.
 
-Unlike Fortran, C does not have classes in the language. The wrapper therefore cannot pass the class to C via a description. Instead the wrapper should print a function which returns a pointer to the module variable.
-
-Additionally the class method functions will be wrapped as described for functions. The attributes of the class will be exposed via wrapper functions.
+Additionally the class method functions are be wrapped as described for functions. The attributes of the class are be exposed via getter and setter wrapper functions.
 
 ## C To Python
 
@@ -699,3 +697,23 @@ int32_t tmp_exec_func(PyObject* mod)
     return INT64_C(0);
 }
 ```
+
+### Classes
+
+The wrapping of classes is described in detail at <https://docs.python.org/3/extending/newtypes_tutorial.html>.
+
+The class methods are wrapped similarly to normal functions. The main difference is that the first argument (`self`) is used and represents the class instance instead of the module instance.
+
+In order to wrap class attributes, a getter and a setter function are created. These are then linked to the class as described in the tutorial.
+
+Classes have an additional difficulty which is not present for module functions and variables. The difficulty is that they define a new type which may be imported and used in other modules. This difficulty is managed using capsules. Capsules are objects in the C-Python API which are designed to expose the API to other compiled Python libraries. The use of these capsules is described at <https://docs.python.org/3/extending/extending.html#using-capsules>.
+
+### Returning pointers
+
+Pyccel allows the user to return a pointer to an object which is an argument of a function (including an attribute of a bound argument). Pointers are created when pointing at non-trivial objects (e.g. classes, NumPy arrays, lists). When doing this it is very important to ensure that the reference counter on the target is incremented and will be decremented when the pointer goes out of scope.
+
+Python and Pyccel handle this slightly differently. Python directly returns the object passed as argument so we have `pointer is target`. The C to Python backend could theoretically do this, but they would have to compare the pointer for the results with the pointer for each of the target arguments to find the correct argument. This is unnecessarily complex and class attributes would have to be handled as a special case. Instead what is done is that a new object is created which operates on the same data.
+
+For a NumPy array pointer, a `numpy.ndarray` is created which operates on the same data. NumPy uses the base property to track the object whose reference counter should be decremented when this object is destroyed. If there is only 1 possible target then the base is set to this target (i.e. to the class for a class property, or to the argument for a pointer to an argument) so the data is not deleted and the decremented object can take care of destroying it when necessary. If there are multiple possible NumPy targets then a warning is raised advising the user to avoid using this function. In reality it can be used as long as one takes care with scoping to ensure dangling pointers cannot occur.
+
+For a class pointer, a new class instance is created. This class has a `referenced_objects` attribute which contains a Python list. All possible targets are added to this list. They are decremented by removing them from the Python list when the pointer class goes out of scope and is garbage collected.

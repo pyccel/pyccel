@@ -70,7 +70,6 @@ from pyccel.stdlib.internal.mpiext import mpiext_get_size
 
 #===================================================================================
 
-#$ header class MPI_(public)
 #$ header method __init__(MPI_)
 
 class MPI_:

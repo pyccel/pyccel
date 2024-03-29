@@ -53,7 +53,7 @@ jobs:
         run: |
           pip install jwt requests
           cd compare
-          python ../base/ci_tools/setup_check_run.py
+          python ../base/ci_tools/setup_check_run.py docs
           cd ..
       - name: Install python CI dependencies
         run: |
@@ -68,6 +68,7 @@ jobs:
         run: |
           cd compare
           pip3 install .[test]
+          pip3 install hatchling
           cd ..
         shell: bash
       - name: Check doc coverage
@@ -89,11 +90,13 @@ jobs:
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
           touch report.txt
+          export PYTHONPATH=ci_tools
           while read line; do
             echo "python -m numpydoc --validate $line"
             python -m numpydoc --validate $line 2>&1 | tee -a report.txt || true 
           done < objects.txt
           cd ..
+          export PYTHONPATH=compare
           python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
