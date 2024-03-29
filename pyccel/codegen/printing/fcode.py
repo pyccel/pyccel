@@ -63,7 +63,7 @@ from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthe
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
-from pyccel.ast.utilities import expand_to_loops
+from pyccel.ast.utilities import expand_to_loops, get_new_slice_with_processed_arguments
 
 from pyccel.ast.variable import Variable, IndexedElement, InhomogeneousTupleVariable, DottedName
 from pyccel.ast.variable import Constant
@@ -2894,7 +2894,7 @@ class FCodePrinter(CodePrinter):
         for i, ind in enumerate(inds):
             _shape = PyccelArrayShapeElement(base, i if expr.base.order != 'C' else len(inds) - i - 1)
             if isinstance(ind, Slice):
-                inds[i] = self._new_slice_with_processed_arguments(ind, _shape, allow_negative_indexes)
+                inds[i] = get_new_slice_with_processed_arguments(ind, _shape, allow_negative_indexes)
             elif isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(_shape, ind.args[0], simplify = True)
             else:
@@ -2908,84 +2908,6 @@ class FCodePrinter(CodePrinter):
         inds = [self._print(i) for i in inds]
 
         return "%s(%s)" % (base_code, ", ".join(inds))
-
-    @staticmethod
-    def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
-        """
-        Create new slice with information collected from old slice and decorators.
-
-        Create a new slice where the original `start`, `stop`, and `step` have
-        been processed using basic simplifications, as well as additional rules
-        identified by the function decorators.
-
-        Parameters
-        ----------
-        _slice : Slice
-            Slice needed to collect (start, stop, step).
-
-        array_size : PyccelArrayShapeElement
-            Call to function size().
-
-        allow_negative_index : bool
-            True when the decorator allow_negative_index is present.
-
-        Returns
-        -------
-        Slice
-            The new slice with processed arguments (start, stop, step).
-        """
-        start = _slice.start
-        stop = _slice.stop
-        step = _slice.step
-
-        try:
-            start_value = int(start)
-        except TypeError:
-            start_value = None
-        try:
-            stop_value = int(stop)
-        except TypeError:
-            stop_value = None
-        try:
-            step_value = int(step)
-        except TypeError:
-            step_value = None
-
-        # negative start and end in slice
-        if start_value and start_value < 0:
-            start = PyccelAdd(array_size, start, simplify = True)
-        elif start is not None and allow_negative_index and start_value is None:
-            start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
-                        PyccelAdd(array_size, start, simplify = True), start)
-
-        if stop_value and stop_value < 0:
-            stop = PyccelAdd(array_size, stop, simplify = True)
-        elif stop is not None and allow_negative_index and stop_value is None:
-            stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
-                        PyccelAdd(array_size, stop, simplify = True), stop)
-
-        # negative step in slice
-        if step_value and step_value < 0:
-            stop = PyccelAdd(stop, LiteralInteger(1), simplify = True) if stop is not None else LiteralInteger(0)
-            start = start if start is not None else PyccelMinus(array_size, LiteralInteger(1), simplify = True)
-
-        # variable step in slice
-        elif step and allow_negative_index and step_value is None:
-            if start is None:
-                start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                    LiteralInteger(0), PyccelMinus(array_size , LiteralInteger(1), simplify = True))
-
-            if stop is None:
-                stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                    PyccelMinus(array_size, LiteralInteger(1), simplify = True), LiteralInteger(0))
-            else:
-                stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                    stop, PyccelAdd(stop, LiteralInteger(1), simplify = True))
-
-        elif stop is not None:
-            stop = PyccelMinus(stop, LiteralInteger(1), simplify = True)
-
-        return Slice(start, stop, step)
 
     def _print_Slice(self, expr):
         if expr.start is None or  isinstance(expr.start, Nil):
