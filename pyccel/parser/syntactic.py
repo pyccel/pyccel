@@ -1122,7 +1122,7 @@ class SyntaxParser(BasicParser):
         iterable = self._visit(stmt.iter)
         body = self._visit(stmt.body)
 
-        if any(isinstance(l, FunctionDef, ClassDef, Import) for l in body):
+        if any(isinstance(l, (FunctionDef, ClassDef, Import)) for l in body):
             errors.report("Unexpected object in a while block (function, class or import)",
                     symbol=stmt, severity='error')
 
@@ -1270,7 +1270,7 @@ class SyntaxParser(BasicParser):
 
         test = self._visit(stmt.test)
         body = self._visit(stmt.body)
-        if any(isinstance(l, FunctionDef, ClassDef, Import) for l in body):
+        if any(isinstance(l, (FunctionDef, ClassDef, Import)) for l in body):
             errors.report("Unexpected object in a while block (function, class or import)",
                     symbol=stmt, severity='error')
 
@@ -1321,7 +1321,7 @@ class SyntaxParser(BasicParser):
             domain = domain[0]
         body = self._visit(stmt.body)
 
-        if any(isinstance(l, FunctionDef, ClassDef, Import) for l in body):
+        if any(isinstance(l, (FunctionDef, ClassDef, Import)) for l in body):
             errors.report("Unexpected object in a while block (function, class or import)",
                     symbol=stmt, severity='error')
 
