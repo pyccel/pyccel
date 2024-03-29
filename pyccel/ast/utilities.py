@@ -19,10 +19,11 @@ from .core          import (AsName, Import, FunctionDef, FunctionCall,
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
 from .cmathext      import cmath_mod
-from .datatypes     import HomogeneousTupleType, PythonNativeInt
+from .datatypes     import HomogeneousTupleType, PythonNativeInt, PrimitiveIntegerType
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
+from .operators     import PyccelUnarySub
 from .mathext       import math_mod
 from .sysext        import sys_mod
 
@@ -31,7 +32,7 @@ from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .scipyext      import scipy_mod
 from .typingext     import typing_mod
-from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable )
+from .variable      import Variable, IndexedElement, InhomogeneousTupleVariable, Constant
 
 from .c_concepts import ObjectAddress
 
@@ -755,3 +756,26 @@ def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     body = [bi for b in body for bi in b]
 
     return body
+
+#==============================================================================
+def is_literal_integer(expr):
+    """
+    Determine whether the expression is a literal integer.
+
+    Determine whether the expression is a literal integer. A literal integer
+    can be described by a LiteralInteger, a PyccelUnarySub(LiteralInteger) or
+    a Constant.
+
+    Parameters
+    ----------
+    expr : object
+        Any Python object which should be analysed to determine whether it is an integer.
+
+    Returns
+    -------
+    bool
+        True if the object represents a literal integer, false otherwise.
+    """
+    return isinstance(a, (int, LiteralInteger)) or \
+        (isinstance(a, PyccelUnarySub) and isinstance(a.args[0], (int, LiteralInteger))) or \
+        (isinstance(a, Constant) and isinstance(a.dtype.primitive_type, PrimitiveIntegerType))
