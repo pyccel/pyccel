@@ -776,7 +776,7 @@ class Constant(Variable):
     # The value of a constant is not a translated object
     _attribute_nodes = ()
 
-    def __init__(self, *args, value = Nil(), **kwargs):
+    def __init__(self, *args, value, **kwargs):
         self._value = value
         super().__init__(*args, **kwargs)
 
