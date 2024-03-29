@@ -534,6 +534,8 @@ class FCodePrinter(CodePrinter):
         # ...
 
         declarations = list(expr.declarations)
+        builtin_constants = set(c for c in expr.get_attribute_nodes(Constant) if c not in declarations)
+        declarations += [Declare(c) for c in builtin_constants if c in expr.scope.imports['variables'].values()]
         # look for external functions and declare their result type
         self._get_external_declarations(declarations)
         decs += ''.join(self._print(d) for d in declarations)
