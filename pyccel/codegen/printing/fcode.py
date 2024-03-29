@@ -1062,7 +1062,7 @@ class FCodePrinter(CodePrinter):
         else:
             v = self._print(expr.stop)
 
-        if not isinstance(expr.endpoint, LiteralFalse):
+        if expr.endpoint != LiteralFalse():
             lhs = expr.get_user_nodes(Assign)[0].lhs
 
 
@@ -1077,7 +1077,7 @@ class FCodePrinter(CodePrinter):
                                                  PyccelMinus(expr.num, LiteralInteger(1),
                                                  simplify = True)))
 
-            if isinstance(expr.endpoint, LiteralTrue):
+            if expr.endpoint == LiteralTrue():
                 cond_template = lhs + ' = {stop}'
             else:
                 cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
@@ -1096,9 +1096,9 @@ class FCodePrinter(CodePrinter):
             end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)),
         )
 
-        if isinstance(expr.endpoint, LiteralFalse):
+        if expr.endpoint == LiteralFalse():
             code = init_value
-        elif isinstance(expr.endpoint, LiteralTrue):
+        elif expr.endpoint == LiteralTrue():
             code = init_value + '\n' + cond_template.format(stop=v)
         else:
             code = init_value + '\n' + cond_template.format(stop=v, lhs=lhs, cond=self._print(expr.endpoint))
