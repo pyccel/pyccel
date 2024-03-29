@@ -795,6 +795,9 @@ class Constant(Variable):
     def __index__(self):
         return self.value.__index__()
 
+    def __eq__(self, other):
+        return self.value == other
+
 
 class IndexedElement(TypedAstNode):
     """
