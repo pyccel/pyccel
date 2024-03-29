@@ -557,9 +557,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 and isinstance(line.rhs, (PythonTuple, NumpyArray)):
             lhs = line.lhs
             rhs = line.rhs
-            modified = False
             if lhs.rank > rhs.rank:
-                modified = True
                 for index in range(lhs.rank-rhs.rank):
                     # If an index exists at the same depth, reuse it if not create one
                     if index >= len(indices):
