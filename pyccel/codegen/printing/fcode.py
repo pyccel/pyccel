@@ -2136,20 +2136,20 @@ class FCodePrinter(CodePrinter):
         start = self._print(expr.start)
 
         test_step = expr.step
-        if isinstance(test_step, LiteralInteger) and test_step.python_value == 1:
+        if isinstance(test_step, Constant):
+            test_step = test_step.value
+
+        if test_step == 1:
             step = ''
         else:
-            step = ', '+self._print(expr.step)
+            step = ', '+self._print(test_step)
 
-        if isinstance(test_step, PyccelUnarySub):
-            test_step = expr.step.args[0]
 
         # testing if the step is a value or an expression
-        if isinstance(test_step, Literal):
-            if isinstance(expr.step, PyccelUnarySub):
-                stop = PyccelAdd(expr.stop, LiteralInteger(1), simplify = True)
-            else:
-                stop = PyccelMinus(expr.stop, LiteralInteger(1), simplify = True)
+        if isinstance(test_step, PyccelUnarySub) and isinstance(test_step.args[0], Literal):
+            stop = PyccelAdd(expr.stop, LiteralInteger(1), simplify = True)
+        elif isinstance(test_step, Literal):
+            stop = PyccelMinus(expr.stop, LiteralInteger(1), simplify = True)
         else:
             stop = IfTernaryOperator(PyccelGt(expr.step, LiteralInteger(0)),
                                      PyccelMinus(expr.stop, LiteralInteger(1), simplify = True),
@@ -2497,7 +2497,7 @@ class FCodePrinter(CodePrinter):
 
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
-            elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
+            elif i == len(expr.blocks) - 1 and c == LiteralTrue():
                 lines.append("else\n")
             else:
                 lines.append("else if (%s) then\n" % self._print(c))
@@ -2938,34 +2938,47 @@ class FCodePrinter(CodePrinter):
         stop = _slice.stop
         step = _slice.step
 
+        try:
+            start_value = int(start)
+        except TypeError:
+            start_value = None
+        try:
+            stop_value = int(stop)
+        except TypeError:
+            stop_value = None
+        try:
+            step_value = int(step)
+        except TypeError:
+            step_value = None
+
         # negative start and end in slice
-        if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
-            start = PyccelMinus(array_size, start.args[0], simplify = True)
-        elif start is not None and allow_negative_index and not isinstance(start,LiteralInteger):
+        if start_value and start_value < 0:
+            start = PyccelAdd(array_size, start, simplify = True)
+        elif start is not None and allow_negative_index and start_value is None:
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
                         PyccelAdd(array_size, start, simplify = True), start)
 
-        if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
-            stop = PyccelMinus(array_size, stop.args[0], simplify = True)
-        elif stop is not None and allow_negative_index and not isinstance(stop, LiteralInteger):
+        if stop_value and stop_value < 0:
+            stop = PyccelAdd(array_size, stop, simplify = True)
+        elif stop is not None and allow_negative_index and stop_value is None:
             stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
                         PyccelAdd(array_size, stop, simplify = True), stop)
 
         # negative step in slice
-        if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
+        if step_value and step_value < 0:
             stop = PyccelAdd(stop, LiteralInteger(1), simplify = True) if stop is not None else LiteralInteger(0)
             start = start if start is not None else PyccelMinus(array_size, LiteralInteger(1), simplify = True)
 
         # variable step in slice
-        elif step and allow_negative_index and not isinstance(step, LiteralInteger):
-            if start is None :
+        elif step and allow_negative_index and step_value is None:
+            if start is None:
                 start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
                     LiteralInteger(0), PyccelMinus(array_size , LiteralInteger(1), simplify = True))
 
-            if stop is None :
+            if stop is None:
                 stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
                     PyccelMinus(array_size, LiteralInteger(1), simplify = True), LiteralInteger(0))
-            else :
+            else:
                 stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
                     stop, PyccelAdd(stop, LiteralInteger(1), simplify = True))
 
