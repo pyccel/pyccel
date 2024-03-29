@@ -1125,12 +1125,13 @@ class Module(ScopedAstNode):
         self._classes = classes
         self._imports = imports
 
-        self._internal_dictionary = {v.name:v for v in variables}
-        self._internal_dictionary.update({f.name:f for f in funcs})
-        self._internal_dictionary.update({i.name:i for i in interfaces})
-        self._internal_dictionary.update({c.name:c for c in classes})
-        import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
-        self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
+        if pyccel_stage != "syntactic":
+            self._internal_dictionary = {v.name:v for v in variables}
+            self._internal_dictionary.update({f.name:f for f in funcs})
+            self._internal_dictionary.update({i.name:i for i in interfaces})
+            self._internal_dictionary.update({c.name:c for c in classes})
+            import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
+            self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
         if init_func:
             init_if = init_func.body.body[0]
