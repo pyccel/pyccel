@@ -792,6 +792,8 @@ class Constant(Variable):
         value = str(self.value)
         return '{0}={1}'.format(name, value)
 
+    def __index__(self):
+        return self.value.__index__()
 
 
 class IndexedElement(TypedAstNode):

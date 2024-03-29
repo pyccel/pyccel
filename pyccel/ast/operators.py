@@ -383,6 +383,9 @@ class PyccelUnarySub(PyccelUnary):
     def __repr__(self):
         return f'-{repr(self.args[0])}'
 
+    def __index__(self):
+        return -self.args[0]
+
 #==============================================================================
 
 class PyccelNot(PyccelUnaryOperator):
