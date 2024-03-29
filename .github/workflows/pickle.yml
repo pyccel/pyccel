@@ -91,6 +91,9 @@ jobs:
       - name: Check for STC installation
         id: stc_check
         uses: ./.github/actions/check_for_stc
+        inputs:
+          username:
+            description: 'editable'
       - name: "Post completed"
         if: always()
         run: |

@@ -9,7 +9,8 @@ runs:
         import pyccel, os
         from os.path import exists, join
         pyccel_loc = pyccel.__path__[0]
+        input = os.getenv('editable')
         print(pyccel_loc)
         assert(exists(join(pyccel_loc,'extensions/STC/include/stc')))
-        if not os.access(pyccel_loc, os.W_OK):
+        if input is not None:
           assert(not exists(join(pyccel_loc,'extensions/STC/docs')))
