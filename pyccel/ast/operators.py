@@ -384,7 +384,7 @@ class PyccelUnarySub(PyccelUnary):
         return f'-{repr(self.args[0])}'
 
     def __index__(self):
-        return -self.args[0]
+        return -int(self.args[0])
 
 #==============================================================================
 
