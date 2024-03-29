@@ -2188,17 +2188,15 @@ class SemanticParser(BasicParser):
                         for v in headers:
                             types = [self._visit(d).type_list[0] for d in v.dtypes]
                             args = [Variable(t.class_type, PyccelSymbol(f'anon_{i}'),
-                                shape = None, rank = t.rank, order = t.order,
-                                is_const = t.is_const, is_optional = False,
-                                cls_base = t.class_type if t.rank == 0 else NumpyNDArrayType(numpy_process_dtype(t.class_type.element_type)),
-                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
+                                shape = None, is_const = t.is_const, is_optional = False,
+                                cls_base = t.class_type,
+                                memory_handling = 'heap' if t.class_type.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             types = [self._visit(d).type_list[0] for d in v.results]
-                            results = [Variable(t.class_type, PyccelSymbol(f'result_{i}'),
-                                shape = None, rank = t.rank, order = t.order,
-                                cls_base = t.class_type if t.rank == 0 else NumpyNDArrayType(numpy_process_dtype(t.class_type.element_type)),
+                            results = [Variable(t.class_type, PyccelSymbol(f'result_{i}'), shape = None,
+                                cls_base = t.class_type,
                                 is_const = t.is_const, is_optional = False,
-                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
+                                memory_handling = 'heap' if t.class_type.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             args = [FunctionDefArgument(a) for a in args]
                             results = [FunctionDefResult(r) for r in results]
