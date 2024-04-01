@@ -4091,13 +4091,14 @@ class SemanticParser(BasicParser):
             self._allocs.append(set())
             self._pointer_targets.append({})
 
-            body = [self._visit(i) for i in expr.imports]
+            import_init_calls = [self._visit(i) for i in expr.imports]
 
             for f in expr.functions:
                 self.insert_function(f)
 
             # we annotate the body
-            body += self._visit(expr.body)
+            body = self._visit(expr.body)
+            body.insert2body(*import_init_calls, back=False)
 
             # Annotate the remaining functions
             sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and\
