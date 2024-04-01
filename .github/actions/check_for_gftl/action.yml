@@ -1,5 +1,8 @@
 name: 'Ensure gFTL is installed with Pyccel'
-
+inputs:
+  not_editable:
+    description: 'not_editable installation'
+    default: 'true'
 runs:
   using: "composite"
   steps:
@@ -11,4 +14,5 @@ runs:
         pyccel_loc = pyccel.__path__[0]
         print(pyccel_loc)
         assert(exists(join(pyccel_loc,'extensions/gFTL/include/v2')))
-        assert(not exists(join(pyccel_loc,'extensions/gFTL/doc')))
+        if ${{ inputs.not_editable }}:
+          assert(not exists(join(pyccel_loc,'extensions/gFTL/doc')))

@@ -91,6 +91,8 @@ jobs:
       - name: Check for gFTL installation
         id: gFTL_check
         uses: ./.github/actions/check_for_gftl
+        with:
+          not_editable: 'false'
       - name: "Post completed"
         if: always()
         run: |
