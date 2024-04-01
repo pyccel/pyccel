@@ -57,6 +57,7 @@ include = [
   "pyccel/stdlib/*/*.h",
   "pyccel/stdlib/*/*.f90",
   "*.tx"
+  "*.c"
 ]
 
 [tool.hatch.build.targets.wheel.hooks.custom]
