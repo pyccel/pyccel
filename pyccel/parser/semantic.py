@@ -2071,18 +2071,17 @@ class SemanticParser(BasicParser):
             severity='fatal')
 
     def _visit_Module(self, expr):
+        imports = [self._visit(i) for i in expr.imports]
+        init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]
+
         for f in expr.funcs:
             self.insert_function(f)
-
-        for i in expr.imports:
-            self._visit(i)
 
         for c in expr.classes:
             self._visit(c)
 
         body = self._visit(expr.program).body
         program_body      = []
-        init_func_body    = []
         mod_name = self.metavars.get('module_name', None)
         if mod_name is None:
             mod_name = expr.name
@@ -2124,7 +2123,7 @@ class SemanticParser(BasicParser):
 
         comment_types = (Header, MacroFunction, EmptyNode, Comment, CommentBlock)
 
-        if not all(isinstance(l, comment_types) for l in init_func_body):
+        if imports or not all(isinstance(l, comment_types) for l in init_func_body):
             # If there are any initialisation statements then create an initialisation function
             init_var = Variable(PythonNativeBool(), self.scope.get_new_name('initialised'),
                                 is_private=True)
@@ -4092,14 +4091,13 @@ class SemanticParser(BasicParser):
             self._allocs.append(set())
             self._pointer_targets.append({})
 
-            for i in expr.imports:
-                self._visit(i)
+            body = [self._visit(i) for i in expr.imports]
 
             for f in expr.functions:
                 self.insert_function(f)
 
             # we annotate the body
-            body = self._visit(expr.body)
+            body += self._visit(expr.body)
 
             # Annotate the remaining functions
             sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and\
