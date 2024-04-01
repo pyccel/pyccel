@@ -26,7 +26,8 @@ from .mathext       import math_mod
 from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod, NumpyAbs,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
-from .operators     import PyccelUnarySub, PyccelMinus, IfTernaryOperator
+from .operators     import PyccelUnarySub, PyccelMinus, IfTernaryOperator, PyccelLt
+from .operators     import PyccelGt
 from .scipyext      import scipy_mod
 from .sysext        import sys_mod
 from .typingext     import typing_mod
