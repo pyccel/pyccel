@@ -249,6 +249,15 @@ def compatible_operation(*args, language_has_vectors = True):
         return all(a.rank == 0 for a in args)
 
 #==============================================================================
+def get_deep_indexed_element(expr, indices):
+    result = expr
+    while indices:
+        depth = result.rank
+        result = IndexedElement(result, *indices[:depth])
+        indices = indices[depth:]
+    return result
+
+#==============================================================================
 def insert_index(expr, pos, index_var):
     """
     Function to insert an index into an expression at a given position.
@@ -287,15 +296,15 @@ def insert_index(expr, pos, index_var):
     if expr.rank==0:
         return expr
     elif isinstance(expr, (Variable, ObjectAddress)):
-        if expr.rank==0 or -pos>expr.rank:
+        if expr.rank==0 or -pos>expr.class_type.deep_rank:
             return expr
         if expr.shape[pos]==1:
             # If there is no dimension in this axis, reduce the rank
             index_var = LiteralInteger(0)
 
         # Add index at the required position
-        indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
-        return IndexedElement(expr, *indexes)
+        indexes = [Slice(None,None)]*(expr.class_type.deep_rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
+        return get_deep_indexed_element(expr, indexes)
 
     elif isinstance(expr, NumpyTranspose):
         if expr.rank==0 or -pos>expr.rank:
@@ -312,15 +321,29 @@ def insert_index(expr, pos, index_var):
 
     elif isinstance(expr, IndexedElement):
         base = expr.base
+        deep_rank = expr.class_type.deep_rank
+
+        # If pos indexes base then recurse
+        if -pos < deep_rank-base.rank:
+            return insert_index(base, pos+base.rank, index_var)
+
+        # Ensure current indices are fully defined
         indices = list(expr.indices)
         if len(indices) == 1 and isinstance(indices[0], LiteralEllipsis):
             indices = [Slice(None,None)]*base.rank
-        i = -1
+
+        if len(indices)<deep_rank:
+            indices += [Slice(None,None)]*(deep_rank-base.rank)
+
+        # Start from last index in this indexed element
+        i = base.rank-deep_rank-1
         while i>=pos and -i<=base.rank:
             if not isinstance(indices[i], Slice):
                 pos -= 1
             i -= 1
-        if -pos>base.rank:
+
+        # if no slices were found then the object is already correctly indexed
+        if -pos > deep_rank:
             return expr
 
         # Add index at the required position
@@ -336,8 +359,11 @@ def insert_index(expr, pos, index_var):
             if indices[pos].start is not None:
                 index_var = PyccelAdd(index_var, indices[pos].start, simplify=True)
 
+        # Update index
         indices[pos] = index_var
-        return IndexedElement(base, *indices)
+
+        # Get new indexed object
+        return get_deep_indexed_element(base, indices)
 
     elif isinstance(expr, PyccelArithmeticOperator):
         return type(expr)(insert_index(expr.args[0], pos, index_var),
@@ -500,7 +526,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 result.extend(assigns)
                 current_level = 0
 
-            rank = line.lhs.rank
+            rank = line.lhs.class_type.deep_rank
             shape = line.lhs.shape
             new_vars = variables
             handled_funcs = transposed_vars + indexed_funcs
@@ -561,7 +587,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             if isinstance(rhs, NumpyArray):
                 rhs = rhs.arg
 
-            lhs_rank = lhs.rank
+            lhs_rank = lhs.class_type.deep_rank
 
             new_assigns = [Assign(
                             insert_index(expr=lhs,
