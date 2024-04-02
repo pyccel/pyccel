@@ -1381,6 +1381,7 @@ class CCodePrinter(CodePrinter):
     def _print_IndexedElement(self, expr):
         base = expr.base
         inds = self._get_indices(expr)
+        allow_negative_indexes = expr.allows_negative_indexes
         if isinstance(base.class_type, NumpyNDArrayType):
             #set dtype to the C struct types
             dtype = self.find_in_ndarray_type_registry(expr.dtype)
