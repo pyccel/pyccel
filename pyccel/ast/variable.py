@@ -875,8 +875,10 @@ class IndexedElement(TypedAstNode):
 
         if rank == 0:
             self._class_type = base.class_type.element_type
-        else:
+        elif rank != base.class_type.rank:
             self._class_type = base.class_type.reduce_rank(rank)
+        else:
+            self._class_type = base.class_type
 
         super().__init__()
 
