@@ -2,9 +2,9 @@ skip_magic: True
 skip_init: True
 fail_under: 0
 ignore_patterns:
-  ".*/pyccel/parser/syntactic.py":
-    - "SyntaxParser._visit_.*"
-  ".*/pyccel/parser/semantic.py":
+  "syntactic":
     - "_visit_.*"
-  ".*/pyccel/codegen/printing/.*code.py":
+  "semantic":
+    - "_visit_.*"
+  ".*code":
     - "_print_.*"
