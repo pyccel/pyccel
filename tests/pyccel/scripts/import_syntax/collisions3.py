@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import numpy as np
 import math as m
+import numpy as np
 
 if __name__ == '__main__':
 
