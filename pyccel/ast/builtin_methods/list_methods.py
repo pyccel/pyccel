@@ -84,12 +84,7 @@ class ListAppend(ListMethod):
     name = 'append'
 
     def __init__(self, list_obj, new_elem) -> None:
-        expected_type = list_obj.class_type.element_type
-        is_homogeneous = (
-            new_elem.class_type == expected_type and
-            list_obj.rank - 1 == new_elem.rank
-        )
-        if not is_homogeneous:
+        if new_elem.class_type != list_obj.class_type.element_type:
             raise TypeError(f"Expecting an argument of the same type as the elements of the list ({expected_type}) but received {new_elem.class_type}")
         super().__init__(list_obj, new_elem)
 
@@ -180,12 +175,7 @@ class ListInsert(ListMethod):
     name = 'insert'
 
     def __init__(self, list_obj, index, new_elem) -> None:
-        expected_type = list_obj.class_type.element_type
-        is_homogeneous = (
-            new_elem.class_type == expected_type and
-            list_obj.rank - 1 == new_elem.rank
-        )
-        if not is_homogeneous:
+        if new_elem.class_type != list_obj.class_type.element_type:
             raise TypeError("Expecting an argument of the same type as the elements of the list")
         super().__init__(list_obj, index, new_elem)
 
@@ -254,12 +244,7 @@ class ListRemove(ListMethod) :
     name = 'remove'
 
     def __init__(self, list_obj, removed_obj) -> None:
-        expected_type = list_obj.class_type.element_type
-        is_homogeneous = (
-            removed_obj.class_type == expected_type and
-            list_obj.rank - 1 == removed_obj.rank
-        )
-        if not is_homogeneous:
+        if removed_obj.class_type != list_obj.class_type.element_type:
             raise TypeError(f"Can't remove an element of type {removed_obj.class_type} from {list_obj.class_type}")
         super().__init__(list_obj, removed_obj)
 
