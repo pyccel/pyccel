@@ -507,7 +507,7 @@ class PythonTuple(TypedAstNode):
         # Create a set of dtypes using the same key for compatible types
         dtypes = set((d.primitive_type, d.precision) if isinstance(d, FixedSizeNumericType) else d for d in dtypes)
 
-        ranks  = set(getattr(a.class_type, 'deep_rank', a.rank) for a in args)
+        ranks  = set(a.class_type.deep_rank for a in args)
         orders = set(a.order for a in args if a.order is not None)
         if len(ranks) == 1:
             rank = next(iter(ranks))

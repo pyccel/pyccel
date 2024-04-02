@@ -266,6 +266,10 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
         assert isinstance(new_type, FixedSizeType)
         return new_type
 
+    @property
+    def deep_rank(self):
+        return 0
+
 class FixedSizeNumericType(FixedSizeType):
     """
     Base class representing a scalar numeric datatype.
@@ -603,7 +607,7 @@ class HomogeneousContainerType(ContainerType):
     @property
     def deep_rank(self):
         elem = self.element_type
-        return self.rank + getattr(elem, 'deep_rank', elem.rank)
+        return self.rank + elem.deep_rank
 
 class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
@@ -865,7 +869,7 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
 
     @property
     def deep_rank(self):
-        elem_ranks = set(getattr(elem, 'deep_rank', elem.rank) for elem in self._element_types)
+        elem_ranks = set(elem.deep_rank for elem in self._element_types)
         if len(elem_ranks) == 1:
             return elem_ranks.pop() + self.rank
         else:
