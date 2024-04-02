@@ -1,6 +1,3 @@
-paths:
-  - pyccel
-  - ci_tools
 skip_magic: True
 skip_init: True
 fail_under: 0
