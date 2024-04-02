@@ -1990,7 +1990,7 @@ class NumpyMod(NumpyUfuncBinary):
         shapes = [a.shape for a in args]
 
         if all(r == 0 for r in ranks):
-            return 0, None
+            return None, 0
         else:
             if len(args) == 1:
                 shape = args[0].shape
