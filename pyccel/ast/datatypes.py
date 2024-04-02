@@ -654,6 +654,10 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
         """
         return self
 
+    @property
+    def deep_rank(self):
+        return 1
+
 class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous tuple type.
