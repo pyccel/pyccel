@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from numpy import shape as form
+from numpy import zeros as zilch
 
-#$ header function matmat(double [:,:], double [:,:], double [:,:])
-def matmat(a,b,c):
-    from numpy import shape as form
+def matmat(a : 'float[:,:]', b : 'float[:,:]', c : 'float[:,:]'):
     nm = form(a)
     mp = form(b)
 
@@ -16,7 +16,6 @@ def matmat(a,b,c):
                 c[i,j] = c[i,j] + a[i,k]*b[k,j]
 
 if __name__ == '__main__':
-    from numpy import zeros as zilch
 
     n = 3
     m = 4
