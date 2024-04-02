@@ -815,7 +815,7 @@ class IndexedElement(TypedAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
-    __slots__ = ('_label', '_indices','_shape','_class_type')
+    __slots__ = ('_label', '_indices','_shape','_class_type', '_is_slice')
     _attribute_nodes = ('_label', '_indices', '_shape')
 
     def __init__(self, base, *indices):
@@ -875,10 +875,15 @@ class IndexedElement(TypedAstNode):
 
         if rank == 0:
             self._class_type = base.class_type.element_type
+            self._is_slice = False
+            if self._class_type.rank:
+                self._shape = base.shape[base.rank:]
         elif rank != base.class_type.rank:
             self._class_type = base.class_type.reduce_rank(rank)
+            self._is_slice = True
         else:
             self._class_type = base.class_type
+            self._is_slice = True
 
         super().__init__()
 
@@ -902,27 +907,30 @@ class IndexedElement(TypedAstNode):
 
     def __getitem__(self, *args):
 
-        if len(args) == 1 and isinstance(args[0], (tuple, list)):
-            args = args[0]
-
         if self.rank < len(args):
             raise IndexError('Rank mismatch.')
 
-        new_indexes = []
-        j = 0
-        base = self.base
-        for i in self.indices:
-            if isinstance(i, Slice) and j<len(args):
-                if i.step == 1 or i.step is None:
-                    incr = args[j]
-                else:
-                    incr = PyccelMul(i.step, args[j], simplify = True)
-                if i.start != 0 and i.start is not None:
-                    incr = PyccelAdd(i.start, incr, simplify = True)
-                i = incr
-                j += 1
-            new_indexes.append(i)
-        return IndexedElement(base, *new_indexes)
+        if len(args) == 1 and isinstance(args[0], (tuple, list)):
+            args = args[0]
+
+        if self._is_slice:
+            new_indexes = []
+            j = 0
+            base = self.base
+            for i in self.indices:
+                if isinstance(i, Slice) and j<len(args):
+                    if i.step == 1 or i.step is None:
+                        incr = args[j]
+                    else:
+                        incr = PyccelMul(i.step, args[j], simplify = True)
+                    if i.start != 0 and i.start is not None:
+                        incr = PyccelAdd(i.start, incr, simplify = True)
+                    i = incr
+                    j += 1
+                new_indexes.append(i)
+            return IndexedElement(base, *new_indexes)
+        else:
+            return IndexedElement(self, *args)
 
     @property
     def is_const(self):
