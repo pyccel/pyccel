@@ -92,7 +92,7 @@ jobs:
         id: stc_check
         uses: ./.github/actions/check_for_stc
         with:
-          not_editable: "${{ matrix.editable_string == "-e" && false || True}}"
+          not_editable: "${{ matrix.editable_string == "-e" && false || true}}"
       - name: "Post completed"
         if: always()
         run: |
