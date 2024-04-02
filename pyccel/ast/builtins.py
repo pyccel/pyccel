@@ -493,7 +493,7 @@ class PythonTuple(TypedAstNode):
             return
         elif len(args) == 0:
             self._class_type = HomogeneousTupleType(GenericType())
-            self._shape = None
+            self._shape = (LiteralInteger(0),)
             self._is_homogeneous = False
             return
 
@@ -665,7 +665,7 @@ class PythonList(TypedAstNode):
         if pyccel_stage == 'syntactic':
             return
         elif len(args) == 0:
-            self._shape = None
+            self._shape = (LiteralInteger(0),)
             self._class_type = HomogeneousListType(GenericType())
             return
         arg0 = args[0]
