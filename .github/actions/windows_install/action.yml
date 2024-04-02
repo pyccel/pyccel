@@ -53,7 +53,7 @@ runs:
         #
         # Install MS MPI
         Start-Process msmpisetup.exe -Wait -ArgumentList '-unattend -verbose'
-￼       Start-Process msiexec -Wait -ArgumentList '/quiet /i msmpisdk.msi'
+        Start-Process msiexec -Wait -ArgumentList '/quiet /i msmpisdk.msi'
         echo "MS MPI runtime and SDK installed"
       shell: powershell
     - name: Setup MPI
