@@ -42,12 +42,6 @@ class VariableTypeAnnotation(PyccelAstNode):
     class_type : DataType
         The requested Python type of the variable.
 
-    rank : int
-        The rank of the variable.
-
-    order : str
-        The order of the variable.
-
     is_const : bool, default=False
         True if the variable cannot be modified, false otherwise.
     """

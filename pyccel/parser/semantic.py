@@ -1986,10 +1986,7 @@ class SemanticParser(BasicParser):
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                             severity='fatal', symbol=expr)
                 for u in internal_datatypes.type_list:
-                    rank = u.rank+1
-                    order = None if rank == 1 else 'C'
-                    type_annotations.append(VariableTypeAnnotation(class_type(u.class_type),
-                        rank, order, u.is_const))
+                    type_annotations.append(VariableTypeAnnotation(class_type(u.class_type), u.is_const))
                 return UnionTypeAnnotation(*type_annotations)
             else:
                 raise errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,
