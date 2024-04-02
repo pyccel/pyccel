@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from numpy import zeros
 
 #$ header function pairwise_python(double[:,:],double[:,:])
 def pairwise_python (X, D) :
@@ -14,7 +15,6 @@ def pairwise_python (X, D) :
             D[ i , j ] = sqrt(r)
 
 if __name__ == '__main__':
-    from numpy import zeros
 
     s = 100
     X = zeros([s, s])
