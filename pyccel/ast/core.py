@@ -447,10 +447,6 @@ class Allocate(PyccelAstNode):
         if variable.rank != len(shape):
             raise ValueError("Incompatible rank in variable allocation")
 
-        # rank is None for lambda functions
-        if variable.rank is not None and variable.rank > 1 and variable.order != order:
-            raise ValueError("Incompatible order in variable allocation")
-
         if not isinstance(status, str):
             raise TypeError("Cannot understand 'status' parameter of type '{}'".format(type(status)))
 
