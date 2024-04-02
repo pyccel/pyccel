@@ -772,7 +772,7 @@ class CToPythonWrapper(Wrapper):
 
         alias_val = LiteralTrue() if is_alias else LiteralFalse()
 
-        return [Allocate(class_var, shape=(), order=None, status='unallocated'),
+        return [Allocate(class_var, shape=(), status='unallocated'),
                 AliasAssign(ref_list, FunctionCall(PyList_New, ())),
                 Assign(alias_bool, alias_val)]
 
@@ -824,7 +824,7 @@ class CToPythonWrapper(Wrapper):
         else:
             result_name = self.scope.get_new_name('result')
             result = Variable(class_dtype, result_name)
-            body.append(Allocate(c_res, shape=(), order=None, status='unallocated',
+            body.append(Allocate(c_res, shape=(), status='unallocated',
                          like = result))
 
         body.append(Return([ObjectAddress(PointerCast(python_result_var, func_results[0].var))]))
@@ -1299,7 +1299,7 @@ class CToPythonWrapper(Wrapper):
             if isinstance(r, DottedVariable):
                 self.scope.remove_variable(r, name=n)
                 if not o_r.var.is_alias:
-                    body.append(Allocate(r, shape=(), order=None, status='unallocated', like=o_r.var))
+                    body.append(Allocate(r, shape=(), status='unallocated', like=o_r.var))
         c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
         c_results = [PointerCast(r, cast_type = o_r.var) if isinstance(r, DottedVariable) else r for r,o_r in zip(c_results, original_c_results)]
 
@@ -1655,7 +1655,7 @@ class CToPythonWrapper(Wrapper):
             # Save so we can find by iterating over func.bind_c_results
             self.scope.insert_variable(c_res, orig_var_name)
 
-            body.append(Allocate(c_res, shape = shape_vars, order = orig_var.order, status='unallocated'))
+            body.append(Allocate(c_res, shape = shape_vars, status='unallocated'))
             body.append(AliasAssign(DottedVariable(VoidType(), 'raw_data', memory_handling = 'alias', lhs=c_res), arg_var))
         elif isinstance(orig_var.dtype, CustomDataType):
             c_res = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
@@ -1752,7 +1752,7 @@ class CToPythonWrapper(Wrapper):
         # Create ndarray to store array data
         nd_var = self.scope.get_temporary_variable(dtype_or_var = v,
                 name = v.name, memory_handling = 'alias')
-        alloc = Allocate(nd_var, shape=shape, order=nd_var.order, status='unallocated')
+        alloc = Allocate(nd_var, shape=shape, status='unallocated')
         # Save raw_data into ndarray to obtain useable pointer
         set_data = AliasAssign(DottedVariable(VoidType(), 'raw_data',
                 memory_handling = 'alias', lhs=nd_var), var)
@@ -1817,7 +1817,7 @@ class CToPythonWrapper(Wrapper):
             body = [AliasAssign(new_res_val, attrib), *res_wrapper]
         elif isinstance(expr.dtype, CustomDataType):
             self.scope.remove_variable(new_res_val, name = expr.name)
-            body = [Allocate(getter_result, shape=(), order=None, status='unallocated'),
+            body = [Allocate(getter_result, shape=(), status='unallocated'),
                     AliasAssign(new_res_val, attrib),
                     *res_wrapper]
         else:
@@ -1953,7 +1953,7 @@ class CToPythonWrapper(Wrapper):
             call = Assign(c_results, FunctionCall(expr.getter, (class_obj,)))
 
         if isinstance(getter_result.dtype, CustomDataType):
-            arg_code.append(Allocate(getter_result, shape=(), order=None, status='unallocated'))
+            arg_code.append(Allocate(getter_result, shape=(), status='unallocated'))
 
         wrapped_var = expr.getter.original_function
         res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
