@@ -2123,7 +2123,7 @@ class SemanticParser(BasicParser):
 
         comment_types = (Header, MacroFunction, EmptyNode, Comment, CommentBlock)
 
-        if imports or not all(isinstance(l, comment_types) for l in init_func_body):
+        if not all(isinstance(l, comment_types) for l in init_func_body):
             # If there are any initialisation statements then create an initialisation function
             init_var = Variable(PythonNativeBool(), self.scope.get_new_name('initialised'),
                                 is_private=True)
