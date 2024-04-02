@@ -313,7 +313,6 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             other_f_contiguous = other.order in (None, 'F')
             self_f_contiguous = self.order in (None, 'F')
             order = 'F' if other_f_contiguous and self_f_contiguous else 'C'
-            print(self.order, other.order, order, other_f_contiguous, self_f_contiguous)
         return NumpyNDArrayType(result_type, rank, order)
 
     @lru_cache
@@ -365,6 +364,27 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     def swap_order(self):
         order = None if self._order is None else ('C' if self._order == 'F' else 'F')
         return NumpyNDArrayType(self.element_type, self._rank, order)
+
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+        """
+        return self._rank
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return self._order
 
     def __repr__(self):
         dims = ','.join(':'*self._rank)
