@@ -2,7 +2,6 @@ name: 'Ensure STC is installed with Pyccel'
 inputs:
   not_editable:
     description: 'not_editable installation'
-    default: 'true'
 runs:
   using: "composite"
   steps:
@@ -15,5 +14,5 @@ runs:
         print(pyccel_loc)
         print("${{ inputs.not_editable }}")
         assert(exists(join(pyccel_loc,'extensions/STC/include/stc')))
-        if ${{ inputs.not_editable }}:
+        if "${{ inputs.not_editable }}" != "-e":
           assert(not exists(join(pyccel_loc,'extensions/STC/docs')))
