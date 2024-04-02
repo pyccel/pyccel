@@ -3941,6 +3941,10 @@ class SemanticParser(BasicParser):
         function_call_args : list[FunctionCallArgument], optional
             The list of call arguments, needed only in the case of an inlined function.
         """
+        if expr.get_direct_user_nodes(lambda u: isinstance(u, CodeBlock)):
+            errors.report("Functions can only be declared in modules or inside other functions.",
+                    symbol=expr, severity='error')
+
         existing_semantic_funcs = []
         if not expr.is_semantic:
             self.scope.functions.pop(expr.name, None)
@@ -4279,9 +4283,12 @@ class SemanticParser(BasicParser):
             return PythonPrint(args)
 
     def _visit_ClassDef(self, expr):
-
         # TODO - improve the use and def of interfaces
         #      - wouldn't be better if it is done inside ClassDef?
+
+        if expr.get_direct_user_nodes(lambda u: isinstance(u, CodeBlock)):
+            errors.report("Classes can only be declared in modules.",
+                    symbol=expr, severity='error')
 
         name = self.scope.get_expected_name(expr.name)
 
@@ -4448,6 +4455,10 @@ class SemanticParser(BasicParser):
         # TODO - must have a dict where to store things that have been
         #        imported
         #      - should not use scope
+
+        if expr.get_direct_user_nodes(lambda u: isinstance(u, CodeBlock)):
+            errors.report("Imports can only be used in modules or inside functions.",
+                    symbol=expr, severity='error')
 
         container = self.scope.imports
 
