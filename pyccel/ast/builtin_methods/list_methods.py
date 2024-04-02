@@ -316,6 +316,7 @@ class ListSort(ListMethod) :
     Represents a call to the `.sort()` method, which sorts the elements of the
     list in ascending order and modifies the original list in place. This means
     that the elements of the original list are rearranged to be in sorted order.
+    Optional Parameters are not supported, therefore they should not be provided. 
     Note that the .sort() method doesn't return any value.
     
     >>> a = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
@@ -328,11 +329,12 @@ class ListSort(ListMethod) :
     list_obj : TypedAstNode
         The list object which the method is called from.
 
-    reverse : TypedAstNode
-        Optional, reverse=True will sort the list descending. Default is reverse=False.
+    reverse : TypedAstNode, optional
+        Argument mimicking sort's reverse parameter. This argument is 
+        unsupported so it should not be provided.
 
-    key : TypedAstNode
-        Optional, a function to specify the sorting criteria(s).
+    key : TypedAstNode, optional
+        A function to specify the sorting criteria(s).
     """
     __slots__ = ()
     _rank = 0
