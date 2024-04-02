@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import pure
 import numpy as np
+from pyccel.decorators import pure
 
 @pure
 def mult_2(x : 'double[:]'):
