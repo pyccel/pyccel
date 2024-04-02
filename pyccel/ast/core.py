@@ -432,7 +432,7 @@ class Allocate(PyccelAstNode):
     _attribute_nodes = ('_variable', '_like')
 
     # ...
-    def __init__(self, variable, *, shape, order, status, like = None):
+    def __init__(self, variable, *, shape, status, like = None):
 
         if not isinstance(variable, (Variable, PointerCast)):
             raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
@@ -459,7 +459,7 @@ class Allocate(PyccelAstNode):
 
         self._variable = variable
         self._shape    = shape
-        self._order    = order
+        self._order    = variable.order
         self._status   = status
         self._like = like
         super().__init__()

@@ -1558,10 +1558,10 @@ class SemanticParser(BasicParser):
                                     new_args.extend(v for v in a.get_vars() if v.rank>0)
                                 else:
                                     new_expressions.append(Allocate(a,
-                                        shape=a.alloc_shape, order=a.order, status=status))
+                                        shape=a.alloc_shape, status=status))
                             args = new_args
                     else:
-                        new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
+                        new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status))
                 # ...
 
                 # ...
@@ -1743,8 +1743,7 @@ class SemanticParser(BasicParser):
                     else:
                         status = 'unallocated'
 
-                    new_expressions.append(Allocate(var,
-                        shape=d_var['shape'], status=status))
+                    new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
 
                     if status != 'unallocated':
                         errors.report(ARRAY_REALLOCATION, symbol=var.name,
@@ -1756,9 +1755,7 @@ class SemanticParser(BasicParser):
                 # If previously allocated in If still under construction
                 status = previous_allocations[-1].status
 
-                new_expressions.append(Allocate(var,
-                    shape=d_var['shape'], order=d_var['order'],
-                    status=status))
+                new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
             elif isinstance(var.class_type, CustomDataType) and not var.is_alias:
                 new_expressions.append(Deallocate(var))
 
@@ -3697,7 +3694,7 @@ class SemanticParser(BasicParser):
         d_var['class_type'] = class_type
         shape = [dim]
         if d_var['shape']:
-            shape.extend(*d_var['shape'])
+            shape.extend(d_var['shape'])
         d_var['shape'] = shape
         d_var['cls_base'] = get_cls_base(class_type)
 
