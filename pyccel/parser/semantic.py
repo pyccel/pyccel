@@ -1590,7 +1590,8 @@ class SemanticParser(BasicParser):
 
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
-                know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape)
+                know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape) \
+                        or isinstance(lhs.class_type, StringType)
 
                 if not know_lhs_shape:
                     msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
@@ -1693,9 +1694,9 @@ class SemanticParser(BasicParser):
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
 
-        elif not is_augassign:
+        elif not is_augassign and not isinstance(var.class_type, StringType):
 
-            shape = getattr(var, 'shape', 'None')
+            shape = var.shape
 
             # Get previous allocation calls
             previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
