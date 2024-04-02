@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 import numpy as np
+from default_args_mod import f1, f5, f3, is_nil_default_arg, recursivity, print_var, f7
 
 if __name__ == '__main__':
-    from default_args_mod import f1, f5, f3, is_nil_default_arg, recursivity, print_var, f7
 
     print(f1(2))
     print(f1())
