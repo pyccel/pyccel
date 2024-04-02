@@ -1099,7 +1099,7 @@ class CCodePrinter(CodePrinter):
                 args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)
-            elif f.rank > 0:
+            elif f.rank > 0 and not isinstance(f.class_type, StringType):
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
@@ -1360,11 +1360,11 @@ class CCodePrinter(CodePrinter):
         else:
             return f'{static}{ret_type} {name}({arg_code})'
 
-    def _print_IndexedElement(self, expr):
+    def _get_indices(self, expr):
         base = expr.base
-        inds = list(expr.indices)
         base_shape = base.shape
-        allow_negative_indexes = True if isinstance(base, PythonTuple) else base.allows_negative_indexes
+        inds = list(expr.indices)
+        allow_negative_indexes = expr.allows_negative_indexes
         for i, ind in enumerate(inds):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0], simplify = True)
@@ -1376,6 +1376,11 @@ class CCodePrinter(CodePrinter):
                         not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
                     inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
                         PyccelAdd(base_shape[i], ind, simplify = True), ind)
+        return inds
+
+    def _print_IndexedElement(self, expr):
+        base = expr.base
+        inds = self._get_indices(expr)
         if isinstance(base.class_type, NumpyNDArrayType):
             #set dtype to the C struct types
             dtype = self.find_in_ndarray_type_registry(expr.dtype)
@@ -1383,22 +1388,24 @@ class CCodePrinter(CodePrinter):
             dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(expr.dtype.primitive_type, expr.dtype.precision)])
         else:
             raise NotImplementedError(f"Don't know how to index {expr.class_type} type")
+
+        if isinstance(base, IndexedElement):
+            while isinstance(base, IndexedElement) and isinstance(base.class_type, HomogeneousContainerType):
+                inds = self._get_indices(base) + inds
+                base = base.base
         base_name = self._print(base)
-        if getattr(base, 'is_ndarray', False) or isinstance(base.class_type, HomogeneousContainerType):
-            if expr.rank > 0:
-                #managing the Slice input
-                for i , ind in enumerate(inds):
-                    if isinstance(ind, Slice):
-                        inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArrayShapeElement(base, i),
-                            allow_negative_indexes)
-                    else:
-                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1),
-                            Slice.Element)
-                inds = [self._print(i) for i in inds]
-                return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
-            inds = [self._cast_to(i, NumpyInt64Type()).format(self._print(i)) for i in inds]
-        else:
-            raise NotImplementedError(expr)
+        if expr.rank > 0:
+            #managing the Slice input
+            for i , ind in enumerate(inds):
+                if isinstance(ind, Slice):
+                    inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArrayShapeElement(base, i),
+                        allow_negative_indexes)
+                else:
+                    inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1),
+                        Slice.Element)
+            inds = [self._print(i) for i in inds]
+            return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
+        inds = [self._cast_to(i, NumpyInt64Type()).format(self._print(i)) for i in inds]
         return "GET_ELEMENT(%s, %s, %s)" % (base_name, dtype, ", ".join(inds))
 
 
@@ -1539,8 +1546,8 @@ class CCodePrinter(CodePrinter):
             shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
             is_view = 'false' if variable.on_heap else 'true'
             order = "order_f" if expr.order == "F" else "order_c"
-            alloc_code = f"{self._print(variable)} = array_create({variable.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
-            return '{}{}'.format(free_code, alloc_code)
+            alloc_code = f"{self._print(variable)} = array_create({variable.class_type.deep_rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
+            return f'{free_code}{alloc_code}'
         elif variable.is_alias:
             var_code = self._print(ObjectAddress(variable))
             if expr.like:
