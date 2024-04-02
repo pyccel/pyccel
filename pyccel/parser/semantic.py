@@ -74,7 +74,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol
+from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -3338,7 +3338,7 @@ class SemanticParser(BasicParser):
                         new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs, new_expressions, isinstance(expr, AugAssign)) )
                 lhs = PythonTuple(*new_lhs)
 
-            elif d_var['shape'][0]==n:
+            elif d_var['shape'][0]==n or isinstance(d_var['shape'][0], PyccelArrayShapeElement):
                 new_lhs = []
                 new_rhs = []
 
@@ -3347,7 +3347,7 @@ class SemanticParser(BasicParser):
                     new_rhs.append(r)
 
                 lhs = PythonTuple(*new_lhs)
-                rhs = new_rhs
+                rhs = PythonTuple(*new_rhs)
             else:
                 errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr, severity='error')
                 return None

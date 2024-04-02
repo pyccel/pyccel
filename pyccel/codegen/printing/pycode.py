@@ -11,7 +11,7 @@ from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, 
 from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.datatypes  import HomogeneousTupleType
+from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
@@ -1151,22 +1151,3 @@ class PythonCodePrinter(CodePrinter):
     def _print_TypingFinal(self, expr):
         annotation = self._print(expr.arg)
         return f'const {annotation}'
-
-#==============================================================================
-def pycode(expr, assign_to=None, **settings):
-    """ Converts an expr to a string of Python code
-    Parameters
-    ==========
-    expr : Expr
-        A SymPy expression.
-    fully_qualified_modules : bool
-        Whether or not to write out full module names of functions
-        (``math.sin`` vs. ``sin``). default: ``True``.
-    Examples
-    ========
-    >>> from sympy import tan, Symbol
-    >>> from sympy.printing.pycode import pycode
-    >>> pycode(tan(Symbol('x')) + 1)
-    'math.tan(x) + 1'
-    """
-    return PythonCodePrinter(settings).doprint(expr, assign_to)
