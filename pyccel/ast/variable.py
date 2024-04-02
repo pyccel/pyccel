@@ -942,6 +942,13 @@ class IndexedElement(TypedAstNode):
         """
         return self.base.is_const
 
+    @property
+    def allows_negative_indexes(self):
+        """ Indicates whether variables used to
+        index this Variable can be negative
+        """
+        return self.base.allows_negative_indexes
+
 class DottedVariable(Variable):
     """
     Class representing a dotted variable.
