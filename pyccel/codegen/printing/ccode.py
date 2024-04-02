@@ -421,7 +421,7 @@ class CCodePrinter(CodePrinter):
             # If the order is F then the data should be copied non-contiguously so a temporary
             # variable is required to pass to array_copy_data
             temp_var = self.scope.get_temporary_variable(lhs, order='C')
-            operations += self._print(Allocate(temp_var, shape=lhs.shape, order="C", status="unallocated"))
+            operations += self._print(Allocate(temp_var, shape=lhs.shape, status="unallocated"))
             copy_to = temp_var
         else:
             copy_to = lhs
