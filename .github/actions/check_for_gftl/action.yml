@@ -2,7 +2,7 @@ name: 'Ensure gFTL is installed with Pyccel'
 inputs:
   not_editable:
     description: 'not_editable installation'
-    default: 'true'
+    default: 'True'
 runs:
   using: "composite"
   steps:
