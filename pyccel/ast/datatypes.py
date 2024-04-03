@@ -678,7 +678,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
-        self._order = 'C' if element_type.rank else None
+        self._order = 'C' if isinstance(element_type, HomogeneousTupleType) and element_type.rank else None
         super().__init__()
 
     def __str__(self):
@@ -703,7 +703,7 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
-        self._order = 'C' if element_type.rank else None
+        self._order = 'C' if isinstance(element_type, HomogeneousListType) and element_type.rank else None
         super().__init__()
 
 class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton):
