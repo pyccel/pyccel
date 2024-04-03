@@ -1022,7 +1022,7 @@ class SyntaxParser(BasicParser):
     def _visit_Subscript(self, stmt):
 
         args = self._visit(stmt.slice)
-        if not isinstance(args, PythonTuple):
+        if not isinstance(args, (PythonTuple, list)):
             args = (args,)
         var = self._visit(stmt.value)
         var = IndexedElement(var, *args)
