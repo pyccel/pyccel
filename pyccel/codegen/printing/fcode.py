@@ -34,7 +34,7 @@ from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
-from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
+from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
 from pyccel.ast.datatypes import PythonNativeInt, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type
@@ -1477,7 +1477,7 @@ class FCodePrinter(CodePrinter):
 
         # ... TODO improve
         # Group the variables by intent
-        rank            = var.rank
+        rank            = var.class_type.deep_rank
         shape           = var.alloc_shape
         is_const        = var.is_const
         is_optional     = var.is_optional
@@ -2879,11 +2879,21 @@ class FCodePrinter(CodePrinter):
 
     def _print_IndexedElement(self, expr):
         base = expr.base
-        base_code = self._print(base)
 
         inds = list(expr.indices)
         if len(inds) == 1 and isinstance(inds[0], LiteralEllipsis):
             inds = [Slice(None,None)]*expr.rank
+
+        if isinstance(base, IndexedElement):
+            while isinstance(base, IndexedElement) and isinstance(base.class_type, HomogeneousContainerType):
+                inds = list(base.indices) + inds
+                base = base.base
+
+        deep_rank = base.class_type.deep_rank
+        if len(inds)<deep_rank:
+            inds += [Slice(None,None)]*(deep_rank-base.rank)
+
+        base_code = self._print(base)
 
         if expr.base.order == 'C':
             inds = inds[::-1]
