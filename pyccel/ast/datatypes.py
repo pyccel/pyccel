@@ -785,6 +785,10 @@ class CustomDataType(ContainerType, metaclass=Singleton):
         """
         return None
 
+    @property
+    def deep_rank(self):
+        return 0
+
 class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingleton):
     """
     Class representing the inhomogeneous tuple type.
