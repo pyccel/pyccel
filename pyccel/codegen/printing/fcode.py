@@ -21,7 +21,7 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefAr
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
-from pyccel.ast.builtins import PythonBool, PythonAbs
+from pyccel.ast.builtins import PythonBool
 
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -35,8 +35,8 @@ from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
-from pyccel.ast.datatypes import PythonNativeInt
-from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType
+from pyccel.ast.datatypes import PythonNativeInt, HomogeneousListType, HomogeneousSetType
+from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
@@ -52,7 +52,7 @@ from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyEmpty, NumpyInt32
 from pyccel.ast.numpyext import NumpyFloat, NumpyBool
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
-from pyccel.ast.numpyext import NumpyRand
+from pyccel.ast.numpyext import NumpyRand, NumpyAbs
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
@@ -1043,7 +1043,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyNorm(self, expr):
         """Fortran print."""
-        arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
+        arg = NumpyAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
         if expr.axis:
             axis = expr.axis
             if arg.order != 'F':
@@ -1334,8 +1334,7 @@ class FCodePrinter(CodePrinter):
         if (not self._additional_code):
             self._additional_code = ''
         var = self.scope.get_temporary_variable(expr.dtype, memory_handling = 'stack',
-                shape = expr.shape,
-                order = expr.order, rank = expr.rank)
+                shape = expr.shape)
 
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
         return self._print(var)
