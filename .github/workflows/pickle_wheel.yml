@@ -26,7 +26,7 @@ env:
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
 
 jobs:
-  Python_version_picker:
+zz  Python_version_picker:
     runs-on: ubuntu-latest
     if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
     outputs:
