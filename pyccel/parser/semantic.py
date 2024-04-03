@@ -741,6 +741,10 @@ class SemanticParser(BasicParser):
             d_var['is_target'      ] = expr.is_target
             return d_var
 
+        elif isinstance(expr, LiteralString):
+            d_var['memory_handling'] = 'stack'
+            return d_var
+
         elif isinstance(expr, PythonTuple):
             d_var['cls_base'       ] = TupleClass
             d_var['memory_handling'] = 'heap'
@@ -1509,7 +1513,7 @@ class SemanticParser(BasicParser):
 
                 # We cannot allow the definition of a stack array from a shape which
                 # is unknown at the declaration
-                if class_type.rank > 0 and d_lhs.get('memory_handling', None) == 'stack':
+                if not isinstance(class_type, StringType) and class_type.rank > 0 and d_lhs.get('memory_handling', None) == 'stack':
                     for a in d_lhs['shape']:
                         if (isinstance(a, FunctionCall) and not a.funcdef.is_pure) or \
                                 any(not f.funcdef.is_pure for f in a.get_attribute_nodes(FunctionCall)):
