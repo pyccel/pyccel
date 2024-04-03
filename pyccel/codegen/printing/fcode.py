@@ -1207,12 +1207,11 @@ class FCodePrinter(CodePrinter):
         else:
             new_args = []
             inv_order = 'C' if order == 'F' else 'F'
-            flip_C = order == 'F'
             for a in expr_args:
                 ac = self._print(a)
                 a_deep_rank = a.class_type.deep_rank
-                if a.order == inv_order or (flip_C and a_deep_rank > 1):
-                    shape = a.shape if a.order != 'F' else a.shape[::-1]
+                if a.order == inv_order:
+                    shape = a.shape if a.order == 'C' else a.shape[::-1]
                     shape_code = ', '.join(self._print(i) for i in shape)
                     order_code = ', '.join(self._print(LiteralInteger(i)) for i in range(a_deep_rank, 0, -1))
                     ac = f'reshape({ac}, [{shape_code}], order=[{order_code}])'
