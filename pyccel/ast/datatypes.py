@@ -482,7 +482,6 @@ class TupleType:
     __slots__ = ()
     _name = 'tuple'
     _rank = 1
-    _order = None
 
 #==============================================================================
 
@@ -674,11 +673,12 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
     element_type : PyccelType
         The type of the elements of the homogeneous tuple.
     """
-    __slots__ = ('_element_type',)
+    __slots__ = ('_element_type', '_order')
 
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
+        self._order = 'C' if element_type.rank else None
         super().__init__()
 
     def __str__(self):
@@ -696,14 +696,14 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
     element_type : PyccelType
         The type which is stored in the homogeneous list.
     """
-    __slots__ = ('_element_type',)
+    __slots__ = ('_element_type', '_order')
     _name = 'list'
     _rank = 1
-    _order = None
 
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
+        self._order = 'C' if element_type.rank else None
         super().__init__()
 
 class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton):
