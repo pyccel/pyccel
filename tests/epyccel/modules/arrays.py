@@ -362,6 +362,11 @@ def array_float_nested_F_array_initialization_3(a : 'float[:,:,:]', e : 'float[:
                         ((1., 2., 3.), (1., 2., 3.)))), dtype='float', order="F")
     x[:,:,:,:] = tmp[:,:,:,:]
 
+def array_float_nested_F_array_initialization_mixed(x : 'float[:,:,:](order=F)', y : 'float[:,:](order=F)', z : 'float[:,:](order=F)', a : 'float[:,:,:,:](order=F)'):
+    from numpy import array
+    tmp      = array((x, (y, z, z), x), dtype='float', order="F")
+    a[:,:,:,:] = tmp[:,:,:,:]
+
 ##==============================================================================
 ## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER C 1D
 ##==============================================================================

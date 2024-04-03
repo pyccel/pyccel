@@ -3780,6 +3780,23 @@ def test_array_float_nested_F_array_initialization_3(language):
 
     assert np.array_equal(x1, x2)
 
+def test_array_float_nested_F_array_initialization_mixed(language):
+    f1 = arrays.array_float_nested_F_array_initialization_mixed
+    f2 = epyccel(f1, language = language)
+
+    x  = np.random.random((3,2,4), order="F")
+    y  = np.random.random((2,4), order="F")
+    z  = np.random.random((2,4), order="F")
+    a  = np.array([x, [y, z, z], x], order="F")
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, z, x1)
+    f2(x, y, z, x2)
+
+    assert np.array_equal(x1, x2)
+
 ##==============================================================================
 ## TEST SIMPLE ARRAY SLICING WITH ORDER C 1D
 ##==============================================================================
