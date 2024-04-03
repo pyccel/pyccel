@@ -2903,7 +2903,7 @@ class FCodePrinter(CodePrinter):
 
         base_code = self._print(base)
 
-        if base.order == 'C':
+        if base.order != 'F':
             inds = inds[::-1]
         allow_negative_indexes = base.allows_negative_indexes
 
