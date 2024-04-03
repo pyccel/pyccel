@@ -321,7 +321,7 @@ def insert_index(expr, pos, index_var):
 
     elif isinstance(expr, IndexedElement):
         base = expr.base
-        deep_rank = expr.class_type.deep_rank
+        deep_rank = base.class_type.deep_rank
 
         # If pos indexes base then recurse
         if -pos < deep_rank-base.rank:
