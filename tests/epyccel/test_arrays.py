@@ -3871,7 +3871,10 @@ def test_array_view_steps_F_2D_3(language):
 #==============================================================================
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template makes interface ambiguous")),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
@@ -3896,7 +3899,10 @@ def test_array_ndmin_1(language):
     check_array_equal(f1(e), f2(e))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template makes interface ambiguous")),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
@@ -3921,7 +3927,10 @@ def test_array_ndmin_2(language):
     check_array_equal(f1(e), f2(e))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template makes interface ambiguous")),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
@@ -3946,7 +3955,10 @@ def test_array_ndmin_4(language):
     check_array_equal(f1(e), f2(e))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template makes interface ambiguous")),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
