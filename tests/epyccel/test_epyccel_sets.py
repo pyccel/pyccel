@@ -202,4 +202,4 @@ def test_Discard_wrong_arg(language):
     epyccel_remove = epyccel(Discard_wrong_arg, language = language)
     pyccel_result = epyccel_remove()
     python_result = Discard_wrong_arg()
-
+    assert python_result == pyccel_result
