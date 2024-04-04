@@ -1549,6 +1549,7 @@ class FCodePrinter(CodePrinter):
         privatestr     = ''
         rankstr        = ''
         externalstr    = ''
+        is_string = isinstance(var.class_type, StringType)
 
         # Compute intent string
         if intent:
@@ -1561,7 +1562,7 @@ class FCodePrinter(CodePrinter):
                 intentstr = ', intent({})'.format(intent)
 
         # Compute allocatable string
-        if not is_static:
+        if not is_static and not is_string:
             if is_alias:
                 allocatablestr = ', pointer'
 
@@ -1586,29 +1587,30 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, TypedAstNode))) and (is_static or on_stack)):
-            rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
+        if not is_string:
+            if ((rank == 1) and (isinstance(shape, (int, TypedAstNode))) and (is_static or on_stack)):
+                rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
-        elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or on_stack)):
-            #TODO fix bug when we include shape of type list
+            elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or on_stack)):
+                #TODO fix bug when we include shape of type list
 
-            if var.order == 'C':
-                rankstr = ','.join('{0}:{1}'.format(self._print(s),
-                                                      self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape[::-1])
-            else:
-                rankstr =  ','.join('{0}:{1}'.format(self._print(s),
-                                                     self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
-            rankstr = '({rank})'.format(rank=rankstr)
+                if var.order == 'C':
+                    rankstr = ','.join('{0}:{1}'.format(self._print(s),
+                                                          self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape[::-1])
+                else:
+                    rankstr =  ','.join('{0}:{1}'.format(self._print(s),
+                                                         self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
+                rankstr = '({rank})'.format(rank=rankstr)
 
-        elif (rank > 0) and on_heap and intent_in:
-            rankstr = '({})'.format(','.join(['0:'] * rank))
+            elif (rank > 0) and on_heap and intent_in:
+                rankstr = '({})'.format(','.join(['0:'] * rank))
 
-        elif (rank > 0) and (on_heap or is_alias):
-            rankstr = '({})'.format(','.join( [':'] * rank))
+            elif (rank > 0) and (on_heap or is_alias):
+                rankstr = '({})'.format(','.join( [':'] * rank))
 
-#        else:
-#            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-#                severity='fatal')
+    #        else:
+    #            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+    #                severity='fatal')
 
         mod_str = ''
         if expr.module_variable and not is_private and isinstance(expr.variable.class_type, FixedSizeNumericType):
