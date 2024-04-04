@@ -1691,6 +1691,16 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         super().__init__(x)
 
     def _get_shape_rank(self, x):
+        """
+        Get the shape and rank of the resulting object.
+
+        Get the shape and rank of the resulting object.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
         return x.shape, x.rank
 
     def _get_dtype(self, x):
@@ -1756,6 +1766,18 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._class_type = NumpyNDArrayType(dtype, rank, order) if rank else dtype
 
     def _get_shape_rank(self, x1, x2):
+        """
+        Get the shape and rank of the resulting object.
+
+        Get the shape and rank of the resulting object.
+
+        Parameters
+        ----------
+        x1 : TypedAstNode
+            The first argument passed to the function.
+        x2 : TypedAstNode
+            The second argument passed to the function.
+        """
         shape = broadcast(x1.shape, x2.shape)
         rank  = 0 if shape is None else len(shape)
         return shape, rank
@@ -1985,6 +2007,18 @@ class NumpyMod(NumpyUfuncBinary):
         self._args = (x1, x2)
 
     def _get_shape_rank(self, x1, x2):
+        """
+        Get the shape and rank of the resulting object.
+
+        Get the shape and rank of the resulting object.
+
+        Parameters
+        ----------
+        x1 : TypedAstNode
+            The first argument passed to the function.
+        x2 : TypedAstNode
+            The second argument passed to the function.
+        """
         args   = (x1, x2)
         ranks  = [a.rank  for a in args]
         shapes = [a.shape for a in args]
@@ -2153,9 +2187,9 @@ class NumpyTranspose(NumpyUfuncUnary):
 
     def _get_shape_rank(self, x):
         """
-        Set the shape and rank of the resulting object.
+        Get the shape and rank of the resulting object.
 
-        Set the shape and rank of the resulting object.
+        Get the shape and rank of the resulting object.
 
         Parameters
         ----------
