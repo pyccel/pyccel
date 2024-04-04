@@ -84,7 +84,8 @@ class ListAppend(ListMethod):
     name = 'append'
 
     def __init__(self, list_obj, new_elem) -> None:
-        if new_elem.class_type != list_obj.class_type.element_type:
+        expected_type = list_obj.class_type.element_type
+        if new_elem.class_type != expected_type:
             raise TypeError(f"Expecting an argument of the same type as the elements of the list ({expected_type}) but received {new_elem.class_type}")
         super().__init__(list_obj, new_elem)
 
