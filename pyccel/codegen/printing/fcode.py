@@ -1538,9 +1538,9 @@ class FCodePrinter(CodePrinter):
         vstr = self._print(expr.variable.name)
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
-        s = self._print(LiteralInteger(0))
+        start_val = self._print(LiteralInteger(0))
         if not(is_static) and (on_heap or (var.shape is None)):
-            s = ''
+            start_val = ''
 
         # Default empty strings
         intentstr      = ''
@@ -1589,24 +1589,24 @@ class FCodePrinter(CodePrinter):
         # TODO: improve
         if not is_string:
             if ((rank == 1) and (isinstance(shape, (int, TypedAstNode))) and (is_static or on_stack)):
-                rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
+                ubound = PyccelMinus(shape, LiteralInteger(1), simplify = True)
+                rankstr = f'({self._print(start_val)}:{self._print(ubound)})'
 
             elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or on_stack)):
                 #TODO fix bug when we include shape of type list
 
-                if var.order == 'C':
-                    rankstr = ','.join('{0}:{1}'.format(self._print(s),
-                                                          self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape[::-1])
-                else:
-                    rankstr =  ','.join('{0}:{1}'.format(self._print(s),
-                                                         self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
-                rankstr = '({rank})'.format(rank=rankstr)
+                ordered_shape = shape[::-1] if var.order == 'C' else shape
+                ubounds = [PyccelMinus(s, LiteralInteger(1), simplify = True) for s in ordered_shape]
+                rankstr = ','.join(f'{self._print(start_val)}:{self._print(u)}' for u in ubounds)
+                rankstr = f'({rankstr})'
 
             elif (rank > 0) and on_heap and intent_in:
-                rankstr = '({})'.format(','.join(['0:'] * rank))
+                rankstr = ','.join(['0:'] * rank)
+                rankstr = f'({rankstr})'
 
             elif (rank > 0) and (on_heap or is_alias):
-                rankstr = '({})'.format(','.join( [':'] * rank))
+                rankstr = ','.join([':'] * rank)
+                rankstr = f'({rankstr})'
 
     #        else:
     #            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
@@ -1619,7 +1619,7 @@ class FCodePrinter(CodePrinter):
         # Construct declaration
         left  = dtype + allocatablestr + optionalstr + privatestr + externalstr + mod_str + intentstr
         right = vstr + rankstr + code_value
-        return '{} :: {}\n'.format(left, right)
+        return f'{left} :: {right}\n'
 
     def _print_AliasAssign(self, expr):
         code = ''
