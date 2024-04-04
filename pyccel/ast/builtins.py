@@ -740,15 +740,15 @@ class PythonSet(TypedAstNode):
                          all(a.class_type is not GenericType() and \
                              arg0.class_type == a.class_type for a in args[1:])
         if is_homogeneous:
-            class_type = arg0.class_type
+            elem_type = arg0.class_type
             inner_shape = [() if a.rank == 0 else a.shape for a in args]
             self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
-            if class_type.rank > 0:
+            if elem_type.rank > 0:
                 raise TypeError("Pyccel can't hash non-scalar types")
         else:
             raise TypeError("Can't create an inhomogeneous set")
 
-        self._class_type = HomogeneousSetType(dtype)
+        self._class_type = HomogeneousSetType(elem_type)
 
     def __iter__(self):
         return self._args.__iter__()
