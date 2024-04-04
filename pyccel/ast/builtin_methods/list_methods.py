@@ -334,7 +334,8 @@ class ListSort(ListMethod) :
         unsupported so it should not be provided.
 
     key : TypedAstNode, optional
-        A function to specify the sorting criteria(s).
+        A function to specify the sorting criteria(s). This argument is 
+        unsupported so it should not be provided.
     """
     __slots__ = ()
     _rank = 0
