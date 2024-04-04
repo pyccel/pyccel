@@ -733,7 +733,8 @@ class FCodePrinter(CodePrinter):
             elif isinstance(f, PythonType):
                 args_format.append('A')
                 args.append(self._print(f.print_string))
-            elif isinstance(f.class_type, (TupleType, HomogeneousListType, HomogeneousSetType)) and not isinstance(f, FunctionCall):
+            elif isinstance(f.class_type, (TupleType, HomogeneousContainerType)) and not isinstance(f.class_type, StringType) \
+                    and not isinstance(f, FunctionCall):
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
