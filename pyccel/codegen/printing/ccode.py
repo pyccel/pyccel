@@ -9,7 +9,7 @@ import re
 
 from pyccel.ast.basic     import ScopedAstNode
 
-from pyccel.ast.builtins  import PythonRange, PythonComplex
+from pyccel.ast.builtins  import PythonRange, PythonComplex, DtypePrecisionToCastFunction
 from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
@@ -2309,7 +2309,8 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['math'])
             return 'M_E'
         else:
-            return self._print(expr.value)
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
+            return self._print(cast_func(expr.value))
 
 
     def _print_Variable(self, expr):
