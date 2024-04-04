@@ -316,7 +316,7 @@ class ListSort(ListMethod) :
     Represents a call to the `.sort()` method, which sorts the elements of the
     list in ascending order and modifies the original list in place. This means
     that the elements of the original list are rearranged to be in sorted order.
-    Optional Parameters are not supported, therefore they should not be provided. 
+    Optional parameters are not supported, therefore they should not be provided. 
     Note that the .sort() method doesn't return any value.
     
     >>> a = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
