@@ -1570,7 +1570,7 @@ class SemanticParser(BasicParser):
 
                 # ...
                 # Add memory deallocation
-                if isinstance(lhs.class_type, CustomDataType) or not lhs.on_stack:
+                if isinstance(lhs.class_type, CustomDataType) or (not lhs.on_stack and not isinstance(lhs.class_type, StringType)):
                     if isinstance(lhs, InhomogeneousTupleVariable):
                         args = [v for v in lhs.get_vars() if v.rank>0]
                         new_args = []
