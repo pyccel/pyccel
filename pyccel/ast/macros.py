@@ -12,7 +12,7 @@ from pyccel.utilities.stage import PyccelStage
 from .basic          import TypedAstNode
 from .datatypes      import PythonNativeInt, GenericType
 from .internals      import PyccelSymbol
-from .numpytypes     import NumpyNDArrayType
+from .numpytypes     import NumpyNDArrayType, NumpyInt
 from .variable       import Variable
 
 pyccel_stage = PyccelStage()
@@ -81,9 +81,9 @@ class MacroShape(Macro):
         elif pyccel_stage != "syntactic":
             rank      = int(argument.rank>1)
             self._shape     = (argument.rank,)
-            self._class_type = NumpyNDArrayType(PythonNativeInt(), rank)
+            self._class_type = NumpyNDArrayType(NumpyInt, rank, None)
         else:
-            self._class_type      = NumpyNDArrayType(PythonNativeInt())
+            self._class_type = NumpyNDArrayType(NumpyInt, 0, None)
             self._shape     = ()
         self._index = index
         super().__init__(argument)
