@@ -290,7 +290,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType))
         if rank < 2:
             order = None
-        
+
         self._element_type = dtype
         self._rank = rank
         self._order = order
@@ -357,11 +357,47 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         cls = type(self)
         return cls(self.element_type.switch_basic_type(new_type), self._rank, self._order)
 
-    def reduce_rank(self, new_rank):
-        new_order = self._order if new_rank > 1 else None
-        return NumpyNDArrayType(self.element_type, new_rank, new_order)
+    def switch_rank(self, new_rank, new_order = None):
+        """
+        Get a type which is identical to this type in all aspects except the rank and/or order.
+
+        Get a type which is identical to this type in all aspects except the rank and/or order.
+        The order must be provided if the rank is increased from 1. Otherwise it defaults to the
+        same order as the current type.
+
+        Parameters
+        ----------
+        new_rank : int
+            The rank of the new type.
+
+        new_order : str, optional
+            The order of the new type. This should be provided if the rank is increased from 1.
+
+        Returns
+        -------
+        PyccelType
+            The new type.
+        """
+        if new_rank == 0:
+            return self.element_type
+        else:
+            new_order = (new_order or self._order) if new_rank > 1 else None
+            return NumpyNDArrayType(self.element_type, new_rank, new_order)
 
     def swap_order(self):
+        """
+        Get a type which is identical to this type in all aspects except the order.
+
+        Get a type which is identical to this type in all aspects except the order.
+        In the case of a 1D array the final type will be the same as this type. Otherwise
+        if the array is C-ordered the final type will be F-ordered, while if the array
+        is F-ordered the final type will be C-ordered.
+
+        Returns
+        -------
+        PyccelType
+            The new type.
+        """
         order = None if self._order is None else ('C' if self._order == 'F' else 'F')
         return NumpyNDArrayType(self.element_type, self._rank, order)
 
