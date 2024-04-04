@@ -1726,6 +1726,19 @@ class NumpyUfuncUnary(NumpyUfuncBase):
             return numpy_precision_map[(x_dtype.primitive_type, x_dtype.precision)]
 
     def _get_order(self, x, rank):
+        """
+        Get the order of the resulting object.
+
+        Get the order of the resulting object.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+
+        rank : int
+            The rank of the resulting object calculated by _get_shape_rank.
+        """
         return x.order
 
     @property
@@ -1808,6 +1821,20 @@ class NumpyUfuncBinary(NumpyUfuncBase):
             return numpy_precision_map[(PrimitiveFloatingPointType(), arg_dtype.precision)]
 
     def _get_order(self, x1, x2, rank):
+        """
+        Get the order of the resulting object.
+
+        Get the order of the resulting object.
+
+        Parameters
+        ----------
+        x1 : TypedAstNode
+            The first argument passed to the function.
+        x2 : TypedAstNode
+            The second argument passed to the function.
+        rank : int
+            The rank of the resulting object calculated by _get_shape_rank.
+        """
         if x1.order == x2.order:
             return x1.order
         else:
@@ -2201,6 +2228,19 @@ class NumpyTranspose(NumpyUfuncUnary):
         return shape, rank
 
     def _get_order(self, x, rank):
+        """
+        Get the order of the resulting object.
+
+        Get the order of the resulting object.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+
+        rank : int
+            The rank of the resulting object calculated by _get_shape_rank.
+        """
         if rank < 2:
             return None
         return 'C' if x.order=='F' else 'F'

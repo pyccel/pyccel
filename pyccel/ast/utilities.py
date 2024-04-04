@@ -250,6 +250,25 @@ def compatible_operation(*args, language_has_vectors = True):
 
 #==============================================================================
 def get_deep_indexed_element(expr, indices):
+    """
+    Get the scalar element obtained by indexed the expression with all the indices.
+
+    Get the scalar element obtained by indexed the expression with all the provided
+    indices. This element is constructed by calling IndexedElement multiple times
+    to create a recursive object with one IndexedElement for each container type.
+
+    Parameters
+    ----------
+    expr : TypedAstNode
+        The base object being indexed.
+    indices : list[TypedAstNode]
+        A list of the indices used to obtain the scalar element.
+
+    Returns
+    -------
+    IndexedElement
+        The scalar indexed element.
+    """
     result = expr
     while indices:
         depth = result.rank
