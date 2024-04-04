@@ -428,3 +428,5 @@ if hasattr(np, 'float128'):
 pyccel_type_to_original_type.update(numpy_type_to_original_type)
 original_type_to_pyccel_type.update({v:k for k,v in numpy_type_to_original_type.items()})
 original_type_to_pyccel_type[np.bool_] = PythonNativeBool()
+
+NumpyInt = numpy_precision_map[PrimitiveIntegerType(), np.dtype(int).alignment]
