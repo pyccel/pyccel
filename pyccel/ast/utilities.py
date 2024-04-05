@@ -674,18 +674,18 @@ def insert_fors(blocks, indices, scope, level = 0):
     requested sizes.
 
     Parameters
-    ==========
-    block : list of LoopCollection
+    ----------
+    blocks : list of LoopCollection
         The result of a call to collect_loops.
     indices : list
         The index variables.
     scope : Scope
         The scope on which the loop is defined. This is where the scope for
         the new For loop will be created.
-    level : int
+    level : int, default=0
         The index of the index variable used in the outermost loop.
 
-    Results
+    Returns
     -------
     list[TypedAstNode]
         The modified expression.
@@ -781,7 +781,7 @@ def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     Parameters
     ----------
     block : CodeBlock
-        The expressions to be modified
+        The expressions to be modified.
     new_index : function
         A function which provides a new variable from a base name, avoiding
         name collisions.
