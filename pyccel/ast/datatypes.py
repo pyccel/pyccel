@@ -210,16 +210,6 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
         return self._primitive_type # pylint: disable=no-member
 
     @property
-    def container_rank(self):
-        """
-        Number of dimensions of the container.
-
-        Number of dimensions of the object described by the container. This is
-        equal to the number of values required to index an element of this container.
-        """
-        return 0
-
-    @property
     def rank(self):
         """
         Number of dimensions of the object.
@@ -812,16 +802,6 @@ class CustomDataType(ContainerType, metaclass=Singleton):
             A tuple containing any arguments to be passed to the callable.
         """
         return (self.__class__, ())
-
-    @property
-    def container_rank(self):
-        """
-        Number of dimensions of the container.
-
-        Number of dimensions of the object described by the container. This is
-        equal to the number of values required to index an element of this container.
-        """
-        return 0
 
     @property
     def rank(self):
