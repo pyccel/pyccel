@@ -112,6 +112,13 @@ class AsName(PyccelAstNode):
     A class representing the renaming of an object such as a function or a
     variable. This usually occurs during an Import.
 
+    Parameters
+    ----------
+    obj : PyccelAstNode or PyccelAstNodeType
+        The variable, function, or module being renamed.
+    target : str
+        Name of variable or function in this context.
+
     Examples
     --------
     >>> from pyccel.ast.core import AsName, FunctionDef
@@ -121,13 +128,6 @@ class AsName(PyccelAstNode):
     old as new
     >>> AsName(NumpyFull, 'fill_func')
     full as fill_func
-
-    Parameters
-    ----------
-    obj : PyccelAstNode or PyccelAstNodeType
-        The variable, function, or module being renamed.
-    target : str
-        Name of variable or function in this context.
     """
     __slots__ = ('_obj', '_target')
     _attribute_nodes = ()
@@ -2172,7 +2172,7 @@ class Return(PyccelAstNode):
     expr : TypedAstNode
         The expression to return.
 
-    stmts : PyccelAstNode
+    stmt : PyccelAstNode
         Any assign statements in the case of expression return.
     """
     __slots__ = ('_expr', '_stmt')
