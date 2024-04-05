@@ -88,7 +88,7 @@ pyarray_to_ndarray = FunctionDef(
                 name      = 'pyarray_to_ndarray',
                 arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling = 'alias'))],
                 body      = [],
-                results   = [FunctionDefResult(Variable(NumpyNDArrayType(GenericType(), None, None), 'array'))])
+                results   = [FunctionDefResult(Variable(NumpyNDArrayType(GenericType(), 1, None), 'array'))])
 
 # numpy array check elements : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_check = FunctionDef(
