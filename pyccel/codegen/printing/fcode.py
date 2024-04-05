@@ -1211,11 +1211,6 @@ class FCodePrinter(CodePrinter):
             for a in expr_args:
                 ac = self._print(a)
 
-                # Pack list/tuple of array/list/tuple into array
-                if a.order is None and a.rank > 1:
-                    a = NumpyArray(a)
-                    ac = self._print(a)
-
                 # Reshape array element if out of order
                 if a.order == inv_order:
                     shape = a.shape[::-1] if a.order == 'F' else a.shape
