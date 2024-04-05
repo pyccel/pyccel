@@ -35,7 +35,7 @@ from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
-from pyccel.ast.datatypes import PythonNativeInt, HomogeneousListType, HomogeneousSetType
+from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type
 
