@@ -1852,6 +1852,11 @@ class NumpyUfuncBinary(NumpyUfuncBase):
             The second argument passed to the function.
         rank : int
             The rank of the result of the function calculated by _get_shape_rank.
+
+        Returns
+        -------
+        str
+            The order of the result of the function.
         """
         if x1.order == x2.order:
             return x1.order
