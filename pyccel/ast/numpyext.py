@@ -921,9 +921,9 @@ class NumpyMatmul(PyccelInternalFunction):
             return
 
         if not isinstance(a, TypedAstNode):
-            raise TypeError('Unknown type of {type(a)}.')
+            raise TypeError(f'Unknown type of {type(a)}.')
         if not isinstance(b, TypedAstNode):
-            raise TypeError('Unknown type of {type(a)}.')
+            raise TypeError(f'Unknown type of {type(a)}.')
 
         args      = (a, b)
         type_info = NumpyResultType(*args)
