@@ -65,6 +65,16 @@ class VariableTypeAnnotation(PyccelAstNode):
         return self._class_type
 
     @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+        """
+        return self.class_type.rank
+
+    @property
     def is_const(self):
         """
         Indicates whether the object will remain constant.
