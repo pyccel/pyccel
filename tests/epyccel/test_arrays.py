@@ -6109,3 +6109,12 @@ def test_unpacking_2D_of_known_size(language):
     f1 = arrays.unpack_array_2D_of_known_size
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+
+##==============================================================================
+## TEST INDEXING
+##==============================================================================
+
+def test_multi_layer_index(language):
+    f1 = arrays.multi_layer_index
+    f2 = epyccel(f1, language = language)
+    assert f1(arrays.a_1d, 3, 18, 5, 2) == f2(arrays.a_1d, 3, 18, 5, 2)

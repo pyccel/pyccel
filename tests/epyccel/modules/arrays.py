@@ -2075,3 +2075,10 @@ def unpack_array_2D_of_known_size():
     arr = array([[1,2,3], [4,5,6], [7,8,9]], dtype='float64')
     x, y, z = arr[:]
     return x.sum(), y.sum(), z.sum()
+
+#==============================================================================
+# Indexing
+#==============================================================================
+
+def multi_layer_index(x : 'int[:]', start : int, stop : int, step : int, idx : int):
+    return x[start:stop:step][idx]
