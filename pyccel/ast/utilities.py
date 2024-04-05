@@ -668,21 +668,27 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
 def insert_fors(blocks, indices, scope, level = 0):
     """
+    Create For loops as requested by the output of collect_loops.
+
     Run through the output of collect_loops and create For loops of the
-    requested sizes
+    requested sizes.
 
     Parameters
     ==========
-    block   : list of LoopCollection
-            The result of a call to collect_loops
+    block : list of LoopCollection
+        The result of a call to collect_loops.
     indices : list
-            The index variables
-    level   : int
-            The index of the index variable used in the outermost loop
+        The index variables.
+    scope : Scope
+        The scope on which the loop is defined. This is where the scope for
+        the new For loop will be created.
+    level : int
+        The index of the index variable used in the outermost loop.
+
     Results
-    =======
-    block : list of TypedAstNodes
-            The modified expression
+    -------
+    list[TypedAstNode]
+        The modified expression.
     """
     if all(not isinstance(b, LoopCollection) for b in blocks.body):
         body = blocks.body
@@ -779,6 +785,9 @@ def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     new_index : function
         A function which provides a new variable from a base name, avoiding
         name collisions.
+    scope : Scope
+        The scope on which the loop is defined. This is where the scope for
+        the new For loop will be created.
     language_has_vectors : bool
         Indicates if the language has support for vector operations of the
         same shape.
