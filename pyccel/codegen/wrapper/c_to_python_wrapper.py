@@ -303,7 +303,7 @@ class CToPythonWrapper(Wrapper):
             func_call = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
 
         if raise_error:
-            message = LiteralString(f"Expected an argument of type {dtype} for argument {arg.name}")
+            message = LiteralString(f"Expected an argument of type {arg.class_type} for argument {arg.name}")
             python_error = FunctionCall(PyErr_SetString, [PyTypeError, message])
             error_code = (python_error,)
 
