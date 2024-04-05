@@ -761,23 +761,32 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
 #==============================================================================
 def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     """
-    Re-write a list of expressions to include explicit loops where necessary
+    Re-write a list of expressions to include explicit loops where necessary.
+
+    Re-write a list of expressions to include explicit loops where necessary.
+    The provided expression is the Pyccel representation of the user code. It
+    is the output of the semantic stage. The result of this function is the
+    equivalent code where any vector expressions are unrolled into explicit
+    loops. The unrolling is done completely for languages such as C which have
+    no support for vector operations and partially for languages such as
+    Fortran which have support for vector operations on objects of the same
+    shape.
 
     Parameters
-    ==========
-    block          : CodeBlock
-                     The expressions to be modified
-    new_index      : function
-                     A function which provides a new variable from a base name,
-                     avoiding name collisions
+    ----------
+    block : CodeBlock
+        The expressions to be modified
+    new_index : function
+        A function which provides a new variable from a base name, avoiding
+        name collisions.
     language_has_vectors : bool
-                     Indicates if the language has support for vector
-                     operations of the same shape
+        Indicates if the language has support for vector operations of the
+        same shape.
 
     Returns
-    =======
-    expr        : list of Ast Nodes
-                The expressions with For loops inserted where necessary
+    -------
+    list[PyccelAstNode]
+        The expressions with `For` loops inserted where necessary.
 
     Examples
     --------
