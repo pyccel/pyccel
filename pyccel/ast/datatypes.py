@@ -587,6 +587,38 @@ class HomogeneousContainerType(ContainerType):
         cls = type(self)
         return cls(self.element_type.switch_basic_type(new_type))
 
+    def switch_rank(self, new_rank, new_order = None):
+        """
+        Get a type which is identical to this type in all aspects except the rank.
+
+        Get a type which is identical to this type in all aspects except the rank.
+        The order must be provided if the rank is increased from 1. This is never
+        the case for 1D containers.
+
+        Parameters
+        ----------
+        new_rank : int
+            The rank of the new type.
+
+        new_order : str, optional
+            The order of the new type. For 1D containers this should not be provided
+
+        Returns
+        -------
+        PyccelType
+            The new type.
+        """
+        assert new_order is None
+        rank = self.rank
+        assert new_rank < rank
+
+        if new_rank == rank:
+            return self
+        elif rank - new_rank == self.container_rank:
+            return self.element_type
+        else:
+            return self.element_type.switch_rank(new_rank - self.container_rank)
+
     @property
     def container_rank(self):
         """

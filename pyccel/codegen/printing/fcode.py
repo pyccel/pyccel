@@ -1210,10 +1210,9 @@ class FCodePrinter(CodePrinter):
             inv_order = 'C' if order == 'F' else 'F'
             for a in expr_args:
                 ac = self._print(a)
-                a_rank = a.rank
 
                 # Pack list/tuple of array/list/tuple into array
-                if a.order is None and a_rank > 1:
+                if a.order is None and a.rank > 1:
                     a = NumpyArray(a)
                     ac = self._print(a)
 
@@ -1221,7 +1220,7 @@ class FCodePrinter(CodePrinter):
                 if a.order == inv_order:
                     shape = a.shape[::-1] if a.order == 'F' else a.shape
                     shape_code = ', '.join(self._print(i) for i in shape)
-                    order_code = ', '.join(self._print(LiteralInteger(i)) for i in range(a_rank, 0, -1))
+                    order_code = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
                     ac = f'reshape({ac}, [{shape_code}], order=[{order_code}])'
                 new_args.append(ac)
 

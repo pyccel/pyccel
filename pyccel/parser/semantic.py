@@ -1930,7 +1930,7 @@ class SemanticParser(BasicParser):
             if isinstance(base, VariableTypeAnnotation):
                 dtype = base.class_type
                 if dtype.rank != 0:
-                    raise errors.report("Can't index a vector type", severity='fatal', symbol=expr)
+                    raise errors.report("NumPy element must be a scalar type", severity='fatal', symbol=expr)
                 class_type = NumpyNDArrayType(numpy_process_dtype(dtype), rank, order)
             elif isinstance(base, PyccelFunctionDef):
                 dtype_cls = base.cls_name
@@ -2157,13 +2157,13 @@ class SemanticParser(BasicParser):
                             args = [Variable(t.class_type, PyccelSymbol(f'anon_{i}'),
                                 shape = None, is_const = t.is_const, is_optional = False,
                                 cls_base = t.class_type,
-                                memory_handling = 'heap' if t.class_type.rank > 0 else 'stack') for i,t in enumerate(types)]
+                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             types = [self._visit(d).type_list[0] for d in v.results]
                             results = [Variable(t.class_type, PyccelSymbol(f'result_{i}'), shape = None,
                                 cls_base = t.class_type,
                                 is_const = t.is_const, is_optional = False,
-                                memory_handling = 'heap' if t.class_type.rank > 0 else 'stack') for i,t in enumerate(types)]
+                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             args = [FunctionDefArgument(a) for a in args]
                             results = [FunctionDefResult(r) for r in results]
@@ -3538,27 +3538,31 @@ class SemanticParser(BasicParser):
                 stop  = a.stop
                 start = a.start
                 step  = a.step
+
             elif isinstance(a, (PythonZip, PythonEnumerate)):
                 dvar  = self._infer_type(a.element)
                 class_type = dvar.pop('class_type')
                 if class_type.rank > 0:
-                    class_type = class_type.element_type
+                    class_type = class_type.switch_rank(class_type.rank-1)
                     dvar['shape'] = (dvar['shape'])[1:]
-                if class_type.rank == 0:
-                    dvar['memory_handling'] = 'stack'
-                var  = Variable(class_type, var, **dvar)
-                stop = a.element.shape[0]
-            elif isinstance(a, Variable):
-                dvar  = self._infer_type(a)
-                class_type = dvar.pop('class_type').element_type
                 if class_type.rank == 0:
                     dvar['shape'] = None
                     dvar['memory_handling'] = 'stack'
-                elif class_type.rank:
-                    dvar['shape'] = (dvar['shape'])[1:]
+                var  = Variable(class_type, var, **dvar)
+                stop = a.element.shape[0]
 
+            elif isinstance(a, Variable):
+                dvar  = self._infer_type(a)
+                class_type = dvar.pop('class_type')
+                if class_type.rank > 0:
+                    class_type = class_type.switch_rank(class_type.rank-1)
+                    dvar['shape'] = (dvar['shape'])[1:]
+                if class_type.rank == 0:
+                    dvar['shape'] = None
+                    dvar['memory_handling'] = 'stack'
                 var  = Variable(class_type, var, **dvar)
                 stop = a.shape[0]
+
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO,
                               bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
