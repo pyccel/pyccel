@@ -1360,13 +1360,10 @@ class CCodePrinter(CodePrinter):
         else:
             return f'{static}{ret_type} {name}({arg_code})'
 
-    def _get_indices(self, expr):
-        return inds
-
     def _print_IndexedElement(self, expr):
         base = expr.base
-        base_shape = base.shape
         inds = list(expr.indices)
+        base_shape = base.shape
         allow_negative_indexes = expr.allows_negative_indexes
         if isinstance(base.class_type, NumpyNDArrayType):
             #set dtype to the C struct types
@@ -1405,8 +1402,8 @@ class CCodePrinter(CodePrinter):
                         Slice.Element)
             indices = ", ".join(self._print(i) for i in inds)
             return f"array_slicing({base_name}, {expr.rank}, {indices})"
-        inds = [self._cast_to(i, NumpyInt64Type()).format(self._print(i)) for i in inds]
-        return "GET_ELEMENT(%s, %s, %s)" % (base_name, dtype, ", ".join(inds))
+        indices = ", ".join(self._cast_to(i, NumpyInt64Type()).format(self._print(i)) for i in inds)
+        return f"GET_ELEMENT({base_name}, {dtype}, {indices})"
 
 
     def _cast_to(self, expr, dtype):
