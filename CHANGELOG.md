@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 -   #1792 : Fix array unpacking.
 -   #1795 : Fix bug when returning slices in C.
 -   #1732 : Fix multidimensional list indexing in Python.
+-   #1821 : Ensure an error is raised when creating an ambiguous interface.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
