@@ -130,10 +130,10 @@ class PyccelBitOperator(PyccelOperator):
 
     def _set_shape(self):
         """
-        Set the shape and rank of the resulting object.
+        Set the shape of the resulting object.
 
-        Set the shape and rank of the resulting object. For a PyccelBitOperator,
-        the shape and rank are class attributes so nothing needs to be done.
+        Set the shape of the resulting object. For a PyccelBitOperator,
+        the shape is a class attribute so nothing needs to be done.
         """
 
     def __repr__(self):
