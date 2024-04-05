@@ -411,10 +411,6 @@ class Allocate(PyccelAstNode):
     shape : int or iterable or None
         Shape of the array after allocation (None for scalars).
 
-    order : str {'C'|'F'}
-        Ordering of multi-dimensional array after allocation
-        ('C' = row-major, 'F' = column-major).
-
     status : str {'allocated'|'unallocated'|'unknown'}
         Variable allocation status at object creation.
 

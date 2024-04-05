@@ -75,10 +75,6 @@ class Variable(TypedAstNode):
     cls_base : class, default: None
         Class base if variable is an object or an object member.
 
-    order : str, default: 'C'
-        Used for arrays. Indicates whether the data is stored in C or Fortran format in memory.
-        See order_docs.md in the developer docs for more details.
-
     is_argument : bool, default: False
         Indicates if object is the argument of a function.
 
@@ -932,8 +928,10 @@ class IndexedElement(TypedAstNode):
 
     @property
     def allows_negative_indexes(self):
-        """ Indicates whether variables used to
-        index this Variable can be negative
+        """
+        Indicate whether variables used to index this Variable can be negative.
+
+        Indicate whether variables used to index this Variable can be negative.
         """
         return self.base.allows_negative_indexes
 

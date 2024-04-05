@@ -601,7 +601,7 @@ class HomogeneousContainerType(ContainerType):
             The rank of the new type.
 
         new_order : str, optional
-            The order of the new type. For 1D containers this should not be provided
+            The order of the new type. For 1D containers this should not be provided.
 
         Returns
         -------
