@@ -2208,7 +2208,7 @@ class Return(PyccelAstNode):
         else:
             code = ''
         exprs = ','.join(repr(e) for e in self.expr)
-        return code+"Return({exprs})"
+        return code+f"Return({exprs})"
 
 class FunctionDef(ScopedAstNode):
 
