@@ -1691,14 +1691,21 @@ class NumpyUfuncUnary(NumpyUfuncBase):
 
     def _get_shape_rank(self, x):
         """
-        Get the shape and rank of the resulting object.
+        Get the shape and rank of the result of the function.
 
-        Get the shape and rank of the resulting object.
+        Get the shape and rank of the result of the function.
 
         Parameters
         ----------
         x : TypedAstNode
             The argument passed to the function.
+
+        Returns
+        -------
+        shape : tuple[TypedAstNode]
+            The shape of the result of the function.
+        rank : int
+            The rank of the result of the function.
         """
         return x.shape, x.rank
 
@@ -1726,9 +1733,9 @@ class NumpyUfuncUnary(NumpyUfuncBase):
 
     def _get_order(self, x, rank):
         """
-        Get the order of the resulting object.
+        Get the order of the result of the function.
 
-        Get the order of the resulting object.
+        Get the order of the result of the function.
 
         Parameters
         ----------
@@ -1736,7 +1743,12 @@ class NumpyUfuncUnary(NumpyUfuncBase):
             The argument passed to the function.
 
         rank : int
-            The rank of the resulting object calculated by _get_shape_rank.
+            The rank of the result of the function calculated by _get_shape_rank.
+
+        Returns
+        -------
+        str
+            The order of the result of the function.
         """
         return x.order
 
@@ -1779,9 +1791,9 @@ class NumpyUfuncBinary(NumpyUfuncBase):
 
     def _get_shape_rank(self, x1, x2):
         """
-        Get the shape and rank of the resulting object.
+        Get the shape and rank of the result of the function.
 
-        Get the shape and rank of the resulting object.
+        Get the shape and rank of the result of the function.
 
         Parameters
         ----------
@@ -1789,6 +1801,13 @@ class NumpyUfuncBinary(NumpyUfuncBase):
             The first argument passed to the function.
         x2 : TypedAstNode
             The second argument passed to the function.
+
+        Returns
+        -------
+        shape : tuple[TypedAstNode]
+            The shape of the result of the function.
+        rank : int
+            The rank of the result of the function.
         """
         shape = broadcast(x1.shape, x2.shape)
         rank  = 0 if shape is None else len(shape)
@@ -1821,9 +1840,9 @@ class NumpyUfuncBinary(NumpyUfuncBase):
 
     def _get_order(self, x1, x2, rank):
         """
-        Get the order of the resulting object.
+        Get the order of the result of the function.
 
-        Get the order of the resulting object.
+        Get the order of the result of the function.
 
         Parameters
         ----------
@@ -1832,7 +1851,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         x2 : TypedAstNode
             The second argument passed to the function.
         rank : int
-            The rank of the resulting object calculated by _get_shape_rank.
+            The rank of the result of the function calculated by _get_shape_rank.
         """
         if x1.order == x2.order:
             return x1.order
@@ -2034,9 +2053,9 @@ class NumpyMod(NumpyUfuncBinary):
 
     def _get_shape_rank(self, x1, x2):
         """
-        Get the shape and rank of the resulting object.
+        Get the shape and rank of the result of the function.
 
-        Get the shape and rank of the resulting object.
+        Get the shape and rank of the result of the function.
 
         Parameters
         ----------
@@ -2044,6 +2063,13 @@ class NumpyMod(NumpyUfuncBinary):
             The first argument passed to the function.
         x2 : TypedAstNode
             The second argument passed to the function.
+
+        Returns
+        -------
+        shape : tuple[TypedAstNode]
+            The shape of the result of the function.
+        rank : int
+            The rank of the result of the function.
         """
         args   = (x1, x2)
         ranks  = [a.rank  for a in args]
@@ -2213,14 +2239,21 @@ class NumpyTranspose(NumpyUfuncUnary):
 
     def _get_shape_rank(self, x):
         """
-        Get the shape and rank of the resulting object.
+        Get the shape and rank of the result of the function.
 
-        Get the shape and rank of the resulting object.
+        Get the shape and rank of the result of the function.
 
         Parameters
         ----------
         x : TypedAstNode
             The argument passed to the function.
+
+        Returns
+        -------
+        shape : tuple[TypedAstNode]
+            The shape of the result of the function.
+        rank : int
+            The rank of the result of the function.
         """
         shape = tuple(reversed(x.shape))
         rank  = x.rank
@@ -2228,9 +2261,9 @@ class NumpyTranspose(NumpyUfuncUnary):
 
     def _get_order(self, x, rank):
         """
-        Get the order of the resulting object.
+        Get the order of the result of the function.
 
-        Get the order of the resulting object.
+        Get the order of the result of the function.
 
         Parameters
         ----------
@@ -2238,7 +2271,12 @@ class NumpyTranspose(NumpyUfuncUnary):
             The argument passed to the function.
 
         rank : int
-            The rank of the resulting object calculated by _get_shape_rank.
+            The rank of the result of the function calculated by _get_shape_rank.
+
+        Returns
+        -------
+        str
+            The order of the result of the function.
         """
         if rank < 2:
             return None

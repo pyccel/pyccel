@@ -1371,6 +1371,22 @@ class IfTernaryOperator(PyccelOperator):
 
         Calculate the shape of the result of the IfTernaryOperator.
         The shape is equal to the shape of one of the outputs.
+
+        Parameters
+        ----------
+        cond : TypedAstNode
+            The first argument passed to the operator representing the condition.
+        value_true : TypedAstNode
+            The second argument passed to the operator representing the result if the
+            condition is true.
+        value_false : TypedAstNode
+            The third argument passed to the operator representing the result if the
+            condition is false.
+
+        Returns
+        -------
+        tuple[TypedAstNode]
+            The shape of the resulting object.
         """
         return value_true.shape
 
