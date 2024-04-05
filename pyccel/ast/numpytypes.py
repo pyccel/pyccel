@@ -268,7 +268,9 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         The internal datatype of the object (GenericType is allowed for external
         libraries, e.g. MPI).
     rank : int
-        The rank of the new NumPy array.
+        The rank of the new NumPy array. In the case of a permissive function
+        which accepts arrays of any rank (e.g. MPI functions), a rank of None
+        indicates that all ranks are possible.
     order : str
         The order of the memory layout for the new NumPy array.
     """
@@ -282,7 +284,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             return super().__new__(cls)
 
     def __init__(self, dtype, rank, order):
-        assert isinstance(rank, int)
+        assert isinstance(rank, int) or rank is None
         assert order in (None, 'C', 'F')
         assert rank < 2 or order is not None
 
