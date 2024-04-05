@@ -656,8 +656,7 @@ class NumpyNewArray(PyccelInternalFunction):
             return None
 
         order = str(order).strip('\'"')
-        if order not in ('C', 'F'):
-            raise TypeError(f'unrecognized order = {order}')
+        assert order in ('C', 'F')
         return order
 
 #==============================================================================
@@ -742,8 +741,7 @@ class NumpyArray(NumpyNewArray):
             # ... Determine ordering
             order = str(order).strip("\'")
 
-            if order not in ('K', 'A', 'C', 'F'):
-                raise TypeError(f"Cannot recognize '{order}' order")
+            assert order in ('K', 'A', 'C', 'F')
 
             if order in ('K', 'A'):
                 order = arg.order or 'C'
