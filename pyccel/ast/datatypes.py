@@ -727,7 +727,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
-        self._order = 'C' if (element_type.order == 'C' or element_type.rank < 2) else None
+        self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
         super().__init__()
 
     def __str__(self):
@@ -752,7 +752,7 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
-        self._order = 'C' if (element_type.order == 'C' or element_type.rank < 2) else None
+        self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
         super().__init__()
 
 class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton):
@@ -870,7 +870,9 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
             self._rank = 1
 
         # Determine order
-        if self._rank > 1:
+        if self._rank == 2:
+            self._order = 'C'
+        elif self._rank > 2:
             elem_orders = set(elem.order for elem in self._element_types)
             if len(elem_orders) == 1 and elem_orders.pop() == 'C':
                 self._order = 'C'
