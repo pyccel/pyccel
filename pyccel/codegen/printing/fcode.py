@@ -1210,10 +1210,10 @@ class FCodePrinter(CodePrinter):
             inv_order = 'C' if order == 'F' else 'F'
             for a in expr_args:
                 ac = self._print(a)
-                a_deep_rank = a.class_type.deep_rank
+                a_rank = a.rank
 
                 # Pack list/tuple of array/list/tuple into array
-                if a.order is None and a_deep_rank > 1:
+                if a.order is None and a_rank > 1:
                     a = NumpyArray(a)
                     ac = self._print(a)
 
@@ -1221,7 +1221,7 @@ class FCodePrinter(CodePrinter):
                 if a.order == inv_order:
                     shape = a.shape[::-1] if a.order == 'F' else a.shape
                     shape_code = ', '.join(self._print(i) for i in shape)
-                    order_code = ', '.join(self._print(LiteralInteger(i)) for i in range(a_deep_rank, 0, -1))
+                    order_code = ', '.join(self._print(LiteralInteger(i)) for i in range(a_rank, 0, -1))
                     ac = f'reshape({ac}, [{shape_code}], order=[{order_code}])'
                 new_args.append(ac)
 
@@ -1486,7 +1486,7 @@ class FCodePrinter(CodePrinter):
 
         # ... TODO improve
         # Group the variables by intent
-        rank            = var.class_type.deep_rank
+        rank            = var.rank
         shape           = var.alloc_shape
         is_const        = var.is_const
         is_optional     = var.is_optional
@@ -2900,9 +2900,9 @@ class FCodePrinter(CodePrinter):
                 inds = list(base.indices) + inds
                 base = base.base
 
-        deep_rank = base.class_type.deep_rank
-        if len(inds)<deep_rank:
-            inds += [Slice(None,None)]*(deep_rank-base.rank)
+        rank = base.rank
+        if len(inds)<rank:
+            inds += [Slice(None,None)]*(rank-base.class_type.container_rank)
 
         base_code = self._print(base)
 

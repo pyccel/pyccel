@@ -1020,31 +1020,6 @@ class SemanticParser(BasicParser):
                 args.append(a)
         return args
 
-    def get_type_description(self, var, include_rank = True):
-        """
-        Get a text description of the type of a variable.
-
-        Get a text description of the type of a variable.
-        This is notably useful for error messages.
-
-        Parameters
-        ----------
-        var : Variable
-            The variable to describe.
-        include_rank : bool, default=True
-            Indicates whether rank information should be included.
-
-        Returns
-        -------
-        str
-            A description of the variable type.
-        """
-        descr = str(var.class_type)
-        if include_rank and var.rank>0:
-            dims = ','.join(':'*var.rank)
-            descr += f'[{dims}]'
-        return descr
-
     def _check_argument_compatibility(self, input_args, func_args, func, elemental, raise_error=True, error_type='error'):
         """
         Check that the provided arguments match the expected types.
@@ -1076,8 +1051,7 @@ class SemanticParser(BasicParser):
                 return i_arg.class_type.datatype != f_arg.class_type.datatype
         else:
             def incompatible(i_arg, f_arg):
-                return (i_arg.class_type != f_arg.class_type or
-                        i_arg.rank != f_arg.rank)
+                return i_arg.class_type != f_arg.class_type
 
         err_msgs = []
         # Compare each set of arguments
@@ -1092,13 +1066,10 @@ class SemanticParser(BasicParser):
 
             # Check for compatibility
             if incompatible(i_arg, f_arg):
-                expected  = self.get_type_description(f_arg, not elemental)
-                type_name = self.get_type_description(i_arg, not elemental)
+                expected  = str(f_arg.class_type)
+                type_name = str(i_arg.class_type)
                 received  = f'{i_arg} ({type_name})'
                 err_msgs += [INCOMPATIBLE_ARGUMENT.format(idx+1, received, func, expected)]
-
-            if f_arg.rank > 1 and i_arg.order != f_arg.order:
-                err_msgs += [INCOMPATIBLE_ORDERING.format(idx=idx+1, arg=i_arg, func=func, order=f_arg.order)]
 
         if err_msgs:
             if raise_error:
@@ -1960,10 +1931,9 @@ class SemanticParser(BasicParser):
             order = None if rank < 2 else 'C'
             if isinstance(base, VariableTypeAnnotation):
                 dtype = base.class_type
-                class_type = NumpyNDArrayType(numpy_process_dtype(dtype), rank, order)
                 if dtype.rank != 0:
-                    raise errors.report("Can't index a vector type",
-                            severity='fatal', symbol=expr)
+                    raise errors.report("Can't index a vector type", severity='fatal', symbol=expr)
+                class_type = NumpyNDArrayType(numpy_process_dtype(dtype), rank, order)
             elif isinstance(base, PyccelFunctionDef):
                 dtype_cls = base.cls_name
                 dtype = numpy_process_dtype(dtype_cls.static_type())

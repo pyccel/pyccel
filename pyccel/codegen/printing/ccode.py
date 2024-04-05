@@ -1547,7 +1547,7 @@ class CCodePrinter(CodePrinter):
             shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
             is_view = 'false' if variable.on_heap else 'true'
             order = "order_f" if expr.order == "F" else "order_c"
-            alloc_code = f"{self._print(variable)} = array_create({variable.class_type.deep_rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
+            alloc_code = f"{self._print(variable)} = array_create({variable.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
             return f'{free_code}{alloc_code}'
         elif variable.is_alias:
             var_code = self._print(ObjectAddress(variable))

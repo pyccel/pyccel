@@ -51,9 +51,6 @@ class Variable(TypedAstNode):
         The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
 
-    rank : int, default: 0
-        The number of dimensions for an array.
-
     memory_handling : str, default: 'stack'
         'heap' is used for arrays, if we need to allocate memory on the heap.
         'stack' if memory should be allocated on the stack, represents stack arrays and scalars.
@@ -99,7 +96,7 @@ class Variable(TypedAstNode):
     >>> Variable('int', 'n')
     n
     >>> n = 4
-    >>> Variable('float', 'x', rank=2, shape=(n,2), memory_handling='heap')
+    >>> Variable('float', 'x', shape=(n,2), memory_handling='heap')
     x
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
@@ -325,12 +322,6 @@ class Variable(TypedAstNode):
         return self.on_stack and self.rank > 0
 
     @property
-    def is_stack_scalar(self):
-        """ Indicates if the variable is located on stack and is a scalar
-        """
-        return self.on_stack and self.rank == 0
-
-    @property
     def cls_base(self):
         """ Class from which the Variable inherits
         """
@@ -413,11 +404,9 @@ class Variable(TypedAstNode):
         """
         User friendly method to check if the variable is a numpy.ndarray.
 
-        User friendly method to check if the variable is an ndarray:
-            1. have a rank > 0
-            2. class type is NumpyNDArrayType
+        User friendly method to check if the variable is an ndarray.
         """
-        return isinstance(self.class_type, NumpyNDArrayType) and self.rank > 0
+        return isinstance(self.class_type, NumpyNDArrayType)
 
     def __str__(self):
         return str(self.name)
@@ -444,8 +433,6 @@ class Variable(TypedAstNode):
         print('>>> Variable')
         print(f'  name               = {self.name}')
         print(f'  type               = {self.class_type}')
-        print(f'  rank               = {self.rank}')
-        print(f'  order              = {self.order}')
         print(f'  memory_handling    = {self.memory_handling}')
         print(f'  shape              = {self.shape}')
         print(f'  cls_base           = {self.cls_base}')
@@ -521,10 +508,8 @@ class Variable(TypedAstNode):
             self.class_type,
             self.name)
         kwargs = {
-            'rank' : self.rank,
             'memory_handling': self.memory_handling,
             'is_optional':self.is_optional,
-            'order':self.order,
             'cls_base':self.cls_base,
             }
 
@@ -831,7 +816,7 @@ class IndexedElement(TypedAstNode):
             return
 
         shape = base.shape
-        rank  = base.rank
+        rank  = base.class_type.container_rank
         assert len(indices) <= rank
 
         if any(not isinstance(a, (int, TypedAstNode, Slice, LiteralEllipsis)) for a in indices):
@@ -870,23 +855,23 @@ class IndexedElement(TypedAstNode):
 
                     _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                 new_shape.append(_shape)
-        rank  = len(new_shape)
+        new_rank = len(new_shape)
 
-        if rank == 0:
+        if new_rank == 0:
             self._class_type = base.class_type.element_type
             self._is_slice = False
             if self._class_type.rank:
-                self._shape = base.shape[base.rank:]
+                self._shape = base.shape[rank:]
             else:
                 self._shape = None
-        elif rank != base.class_type.rank:
-            self._class_type = base.class_type.reduce_rank(rank)
+        elif new_rank != rank:
+            self._class_type = base.class_type.switch_rank(new_rank)
             self._is_slice = True
-            self._shape = tuple(new_shape) + base.shape[base.rank:]
+            self._shape = tuple(new_shape) + base.shape[rank:]
         else:
             self._class_type = base.class_type
             self._is_slice = True
-            self._shape = tuple(new_shape) + base.shape[base.rank:]
+            self._shape = tuple(new_shape) + base.shape[rank:]
 
         super().__init__()
 
@@ -910,7 +895,7 @@ class IndexedElement(TypedAstNode):
 
     def __getitem__(self, *args):
 
-        if self.rank < len(args):
+        if self.class_type.container_rank < len(args):
             raise IndexError('Rank mismatch.')
 
         if len(args) == 1 and isinstance(args[0], (tuple, list)):

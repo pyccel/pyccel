@@ -271,7 +271,7 @@ def get_deep_indexed_element(expr, indices):
     """
     result = expr
     while indices:
-        depth = result.rank
+        depth = result.class_type.container_rank
         result = IndexedElement(result, *indices[:depth])
         indices = indices[depth:]
     return result
@@ -301,12 +301,13 @@ def insert_index(expr, pos, index_var):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.datatypes import PythonNativeInt
     >>> from pyccel.ast.operators import PyccelAdd
     >>> from pyccel.ast.utilities import insert_index
-    >>> a = Variable('int', 'a', shape=(4,), rank=1)
-    >>> b = Variable('int', 'b', shape=(4,), rank=1)
-    >>> c = Variable('int', 'c', shape=(4,), rank=1)
-    >>> i = Variable('int', 'i')
+    >>> a = Variable(PythonNativeInt(), 'a', shape=(4,))
+    >>> b = Variable(PythonNativeInt(), 'b', shape=(4,))
+    >>> c = Variable(PythonNativeInt(), 'c', shape=(4,))
+    >>> i = Variable(PythonNativeInt(), 'i')
     >>> d = PyccelAdd(a,b)
     >>> expr = Assign(c,d)
     >>> insert_index(expr, 0, i)
@@ -315,14 +316,14 @@ def insert_index(expr, pos, index_var):
     if expr.rank==0:
         return expr
     elif isinstance(expr, (Variable, ObjectAddress)):
-        if expr.rank==0 or -pos>expr.class_type.deep_rank:
+        if expr.rank==0 or -pos>expr.rank:
             return expr
         if expr.shape[pos]==1:
             # If there is no dimension in this axis, reduce the rank
             index_var = LiteralInteger(0)
 
         # Add index at the required position
-        indexes = [Slice(None,None)]*(expr.class_type.deep_rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
+        indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
         return get_deep_indexed_element(expr, indexes)
 
     elif isinstance(expr, NumpyTranspose):
@@ -340,29 +341,30 @@ def insert_index(expr, pos, index_var):
 
     elif isinstance(expr, IndexedElement):
         base = expr.base
-        deep_rank = base.class_type.deep_rank
+        rank = base.rank
 
         # If pos indexes base then recurse
-        if -pos < deep_rank-base.rank:
-            return insert_index(base, pos+base.rank, index_var)
+        base_container_rank = base.class_type.container_rank
+        if -pos < rank-base_container_rank:
+            return insert_index(base, pos+base_container_rank, index_var)
 
         # Ensure current indices are fully defined
         indices = list(expr.indices)
         if len(indices) == 1 and isinstance(indices[0], LiteralEllipsis):
-            indices = [Slice(None,None)]*base.rank
+            indices = [Slice(None,None)]*base_container_rank
 
-        if len(indices)<deep_rank:
-            indices += [Slice(None,None)]*(deep_rank-base.rank)
+        if len(indices)<rank:
+            indices += [Slice(None,None)]*(rank-base_container_rank)
 
         # Start from last index in this indexed element
-        i = base.rank-deep_rank-1
-        while i>=pos and -i<=base.rank:
+        i = base_container_rank-rank-1
+        while i>=pos and -i<=base_container_rank:
             if not isinstance(indices[i], Slice):
                 pos -= 1
             i -= 1
 
         # if no slices were found then the object is already correctly indexed
-        if -pos > deep_rank:
+        if -pos > rank:
             return expr
 
         # Add index at the required position
@@ -545,7 +547,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 result.extend(assigns)
                 current_level = 0
 
-            rank = line.lhs.class_type.deep_rank
+            rank = line.lhs.rank
             shape = line.lhs.shape
             new_vars = variables
             handled_funcs = transposed_vars + indexed_funcs
@@ -606,7 +608,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             if isinstance(rhs, NumpyArray):
                 rhs = rhs.arg
 
-            lhs_rank = lhs.class_type.deep_rank
+            lhs_rank = lhs.rank
 
             new_assigns = [Assign(
                             insert_index(expr=lhs,
@@ -724,9 +726,9 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
     >>> from pyccel.ast.literals  import LiteralInteger
     >>> from pyccel.ast.utilities import expand_to_loops
     >>> from pyccel.ast.variable  import Variable
-    >>> a = Variable(PythonNativeInt(), 'a', shape=(,), rank=0)
-    >>> b = Variable(PythonNativeInt(), 'b', shape=(,), rank=0)
-    >>> c = Variable(PythonNativeInt(), 'c', shape=(,), rank=0)
+    >>> a = Variable(PythonNativeInt(), 'a')
+    >>> b = Variable(PythonNativeInt(), 'b')
+    >>> c = Variable(PythonNativeInt(), 'c')
     >>> expr = [Assign(PythonTuple(a,b,c),PythonTuple(LiteralInteger(0),LiteralInteger(1),LiteralInteger(2))]
     >>> expand_inhomog_tuple_assignments(CodeBlock(expr))
     [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
@@ -780,12 +782,13 @@ def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.datatypes import PythonNativeInt
     >>> from pyccel.ast.operators import PyccelAdd
     >>> from pyccel.ast.utilities import expand_to_loops
-    >>> a = Variable('int', 'a', shape=(4,), rank=1)
-    >>> b = Variable('int', 'b', shape=(4,), rank=1)
-    >>> c = Variable('int', 'c', shape=(4,), rank=1)
-    >>> i = Variable('int', 'i')
+    >>> a = Variable(PythonNativeInt(), 'a', shape=(4,))
+    >>> b = Variable(PythonNativeInt(), 'b', shape=(4,))
+    >>> c = Variable(PythonNativeInt(), 'c', shape=(4,))
+    >>> i = Variable(PythonNativeInt(), 'i')
     >>> d = PyccelAdd(a,b)
     >>> expr = [Assign(c,d)]
     >>> expand_to_loops(expr, language_has_vectors = False)

@@ -210,6 +210,16 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
         return self._primitive_type # pylint: disable=no-member
 
     @property
+    def container_rank(self):
+        """
+        Number of dimensions of the container.
+
+        Number of dimensions of the object described by the container. This is
+        equal to the number of values required to index an element of this container.
+        """
+        return 0
+
+    @property
     def rank(self):
         """
         Number of dimensions of the object.
@@ -265,10 +275,6 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
         """
         assert isinstance(new_type, FixedSizeType)
         return new_type
-
-    @property
-    def deep_rank(self):
-        return 0
 
 class FixedSizeNumericType(FixedSizeType):
     """
@@ -583,6 +589,16 @@ class HomogeneousContainerType(ContainerType):
         return cls(self.element_type.switch_basic_type(new_type))
 
     @property
+    def container_rank(self):
+        """
+        Number of dimensions of the container.
+
+        Number of dimensions of the object described by the container. This is
+        equal to the number of values required to index an element of this container.
+        """
+        return self._rank # pylint: disable=no-member
+
+    @property
     def rank(self):
         """
         Number of dimensions of the object.
@@ -590,7 +606,8 @@ class HomogeneousContainerType(ContainerType):
         Number of dimensions of the object. If the object is a scalar then
         this is equal to 0.
         """
-        return self._rank # pylint: disable=no-member
+        elem = self.element_type
+        return self.container_rank + elem.rank
 
     @property
     def order(self):
@@ -602,11 +619,6 @@ class HomogeneousContainerType(ContainerType):
         this function returns None.
         """
         return self._order # pylint: disable=no-member
-
-    @property
-    def deep_rank(self):
-        elem = self.element_type
-        return self.rank + elem.deep_rank
 
 class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
@@ -658,7 +670,13 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
         return self
 
     @property
-    def deep_rank(self):
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+        """
         return 1
 
 class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = ArgumentSingleton):
@@ -765,6 +783,16 @@ class CustomDataType(ContainerType, metaclass=Singleton):
         return (self.__class__, ())
 
     @property
+    def container_rank(self):
+        """
+        Number of dimensions of the container.
+
+        Number of dimensions of the object described by the container. This is
+        equal to the number of values required to index an element of this container.
+        """
+        return 0
+
+    @property
     def rank(self):
         """
         Number of dimensions of the object.
@@ -784,10 +812,6 @@ class CustomDataType(ContainerType, metaclass=Singleton):
         this function returns None.
         """
         return None
-
-    @property
-    def deep_rank(self):
-        return 0
 
 class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingleton):
     """
@@ -851,6 +875,16 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
             return self
 
     @property
+    def container_rank(self):
+        """
+        Number of dimensions of the container.
+
+        Number of dimensions of the object described by the container. This is
+        equal to the number of values required to index an element of this container.
+        """
+        return 1
+
+    @property
     def rank(self):
         """
         Number of dimensions of the object.
@@ -858,7 +892,11 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         Number of dimensions of the object. If the object is a scalar then
         this is equal to 0.
         """
-        return 1
+        elem_ranks = set(elem.rank for elem in self._element_types)
+        if len(elem_ranks) == 1:
+            return elem_ranks.pop() + self.container_rank
+        else:
+            return self.container_rank
 
     @property
     def order(self):
@@ -869,15 +907,11 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         ('F') format. This is only relevant if rank > 1. When it is not relevant
         this function returns None.
         """
+        if self.rank > 1:
+            elem_orders = set(elem.order for elem in self._element_types)
+            if len(elem_orders) == 1 and elem_orders.pop() == 'C':
+                return 'C'
         return None
-
-    @property
-    def deep_rank(self):
-        elem_ranks = set(elem.deep_rank for elem in self._element_types)
-        if len(elem_ranks) == 1:
-            return elem_ranks.pop() + self.rank
-        else:
-            return self.rank
 
 class DictType(ContainerType, metaclass = ArgumentSingleton):
     """
