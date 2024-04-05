@@ -2162,15 +2162,18 @@ class ConstructorCall(FunctionCall):
 
 
 class Return(PyccelAstNode):
+    """
+    Represents a return statement in a function in the code.
 
-    """Represents a function return in the code.
+    Represents a return statement in a function in the code.
 
     Parameters
     ----------
     expr : TypedAstNode
         The expression to return.
 
-    stmts :represent assign stmts in the case of expression return
+    stmts : PyccelAstNode
+        Any assign statements in the case of expression return.
     """
     __slots__ = ('_expr', '_stmt')
     _attribute_nodes = ('_expr', '_stmt')
@@ -4097,7 +4100,7 @@ class SymbolicPrint(PyccelAstNode):
         for i in expr:
             if not isinstance(i, (Lambda, SymbolicAssign,
                               SympyFunction)):
-                raise TypeError(f'Expecting Lambda, SymbolicAssign, SympyFunction for {i}')
+                raise TypeError('Expecting Lambda, SymbolicAssign, SympyFunction for {}'.format(i))
 
         self._expr = expr
 
