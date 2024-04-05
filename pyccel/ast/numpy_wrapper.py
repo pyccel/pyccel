@@ -69,8 +69,8 @@ def get_numpy_max_acceptable_version_file():
     numpy_max_acceptable_version = [1, 19]
     numpy_current_version = [int(v) for v in np.version.version.split('.')[:2]]
     numpy_api_acceptable_version = min(numpy_max_acceptable_version, numpy_current_version)
-    numpy_api_macro = '# define NPY_NO_DEPRECATED_API NPY_{}_{}_API_VERSION\n'.format(
-        *numpy_api_acceptable_version)
+    major, minor = numpy_api_acceptable_version
+    numpy_api_macro = f'# define NPY_NO_DEPRECATED_API NPY_{major}_{minor}_API_VERSION\n'
 
     return '#ifndef NPY_NO_DEPRECATED_API\n'+ \
             numpy_api_macro+\

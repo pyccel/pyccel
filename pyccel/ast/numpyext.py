@@ -638,7 +638,7 @@ class NumpyNewArray(PyccelInternalFunction):
 
         order = str(order).strip('\'"')
         if order not in ('C', 'F'):
-            raise ValueError('unrecognized order = {}'.format(order))
+            raise ValueError(f'unrecognized order = {order}')
         return order
 
 #==============================================================================
@@ -670,7 +670,7 @@ class NumpyArray(NumpyNewArray):
     def __init__(self, arg, dtype=None, order='K', ndmin=None):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of  {type(arg)}')
 
         is_homogeneous_tuple = isinstance(arg.class_type, HomogeneousTupleType)
         # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
@@ -830,7 +830,7 @@ class NumpySum(PyccelInternalFunction):
 
     def __init__(self, arg):
         if not isinstance(arg, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of {type(arg)}.')
         super().__init__(arg)
         lowest_possible_type = process_dtype(PythonNativeInt())
         if isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and \
@@ -863,7 +863,7 @@ class NumpyProduct(PyccelInternalFunction):
 
     def __init__(self, arg):
         if not isinstance(arg, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of {type(arg)}.')
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
         lowest_possible_type = process_dtype(PythonNativeInt())
@@ -904,9 +904,9 @@ class NumpyMatmul(PyccelInternalFunction):
             return
 
         if not isinstance(a, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(a))
+            raise TypeError('Unknown type of {type(a)}.')
         if not isinstance(b, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(a))
+            raise TypeError('Unknown type of {type(a)}.')
 
         args      = (a, b)
         type_info = NumpyResultType(*args)
