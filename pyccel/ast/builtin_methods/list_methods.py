@@ -78,7 +78,6 @@ class ListAppend(ListMethod):
         The argument passed to append() method.
     """
     __slots__ = ()
-    _dtype = VoidType()
     _shape = None
     _class_type = VoidType()
     name = 'append'
