@@ -53,7 +53,7 @@ from pyccel.ast.numpyext import NumpyEmpty, NumpyInt32
 from pyccel.ast.numpyext import NumpyFloat, NumpyBool
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand, NumpyAbs
-from pyccel.ast.numpyext import NumpyNewArray, NumpyArray
+from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
