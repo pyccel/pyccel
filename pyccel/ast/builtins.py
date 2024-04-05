@@ -481,9 +481,8 @@ class PythonTuple(TypedAstNode):
     *args : tuple of TypedAstNode
         The arguments passed to the tuple function.
     """
-    __slots__ = ('_args','_is_homogeneous',
-            '_shape', '_class_type')
-    _iterable        = True
+    __slots__ = ('_args','_is_homogeneous', '_shape', '_class_type')
+    _iterable = True
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
@@ -508,7 +507,7 @@ class PythonTuple(TypedAstNode):
         dtypes = set((d.primitive_type, d.precision) if isinstance(d, FixedSizeNumericType) else d for d in dtypes)
 
         ranks  = set(a.rank for a in args)
-        orders = set(a.order for a in args if a.order is not None)
+        orders = set(a.order for a in args)
         if len(ranks) == 1:
             rank = next(iter(ranks))
             shapes = tuple(set(a.shape[i] for a in args if not (isinstance(a.shape[i], PyccelArrayShapeElement) or \
@@ -517,7 +516,7 @@ class PythonTuple(TypedAstNode):
         else:
             shapes = ()
         is_homogeneous = len(dtypes) == 1 and len(ranks) == 1 and \
-                         len(orders) <= 1 and all(len(s) <= 1 for s in shapes)
+                         len(orders) == 1 and all(len(s) <= 1 for s in shapes)
         contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
                             not isinstance(a.class_type, HomogeneousTupleType) for a in args)
 
