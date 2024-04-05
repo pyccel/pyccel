@@ -633,7 +633,7 @@ class NumpyNewArray(PyccelInternalFunction):
     @staticmethod
     def _process_order(rank, order):
         """
-        Process the order to get an order in the format expected by Pyccel.
+        Treat the order to get an order in the format expected by Pyccel.
 
         Process the order passed to the array creation function to get an order
         in the format expected by Pyccel. The final format should be a string
