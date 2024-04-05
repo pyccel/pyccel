@@ -2283,8 +2283,6 @@ class NumpyTranspose(NumpyUfuncUnary):
         str
             The order of the result of the function.
         """
-        if rank < 2:
-            return None
         return 'C' if x.order=='F' else 'F'
 
     @property
