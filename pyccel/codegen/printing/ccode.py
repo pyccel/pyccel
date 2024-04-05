@@ -1361,26 +1361,12 @@ class CCodePrinter(CodePrinter):
             return f'{static}{ret_type} {name}({arg_code})'
 
     def _get_indices(self, expr):
-        base = expr.base
-        base_shape = base.shape
-        inds = list(expr.indices)
-        allow_negative_indexes = expr.allows_negative_indexes
-        for i, ind in enumerate(inds):
-            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
-                inds[i] = PyccelMinus(base_shape[i], ind.args[0], simplify = True)
-            else:
-                #indices of indexedElement of len==1 shouldn't be a tuple
-                if isinstance(ind, tuple) and len(ind) == 1:
-                    inds[i].args = ind[0]
-                if allow_negative_indexes and \
-                        not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
-                    inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
-                        PyccelAdd(base_shape[i], ind, simplify = True), ind)
         return inds
 
     def _print_IndexedElement(self, expr):
         base = expr.base
-        inds = self._get_indices(expr)
+        base_shape = base.shape
+        inds = list(expr.indices)
         allow_negative_indexes = expr.allows_negative_indexes
         if isinstance(base.class_type, NumpyNDArrayType):
             #set dtype to the C struct types
@@ -1392,8 +1378,21 @@ class CCodePrinter(CodePrinter):
 
         if isinstance(base, IndexedElement):
             while isinstance(base, IndexedElement) and isinstance(base.class_type, HomogeneousContainerType):
-                inds = self._get_indices(base) + inds
+                inds = list(base.indices) + inds
                 base = base.base
+
+        for i, ind in enumerate(inds):
+            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
+                inds[i] = PyccelMinus(base_shape[i], ind.args[0], simplify = True)
+            else:
+                #indices of indexedElement of len==1 shouldn't be a tuple
+                if isinstance(ind, tuple) and len(ind) == 1:
+                    inds[i].args = ind[0]
+                if allow_negative_indexes and \
+                        not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
+                    inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
+                        PyccelAdd(base_shape[i], ind, simplify = True), ind)
+
         base_name = self._print(base)
         if expr.rank > 0:
             #managing the Slice input
@@ -1404,8 +1403,8 @@ class CCodePrinter(CodePrinter):
                 else:
                     inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1),
                         Slice.Element)
-            inds = [self._print(i) for i in inds]
-            return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
+            indices = ", ".join(self._print(i) for i in inds)
+            return f"array_slicing({base_name}, {expr.rank}, {indices})"
         inds = [self._cast_to(i, NumpyInt64Type()).format(self._print(i)) for i in inds]
         return "GET_ELEMENT(%s, %s, %s)" % (base_name, dtype, ", ".join(inds))
 
