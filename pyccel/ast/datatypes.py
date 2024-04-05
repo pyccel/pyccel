@@ -487,7 +487,6 @@ class TupleType:
     """
     __slots__ = ()
     _name = 'tuple'
-    _rank = 1
 
 #==============================================================================
 
@@ -691,6 +690,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
         The type of the elements of the homogeneous tuple.
     """
     __slots__ = ('_element_type', '_order')
+    _rank = 1
 
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
@@ -825,7 +825,7 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
     *args : tuple of DataTypes
         The datatypes stored in the inhomogeneous tuple.
     """
-    __slots__ = ('_element_types',)
+    __slots__ = ('_element_types', '_rank', '_order')
 
     def __init__(self, *args):
         self._element_types = args
