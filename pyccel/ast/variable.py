@@ -903,12 +903,16 @@ class IndexedElement(TypedAstNode):
             base = self.base
             for i in self.indices:
                 if isinstance(i, Slice) and j<len(args):
-                    if i.step == 1 or i.step is None:
-                        incr = args[j]
+                    current_arg = args[j]
+                    if isinstance(current_arg, Slice):
+                        raise NotImplementedError("Can't extract a slice from a slice")
                     else:
-                        incr = PyccelMul(i.step, args[j], simplify = True)
-                    if i.start != 0 and i.start is not None:
-                        incr = PyccelAdd(i.start, incr, simplify = True)
+                        if i.step == 1 or i.step is None:
+                            incr = current_arg
+                        else:
+                            incr = PyccelMul(i.step, current_arg, simplify = True)
+                        if i.start != 0 and i.start is not None:
+                            incr = PyccelAdd(i.start, incr, simplify = True)
                     i = incr
                     j += 1
                 new_indexes.append(i)
