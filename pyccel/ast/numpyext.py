@@ -982,9 +982,8 @@ class NumpyLinspace(NumpyNewArray):
            from start and stop, the calculated dtype will never be an integer.
     """
 
-    __slots__ = ('_index','_start','_stop',
-            '_num','_endpoint','_shape', '_ind','_step',
-            '_py_argument')
+    __slots__ = ('_index','_start','_stop', '_num','_endpoint','_shape', '_ind',
+            '_step', '_py_argument')
     _attribute_nodes = ('_start', '_stop', '_index', '_step', '_num',
             '_endpoint', '_ind')
     name = 'linspace'

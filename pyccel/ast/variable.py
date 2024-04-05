@@ -92,18 +92,18 @@ class Variable(TypedAstNode):
 
     Examples
     --------
+    >>> from pyccel.ast.datatypes import PythonNativeInt, PythonNativeFloat
     >>> from pyccel.ast.core import Variable
-    >>> Variable('int', 'n')
+    >>> Variable(PythonNativeInt(), 'n')
     n
     >>> n = 4
-    >>> Variable('float', 'x', shape=(n,2), memory_handling='heap')
+    >>> Variable(PythonNativeFloat(), 'x', shape=(n,2), memory_handling='heap')
     x
-    >>> Variable('int', DottedName('matrix', 'n_rows'))
+    >>> Variable(PythonNativeInt(), DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
-    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
-            '_is_target', '_is_optional', '_allows_negative_indexes',
-            '_cls_base', '_is_argument', '_is_temp',
+    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const', '_is_target',
+            '_is_optional', '_allows_negative_indexes', '_cls_base', '_is_argument', '_is_temp',
             '_shape','_is_private','_class_type')
     _attribute_nodes = ()
 

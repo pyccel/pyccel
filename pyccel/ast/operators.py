@@ -176,11 +176,11 @@ class PyccelOperator(TypedAstNode):
 
     def _set_shape(self):
         """
-        Set the shape and rank of the result of the operator.
+        Set the shape of the result of the operator.
 
-        Set the shape and rank of the result of the operator. This function
+        Set the shape of the result of the operator. This function
         uses the static method `_shape` to set these values. If the
-        values are class parameters in a sub-class, this method must be over-ridden.
+        values are class parameters in a sub-class, this method must be overridden.
         """
         self._shape = self._calculate_shape(*self._args)  # pylint: disable=no-member
 
@@ -293,10 +293,9 @@ class PyccelUnaryOperator(PyccelOperator):
     @staticmethod
     def _calculate_shape(arg):
         """
-        Calculate the shape and rank.
+        Calculate the shape.
 
-        Calculate the shape and rank.
-        They are chosen to match the argument
+        Calculate the shape. It is chosen to match the argument.
 
         Parameters
         ----------
@@ -305,10 +304,8 @@ class PyccelUnaryOperator(PyccelOperator):
 
         Returns
         -------
-        shape : tuple[TypedAstNode]
+        tuple[TypedAstNode]
             The shape of the resulting object.
-        rank : int
-            The rank of the resulting object.
         """
         return arg.shape
 
@@ -393,10 +390,9 @@ class PyccelNot(PyccelUnaryOperator):
     @staticmethod
     def _calculate_shape(arg):
         """
-        Calculate the shape and rank.
+        Calculate the shape.
 
-        Calculate the shape and rank.
-        They are chosen to match the argument
+        Calculate the shape. It is chosen to match the argument.
 
         Parameters
         ----------
@@ -405,10 +401,8 @@ class PyccelNot(PyccelUnaryOperator):
 
         Returns
         -------
-        shape : tuple[TypedAstNode]
+        tuple[TypedAstNode]
             The shape of the resulting object.
-        rank : int
-            The rank of the resulting object.
         """
         return None
 
@@ -496,11 +490,11 @@ class PyccelBinaryOperator(PyccelOperator):
     @staticmethod
     def _calculate_shape(arg1, arg2):
         """
-        Calculate the shape and rank.
+        Calculate the shape.
 
         Strings must be scalars.
 
-        For numeric types the rank and shape is determined according
+        For numeric types the shape is determined according
         to NumPy broadcasting rules where possible.
 
         Parameters
@@ -512,10 +506,8 @@ class PyccelBinaryOperator(PyccelOperator):
 
         Returns
         -------
-        shape : tuple[TypedAstNode]
+        tuple[TypedAstNode]
             The shape of the resulting object.
-        rank : int
-            The rank of the resulting object.
         """
         args = (arg1, arg2)
         strs = [a for a in args if isinstance(a.dtype, StringType)]
@@ -1129,10 +1121,10 @@ class PyccelBooleanOperator(PyccelOperator):
 
     def _set_shape(self):
         """
-        Set the shape and rank of the result of the operator.
+        Set the shape of the result of the operator.
 
-        Set the shape and rank of the result of the operator. Nothing needs
-        to be done here as the shape and rank are class variables.
+        Set the shape of the result of the operator. Nothing needs
+        to be done here as the shape is a class variable.
         """
 
 #==============================================================================
@@ -1375,7 +1367,10 @@ class IfTernaryOperator(PyccelOperator):
     @staticmethod
     def _calculate_shape(cond, value_true, value_false):
         """
-        Sets the shape and rank and the order for IfTernaryOperator
+        Calculate the shape of the result.
+
+        Calculate the shape of the result of the IfTernaryOperator.
+        The shape is equal to the shape of one of the outputs.
         """
         return value_true.shape
 
