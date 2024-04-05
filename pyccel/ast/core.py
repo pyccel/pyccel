@@ -106,9 +106,11 @@ __all__ = (
 
 
 class AsName(PyccelAstNode):
-
     """
-    Represents a renaming of a variable, used with Import.
+    Represents a renaming of an object, used with Import.
+
+    A class representing the renaming of an object such as a function or a
+    variable. This usually occurs during an Import.
 
     Examples
     --------
@@ -121,11 +123,11 @@ class AsName(PyccelAstNode):
     full as fill_func
 
     Parameters
-    ==========
-    obj    : PyccelAstNode or PyccelAstNodeType
-             The variable, function, or module being renamed
+    ----------
+    obj : PyccelAstNode or PyccelAstNodeType
+        The variable, function, or module being renamed.
     target : str
-             name of variable or function in this context
+        Name of variable or function in this context.
     """
     __slots__ = ('_obj', '_target')
     _attribute_nodes = ()
@@ -531,6 +533,8 @@ class Allocate(PyccelAstNode):
 #------------------------------------------------------------------------------
 class Deallocate(PyccelAstNode):
     """
+    Class representing memory deallocation.
+
     Represents memory deallocation (usually of an array) for code generation.
     This is relevant to low-level target languages, such as C or Fortran,
     where the programmer must take care of heap memory deallocation.
@@ -544,7 +548,6 @@ class Deallocate(PyccelAstNode):
     -----
     An object of this class is immutable, although it contains a reference to a
     mutable Variable object.
-
     """
     __slots__ = ('_variable',)
     _attribute_nodes = ('_variable',)
@@ -767,7 +770,7 @@ class SymbolicAssign(PyccelAstNode):
         super().__init__()
 
     def __str__(self):
-        return f'{self.lhs} := {self.rhs}'
+        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
     @property
     def lhs(self):
@@ -3708,19 +3711,23 @@ class ClassDef(ScopedAstNode):
 
 
 class Import(PyccelAstNode):
+    """
+    Represents inclusion of dependencies in the code.
 
-    """Represents inclusion of dependencies in the code.
+    Represents the importation of targets from another source code. This is
+    usually used to represent an import statement in the original code but
+    it is also used to import language/library specific dependencies.
 
     Parameters
     ----------
     source : str, DottedName, AsName
-        the module from which we import
+        The module from which we import.
     target : str, AsName, list, tuple
-        targets to import
+        Targets to import.
     ignore_at_print : bool
-        indicates whether the import should be printed
+        Indicates whether the import should be printed.
     mod : Module
-        The module describing the source
+        The module describing the source.
 
     Examples
     --------
@@ -3769,6 +3776,28 @@ class Import(PyccelAstNode):
 
     @staticmethod
     def _format(i):
+        """
+        Format a string passed to this file into a Pyccel object.
+
+        Format a string passed to this file into a Pyccel object or confirm
+        that it is already correctly formatted.
+
+        Parameters
+        ----------
+        i : obj
+            The object to be formatted.
+
+        Returns
+        -------
+        DottedName | PyccelSymbol | AsName
+            The formatted object.
+
+        Raises
+        ------
+        TypeError
+            Raised if the input is not a string or one of the acceptable
+            output types.
+        """
         if isinstance(i, str):
             if '.' in i:
                 return DottedName(*i.split('.'))
