@@ -632,13 +632,32 @@ class NumpyNewArray(PyccelInternalFunction):
     #--------------------------------------------------------------------------
     @staticmethod
     def _process_order(rank, order):
+        """
+        Process the order to get an order in the format expected by Pyccel.
+
+        Process the order passed to the array creation function to get an order
+        in the format expected by Pyccel. The final format should be a string
+        containing either 'C' or 'F'.
+
+        Parameters
+        ----------
+        rank : int
+            The rank of the array being created.
+        order : str | LiteralString
+            The order of the array as specified by the user or the subclass.
+
+        Returns
+        -------
+        str | None
+            The order in the format expected by Pyccel.
+        """
 
         if rank < 2:
             return None
 
         order = str(order).strip('\'"')
         if order not in ('C', 'F'):
-            raise ValueError(f'unrecognized order = {order}')
+            raise TypeError(f'unrecognized order = {order}')
         return order
 
 #==============================================================================
@@ -724,7 +743,7 @@ class NumpyArray(NumpyNewArray):
             order = str(order).strip("\'")
 
             if order not in ('K', 'A', 'C', 'F'):
-                raise ValueError(f"Cannot recognize '{order}' order")
+                raise TypeError(f"Cannot recognize '{order}' order")
 
             if order in ('K', 'A'):
                 order = arg.order or 'C'

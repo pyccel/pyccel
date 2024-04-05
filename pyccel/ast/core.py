@@ -4424,13 +4424,15 @@ class IfSection(PyccelAstNode):
         return f"IfSec({self.condition}, {self.body})"
 
 class If(PyccelAstNode):
+    """
+    Represents an if statement in the code.
 
-    """Represents a if statement in the code.
+    Represents an if statement in the code.
 
     Parameters
     ----------
-    args : IfSection
-           All arguments are sections of the complete If block
+    *args : IfSection
+        All arguments are sections of the complete If block.
 
     Examples
     --------

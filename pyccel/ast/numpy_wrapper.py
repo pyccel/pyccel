@@ -60,11 +60,18 @@ class PyccelPyArrayObject(FixedSizeType):
 
 def get_numpy_max_acceptable_version_file():
     """
+    Get the macro specifying the last acceptable numpy version.
+
     Get the macro specifying the last acceptable numpy version. If numpy is more
     recent than this then deprecation warnings are shown.
 
     The last acceptable numpy version is 1.19. If the current version is older
-    than this then the last acceptable numpy version is the current version
+    than this then the last acceptable numpy version is the current version.
+
+    Returns
+    -------
+    str
+        A string containing the code which defines the macro.
     """
     numpy_max_acceptable_version = [1, 19]
     numpy_current_version = [int(v) for v in np.version.version.split('.')[:2]]
