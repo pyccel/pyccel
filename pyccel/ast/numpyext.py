@@ -665,6 +665,7 @@ class NumpyArray(NumpyNewArray):
             is_homogeneous_tuple = isinstance(arg.dtype, FixedSizeNumericType) and len(set(a.rank for a in arg))
             if not isinstance(arg, PythonTuple):
                 arg = PythonTuple(*arg)
+            is_homogeneous_tuple = is_homogeneous_tuple or arg.is_homogeneous
 
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
         if not (is_homogeneous_tuple or isinstance(arg.class_type, HomogeneousContainerType)):
