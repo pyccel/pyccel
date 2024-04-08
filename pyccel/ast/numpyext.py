@@ -662,9 +662,9 @@ class NumpyArray(NumpyNewArray):
         is_homogeneous_tuple = isinstance(arg.class_type, HomogeneousTupleType)
         # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
         if isinstance(arg.class_type, InhomogeneousTupleType):
+            is_homogeneous_tuple = isinstance(arg.dtype, FixedSizeNumericType) and len(set(a.rank for a in arg))
             if not isinstance(arg, PythonTuple):
                 arg = PythonTuple(*arg)
-            is_homogeneous_tuple = arg.is_homogeneous
 
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
         if not (is_homogeneous_tuple or isinstance(arg.class_type, HomogeneousContainerType)):
