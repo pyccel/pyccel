@@ -1,5 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import array
 
 #$ header function qsort_kernel(double[:],int,int)
 def qsort_kernel ( a , lo , hi ) :
@@ -24,6 +23,7 @@ def qsort_kernel ( a , lo , hi ) :
         j = hi
 
 if __name__ == '__main__':
+    from numpy import array
 
     x = array([0.66, 0.96, 0.06, 0.89, 0.57, 0.56, 0.08, 0.33, 0.04, 0.59])
     qsort_kernel(x,0,9)

@@ -1,7 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import zeros
 
-def pdf (density : 'float[:,:]', x_range : 'int', y_range : 'int', x_center : 'float', y_center : 'float', w2D : 'float[:,:]', r50 : 'float', b : 'float', a : 'float') :
+def pdf (density : 'double[:,:]', x_range : 'int', y_range : 'int', x_center : 'double', y_center : 'double', w2D : 'double[:,:]', r50 : 'double', b : 'double', a : 'double') :
     from numpy import sqrt, pi, sum as np_sum
     for x in range ( x_range ) :
         for y in range ( y_range ) :
@@ -10,6 +9,7 @@ def pdf (density : 'float[:,:]', x_range : 'int', y_range : 'int', x_center : 'f
             density [ x , y ] = tmp * np_sum(w2D)
 
 if __name__ == '__main__':
+    from numpy import zeros
 
     w2D = zeros([7,7])
     x_range = 2

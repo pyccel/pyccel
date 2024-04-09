@@ -1,5 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import numpy as np
 from pyccel.decorators import pure
 
 @pure
@@ -13,6 +12,7 @@ def add_2(a : 'double[:]', b : 'double[:]'):
     b[:] = b[:] + a[:]
 
 if __name__ == '__main__':
+    import numpy as np
 
     x = np.ones(4)
     y = np.full_like(x,6)

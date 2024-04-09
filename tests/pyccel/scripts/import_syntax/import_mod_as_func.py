@@ -1,7 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import numpy as np
 
-def matmat(a : 'float[:,:]', b : 'float[:,:]', c : 'float[:,:]'):
+#$ header function matmat(double [:, :], double [:, :], double [:, :])
+def matmat(a, b, c):
+    import numpy as np #pylint: disable=W0404
     n, m = np.shape(a)
     m, p = np.shape(b)
 
@@ -11,6 +12,8 @@ def matmat(a : 'float[:,:]', b : 'float[:,:]', c : 'float[:,:]'):
                 c[i, j] = c[i, j] + a[i, k]*b[k, j]
 
 if __name__ == '__main__':
+    import numpy as np #pylint: disable=W0404
+
     n = 3
     m = 4
     p = 3
