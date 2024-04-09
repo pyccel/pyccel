@@ -1843,7 +1843,7 @@ class CCodePrinter(CodePrinter):
         start = self._print(expr.start)
         step  = self._print(expr.step)
         index = self._print(expr.ind)
-        stop = self._cast_to(expr.stop, expr.dtype, expr.precision).format(self._print(expr.stop))
+        stop = self._cast_to(expr.stop, expr.dtype).format(self._print(expr.stop))
 
         init_value = f'({start} + {index}*{step})'
         if not isinstance(expr.endpoint, LiteralFalse):
