@@ -4637,7 +4637,7 @@ def test_dtype_conversion_to_complex128_from_other_types(language):
     assert epyccel_func(cmplx64) == arrays.dtype_convert_to_cdouble(cmplx64)
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_cdouble(cmplx128)
 
-    
+
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
@@ -4785,7 +4785,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(cmplx128_1, cmplx128_2, cmplx128_3)
 
-    
+
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
@@ -4858,7 +4858,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(cmplx128_1, cmplx128_2, cmplx128_3)
 
-    
+
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
@@ -5003,7 +5003,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(cmplx128_1, cmplx128_2, cmplx128_3)
 
-    
+
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
@@ -5290,7 +5290,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(cmplx128_1, cmplx128_2, cmplx128_3)
 
-    
+
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
     size = (1,2)
 
