@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   \[TESTS\] Filter out cast warnings in cast tests.
 -   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
 -   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
 
