@@ -18,7 +18,7 @@ For scalar variables Pyccel supports the following data types:
 
 -   built-in data types: `bool`, `int`, `float`, `complex`
 -   NumPy integer types: `int8`, `int16`, `int32`, `int64`
--   NumPy real types: `float32`, `float64`, `double`
+-   NumPy floating point types: `float32`, `float64`, `double`
 -   NumPy complex types: `complex64`, `complex128`
 
 ## NumPy Arrays
