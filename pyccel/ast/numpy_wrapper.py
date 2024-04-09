@@ -60,13 +60,13 @@ class PyccelPyArrayObject(FixedSizeType):
 
 def get_numpy_max_acceptable_version_file():
     """
-    Get the macro specifying the last acceptable numpy version.
+    Get the macro specifying the most recent acceptable NumPy version.
 
-    Get the macro specifying the last acceptable numpy version. If numpy is more
-    recent than this then deprecation warnings are shown.
+    Get the macro specifying the most recent acceptable NumPy version.
+    If NumPy is more recent than this then deprecation warnings are shown.
 
-    The last acceptable numpy version is 1.19. If the current version is older
-    than this then the last acceptable numpy version is the current version.
+    The most recent acceptable NumPy version is 1.19. If the current version is older
+    than this then the last acceptable NumPy version is the current version.
 
     Returns
     -------
@@ -88,14 +88,14 @@ PyArray_Check = FunctionDef(name      = 'PyArray_Check',
                             arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o'))],
                             results   = [FunctionDefResult(Variable(PythonNativeBool(), name='b'))])
 
-# numpy array to c ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
+# NumPy array to c ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_to_ndarray = FunctionDef(
                 name      = 'pyarray_to_ndarray',
                 arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling = 'alias'))],
                 body      = [],
                 results   = [FunctionDefResult(Variable(NumpyNDArrayType(GenericType()), 'array'))])
 
-# numpy array check elements : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
+# NumPy array check elements : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_check = FunctionDef(
                 name      = 'pyarray_check',
                 arguments = [
@@ -219,7 +219,7 @@ numpy_dtype_registry = {PythonNativeBool()    : numpy_bool_type,
                         NumpyComplex128Type() : numpy_cdouble_type,
                         NumpyComplex256Type() : numpy_clongdouble_type}
 
-# Needed to check for numpy arguments type
+# Needed to check for NumPy arguments type
 check_type_registry.update({
     NumpyInt8Type()       : 'PyIs_Int8',
     NumpyInt16Type()      : 'PyIs_Int16',
