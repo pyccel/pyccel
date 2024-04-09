@@ -714,10 +714,14 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
     *args : tuple of DataTypes
         The datatypes stored in the inhomogeneous tuple.
     """
-    __slots__ = ('_element_types',)
+    __slots__ = ('_element_types', '_datatype')
 
     def __init__(self, *args):
         self._element_types = args
+
+        possible_types = set(t.datatype for t in self._element_types)
+        dtype = possible_types.pop()
+        self._datatype = dtype if all(d == dtype for d in possible_types) else self
         super().__init__()
 
     def __str__(self):
@@ -758,12 +762,7 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         of the tuple unless the tuple is comprised of containers which are all based on
         compatible data types. In this case one of the underlying types is returned.
         """
-        possible_types = set(t.datatype for t in self._element_types)
-        dtype = possible_types.pop()
-        if all(d == dtype for d in possible_types):
-            return dtype
-        else:
-            return self
+        return self._datatype
 
 class DictType(ContainerType, metaclass = ArgumentSingleton):
     """
