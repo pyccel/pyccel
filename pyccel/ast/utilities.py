@@ -494,14 +494,14 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             # Loop over indexes, inserting until the expression can be evaluated
             # in the desired language
             new_level = 0
-            for index in range(-rank,0):
+            for index_depth in range(-rank,0):
                 new_level += 1
                 # If an index exists at the same depth, reuse it if not create one
-                if rank+index >= len(indices):
+                if rank+index_depth >= len(indices):
                     indices.append(new_index(PythonNativeInt(),'i'))
-                index_var = indices[rank+index]
-                new_vars = [insert_index(v, index, index_var) for v in new_vars]
-                handled_funcs = [insert_index(v, index, index_var) for v in handled_funcs]
+                index = indices[rank+index_depth]
+                new_vars = [insert_index(v, index_depth, index) for v in new_vars]
+                handled_funcs = [insert_index(v, index_depth, index) for v in handled_funcs]
                 if compatible_operation(*new_vars, *handled_funcs, language_has_vectors = language_has_vectors):
                     break
 
@@ -545,12 +545,12 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             lhs = line.lhs
             rhs = line.rhs
             if lhs.rank > rhs.rank:
-                for index in range(lhs.rank-rhs.rank):
+                for index_depth in range(lhs.rank-rhs.rank):
                     # If an index exists at the same depth, reuse it if not create one
-                    if index >= len(indices):
+                    if index_depth >= len(indices):
                         indices.append(new_index(PythonNativeInt(), 'i'))
-                    index_var = indices[index]
-                    lhs = insert_index(lhs, index, index_var)
+                    index = indices[index_depth]
+                    lhs = insert_index(lhs, index_depth, index)
                 collect_loops([Assign(lhs, rhs)], indices, new_index, language_has_vectors, result = result)
 
             elif not language_has_vectors:
