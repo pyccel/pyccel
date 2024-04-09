@@ -1349,9 +1349,7 @@ class Program(ScopedAstNode):
             if not isinstance(i, Variable):
                 raise TypeError('Only a Variable instance is allowed.')
 
-        if not iterable(body):
-            raise TypeError('body must be an iterable')
-        body = CodeBlock(body)
+        assert isinstance(body, CodeBlock)
 
         if not iterable(imports):
             raise TypeError('imports must be an iterable')

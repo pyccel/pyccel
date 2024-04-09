@@ -2211,12 +2211,14 @@ class SemanticParser(BasicParser):
             container = prog_scope.imports
             container['imports'][mod_name] = Import(mod_name, mod)
 
-            program_body = []
+            body = []
             if init_func:
                 import_init  = FunctionCall(init_func,[],[])
-                program_body = [import_init]
+                body = [import_init]
 
-            program_body += self._visit(expr.program.body).body
+            body += self._visit(expr.program.body).body
+
+            program_body = CodeBlock(body)
 
             # Calling the Garbage collecting,
             # it will add the necessary Deallocate nodes
@@ -2225,13 +2227,13 @@ class SemanticParser(BasicParser):
 
             if free_func:
                 import_free  = FunctionCall(free_func,[],[])
-                program_body.append(import_free)
+                program_body.insert2body(import_free)
 
             self.scope = mod_scope
             program = Program(prog_name,
-                            self.get_variables(container),
+                            self.get_variables(prog_scope),
                             program_body,
-                            container.imports['imports'].values(),
+                            container['imports'].values(),
                             scope=prog_scope)
 
             mod.program = program
