@@ -494,11 +494,11 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             # Loop over indexes, inserting until the expression can be evaluated
             # in the desired language
             new_level = 0
-            for index_depth in range(-rank,0):
+            for index_depth in range(-rank, 0):
                 new_level += 1
                 # If an index exists at the same depth, reuse it if not create one
                 if rank+index_depth >= len(indices):
-                    indices.append(new_index(PythonNativeInt(),'i'))
+                    indices.append(new_index(PythonNativeInt(), 'i'))
                 index = indices[rank+index_depth]
                 new_vars = [insert_index(v, index_depth, index) for v in new_vars]
                 handled_funcs = [insert_index(v, index_depth, index) for v in handled_funcs]
