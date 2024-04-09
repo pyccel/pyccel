@@ -1279,20 +1279,29 @@ class ModuleHeader(PyccelAstNode):
         return self._module
 
 class Program(ScopedAstNode):
+    """
+    Represents a Program in the code.
 
-    """Represents a Program in the code. A block consists of the following inputs
+    A class representing a program in the code. A program is a set of statements
+    that are executed when the module is run directly. In Python these statements
+    are located in an `if __name__ == '__main__':` block.
 
     Parameters
     ----------
-    variables: list
-        list of the variables that appear in the block.
+    name : str
+        The name used to identify the program (this is used for printing in Fortran).
 
-    body: list
-        a list of statements
+    variables : list[Variable]
+        A list of the variables that appear in the program.
 
-    imports: list, tuple
-        list of needed imports
+    body : Iterable[PyccelAstNode]
+        An iterable object containing the statements in the body of the program.
 
+    imports : Iterable[Import]
+        An iterable object containing the imports used by the program.
+
+    scope : Scope
+        The scope of the program.
     """
     __slots__ = ('_name', '_variables', '_body', '_imports')
     _attribute_nodes = ('_variables', '_body', '_imports')
