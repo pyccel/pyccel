@@ -1859,11 +1859,6 @@ class CCodePrinter(CodePrinter):
 
         v = self._cast_to(expr.stop, expr.dtype).format(self._print(expr.stop))
 
-        init_value = template.format(
-            start = self._print(expr.start),
-            step  = self._print(expr.step),
-            index = self._print(expr.ind),
-        )
         if isinstance(expr.endpoint, LiteralFalse):
             code = init_value
         else:
