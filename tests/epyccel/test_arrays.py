@@ -3506,7 +3506,7 @@ def test_copy_to_slice_1(language):
 
     pyth_a = np.arange(10, dtype=float)
     epyc_a = pyth_a.copy()
-    b = np.arange(20,28, dtype=float)
+    b = np.arange(20, 28, dtype=float)
     pyth_f(pyth_a, b)
     epyc_f(epyc_a, b)
     check_array_equal(pyth_a, epyc_a)
@@ -3515,9 +3515,9 @@ def test_copy_to_slice_2(language):
     pyth_f = arrays.copy_to_slice_2
     epyc_f = epyccel(pyth_f, language = language)
 
-    pyth_a = np.arange(20, dtype=float).reshape(2,10)
+    pyth_a = np.arange(20, dtype=float).reshape(2, 10)
     epyc_a = pyth_a.copy()
-    b = np.arange(20,28, dtype=float)
+    b = np.arange(20, 28, dtype=float)
     pyth_f(pyth_a, b)
     epyc_f(epyc_a, b)
     check_array_equal(pyth_a, epyc_a)
@@ -3526,9 +3526,9 @@ def test_copy_to_slice_3(language):
     pyth_f = arrays.copy_to_slice_3
     epyc_f = epyccel(pyth_f, language = language)
 
-    pyth_a = np.arange(20, dtype=float).reshape(4,5)
+    pyth_a = np.arange(20, dtype=float).reshape(4, 5)
     epyc_a = pyth_a.copy()
-    b = np.arange(20,24, dtype=float)
+    b = np.arange(20, 24, dtype=float)
     pyth_f(pyth_a, b)
     epyc_f(epyc_a, b)
     check_array_equal(pyth_a, epyc_a)
@@ -3539,7 +3539,7 @@ def test_copy_to_slice_4(language):
 
     pyth_a = np.arange(10, dtype=float)
     epyc_a = pyth_a.copy()
-    b = np.arange(20,25, dtype=float)
+    b = np.arange(20, 25, dtype=float)
     pyth_f(pyth_a, b)
     epyc_f(epyc_a, b)
     check_array_equal(pyth_a, epyc_a)

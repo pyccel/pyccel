@@ -1589,17 +1589,17 @@ def copy_to_slice_issue_1218(n : int):
     from numpy import zeros, array
     x = 1
     arr = zeros((2, n))
-    arr[0:x,0:6:2] = array([2,5,6])
+    arr[0:x, 0:6:2] = array([2, 5, 6])
     return arr
 
 def copy_to_slice_1(a : 'float[:]', b : 'float[:]'):
     a[1:-1] = b
 
 def copy_to_slice_2(a : 'float[:,:]', b : 'float[:]'):
-    a[:,1:-1] = b
+    a[:, 1:-1] = b
 
 def copy_to_slice_3(a : 'float[:,:]', b : 'float[:]'):
-    a[:,0] = b
+    a[:, 0] = b
 
 def copy_to_slice_4(a : 'float[:]', b : 'float[:]'):
     a[::2] = b

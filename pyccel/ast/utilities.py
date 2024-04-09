@@ -548,10 +548,10 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 for index in range(lhs.rank-rhs.rank):
                     # If an index exists at the same depth, reuse it if not create one
                     if index >= len(indices):
-                        indices.append(new_index(PythonNativeInt(),'i'))
+                        indices.append(new_index(PythonNativeInt(), 'i'))
                     index_var = indices[index]
                     lhs = insert_index(lhs, index, index_var)
-                collect_loops([Assign(lhs,rhs)], indices, new_index, language_has_vectors, result = result)
+                collect_loops([Assign(lhs, rhs)], indices, new_index, language_has_vectors, result = result)
 
             elif not language_has_vectors:
                 if isinstance(rhs, NumpyArray):
