@@ -21,6 +21,7 @@ def check_array_equal(a, b):
     assert a.dtype is b.dtype
     assert a.flags.c_contiguous == b.flags.c_contiguous
     assert a.flags.f_contiguous == b.flags.f_contiguous
+
 #==============================================================================
 # TEST: VERIFY ARRAY'S DTYPE CORRESPONDENCE TO THE PASSED ELEMENTS
 #==============================================================================
@@ -99,6 +100,7 @@ def test_array_int32_1d_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_1d_scalar_add_stride(language):
 
     f1 = arrays.array_int32_1d_scalar_add
@@ -112,6 +114,7 @@ def test_array_int32_1d_scalar_add_stride(language):
     f2(x2[::3], a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_1d_scalar_sub(language):
 
@@ -127,6 +130,7 @@ def test_array_int32_1d_scalar_sub(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_1d_scalar_sub_stride(language):
 
     f1 = arrays.array_int32_1d_scalar_sub
@@ -140,6 +144,7 @@ def test_array_int32_1d_scalar_sub_stride(language):
     f2(x2[::2], a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_1d_scalar_mul(language):
 
@@ -155,6 +160,7 @@ def test_array_int32_1d_scalar_mul(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_1d_scalar_mul_stride(language):
 
     f1 = arrays.array_int32_1d_scalar_mul
@@ -168,6 +174,7 @@ def test_array_int32_1d_scalar_mul_stride(language):
     f2(x2[3:7:2], a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_1d_scalar_div(language):
 
@@ -183,6 +190,7 @@ def test_array_int32_1d_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_1d_scalar_idiv(language):
 
     f1 = arrays.array_int32_1d_scalar_idiv
@@ -196,6 +204,7 @@ def test_array_int32_1d_scalar_idiv(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_1d_scalar_idiv_stride(language):
 
@@ -211,6 +220,7 @@ def test_array_int32_1d_scalar_idiv_stride(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_1d_add(language):
 
     f1 = arrays.array_int32_1d_add
@@ -224,6 +234,7 @@ def test_array_int32_1d_add(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_1d_sub(language):
 
@@ -239,6 +250,7 @@ def test_array_int32_1d_sub(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_1d_mul(language):
 
     f1 = arrays.array_int32_1d_mul
@@ -252,6 +264,7 @@ def test_array_int32_1d_mul(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_1d_idiv(language):
 
@@ -267,6 +280,7 @@ def test_array_int32_1d_idiv(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_1d_add_augassign(language):
 
     f1 = arrays.array_int32_1d_add_augassign
@@ -280,6 +294,7 @@ def test_array_int32_1d_add_augassign(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_1d_sub_augassign(language):
 
@@ -295,12 +310,14 @@ def test_array_int32_1d_sub_augassign(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_1d_initialization_1(language):
 
     f1 = arrays.array_int_1d_initialization_1
     f2 = epyccel( f1 , language = language)
 
     assert f1() == f2()
+
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -317,6 +334,7 @@ def test_array_int_1d_initialization_2(language):
     f2 = epyccel( f1 , language = language)
 
     assert f1() == f2()
+
 
 def test_array_int_1d_initialization_3(language):
 
@@ -343,6 +361,7 @@ def test_array_int32_2d_C_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_2d_C_scalar_add_stride(language):
 
     f1 = arrays.array_int32_2d_C_scalar_add
@@ -357,6 +376,7 @@ def test_array_int32_2d_C_scalar_add_stride(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_2d_C_scalar_sub(language):
 
     f1 = arrays.array_int32_2d_C_scalar_sub
@@ -370,6 +390,7 @@ def test_array_int32_2d_C_scalar_sub(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -395,6 +416,7 @@ def test_array_int32_2d_C_scalar_sub_stride(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_2d_C_scalar_mul(language):
 
     f1 = arrays.array_int32_2d_C_scalar_mul
@@ -408,6 +430,7 @@ def test_array_int32_2d_C_scalar_mul(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_2d_C_scalar_mul_stride(language):
 
@@ -423,6 +446,7 @@ def test_array_int32_2d_C_scalar_mul_stride(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_2d_C_scalar_idiv(language):
 
     f1 = arrays.array_int32_2d_C_scalar_idiv
@@ -436,6 +460,7 @@ def test_array_int32_2d_C_scalar_idiv(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -461,6 +486,7 @@ def test_array_int32_2d_C_scalar_idiv_stride(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_2d_C_add(language):
 
     f1 = arrays.array_int32_2d_C_add
@@ -474,6 +500,7 @@ def test_array_int32_2d_C_add(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_2d_C_sub(language):
 
@@ -489,6 +516,7 @@ def test_array_int32_2d_C_sub(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_2d_C_mul(language):
 
     f1 = arrays.array_int32_2d_C_mul
@@ -502,6 +530,7 @@ def test_array_int32_2d_C_mul(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_2d_C_idiv(language):
 
@@ -535,6 +564,7 @@ def test_array_int32_2d_F_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
@@ -559,6 +589,7 @@ def test_array_int32_2d_F_scalar_add_stride(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_2d_F_scalar_sub(language):
 
     f1 = arrays.array_int32_2d_F_scalar_sub
@@ -572,6 +603,7 @@ def test_array_int32_2d_F_scalar_sub(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -597,6 +629,7 @@ def test_array_int32_2d_F_scalar_sub_stride(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_2d_F_scalar_mul(language):
 
     f1 = arrays.array_int32_2d_F_scalar_mul
@@ -610,6 +643,7 @@ def test_array_int32_2d_F_scalar_mul(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_2d_F_scalar_idiv(language):
 
@@ -625,6 +659,7 @@ def test_array_int32_2d_F_scalar_idiv(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_2d_F_add(language):
 
     f1 = arrays.array_int32_2d_F_add
@@ -638,6 +673,7 @@ def test_array_int32_2d_F_add(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_2d_F_sub(language):
 
@@ -653,6 +689,7 @@ def test_array_int32_2d_F_sub(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_2d_F_mul(language):
 
     f1 = arrays.array_int32_2d_F_mul
@@ -666,6 +703,7 @@ def test_array_int32_2d_F_mul(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_2d_F_idiv(language):
 
@@ -700,6 +738,7 @@ def test_array_int_1d_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_1d_scalar_sub(language):
 
     f1 = arrays.array_int_1d_scalar_sub
@@ -713,6 +752,7 @@ def test_array_int_1d_scalar_sub(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int_1d_scalar_mul(language):
 
@@ -728,6 +768,7 @@ def test_array_int_1d_scalar_mul(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_1d_scalar_idiv(language):
 
     f1 = arrays.array_int_1d_scalar_idiv
@@ -741,6 +782,7 @@ def test_array_int_1d_scalar_idiv(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int_1d_add(language):
 
@@ -756,6 +798,7 @@ def test_array_int_1d_add(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_1d_sub(language):
 
     f1 = arrays.array_int_1d_sub
@@ -770,6 +813,7 @@ def test_array_int_1d_sub(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_1d_mul(language):
 
     f1 = arrays.array_int_1d_mul
@@ -783,6 +827,7 @@ def test_array_int_1d_mul(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int_1d_idiv(language):
 
@@ -816,6 +861,7 @@ def test_array_int_2d_C_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_2d_C_scalar_sub(language):
 
     f1 = arrays.array_int_2d_C_scalar_sub
@@ -829,6 +875,7 @@ def test_array_int_2d_C_scalar_sub(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int_2d_C_scalar_mul(language):
 
@@ -844,6 +891,7 @@ def test_array_int_2d_C_scalar_mul(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_2d_C_scalar_idiv(language):
 
     f1 = arrays.array_int_2d_C_scalar_idiv
@@ -857,6 +905,7 @@ def test_array_int_2d_C_scalar_idiv(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int_2d_C_add(language):
 
@@ -872,6 +921,7 @@ def test_array_int_2d_C_add(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_2d_C_sub(language):
 
     f1 = arrays.array_int_2d_C_sub
@@ -885,6 +935,7 @@ def test_array_int_2d_C_sub(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int_2d_C_mul(language):
 
@@ -900,6 +951,7 @@ def test_array_int_2d_C_mul(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_2d_C_idiv(language):
 
     f1 = arrays.array_int_2d_C_idiv
@@ -913,6 +965,7 @@ def test_array_int_2d_C_idiv(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int_2d_C_initialization(language):
 
@@ -945,6 +998,7 @@ def test_array_int_2d_F_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_2d_F_scalar_sub(language):
 
     f1 = arrays.array_int_2d_F_scalar_sub
@@ -958,6 +1012,7 @@ def test_array_int_2d_F_scalar_sub(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int_2d_F_scalar_mul(language):
 
@@ -973,6 +1028,7 @@ def test_array_int_2d_F_scalar_mul(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_2d_F_scalar_idiv(language):
 
     f1 = arrays.array_int_2d_F_scalar_idiv
@@ -986,6 +1042,7 @@ def test_array_int_2d_F_scalar_idiv(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int_2d_F_add(language):
 
@@ -1001,6 +1058,7 @@ def test_array_int_2d_F_add(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_2d_F_sub(language):
 
     f1 = arrays.array_int_2d_F_sub
@@ -1014,6 +1072,7 @@ def test_array_int_2d_F_sub(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int_2d_F_mul(language):
 
@@ -1029,6 +1088,7 @@ def test_array_int_2d_F_mul(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int_2d_F_idiv(language):
 
     f1 = arrays.array_int_2d_F_idiv
@@ -1042,6 +1102,7 @@ def test_array_int_2d_F_idiv(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int_2d_F_initialization(language):
 
@@ -1074,6 +1135,7 @@ def test_array_float_1d_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_1d_scalar_sub(language):
 
     f1 = arrays.array_float_1d_scalar_sub
@@ -1087,6 +1149,7 @@ def test_array_float_1d_scalar_sub(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_float_1d_scalar_mul(language):
 
@@ -1102,6 +1165,7 @@ def test_array_float_1d_scalar_mul(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_1d_scalar_div(language):
 
     f1 = arrays.array_float_1d_scalar_div
@@ -1116,6 +1180,7 @@ def test_array_float_1d_scalar_div(language):
 
     assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
+
 def test_array_float_1d_scalar_mod(language):
     f1 = arrays.array_float_1d_scalar_mod
     f2 = epyccel( f1 , language = language)
@@ -1128,6 +1193,7 @@ def test_array_float_1d_scalar_mod(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_float_1d_scalar_idiv(language):
 
@@ -1143,6 +1209,7 @@ def test_array_float_1d_scalar_idiv(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_1d_add(language):
 
     f1 = arrays.array_float_1d_add
@@ -1156,6 +1223,7 @@ def test_array_float_1d_add(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_float_1d_sub(language):
 
@@ -1171,6 +1239,7 @@ def test_array_float_1d_sub(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_1d_mul(language):
 
     f1 = arrays.array_float_1d_mul
@@ -1184,6 +1253,7 @@ def test_array_float_1d_mul(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_float_1d_div(language):
 
@@ -1199,6 +1269,7 @@ def test_array_float_1d_div(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_1d_mod(language):
 
     f1 = arrays.array_float_1d_mod
@@ -1212,6 +1283,7 @@ def test_array_float_1d_mod(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2)
+
 
 def test_array_float_1d_idiv(language):
 
@@ -1245,6 +1317,7 @@ def test_array_float_2d_C_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_C_scalar_sub(language):
 
     f1 = arrays.array_float_2d_C_scalar_sub
@@ -1258,6 +1331,7 @@ def test_array_float_2d_C_scalar_sub(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_float_2d_C_scalar_mul(language):
 
@@ -1273,6 +1347,7 @@ def test_array_float_2d_C_scalar_mul(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_C_scalar_div(language):
 
     f1 = arrays.array_float_2d_C_scalar_div
@@ -1286,6 +1361,7 @@ def test_array_float_2d_C_scalar_div(language):
     f2(x2, a)
 
     assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
+
 
 def test_array_float_2d_C_scalar_mod(language):
 
@@ -1301,6 +1377,7 @@ def test_array_float_2d_C_scalar_mod(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_C_add(language):
 
     f1 = arrays.array_float_2d_C_add
@@ -1314,6 +1391,7 @@ def test_array_float_2d_C_add(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_float_2d_C_sub(language):
 
@@ -1329,6 +1407,7 @@ def test_array_float_2d_C_sub(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_C_mul(language):
 
     f1 = arrays.array_float_2d_C_mul
@@ -1342,6 +1421,7 @@ def test_array_float_2d_C_mul(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_float_2d_C_div(language):
 
@@ -1357,6 +1437,7 @@ def test_array_float_2d_C_div(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_C_mod(language):
 
     f1 = arrays.array_float_2d_C_mod
@@ -1371,6 +1452,7 @@ def test_array_float_2d_C_mod(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_C_array_initialization(language):
 
     f1 = arrays.array_float_2d_C_array_initialization
@@ -1383,6 +1465,7 @@ def test_array_float_2d_C_array_initialization(language):
     f2(x2)
 
     assert np.array_equal(x1, x2)
+
 
 def test_array_float_3d_C_array_initialization_1(language):
 
@@ -1401,6 +1484,7 @@ def test_array_float_3d_C_array_initialization_1(language):
 
     assert np.array_equal(x1, x2)
 
+
 def test_array_float_3d_C_array_initialization_2(language):
 
     f1 = arrays.array_float_3d_C_array_initialization_2
@@ -1413,6 +1497,7 @@ def test_array_float_3d_C_array_initialization_2(language):
     f2(x2)
 
     assert np.array_equal(x1, x2)
+
 
 def test_array_float_4d_C_array_initialization(language):
 
@@ -1430,6 +1515,7 @@ def test_array_float_4d_C_array_initialization(language):
     f2(x, y, x2)
 
     assert np.array_equal(x1, x2)
+
 #==============================================================================
 # TEST: 2D ARRAYS OF REAL WITH F ORDERING
 #==============================================================================
@@ -1448,6 +1534,7 @@ def test_array_float_2d_F_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_F_scalar_sub(language):
 
     f1 = arrays.array_float_2d_F_scalar_sub
@@ -1461,6 +1548,7 @@ def test_array_float_2d_F_scalar_sub(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_float_2d_F_scalar_mul(language):
 
@@ -1476,6 +1564,7 @@ def test_array_float_2d_F_scalar_mul(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_F_scalar_div(language):
 
     f1 = arrays.array_float_2d_F_scalar_div
@@ -1489,6 +1578,7 @@ def test_array_float_2d_F_scalar_div(language):
     f2(x2, a)
 
     assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
+
 
 def test_array_float_2d_F_scalar_mod(language):
 
@@ -1504,6 +1594,7 @@ def test_array_float_2d_F_scalar_mod(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_F_add(language):
 
     f1 = arrays.array_float_2d_F_add
@@ -1517,6 +1608,7 @@ def test_array_float_2d_F_add(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_float_2d_F_sub(language):
 
@@ -1532,6 +1624,7 @@ def test_array_float_2d_F_sub(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_F_mul(language):
 
     f1 = arrays.array_float_2d_F_mul
@@ -1545,6 +1638,7 @@ def test_array_float_2d_F_mul(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_float_2d_F_div(language):
 
@@ -1560,6 +1654,7 @@ def test_array_float_2d_F_div(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_F_mod(language):
 
     f1 = arrays.array_float_2d_F_mod
@@ -1574,6 +1669,7 @@ def test_array_float_2d_F_mod(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_F_array_initialization(language):
 
     f1 = arrays.array_float_2d_F_array_initialization
@@ -1586,6 +1682,7 @@ def test_array_float_2d_F_array_initialization(language):
     f2(x2)
 
     assert np.array_equal(x1, x2)
+
 
 def test_array_float_3d_F_array_initialization_1(language):
 
@@ -1604,6 +1701,7 @@ def test_array_float_3d_F_array_initialization_1(language):
 
     assert np.array_equal(x1, x2)
 
+
 def test_array_float_3d_F_array_initialization_2(language):
 
     f1 = arrays.array_float_3d_F_array_initialization_2
@@ -1616,6 +1714,7 @@ def test_array_float_3d_F_array_initialization_2(language):
     f2(x2)
 
     assert np.array_equal(x1, x2)
+
 
 def test_array_float_4d_F_array_initialization(language):
 
@@ -1633,6 +1732,7 @@ def test_array_float_4d_F_array_initialization(language):
     f2(x, y, x2)
 
     assert np.array_equal(x1, x2)
+
 
 @pytest.mark.xfail(reason='Inhomogeneous arguments due to unknown shape')
 def test_array_float_4d_F_array_initialization_mixed_ordering(language):
@@ -1656,10 +1756,10 @@ def test_array_float_4d_F_array_initialization_mixed_ordering(language):
     f2(x, x2)
 
     assert np.array_equal(x1, x2)
+
 #==============================================================================
 # TEST: COMPLEX EXPRESSIONS IN 3D : TEST CONSTANT AND UNKNOWN SHAPES
 #==============================================================================
-
 
 def test_array_int32_1d_complex_3d_expr(language):
 
@@ -1675,6 +1775,7 @@ def test_array_int32_1d_complex_3d_expr(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_2d_C_complex_3d_expr(language):
 
     f1 = arrays.array_int32_2d_C_complex_3d_expr
@@ -1689,6 +1790,7 @@ def test_array_int32_2d_C_complex_3d_expr(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_int32_2d_F_complex_3d_expr(language):
 
     f1 = arrays.array_int32_2d_F_complex_3d_expr
@@ -1702,6 +1804,7 @@ def test_array_int32_2d_F_complex_3d_expr(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_int32_in_bool_out_1d_complex_3d_expr(language):
 
@@ -1718,6 +1821,7 @@ def test_array_int32_in_bool_out_1d_complex_3d_expr(language):
 
     assert np.array_equal( r1, r2 )
 
+
 def test_array_int32_in_bool_out_2d_C_complex_3d_expr(language):
 
     f1 = arrays.array_int32_in_bool_out_2d_C_complex_3d_expr
@@ -1732,6 +1836,7 @@ def test_array_int32_in_bool_out_2d_C_complex_3d_expr(language):
     f2(x, a, r2)
 
     assert np.array_equal( r1, r2 )
+
 
 def test_array_int32_in_bool_out_2d_F_complex_3d_expr(language):
 
@@ -1748,6 +1853,7 @@ def test_array_int32_in_bool_out_2d_F_complex_3d_expr(language):
 
     assert np.array_equal( r1, r2 )
 
+
 def test_array_float_1d_complex_3d_expr(language):
 
     f1 = arrays.array_float_1d_complex_3d_expr
@@ -1762,6 +1868,7 @@ def test_array_float_1d_complex_3d_expr(language):
 
     assert np.array_equal( x1, x2 )
 
+
 def test_array_float_2d_C_complex_3d_expr(language):
 
     f1 = arrays.array_float_2d_C_complex_3d_expr
@@ -1775,6 +1882,7 @@ def test_array_float_2d_C_complex_3d_expr(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
 
 def test_array_float_2d_F_complex_3d_expr(language):
 
@@ -1802,6 +1910,7 @@ def test_array_float_sum_stack_array(language):
     x2 = f2()
     assert np.equal( x1, x2 )
 
+
 def test_array_float_div_stack_array(language):
 
     f1 = arrays.array_float_1d_div_stack_array
@@ -1810,11 +1919,13 @@ def test_array_float_div_stack_array(language):
     x2 = f2()
     assert np.equal( x1, x2 )
 
+
 def test_multiple_stack_array_1(language):
 
     f1 = arrays.multiple_stack_array_1
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
+
 
 def test_multiple_stack_array_2(language):
 
@@ -1834,6 +1945,7 @@ def test_array_float_sum_2d_stack_array(language):
     x2 = f2()
     assert np.equal( x1, x2 )
 
+
 def test_array_float_div_2d_stack_array(language):
 
     f1 = arrays.array_float_2d_div_stack_array
@@ -1842,11 +1954,13 @@ def test_array_float_div_2d_stack_array(language):
     x2 = f2()
     assert np.equal( x1, x2 )
 
+
 def test_multiple_2d_stack_array_1(language):
 
     f1 = arrays.multiple_2d_stack_array_1
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
+
 
 def test_multiple_2d_stack_array_2(language):
 
@@ -1876,6 +1990,7 @@ def test_array_float_1d_1d_prod(language):
     f2(x2, y2)
     assert np.array_equal(y1, y2)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="matmul not implemented in c"),
@@ -1898,6 +2013,7 @@ def test_array_float_2d_1d_matmul(language):
     f2(A2, x2, y2)
     assert np.array_equal(y1, y2)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="matmul not implemented in c"),
@@ -1917,6 +2033,7 @@ def test_array_float_2d_1d_matmul_creation(language):
     y1 = f1(A1, x1)
     y2 = f2(A2, x2)
     assert np.isclose(y1, y2)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -1940,6 +2057,7 @@ def test_array_float_2d_1d_matmul_order_F_F(language):
     f2(A2, x2, y2)
     assert np.array_equal(y1, y2)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="matmul not implemented in c"),
@@ -1962,6 +2080,7 @@ def test_array_float_2d_2d_matmul(language):
     f2(A2, B2, C2)
     assert np.array_equal(C1, C2)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="matmul not implemented in c"),
@@ -1983,6 +2102,7 @@ def test_array_float_2d_2d_matmul_F_F_F_F(language):
     f1(A1, B1, C1)
     f2(A2, B2, C2)
     assert np.array_equal(C1, C2)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -2009,6 +2129,7 @@ def test_array_float_2d_2d_matmul_mixorder(language):
     f2(A2, B2, C2)
     assert np.array_equal(C1, C2)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="matmul not implemented in c"),
@@ -2031,6 +2152,7 @@ def test_array_float_2d_2d_matmul_operator(language):
     f2(A2, B2, C2)
     assert np.array_equal(C1, C2)
 
+
 def test_array_float_loopdiff(language):
     f1 = arrays.array_float_loopdiff
     f2 = epyccel( f1 , language = language)
@@ -2052,6 +2174,7 @@ def test_array_kwargs_full(language):
     f2 = epyccel( f1 , language = language)
     assert f1() == f2()
 
+
 def test_array_kwargs_ones(language):
     f1 = arrays.array_kwargs_ones
     f2 = epyccel( f1 , language = language)
@@ -2068,12 +2191,14 @@ def test_constant_negative_index(language):
     f2 = epyccel( f1 , language = language)
     assert f1(n) == f2(n)
 
+
 def test_almost_negative_index(language):
     from numpy.random import randint
     n = randint(2, 10)
     f1 = arrays.constant_negative_index
     f2 = epyccel( f1 , language = language)
     assert f1(n) == f2(n)
+
 
 def test_var_negative_index(language):
     from numpy.random import randint
@@ -2082,6 +2207,7 @@ def test_var_negative_index(language):
     f1 = arrays.var_negative_index
     f2 = epyccel( f1 , language = language)
     assert f1(n,idx) == f2(n,idx)
+
 
 def test_expr_negative_index(language):
     from numpy.random import randint
@@ -2092,11 +2218,13 @@ def test_expr_negative_index(language):
     f2 = epyccel( f1 , language = language)
     assert f1(n,idx1,idx2) == f2(n,idx1,idx2)
 
+
 def test_multiple_negative_index(language):
     f1 = arrays.test_multiple_negative_index
     f2 = epyccel(f1, language = language)
 
     assert f1(-2, -1) == f2(-2, -1)
+
 
 def test_multiple_negative_index_2(language):
     f1 = arrays.test_multiple_negative_index_2
@@ -2104,11 +2232,13 @@ def test_multiple_negative_index_2(language):
 
     assert f1(-4, -2) == f2(-4, -2)
 
+
 def test_multiple_negative_index_3(language):
     f1 = arrays.test_multiple_negative_index_3
     f2 = epyccel(f1, language = language)
 
     assert f1(-1, -1, -3) == f2(-1, -1, -3)
+
 
 def test_argument_negative_index_1(language):
     a = arrays.a_1d
@@ -2117,6 +2247,7 @@ def test_argument_negative_index_1(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_argument_negative_index_2(language):
     a = arrays.a_1d
 
@@ -2124,12 +2255,14 @@ def test_argument_negative_index_2(language):
     f2 = epyccel(f1, language = language)
     assert f1(a, a) == f2(a, a)
 
+
 def test_c_order_argument_negative_index(language):
     a = np.random.randint(20, size=(3,4))
 
     f1 = arrays.test_c_order_argument_negative_index
     f2 = epyccel(f1, language = language)
     assert f1(a, a) == f2(a, a)
+
 
 def test_f_order_argument_negative_index(language):
     a = np.array(np.random.randint(20, size=(3,4)), order='F')
@@ -2155,6 +2288,7 @@ def test_array_random_size(language):
     s1, s2 = f2()
     assert s1 == s2
 
+
 def test_array_variable_size(language):
     f1 = arrays.array_variable_size
     f2 = epyccel( f1 , language = language)
@@ -2176,6 +2310,7 @@ def test_array_1d_slice_1(language):
 
     assert f1(a) == f2(a)
 
+
 def test_array_1d_slice_2(language):
     a = arrays.a_1d
 
@@ -2183,6 +2318,7 @@ def test_array_1d_slice_2(language):
     f2 = epyccel(f1, language = language)
 
     assert f1(a) == f2(a)
+
 
 def test_array_1d_slice_3(language):
     a = arrays.a_1d
@@ -2192,6 +2328,7 @@ def test_array_1d_slice_3(language):
 
     assert f1(a) == f2(a)
 
+
 def test_array_1d_slice_4(language):
     a = arrays.a_1d
 
@@ -2199,6 +2336,7 @@ def test_array_1d_slice_4(language):
     f2 = epyccel(f1, language = language)
 
     assert f1(a) == f2(a)
+
 
 def test_array_1d_slice_5(language):
     a = arrays.a_1d
@@ -2208,6 +2346,7 @@ def test_array_1d_slice_5(language):
 
     assert f1(a) == f2(a)
 
+
 def test_array_1d_slice_6(language):
     a = arrays.a_1d
 
@@ -2215,6 +2354,7 @@ def test_array_1d_slice_6(language):
     f2 = epyccel(f1, language = language)
 
     assert f1(a) == f2(a)
+
 
 def test_array_1d_slice_7(language):
     a = arrays.a_1d
@@ -2224,6 +2364,7 @@ def test_array_1d_slice_7(language):
 
     assert f1(a) == f2(a)
 
+
 def test_array_1d_slice_8(language):
     a = arrays.a_1d
 
@@ -2232,6 +2373,7 @@ def test_array_1d_slice_8(language):
 
     assert f1(a) == f2(a)
 
+
 def test_array_1d_slice_9(language):
     a = arrays.a_1d
 
@@ -2239,6 +2381,7 @@ def test_array_1d_slice_9(language):
     f2 = epyccel(f1, language = language)
 
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -2255,6 +2398,7 @@ def test_array_1d_slice_10(language):
 
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
@@ -2269,6 +2413,7 @@ def test_array_1d_slice_11(language):
     f2 = epyccel(f1, language = language)
 
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -2296,12 +2441,14 @@ def test_array_2d_F_slice_1(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_2(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_2
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_F_slice_3(language):
     a = arrays.a_2d_f
@@ -2310,12 +2457,14 @@ def test_array_2d_F_slice_3(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_4(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_4
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_F_slice_5(language):
     a = arrays.a_2d_f
@@ -2324,12 +2473,14 @@ def test_array_2d_F_slice_5(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_6(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_6
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_F_slice_7(language):
     a = arrays.a_2d_f
@@ -2338,12 +2489,14 @@ def test_array_2d_F_slice_7(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_8(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_8
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_F_slice_9(language):
     a = arrays.a_2d_f
@@ -2352,12 +2505,14 @@ def test_array_2d_F_slice_9(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_10(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_10
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_F_slice_11(language):
     a = arrays.a_2d_f
@@ -2366,12 +2521,14 @@ def test_array_2d_F_slice_11(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_12(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_12
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_F_slice_13(language):
     a = arrays.a_2d_f
@@ -2380,12 +2537,14 @@ def test_array_2d_F_slice_13(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_14(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_14
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_F_slice_15(language):
     a = arrays.a_2d_f
@@ -2394,12 +2553,14 @@ def test_array_2d_F_slice_15(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_16(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_16
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_F_slice_17(language):
     a = arrays.a_2d_f
@@ -2408,12 +2569,14 @@ def test_array_2d_F_slice_17(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_18(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_18
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_F_slice_19(language):
     a = arrays.a_2d_f
@@ -2422,12 +2585,14 @@ def test_array_2d_F_slice_19(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_20(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_20
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -2443,6 +2608,7 @@ def test_array_2d_F_slice_21(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
@@ -2456,6 +2622,7 @@ def test_array_2d_F_slice_22(language):
     f1 = arrays.array_2d_F_slice_22
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -2475,13 +2642,13 @@ def test_array_2d_F_slice_23(language):
 # TEST : 2d array slices order C
 #==============================================================================
 
-
 def test_array_2d_C_slice_1(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_1
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_C_slice_2(language):
     a = arrays.a_2d_c
@@ -2490,12 +2657,14 @@ def test_array_2d_C_slice_2(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_C_slice_3(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_3
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_C_slice_4(language):
     a = arrays.a_2d_c
@@ -2504,12 +2673,14 @@ def test_array_2d_C_slice_4(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_C_slice_5(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_5
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_C_slice_6(language):
     a = arrays.a_2d_c
@@ -2518,12 +2689,14 @@ def test_array_2d_C_slice_6(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_C_slice_7(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_7
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_C_slice_8(language):
     a = arrays.a_2d_c
@@ -2532,12 +2705,14 @@ def test_array_2d_C_slice_8(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_C_slice_9(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_9
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_C_slice_10(language):
     a = arrays.a_2d_c
@@ -2546,12 +2721,14 @@ def test_array_2d_C_slice_10(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_C_slice_11(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_11
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_C_slice_12(language):
     a = arrays.a_2d_c
@@ -2560,12 +2737,14 @@ def test_array_2d_C_slice_12(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_C_slice_13(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_13
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_C_slice_14(language):
     a = arrays.a_2d_c
@@ -2574,12 +2753,14 @@ def test_array_2d_C_slice_14(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_C_slice_15(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_15
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_C_slice_16(language):
     a = arrays.a_2d_c
@@ -2588,12 +2769,14 @@ def test_array_2d_C_slice_16(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_C_slice_17(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_17
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_C_slice_18(language):
     a = arrays.a_2d_c
@@ -2602,6 +2785,7 @@ def test_array_2d_C_slice_18(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_C_slice_19(language):
     a = arrays.a_2d_c
 
@@ -2609,12 +2793,14 @@ def test_array_2d_C_slice_19(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_C_slice_20(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_20
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -2630,6 +2816,7 @@ def test_array_2d_C_slice_21(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
@@ -2643,6 +2830,7 @@ def test_array_2d_C_slice_22(language):
     f1 = arrays.array_2d_C_slice_22
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -2746,6 +2934,7 @@ def test_array_1d_slice_stride_8(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_1d_slice_stride_9(language):
     a = arrays.a_1d
 
@@ -2767,6 +2956,7 @@ def test_array_1d_slice_stride_10(language):
     f1 = arrays.array_1d_slice_stride_10
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_1d_slice_stride_11(language):
     a = arrays.a_1d
@@ -2790,12 +2980,14 @@ def test_array_1d_slice_stride_12(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_1d_slice_stride_13(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_13
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -2826,12 +3018,14 @@ def test_array_1d_slice_stride_15(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_1d_slice_stride_16(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_16
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -2847,6 +3041,7 @@ def test_array_1d_slice_stride_17(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -2861,12 +3056,14 @@ def test_array_1d_slice_stride_18(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_1d_slice_stride_19(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_19
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -2882,6 +3079,7 @@ def test_array_1d_slice_stride_20(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -2896,12 +3094,14 @@ def test_array_1d_slice_stride_21(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_1d_slice_stride_22(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_22
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_1d_slice_stride_23(language):
     a = arrays.a_1d
@@ -2921,6 +3121,7 @@ def test_array_2d_F_slice_stride_1(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -2934,6 +3135,7 @@ def test_array_2d_F_slice_stride_2(language):
     f1 = arrays.array_2d_F_slice_stride_2
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -2949,12 +3151,14 @@ def test_array_2d_F_slice_stride_3(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_stride_4(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_4
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_F_slice_stride_5(language):
     a = arrays.a_2d_f
@@ -2963,12 +3167,14 @@ def test_array_2d_F_slice_stride_5(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_stride_6(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_6
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 def test_array_2d_F_slice_stride_7(language):
     a = arrays.a_2d_f
@@ -2985,12 +3191,14 @@ def test_array_2d_F_slice_stride_8(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_F_slice_stride_9(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_9
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3006,6 +3214,7 @@ def test_array_2d_F_slice_stride_10(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3019,6 +3228,7 @@ def test_array_2d_F_slice_stride_11(language):
     f1 = arrays.array_2d_F_slice_stride_11
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3034,6 +3244,7 @@ def test_array_2d_F_slice_stride_12(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3047,6 +3258,7 @@ def test_array_2d_F_slice_stride_13(language):
     f1 = arrays.array_2d_F_slice_stride_13
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3062,6 +3274,7 @@ def test_array_2d_F_slice_stride_14(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3075,6 +3288,7 @@ def test_array_2d_F_slice_stride_15(language):
     f1 = arrays.array_2d_F_slice_stride_15
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3090,6 +3304,7 @@ def test_array_2d_F_slice_stride_16(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3103,6 +3318,7 @@ def test_array_2d_F_slice_stride_17(language):
     f1 = arrays.array_2d_F_slice_stride_17
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3118,6 +3334,7 @@ def test_array_2d_F_slice_stride_18(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3131,6 +3348,7 @@ def test_array_2d_F_slice_stride_19(language):
     f1 = arrays.array_2d_F_slice_stride_19
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3161,6 +3379,7 @@ def test_array_2d_F_slice_stride_21(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3174,6 +3393,7 @@ def test_array_2d_F_slice_stride_22(language):
     f1 = arrays.array_2d_F_slice_stride_22
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3200,6 +3420,7 @@ def test_array_2d_C_slice_stride_1(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3213,6 +3434,7 @@ def test_array_2d_C_slice_stride_2(language):
     f1 = arrays.array_2d_C_slice_stride_2
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3228,12 +3450,14 @@ def test_array_2d_C_slice_stride_3(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_C_slice_stride_4(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_4
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3249,12 +3473,14 @@ def test_array_2d_C_slice_stride_5(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 def test_array_2d_C_slice_stride_6(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_6
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3278,6 +3504,7 @@ def test_array_2d_C_slice_stride_8(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3291,6 +3518,7 @@ def test_array_2d_C_slice_stride_9(language):
     f1 = arrays.array_2d_C_slice_stride_9
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3306,6 +3534,7 @@ def test_array_2d_C_slice_stride_10(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3319,6 +3548,7 @@ def test_array_2d_C_slice_stride_11(language):
     f1 = arrays.array_2d_C_slice_stride_11
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3334,6 +3564,7 @@ def test_array_2d_C_slice_stride_12(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3347,6 +3578,7 @@ def test_array_2d_C_slice_stride_13(language):
     f1 = arrays.array_2d_C_slice_stride_13
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3362,6 +3594,7 @@ def test_array_2d_C_slice_stride_14(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3375,6 +3608,7 @@ def test_array_2d_C_slice_stride_15(language):
     f1 = arrays.array_2d_C_slice_stride_15
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3390,6 +3624,7 @@ def test_array_2d_C_slice_stride_16(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3403,6 +3638,7 @@ def test_array_2d_C_slice_stride_17(language):
     f1 = arrays.array_2d_C_slice_stride_17
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3418,6 +3654,7 @@ def test_array_2d_C_slice_stride_18(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3431,6 +3668,7 @@ def test_array_2d_C_slice_stride_19(language):
     f1 = arrays.array_2d_C_slice_stride_19
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3446,6 +3684,7 @@ def test_array_2d_C_slice_stride_20(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3460,6 +3699,7 @@ def test_array_2d_C_slice_stride_21(language):
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
 
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3473,6 +3713,7 @@ def test_array_2d_C_slice_stride_22(language):
     f1 = arrays.array_2d_C_slice_stride_22
     f2 = epyccel(f1, language = language)
     assert f1(a) == f2(a)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3489,6 +3730,66 @@ def test_array_2d_C_slice_stride_23(language):
     assert f1(a) == f2(a)
 
 #==============================================================================
+# TEST : Slice assignment
+#==============================================================================
+def test_copy_to_slice_issue_1218(language):
+    pyth_f = arrays.copy_to_slice_issue_1218
+    epyc_f = epyccel(pyth_f, language = language)
+
+    n = 10
+    pyth_arr = pyth_f(n)
+    epyc_arr = epyc_f(n)
+    check_array_equal(pyth_arr, epyc_arr)
+
+
+def test_copy_to_slice_1(language):
+    pyth_f = arrays.copy_to_slice_1
+    epyc_f = epyccel(pyth_f, language = language)
+
+    pyth_a = np.arange(10, dtype=float)
+    epyc_a = pyth_a.copy()
+    b = np.arange(20, 28, dtype=float)
+    pyth_f(pyth_a, b)
+    epyc_f(epyc_a, b)
+    check_array_equal(pyth_a, epyc_a)
+
+
+def test_copy_to_slice_2(language):
+    pyth_f = arrays.copy_to_slice_2
+    epyc_f = epyccel(pyth_f, language = language)
+
+    pyth_a = np.arange(20, dtype=float).reshape(2, 10)
+    epyc_a = pyth_a.copy()
+    b = np.arange(20, 28, dtype=float)
+    pyth_f(pyth_a, b)
+    epyc_f(epyc_a, b)
+    check_array_equal(pyth_a, epyc_a)
+
+
+def test_copy_to_slice_3(language):
+    pyth_f = arrays.copy_to_slice_3
+    epyc_f = epyccel(pyth_f, language = language)
+
+    pyth_a = np.arange(20, dtype=float).reshape(4, 5)
+    epyc_a = pyth_a.copy()
+    b = np.arange(20, 24, dtype=float)
+    pyth_f(pyth_a, b)
+    epyc_f(epyc_a, b)
+    check_array_equal(pyth_a, epyc_a)
+
+
+def test_copy_to_slice_4(language):
+    pyth_f = arrays.copy_to_slice_4
+    epyc_f = epyccel(pyth_f, language = language)
+
+    pyth_a = np.arange(10, dtype=float)
+    epyc_a = pyth_a.copy()
+    b = np.arange(20, 25, dtype=float)
+    pyth_f(pyth_a, b)
+    epyc_f(epyc_a, b)
+    check_array_equal(pyth_a, epyc_a)
+
+#==============================================================================
 # TEST : arithmetic operations
 #==============================================================================
 
@@ -3497,30 +3798,36 @@ def test_arrs_similar_shapes_0(language):
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
+
 def test_arrs_similar_shapes_1(language):
     f1 = arrays.arrs_similar_shapes_1
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+
 
 def test_arrs_different_shapes_0(language):
     f1 = arrays.arrs_different_shapes_0
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
+
 def test_arrs_uncertain_shape_1(language):
     f1 = arrays.arrs_uncertain_shape_1
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+
 
 def test_arrs_2d_similar_shapes_0(language):
     f1 = arrays.arrs_2d_similar_shapes_0
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
+
 def test_arrs_2d_different_shapes_0(language):
     f1 = arrays.arrs_2d_different_shapes_0
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3534,20 +3841,24 @@ def test_arrs_1d_negative_index_1(language):
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
+
 def test_arrs_1d_negative_index_2(language):
     f1 = arrays.arrs_1d_negative_index_2
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
+
 
 def test_arrs_1d_int32_index(language):
     f1 = arrays.arrs_1d_int32_index
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
+
 def test_arrs_1d_int64_index(language):
     f1 = arrays.arrs_1d_int64_index
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+
 
 def test_arr_tuple_slice_index(language):
     f1 = arrays.arr_tuple_slice_index
@@ -3557,6 +3868,7 @@ def test_arr_tuple_slice_index(language):
     r_pyccel = f2(arrays.a_2d_c)
 
     check_array_equal(r_python, r_pyccel)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3570,10 +3882,12 @@ def test_arrs_1d_negative_index_negative_step(language):
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
+
 def test_arrs_1d_negative_step_positive_step(language):
     f1 = arrays.arrs_1d_negative_step_positive_step
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
+
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -3596,10 +3910,12 @@ def test_numpy_arange_one_arg(language):
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
+
 def test_numpy_arange_two_arg(language):
     f1 = arrays.arr_arange_2
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+
 
 def test_numpy_arange_full_arg(language):
     f1 = arrays.arr_arange_3
@@ -3611,10 +3927,12 @@ def test_numpy_arange_full_arg(language):
     assert (type(r_f1[1]) is type(r_f2[1]))
     np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
+
 def test_numpy_arange_with_dtype(language):
     f1 = arrays.arr_arange_4
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+
 
 def test_numpy_arange_negative_step(language):
     f1 = arrays.arr_arange_5
@@ -3626,6 +3944,7 @@ def test_numpy_arange_negative_step(language):
     assert (type(r_f1[1]) is type(r_f2[1]))
     np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
+
 def test_numpy_arange_negative_step_2(language):
     f1 = arrays.arr_arange_6
     f2 = epyccel(f1, language = language)
@@ -3635,6 +3954,7 @@ def test_numpy_arange_negative_step_2(language):
 
     assert (type(r_f1[1]) is type(r_f2[1]))
     np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
+
 
 def test_numpy_arange_into_slice(language):
     f1 = arrays.arr_arange_7
@@ -3669,6 +3989,7 @@ def test_array_float_nested_C_array_initialization(language):
 
     assert np.array_equal(x1, x2)
 
+
 def test_array_float_nested_C_array_initialization_2(language):
     f1 = arrays.array_float_nested_C_array_initialization_2
     f2 = epyccel(f1, language = language)
@@ -3685,6 +4006,7 @@ def test_array_float_nested_C_array_initialization_2(language):
     f2(a, e, f, x2)
 
     assert np.array_equal(x1, x2)
+
 
 def test_array_float_nested_C_array_initialization_3(language):
     f1 = arrays.array_float_nested_C_array_initialization_3
@@ -3711,6 +4033,7 @@ def test_arr_bool_sum(language):
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
     assert isinstance(f1(), type(f2()))
+
 
 def test_tuple_sum(language):
     f1 = arrays.tuple_sum
@@ -3747,6 +4070,7 @@ def test_array_float_nested_F_array_initialization(language):
 
     assert np.array_equal(x1, x2)
 
+
 def test_array_float_nested_F_array_initialization_2(language):
     f1 = arrays.array_float_nested_F_array_initialization_2
     f2 = epyccel(f1, language = language)
@@ -3763,6 +4087,7 @@ def test_array_float_nested_F_array_initialization_2(language):
     f2(a, e, f, x2)
 
     assert np.array_equal(x1, x2)
+
 
 def test_array_float_nested_F_array_initialization_3(language):
     f1 = arrays.array_float_nested_F_array_initialization_3
@@ -3791,6 +4116,7 @@ def test_array_view_steps_C_1D_1(language):
     f2 = epyccel(f1, language = language)
     check_array_equal(f1(a), f2(a))
 
+
 def test_array_view_steps_C_1D_2(language):
     a = arrays.a_1d
 
@@ -3809,12 +4135,14 @@ def test_array_view_steps_C_2D_1(language):
     f2 = epyccel(f1, language = language)
     check_array_equal(f1(a), f2(a))
 
+
 def test_array_view_steps_C_2D_2(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_view_steps_C_2D_2
     f2 = epyccel(f1, language = language)
     check_array_equal(f1(a), f2(a))
+
 
 def test_array_view_steps_C_2D_3(language):
     a = arrays.a_2d_c
@@ -3834,6 +4162,7 @@ def test_array_view_steps_F_1D_1(language):
     f2 = epyccel(f1, language = language)
     check_array_equal(f1(a), f2(a))
 
+
 def test_array_view_steps_F_1D_2(language):
     a = arrays.a_1d_f
 
@@ -3852,12 +4181,14 @@ def test_array_view_steps_F_2D_1(language):
     f2 = epyccel(f1, language = language)
     check_array_equal(f1(a), f2(a))
 
+
 def test_array_view_steps_F_2D_2(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_view_steps_F_2D_2
     f2 = epyccel(f1, language = language)
     check_array_equal(f1(a), f2(a))
+
 
 def test_array_view_steps_F_2D_3(language):
     a = arrays.a_2d_f
@@ -3895,6 +4226,7 @@ def test_array_ndmin_1(language):
     check_array_equal(f1(d), f2(d))
     check_array_equal(f1(e), f2(e))
 
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
@@ -3919,6 +4251,7 @@ def test_array_ndmin_2(language):
     check_array_equal(f1(c), f2(c))
     check_array_equal(f1(d), f2(d))
     check_array_equal(f1(e), f2(e))
+
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -3945,6 +4278,7 @@ def test_array_ndmin_4(language):
     check_array_equal(f1(d), f2(d))
     check_array_equal(f1(e), f2(e))
 
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
@@ -3970,6 +4304,10 @@ def test_array_ndmin_2_order(language):
     check_array_equal(f1(d), f2(d))
     check_array_equal(f1(e), f2(e))
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_dtype_conversion_to_bool_from_other_types(language):
     size = (2, 2)
 
@@ -4004,12 +4342,10 @@ def test_dtype_conversion_to_bool_from_other_types(language):
     assert epyccel_func(cmplx64) == arrays.dtype_convert_to_bool(cmplx64)
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_bool(cmplx128)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_dtype_conversion_to_int8_from_other_types(language):
     size = (2, 2)
 
@@ -4044,12 +4380,10 @@ def test_dtype_conversion_to_int8_from_other_types(language):
     assert epyccel_func(cmplx64) == arrays.dtype_convert_to_int8(cmplx64)
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_int8(cmplx128)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_dtype_conversion_to_int16_from_other_types(language):
     size = (2, 2)
 
@@ -4084,12 +4418,10 @@ def test_dtype_conversion_to_int16_from_other_types(language):
     assert epyccel_func(cmplx64) == arrays.dtype_convert_to_int16(cmplx64)
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_int16(cmplx128)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_dtype_conversion_to_int32_from_other_types(language):
     size = (2, 2)
 
@@ -4124,12 +4456,10 @@ def test_dtype_conversion_to_int32_from_other_types(language):
     assert epyccel_func(cmplx64) == arrays.dtype_convert_to_int32(cmplx64)
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_int32(cmplx128)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_dtype_conversion_to_int64_from_other_types(language):
     size = (2, 2)
 
@@ -4164,6 +4494,9 @@ def test_dtype_conversion_to_int64_from_other_types(language):
     assert epyccel_func(cmplx64) == arrays.dtype_convert_to_int64(cmplx64)
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_int64(cmplx128)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
 def test_dtype_conversion_to_float32_from_other_types(language):
     size = (2, 2)
 
@@ -4198,6 +4531,8 @@ def test_dtype_conversion_to_float32_from_other_types(language):
     assert epyccel_func(cmplx64) == arrays.dtype_convert_to_float32(cmplx64)
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_float32(cmplx128)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 def test_dtype_conversion_to_float64_from_other_types(language):
     size = (2, 2)
 
@@ -4232,6 +4567,8 @@ def test_dtype_conversion_to_float64_from_other_types(language):
     assert epyccel_func(cmplx64) == arrays.dtype_convert_to_float64(cmplx64)
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_float64(cmplx128)
 
+
+@pytest.mark.filterwarnings("ignore:overflow")
 def test_dtype_conversion_to_complex64_from_other_types(language):
     size = (2, 2)
 
@@ -4264,6 +4601,7 @@ def test_dtype_conversion_to_complex64_from_other_types(language):
     assert epyccel_func(fl64) == arrays.dtype_convert_to_cfloat(fl64)
     assert epyccel_func(cmplx64) == arrays.dtype_convert_to_cfloat(cmplx64)
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_cfloat(cmplx128)
+
 
 def test_dtype_conversion_to_complex128_from_other_types(language):
     size = (2, 2)
@@ -4299,12 +4637,10 @@ def test_dtype_conversion_to_complex128_from_other_types(language):
     assert epyccel_func(cmplx64) == arrays.dtype_convert_to_cdouble(cmplx64)
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_cdouble(cmplx128)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_dtype_conversion_to_pyint_from_other_types(language):
     size = (2, 2)
 
@@ -4339,6 +4675,9 @@ def test_dtype_conversion_to_pyint_from_other_types(language):
     assert epyccel_func(cmplx64) == arrays.dtype_convert_to_pyint(cmplx64)
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_pyint(cmplx128)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
 def test_dtype_conversion_to_pyfloat_from_other_types(language):
     size = (2, 2)
 
@@ -4373,6 +4712,10 @@ def test_dtype_conversion_to_pyfloat_from_other_types(language):
     assert epyccel_func(cmplx64) == arrays.dtype_convert_to_pyfloat(cmplx64)
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_pyfloat(cmplx128)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
     size = (1,2)
 
@@ -4442,6 +4785,10 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
     size = (1,2)
 
@@ -4511,6 +4858,10 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
     size = (1,2)
 
@@ -4580,6 +4931,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(cmplx128_1, cmplx128_2, cmplx128_3)
 
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
     size = (1,2)
 
@@ -4649,6 +5003,10 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
     size = (1,2)
 
@@ -4718,6 +5076,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
     size = (1,2)
 
@@ -4787,6 +5148,8 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
     size = (1,2)
 
@@ -4856,6 +5219,8 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:overflow")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     size = (1,2)
 
@@ -4924,6 +5289,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(fl64_1, fl64_2, fl64_3)
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(cmplx128_1, cmplx128_2, cmplx128_3)
+
 
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
     size = (1,2)
@@ -4994,6 +5360,10 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
     size = (1,2)
 
@@ -5063,6 +5433,10 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
     size = (1,2)
 
@@ -5132,6 +5506,10 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
     size = (1,2)
 
@@ -5201,6 +5579,10 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
     size = (1,2)
 
@@ -5270,6 +5652,10 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
     size = (1,2)
 
@@ -5339,6 +5725,10 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
     size = (1,2)
 
@@ -5408,6 +5798,10 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
     size = (1,2)
 
@@ -5477,6 +5871,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
     size = (1,2)
 
@@ -5546,6 +5943,8 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
     size = (1,2)
 
@@ -5615,6 +6014,8 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:overflow")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     size = (1,2)
 
@@ -5683,6 +6084,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(fl64_1, fl64_2, fl64_3)
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
 
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
     size = (1,2)
@@ -5753,6 +6155,10 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
     size = (1,2)
 
@@ -5822,6 +6228,10 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
+@pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
+@pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(language):
     size = (1,2)
 

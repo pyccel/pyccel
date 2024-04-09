@@ -25,10 +25,12 @@ All notable changes to this project will be documented in this file.
 -   #1795 : Fix bug when returning slices in C.
 -   #1732 : Fix multidimensional list indexing in Python.
 -   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
+-   #1218 : Fix bug when assigning an array to a slice in Fortran.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
+-   \[TESTS\] Filter out cast warnings in cast tests.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
