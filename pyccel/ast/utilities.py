@@ -494,14 +494,14 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             # Loop over indexes, inserting until the expression can be evaluated
             # in the desired language
             new_level = 0
-            for index in range(-rank,0):
+            for index_depth in range(-rank, 0):
                 new_level += 1
                 # If an index exists at the same depth, reuse it if not create one
-                if rank+index >= len(indices):
-                    indices.append(new_index(PythonNativeInt(),'i'))
-                index_var = indices[rank+index]
-                new_vars = [insert_index(v, index, index_var) for v in new_vars]
-                handled_funcs = [insert_index(v, index, index_var) for v in handled_funcs]
+                if rank+index_depth >= len(indices):
+                    indices.append(new_index(PythonNativeInt(), 'i'))
+                index = indices[rank+index_depth]
+                new_vars = [insert_index(v, index_depth, index) for v in new_vars]
+                handled_funcs = [insert_index(v, index_depth, index) for v in handled_funcs]
                 if compatible_operation(*new_vars, *handled_funcs, language_has_vectors = language_has_vectors):
                     break
 
@@ -541,22 +541,34 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             current_level = new_level
 
         elif isinstance(line, Assign) and isinstance(line.lhs, IndexedElement) \
-                and isinstance(line.rhs, (PythonTuple, NumpyArray)) and not language_has_vectors:
-
+                and isinstance(line.rhs, (PythonTuple, NumpyArray)):
             lhs = line.lhs
             rhs = line.rhs
-            if isinstance(rhs, NumpyArray):
-                rhs = rhs.arg
+            if lhs.rank > rhs.rank:
+                for index_depth in range(lhs.rank-rhs.rank):
+                    # If an index exists at the same depth, reuse it if not create one
+                    if index_depth >= len(indices):
+                        indices.append(new_index(PythonNativeInt(), 'i'))
+                    index = indices[index_depth]
+                    lhs = insert_index(lhs, index_depth, index)
+                collect_loops([Assign(lhs, rhs)], indices, new_index, language_has_vectors, result = result)
 
-            lhs_rank = lhs.rank
+            elif not language_has_vectors:
+                if isinstance(rhs, NumpyArray):
+                    rhs = rhs.arg
 
-            new_assigns = [Assign(
-                            insert_index(expr=lhs,
-                                pos       = -lhs_rank,
-                                index_var = LiteralInteger(j)),
-                            rj) # lhs[j] = rhs[j]
-                          for j, rj in enumerate(rhs)]
-            collect_loops(new_assigns, indices, new_index, language_has_vectors, result = result)
+                lhs_rank = lhs.rank
+
+                new_assigns = [Assign(
+                                insert_index(expr=lhs,
+                                    pos       = -lhs_rank,
+                                    index_var = LiteralInteger(j)),
+                                rj) # lhs[j] = rhs[j]
+                              for j, rj in enumerate(rhs)]
+                collect_loops(new_assigns, indices, new_index, language_has_vectors, result = result)
+
+            else:
+                result.append(line)
 
         elif isinstance(line, Assign) and isinstance(line.rhs, Concatenate):
             lhs = line.lhs
