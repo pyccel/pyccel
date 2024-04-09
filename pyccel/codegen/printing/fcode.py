@@ -1035,6 +1035,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyNorm(self, expr):
         """Fortran print."""
         arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
+        arg_code = self._print(arg)
         if expr.axis:
             axis = expr.axis
             if arg.order != 'F':
