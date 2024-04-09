@@ -36,7 +36,7 @@ class Literal(TypedAstNode):
     as itself rather than as a variable or an expression, e.g. the number 3
     or the string "Hello".
 
-    This class is abstract and should be implemented for each dtype.
+    This class is abstract and should be implemented for each dtype
     """
     __slots__ = ()
     _attribute_nodes  = ()
@@ -49,7 +49,7 @@ class Literal(TypedAstNode):
         """
         Get the Python literal represented by this instance.
 
-        Get the constant value of this literal as a Python object.
+        Get the Python literal represented by this instance.
         """
 
     def __repr__(self):
@@ -97,7 +97,7 @@ class LiteralTrue(Literal):
 #------------------------------------------------------------------------------
 class LiteralFalse(Literal):
     """
-    Represents the Python value False.
+    Class representing the Python value False.
 
     Class representing the Python value False.
 
@@ -131,7 +131,7 @@ class LiteralInteger(Literal):
     Parameters
     ----------
     value : int
-        The literal integer.
+        The Python literal.
 
     dtype : FixedSizeType
         The exact type of the literal.
@@ -168,7 +168,7 @@ class LiteralFloat(Literal):
     Parameters
     ----------
     value : float
-        The literal float.
+        The Python literal.
 
     dtype : FixedSizeType
         The exact type of the literal.
@@ -205,10 +205,10 @@ class LiteralComplex(Literal):
     Parameters
     ----------
     real : float
-        The real part of the literal complex.
+        The real part of the Python literal.
 
     imag : float
-        The imaginary part of the literal complex.
+        The imaginary part of the Python literal.
 
     dtype : FixedSizeType
         The exact type of the literal.
@@ -329,7 +329,7 @@ class LiteralString(Literal):
     Parameters
     ----------
     arg : str
-        The literal string.
+        The Python literal.
     """
     __slots__ = ('_string',)
     _class_type = StringType()
@@ -430,10 +430,9 @@ class LiteralEllipsis(Literal, metaclass=Singleton):
 
 def convert_to_literal(value, dtype = None):
     """
-    Convert a Python value to a Pyccel Literal.
+    Convert a Python value to a pyccel Literal.
 
-    Convert a Python object to the equivalent Pyccel Literal
-    object.
+    Convert a Python value to a pyccel Literal.
 
     Parameters
     ----------
