@@ -1090,7 +1090,7 @@ class FCodePrinter(CodePrinter):
             index = self._print(expr.ind)
             init_value = f'({start} + {index}*{step})'
         else:
-            index = self._print(self.scope.get_temporary_variable('int', 'linspace_index') )
+            index = self._print(self.scope.get_temporary_variable(PythonNativeInt(), 'linspace_index') )
             zero  = self._print(LiteralInteger(0))
             end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
             init_value = f'[(({start} + {index}*{step}), {index} = {zero}, {end})]'
