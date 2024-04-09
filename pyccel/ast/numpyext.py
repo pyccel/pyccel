@@ -389,8 +389,8 @@ class NumpyReal(PythonReal):
         super().__init__(arg)
         rank  = arg.rank
         order = arg.order
-    self._class_type = NumpyNDArrayType(arg.dtype.element_type, rank, order) if rank else self.static_type()
-    self._shape = process_shape(self.rank == 0, self.internal_var.shape)
+        self._class_type = NumpyNDArrayType(arg.dtype.element_type, rank, order) if rank else self.static_type()
+        self._shape = process_shape(self.rank == 0, self.internal_var.shape)
 
     @property
     def is_elemental(self):
