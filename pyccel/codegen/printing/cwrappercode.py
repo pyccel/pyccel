@@ -336,13 +336,13 @@ class CWrapperCodePrinter(CCodePrinter):
 
         class_defs = f"\n{sep}\n".join(self._print(c) for c in expr.classes)
 
-        method_def_func = ''.join('\n'.join('{',
-                                     f'"{self.get_python_name(expr.scope, f.original_function)}",'
-                                     f'(PyCFunction){f.name},'
-                                     'METH_VARARGS | METH_KEYWORDS,'
+        method_def_func = ''.join('\n'.join(('{',
+                                     f'"{self.get_python_name(expr.scope, f.original_function)}",',
+                                     f'(PyCFunction){f.name},',
+                                     'METH_VARARGS | METH_KEYWORDS,',
                                      self._print(LiteralString('\n'.join(f.docstring.comments))) \
                                                         if f.docstring else '""',
-                                     '},') for f in funcs if not getattr(f, 'is_header', False))
+                                     '},')) for f in funcs if not getattr(f, 'is_header', False))
 
         method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
