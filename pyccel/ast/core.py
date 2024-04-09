@@ -4463,24 +4463,6 @@ class StarredArguments(PyccelAstNode):
 
 # ...
 
-class InProgram(TypedAstNode):
-    """
-    Class representing the 'in program' test.
-
-    Class representing the test indicating whether the code should
-    only be executed when the file is executed as a program. In
-    other words, a class representing the boolean:
-    `__name__ == '__main__'`
-    """
-    _rank  = 0
-    _shape = None
-    _order = None
-    _class_type = PythonNativeBool()
-    _attribute_nodes = ()
-    __slots__ = ()
-
-# ...
-
 class Decorator(PyccelAstNode):
     """ Class representing a function decorator.
     For now this is just designed to handle the pyccel decorators

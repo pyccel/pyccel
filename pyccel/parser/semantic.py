@@ -55,7 +55,6 @@ from pyccel.ast.core import With
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import Iterable
-from pyccel.ast.core import InProgram
 from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
@@ -2080,8 +2079,8 @@ class SemanticParser(BasicParser):
         for c in expr.classes:
             self._visit(c)
 
-        body = self._visit(expr.program).body
-        program_body      = []
+        body = self._visit(expr.init_func).body
+        program_body = self._visit(expr.program.body).body if expr.program else None
         mod_name = self.metavars.get('module_name', None)
         if mod_name is None:
             mod_name = expr.name
@@ -2094,21 +2093,6 @@ class SemanticParser(BasicParser):
             name_suffix = expr.name
         prog_name = 'prog_'+name_suffix
         prog_name = self.scope.get_new_name(prog_name)
-
-        for b in body:
-            if isinstance(b, If):
-                if any(isinstance(i.condition, InProgram) for i in b.blocks):
-                    for i in b.blocks:
-                        if isinstance(i.condition, InProgram):
-                            program_body.extend(i.body.body)
-                        else:
-                            init_func_body.append(i.body.body)
-                else:
-                    init_func_body.append(b)
-            elif isinstance(b, CodeBlock):
-                init_func_body.extend(b.body)
-            else:
-                init_func_body.append(b)
 
         for f in self.scope.functions.copy():
             f = self.scope.functions[f]
@@ -3797,16 +3781,7 @@ class SemanticParser(BasicParser):
     def _visit_IfSection(self, expr):
         condition = expr.condition
 
-        name_symbol = PyccelSymbol('__name__')
-        main = LiteralString('__main__')
-        prog_check = isinstance(condition, PyccelEq) \
-                and all(a in (name_symbol, main) for a in condition.args)
-
-        if prog_check:
-            cond = InProgram()
-            self.change_to_program_scope()
-        else:
-            cond = self._visit(expr.condition)
+        cond = self._visit(expr.condition)
 
         body = self._visit(expr.body)
         if prog_check:
@@ -3822,10 +3797,6 @@ class SemanticParser(BasicParser):
         args = [self._visit(i) for i in expr.blocks]
 
         conds = [b.condition for b in args]
-        if any(isinstance(c, InProgram) for c in conds):
-            if not all(isinstance(c, (InProgram,LiteralTrue)) for c in conds):
-                errors.report("Determination of main module is too complicated to handle",
-                        symbol=expr, severity='error')
 
         allocations = [arg.get_attribute_nodes(Allocate) for arg in args]
 
