@@ -2049,6 +2049,33 @@ class SemanticParser(BasicParser):
         else:
             name_suffix = expr.name
 
+        if expr.program:
+            prog_name = 'prog_'+name_suffix
+            prog_name = self.scope.get_new_name(prog_name)
+            self._allocs.append(set())
+            self._pointer_targets.append({})
+
+            mod_scope = self.scope
+            prog_syntactic_scope = expr.program.scope
+            self.scope = mod_scope.new_child_scope(prog_name,
+                    used_symbols = prog_syntactic_scope.local_used_symbols.copy(),
+                    original_symbols = prog_syntactic_scope.python_names.copy())
+            prog_scope = self.scope
+
+            imports = [self._visit(i) for i in expr.program.imports]
+            body = [i for i in imports if not isinstance(i, EmptyNode)]
+
+            body += self._visit(expr.program.body).body
+
+            program_body = CodeBlock(body)
+
+            # Calling the Garbage collecting,
+            # it will add the necessary Deallocate nodes
+            # to the ast
+            program_body.insert2body(*self._garbage_collector(program_body))
+
+            self.scope = mod_scope
+
         for f in self.scope.functions.copy():
             f = self.scope.functions[f]
             if not f.is_semantic and not isinstance(f, InlineFunctionDef):
@@ -2197,42 +2224,17 @@ class SemanticParser(BasicParser):
                     scope=self.scope)
 
         if expr.program:
-            prog_name = 'prog_'+name_suffix
-            prog_name = self.scope.get_new_name(prog_name)
-            self._allocs.append(set())
-            self._pointer_targets.append({})
-
-            mod_scope = self.scope
-            prog_syntactic_scope = expr.program.scope
-            self.scope = mod_scope.new_child_scope(prog_name,
-                    used_symbols = prog_syntactic_scope.local_used_symbols.copy(),
-                    original_symbols = prog_syntactic_scope.python_names.copy())
-            prog_scope = self.scope
             container = prog_scope.imports
             container['imports'][mod_name] = Import(mod_name, mod)
 
-            body = []
             if init_func:
                 import_init  = FunctionCall(init_func, [], [])
-                body = [import_init]
-
-            imports = [self._visit(i) for i in expr.program.imports]
-            body += [i for i in imports if not isinstance(i, EmptyNode)]
-
-            body += self._visit(expr.program.body).body
-
-            program_body = CodeBlock(body)
-
-            # Calling the Garbage collecting,
-            # it will add the necessary Deallocate nodes
-            # to the ast
-            program_body.insert2body(*self._garbage_collector(program_body))
+                program_body.insert2body(import_init, back=False)
 
             if free_func:
                 import_free  = FunctionCall(free_func,[],[])
                 program_body.insert2body(import_free)
 
-            self.scope = mod_scope
             program = Program(prog_name,
                             self.get_variables(prog_scope),
                             program_body,
