@@ -824,11 +824,18 @@ class AugAssign(Assign):
 
     def to_basic_assign(self):
         """
-        Convert the AugAssign to an Assign
+        Convert the AugAssign to an Assign.
+
+        Convert the AugAssign to an Assign.
         E.g. convert:
         a += b
         to:
         a = a + b
+
+        Returns
+        -------
+        Assign
+            An assignment equivalent to the AugAssign.
         """
         return Assign(self.lhs,
                 self._accepted_operators[self._op](self.lhs, self.rhs))
