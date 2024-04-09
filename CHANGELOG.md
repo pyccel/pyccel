@@ -24,10 +24,13 @@ All notable changes to this project will be documented in this file.
 -   #1792 : Fix array unpacking.
 -   #1795 : Fix bug when returning slices in C.
 -   #1732 : Fix multidimensional list indexing in Python.
+-   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
+-   #1218 : Fix bug when assigning an array to a slice in Fortran.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
+-   \[TESTS\] Filter out cast warnings in cast tests.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -41,11 +44,14 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
 -   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
+-   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
+-   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
 
 ## \[1.11.2\] - 2024-03-05
 
