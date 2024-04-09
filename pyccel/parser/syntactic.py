@@ -1264,7 +1264,7 @@ class SyntaxParser(BasicParser):
             imports = [i for i in body if isinstance(i, Import)]
             body = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import))]
 
-            return Program('__main__', (), body, imports=imports)
+            return Program('__main__', (), body, imports=imports, scope = scope)
         else:
             body = self._visit(stmt.body)
 

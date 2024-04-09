@@ -223,7 +223,6 @@ class SemanticParser(BasicParser):
         self.scope = parser.scope
         self.scope.imports['imports'] = {}
         self._module_namespace  = self.scope
-        self._program_namespace = self.scope.new_child_scope('__main__')
 
         self._in_annotation = False
 
@@ -261,22 +260,6 @@ class SemanticParser(BasicParser):
         """Returns the d_parsers parser."""
 
         return self._d_parsers
-
-    @property
-    def program_namespace(self):
-        """
-        Get the namespace relevant to the program.
-
-        Get the namespace which describes the section of
-        code which is executed as a program. In other words
-        the code inside an `if __name__ == '__main__':`
-        block.
-
-        Returns
-        -------
-        Scope : The program namespace.
-        """
-        return self._program_namespace
 
     #================================================================
     #                     Public functions
@@ -328,31 +311,6 @@ class SemanticParser(BasicParser):
     #================================================================
     #              Utility functions for scope handling
     #================================================================
-
-    def change_to_program_scope(self):
-        """
-        Switch the focus to the program scope.
-
-        Update the namespace variable so that it points at the
-        program namespace (which describes the scope inside
-        a `if __name__ == '__main__':` block). It is assumed that
-        the current namespace is the module namespace.
-        """
-        self._allocs.append(set())
-        self._pointer_targets.append({})
-        self._module_namespace = self.scope
-        self.scope = self._program_namespace
-
-    def change_to_module_scope(self):
-        """
-        Switch the focus to the module scope.
-
-        Update the namespace variable so that it points
-        at the module namespace. It is assumed that the
-        current namespace is the program namespace.
-        """
-        self._program_namespace = self.scope
-        self.scope = self._module_namespace
 
     def get_class_prefix(self, name):
         """
@@ -2079,8 +2037,7 @@ class SemanticParser(BasicParser):
         for c in expr.classes:
             self._visit(c)
 
-        body = self._visit(expr.init_func).body
-        program_body = self._visit(expr.program.body).body if expr.program else None
+        init_func_body += self._visit(expr.init_func).body
         mod_name = self.metavars.get('module_name', None)
         if mod_name is None:
             mod_name = expr.name
@@ -2091,8 +2048,6 @@ class SemanticParser(BasicParser):
             name_suffix = expr.name.name
         else:
             name_suffix = expr.name
-        prog_name = 'prog_'+name_suffix
-        prog_name = self.scope.get_new_name(prog_name)
 
         for f in self.scope.functions.copy():
             f = self.scope.functions[f]
@@ -2240,23 +2195,44 @@ class SemanticParser(BasicParser):
                     classes=self.scope.classes.values(),
                     imports=self.scope.imports['imports'].values(),
                     scope=self.scope)
-        container = self._program_namespace.imports
-        container['imports'][mod_name] = Import(mod_name, mod)
 
-        if program_body:
+        if expr.program:
+            prog_name = 'prog_'+name_suffix
+            prog_name = self.scope.get_new_name(prog_name)
+            self._allocs.append(set())
+            self._pointer_targets.append({})
+
+            mod_scope = self.scope
+            prog_syntactic_scope = expr.program.scope
+            self.scope = mod_scope.new_child_scope(prog_name,
+                    used_symbols = prog_syntactic_scope.local_used_symbols.copy(),
+                    original_symbols = prog_syntactic_scope.python_names.copy())
+            prog_scope = self.scope
+            container = prog_scope.imports
+            container['imports'][mod_name] = Import(mod_name, mod)
+
+            program_body = []
             if init_func:
                 import_init  = FunctionCall(init_func,[],[])
-                program_body = [import_init, *program_body]
+                program_body = [import_init]
+
+            program_body += self._visit(expr.program.body).body
+
+            # Calling the Garbage collecting,
+            # it will add the necessary Deallocate nodes
+            # to the ast
+            program_body.insert2body(*self._garbage_collector(program_body))
 
             if free_func:
                 import_free  = FunctionCall(free_func,[],[])
-                program_body = [*program_body, import_free]
-            container = self._program_namespace
+                program_body.append(import_free)
+
+            self.scope = mod_scope
             program = Program(prog_name,
                             self.get_variables(container),
                             program_body,
                             container.imports['imports'].values(),
-                            scope=self._program_namespace)
+                            scope=prog_scope)
 
             mod.program = program
         return mod
@@ -3784,12 +3760,6 @@ class SemanticParser(BasicParser):
         cond = self._visit(expr.condition)
 
         body = self._visit(expr.body)
-        if prog_check:
-            # Calling the Garbage collecting,
-            # it will add the necessary Deallocate nodes
-            # to the ast
-            body.insert2body(*self._garbage_collector(body))
-            self.change_to_module_scope()
 
         return IfSection(cond, body)
 
