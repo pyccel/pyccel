@@ -19,10 +19,10 @@ from .core          import (AsName, Import, FunctionDef, FunctionCall,
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
 from .cmathext      import cmath_mod
-from .datatypes     import NativeHomogeneousTuple
+from .datatypes     import HomogeneousTupleType, PythonNativeInt
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import itertools_mod
-from .literals      import LiteralInteger, Nil
+from .literals      import LiteralInteger, LiteralEllipsis, Nil
 from .mathext       import math_mod
 from .sysext        import sys_mod
 
@@ -30,6 +30,7 @@ from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .scipyext      import scipy_mod
+from .typingext     import typing_mod
 from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable )
 
 from .c_concepts import ObjectAddress
@@ -87,6 +88,7 @@ builtin_import_registry = Module('__main__',
             Import('math', math_mod),
             Import('pyccel', pyccel_mod),
             Import('sys', sys_mod),
+            Import('typing', typing_mod)
             ])
 if sys.version_info < (3, 10):
     from .builtin_imports import python_builtin_libs
@@ -243,17 +245,17 @@ def insert_index(expr, pos, index_var):
     Parameters
     ----------
     expr : PyccelAstNode
-        The expression to be modified.
+       The expression to be modified.
     pos : int
-        The index at which the expression is modified
-        (If negative then there is no index to insert).
+       The index at which the expression is modified
+       (If negative then there is no index to insert).
     index_var : Variable
-        The variable which will be used for indexing.
+       The variable which will be used for indexing.
 
     Returns
     -------
     PyccelAstNode
-        Either a modified version of expr or expr itself.
+       The modified version of expr.
 
     Examples
     --------
@@ -266,10 +268,8 @@ def insert_index(expr, pos, index_var):
     >>> i = Variable('int', 'i')
     >>> d = PyccelAdd(a,b)
     >>> expr = Assign(c,d)
-    >>> insert_index(expr, 0, i, language_has_vectors = False)
+    >>> insert_index(expr, 0, i)
     IndexedElement(c, i) := IndexedElement(a, i) + IndexedElement(b, i)
-    >>> insert_index(expr, 0, i, language_has_vectors = True)
-    c := a + b
     """
     if expr.rank==0:
         return expr
@@ -300,16 +300,18 @@ def insert_index(expr, pos, index_var):
     elif isinstance(expr, IndexedElement):
         base = expr.base
         indices = list(expr.indices)
+        if len(indices) == 1 and isinstance(indices[0], LiteralEllipsis):
+            indices = [Slice(None,None)]*base.rank
         i = -1
-        while i>=pos and -i<=expr.base.rank:
+        while i>=pos and -i<=base.rank:
             if not isinstance(indices[i], Slice):
                 pos -= 1
             i -= 1
-        if -pos>expr.base.rank:
+        if -pos>base.rank:
             return expr
 
         # Add index at the required position
-        if expr.base.shape[pos]==1:
+        if base.shape[pos]==1:
             # If there is no dimension in this axis, reduce the rank
             assert(indices[pos].start is None)
             index_var = LiteralInteger(0)
@@ -496,7 +498,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 new_level += 1
                 # If an index exists at the same depth, reuse it if not create one
                 if rank+index >= len(indices):
-                    indices.append(new_index('int','i'))
+                    indices.append(new_index(PythonNativeInt(),'i'))
                 index_var = indices[rank+index]
                 new_vars = [insert_index(v, index, index_var) for v in new_vars]
                 handled_funcs = [insert_index(v, index, index_var) for v in handled_funcs]
@@ -570,7 +572,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
             if not isinstance(rhs.length, LiteralInteger):
                 if len(indices) == 0:
-                    indices.append(new_index('int', 'i'))
+                    indices.append(new_index(PythonNativeInt(), 'i'))
                 idx = indices[0]
 
                 assign = Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], idx, simplify=True),
@@ -660,12 +662,13 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
     --------
     >>> from pyccel.ast.builtins  import PythonTuple
     >>> from pyccel.ast.core      import Assign, CodeBlock
+    >>> from pyccel.ast.datatypes import PythonNativeInt
     >>> from pyccel.ast.literals  import LiteralInteger
     >>> from pyccel.ast.utilities import expand_to_loops
     >>> from pyccel.ast.variable  import Variable
-    >>> a = Variable('int', 'a', shape=(,), rank=0)
-    >>> b = Variable('int', 'b', shape=(,), rank=0)
-    >>> c = Variable('int', 'c', shape=(,), rank=0)
+    >>> a = Variable(PythonNativeInt(), 'a', shape=(,), rank=0)
+    >>> b = Variable(PythonNativeInt(), 'b', shape=(,), rank=0)
+    >>> c = Variable(PythonNativeInt(), 'c', shape=(,), rank=0)
     >>> expr = [Assign(PythonTuple(a,b,c),PythonTuple(LiteralInteger(0),LiteralInteger(1),LiteralInteger(2))]
     >>> expand_inhomog_tuple_assignments(CodeBlock(expr))
     [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
@@ -673,8 +676,8 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
     if not language_has_vectors:
         allocs_to_unravel = [a for a in block.get_attribute_nodes(Assign) \
                     if isinstance(a.lhs, Variable) \
-                    and isinstance(a.lhs.class_type, NativeHomogeneousTuple) \
-                    and isinstance(a.rhs.class_type, NativeHomogeneousTuple)]
+                    and isinstance(a.lhs.class_type, HomogeneousTupleType) \
+                    and isinstance(a.rhs.class_type, HomogeneousTupleType)]
         new_allocs = [(Assign(a.lhs, NumpyEmpty(a.lhs.shape,
                                      dtype=a.lhs.dtype,
                                      order=a.lhs.order)

@@ -10,6 +10,8 @@
 # include <stdio.h>
 # include <stdbool.h>
 # include <inttypes.h>
+# include <complex.h>
+# include <math.h>
 
 /*
  * Takes an array, and prints its elements the way they are laid out in memory (similar to ravel)
@@ -488,6 +490,175 @@ bool is_same_shape(t_ndarray a, t_ndarray b)
     return (true);
 }
 
+#define COPY_DATA_FROM_(SRC_TYPE) \
+    void copy_data_from_##SRC_TYPE(t_ndarray **ds, t_ndarray src, uint32_t offset, bool elem_wise_cp) \
+    { \
+        t_ndarray *dest = *ds; \
+        switch(dest->type) \
+        { \
+            case nd_bool: \
+                if(elem_wise_cp == false)\
+                { \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[i + offset] = (bool)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[element_index(*dest, i, dest->nd) + offset] = (bool)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
+                break; \
+            case nd_int8: \
+                if(elem_wise_cp == false)\
+                { \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_int8[i + offset] = (int8_t)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_int8[element_index(*dest, i, dest->nd) + offset] = (int8_t)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
+                break; \
+            case nd_int16: \
+                if(elem_wise_cp == false)\
+                { \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_int16[i + offset] = (int16_t)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_int16[element_index(*dest, i, dest->nd) + offset] = (int16_t)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
+                break; \
+            case nd_int32: \
+                if(elem_wise_cp == false)\
+                { \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_int32[i + offset] = (int32_t)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_int32[element_index(*dest, i, dest->nd) + offset] = (int32_t)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
+                break; \
+            case nd_int64: \
+                if(elem_wise_cp == false)\
+                { \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_int64[i + offset] = (int64_t)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_int64[element_index(*dest, i, dest->nd) + offset] = (int64_t)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
+                break; \
+            case nd_float: \
+                if(elem_wise_cp == false)\
+                { \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_float[i + offset] = (float)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_float[element_index(*dest, i, dest->nd) + offset] = (float)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
+                break; \
+            case nd_double: \
+                if(elem_wise_cp == false)\
+                { \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_double[i + offset] = (double)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_double[element_index(*dest, i, dest->nd) + offset] = (double)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
+                break; \
+            case nd_cfloat: \
+                if(elem_wise_cp == false)\
+                { \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_cfloat[i + offset] = (float complex)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_cfloat[element_index(*dest, i, dest->nd) + offset] = (float complex)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
+                break; \
+            case nd_cdouble: \
+                if(elem_wise_cp == false)\
+                { \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_cdouble[i + offset] = (double complex)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_cdouble[element_index(*dest, i, dest->nd) + offset] = (double complex)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
+                break; \
+        } \
+    }
+
+COPY_DATA_FROM_(bool)
+COPY_DATA_FROM_(int8)
+COPY_DATA_FROM_(int16)
+COPY_DATA_FROM_(int32)
+COPY_DATA_FROM_(int64)
+COPY_DATA_FROM_(float)
+COPY_DATA_FROM_(double)
+COPY_DATA_FROM_(cfloat)
+COPY_DATA_FROM_(cdouble)
+
+void copy_data(t_ndarray **ds, t_ndarray src, uint32_t offset, bool elem_wise_cp)
+{
+    switch(src.type)
+    {
+        case nd_bool:
+            copy_data_from_bool(ds, src, offset, elem_wise_cp);
+            break;
+
+        case nd_int8:
+            copy_data_from_int8(ds, src, offset, elem_wise_cp);
+            break;
+
+        case nd_int16:
+            copy_data_from_int16(ds, src, offset, elem_wise_cp);
+            break;
+
+        case nd_int32:
+            copy_data_from_int32(ds, src, offset, elem_wise_cp);
+            break;
+
+        case nd_int64:
+            copy_data_from_int64(ds, src, offset, elem_wise_cp);
+            break;
+
+        case nd_float:
+            copy_data_from_float(ds, src, offset, elem_wise_cp);
+            break;
+
+        case nd_double:
+            copy_data_from_double(ds, src, offset, elem_wise_cp);
+            break;
+
+        case nd_cfloat:
+            copy_data_from_cfloat(ds, src, offset, elem_wise_cp);
+            break;
+
+        case nd_cdouble:
+            copy_data_from_cdouble(ds, src, offset, elem_wise_cp);
+            break;
+    }
+}
+
 void array_copy_data(t_ndarray *dest, t_ndarray src, uint32_t offset)
 {
     unsigned char *d = (unsigned char*)dest->raw_data;
@@ -497,15 +668,11 @@ void array_copy_data(t_ndarray *dest, t_ndarray src, uint32_t offset)
         && (src.order == order_c
             || (src.order == order_f && is_same_shape(*dest, src))))
     {
-        memcpy(d + offset * dest->type_size, s, src.buffer_size);
+        copy_data(&dest, src, offset, false);
     }
     else
     {
-        for (int64_t element_num = 0; element_num < src.length; ++element_num)
-        {
-            memcpy(d + ((element_index(*dest, element_num, dest->nd) + offset) * dest->type_size),
-                s + (element_index(src, element_num, src.nd) * src.type_size), src.type_size);
-        }
+        copy_data(&dest, src, offset, true);
     }
 }
 
@@ -582,3 +749,74 @@ NUMPY_SUM_(float32, float, float)
 NUMPY_SUM_(float64, double, double)
 NUMPY_SUM_(complex64, float complex, cfloat)
 NUMPY_SUM_(complex128, double complex, cdouble)
+
+#define NUMPY_AMAX_(NAME, TYPE, CTYPE) \
+    TYPE numpy_amax_##NAME(t_ndarray arr) \
+    { \
+        int64_t nd_indices[arr.nd]; \
+        memset(nd_indices, 0, sizeof(int64_t) * arr.nd); \
+        TYPE output = arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
+        for (int32_t i = 0; i < arr.length; i++) \
+        { \
+            TYPE current_value = arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
+            if (creal(current_value) > creal(output) || \
+                (creal(current_value) == creal(output) && cimag(current_value) > cimag(output))) \
+            { \
+                output = current_value; \
+            } \
+            nd_indices[0]++; \
+            for (int32_t j = 0; j < arr.nd - 1; j++) \
+                if (nd_indices[j] == arr.shape[j]) \
+                { \
+                    nd_indices[j] = 0; \
+                    nd_indices[j + 1]++; \
+                } \
+        } \
+        return output; \
+    }
+
+NUMPY_AMAX_(bool, int64_t, bool)
+NUMPY_AMAX_(int8, int64_t, int8)
+NUMPY_AMAX_(int16, int64_t, int16)
+NUMPY_AMAX_(int32, int64_t, int32)
+NUMPY_AMAX_(int64, int64_t, int64)
+NUMPY_AMAX_(float32, float, float)
+NUMPY_AMAX_(float64, double, double)
+NUMPY_AMAX_(complex64, float complex, cfloat)
+NUMPY_AMAX_(complex128, double complex, cdouble)
+
+#define NUMPY_AMIN_(NAME, TYPE, CTYPE) \
+    TYPE numpy_amin_##NAME(t_ndarray arr) \
+    { \
+        int64_t nd_indices[arr.nd]; \
+        memset(nd_indices, 0, sizeof(int64_t) * arr.nd); \
+        TYPE output = arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
+        for (int32_t i = 0; i < arr.length; i++) \
+        { \
+            TYPE current_value = arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
+            if (creal(current_value) < creal(output) || \
+                (creal(current_value) == creal(output) && cimag(current_value) < cimag(output))) \
+            { \
+                output = current_value; \
+            } \
+            nd_indices[0]++; \
+            for (int32_t j = 0; j < arr.nd - 1; j++) \
+                if (nd_indices[j] == arr.shape[j]) \
+                { \
+                    nd_indices[j] = 0; \
+                    nd_indices[j + 1]++; \
+                } \
+        } \
+        return output; \
+    }
+
+NUMPY_AMIN_(bool, int64_t, bool)
+NUMPY_AMIN_(int8, int64_t, int8)
+NUMPY_AMIN_(int16, int64_t, int16)
+NUMPY_AMIN_(int32, int64_t, int32)
+NUMPY_AMIN_(int64, int64_t, int64)
+NUMPY_AMIN_(float32, float, float)
+NUMPY_AMIN_(float64, double, double)
+NUMPY_AMIN_(complex64, float complex, cfloat)
+NUMPY_AMIN_(complex128, double complex, cdouble)
+

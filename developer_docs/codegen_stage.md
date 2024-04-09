@@ -20,8 +20,8 @@ def _print_ClassName(self, stmt):
     return Y
 ```
 where `Y` must be a string.
-Each of these `_print_X` functions should internally call the `_print` function on each of the elements of the object to obtain strings which can be combined to create a string describing the current object in the target language.
-It can be tempting to skip some of these `_print` calls, especially for basic types such as literals.
+Each of these `_print_X` functions should internally call the `_print` function on each of the `PyccelAstNode` elements of the object to obtain strings which can be combined to create a string describing the current object in the target language.
+It can be tempting to skip some of these `_print` calls, especially for basic types such as `Literal`s.
 However it is very important to use these functions as much as possible, for several reasons:
 1.  It ensures that the same conventions are used throughout the generated code
 2.  It ensures that code details are not forgotten
@@ -134,7 +134,7 @@ While in Fortran it becomes:
 
     allocate(c(0:size(a, 1_i64, i64) - 1_i64, 0:size(a, 2_i64, i64) - &
           1_i64))
-    do i = 0_i64, size(c, 2_i64, i64) - 1_i64, 1_i64
+    do i = 0_i64, size(c, 2_i64, i64) - 1_i64
       c(:, i) = a(:, i) + b
     end do
     return

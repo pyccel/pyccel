@@ -48,10 +48,27 @@ class FortranNameClashChecker(LanguageNameClashChecker):
             'pack', 'numpy_sign', 'c_associated', 'c_loc', 'c_f_pointer', 'c_ptr'])
 
     def has_clash(self, name, symbols):
-        """ Indicate whether the proposed name causes any clashes
+        """
+        Indicate whether the proposed name causes any clashes.
+
+        Indicate whether the proposed name causes any clashes by comparing it with the
+        reserved keywords and the symbols which are already defined in the scope. The
+        comparison is carried out without case sensitviity to match Fortran's behaviour.
+
+        Parameters
+        ----------
+        name : str
+            The proposed name.
+        symbols : set of str
+            The symbols already used in the scope.
+
+        Returns
+        -------
+        bool
+            True if the name clashes with an existing name. False otherwise.
         """
         name = name.lower()
-        return any(name == k for k in self.keywords) or \
+        return name in self.keywords or \
                any(name == s.lower() for s in symbols)
 
     def get_collisionless_name(self, name, symbols):

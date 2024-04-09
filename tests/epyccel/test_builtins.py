@@ -175,6 +175,19 @@ def test_min_tuple(language):
     assert epyc_f(*int_args) == f(*int_args)
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
+def test_min_expr(language):
+    @template('T', [int, float])
+    def f(x : 'T', y : 'T'):
+        return min((x, y))+3, min(x, y)+4
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int, max_int) for _ in range(2)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
+
+    assert np.array_equal(epyc_f(*int_args), f(*int_args))
+    assert np.allclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
+
 def test_max_2_args_i(language):
     def f(x : 'int', y : 'int'):
         return max(x, y)
@@ -261,6 +274,19 @@ def test_max_tuple(language):
     assert epyc_f(*int_args) == f(*int_args)
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
+def test_max_expr(language):
+    @template('T', [int, float])
+    def f(x : 'T', y : 'T'):
+        return max((x, y))+3, max(x, y)+4
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int, max_int) for _ in range(2)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
+
+    assert np.array_equal(epyc_f(*int_args), f(*int_args))
+    assert np.allclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
@@ -277,7 +303,7 @@ def test_sum_matching_types(language):
 
     epyc_f = epyccel(f, language=language)
 
-    int_args = [randint(min_int/2, max_int/2) for _ in range(2)]
+    int_args = [randint(min_int//2, max_int//2) for _ in range(2)]
     float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
     complex_args = [uniform(min_float/2, max_float/2) + 1j*uniform(min_float/2, max_float/2)
                     for _ in range(2)]
@@ -285,3 +311,61 @@ def test_sum_matching_types(language):
     assert epyc_f(*int_args) == f(*int_args)
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
     assert np.isclose(epyc_f(*complex_args), f(*complex_args), rtol=RTOL, atol=ATOL)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="sum not implemented in C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_sum_expr(language):
+    @template('T', [int, float])
+    def f(x : 'T', y : 'T'):
+        return sum((x, y))+3
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int//3, max_int//3) for _ in range(2)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert np.allclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
+
+def test_len_numpy(language):
+    def f():
+        from numpy import ones
+        a = ones((3,4))
+        b = ones((4,3,5))
+        c = ones(4)
+        return len(a), len(b), len(c)
+
+    epyc_f = epyccel(f, language=language)
+
+    assert epyc_f() == f()
+
+
+def test_len_tuple(language):
+    def f():
+        a = (3,4)
+        b = (4,3,5)
+        c = b
+        return len(a), len(b), len(c), len((1,2))
+
+    epyc_f = epyccel(f, language=language)
+
+    assert epyc_f() == f()
+
+
+def test_len_inhomog_tuple(language):
+    def f():
+        a = (3,True)
+        b = (4j,False,5)
+        c = b
+        return len(a), len(b), len(c), len((1.5,2))
+
+    epyc_f = epyccel(f, language=language)
+
+    assert epyc_f() == f()

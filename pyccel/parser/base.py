@@ -38,6 +38,7 @@ from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 
 errors = Errors()
 error_mode = ErrorsMode()
+
 #==============================================================================
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
@@ -46,30 +47,33 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 # Useful for very coarse version differentiation.
 
 #==============================================================================
-
-
-def get_filename_from_import(module,input_folder=''):
+def get_filename_from_import(module, input_folder=''):
     """
-    Get a valid filename for the import.
+    Get the absolute path of a module, searching in a given folder.
 
-    Get a valid filename with absolute path, that corresponds to the
+    Return a valid filename with an absolute path, that corresponds to the
     definition of module.
     The priority order is:
         - header files (extension == pyh)
-        - python files (extension == py).
+        - python files (extension == py)
 
     Parameters
     ----------
-    module : AsName | str
-        The module being imported.
+    module : str | AsName
+        Name of the module of interest.
 
     input_folder : str
-        The folders in which the module might be found.
+        Relative path of the folder which should be searched for the module.
 
     Returns
     -------
     str
-        The location of the imported file.
+        Absolute path of the given module.
+
+    Raises
+    ------
+    PyccelError
+        Error raised when the module cannot be found.
     """
 
     if (isinstance(module, AsName)):
@@ -87,15 +91,13 @@ def get_filename_from_import(module,input_folder=''):
 
     filename_pyh = f'{filename}.pyh'
     filename_py  = f'{filename}.py'
-    folders = input_folder.split(""".""")
-    for i in range(len(folders)):
-        poss_dirname      = os.path.join( *folders[:i+1] )
-        poss_filename_pyh = os.path.join( poss_dirname, filename_pyh )
-        poss_filename_py  = os.path.join( poss_dirname, filename_py  )
-        if is_valid_filename_pyh(poss_filename_pyh):
-            return os.path.abspath(poss_filename_pyh)
-        if is_valid_filename_py(poss_filename_py):
-            return os.path.abspath(poss_filename_py)
+
+    poss_filename_pyh = os.path.join( input_folder, filename_pyh )
+    poss_filename_py  = os.path.join( input_folder, filename_py  )
+    if is_valid_filename_pyh(poss_filename_pyh):
+        return os.path.abspath(poss_filename_pyh)
+    if is_valid_filename_py(poss_filename_py):
+        return os.path.abspath(poss_filename_py)
 
     source = module
     if len(module.split(""".""")) > 1:
@@ -123,13 +125,10 @@ def get_filename_from_import(module,input_folder=''):
         return filename_py
 
     errors = Errors()
-    errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
+    raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                   severity='fatal')
 
-
-
 #==============================================================================
-
 class BasicParser(object):
     """
     Class for a basic parser.
@@ -158,8 +157,8 @@ class BasicParser(object):
 
         # represent the scope of a function
         self._scope = Scope()
-        self._current_class    = None
-        self._current_function = None
+        self._current_function_name = None
+        self._current_function = []
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
@@ -179,7 +178,7 @@ class BasicParser(object):
 
     def __setstate__(self, state):
         copy_slots = ('_code', '_fst', '_ast', '_metavars', '_scope', '_filename',
-                '_metavars', '_scope', '_current_class', '_current_function',
+                '_metavars', '_scope', '_current_function',
                 '_syntax_done', '_semantic_done', '_current_ast_node')
 
         self.__dict__.update({s : state[s] for s in copy_slots})
@@ -257,10 +256,6 @@ class BasicParser(object):
         return self._metavars
 
     @property
-    def current_class(self):
-        return self._current_class
-
-    @property
     def current_function(self):
         """Name of current function, if any."""
         return self._current_function
@@ -298,7 +293,6 @@ class BasicParser(object):
     @property
     def blocking(self):
         return self._blocking
-
 
     def insert_function(self, func):
         """."""
@@ -572,9 +566,8 @@ class BasicParser(object):
         self._syntax_done   = parser.syntax_done
         self._semantic_done = parser.semantic_done
 
+
 #==============================================================================
-
-
 if __name__ == '__main__':
     import sys
 

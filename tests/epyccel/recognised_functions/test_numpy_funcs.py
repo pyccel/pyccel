@@ -1,8 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
 import sys
 import pytest
-from numpy.random import rand, randint, uniform
-from numpy import isclose, iinfo, finfo
+from numpy.random import rand, randn, randint, uniform
+from numpy import isclose, iinfo, finfo, complex64, complex128
 import numpy as np
 
 from pyccel.decorators import template, types
@@ -136,6 +137,220 @@ def test_fabs_phrase_i_r(language):
     assert(isclose(f2(-x,-y), fabs_phrase_r_i(-x,-y), rtol=RTOL, atol=ATOL))
     assert(isclose(f2(x,-y), fabs_phrase_r_i(x,-y), rtol=RTOL, atol=ATOL))
     assert(isclose(f2(-x,y), fabs_phrase_r_i(-x,y), rtol=RTOL, atol=ATOL))
+
+#------------------------------ isnan function ----------------------------#
+def test_numpy_isnan(language):
+    def numpy_isnan_test(x : 'float'):
+        from numpy import isnan
+        return isnan(x)
+
+    def numpy_isnan_array_test(x : 'float[:]'):
+        from numpy import isnan
+        return isnan(x)
+
+    def numpy_isnan_expr_test(x : 'float', y : 'float'):
+        from numpy import isnan
+        return isnan(x+y)
+
+    f = epyccel(numpy_isnan_test, language=language)
+    f_arr = epyccel(numpy_isnan_array_test, language=language)
+    f_expr = epyccel(numpy_isnan_expr_test, language=language)
+
+    input_data = np.nan
+    expected_output = numpy_isnan_test(input_data)
+    obtained = f(input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isnan_expr_test(input_data, 3.0)
+    obtained = f_expr(input_data, 3.0)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isnan_expr_test(3.0, input_data)
+    obtained = f_expr(3.0, input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6)
+    expected_output = numpy_isnan_test(input_data)
+    obtained = f(input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isnan_expr_test(input_data, 3.0)
+    obtained = f_expr(input_data, 3.0)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isnan_expr_test(3.0, input_data)
+    obtained = f_expr(3.0, input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6, size=5)
+    expected_output = numpy_isnan_array_test(input_data)
+    obtained = f_arr(input_data)
+
+    assert np.array_equal(obtained, expected_output)
+    assert matching_types(obtained, expected_output)
+
+    input_data[1] = np.nan
+
+    expected_output = numpy_isnan_array_test(input_data)
+    obtained = f_arr(input_data)
+
+    assert np.array_equal(obtained, expected_output)
+    assert matching_types(obtained, expected_output)
+
+#------------------------------ isinf function ----------------------------#
+def test_numpy_isinf(language):
+    def numpy_isinf_test(x : 'float'):
+        from numpy import isinf
+        return isinf(x)
+
+    def numpy_isinf_array_test(x : 'float[:]'):
+        from numpy import isinf
+        return isinf(x)
+
+    def numpy_isinf_expr_test(x : 'float', y : 'float'):
+        from numpy import isinf
+        return isinf(x+y)
+
+    f = epyccel(numpy_isinf_test, language=language)
+    f_arr = epyccel(numpy_isinf_array_test, language=language)
+    f_expr = epyccel(numpy_isinf_expr_test, language=language)
+
+    input_data = np.inf
+    expected_output = numpy_isinf_test(input_data)
+    obtained = f(input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isinf_expr_test(input_data, 3.0)
+    obtained = f_expr(input_data, 3.0)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isinf_expr_test(3.0, input_data)
+    obtained = f_expr(3.0, input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6)
+    expected_output = numpy_isinf_test(input_data)
+    obtained = f(input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isinf_expr_test(input_data, 3.0)
+    obtained = f_expr(input_data, 3.0)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isinf_expr_test(3.0, input_data)
+    obtained = f_expr(3.0, input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6, size=5)
+    expected_output = numpy_isinf_array_test(input_data)
+    obtained = f_arr(input_data)
+
+    assert np.array_equal(obtained, expected_output)
+    assert matching_types(obtained, expected_output)
+
+    input_data[1] = np.inf
+
+    expected_output = numpy_isinf_array_test(input_data)
+    obtained = f_arr(input_data)
+
+    assert np.array_equal(obtained, expected_output)
+    assert matching_types(obtained, expected_output)
+
+#------------------------------ isfinite function ----------------------------#
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Different inf representation.')
+def test_numpy_isfinite(language):
+    def numpy_isfinite_test(x : 'float'):
+        from numpy import isfinite
+        return isfinite(x)
+
+    def numpy_isfinite_array_test(x : 'float[:]'):
+        from numpy import isfinite
+        return isfinite(x)
+
+    def numpy_isfinite_expr_test(x : 'float', y : 'float'):
+        from numpy import isfinite
+        return isfinite(x+y)
+
+    f = epyccel(numpy_isfinite_test, language=language)
+    f_arr = epyccel(numpy_isfinite_array_test, language=language)
+    f_expr = epyccel(numpy_isfinite_expr_test, language=language)
+
+    input_data = np.inf
+    expected_output = numpy_isfinite_test(input_data)
+    obtained = f(input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isfinite_expr_test(input_data, 3.0)
+    obtained = f_expr(input_data, 3.0)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isfinite_expr_test(3.0, input_data)
+    obtained = f_expr(3.0, input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6)
+    expected_output = numpy_isfinite_test(input_data)
+    obtained = f(input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isfinite_expr_test(input_data, 3.0)
+    obtained = f_expr(input_data, 3.0)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isfinite_expr_test(3.0, input_data)
+    obtained = f_expr(3.0, input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6, size=5)
+    expected_output = numpy_isfinite_array_test(input_data)
+    obtained = f_arr(input_data)
+
+    assert np.array_equal(obtained, expected_output)
+    assert matching_types(obtained, expected_output)
+
+    input_data[1] = np.inf
+
+    expected_output = numpy_isfinite_array_test(input_data)
+    obtained = f_arr(input_data)
+
+    assert np.array_equal(obtained, expected_output)
+    assert matching_types(obtained, expected_output)
 
 #------------------------------ absolute function ----------------------------#
 def test_absolute_call_r(language):
@@ -720,7 +935,7 @@ def test_sinh_phrase(language):
     assert(isclose(f2(-x,y), sinh_phrase(-x,y), rtol=RTOL, atol=ATOL))
     assert(isclose(f2(x,-y), sinh_phrase(x,-y), rtol=RTOL, atol=ATOL))
 
-#------------------------------- sinh function -------------------------------#
+#------------------------------- cosh function -------------------------------#
 def test_cosh_call_i(language):
     def cosh_call_i(x : 'int'):
         from numpy import cosh
@@ -757,7 +972,7 @@ def test_cosh_phrase(language):
     assert(isclose(f2(-x,y), cosh_phrase(-x,y), rtol=RTOL, atol=ATOL))
     assert(isclose(f2(x,-y), cosh_phrase(x,-y), rtol=RTOL, atol=ATOL))
 
-#------------------------------- sinh function -------------------------------#
+#------------------------------- tanh function -------------------------------#
 def test_tanh_call_i(language):
     def tanh_call_i(x : 'int'):
         from numpy import tanh
@@ -1926,16 +2141,44 @@ def test_array(language):
         a = array(((1,2,3),(4,5,6)))
         s = shape(a)
         return len(s), s[0], s[1]
+    def create_array_tuple_ref(a : 'int[:,:]'):
+        from numpy import array
+        b = (a[0,:], a[1,:])
+        c = array(b)
+        return c
     f1_shape = epyccel(create_array_list_shape, language = language)
     f1_val   = epyccel(create_array_list_val, language = language)
-    assert(f1_shape() == create_array_list_shape())
-    assert(f1_val()   == create_array_list_val())
+    assert f1_shape() == create_array_list_shape()
+    assert f1_val()   == create_array_list_val()
     assert matching_types(f1_val(), create_array_list_val())
     f2_shape = epyccel(create_array_tuple_shape, language = language)
     f2_val   = epyccel(create_array_tuple_val, language = language)
-    assert(f2_shape() == create_array_tuple_shape())
-    assert(f2_val()   == create_array_tuple_val())
+    assert f2_shape() == create_array_tuple_shape()
+    assert f2_val()   == create_array_tuple_val()
     assert matching_types(f2_val(), create_array_tuple_val())
+    array_tuple_ref = epyccel(create_array_tuple_ref, language = language)
+    tmp_arr = np.ones((3,4), dtype=int)
+    assert np.allclose(array_tuple_ref(tmp_arr), create_array_tuple_ref(tmp_arr))
+
+def test_array_new_dtype(language):
+    def create_float_array_tuple_ref(a : 'int[:,:]'):
+        from numpy import array
+        b = (a[0,:], a[1,:])
+        c = array(b, dtype=float)
+        return c
+    def create_bool_array_tuple_ref(a : 'int[:,:]'):
+        from numpy import array
+        b = (a[0,:], a[1,:])
+        c = array(b, dtype=bool)
+        return c
+
+    array_float_tuple_ref = epyccel(create_float_array_tuple_ref, language = language)
+    tmp_arr = np.ones((3,4), dtype=int)
+    assert np.allclose(array_float_tuple_ref(tmp_arr), create_float_array_tuple_ref(tmp_arr))
+
+    array_bool_tuple_ref = epyccel(create_float_array_tuple_ref, language = language)
+    tmp_arr = np.ones((3,4), dtype=int)
+    assert np.allclose(array_bool_tuple_ref(tmp_arr), create_bool_array_tuple_ref(tmp_arr))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -2162,6 +2405,16 @@ def test_sum_real(language):
     x = rand(10)
     assert(isclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL))
 
+def test_sum_type(language):
+    def sum_call(x : 'float32[:]'):
+        from numpy import sum as np_sum
+        return np_sum(x)
+
+    f1 = epyccel(sum_call, language = language)
+    x = rand(10).astype(np.float32)
+    assert isclose(f1(x), sum_call(x), rtol=RTOL32, atol=ATOL32)
+    assert matching_types(f1(x), sum_call(x))
+
 def test_sum_phrase(language):
     def sum_phrase(x : 'float[:]', y : 'float[:]'):
         from numpy import sum as np_sum
@@ -2181,15 +2434,6 @@ def test_sum_property(language):
     x = randint(99,size=10)
     assert(f1(x) == sum_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amin not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_int(language):
     def min_call(x : 'int[:]'):
         from numpy import amin
@@ -2199,15 +2443,6 @@ def test_min_int(language):
     x = randint(99,size=10)
     assert(f1(x) == min_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amin not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_real(language):
     def min_call(x : 'float[:]'):
         from numpy import amin
@@ -2216,6 +2451,28 @@ def test_min_real(language):
     f1 = epyccel(min_call, language = language)
     x = rand(10)
     assert(isclose(f1(x), min_call(x), rtol=RTOL, atol=ATOL))
+
+def test_min_complex(language):
+    def min_call(x: 'complex128[:]'):
+        from numpy import amin
+        return amin(x)
+
+    f1 = epyccel(min_call, language=language)
+    x = randn(10) + 1j * randn(10)  
+    assert np.allclose(f1(x), min_call(x))
+    x = randn(10) + 1j  
+    assert np.allclose(f1(x), min_call(x))
+    x = 10 + 1j * randn(10) 
+    assert np.allclose(f1(x), min_call(x))
+
+def test_min_bool(language):
+    def min_call(x: 'bool[:]'):
+        from numpy import amin
+        return amin(x)
+
+    f1 = epyccel(min_call, language=language)
+    x = np.array([True, False, True, False])  # Generating a boolean array
+    assert f1(x) == min_call(x)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -2254,15 +2511,6 @@ def test_min_property(language):
     x = randint(99,size=10)
     assert(f1(x) == min_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_max_int(language):
     def max_call(x : 'int[:]'):
         from numpy import amax
@@ -2272,15 +2520,6 @@ def test_max_int(language):
     x = randint(99,size=10)
     assert(f1(x) == max_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_max_real(language):
     def max_call(x : 'float[:]'):
         from numpy import amax
@@ -2290,15 +2529,28 @@ def test_max_real(language):
     x = rand(10)
     assert(isclose(f1(x), max_call(x), rtol=RTOL, atol=ATOL))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+def test_max_complex(language):
+    def max_call(x: 'complex128[:]'):
+        from numpy import amax
+        return amax(x)
+
+    f1 = epyccel(max_call, language=language)
+    x = randn(10) + 1j * randn(10)  
+    assert np.allclose(f1(x), max_call(x))
+    x = randn(10) + 1j  
+    assert np.allclose(f1(x), max_call(x))
+    x = 10 + 1j * randn(10) 
+    assert np.allclose(f1(x), max_call(x))
+
+def test_max_bool(language):
+    def max_call(x: 'bool[:]'):
+        from numpy import amax
+        return amax(x)
+
+    f1 = epyccel(max_call, language=language)
+    x = np.array([True, False, True, False])  # Generating a boolean array
+    assert f1(x) == max_call(x)
+
 def test_max_phrase(language):
     def max_phrase(x : 'float[:]', y : 'float[:]'):
         from numpy import amax
@@ -2309,17 +2561,7 @@ def test_max_phrase(language):
     x = rand(10)
     y = rand(15)
     assert(isclose(f2(x,y), max_phrase(x,y), rtol=RTOL, atol=ATOL))
-
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+    
 def test_max_property(language):
     def max_call(x : 'int[:]'):
         return x.max()
@@ -3938,9 +4180,8 @@ def test_numpy_imag_array_like_2d(language):
         )
     )
 )
-
 # Not all the arguments supported
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_scalar(language):
 
     @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
@@ -4005,7 +4246,7 @@ def test_numpy_mod_scalar(language):
         )
     )
 )
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_array_like_1d(language):
 
     @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
@@ -4052,7 +4293,7 @@ def test_numpy_mod_array_like_1d(language):
         )
     )
 )
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_array_like_2d(language):
 
     @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
@@ -4842,7 +5083,7 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
             pytest.mark.python])
     )
 )
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Boolean conversion. See #1670')
 def test_numpy_matmul_array_like_1d(language):
 
     @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]', 'complex64[:]', 'complex128[:]'])
@@ -4881,12 +5122,12 @@ def test_numpy_matmul_array_like_1d(language):
 
     epyccel_func = epyccel(get_matmul, language=language)
 
-    assert epyccel_func(bl) == get_matmul(bl)
-    assert epyccel_func(integer8) == get_matmul(integer8)
-    assert epyccel_func(integer16) == get_matmul(integer16)
-    assert epyccel_func(integer) == get_matmul(integer)
-    assert epyccel_func(integer32) == get_matmul(integer32)
-    assert epyccel_func(integer64) == get_matmul(integer64)
+    assert np.array_equal(epyccel_func(bl), get_matmul(bl))
+    assert np.array_equal(epyccel_func(integer8), get_matmul(integer8))
+    assert np.array_equal(epyccel_func(integer16), get_matmul(integer16))
+    assert np.array_equal(epyccel_func(integer), get_matmul(integer))
+    assert np.array_equal(epyccel_func(integer32), get_matmul(integer32))
+    assert np.array_equal(epyccel_func(integer64), get_matmul(integer64))
     assert isclose(epyccel_func(fl),get_matmul(fl), rtol=RTOL, atol=ATOL)
     assert isclose(epyccel_func(fl32),get_matmul(fl32), rtol=RTOL32, atol=ATOL32)
     assert isclose(epyccel_func(fl64),get_matmul(fl64), rtol=RTOL, atol=ATOL)
@@ -4922,7 +5163,6 @@ def test_numpy_matmul_array_like_2x2d(language):
         cast = type(min_for_type)
         min_test = -np.sqrt(abs(min_for_type) / size[0])
         max_test = np.sqrt(abs(max_for_type) / size[0])
-        print(min_test, max_test, cast(min_test), cast(max_test))
         return cast(min_test), cast(max_test)
 
     integer8 = randint(*calculate_max_values(min_int8, max_int8), size=size, dtype=np.int8)
@@ -5161,10 +5401,7 @@ def test_numpy_linspace_scalar(language):
         from numpy import linspace
         stop = start + steps
         b = linspace(start, stop, num)
-        x = 0.0
-        for bi in b:
-            x += bi
-        return x
+        return b
 
     def test_linspace(start : 'complex64', end : 'complex64'):
         from numpy import linspace
@@ -5217,29 +5454,29 @@ def test_numpy_linspace_scalar(language):
     assert (np.allclose(x, out))
     arr = np.zeros
     x = randint(1, 60)
-    assert np.isclose(epyccel_func(integer8, x, 30), get_linspace(integer8, x, 30), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100))
+    assert np.allclose(epyccel_func(integer8, x, 30), get_linspace(integer8, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer8, x, 100)[0], get_linspace(integer8, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(integer, x, 30), get_linspace(integer, x, 30), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(integer, x, 100), get_linspace(integer, x, 100))
+    assert np.allclose(epyccel_func(integer, x, 30), get_linspace(integer, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer, x, 100)[0], get_linspace(integer, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(integer16, x, 30), get_linspace(integer16, x, 30), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(integer16, x, 100), get_linspace(integer16, x, 100))
+    assert np.allclose(epyccel_func(integer16, x, 30), get_linspace(integer16, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer16, x, 100)[0], get_linspace(integer16, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(integer32, x, 30), get_linspace(integer32, x, 30), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(integer32, x, 100), get_linspace(integer32, x, 100))
+    assert np.allclose(epyccel_func(integer32, x, 30), get_linspace(integer32, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer32, x, 100)[0], get_linspace(integer32, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(integer64, x, 200), get_linspace(integer64, x, 200), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(integer64, x, 100), get_linspace(integer64, x, 100))
+    assert np.allclose(epyccel_func(integer64, x, 200), get_linspace(integer64, x, 200), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer64, x, 100)[0], get_linspace(integer64, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(fl, x, 100), get_linspace(fl, x, 100), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(fl, x, 100), get_linspace(fl, x, 100))
+    assert np.allclose(epyccel_func(fl, x, 100), get_linspace(fl, x, 100), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(fl, x, 100)[0], get_linspace(fl, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(fl32, x, 200), get_linspace(fl32, x, 200), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(fl32, x, 100), get_linspace(fl32, x, 100))
+    assert np.allclose(epyccel_func(fl32, x, 200), get_linspace(fl32, x, 200), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(fl32, x, 100)[0], get_linspace(fl32, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(fl64, x, 200), get_linspace(fl64, x, 200), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(fl64, x, 100), get_linspace(fl64, x, 100))
+    assert np.allclose(epyccel_func(fl64, x, 200), get_linspace(fl64, x, 200), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(fl64, x, 100)[0], get_linspace(fl64, x, 100)[0])
 
     epyccel_func1 = epyccel(test_linspace, language=language)
     epyccel_func2 = epyccel(test_linspace2, language=language)

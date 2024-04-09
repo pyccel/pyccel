@@ -488,14 +488,14 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
       integer(i64) :: i_0001
 
       allocate(a(0:3_i64, 0:2_i64))
-      do i = 0_i64, 2_i64, 1_i64
-        do j = 0_i64, 3_i64, 1_i64
+      do i = 0_i64, 2_i64
+        do j = 0_i64, 3_i64
           a(j, i) = i * 4_i64 + j
         end do
       end do
       allocate(b(0:2_i64, 0:3_i64))
       allocate(c(0:2_i64, 0:3_i64))
-      do i_0001 = 0_i64, 3_i64, 1_i64
+      do i_0001 = 0_i64, 3_i64
         b(:, i_0001) = a(i_0001, :)
         c(:, i_0001) = a(i_0001, :)
       end do
@@ -559,6 +559,10 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 
     `sqrt`, `abs`, `sin`, `cos`, `exp`, `log`, `tan`, `arcsin`, `arccos`, `arctan`, `arctan2`, `sinh`, `cosh`, `tanh`, `arcsinh`, `arccosh` and
     `arctanh`.
+
+-   Supported [logic functions](https://numpy.org/doc/stable/reference/routines.logic.html) (optional parameters are not supported):
+
+    `isfinite`, `isinf`, `isnan`
 
 -   Supported [array creation routines](https://numpy.org/doc/stable/reference/routines.array-creation.html) (fully supported):
 
