@@ -1097,8 +1097,8 @@ class Module(ScopedAstNode):
                 raise TypeError('Only a Interface instance is allowed.')
 
         NoneType = type(None)
-        if not isinstance(init_func, (NoneType, FunctionDef)):
-            raise TypeError('init_func must be a FunctionDef')
+        assert (pyccel_stage == 'syntactic' and isinstance(init_func, CodeBlock)) or \
+                isinstance(init_func, (NoneType, FunctionDef))
 
         if not isinstance(free_func, (NoneType, FunctionDef)):
             raise TypeError('free_func must be a FunctionDef')
@@ -1133,14 +1133,14 @@ class Module(ScopedAstNode):
             import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
             self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
-        if init_func:
-            init_if = init_func.body.body[0]
-            # The init function should always contain an If block unless it is part of a wrapper
-            if isinstance(init_if, If):
-                init_cond = init_if.blocks[0].condition
-                init_var = init_cond.args[0]
-                self._variables.append(init_var)
-                self._variable_inits.append(LiteralFalse())
+            if init_func:
+                init_if = init_func.body.body[0]
+                # The init function should always contain an If block unless it is part of a wrapper
+                if isinstance(init_if, If):
+                    init_cond = init_if.blocks[0].condition
+                    init_var = init_cond.args[0]
+                    self._variables.append(init_var)
+                    self._variable_inits.append(LiteralFalse())
 
         super().__init__(scope)
 
