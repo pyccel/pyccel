@@ -5290,6 +5290,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(cmplx128_1, cmplx128_2, cmplx128_3)
 
+
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
     size = (1,2)
 
@@ -6083,6 +6084,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(fl64_1, fl64_2, fl64_3)
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
 
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
     size = (1,2)
