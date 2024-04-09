@@ -189,7 +189,9 @@ class NumpyFloat(PythonFloat):
 
     def __init__(self, arg):
         self._shape = arg.shape
-        self._class_type = arg.class_type.switch_basic_type(self.static_type())
+        rank  = arg.rank
+        order = arg.order
+        self._class_type = NumpyNDArrayType(self.static_type(), rank, order) if rank else self.static_type()
         super().__init__(arg)
 
     @property
@@ -248,7 +250,9 @@ class NumpyBool(PythonBool):
     name = 'bool'
     def __init__(self, arg):
         self._shape = arg.shape
-        self._class_type = arg.class_type.switch_basic_type(self.static_type())
+        rank  = arg.rank
+        order = arg.order
+        self._class_type = NumpyNDArrayType(self.static_type(), rank, order) if rank else self.static_type()
         super().__init__(arg)
 
     @property
@@ -280,7 +284,9 @@ class NumpyInt(PythonInt):
 
     def __init__(self, arg=None, base=10):
         self._shape = arg.shape
-        self._class_type = arg.class_type.switch_basic_type(self.static_type())
+        rank  = arg.rank
+        order = arg.order
+        self._class_type = NumpyNDArrayType(self.static_type(), rank, order) if rank else self.static_type()
         super().__init__(arg)
 
     @property
@@ -456,7 +462,9 @@ class NumpyComplex(PythonComplex):
         if arg1 is not None:
             raise NotImplementedError("Use builtin complex function not deprecated np.complex")
         self._shape = arg0.shape
-        self._class_type = arg0.class_type.switch_basic_type(self.static_type())
+        rank  = arg0.rank
+        order = arg0.order
+        self._class_type = NumpyNDArrayType(self.static_type(), rank, order) if rank else self.static_type()
         super().__init__(arg0)
 
     @property
