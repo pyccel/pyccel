@@ -2034,6 +2034,10 @@ class SemanticParser(BasicParser):
         for f in expr.funcs:
             self.insert_function(f)
 
+        # Avoid conflicts with symbols from Program
+        if expr.program:
+            self.scope.insert_symbols(expr.program.scope.all_used_symbols)
+
         for c in expr.classes:
             self._visit(c)
 
