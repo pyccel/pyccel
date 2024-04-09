@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 -   #1792 : Fix array unpacking.
 -   #1795 : Fix bug when returning slices in C.
 -   #1732 : Fix multidimensional list indexing in Python.
+-   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
