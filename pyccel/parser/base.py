@@ -471,7 +471,6 @@ class BasicParser(object):
         import pickle
         import hashlib
 
-        #print('>>> home = ', os.environ['HOME'])
         # ...
 
         # we are only exporting the AST.

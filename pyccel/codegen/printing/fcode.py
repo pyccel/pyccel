@@ -1077,7 +1077,7 @@ class FCodePrinter(CodePrinter):
             if isinstance(expr.endpoint, LiteralTrue):
                 condition = lhs + f' = {stop}'
             else:
-                cond_template = lhs + f' = merge({stop}, {lhs}, ({cond}))'
+                condition = lhs + f' = merge({stop}, {lhs}, ({cond}))'
         if expr.rank > 1:
             template = '({start} + {index}*{step})'
             var = expr.ind
@@ -2107,9 +2107,6 @@ class FCodePrinter(CodePrinter):
         self.exit_scope()
 
         return decs, methods
-
-    def _print_BindCClassDef(self, expr):
-        return '', ''
 
     def _print_Break(self, expr):
         return 'exit\n'
