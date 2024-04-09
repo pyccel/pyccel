@@ -1237,8 +1237,8 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyArange(self, expr):
         start  = self._print(expr.start)
         step   = self._print(expr.step)
-        shape  = PyccelMinus(expr.shape[0], LiteralInteger(1), simplify = True)
-        index  = self.scope.get_temporary_variable(PythonNativeInt())
+        shape  = self._print(PyccelMinus(expr.shape[0], LiteralInteger(1), simplify = True))
+        index  = self._print(self.scope.get_temporary_variable(PythonNativeInt()))
 
         zero = self._print(LiteralInteger(0))
         one  = self._print(LiteralInteger(1))
