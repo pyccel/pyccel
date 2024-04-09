@@ -1840,7 +1840,7 @@ class FCodePrinter(CodePrinter):
         for c in expr.python_value:
             if c in sp_chars:
                 if sub_str != '':
-                    formatted_str.append("'{sub_str}'")
+                    formatted_str.append(f"'{sub_str}'")
                     sub_str = ''
                 formatted_str.append(f'ACHAR({ord(c)})')
             else:
