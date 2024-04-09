@@ -30,7 +30,7 @@ from .datatypes      import InhomogeneousTupleType, ContainerType
 from .internals      import PyccelInternalFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
 
-from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, LiteralString, convert_to_literal
+from .literals       import LiteralInteger, LiteralString, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil

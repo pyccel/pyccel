@@ -219,7 +219,7 @@ numpy_dtype_registry = {PythonNativeBool()    : numpy_bool_type,
                         NumpyComplex128Type() : numpy_cdouble_type,
                         NumpyComplex256Type() : numpy_clongdouble_type}
 
-# Needed to check for numpy arguments type
+# Needed to check for NumPy arguments type
 check_type_registry.update({
     NumpyInt8Type()       : 'PyIs_Int8',
     NumpyInt16Type()      : 'PyIs_Int16',

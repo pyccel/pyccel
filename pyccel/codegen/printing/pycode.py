@@ -14,7 +14,6 @@ from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunction
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
-from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpytypes import NumpyNumericType
