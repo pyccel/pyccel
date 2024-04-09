@@ -55,7 +55,7 @@ class FunctionalFor(TypedAstNode):
               Index is `Dummy_0`.
     """
     __slots__ = ('_loops','_expr', '_lhs', '_indices','_index',
-            '_dtype','_precision','_rank','_shape','_order','_class_type')
+            '_rank','_shape','_order','_class_type')
     _attribute_nodes = ('_loops','_expr', '_lhs', '_indices','_index')
 
     def __init__(
@@ -74,8 +74,6 @@ class FunctionalFor(TypedAstNode):
         super().__init__()
 
         if pyccel_stage != 'syntactic':
-            self._dtype      = lhs.dtype
-            self._precision  = lhs.precision
             self._rank       = lhs.rank
             self._shape      = lhs.shape
             self._order      = lhs.order

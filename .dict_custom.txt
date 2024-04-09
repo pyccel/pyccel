@@ -3,6 +3,8 @@ Pythran
 numba
 NumPy
 NumPy's
+CuPy
+CuPy's
 BLAS
 LAPACK
 MPI
@@ -16,6 +18,7 @@ deallocate
 deallocated
 deallocation
 deallocations
+deallocating
 conda
 PyPI
 CentOS
@@ -64,8 +67,8 @@ Quickstart
 FST
 AST
 RedBaron
-intel
-nvidia
+Intel
+NVIDIA
 boolean
 booleans
 quicksort
@@ -104,3 +107,9 @@ destructor's
 Valgrind
 variadic
 subclasses
+oneAPI
+getter
+setter
+bitwise
+datatyping
+datatypes

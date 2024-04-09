@@ -15,6 +15,9 @@ __all__ = [
         'homogeneous_tuple_2_levels',
         'tuple_unpacking_1',
         'tuple_unpacking_2',
+        'tuple_unpacking_3',
+        'tuple_unpacking_4',
+        'tuple_unpacking_5',
         'tuple_name_clash',
         'tuples_as_indexing_basic',
         'tuples_as_indexing_var',
@@ -69,6 +72,7 @@ __all__ = [
         'tuple_inhomogeneous_3',
         'test_tuple_homogeneous',
         'test_tuple_inhomogeneous',
+        'tuple_different_ranks',
         ]
 
 def homogenous_tuple_int():
@@ -131,6 +135,11 @@ def tuple_unpacking_3(x : 'int[:,:]'):
 
 def tuple_unpacking_4(x : 'int[:,:]'):
     x[:,0], x[0,:] = 2, 3
+
+def tuple_unpacking_5():
+    ai = (1,2,3)
+    a,b,c = ai
+    return a,b,c
 
 def tuple_name_clash():
     ai = (1+2j, False, 10.4)
@@ -439,3 +448,7 @@ def test_tuple_inhomogeneous():
     b = ( 42, True, 3.14)
     a = tuple(b)
     return a[0], a[1], a[2], len(a)
+
+def tuple_different_ranks():
+    a = (1,(2,3))
+    return a[0], a[1][0], a[1][1]

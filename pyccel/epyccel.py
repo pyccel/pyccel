@@ -9,24 +9,18 @@ import inspect
 import importlib
 import sys
 import os
-import string
-import random
+
 from filelock import FileLock, Timeout
 
 from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
 
-from pyccel.codegen.pipeline import execute_pyccel
-from pyccel.errors.errors import ErrorsMode
+from pyccel.utilities.strings  import random_string
+from pyccel.codegen.pipeline   import execute_pyccel
+from pyccel.errors.errors      import ErrorsMode
 
-__all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
+__all__ = ['get_source_function', 'epyccel_seq', 'epyccel']
 
-#==============================================================================
-random_selector = random.SystemRandom()
-
-def random_string( n ):
-    chars    = string.ascii_lowercase + string.digits
-    return ''.join( random_selector.choice( chars ) for _ in range(n) )
 
 #==============================================================================
 def get_source_function(func):
@@ -104,6 +98,7 @@ def epyccel_seq(function_or_module, *,
                 wrapper_flags = None,
                 accelerators  = (),
                 verbose       = False,
+                time_execution  = False,
                 debug         = False,
                 includes      = (),
                 libdirs       = (),
@@ -138,6 +133,8 @@ def epyccel_seq(function_or_module, *,
         (currently supported: 'mpi', 'openmp', 'openacc').
     verbose : bool
         Print additional information (default: False).
+    time_execution : bool
+        Time the execution of Pyccel's internal stages.
     debug : bool, optional
         Enable debug mode.
     includes : tuple, optional
@@ -178,7 +175,7 @@ def epyccel_seq(function_or_module, *,
 
     # Define working directory 'folder'
     if folder is None:
-        folder = os.path.dirname(dirpath)
+        folder = dirpath
     else:
         folder = os.path.abspath(folder)
 
@@ -224,6 +221,7 @@ def epyccel_seq(function_or_module, *,
             # Generate shared library
             execute_pyccel(pymod_filename,
                            verbose       = verbose,
+                           show_timings  = time_execution,
                            language      = language,
                            compiler      = compiler,
                            fflags        = fflags,

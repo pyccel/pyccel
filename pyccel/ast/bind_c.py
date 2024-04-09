@@ -9,15 +9,17 @@ file.
 """
 
 from pyccel.ast.basic import PyccelAstNode
-from pyccel.ast.core import Module
+from pyccel.ast.core import Module, Deallocate
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
-from pyccel.ast.datatypes import DataType, NativeInteger
+from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt
 from pyccel.ast.variable import Variable
+from pyccel.utilities.metaclasses import Singleton
 
 __all__ = (
     'BindCArrayVariable',
     'BindCClassDef',
+    'BindCClassProperty',
     'BindCFunctionDef',
     'BindCFunctionDefArgument',
     'BindCFunctionDefResult',
@@ -26,13 +28,14 @@ __all__ = (
     'BindCVariable',
     'CLocFunc',
     'C_F_Pointer',
+    'DeallocatePointer',
 )
 
 # =======================================================================================
 #                                    Datatypes
 # =======================================================================================
 
-class BindCPointer(DataType):
+class BindCPointer(FixedSizeType, metaclass = Singleton):
     """
     Datatype representing a C pointer in Fortran.
 
@@ -136,6 +139,20 @@ class BindCFunctionDef(FunctionDef):
         """
         return [ai for a in self._arguments for ai in a.get_all_function_def_arguments()]
 
+    def rename(self, newname):
+        """
+        Rename the FunctionDef name->newname.
+
+        Rename the FunctionDef name->newname.
+
+        Parameters
+        ----------
+        newname : str
+            New name for the FunctionDef.
+        """
+        assert newname == newname.lower()
+        self._name = newname
+
 # =======================================================================================
 
 
@@ -163,6 +180,10 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         in a C-Fortran interface. This variable may have a type which is not
         compatible with C.
 
+    wrapping_bound_argument : bool
+        Indicates if the argument being wrapped was a bound argument of a
+        class method.
+
     **kwargs : dict
         See FunctionDefArgument.
 
@@ -172,22 +193,23 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         The class from which BindCFunctionDefArgument inherits which
         contains all details about the args and kwargs.
     """
-    __slots__ = ('_shape', '_strides', '_original_arg_var', '_rank')
+    __slots__ = ('_shape', '_strides', '_original_arg_var', '_rank', '_wrapping_bound_argument')
     _attribute_nodes = FunctionDefArgument._attribute_nodes + \
                         ('_shape', '_strides', '_original_arg_var')
 
-    def __init__(self, var, scope, original_arg_var, **kwargs):
+    def __init__(self, var, scope, original_arg_var, wrapping_bound_argument, **kwargs):
         name = var.name
         self._rank = original_arg_var.rank
-        shape   = [scope.get_temporary_variable(NativeInteger(),
+        shape   = [scope.get_temporary_variable(PythonNativeInt(),
                             name=f'{name}_shape_{i+1}')
                    for i in range(self._rank)]
-        strides = [scope.get_temporary_variable(NativeInteger(),
+        strides = [scope.get_temporary_variable(PythonNativeInt(),
                             name=f'{name}_stride_{i+1}')
                    for i in range(self._rank)]
         self._shape = shape
         self._strides = strides
         self._original_arg_var = original_arg_var
+        self._wrapping_bound_argument = wrapping_bound_argument
         super().__init__(var, **kwargs)
 
     @property
@@ -265,6 +287,16 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         else:
             return super().inout
 
+    @property
+    def wrapping_bound_argument(self):
+        """
+        Indicates if the argument being wrapped was originally a bound argument.
+
+        Indicates if the argument being wrapped originally appeared in a class
+        method as a bound argument.
+        """
+        return self._wrapping_bound_argument
+
 # =======================================================================================
 
 
@@ -307,7 +339,7 @@ class BindCFunctionDefResult(FunctionDefResult):
 
     def __init__(self, var, original_res_var, scope, **kwargs):
         name = original_res_var.name
-        self._shape   = [scope.get_temporary_variable(NativeInteger(),
+        self._shape   = [scope.get_temporary_variable(PythonNativeInt(),
                             name=f'{name}_shape_{i+1}')
                          for i in range(original_res_var._rank)]
         self._original_res_var = original_res_var
@@ -542,6 +574,90 @@ class BindCArrayVariable(Variable):
 
 # =======================================================================================
 
+class BindCClassProperty(PyccelAstNode):
+    """
+    A class which wraps a class attribute.
+
+    A class which wraps a class attribute to make it accessible
+    from C. In the future this class will also be used to handle properties of
+    classes (i.e. functions marked with the `@property` decorator).
+
+    Parameters
+    ----------
+    python_name : str
+        The name of the attribute/property in the original Python code.
+    getter : FunctionDef
+        The function which collects the value of the class attribute.
+    setter : FunctionDef
+        The function which modifies the value of the class attribute.
+    class_type : Variable
+        The type of the class to which the attribute belongs.
+    docstring : LiteralString, optional
+        The docstring of the property.
+    """
+    __slots__ = ('_getter', '_setter', '_python_name', '_docstring', '_class_type')
+    _attribute_nodes = ('_getter', '_setter')
+    def __init__(self, python_name, getter, setter, class_type, docstring = None):
+        if not isinstance(getter, BindCFunctionDef):
+            raise TypeError("Getter should be a BindCFunctionDef")
+        if not isinstance(setter, BindCFunctionDef):
+            raise TypeError("Setter should be a BindCFunctionDef")
+        self._python_name = python_name
+        self._getter = getter
+        self._setter = setter
+        self._class_type = class_type
+        self._docstring = docstring
+        super().__init__()
+
+    @property
+    def getter(self):
+        """
+        The BindCFunctionDef describing the getter function.
+
+        The BindCFunctionDef describing the function which allows the user to collect
+        the value of the property.
+        """
+        return self._getter
+
+    @property
+    def setter(self):
+        """
+        The BindCFunctionDef describing the setter function.
+
+        The BindCFunctionDef describing the function which allows the user to modify
+        the value of the property.
+        """
+        return self._setter
+
+    @property
+    def class_type(self):
+        """
+        The type of the class to which the attribute belongs.
+
+        The type of the class to which the attribute belongs.
+        """
+        return self._class_type
+
+    @property
+    def python_name(self):
+        """
+        The name of the attribute/property in the original Python code.
+
+        The name of the attribute/property in the original Python code.
+        """
+        return self._python_name
+
+    @property
+    def docstring(self):
+        """
+        The docstring of the property being wrapped.
+
+        The docstring of the property being wrapped.
+        """
+        return self._docstring
+
+# =======================================================================================
+
 class BindCClassDef(ClassDef):
     """
     Represents a class which is compatible with C.
@@ -555,14 +671,27 @@ class BindCClassDef(ClassDef):
     original_class : ClassDef
         The class being wrapped.
 
+    new_func : BindCFunctionDef
+        The function which provides a new instance of the class.
+
     **kwargs : dict
         See ClassDef.
     """
-    __slots__ = ('_original_class',)
+    __slots__ = ('_original_class', '_new_func')
 
-    def __init__(self, original_class, **kwargs):
+    def __init__(self, original_class, new_func, **kwargs):
         self._original_class = original_class
+        self._new_func = new_func
         super().__init__(original_class.name, scope = original_class.scope, **kwargs)
+
+    @property
+    def new_func(self):
+        """
+        Get the wrapper for `__new__`.
+
+        Get the wrapper for `__new__` which allocates the memory for the class instance.
+        """
+        return self._new_func
 
 # =======================================================================================
 #                                   Utility functions
@@ -668,3 +797,18 @@ class C_F_Pointer(PyccelAstNode):
         determine the size of the array in each dimension.
         """
         return self._shape
+
+class DeallocatePointer(Deallocate):
+    """
+    Represents memory deallocation for memory only stored in a pointer.
+
+    Represents memory deallocation for memory only stored in a pointer. Usually
+    `deallocate` is not called on pointers so as not to delete the target values
+    however this capability is necessary in the wrapper.
+
+    Parameters
+    ----------
+    variable : pyccel.ast.core.Variable
+        The typed variable (usually an array) that needs memory deallocation.
+    """
+    __slots__ = ()

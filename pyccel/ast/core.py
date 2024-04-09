@@ -10,7 +10,6 @@ from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 
 from pyccel.utilities.stage   import PyccelStage
-from pyccel.utilities.strings import create_incremented_string
 
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
@@ -18,11 +17,11 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
 
 from .c_concepts import PointerCast
 
-from .datatypes import (datatype, DataType, NativeSymbol, NativeHomogeneousTuple,
-                        NativeBool, NativeTuple, str_dtype, NativeInhomogeneousTuple,
-                        NativeVoid)
+from .datatypes import (PyccelType, SymbolicType, HomogeneousTupleType,
+                        PythonNativeBool, InhomogeneousTupleType,
+                        VoidType)
 
-from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
+from .internals import PyccelSymbol, PyccelInternalFunction, apply_pickle
 
 from .literals  import Nil, LiteralFalse, LiteralInteger
 from .literals  import NilArgument, LiteralTrue
@@ -46,7 +45,6 @@ __all__ = (
     'Assert',
     'Assign',
     'AugAssign',
-    'Block',
     'Break',
     'ClassDef',
     'CodeBlock',
@@ -59,9 +57,8 @@ __all__ = (
     'Declare',
     'Decorator',
     'Del',
-    'DottedFunctionCall',
-    'Duplicate',
     'DoConcurrent',
+    'Duplicate',
     'EmptyNode',
     'ErrorExit',
     'Exit',
@@ -76,8 +73,8 @@ __all__ = (
     'If',
     'IfSection',
     'Import',
-    'InlineFunctionDef',
     'InProgram',
+    'InlineFunctionDef',
     'Interface',
     'Iterable',
     'Module',
@@ -94,8 +91,6 @@ __all__ = (
     'SympyFunction',
     'While',
     'With',
-    'create_variable',
-    'create_incremented_string',
 )
 
 #==============================================================================
@@ -108,45 +103,21 @@ __all__ = (
 #      - add a new Idx that uses Variable instead of Symbol
 
 #==============================================================================
-def apply(func, args, kwargs):return func(*args, **kwargs)
-
-#==============================================================================
-def create_variable(forbidden_names, prefix = None, counter = 1):
-    """This function takes a prefix and a counter and uses them to construct
-    a PyccelSymbol with a name of the form:
-            prefix_counter
-    Where counter is formatted to fill 4 characters
-    The new name is checked against a list of forbidden expressions. If the
-    constructed name is forbidden then the counter is incremented until a valid
-    name is found
-
-      Parameters
-      ----------
-      forbidden_exprs : Set
-                        A set of all the values which are not valid solutions to this problem
-      prefix          : str
-                        The prefix used to begin the string
-      counter         : int
-                        The expected value of the next name
-
-      Returns
-      ----------
-      name            : PyccelSymbol
-                        A PyccelSymbol with the incremented string name
-      counter         : int
-                        The expected value of the next name
-
-    """
-
-    name, counter = create_incremented_string(forbidden_names, prefix, counter = counter)
-
-    return PyccelSymbol(name, is_temp=True), counter
 
 
 class AsName(PyccelAstNode):
-
     """
-    Represents a renaming of a variable, used with Import.
+    Represents a renaming of an object, used with Import.
+
+    A class representing the renaming of an object such as a function or a
+    variable. This usually occurs during an Import.
+
+    Parameters
+    ----------
+    obj : PyccelAstNode or PyccelAstNodeType
+        The variable, function, or module being renamed.
+    target : str
+        Name of variable or function in this context.
 
     Examples
     --------
@@ -157,13 +128,6 @@ class AsName(PyccelAstNode):
     old as new
     >>> AsName(NumpyFull, 'fill_func')
     full as fill_func
-
-    Parameters
-    ==========
-    obj    : PyccelAstNode or PyccelAstNodeType
-             The variable, function, or module being renamed
-    target : str
-             name of variable or function in this context
     """
     __slots__ = ('_obj', '_target')
     _attribute_nodes = ()
@@ -200,10 +164,7 @@ class AsName(PyccelAstNode):
         return self._obj
 
     def __repr__(self):
-        return '{0} as {1}'.format(str(self.name), str(self.target))
-
-    def __str__(self):
-        return '{0} as {1}'.format(str(self.name), str(self.target))
+        return f'{self.name} as {self.target}'
 
     def __eq__(self, string):
         if isinstance(string, str):
@@ -237,12 +198,10 @@ class Duplicate(TypedAstNode):
     length : TypedAstNode
         The number of times the val should appear in the final object.
     """
-    __slots__ = ('_val', '_length','_dtype','_precision','_rank','_shape','_order','_class_type')
+    __slots__ = ('_val', '_length','_rank','_shape','_order','_class_type')
     _attribute_nodes = ('_val', '_length')
 
     def __init__(self, val, length):
-        self._dtype      = val.dtype
-        self._precision  = val.precision
         self._rank       = val.rank
         self._shape      = (PyccelMul(val.shape[0], length, simplify=True),)
         if not isinstance(val.dtype, NativeInhomogeneousTuple):
@@ -269,10 +228,10 @@ class Duplicate(TypedAstNode):
             raise IndexError
 
     def __str__(self):
-        return '{} * {}'.format(str(self.val), str(self.length))
+        return f'{self.val} * {self.length}'
 
     def __repr__(self):
-        return '{} * {}'.format(repr(self.val), repr(self.length))
+        return f'{repr(self.val)} * {repr(self.length)}'
 
 class Concatenate(TypedAstNode):
     """
@@ -291,12 +250,10 @@ class Concatenate(TypedAstNode):
     arg2 : TypedAstNodes
            The second tuple.
     """
-    __slots__ = ('_args','_dtype','_precision','_rank','_shape','_order','_class_type')
+    __slots__ = ('_args','_rank','_shape','_order','_class_type')
     _attribute_nodes = ('_args',)
 
     def __init__(self, arg1, arg2):
-        self._dtype      = arg1.dtype
-        self._precision  = arg1.precision
         self._rank       = arg1.rank
         self._shape      = (PyccelAdd(arg1.shape[0], arg2.shape[0], simplify=True),) + arg1.shape[1:]
         self._order      = arg1.order
@@ -358,6 +315,7 @@ class Assign(PyccelAstNode):
 
     Examples
     --------
+    >>> from pyccel.ast.datatypes import PythonNativeInt
     >>> from pyccel.ast.internals import symbols
     >>> from pyccel.ast.variable import Variable
     >>> from pyccel.ast.core import Assign
@@ -366,7 +324,7 @@ class Assign(PyccelAstNode):
     x := y
     >>> Assign(x, 0)
     x := 0
-    >>> A = Variable('int', 'A', rank = 2)
+    >>> A = Variable(PythonNativeInt(), 'A', rank = 2)
     >>> Assign(x, A)
     x := A
     >>> Assign(A[0,1], x)
@@ -386,8 +344,6 @@ class Assign(PyccelAstNode):
         ):
         if isinstance(lhs, (tuple, list)):
             lhs = PythonTuple(*lhs)
-        if isinstance(rhs, (tuple, list)):
-            rhs = PythonTuple(*rhs)
         self._lhs = lhs
         self._rhs = rhs
         self._status = status
@@ -397,10 +353,10 @@ class Assign(PyccelAstNode):
             self.set_current_ast(python_ast)
 
     def __str__(self):
-        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
+        return f'{self.lhs} := {self.rhs}'
 
     def __repr__(self):
-        return '({0} := {1})'.format(repr(self.lhs), repr(self.rhs))
+        return f'{repr(self.lhs)} := {repr(self.rhs)}'
 
     @property
     def lhs(self):
@@ -440,19 +396,24 @@ class Assign(PyccelAstNode):
 
     @property
     def is_symbolic_alias(self):
-        """Returns True if the assignment is a symbolic alias."""
+        """
+        Returns True if the assignment is a symbolic alias.
+
+        Returns True if the assignment is a symbolic alias.
+        """
 
         # TODO to be improved when handling classes
+        # TODO: Is this useful?
 
         lhs = self.lhs
         rhs = self.rhs
         if isinstance(lhs, Variable):
-            return isinstance(lhs.dtype, NativeSymbol)
+            return isinstance(lhs.class_type, SymbolicType)
         elif isinstance(lhs, PyccelSymbol):
             if isinstance(rhs, PythonRange):
                 return True
             elif isinstance(rhs, Variable):
-                return isinstance(rhs.dtype, NativeSymbol)
+                return isinstance(rhs.class_type, SymbolicType)
             elif isinstance(rhs, PyccelSymbol):
                 return True
 
@@ -499,14 +460,14 @@ class Allocate(PyccelAstNode):
     def __init__(self, variable, *, shape, order, status, like = None):
 
         if not isinstance(variable, (Variable, PointerCast)):
-            raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
+            raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
 
         if variable.on_stack:
             # Variable may only be a pointer in the wrapper
             raise ValueError("Variable must be allocatable")
 
         if shape and not isinstance(shape, (int, tuple, list)):
-            raise TypeError("Cannot understand 'shape' parameter of type '{}'".format(type(shape)))
+            raise TypeError(f"Cannot understand 'shape' parameter of type '{type(shape)}'")
 
         if variable.rank != len(shape):
             raise ValueError("Incompatible rank in variable allocation")
@@ -516,10 +477,10 @@ class Allocate(PyccelAstNode):
             raise ValueError("Incompatible order in variable allocation")
 
         if not isinstance(status, str):
-            raise TypeError("Cannot understand 'status' parameter of type '{}'".format(type(status)))
+            raise TypeError(f"Cannot understand 'status' parameter of type '{type(status)}'")
 
         if status not in ('allocated', 'unallocated', 'unknown'):
-            raise ValueError("Value of 'status' not allowed: '{}'".format(status))
+            raise ValueError(f"Value of 'status' not allowed: '{status}'")
 
         self._variable = variable
         self._shape    = shape
@@ -578,8 +539,7 @@ class Allocate(PyccelAstNode):
         return self._like
 
     def __str__(self):
-        return 'Allocate({}, shape={}, order={}, status={})'.format(
-                str(self.variable), str(self.shape), str(self.order), str(self.status))
+        return f'Allocate({self.variable}, shape={self.shape}, order={self.order}, status={self.status})'
 
     def __eq__(self, other):
         if isinstance(other, Allocate):
@@ -596,6 +556,8 @@ class Allocate(PyccelAstNode):
 #------------------------------------------------------------------------------
 class Deallocate(PyccelAstNode):
     """
+    Class representing memory deallocation.
+
     Represents memory deallocation (usually of an array) for code generation.
     This is relevant to low-level target languages, such as C or Fortran,
     where the programmer must take care of heap memory deallocation.
@@ -609,7 +571,6 @@ class Deallocate(PyccelAstNode):
     -----
     An object of this class is immutable, although it contains a reference to a
     mutable Variable object.
-
     """
     __slots__ = ('_variable',)
     _attribute_nodes = ('_variable',)
@@ -618,7 +579,7 @@ class Deallocate(PyccelAstNode):
     def __init__(self, variable):
 
         if not isinstance(variable, Variable):
-            raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
+            raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
 
         self._variable = variable
         super().__init__()
@@ -700,7 +661,7 @@ class CodeBlock(PyccelAstNode):
             self._body = tuple([*obj, *self.body])
 
     def __repr__(self):
-        return 'CodeBlock({})'.format(self.body)
+        return f'CodeBlock({self.body})'
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
@@ -721,7 +682,7 @@ class CodeBlock(PyccelAstNode):
            and its arguments.
         """
         kwargs = dict(body = self.body)
-        return (apply, (self.__class__, (), kwargs))
+        return (apply_pickle, (self.__class__, (), kwargs))
 
     def set_current_ast(self, ast_node):
         """
@@ -743,30 +704,37 @@ class CodeBlock(PyccelAstNode):
                 l.set_current_ast(ast_node)
 
 class AliasAssign(PyccelAstNode):
+    """
+    Representing assignment of an alias to its target.
 
-    """Represents aliasing for code generation. An alias is any statement of the
-    form `lhs := rhs` where
+    Represents aliasing for code generation. An alias is any statement of the
+    form `lhs := rhs` where lhs is a pointer and rhs is a target. In other words
+    the contents of `lhs` will change if the contents of `rhs` are modfied.
 
     Parameters
     ----------
-    lhs : PyccelSymbol
-        at this point we don't know yet all information about lhs, this is why a
-        PyccelSymbol is the appropriate type.
+    lhs : TypedAstNode
+        In the syntactic stage:
+           Object representing the lhs of the expression. These should be
+           singular objects, such as one would use in writing code. Notable types
+           include PyccelSymbol, and IndexedElement. Types that
+           subclass these types are also supported.
+        In the semantic stage:
+           Variable.
 
-    rhs : Variable, IndexedElement
-        an assignable variable can be of any rank and any datatype, however its
-        shape must be known (not None)
+    rhs : PyccelSymbol | Variable, IndexedElement
+        The target of the assignment. A PyccelSymbol in the syntactic stage,
+        a Variable or a Slice of an array in the semantic stage.
 
     Examples
     --------
     >>> from pyccel.ast.internals import PyccelSymbol
     >>> from pyccel.ast.core import AliasAssign
     >>> from pyccel.ast.core import Variable
-    >>> n = Variable('int', 'n')
-    >>> x = Variable('int', 'x', rank=1, shape=[n])
+    >>> n = Variable(PythonNativeInt(), 'n')
+    >>> x = Variable(PythonNativeInt(), 'x', rank=1, shape=[n])
     >>> y = PyccelSymbol('y')
     >>> AliasAssign(y, x)
-
     """
     __slots__ = ('_lhs','_rhs')
     _attribute_nodes = ('_lhs','_rhs')
@@ -776,7 +744,7 @@ class AliasAssign(PyccelAstNode):
             if not lhs.is_alias:
                 raise TypeError('lhs must be a pointer')
 
-            if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_alias:
+            if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].var.is_alias:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
         self._lhs = lhs
@@ -784,7 +752,7 @@ class AliasAssign(PyccelAstNode):
         super().__init__()
 
     def __str__(self):
-        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
+        return f'{self.lhs} := {self.rhs}'
 
     @property
     def lhs(self):
@@ -872,8 +840,8 @@ class AugAssign(Assign):
     --------
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import AugAssign
-    >>> s = Variable('int', 's')
-    >>> t = Variable('int', 't')
+    >>> s = Variable(PythonNativeInt(), 's')
+    >>> t = Variable(PythonNativeInt(), 't')
     >>> AugAssign(s, '+', 2 * t + 1)
     s += 1 + 2*t
     """
@@ -904,10 +872,7 @@ class AugAssign(Assign):
         super().__init__(lhs, rhs, status, like, python_ast=python_ast)
 
     def __repr__(self):
-        return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
-
-    def __str__(self):
-        return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
+        return f'{self.lhs} {self.op}= {self.rhs}'
 
     @property
     def op(self):
@@ -928,8 +893,8 @@ class AugAssign(Assign):
 
 
 class While(ScopedAstNode):
-
-    """Represents a 'while' statement in the code.
+    """
+    Represents a 'while' statement in the code.
 
     Expressions are of the form:
         "while test:
@@ -938,11 +903,11 @@ class While(ScopedAstNode):
     Parameters
     ----------
     test : TypedAstNode
-        test condition given as an expression
+        Test condition given as an expression.
     body : list of Pyccel objects
-        list of statements representing the body of the While statement.
+        List of statements representing the body of the While statement.
     scope : Scope
-        The scope for the loop
+        The scope for the loop.
 
     Examples
     --------
@@ -958,7 +923,7 @@ class While(ScopedAstNode):
     def __init__(self, test, body, scope = None):
 
         if pyccel_stage == 'semantic':
-            if test.dtype is not NativeBool():
+            if test.dtype is not PythonNativeBool():
                 test = PythonBool(test)
 
         if iterable(body):
@@ -1033,103 +998,6 @@ class With(ScopedAstNode):
     def body(self):
         return self._body
 
-    @property
-    def block(self):
-        """
-        Get the code block for the with block.
-
-        Get the code block created by calling the enter method followed by
-        the code in the with block and finally the exit method.
-
-        Returns
-        -------
-        Block
-            The code block.
-        """
-        methods = self.test.cls_base.methods
-        for i in methods:
-            if str(i.name) == '__enter__':
-                start = i
-            elif str(i.name) == '__exit__':
-                end   = i
-        start = FunctionCall(start,[])
-        end   = FunctionCall(end  ,[])
-
-        # TODO check if enter is empty or not first
-
-        body = start.body.body
-        body += self.body.body
-        body +=  end.body.body
-        return Block('with', [], body, scope=self.scope)
-
-
-# TODO add a name to a block?
-
-class Block(ScopedAstNode):
-
-    """Represents a block in the code. A block consists of the following inputs
-
-    Parameters
-    ----------
-    variables: list
-        list of the variables that appear in the block.
-
-    declarations: list
-        list of declarations of the variables that appear in the block.
-
-    body: list
-        a list of statements
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable, Assign, Block
-    >>> n = Variable('int', 'n')
-    >>> x = Variable('int', 'x')
-    >>> Block([n, x], [Assign(x,2.*n + 1.), Assign(n, n + 1)])
-    Block([n, x], [x := 1.0 + 2.0*n, n := 1 + n])
-    """
-    __slots__ = ('_name','_variables','_body')
-    _attribute_nodes = ('_variables','_body')
-
-    def __init__(
-        self,
-        name,
-        variables,
-        body,
-        scope = None):
-        if not isinstance(name, str):
-            raise TypeError('name must be of type str')
-        if not iterable(variables):
-            raise TypeError('variables must be an iterable')
-        for var in variables:
-            if not isinstance(var, Variable):
-                raise TypeError('Only a Variable instance is allowed.')
-        if iterable(body):
-            body = CodeBlock(body)
-        elif not isinstance(body, CodeBlock):
-            raise TypeError('body must be an iterable or a CodeBlock')
-        self._name = name
-        self._variables = variables
-        self._body = body
-        super().__init__(scope)
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def variables(self):
-        return self._variables
-
-    @property
-    def body(self):
-        return self._body
-
-    @property
-    def declarations(self):
-        return [Declare(i.dtype, i) for i in self.variables]
-
-
 
 class Module(ScopedAstNode):
     """
@@ -1179,12 +1047,12 @@ class Module(ScopedAstNode):
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
     >>> from pyccel.ast.operators import PyccelAdd, PyccelMinus
     >>> from pyccel.ast.literals import LiteralInteger
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
-    >>> z = Variable('float', 'z')
-    >>> t = Variable('float', 't')
-    >>> a = Variable('float', 'a')
-    >>> b = Variable('float', 'b')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
+    >>> z = Variable(PythonNativeFloat(), 'z')
+    >>> t = Variable(PythonNativeFloat(), 't')
+    >>> a = Variable(PythonNativeFloat(), 'a')
+    >>> b = Variable(PythonNativeFloat(), 'b')
     >>> body = [Assign(z,PyccelAdd(x,a))]
     >>> args = [FunctionDefArgument(arg) for arg in [x,y,a,b]]
     >>> results = [FunctionDefResult(res) for res in [z,t]]
@@ -1357,9 +1225,12 @@ class Module(ScopedAstNode):
 
     @property
     def declarations(self):
-        """ Returns the declarations of the variables
         """
-        return [Declare(i.dtype, i, value=v, module_variable=True) \
+        Get the declarations of all variables in the module.
+
+        Get the declarations of all variables in the module.
+        """
+        return [Declare(i, value=v, module_variable=True) \
                 for i,v in zip(self.variables, self._variable_inits)]
 
     @property
@@ -1424,12 +1295,12 @@ class ModuleHeader(PyccelAstNode):
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
     >>> from pyccel.ast.operators import PyccelAdd, PyccelMinus
     >>> from pyccel.ast.literals import LiteralInteger
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
-    >>> z = Variable('float', 'z')
-    >>> t = Variable('float', 't')
-    >>> a = Variable('float', 'a')
-    >>> b = Variable('float', 'b')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
+    >>> z = Variable(PythonNativeFloat(), 'z')
+    >>> t = Variable(PythonNativeFloat(), 't')
+    >>> a = Variable(PythonNativeFloat(), 'a')
+    >>> b = Variable(PythonNativeFloat(), 'b')
     >>> body = [Assign(z,PyccelAdd(x,a))]
     >>> args = [FunctionDefArgument(arg) for arg in [x,y,a,b]]
     >>> results = [FunctionDefResult(res) for res in [z,t]]
@@ -1577,7 +1448,7 @@ class Iterable(PyccelAstNode):
         elif hasattr(iterable, 'n_indices') and hasattr(iterable, 'to_range'):
             self._num_indices_required = iterable.n_indices
         else:
-            raise TypeError("Unknown iterator type {}".format(type(iterable)))
+            raise TypeError(f"Unknown iterator type {type(iterable)}")
 
         super().__init__()
 
@@ -1687,8 +1558,8 @@ class Iterable(PyccelAstNode):
 #==============================================================================
 
 class For(ScopedAstNode):
-
-    """Represents a 'for-loop' in the code.
+    """
+    Represents a 'for-loop' in the code.
 
     Expressions are of the form:
         "for target in iter:
@@ -1696,14 +1567,15 @@ class For(ScopedAstNode):
 
     Parameters
     ----------
-    target : symbol / Variable
-        symbol representing the iterator
-    iter : iterable
-        iterable object. for the moment only Range is used
-    body : list of pyccel objects
-        list of statements representing the body of the For statement.
+    target : Variable
+        Variable representing the iterator.
+    iter_obj : Iterable
+        Iterable object. Multiple iterators are supported but these are
+        translated to a range object in the Iterable class.
+    body : list[PyccelAstNode]
+        List of statements representing the body of the For statement.
     scope : Scope
-        The scope for the loop
+        The scope for the loop.
 
     Examples
     --------
@@ -1711,7 +1583,7 @@ class For(ScopedAstNode):
     >>> from pyccel.ast.core import Assign, For
     >>> from pyccel.ast.internals import symbols
     >>> i,b,e,s,x = symbols('i,b,e,s,x')
-    >>> A = Variable('int', 'A', rank = 2)
+    >>> A = Variable(PythonNativeInt(), 'A', rank = 2)
     >>> For(i, (b,e,s), [Assign(x, i), Assign(A[0, 1], x)])
     For(i, (b, e, s), (x := i, IndexedElement(A, 0, 1) := x))
     """
@@ -1824,15 +1696,15 @@ class FunctionCallArgument(PyccelAstNode):
 
     def __repr__(self):
         if self.has_keyword:
-            return 'FunctionCallArgument({} = {})'.format(self.keyword, repr(self.value))
+            return f'FunctionCallArgument({self.keyword} = {repr(self.value)})'
         else:
-            return 'FunctionCallArgument({})'.format(repr(self.value))
+            return f'FunctionCallArgument({repr(self.value)})'
 
     def __str__(self):
         if self.has_keyword:
-            return '{} = {}'.format(self.keyword, str(self.value))
+            return f'{self.keyword} = {self.value}'
         else:
-            return '{}'.format(str(self.value))
+            return f'{self.value}'
 
 class FunctionDefArgument(TypedAstNode):
     """
@@ -1856,6 +1728,15 @@ class FunctionDefArgument(TypedAstNode):
     annotation : str
         The type annotation describing the argument.
 
+    bound_argument : bool
+        Indicates if the argument is bound to the function call. This is
+        the case if the argument is the first argument of a method of a
+        class.
+
+    persistent_target : bool, default: False
+        Indicate if the object passed as this argument becomes a target.
+        This argument will usually only be passed by the wrapper.
+
     See Also
     --------
     FunctionDef : The class where these objects will be stored.
@@ -1867,10 +1748,11 @@ class FunctionDefArgument(TypedAstNode):
     >>> n
     n
     """
-    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout')
+    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout', '_persistent_target', '_bound_argument')
     _attribute_nodes = ('_value','_var')
 
-    def __init__(self, name, *, value = None, kwonly=False, annotation=None):
+    def __init__(self, name, *, value = None, kwonly=False, annotation=None, bound_argument = False,
+            persistent_target = False):
         if isinstance(name, (Variable, FunctionAddress)):
             self._var  = name
             self._name = name.name
@@ -1882,9 +1764,13 @@ class FunctionDefArgument(TypedAstNode):
             self._name = name.name
         else:
             raise TypeError("Name must be a PyccelSymbol, Variable or FunctionAddress")
+        if not isinstance(bound_argument, bool):
+            raise TypeError("bound_argument must be a boolean")
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
+        self._persistent_target = persistent_target
+        self._bound_argument = bound_argument
 
         if isinstance(name, Variable):
             name.declare_as_argument()
@@ -1963,21 +1849,49 @@ class FunctionDefArgument(TypedAstNode):
         """
         self._inout = False
 
+    @property
+    def persistent_target(self):
+        """
+        Indicate if the object passed as this argument becomes a target.
+
+        Indicate if the object passed as this argument becomes a pointer target after
+        a call to the function associated with this argument. This may be the case
+        in class methods.
+        """
+        return self._persistent_target
+
+    @persistent_target.setter
+    def persistent_target(self, persistent_target):
+        self._persistent_target = persistent_target
+
+    @property
+    def bound_argument(self):
+        """
+        Indicate if the argument is bound to the function call.
+
+        Indicate if the argument is bound to the function call. This is
+        the case if the argument is the first argument of a method of a
+        class.
+        """
+        return self._bound_argument
+
+    @bound_argument.setter
+    def bound_argument(self, bound):
+        if not isinstance(bound, bool):
+            raise TypeError("bound must be a boolean")
+        self._bound_argument = bound
+
     def __str__(self):
         if self.has_default:
-            argument = str(self.name)
-            value = str(self.value)
-            return '{0}={1}'.format(argument, value)
+            return f'{self.name}={self.value}'
         else:
             return str(self.name)
 
     def __repr__(self):
         if self.has_default:
-            argument = str(self.name)
-            value = str(self.value)
-            return 'FunctionDefArgument({0}={1})'.format(argument, value)
+            return f'FunctionDefArgument({self.name}={self.value})'
         else:
-            return 'FunctionDefArgument({})'.format(repr(self.name))
+            return f'FunctionDefArgument({repr(self.name)})'
 
 class FunctionDefResult(TypedAstNode):
     """
@@ -2039,7 +1953,7 @@ class FunctionDefResult(TypedAstNode):
         The result annotation providing dtype information.
 
         The annotation which provides all information about the data
-        types, precision, etc, necessary to fully define the result.
+        types, rank, etc, necessary to fully define the result.
         """
         return self._annotation
 
@@ -2055,7 +1969,7 @@ class FunctionDefResult(TypedAstNode):
         return self._is_argument
 
     def __repr__(self):
-        return 'FunctionDefResult({})'.format(repr(self.var))
+        return f'FunctionDefResult({repr(self.var)})'
 
     def __str__(self):
         return str(self.var)
@@ -2079,7 +1993,7 @@ class FunctionCall(TypedAstNode):
         The function where the call takes place.
     """
     __slots__ = ('_arguments','_funcdef','_interface','_func_name','_interface_name',
-                 '_dtype','_precision','_shape','_rank','_order','_class_type')
+                 '_shape','_rank','_order','_class_type')
     _attribute_nodes = ('_arguments','_funcdef','_interface')
 
     def __init__(self, func, args, current_function=None):
@@ -2153,29 +2067,23 @@ class FunctionCall(TypedAstNode):
         self._func_name  = func.name
         n_results = len(func.results)
         if n_results == 1:
-            self._dtype      = func.results[0].var.dtype
             self._rank       = func.results[0].var.rank
             self._shape      = func.results[0].var.shape
-            self._precision  = func.results[0].var.precision
             self._order      = func.results[0].var.order
             self._class_type = func.results[0].var.class_type
         elif n_results == 0:
-            self._dtype      = NativeVoid()
             self._rank       = 0
             self._shape      = None
-            self._precision  = None
             self._order      = None
-            self._class_type = NativeVoid()
+            self._class_type = VoidType()
         else:
             dtypes = [r.var.dtype for r in func.results]
             if all(d is dtypes[0] for d in dtypes):
-                dtype = NativeHomogeneousTuple()
+                dtype = HomogeneousTupleType(dtypes[0])
             else:
-                dtype = NativeInhomogeneousTuple(*dtypes)
-            self._dtype      = dtype
+                dtype = InhomogeneousTupleType(*dtypes)
             self._rank       = 1
             self._shape      = (LiteralInteger(n_results),)
-            self._precision  = None
             self._order      = None
             self._class_type = dtype
 
@@ -2213,7 +2121,8 @@ class FunctionCall(TypedAstNode):
         return self._interface_name
 
     def __repr__(self):
-        return '{}({})'.format(self.func_name, ', '.join(str(a) for a in self.args))
+        args = ', '.join(str(a) for a in self.args)
+        return f'{self.func_name}({args})'
 
     @classmethod
     def _ignore(cls, c):
@@ -2221,46 +2130,7 @@ class FunctionCall(TypedAstNode):
         """
         return c is None or isinstance(c, (FunctionDef, *cls._ignored_types))
 
-class DottedFunctionCall(FunctionCall):
-    """
-    Represents a function call in the code where
-    the function is defined in another object
-    (e.g. module/class)
-
-    a.f()
-
-    Parameters
-    ==========
-    func             : FunctionDef
-                       The definition of the function being called
-    args             : tuple
-                       The arguments being passed to the function
-    prefix           : TypedAstNode
-                       The object in which the function is defined
-                       E.g. for a.f()
-                       prefix will contain a
-    current_function : str
-                        The function from which this call occurs
-                        (This is required in order to recognise
-                        recursive functions)
-    """
-    __slots__ = ('_prefix',)
-    _attribute_nodes = (*FunctionCall._attribute_nodes, '_prefix')
-
-    def __init__(self, func, args, prefix, current_function=None):
-        self._prefix = prefix
-        super().__init__(func, args, current_function)
-        self._func_name = DottedName(prefix, self._func_name)
-        if self._interface:
-            self._interface_name = DottedName(prefix, self._interface_name)
-
-    @property
-    def prefix(self):
-        """ The object in which the function is defined
-        """
-        return self._prefix
-
-class ConstructorCall(DottedFunctionCall):
+class ConstructorCall(FunctionCall):
 
     """
     Represents a Constructor call in the code.
@@ -2276,7 +2146,7 @@ class ConstructorCall(DottedFunctionCall):
     arguments : list, tuple, None
         A list of arguments.
 
-    cls_variable : CustomDataType, optional
+    cls_variable : Variable
         The variable on the left-hand side of an assignment,
         where the right-hand side is a constructor call.
         Used to store data inside the class, set during object creation.
@@ -2290,7 +2160,7 @@ class ConstructorCall(DottedFunctionCall):
         self,
         func,
         arguments,
-        cls_variable=None,
+        cls_variable
         ):
         if not isinstance(func, (FunctionDef, Interface, str)):
             raise TypeError('Expecting func to be a FunctionDef or str')
@@ -2315,15 +2185,18 @@ class ConstructorCall(DottedFunctionCall):
 
 
 class Return(PyccelAstNode):
+    """
+    Represents a return statement in a function in the code.
 
-    """Represents a function return in the code.
+    Represents a return statement in a function in the code.
 
     Parameters
     ----------
     expr : TypedAstNode
         The expression to return.
 
-    stmts :represent assign stmts in the case of expression return
+    stmt : PyccelAstNode
+        Any assign statements in the case of expression return.
     """
     __slots__ = ('_expr', '_stmt')
     _attribute_nodes = ('_expr', '_stmt')
@@ -2357,7 +2230,8 @@ class Return(PyccelAstNode):
             code = repr(self.stmt)+';'
         else:
             code = ''
-        return code+"Return({})".format(','.join([repr(e) for e in self.expr]))
+        exprs = ','.join(repr(e) for e in self.expr)
+        return code+f"Return({exprs})"
 
 class FunctionDef(ScopedAstNode):
 
@@ -2386,7 +2260,7 @@ class FunctionDef(ScopedAstNode):
         Variables which will not be passed into the function.
 
     cls_name : str
-        Class name if the function is a method of cls_name.
+        The alternative name of the function required for classes.
 
     is_static : bool
         True for static functions. Needed for iso_c_binding interface.
@@ -2419,11 +2293,22 @@ class FunctionDef(ScopedAstNode):
     is_external : bool
         True for a function which cannot be explicitly imported or renamed.
 
+    is_imported : bool, default : False
+        True for a function that is imported.
+
+    is_semantic : bool, optional
+        True for a function that is annotated.
+        It is used to indicate if the function has been visited in the semantic stage or not.
+        It is only used by the clone method, where we might clone a syntactic function in the semantic stage.
+
     functions : list, tuple
         A list of functions defined within this function.
 
     interfaces : list, tuple
         A list of interfaces defined within this function.
+
+    result_pointer_map : dict[FunctionDefResult, list[int]]
+        A dictionary connecting any pointer results to the index of the possible target arguments.
 
     docstring : str
         The doc string of the function.
@@ -2442,8 +2327,8 @@ class FunctionDef(ScopedAstNode):
     >>> from pyccel.ast.core import Assign, FunctionDef
     >>> from pyccel.ast.operators import PyccelAdd
     >>> from pyccel.ast.literals import LiteralInteger
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
     >>> args        = [FunctionDefArgument(x)]
     >>> results     = [FunctionDefResult(y)]
     >>> body        = [Assign(y,PyccelAdd(x,LiteralInteger(1)))]
@@ -2457,8 +2342,8 @@ class FunctionDef(ScopedAstNode):
     >>> from pyccel.ast.core import FunctionDef
     >>> from pyccel.ast.core import FunctionDefArgument
     >>> n = FunctionDefArgument('n', value=4)
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
     >>> args        = [x, n]
     >>> results     = [y]
     >>> body        = [Assign(y,x+n)]
@@ -2469,7 +2354,9 @@ class FunctionDef(ScopedAstNode):
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header',
-                 '_functions','_interfaces','_docstring', '_is_external')
+                 '_functions','_interfaces','_docstring', '_is_external',
+                 '_result_pointer_map','_is_imported', '_is_semantic')
+
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
 
@@ -2491,8 +2378,11 @@ class FunctionDef(ScopedAstNode):
         is_private=False,
         is_header=False,
         is_external=False,
+        is_imported=False,
+        is_semantic=None,
         functions=(),
         interfaces=(),
+        result_pointer_map={},
         docstring=None,
         scope=None):
 
@@ -2526,7 +2416,6 @@ class FunctionDef(ScopedAstNode):
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
 
-#        body = tuple(i for i in body)
         # results
 
         if not iterable(results):
@@ -2535,15 +2424,10 @@ class FunctionDef(ScopedAstNode):
             raise TypeError('results must be all be FunctionDefResults')
         assert len(results)<2
 
-        # if method
-
         if cls_name:
 
             if not isinstance(cls_name, str):
                 raise TypeError('cls_name must be a string')
-
-            # if not cls_variable:
-             #   raise TypeError('Expecting a instance of {0}'.format(cls_name))
 
         if not isinstance(is_static, bool):
             raise TypeError('Expecting a boolean for is_static attribute')
@@ -2592,10 +2476,13 @@ class FunctionDef(ScopedAstNode):
         self._is_private      = is_private
         self._is_header       = is_header
         self._is_external     = is_external
+        self._is_imported     = is_imported
         self._functions       = functions
         self._interfaces      = interfaces
+        self._result_pointer_map = result_pointer_map
         self._docstring      = docstring
         super().__init__(scope)
+        self._is_semantic    = self.pyccel_staging != 'syntactic' if is_semantic is None else is_semantic
 
     @property
     def name(self):
@@ -2652,8 +2539,14 @@ class FunctionDef(ScopedAstNode):
 
     @property
     def cls_name(self):
-        """ String containing the name of the class to which the method belongs.
-        If the function is not a class procedure then this returns None """
+        """
+        String containing an alternative name for the function if it is a class method.
+
+        If a function is a class method then in some languages an alternative name is
+        required. For example in Fortran a name is required for the definition of the
+        class in the module. This name is different from the name of the method which
+        is used when calling the function via the class variable.
+        """
         return self._cls_name
 
     @cls_name.setter
@@ -2734,9 +2627,37 @@ class FunctionDef(ScopedAstNode):
         return self._is_external
 
     @property
+    def is_imported(self):
+        """
+        Indicates if the function was imported from another file.
+
+        Indicates if the function was imported from another file.
+        """
+        return self._is_imported
+
+    @property
     def is_inline(self):
         """ True if the function should be printed inline """
         return False
+
+    @property
+    def is_static(self):
+        """
+        Indicates if the function is static.
+
+        Indicates if the function is static.
+        """
+        return self._is_static
+
+    @property
+    def is_semantic(self):
+        """
+        Indicates if the function was created with semantic information.
+
+        Indicates if the function has been annotated with type descriptors
+        in the semantic stage.
+        """
+        return self._is_semantic
 
     @property
     def functions(self):
@@ -2789,7 +2710,6 @@ class FunctionDef(ScopedAstNode):
         new_func.rename(newname)
         return new_func
 
-
     def rename(self, newname):
         """
         Rename the FunctionDef name
@@ -2828,6 +2748,8 @@ class FunctionDef(ScopedAstNode):
         'is_header':self._is_header,
         'functions':self._functions,
         'is_external':self._is_external,
+        'is_imported':self._is_imported,
+        'is_semantic':self._is_semantic,
         'interfaces':self._interfaces,
         'docstring':self._docstring,
         'scope':self._scope}
@@ -2852,7 +2774,7 @@ class FunctionDef(ScopedAstNode):
            and its arguments.
         """
         args, kwargs = self.__getnewargs__()
-        out = (apply, (self.__class__, args, kwargs))
+        out = (apply_pickle, (self.__class__, args, kwargs))
         return out
 
 
@@ -2860,32 +2782,48 @@ class FunctionDef(ScopedAstNode):
         result = 'None' if len(self.results) == 0 else \
                     ', '.join(str(r) for r in self.results)
         args = ', '.join(str(a) for a in self.arguments)
-        return '{name}({args}) -> {result}'.format(
-                name   = self.name,
-                args   = args,
-                result = result)
+        return f'{self.name}({args}) -> {result}'
 
     @property
     def is_unused(self):
         return False
 
+    @property
+    def result_pointer_map(self):
+        """
+        A dictionary connecting any pointer results to the index of the possible target arguments.
+
+        A dictionary whose keys are FunctionDefResult objects and whose values are a list of
+        integers. The integers specify the position of the argument which is a target of the
+        FunctionDefResult.
+        """
+        return self._result_pointer_map
+
 class InlineFunctionDef(FunctionDef):
     """
     Represents a function definition for an inline function.
 
+    Represents a function definition for an inline function.
+
     Parameters
     ----------
-    See FunctionDef
-
-    namespace_imports : Scope
-                        The objects in the scope which are available due to imports
+    *args : list
+        The FunctionDef class arguments.
+    namespace_imports : dict
+        The imports available in the function Scope.
+    global_funcs : iterable, optional
+        The global functions used in the function.
+    **kwargs : dict
+        The FunctionDef class keyword arguments.   
     """
     __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements',
             '_global_funcs')
 
     def __init__(self, *args, namespace_imports = None, global_funcs = None, **kwargs):
+        if namespace_imports is not None:
+            assert isinstance(namespace_imports, dict)
         self._namespace_imports = namespace_imports
-        self._global_funcs = global_funcs
+        self._global_funcs = tuple(global_funcs) if global_funcs is not None else None
         super().__init__(*args, **kwargs)
         self._orig_args = tuple(a.var for a in self.arguments)
         self._new_args  = None
@@ -2978,6 +2916,15 @@ class InlineFunctionDef(FunctionDef):
         """ List of global functions used in the function """
         return self._global_funcs
 
+    def __getnewargs__(self):
+        """
+        This method returns the positional and keyword arguments
+        used to create an instance of this class.
+        """
+        args, kwargs = super().__getnewargs__()
+        kwargs.update({'namespace_imports':self._namespace_imports, 'global_funcs':self._global_funcs})
+        return args, kwargs
+
 class PyccelFunctionDef(FunctionDef):
     """
     Class used for storing `PyccelInternalFunction` objects in a FunctionDef.
@@ -3028,6 +2975,20 @@ class PyccelFunctionDef(FunctionDef):
         """
         return self._argument_description
 
+    def __getnewargs__(self):
+        """
+          This method returns the positional and keyword arguments
+            used to create an instance of this class.
+        """
+        args = (
+        self._name,
+        self._cls_name)
+
+        kwargs = {
+            'decorators':self._decorators,
+            'argument_description':self._argument_description}
+        return args, kwargs
+
 class Interface(PyccelAstNode):
     """
     Class representing an interface function.
@@ -3047,13 +3008,19 @@ class Interface(PyccelAstNode):
     is_argument : bool
         True if the interface is used for a function argument.
 
+    is_imported : bool
+        True if the interface is imported from another file.
+
+    syntactic_node : FunctionDef, default: None
+        The syntactic node that is not annotated.
+
     Examples
     --------
     >>> from pyccel.ast.core import Interface, FunctionDef
     >>> f = FunctionDef('F', [], [], [])
     >>> Interface('I', [f])
     """
-    __slots__ = ('_name','_functions','_is_argument')
+    __slots__ = ('_name','_functions','_is_argument', '_is_imported', '_syntactic_node')
     _attribute_nodes = ('_functions',)
 
     def __init__(
@@ -3061,15 +3028,20 @@ class Interface(PyccelAstNode):
         name,
         functions,
         is_argument = False,
+        is_imported=False,
+        syntactic_node=None,
         ):
 
         if not isinstance(name, str):
             raise TypeError('Expecting an str')
-        if not isinstance(functions, list):
-            raise TypeError('Expecting a list')
+
+        assert iterable(functions)
+
         self._name = name
-        self._functions = functions
+        self._functions = tuple(functions)
         self._is_argument = is_argument
+        self._is_imported = is_imported
+        self._syntactic_node = syntactic_node
         super().__init__()
 
     @property
@@ -3088,6 +3060,24 @@ class Interface(PyccelAstNode):
         return self._is_argument
 
     @property
+    def is_imported(self):
+        """
+        Indicates if the function was imported from another file.
+
+        Indicates if the function was imported from another file.
+        """
+        return self._is_imported
+
+    @property
+    def syntactic_node(self):
+        """
+        The syntactic node that is not annotated.
+
+        The syntactic node that is not annotated.
+        """
+        return self._syntactic_node
+
+    @property
     def docstring(self):
         """
         The docstring of the function.
@@ -3096,22 +3086,109 @@ class Interface(PyccelAstNode):
         """
         return self._functions[0].docstring
 
-    def point(self, args, use_final_precision = False):
-        """Returns the actual function that will be called, depending on the passed arguments."""
+    @property
+    def is_semantic(self):
+        """
+         Flag to check if the node is annotated.
+
+         Flag to check if the node has been annotated with type descriptors
+         in the semantic stage.
+        """
+        return self._functions[0].is_semantic
+
+    @property
+    def is_inline(self):
+        """
+         Flag to check if the node is inlined.
+
+         Flag to check if the node is inlined.
+        """
+        return self._functions[0].is_inline
+
+    def rename(self, newname):
+        """
+        Rename the Interface name to a newname.
+
+        Rename the Interface name to a newname.
+
+        Parameters
+        ----------
+        newname : str
+            New name for the Interface.
+        """
+
+        self._name = newname
+
+    def clone(self, newname, **new_kwargs):
+        """
+        Create an almost identical Interface with name `newname`.
+
+        Create an almost identical Interface with name `newname`.
+        Additional parameters can be passed to alter the resulting
+        FunctionDef.
+
+        Parameters
+        ----------
+        newname : str
+            New name for the Interface.
+
+        **new_kwargs : dict
+            Any new keyword arguments to be passed to the new Interface.
+
+        Returns
+        -------
+        Interface
+            The clone of the interface.
+        """
+
+        args, kwargs = self.__getnewargs__()
+        kwargs.update(new_kwargs)
+        cls = type(self)
+        new_func = cls(*args, **kwargs)
+        new_func.rename(newname)
+        return new_func
+
+    def __getnewargs__(self):
+        """
+          This method returns the positional and keyword arguments
+            used to create an instance of this class.
+        """
+        args = (
+        self._name,
+        self._functions)
+
+        kwargs = {
+        'is_argument': self._is_argument,
+        'is_imported':self._is_imported,
+        'syntactic_node':self._syntactic_node}
+        return args, kwargs
+
+    def point(self, args):
+        """
+        Return the actual function that will be called, depending on the passed arguments.
+
+        From the arguments passed in the function call, determine which of the FunctionDef
+        objects in the Interface is actually called.
+
+        Parameters
+        ----------
+        args : tuple[TypedAstNode]
+            The arguments passed in the function call.
+
+        Returns
+        -------
+        FunctionDef
+            The function definition which corresponds with the arguments.
+        """
         fs_args = [[j for j in i.arguments] for i in
                     self._functions]
 
-        if use_final_precision:
-            type_match = lambda dtype1, dtype2, call_arg, func_arg: \
-                    (dtype1 in dtype2 or dtype2 in dtype1) \
-                    and (call_arg.rank == func_arg.rank) \
-                    and get_final_precision(call_arg) == \
-                        get_final_precision(func_arg)
-        else:
-            type_match = lambda dtype1, dtype2, call_arg, func_arg: \
-                    (dtype1 in dtype2 or dtype2 in dtype1) \
-                    and (call_arg.rank == func_arg.rank) \
-                    and call_arg.precision == func_arg.precision
+        def type_match(call_arg, func_arg):
+            """
+            Check that the types of the arguments in the function and the call match.
+            """
+            return call_arg.class_type == func_arg.class_type \
+                    and (call_arg.rank == func_arg.rank)
 
 
         j = -1
@@ -3121,17 +3198,14 @@ class Interface(PyccelAstNode):
             for (x, y) in enumerate(args):
                 func_arg = i[x].var
                 call_arg = y.value
-                dtype1 = str_dtype(call_arg.dtype)
-                dtype2 = str_dtype(func_arg.dtype)
-                found = found and type_match(dtype1, dtype2, call_arg, func_arg)
+                found = found and type_match(call_arg, func_arg)
             if found:
                 break
 
-        if found:
-            return  self._functions[j]
-        else:
-            errors.report('Arguments types provided to {} are incompatible'.format(self.name),
+        if not found:
+            errors.report(f'Arguments types provided to {self.name} are incompatible',
                         severity='fatal')
+        return  self._functions[j]
 
 class FunctionAddress(FunctionDef):
     """
@@ -3173,8 +3247,8 @@ class FunctionAddress(FunctionDef):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
     >>> # a function definition can have a FunctionAddress as an argument
     >>> FunctionDef('g', [FunctionAddress('f', [x], [y])], [], [])
     >>> # we can also Declare a FunctionAddress
@@ -3305,16 +3379,19 @@ class ClassDef(ScopedAstNode):
     scope : Scope
         The scope for the class contents.
 
+    class_type : PyccelType
+        The data type associated with this class.
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
-    >>> z = Variable('float', 'z')
-    >>> t = Variable('float', 't')
-    >>> a = Variable('float', 'a')
-    >>> b = Variable('float', 'b')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
+    >>> z = Variable(PythonNativeFloat(), 'z')
+    >>> t = Variable(PythonNativeFloat(), 't')
+    >>> a = Variable(PythonNativeFloat(), 'a')
+    >>> b = Variable(PythonNativeFloat(), 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributes   = [x,y]
@@ -3322,7 +3399,7 @@ class ClassDef(ScopedAstNode):
     >>> ClassDef('Point', attributes, methods)
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
-    __slots__ = ('_name','_attributes','_methods','_options',
+    __slots__ = ('_name','_attributes','_methods','_options', '_class_type',
                  '_imports','_superclasses','_interfaces', '_docstring')
     _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring')
 
@@ -3336,7 +3413,8 @@ class ClassDef(ScopedAstNode):
         superclasses=(),
         interfaces=(),
         docstring = None,
-        scope = None
+        scope = None,
+        class_type = None
         ):
 
         # name
@@ -3344,7 +3422,7 @@ class ClassDef(ScopedAstNode):
         if isinstance(name, str):
             name = PyccelSymbol(name)
         else:
-            raise TypeError('Function name must be PyccelSymbol or string')
+            raise TypeError('Class name must be PyccelSymbol or string')
 
         # attributes
 
@@ -3369,10 +3447,13 @@ class ClassDef(ScopedAstNode):
 
         if not iterable(superclasses):
             raise TypeError('superclasses must be iterable')
-        if pyccel_stage != 'syntactic':
+        if pyccel_stage.current_stage and pyccel_stage != 'syntactic':
             for s in superclasses:
                 if not isinstance(s, ClassDef):
                     raise TypeError('superclass item must be a ClassDef')
+
+            if not isinstance(class_type, PyccelType):
+                raise TypeError("class_type must be a PyccelType")
 
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')
@@ -3421,12 +3502,27 @@ class ClassDef(ScopedAstNode):
         self._superclasses  = superclasses
         self._interfaces = interfaces
         self._docstring = docstring
+        self._class_type = class_type
 
         super().__init__(scope = scope)
 
     @property
     def name(self):
+        """
+        The name of the class.
+
+        The name of the class.
+        """
         return self._name
+
+    @property
+    def class_type(self):
+        """
+        The PyccelType of an object of the described class.
+
+        The PyccelType of an object of the described class.
+        """
+        return self._class_type
 
     @property
     def attributes(self):
@@ -3568,6 +3664,14 @@ class ClassDef(ScopedAstNode):
         ValueError
             Raised if the method cannot be found.
         """
+        if self.scope is not None:
+            # Collect translated name from scope
+            try:
+                name = self.scope.get_expected_name(name)
+            except RuntimeError:
+                errors.report(f"Can't find method {name} in class {self.name}",
+                        severity='fatal', symbol=self)
+
         try:
             method = next(i for i in chain(self.methods, self.interfaces) if i.name == name)
         except StopIteration:
@@ -3623,23 +3727,34 @@ class ClassDef(ScopedAstNode):
 
     @property
     def is_unused(self):
+        """
+        Indicates whether the class has any users.
+
+        This function always returns False as a class definition
+        shouldn't be invalidated and deleted due to a lack of
+        users.
+        """
         return False
 
 
 class Import(PyccelAstNode):
+    """
+    Represents inclusion of dependencies in the code.
 
-    """Represents inclusion of dependencies in the code.
+    Represents the importation of targets from another source code. This is
+    usually used to represent an import statement in the original code but
+    it is also used to import language/library specific dependencies.
 
     Parameters
     ----------
     source : str, DottedName, AsName
-        the module from which we import
+        The module from which we import.
     target : str, AsName, list, tuple
-        targets to import
+        Targets to import.
     ignore_at_print : bool
-        indicates whether the import should be printed
+        Indicates whether the import should be printed.
     mod : Module
-        The module describing the source
+        The module describing the source.
 
     Examples
     --------
@@ -3688,6 +3803,28 @@ class Import(PyccelAstNode):
 
     @staticmethod
     def _format(i):
+        """
+        Format a string passed to this file into a Pyccel object.
+
+        Format a string passed to this file into a Pyccel object or confirm
+        that it is already correctly formatted.
+
+        Parameters
+        ----------
+        i : Any
+            The object to be formatted.
+
+        Returns
+        -------
+        DottedName | PyccelSymbol | AsName
+            The formatted object.
+
+        Raises
+        ------
+        TypeError
+            Raised if the input is not a string or one of the acceptable
+            output types.
+        """
         if isinstance(i, str):
             if '.' in i:
                 return DottedName(*i.split('.'))
@@ -3696,7 +3833,7 @@ class Import(PyccelAstNode):
         if isinstance(i, (DottedName, AsName, PyccelSymbol)):
             return i
         else:
-            raise TypeError('Expecting a string, PyccelSymbol DottedName, given {}'.format(type(i)))
+            raise TypeError(f'Expecting a string, PyccelSymbol DottedName, given {type(i)}')
 
     @property
     def target(self):
@@ -3719,11 +3856,10 @@ class Import(PyccelAstNode):
     def __str__(self):
         source = str(self.source)
         if len(self.target) == 0:
-            return 'import {source}'.format(source=source)
+            return f'import {source}'
         else:
             target = ', '.join([str(i) for i in self.target])
-            return 'from {source} import {target}'.format(source=source,
-                    target=target)
+            return f'from {source} import {target}'
 
     def define_target(self, new_target):
         """
@@ -3782,8 +3918,8 @@ class FuncAddressDeclare(PyccelAstNode):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
     """
     __slots__ = ('_variable','_intent','_value','_static')
@@ -3798,7 +3934,7 @@ class FuncAddressDeclare(PyccelAstNode):
         ):
 
         if not isinstance(variable, FunctionAddress):
-            raise TypeError('variable must be of type FunctionAddress, given {0}'.format(variable))
+            raise TypeError(f'variable must be of type FunctionAddress, given {variable}')
 
         if intent:
             if not intent in ['in', 'out', 'inout']:
@@ -3843,60 +3979,50 @@ class FuncAddressDeclare(PyccelAstNode):
 
 # ARA : issue-999 add is_external for external function exported through header files
 class Declare(PyccelAstNode):
+    """
+    Represents a variable declaration in the code.
 
-    """Represents a variable declaration in the code.
+    Represents a variable declaration in the translated code.
 
     Parameters
     ----------
-    dtype : DataType
-        The type for the declaration.
-    variable(s)
-        A single variable or an iterable of Variables. If iterable, all
-        Variables must be of the same type.
-    intent: None, str
-        one among {'in', 'out', 'inout'}
-    value: TypedAstNode
-        variable value
-    static: bool
+    variable : Variable
+        A single variable which should be declared.
+    intent : str, optional
+        One among {'in', 'out', 'inout'}.
+    value : TypedAstNode, optional
+        The initialisation value of the variable.
+    static : bool, default=False
         True for a static declaration of an array.
-    external: bool
-        True for a function declared through a header
-    module_variable : bool
-        True for a variable which belongs to a module
+    external : bool, default=False
+        True for a function declared through a header.
+    module_variable : bool, default=False
+        True for a variable which belongs to a module.
 
     Examples
     --------
     >>> from pyccel.ast.core import Declare, Variable
-    >>> Declare('int', Variable('int', 'n'))
-    Declare(NativeInteger(), (n,), None)
-    >>> Declare('float', Variable('float', 'x'), intent='out')
-    Declare(NativeFloat(), (x,), out)
+    >>> Declare(Variable(PythonNativeInt(), 'n'))
+    Declare(n, None)
+    >>> Declare(Variable(PythonNativeFloat(), 'x'), intent='out')
+    Declare(x, out)
     """
-    __slots__ = ('_dtype','_variable','_intent','_value',
-                 '_static','_passed_from_dotted', '_external',
+    __slots__ = ('_variable','_intent','_value',
+                 '_static', '_external',
                  '_module_variable')
     _attribute_nodes = ('_variable', '_value')
 
     def __init__(
         self,
-        dtype,
         variable,
         intent=None,
         value=None,
         static=False,
-        passed_from_dotted = False,
         external = False,
         module_variable = False
         ):
-        if isinstance(dtype, str):
-            dtype = datatype(dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
-
         if not isinstance(variable, Variable):
-            raise TypeError('var must be of type Variable, given {0}'.format(variable))
-        if variable.dtype != dtype:
-            raise ValueError('All variables must have the same dtype')
+            raise TypeError(f'var must be of type Variable, given {variable}')
 
         if intent:
             if not intent in ['in', 'out', 'inout']:
@@ -3905,28 +4031,19 @@ class Declare(PyccelAstNode):
         if not isinstance(static, bool):
             raise TypeError('Expecting a boolean for static attribute')
 
-        if not isinstance(passed_from_dotted, bool):
-            raise TypeError('Expecting a boolean for passed_from_dotted attribute')
-
         if not isinstance(external, bool):
             raise TypeError('Expecting a boolean for external attribute')
 
         if not isinstance(module_variable, bool):
             raise TypeError('Expecting a boolean for module_variable attribute')
 
-        self._dtype = dtype
         self._variable = variable
         self._intent = intent
         self._value = value
         self._static = static
-        self._passed_from_dotted = passed_from_dotted
         self._external = external
         self._module_variable = module_variable
         super().__init__()
-
-    @property
-    def dtype(self):
-        return self._dtype
 
     @property
     def variable(self):
@@ -3945,12 +4062,6 @@ class Declare(PyccelAstNode):
         return self._static
 
     @property
-    def passed_from_dotted(self):
-        """ Argument is the lhs of a DottedFunction
-        """
-        return self._passed_from_dotted
-
-    @property
     def external(self):
         return self._external
 
@@ -3962,7 +4073,7 @@ class Declare(PyccelAstNode):
         return self._module_variable
 
     def __repr__(self):
-        return 'Declare({})'.format(repr(self.variable))
+        return f'Declare({repr(self.variable)})'
 
 class Break(PyccelAstNode):
 
@@ -4025,18 +4136,20 @@ class SymbolicPrint(PyccelAstNode):
 
 
 class Del(PyccelAstNode):
+    """
+    Represents a memory deallocation in the code.
 
-    """Represents a memory deallocation in the code.
+    Represents a memory deallocation in the code.
 
     Parameters
     ----------
-    variables : list, tuple
-        a list of pyccel variables
+    expr : Variable
+        The variable being deallocated.
 
     Examples
     --------
     >>> from pyccel.ast.core import Del, Variable
-    >>> x = Variable('float', 'x', rank=2, shape=(10,2), memory_handling='heap')
+    >>> x = Variable(PythonNativeFloat(), 'x', rank=2, shape=(10,2), memory_handling='heap')
     >>> Del([x])
     Del([x])
     """
@@ -4085,13 +4198,15 @@ class EmptyNode(PyccelAstNode):
 
 
 class Comment(PyccelAstNode):
+    """
+    Represents a Comment in the code.
 
-    """Represents a Comment in the code.
+    Represents a Comment in the code.
 
     Parameters
     ----------
     text : str
-       the comment line
+       The comment line.
 
     Examples
     --------
@@ -4111,7 +4226,7 @@ class Comment(PyccelAstNode):
         return self._text
 
     def __str__(self):
-        return '# {0}'.format(str(self.text))
+        return f'# {self.text}'
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
@@ -4132,7 +4247,7 @@ class Comment(PyccelAstNode):
            and its arguments.
         """
         kwargs = dict(text = self.text)
-        return (apply, (self.__class__, (), kwargs))
+        return (apply_pickle, (self.__class__, (), kwargs))
 
 
 class SeparatorComment(Comment):
@@ -4236,17 +4351,19 @@ class Assert(PyccelAstNode):
     """
     Represents an assert statement in the code.
 
+    Represents an assert statement in the code.
+
     Parameters
     ----------
-    test: TypedAstNode
-        boolean expression to check
+    test : TypedAstNode
+        Boolean expression to check.
     """
     __slots__ = ('_test',)
     _attribute_nodes = ('_test',)
 
     def __init__(self, test):
         if pyccel_stage != 'syntactic':
-            if test.dtype is not NativeBool():
+            if test.dtype is not PythonNativeBool():
                 test = PythonBool(test)
         self._test = test
         super().__init__()
@@ -4275,16 +4392,19 @@ class ErrorExit(Exit):
     __slots__ = ()
 
 class IfSection(PyccelAstNode):
-    """Represents a condition and associated code block
+    """
+    Represents one condition and code block in an if statement.
+
+    Represents a condition and associated code block
     in an if statement in the code.
 
     Parameters
     ----------
     cond : TypedAstNode
            A boolean expression indicating whether or not the block
-           should be executed
+           should be executed.
     body : CodeBlock
-           The code to be executed in the condition is satisfied
+           The code to be executed if the condition is satisfied.
 
     Examples
     --------
@@ -4299,7 +4419,7 @@ class IfSection(PyccelAstNode):
 
     def __init__(self, cond, body):
 
-        if pyccel_stage == 'semantic' and cond.dtype is not NativeBool():
+        if pyccel_stage == 'semantic' and cond.dtype is not PythonNativeBool():
             cond = PythonBool(cond)
         if isinstance(body, (list, tuple)):
             body = CodeBlock(body)
@@ -4325,16 +4445,18 @@ class IfSection(PyccelAstNode):
         return iter((self.condition, self.body))
 
     def __str__(self):
-        return "IfSec({},{})".format(str(self.condition), str(self.body))
+        return f"IfSec({self.condition}, {self.body})"
 
 class If(PyccelAstNode):
+    """
+    Represents an if statement in the code.
 
-    """Represents a if statement in the code.
+    Represents an if statement in the code.
 
     Parameters
     ----------
-    args : IfSection
-           All arguments are sections of the complete If block
+    *args : IfSection
+        All arguments are sections of the complete If block.
 
     Examples
     --------
@@ -4369,7 +4491,8 @@ class If(PyccelAstNode):
         return [b.body for b in self._blocks]
 
     def __str__(self):
-        return "If({})".format(','.join(str(b) for b in self.blocks))
+        blocks = ','.join(str(b) for b in self.blocks)
+        return f"If({blocks})"
 
 class StarredArguments(PyccelAstNode):
     __slots__ = ('_starred_obj',)
@@ -4393,12 +4516,10 @@ class InProgram(TypedAstNode):
     other words, a class representing the boolean:
     `__name__ == '__main__'`
     """
-    _dtype = NativeBool()
-    _precision = -1
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeBool()
+    _class_type = PythonNativeBool()
     _attribute_nodes = ()
     __slots__ = ()
 
