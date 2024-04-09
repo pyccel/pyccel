@@ -389,7 +389,8 @@ class NumpyReal(PythonReal):
         super().__init__(arg)
         rank  = arg.rank
         order = arg.order
-        self._class_type = NumpyNDArrayType(arg.dtype.element_type, rank, order) if rank else self.static_type()
+        dtype = arg.dtype.element_type
+        self._class_type = NumpyNDArrayType(dtype, rank, order) if rank else dtype
         self._shape = process_shape(self.rank == 0, self.internal_var.shape)
 
     @property
@@ -431,7 +432,8 @@ class NumpyImag(PythonImag):
         super().__init__(arg)
         rank  = arg.rank
         order = arg.order
-        self._class_type = NumpyNDArrayType(arg.dtype.element_type, rank, order) if rank else self.static_type()
+        dtype = arg.dtype.element_type
+        self._class_type = NumpyNDArrayType(dtype, rank, order) if rank else dtype
         self._shape = process_shape(self.rank == 0, self.internal_var.shape)
 
     @property
