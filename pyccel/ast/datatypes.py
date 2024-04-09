@@ -837,10 +837,15 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
     *args : tuple of DataTypes
         The datatypes stored in the inhomogeneous tuple.
     """
-    __slots__ = ('_element_types', '_rank', '_order')
+    __slots__ = ('_element_types', '_datatype', '_rank', '_order')
 
     def __init__(self, *args):
         self._element_types = args
+
+        # Determine datatype
+        possible_types = set(t.datatype for t in self._element_types)
+        dtype = possible_types.pop()
+        self._datatype = dtype if all(d == dtype for d in possible_types) else self
 
         # Determine rank
         elem_ranks = set(elem.rank for elem in self._element_types)
@@ -897,13 +902,11 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         """
         The datatype of the object.
 
-        The datatype of the object.
+        The datatype of the object. For an inhomogeneous tuple the datatype is the type
+        of the tuple unless the tuple is comprised of containers which are all based on
+        compatible data types. In this case one of the underlying types is returned.
         """
-        possible_types = set(t.datatype for t in self._element_types)
-        if len(possible_types) == 1:
-            return possible_types.pop()
-        else:
-            return self
+        return self._datatype
 
     @property
     def container_rank(self):
