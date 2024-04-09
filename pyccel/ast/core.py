@@ -38,7 +38,6 @@ pyccel_stage = PyccelStage()
 # TODO [YG, 12.03.2020]: Move non-Python constructs to other modules
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
 __all__ = (
-    'create_variable',
     'AliasAssign',
     'Allocate',
     'AnnotatedComment',
@@ -692,8 +691,9 @@ class AliasAssign(PyccelAstNode):
     _attribute_nodes = ('_lhs','_rhs')
 
     def __init__(self, lhs, rhs):
-        if not lhs.is_alias:
-            raise TypeError('lhs must be a pointer')
+        if pyccel_stage == 'semantic':
+            if not lhs.is_alias:
+                raise TypeError('lhs must be a pointer')
 
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].var.is_alias:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
