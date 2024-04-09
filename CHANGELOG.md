@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 -   Stop printing numbers with more decimal digits than their precision.
 -   Allow printing the result of a function returning multiple objects of different types.
 -   #1732 : Fix multidimensional list indexing in Python.
+-   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.

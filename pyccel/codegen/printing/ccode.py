@@ -1245,7 +1245,7 @@ class CCodePrinter(CodePrinter):
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
         elif not isinstance(class_type, CustomDataType):
-            dtype = self.find_in_dtype_registry(class_type)
+            dtype = self.find_in_dtype_registry(expr.dtype)
         else:
             dtype = self._print(expr.class_type)
 

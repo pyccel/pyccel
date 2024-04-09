@@ -4308,14 +4308,6 @@ def test_array_ndmin_2_order(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_dtype_conversion_to_bool_from_other_types(language):
     size = (2, 2)
 
@@ -4505,14 +4497,6 @@ def test_dtype_conversion_to_int64_from_other_types(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_dtype_conversion_to_float32_from_other_types(language):
     size = (2, 2)
 
@@ -4549,14 +4533,6 @@ def test_dtype_conversion_to_float32_from_other_types(language):
 
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_dtype_conversion_to_float64_from_other_types(language):
     size = (2, 2)
 
@@ -4593,14 +4569,6 @@ def test_dtype_conversion_to_float64_from_other_types(language):
 
 
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_dtype_conversion_to_complex64_from_other_types(language):
     size = (2, 2)
 
@@ -4635,14 +4603,6 @@ def test_dtype_conversion_to_complex64_from_other_types(language):
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_cfloat(cmplx128)
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_dtype_conversion_to_complex128_from_other_types(language):
     size = (2, 2)
 
@@ -4718,14 +4678,6 @@ def test_dtype_conversion_to_pyint_from_other_types(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_dtype_conversion_to_pyfloat_from_other_types(language):
     size = (2, 2)
 
@@ -4764,14 +4716,6 @@ def test_dtype_conversion_to_pyfloat_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
     size = (1,2)
 
@@ -5135,14 +5079,6 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
     size = (1,2)
 
@@ -5214,14 +5150,6 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
 
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
     size = (1,2)
 
@@ -5293,14 +5221,6 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
 
 
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     size = (1,2)
 
@@ -5370,15 +5290,6 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(cmplx128_1, cmplx128_2, cmplx128_3)
 
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
     size = (1,2)
 
@@ -5525,14 +5436,6 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
     size = (1,2)
 
@@ -5606,14 +5509,6 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
     size = (1,2)
 
@@ -5978,14 +5873,6 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
     size = (1,2)
 
@@ -6057,14 +5944,6 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
 
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
     size = (1,2)
 
@@ -6136,14 +6015,6 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
 
 
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     size = (1,2)
 
@@ -6213,15 +6084,6 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
 
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
     size = (1,2)
 
@@ -6368,14 +6230,6 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-                      pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(language):
     size = (1,2)
 

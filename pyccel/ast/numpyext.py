@@ -187,12 +187,14 @@ class NumpyFloat(PythonFloat):
         The argument passed to the function.
     """
     __slots__ = ('_rank','_shape','_order','_class_type')
+    _static_type = NumpyFloat64Type()
     name = 'float'
+
     def __init__(self, arg):
         self._shape = arg.shape
         self._rank  = arg.rank
         self._order = arg.order
-        self._class_type = arg.class_type.switch_basic_type(self.static_type())
+        self._class_type = NumpyNDArrayType(self.static_type()) if self._rank else self.static_type()
         super().__init__(arg)
 
     @property
@@ -253,7 +255,7 @@ class NumpyBool(PythonBool):
         self._shape = arg.shape
         self._rank  = arg.rank
         self._order = arg.order
-        self._class_type = arg.class_type.switch_basic_type(self.static_type())
+        self._class_type = NumpyNDArrayType(self.static_type()) if self._rank else self.static_type()
         super().__init__(arg)
 
     @property
@@ -280,12 +282,14 @@ class NumpyInt(PythonInt):
         The argument passed to the function.
     """
     __slots__ = ('_shape','_rank','_order','_class_type')
+    _static_type = numpy_precision_map[(PrimitiveIntegerType(), PythonInt._static_type.precision)]
     name = 'int'
+
     def __init__(self, arg=None, base=10):
         self._shape = arg.shape
         self._rank  = arg.rank
         self._order = arg.order
-        self._class_type = arg.class_type.switch_basic_type(self.static_type())
+        self._class_type = NumpyNDArrayType(self.static_type()) if self._rank else self.static_type()
         super().__init__(arg)
 
     @property
@@ -377,7 +381,10 @@ class NumpyReal(PythonReal):
     name = 'real'
     def __new__(cls, arg):
         if isinstance(arg.dtype, PythonNativeBool):
-            return NumpyInt(arg)
+            if arg.rank:
+                return NumpyInt(arg)
+            else:
+                return PythonInt(arg)
         else:
             return super().__new__(cls, arg)
 
@@ -455,14 +462,16 @@ class NumpyComplex(PythonComplex):
     _real_cast = NumpyReal
     _imag_cast = NumpyImag
     __slots__ = ('_rank','_shape','_order','_class_type')
+    _static_type = NumpyComplex128Type()
     name = 'complex'
+
     def __init__(self, arg0, arg1 = None):
         if arg1 is not None:
             raise NotImplementedError("Use builtin complex function not deprecated np.complex")
         self._shape = arg0.shape
         self._rank  = arg0.rank
         self._order = arg0.order
-        self._class_type = arg0.class_type.switch_basic_type(self.static_type())
+        self._class_type = NumpyNDArrayType(self.static_type()) if self._rank else self.static_type()
         super().__init__(arg0)
 
     @property
