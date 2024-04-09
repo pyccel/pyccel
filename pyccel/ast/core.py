@@ -3787,7 +3787,7 @@ class Import(PyccelAstNode):
 
         Parameters
         ----------
-        i : obj
+        i : Any
             The object to be formatted.
 
         Returns
