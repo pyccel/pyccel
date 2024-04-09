@@ -2213,8 +2213,11 @@ class SemanticParser(BasicParser):
 
             body = []
             if init_func:
-                import_init  = FunctionCall(init_func,[],[])
+                import_init  = FunctionCall(init_func, [], [])
                 body = [import_init]
+
+            imports = [self._visit(i) for i in expr.program.imports]
+            body += [i for i in imports if not isinstance(i, EmptyNode)]
 
             body += self._visit(expr.program.body).body
 
