@@ -46,6 +46,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
 -   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
 -   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
+-   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
 
 ## \[1.12.1\] - 2024-10-01
 

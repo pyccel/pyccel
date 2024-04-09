@@ -280,13 +280,6 @@ class Assign(PyccelAstNode):
         In the semantic stage :
           TypedAstNode with the same shape as the lhs.
 
-    status : str, optional
-        If lhs is not allocatable, then status is None.
-        otherwise, status is {'allocated', 'unallocated'}.
-
-    like : Variable, optional
-        Contains the name of the variable from which the lhs will be cloned.
-
     python_ast : ast.Ast
         The ast object parsed by Python's ast module.
 
@@ -307,15 +300,13 @@ class Assign(PyccelAstNode):
     >>> Assign(A[0,1], x)
     IndexedElement(A, 0, 1) := x
     """
-    __slots__ = ('_lhs', '_rhs', '_status', '_like')
+    __slots__ = ('_lhs', '_rhs')
     _attribute_nodes = ('_lhs', '_rhs')
 
     def __init__(
         self,
         lhs,
         rhs,
-        status=None,
-        like=None,
         *,
         python_ast = None
         ):
@@ -323,8 +314,6 @@ class Assign(PyccelAstNode):
             lhs = PythonTuple(*lhs)
         self._lhs = lhs
         self._rhs = rhs
-        self._status = status
-        self._like = like
         super().__init__()
         if python_ast is not None:
             self.set_current_ast(python_ast)
@@ -342,20 +331,6 @@ class Assign(PyccelAstNode):
     @property
     def rhs(self):
         return self._rhs
-
-    # TODO : remove
-
-    @property
-    def expr(self):
-        return self.rhs
-
-    @property
-    def status(self):
-        return self._status
-
-    @property
-    def like(self):
-        return self._like
 
     @property
     def is_alias(self):
@@ -804,12 +779,6 @@ class AugAssign(Assign):
     rhs : TypedAstNode
         Object representing the rhs of the expression.
 
-    status : str, optional
-        See Assign.
-
-    like : TypedAstNode, optional
-        See Assign.
-
     python_ast : ast.AST
         The AST node where the object appeared in the original code.
 
@@ -835,8 +804,6 @@ class AugAssign(Assign):
         lhs,
         op,
         rhs,
-        status=None,
-        like=None,
         *,
         python_ast = None
         ):
@@ -846,7 +813,7 @@ class AugAssign(Assign):
 
         self._op = op
 
-        super().__init__(lhs, rhs, status, like, python_ast=python_ast)
+        super().__init__(lhs, rhs, python_ast=python_ast)
 
     def __repr__(self):
         return f'{self.lhs} {self.op}= {self.rhs}'
@@ -857,16 +824,21 @@ class AugAssign(Assign):
 
     def to_basic_assign(self):
         """
-        Convert the AugAssign to an Assign
+        Convert the AugAssign to an Assign.
+
+        Convert the AugAssign to an Assign.
         E.g. convert:
         a += b
         to:
         a = a + b
+
+        Returns
+        -------
+        Assign
+            An assignment equivalent to the AugAssign.
         """
         return Assign(self.lhs,
-                self._accepted_operators[self._op](self.lhs, self.rhs),
-                status = self.status,
-                like   = self.like)
+                self._accepted_operators[self._op](self.lhs, self.rhs))
 
 
 class While(ScopedAstNode):
