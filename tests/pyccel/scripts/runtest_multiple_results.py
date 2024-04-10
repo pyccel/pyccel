@@ -9,16 +9,18 @@ def const_int_float():
 def const_complex_bool_int():
     return 1+2j, False, 8
 
+
 @pure
 def expr_complex_int_bool(n : 'int'):
     return 0.5+n*1j, 2*n, n==3
 
+
 def f3(x  : 'float' =  1.5, y  : 'float' =  2.5):
     return x+y, x-y
 
+
 def print_multiple():
     print(f3())
-
 
 
 def f4(x : 'float', y  : 'float' =  2.5):
@@ -29,11 +31,13 @@ def f4(x : 'float', y  : 'float' =  2.5):
 def print_func(x : int, y : int):
     print(x,y)
 
+
 def test_issue910():
     x = 0
     y = 1
     print_func(x,y)
     return x,y
+
 
 if __name__ == '__main__':
     a,b = const_int_float()
