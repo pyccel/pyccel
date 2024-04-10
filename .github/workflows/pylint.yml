@@ -37,6 +37,7 @@ jobs:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
           fetch-depth: 0
+          submodules: true
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v5
         with:

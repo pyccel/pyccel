@@ -1,6 +1,8 @@
 skip_magic: True
 skip_init: True
 fail_under: 0
+exclude:
+  ".*/pyccel/extensions"
 ignore_patterns:
   "syntactic":
     - "_visit_.*"

@@ -1,0 +1,3 @@
+[submodule "pyccel/extensions/STC"]
+	path = pyccel/extensions/STC
+	url = https://github.com/Stclib/STC/
