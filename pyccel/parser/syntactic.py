@@ -17,7 +17,7 @@ from textx.exceptions import TextXSyntaxError
 from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import FunctionCall, FunctionCallArgument
-from pyccel.ast.core import Module
+from pyccel.ast.core import Module, Program
 from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
@@ -339,7 +339,19 @@ class SyntaxParser(BasicParser):
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
-        body          = [self._visit(v) for v in stmt.body]
+        body = [self._visit(v) for v in stmt.body]
+
+        functions = [f for f in body if isinstance(f, FunctionDef)]
+        classes   = [c for c in body if isinstance(c, ClassDef)]
+        imports   = [i for i in body if isinstance(i, Import)]
+        programs  = [p for p in body if isinstance(p, Program)]
+        body      = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import, Program))]
+
+        if len(programs) > 1:
+            errors.report("Multiple program blocks are not supported. Please group the code for the main.",
+                    symbol = programs[1],
+                    severity = 'error')
+        program = next(iter(programs), None)
 
         # Define the name of the module
         # The module name allows it to be correctly referenced from an import command
@@ -348,7 +360,8 @@ class SyntaxParser(BasicParser):
         self.scope.python_names[name] = mod_name
 
         body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
-        return Module(name, [], [], program = CodeBlock(body), scope=self.scope)
+        return Module(name, [], functions, init_func = CodeBlock(body), scope = self.scope,
+                classes = classes, imports = imports, program = program)
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
@@ -733,7 +746,6 @@ class SyntaxParser(BasicParser):
         is_elemental = False
         is_private   = False
         is_inline    = False
-        imports      = []
         docstring   = None
 
         decorators = {}
@@ -937,6 +949,15 @@ class SyntaxParser(BasicParser):
             docstring.header = ''
             body = body[1:]
 
+        functions = [f for f in body if isinstance(f, FunctionDef)]
+        classes   = [c for c in body if isinstance(c, ClassDef)]
+        imports   = [i for i in body if isinstance(i, Import)]
+        body      = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import))]
+
+        if classes:
+            errors.report("Classes in functions are not supported.",
+                    symbol=classes[0], severity='error')
+
         body = CodeBlock(body)
 
         returns = [i.expr for i in body.get_attribute_nodes(Return,
@@ -984,6 +1005,7 @@ class SyntaxParser(BasicParser):
                is_elemental=is_elemental,
                is_private=is_private,
                imports=imports,
+               functions=functions,
                decorators=decorators,
                docstring=docstring,
                scope=scope)
@@ -1227,8 +1249,26 @@ class SyntaxParser(BasicParser):
     def _visit_If(self, stmt):
 
         test = self._visit(stmt.test)
-        body = self._visit(stmt.body)
         orelse = self._visit(stmt.orelse)
+
+        if isinstance(test, PyccelEq) and test.args[0] == '__name__' and test.args[1] == '__main__' \
+                and isinstance(test.args[0], PyccelSymbol) and isinstance(test.args[1], LiteralString):
+            if len(orelse) != 0:
+                errors.report("Can't add an else condition to a program",
+                        symbol = stmt,
+                        severity = 'error')
+
+            scope = self.create_new_function_scope('__main__')
+            body = [self._visit(v) for v in stmt.body]
+            self.exit_function_scope()
+
+            imports = [i for i in body if isinstance(i, Import)]
+            body = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import))]
+
+            return Program('__main__', (), CodeBlock(body), imports=imports, scope = scope)
+        else:
+            body = self._visit(stmt.body)
+
         if len(orelse)==1 and isinstance(orelse[0],If):
             orelse = orelse[0].blocks
             return If(IfSection(test, body), *orelse)
@@ -1299,6 +1339,7 @@ class SyntaxParser(BasicParser):
         if len(domain) == 1:
             domain = domain[0]
         body = self._visit(stmt.body)
+
         return With(domain, body)
 
     def _visit_Try(self, stmt):

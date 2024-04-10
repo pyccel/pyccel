@@ -407,15 +407,26 @@ class PyccelAstNode:
         return self._user_nodes
 
     def get_direct_user_nodes(self, condition):
-        """ For an object with multiple user nodes
-        Get the objects which satisfy a given
-        condition
+        """
+        Get the direct user nodes which satisfy the condition.
+
+        This function returns all the direct user nodes which satisfy the
+        provided condition. A "direct" user node is a node which uses the
+        instance directly (e.g. a `FunctionCall` uses a `FunctionDef` directly
+        while a `FunctionDef` uses a `Variable` indirectly via a `FunctionDefArgument`
+        or a `CodeBlock`). Most objects only have 1 direct user node so
+        this function only makes sense for an object with multiple user nodes.
+        E.g. a `Variable`, or a `FunctionDef`.
 
         Parameters
         ----------
         condition : lambda
-                    The condition which the user nodes
-                    must satisfy to be returned
+            The condition which the user nodes must satisfy to be returned.
+
+        Returns
+        -------
+        list
+            The user nodes which satisfy the condition.
         """
         return [p for p in self._user_nodes if condition(p)]
 

@@ -1064,8 +1064,8 @@ class Module(ScopedAstNode):
                 raise TypeError('Only a Interface instance is allowed.')
 
         NoneType = type(None)
-        if not isinstance(init_func, (NoneType, FunctionDef)):
-            raise TypeError('init_func must be a FunctionDef')
+        assert (pyccel_stage == 'syntactic' and isinstance(init_func, CodeBlock)) or \
+                isinstance(init_func, (NoneType, FunctionDef))
 
         if not isinstance(free_func, (NoneType, FunctionDef)):
             raise TypeError('free_func must be a FunctionDef')
@@ -1092,21 +1092,22 @@ class Module(ScopedAstNode):
         self._classes = classes
         self._imports = imports
 
-        self._internal_dictionary = {v.name:v for v in variables}
-        self._internal_dictionary.update({f.name:f for f in funcs})
-        self._internal_dictionary.update({i.name:i for i in interfaces})
-        self._internal_dictionary.update({c.name:c for c in classes})
-        import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
-        self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
+        if pyccel_stage != "syntactic":
+            self._internal_dictionary = {v.name:v for v in variables}
+            self._internal_dictionary.update({f.name:f for f in funcs})
+            self._internal_dictionary.update({i.name:i for i in interfaces})
+            self._internal_dictionary.update({c.name:c for c in classes})
+            import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
+            self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
-        if init_func:
-            init_if = init_func.body.body[0]
-            # The init function should always contain an If block unless it is part of a wrapper
-            if isinstance(init_if, If):
-                init_cond = init_if.blocks[0].condition
-                init_var = init_cond.args[0]
-                self._variables.append(init_var)
-                self._variable_inits.append(LiteralFalse())
+            if init_func:
+                init_if = init_func.body.body[0]
+                # The init function should always contain an If block unless it is part of a wrapper
+                if isinstance(init_if, If):
+                    init_cond = init_if.blocks[0].condition
+                    init_var = init_cond.args[0]
+                    self._variables.append(init_var)
+                    self._variable_inits.append(LiteralFalse())
 
         super().__init__(scope)
 
@@ -1273,20 +1274,29 @@ class ModuleHeader(PyccelAstNode):
         return self._module
 
 class Program(ScopedAstNode):
+    """
+    Represents a Program in the code.
 
-    """Represents a Program in the code. A block consists of the following inputs
+    A class representing a program in the code. A program is a set of statements
+    that are executed when the module is run directly. In Python these statements
+    are located in an `if __name__ == '__main__':` block.
 
     Parameters
     ----------
-    variables: list
-        list of the variables that appear in the block.
+    name : str
+        The name used to identify the program (this is used for printing in Fortran).
 
-    body: list
-        a list of statements
+    variables : Iterable[Variable]
+        An iterable object containing the variables that appear in the program.
 
-    imports: list, tuple
-        list of needed imports
+    body : CodeBlock
+        An CodeBlock containing the statements in the body of the program.
 
+    imports : Iterable[Import]
+        An iterable object containing the imports used by the program.
+
+    scope : Scope
+        The scope of the program.
     """
     __slots__ = ('_name', '_variables', '_body', '_imports')
     _attribute_nodes = ('_variables', '_body', '_imports')
@@ -1310,18 +1320,16 @@ class Program(ScopedAstNode):
             if not isinstance(i, Variable):
                 raise TypeError('Only a Variable instance is allowed.')
 
-        if not iterable(body):
-            raise TypeError('body must be an iterable')
-        body = CodeBlock(body)
+        assert isinstance(body, CodeBlock)
 
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        imports = set(imports)  # for unicity
-        imports = tuple(imports)
+        imports = {i : None for i in imports}  # for unicity and ordering
+        imports = tuple(imports.keys())
 
         self._name = name
-        self._variables = variables
+        self._variables = tuple(variables)
         self._body = body
         self._imports = imports
         super().__init__(scope)
@@ -4451,24 +4459,6 @@ class StarredArguments(PyccelAstNode):
     @property
     def args_var(self):
         return self._starred_obj
-
-# ...
-
-class InProgram(TypedAstNode):
-    """
-    Class representing the 'in program' test.
-
-    Class representing the test indicating whether the code should
-    only be executed when the file is executed as a program. In
-    other words, a class representing the boolean:
-    `__name__ == '__main__'`
-    """
-    _rank  = 0
-    _shape = None
-    _order = None
-    _class_type = PythonNativeBool()
-    _attribute_nodes = ()
-    __slots__ = ()
 
 # ...
 

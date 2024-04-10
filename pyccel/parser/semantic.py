@@ -55,7 +55,6 @@ from pyccel.ast.core import With
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import Iterable
-from pyccel.ast.core import InProgram
 from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
@@ -224,7 +223,6 @@ class SemanticParser(BasicParser):
         self.scope = parser.scope
         self.scope.imports['imports'] = {}
         self._module_namespace  = self.scope
-        self._program_namespace = self.scope.new_child_scope('__main__')
 
         self._in_annotation = False
 
@@ -262,22 +260,6 @@ class SemanticParser(BasicParser):
         """Returns the d_parsers parser."""
 
         return self._d_parsers
-
-    @property
-    def program_namespace(self):
-        """
-        Get the namespace relevant to the program.
-
-        Get the namespace which describes the section of
-        code which is executed as a program. In other words
-        the code inside an `if __name__ == '__main__':`
-        block.
-
-        Returns
-        -------
-        Scope : The program namespace.
-        """
-        return self._program_namespace
 
     #================================================================
     #                     Public functions
@@ -329,31 +311,6 @@ class SemanticParser(BasicParser):
     #================================================================
     #              Utility functions for scope handling
     #================================================================
-
-    def change_to_program_scope(self):
-        """
-        Switch the focus to the program scope.
-
-        Update the namespace variable so that it points at the
-        program namespace (which describes the scope inside
-        a `if __name__ == '__main__':` block). It is assumed that
-        the current namespace is the module namespace.
-        """
-        self._allocs.append(set())
-        self._pointer_targets.append({})
-        self._module_namespace = self.scope
-        self.scope = self._program_namespace
-
-    def change_to_module_scope(self):
-        """
-        Switch the focus to the module scope.
-
-        Update the namespace variable so that it points
-        at the module namespace. It is assumed that the
-        current namespace is the program namespace.
-        """
-        self._program_namespace = self.scope
-        self.scope = self._module_namespace
 
     def get_class_prefix(self, name):
         """
@@ -1273,7 +1230,7 @@ class SemanticParser(BasicParser):
 
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
         self._scope = sc
-        self._visit_FunctionDef(old_func, annotate=True, function_call_args=function_call_args)
+        self._visit_FunctionDef(old_func, function_call_args=function_call_args)
         # Retreive the annotated function
         func = self.scope.find(old_func.name, 'functions')
         # Add the Module of the imported function to the new function
@@ -2073,9 +2030,20 @@ class SemanticParser(BasicParser):
             severity='fatal')
 
     def _visit_Module(self, expr):
-        body = self._visit(expr.program).body
-        program_body      = []
-        init_func_body    = []
+        imports = [self._visit(i) for i in expr.imports]
+        init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]
+
+        for f in expr.funcs:
+            self.insert_function(f)
+
+        # Avoid conflicts with symbols from Program
+        if expr.program:
+            self.scope.insert_symbols(expr.program.scope.all_used_symbols)
+
+        for c in expr.classes:
+            self._visit(c)
+
+        init_func_body += self._visit(expr.init_func).body
         mod_name = self.metavars.get('module_name', None)
         if mod_name is None:
             mod_name = expr.name
@@ -2086,29 +2054,39 @@ class SemanticParser(BasicParser):
             name_suffix = expr.name.name
         else:
             name_suffix = expr.name
-        prog_name = 'prog_'+name_suffix
-        prog_name = self.scope.get_new_name(prog_name)
 
-        for b in body:
-            if isinstance(b, If):
-                if any(isinstance(i.condition, InProgram) for i in b.blocks):
-                    for i in b.blocks:
-                        if isinstance(i.condition, InProgram):
-                            program_body.extend(i.body.body)
-                        else:
-                            init_func_body.append(i.body.body)
-                else:
-                    init_func_body.append(b)
-            elif isinstance(b, CodeBlock):
-                init_func_body.extend(b.body)
-            else:
-                init_func_body.append(b)
+        if expr.program:
+            prog_name = 'prog_'+name_suffix
+            prog_name = self.scope.get_new_name(prog_name)
+            self._allocs.append(set())
+            self._pointer_targets.append({})
+
+            mod_scope = self.scope
+            prog_syntactic_scope = expr.program.scope
+            self.scope = mod_scope.new_child_scope(prog_name,
+                    used_symbols = prog_syntactic_scope.local_used_symbols.copy(),
+                    original_symbols = prog_syntactic_scope.python_names.copy())
+            prog_scope = self.scope
+
+            imports = [self._visit(i) for i in expr.program.imports]
+            body = [i for i in imports if not isinstance(i, EmptyNode)]
+
+            body += self._visit(expr.program.body).body
+
+            program_body = CodeBlock(body)
+
+            # Calling the Garbage collecting,
+            # it will add the necessary Deallocate nodes
+            # to the ast
+            program_body.insert2body(*self._garbage_collector(program_body))
+
+            self.scope = mod_scope
 
         for f in self.scope.functions.copy():
             f = self.scope.functions[f]
             if not f.is_semantic and not isinstance(f, InlineFunctionDef):
                 assert isinstance(f, FunctionDef)
-                self._visit_FunctionDef(f, annotate=True)
+                self._visit(f)
 
         variables = self.get_variables(self.scope)
         init_func = None
@@ -2250,26 +2228,24 @@ class SemanticParser(BasicParser):
                     classes=self.scope.classes.values(),
                     imports=self.scope.imports['imports'].values(),
                     scope=self.scope)
-        container = self._program_namespace.imports
-        container['imports'][mod_name] = Import(mod_name, mod)
 
-        if program_body:
-            container = self._program_namespace.imports
+        if expr.program:
+            container = prog_scope.imports
             container['imports'][mod_name] = Import(self.scope.get_python_name(mod_name), mod)
 
             if init_func:
-                import_init  = FunctionCall(init_func,[],[])
-                program_body = [import_init, *program_body]
+                import_init  = FunctionCall(init_func, [], [])
+                program_body.insert2body(import_init, back=False)
 
             if free_func:
                 import_free  = FunctionCall(free_func,[],[])
-                program_body = [*program_body, import_free]
-            container = self._program_namespace
+                program_body.insert2body(import_free)
+
             program = Program(prog_name,
-                            self.get_variables(container),
+                            self.get_variables(prog_scope),
                             program_body,
-                            container.imports['imports'].values(),
-                            scope=self._program_namespace)
+                            container['imports'].values(),
+                            scope=prog_scope)
 
             mod.program = program
         return mod
@@ -3794,24 +3770,9 @@ class SemanticParser(BasicParser):
     def _visit_IfSection(self, expr):
         condition = expr.condition
 
-        name_symbol = PyccelSymbol('__name__')
-        main = LiteralString('__main__')
-        prog_check = isinstance(condition, PyccelEq) \
-                and all(a in (name_symbol, main) for a in condition.args)
-
-        if prog_check:
-            cond = InProgram()
-            self.change_to_program_scope()
-        else:
-            cond = self._visit(expr.condition)
+        cond = self._visit(expr.condition)
 
         body = self._visit(expr.body)
-        if prog_check:
-            # Calling the Garbage collecting,
-            # it will add the necessary Deallocate nodes
-            # to the ast
-            body.insert2body(*self._garbage_collector(body))
-            self.change_to_module_scope()
 
         return IfSection(cond, body)
 
@@ -3819,10 +3780,6 @@ class SemanticParser(BasicParser):
         args = [self._visit(i) for i in expr.blocks]
 
         conds = [b.condition for b in args]
-        if any(isinstance(c, InProgram) for c in conds):
-            if not all(isinstance(c, (InProgram,LiteralTrue)) for c in conds):
-                errors.report("Determination of main module is too complicated to handle",
-                        symbol=expr, severity='error')
 
         allocations = [arg.get_attribute_nodes(Allocate) for arg in args]
 
@@ -3920,7 +3877,7 @@ class SemanticParser(BasicParser):
             expr  = Return(results)
         return expr
 
-    def _visit_FunctionDef(self, expr, annotate=False, function_call_args=None):
+    def _visit_FunctionDef(self, expr, function_call_args=None):
         """
         Annotate the FunctionDef if necessary.
 
@@ -3938,15 +3895,12 @@ class SemanticParser(BasicParser):
            If we provide an Interface, this means that the function has been annotated partially,
            and we need to continue annotating the needed ones.
 
-        annotate : bool, default: False
-           Annotate expr if the flag is set to True.
-
         function_call_args : list[FunctionCallArgument], optional
             The list of call arguments, needed only in the case of an inlined function.
         """
-        if not annotate:
-            self.insert_function(expr)
-            return EmptyNode()
+        if expr.get_direct_user_nodes(lambda u: isinstance(u, CodeBlock)):
+            errors.report("Functions can only be declared in modules or inside other functions.",
+                    symbol=expr, severity='error')
 
         existing_semantic_funcs = []
         if not expr.is_semantic:
@@ -4098,15 +4052,21 @@ class SemanticParser(BasicParser):
             self._allocs.append(set())
             self._pointer_targets.append({})
 
+            import_init_calls = [self._visit(i) for i in expr.imports]
+
+            for f in expr.functions:
+                self.insert_function(f)
+
             # we annotate the body
             body = self._visit(expr.body)
+            body.insert2body(*import_init_calls, back=False)
 
             # Annotate the remaining functions
             sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and\
                         not isinstance(i, (InlineFunctionDef, FunctionAddress)) and \
                         not i.is_semantic]
             for i in sub_funcs:
-                self._visit_FunctionDef(i, annotate=True)
+                self._visit(i)
 
             # Calling the Garbage collecting,
             # it will add the necessary Deallocate nodes
@@ -4280,9 +4240,12 @@ class SemanticParser(BasicParser):
             return PythonPrint(args)
 
     def _visit_ClassDef(self, expr):
-
         # TODO - improve the use and def of interfaces
         #      - wouldn't be better if it is done inside ClassDef?
+
+        if expr.get_direct_user_nodes(lambda u: isinstance(u, CodeBlock)):
+            errors.report("Classes can only be declared in modules.",
+                    symbol=expr, severity='error')
 
         name = self.scope.get_expected_name(expr.name)
 
@@ -4330,7 +4293,7 @@ class SemanticParser(BasicParser):
             m_name = method.name
             if m_name == '__init__':
                 if init_func is None:
-                    self._visit_FunctionDef(method, annotate=True)
+                    self._visit(method)
                     init_func = self.scope.functions.pop(m_name)
 
                 if isinstance(init_func, Interface):
@@ -4353,7 +4316,7 @@ class SemanticParser(BasicParser):
                    severity='error')
 
         for i in methods:
-            self._visit_FunctionDef(i, annotate=True)
+            self._visit(i)
 
         if not any(method.name == '__del__' for method in methods):
             argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
@@ -4449,6 +4412,10 @@ class SemanticParser(BasicParser):
         # TODO - must have a dict where to store things that have been
         #        imported
         #      - should not use scope
+
+        if expr.get_direct_user_nodes(lambda u: isinstance(u, CodeBlock)):
+            errors.report("Imports can only be used in modules or inside functions.",
+                    symbol=expr, severity='error')
 
         container = self.scope.imports
 
