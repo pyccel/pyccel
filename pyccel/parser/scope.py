@@ -766,9 +766,9 @@ class Scope(object):
 
     def get_python_name(self, name):
         """
-        Get the name used in the original python code.
+        Get the name used in the original Python code.
 
-        Get the name used in the original python code from the name used
+        Get the name used in the original Python code from the name used
         by the variable that was created in the parser.
 
         Parameters
