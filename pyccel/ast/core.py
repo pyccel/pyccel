@@ -1291,11 +1291,11 @@ class Program(ScopedAstNode):
     name : str
         The name used to identify the program (this is used for printing in Fortran).
 
-    variables : list[Variable]
-        A list of the variables that appear in the program.
+    variables : Iterable[Variable]
+        An iterable object containing the variables that appear in the program.
 
-    body : Iterable[PyccelAstNode]
-        An iterable object containing the statements in the body of the program.
+    body : CodeBlock
+        An CodeBlock containing the statements in the body of the program.
 
     imports : Iterable[Import]
         An iterable object containing the imports used by the program.
@@ -1330,11 +1330,11 @@ class Program(ScopedAstNode):
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        imports = set(imports)  # for unicity
-        imports = tuple(imports)
+        imports = {i : None for i in imports}  # for unicity and ordering
+        imports = tuple(imports.keys())
 
         self._name = name
-        self._variables = variables
+        self._variables = tuple(variables)
         self._body = body
         self._imports = imports
         super().__init__(scope)
