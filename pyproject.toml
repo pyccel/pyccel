@@ -67,5 +67,3 @@ exclude = [
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "install_scripts/hook.py"
 require-runtime-dependencies = true
-
-
