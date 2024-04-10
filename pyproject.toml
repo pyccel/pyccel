@@ -50,17 +50,18 @@ artifacts = [
 ]
 include = [
   "include",
-   "*.py",
+  "*.py",
   "*.pyh",
   "*.pyccel",
+  "pyccel/parser/grammar/*.tx",
   "pyccel/stdlib/*/*.h",
+  "pyccel/stdlib/*/*.c",
   "pyccel/stdlib/*/*.f90",
-  "*.tx",
-  "*.c"
+  "pyccel/extensions/STC/include/*/*.c"
 ]
 exclude = [
-    "misc",
-    "src"
+    "pyccel/extensions/STC/src",
+    "pyccel/extensions/STC/misc"
 ]
 
 [tool.hatch.build.targets.wheel.hooks.custom]
