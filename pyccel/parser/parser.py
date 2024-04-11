@@ -17,6 +17,19 @@ from pyccel.parser.semantic  import SemanticParser
 # TODO [AR, 18.11.2018] to be modified as a function
 # TODO [YG, 28.01.2020] maybe pass filename to the parse method?
 class Parser(object):
+    """
+    A wrapper class which handles dependencies between the syntactic and semantic parsers.
+
+    A wrapper class which handles dependencies between the syntactic and semantic parsers.
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file being translated.
+
+    **kwargs : dict
+        Any keyword arguments for BasicParser.
+    """
 
     def __init__(self, filename, **kwargs):
 
@@ -181,24 +194,26 @@ class Parser(object):
         self._sons.append(son)
 
     def parse_sons(self, d_parsers_by_filename, verbose=False):
-        """Recursive algorithm for syntax analysis on a given file and its
+        """
+        Parse the files on which this file is dependent.
+
+        Recursive algorithm for syntax analysis on a given file and its
         dependencies.
         This function always terminates with an dict that contains parsers
         for all involved files.
 
-         Parameters
-         ----------
-         d_parsers_by_filename : dict
-          A dictionary of parsed sons.
+        Parameters
+        ----------
+        d_parsers_by_filename : dict
+            A dictionary of parsed sons.
 
-        verbose: bool
-          Determine the verbosity.
+        verbose : bool, default=False
+            Set the verbosity.
 
-         Results
-         -------
-         d_parsers: dict
-          The updated dictionary of parsed sons.
-
+        Returns
+        -------
+        dict
+            The updated dictionary of parsed sons.
         """
 
         imports     = self.imports
@@ -207,7 +222,7 @@ class Parser(object):
         not_treated = [i for i in source_to_filename.values() if i not in treated]
         for filename in not_treated:
             if verbose:
-                print ('>>> treating :: {}'.format(filename))
+                print ('>>> treating :: ', filename)
 
             # get the absolute path corresponding to source
             if filename in d_parsers_by_filename:
@@ -228,25 +243,33 @@ class Parser(object):
 
         return d_parsers
 
-    def _annotate_sons(self, **settings):
+    def _annotate_sons(self, verbose = False):
+        """
+        Annotate any dependencies of the file currently being parsed.
 
-        verbose = settings.pop('verbose', False)
+        Annotate any dependencies of the file currently being parsed.
+
+        Parameters
+        ----------
+        verbose : bool, default=False
+            Indicates if the treatment should be run in verbose mode.
+        """
 
         # we first treat sons that have no imports
 
         for p in self.sons:
             if not p.sons:
                 if verbose:
-                    print ('>>> treating :: {}'.format(p.filename))
-                p.annotate(**settings)
+                    print ('>>> treating :: ', p.filename)
+                p.annotate()
 
         # finally we treat the remaining sons recursively
 
         for p in self.sons:
             if p.sons:
                 if verbose:
-                    print ('>>> treating :: {}'.format(p.filename))
-                p.annotate(**settings)
+                    print ('>>> treating :: ', p.filename)
+                p.annotate()
 
 #==============================================================================
 

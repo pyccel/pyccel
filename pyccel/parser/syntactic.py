@@ -542,7 +542,7 @@ class SyntaxParser(BasicParser):
             return LiteralEllipsis()
 
         else:
-            raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
+            raise NotImplementedError(f'Constant type {type(stmt.value)} not recognised')
 
     def _visit_Name(self, stmt):
         name = PyccelSymbol(stmt.id)
@@ -1110,7 +1110,7 @@ class SyntaxParser(BasicParser):
             func_attr = FunctionCall(func.name[-1], args)
             func = DottedName(*func.name[:-1], func_attr)
         else:
-            raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
+            raise NotImplementedError(f' Unknown function type {type(func)}')
 
         return func
 
