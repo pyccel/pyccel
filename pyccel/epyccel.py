@@ -284,8 +284,10 @@ def epyccel( python_function_or_module, **kwargs ):
 
     Parameters
     ----------
-    python_function_or_module : function | module
+    python_function_or_module : function | module | str
         Python function or module to be accelerated.
+        If a string is passed then it is assumed to be the code from a module which
+        should be accelerated..
     **kwargs :
         Additional keyword arguments for configuring the compilation and acceleration process.
         Available options are defined in epyccel_seq.
@@ -307,7 +309,7 @@ def epyccel( python_function_or_module, **kwargs ):
     >>> one_f = epyccel(one, language='fortran')
     >>> one_c = epyccel(one, language='c')
     """
-    assert isinstance( python_function_or_module, (FunctionType, type, ModuleType) )
+    assert isinstance( python_function_or_module, (FunctionType, type, ModuleType, str) )
 
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
