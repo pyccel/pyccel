@@ -1,5 +1,7 @@
 import sympy as sp
-if version(sp.__version__) >= version('1.8'):
+from packaging.version import parse
+
+if parse(sp.__version__) >= parse('1.8'):
     from sympy.printing.numpy import NumPyPrinter
 else:
     from sympy.printing.pycode import NumPyPrinter
@@ -53,11 +55,11 @@ def lambdify(expr : sp.Expr, args : dict[sp.Symbol, str], result_type : str = No
     epyccel
         The function that accelerates the generated code.
     """
-    expr = MyPrinter().doprint(expr)
-    args = ', '.join(f'{a} : {annot}' for a, annot in args.items())
-    func_name = random_string(8)
+    expr = NumPyPrinter().doprint(expr)
+    args = ', '.join(f'{a} : "{annot}"' for a, annot in args.items())
+    func_name = 'func_'+random_string(8)
     if result_type:
-        signature = f'def {func_name}({args}) -> {result_type}:'
+        signature = f'def {func_name}({args}) -> "{result_type}":'
     else:
         signature = f'def {func_name}({args}):'
     if templates:
@@ -66,7 +68,9 @@ def lambdify(expr : sp.Expr, args : dict[sp.Symbol, str], result_type : str = No
     else:
         decorators = ''
     code = f'    return {expr}'
-    func = '\n'.join((decorators, signature, code))
+    numpy_import = 'import numpy\n'
+    func = '\n'.join((numpy_import, decorators, signature, code))
+    print(func)
     package = epyccel(func, **kwargs)
     return getattr(package, func_name)
 
