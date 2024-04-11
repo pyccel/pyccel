@@ -495,9 +495,8 @@ class BasicParser(object):
 
         Parameters
         ----------
-        filename : str
-            Output file name. if not given `name.pyccel` will be used and placed
-            in the Pyccel directory ($HOME/.pyccel).
+        filename : str, optional
+            The name of the pickled file. if not given `name.pyccel` will be used.
         """
 
         # ...
