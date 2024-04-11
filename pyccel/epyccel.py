@@ -118,8 +118,10 @@ def epyccel_seq(function_or_module, *,
 
     Parameters
     ----------
-    function_or_module : function | module
+    function_or_module : function | module | str
         Python function or module to be accelerated.
+        If a string is passed then it is assumed to be the code from a module which
+        should be accelerated..
     language : {'fortran', 'c', 'python'}
         Language of generated code (default: 'fortran').
     compiler : str, optional
@@ -167,7 +169,7 @@ def epyccel_seq(function_or_module, *,
     # Store current directory
     base_dirpath = os.getcwd()
 
-    if isinstance(function_or_module, (FunctionType, type)):
+    if isinstance(function_or_module, (FunctionType, type, str)):
         dirpath = os.getcwd()
 
     elif isinstance(function_or_module, ModuleType):
@@ -196,6 +198,11 @@ def epyccel_seq(function_or_module, *,
         code = ''.join(lines)
 
         module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
+
+    elif isinstance(function_or_module, str):
+        code = function_or_module
+
+        module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
     else:
         raise TypeError('> Expecting a FunctionType, type or a ModuleType')
