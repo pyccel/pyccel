@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 -   #1740 : Add Python support for set method `copy()`.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1787 : Ensure `STC` is installed with Pyccel.
+-   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate sympy expressions.
 
 ### Fixed
 
