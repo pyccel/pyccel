@@ -4,9 +4,18 @@
 import os
 import pytest
 
+import numpy as np
+import sympy as sp
+
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors   import Errors
+from pyccel.lambdify import lambdify as pyc_lambdify
+
+import scripts.mappings as mappings
+
+RTOL = 1e-12
+ATOL = 1e-16
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
@@ -15,7 +24,7 @@ files = sorted(os.listdir(path_dir))
 files = [f for f in files if (f.endswith(".py"))]
 
 @pytest.mark.parametrize( "f", files )
-@pytest.mark.xfail(reason="Broken symbolic function support, see issue #330")
+@pytest.mark.skip(reason="Broken symbolic function support, see issue #330")
 def test_symbolic(f):
 
     pyccel = Parser(f)
@@ -33,6 +42,24 @@ def test_symbolic(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+
+def test_lambdify(language):
+    r1 = np.linspace(0.0, 1.0, 100)
+    p1 = np.linspace(0.0, 2*np.pi, 100)
+    r,p = np.meshgrid(r1, p1)
+    x,y = sp.symbols('x1,x2')
+    for m in (mappings.PolarMapping, mappings.TargetMapping, mappings.CzarnyMapping):
+        expr_x = sp.sympify(m.expressions['x']).subs(m.constants)
+        expr_y = sp.sympify(m.expressions['y']).subs(m.constants)
+        sp_x = sp.lambdify([x, y], expr_x)
+        sp_y = sp.lambdify([x, y], expr_y)
+        pyc_x = pyc_lambdify(expr_x, {x : 'float[:,:]', y : 'float[:,:]'}, 'float[:,:]',
+                    language = language)
+        pyc_y = pyc_lambdify(expr_y, {x : 'float[:,:]', y : 'float[:,:]'}, 'float[:,:]',
+                    language = language)
+
+        assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
+        assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL, atol=ATOL)
 
 ######################
 if __name__ == '__main__':
