@@ -7,12 +7,12 @@ import pytest
 import numpy as np
 import sympy as sp
 
+from scripts import mappings
+
 from pyccel import lambdify as pyc_lambdify
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors   import Errors
-
-from scripts import mappings
 
 RTOL = 1e-12
 ATOL = 1e-16
