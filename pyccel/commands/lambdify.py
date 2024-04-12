@@ -13,8 +13,8 @@ if parse(sp.__version__) >= parse('1.8'):
 else:
     from sympy.printing.pycode import NumPyPrinter
 
-def lambdify(expr : sp.Expr, args : dict[sp.Symbol, str], result_type : str = None,
-             templates : dict[str,list[str]] = None, **kwargs):
+def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', result_type : str = None,
+             templates : 'dict[str,list[str]]' = None, **kwargs):
     """
     Convert a SymPy expression into a Pyccel-accelerated function.
 
