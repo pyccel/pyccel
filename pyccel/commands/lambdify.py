@@ -19,13 +19,13 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', result_type : str = 
     Convert a SymPy expression into a Pyccel-accelerated function.
 
     Convert a SymPy expression into a function that allows for fast
-    numeric evaluation. This is done using sympy's NumPyPrinter to
+    numeric evaluation. This is done using SymPy's NumPyPrinter to
     generate code that can be accelerated by Pyccel.
 
     Parameters
     ----------
     expr : sp.Expr
-        The sympy expression that should be returned from the function.
+        The SymPy expression that should be returned from the function.
     args : dict[sp.Symbol, str]
         A dictionary of the arguments of the function being created.
         The keys are variables representing the arguments that will be
@@ -33,9 +33,9 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', result_type : str = 
         for those functions.
     result_type : str, optional
         The type annotation for the result of the function. This argument
-        is optional but it is recommended to provide it as sympy
+        is optional but it is recommended to provide it as SymPy
         expressions do not always evaluate to the expected type. For
-        example if the sympy expression simplifies to 0 then the default
+        example if the SymPy expression simplifies to 0 then the default
         type will be int even if the arguments are floats.
     templates : dict[str,list[str]], optional
         A description of any templates that should be added to the
@@ -51,7 +51,7 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', result_type : str = 
     -------
     func
         A Pyccel-accelerated function which allows the evaluation of
-        the sympy expression.
+        the SymPy expression.
 
     See Also
     --------
