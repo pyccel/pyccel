@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 import sympy as sp
 
-from scripts import mappings
+import mappings
 
 from pyccel import lambdify as pyc_lambdify
 from pyccel.parser.parser   import Parser
