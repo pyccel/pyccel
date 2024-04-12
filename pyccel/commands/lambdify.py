@@ -56,7 +56,7 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', result_type : str = 
     See Also
     --------
     sympy.lambdify
-        <https://docs.sympy.org/latest/modules/utilities/lambdify.html>
+        <https://docs.sympy.org/latest/modules/utilities/lambdify.html>.
     epyccel
         The function that accelerates the generated code.
     """
