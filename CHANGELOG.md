@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 -   #1792 : Fix array unpacking.
 -   #1795 : Fix bug when returning slices in C.
 -   #1218 : Fix bug when assigning an array to a slice in Fortran.
+-   #1830 : Fix missing allocation when returning an annotated array expression.
 
 ### Changed
 
