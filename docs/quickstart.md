@@ -453,6 +453,36 @@ Out[9]: 210.99245283018868
 ```
 After subtracting the amount of time required to create an array copy from the given times, we can conclude that the pyccelised function is approximately 210 times faster than the original Python function.
 
+### Interactive Usage with `lambdify`
+
+While Pyccel is usually used to accelerate Python code, it is also possible to accelerate other expressions. The Pyccel library provides the `lambdify` Python function. This function is similar to SymPy's [`lambdify`](https://docs.sympy.org/latest/modules/utilities/lambdify.html) function, given a SymPy expression `f` and type annotations, `lambdify` returns a "pyccelised" function `f_fast` that can be used in the same Python session.
+For example:
+```python
+import numpy as np
+import sympy as sp
+from pyccel import lambdify
+
+x = sp.Symbols('x')
+expr = x**2 + x*5
+f = lambdify(expr, {x : 'float'})
+print(f(3.0))
+
+expr2 = x-x
+f2 = lambdify(expr, {x : 'float'}, float)
+print(f2(3.0))
+
+expr = x**2 + x*5 + 4.5
+f3 = lambdify(expr, {x : 'T'}, float, {'T': ['float', 'float[:]', 'float[:,:]']})
+x_1d = np.ones(4)
+x_2d = np.ones((4,2))
+print(f3(3.0))
+print(f3(x_1d))
+print(f3(x_2d))
+```
+In practice `lambdify` uses SymPy's `NumPyPrinter` to generate code which is passed to the `epyccel` function. The `epyccel` function copies the code into a temporary Python file in the `__epyccel__` directory.
+Once the file has been copied, `epyccel` calls the `pyccel` command to generate a Python C extension module that contains a single pyccelised function.
+Then finally, it imports this function and returns it to the caller.
+
 ## Other Features
 
 Pyccel's generated code can use parallel multi-threading through [OpenMP](https://en.wikipedia.org/wiki/OpenMP); please read [our documentation](https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md) for more details.
