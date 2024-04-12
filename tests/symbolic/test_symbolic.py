@@ -12,7 +12,7 @@ from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors   import Errors
 
-import scripts.mappings as mappings
+from scripts import mappings
 
 RTOL = 1e-12
 ATOL = 1e-16
@@ -21,7 +21,7 @@ base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
 
 files = sorted(os.listdir(path_dir))
-files = [f for f in files if (f.endswith(".py"))]
+files = [f for f in files if f.endswith(".py")]
 
 @pytest.mark.parametrize( "f", files )
 @pytest.mark.skip(reason="Broken symbolic function support, see issue #330")
@@ -70,6 +70,6 @@ if __name__ == '__main__':
     print('*********************************')
 
     for f in files:
-        print('> testing {0}'.format(str(f)))
+        print(f'> testing {f}')
         test_symbolic(f)
         print('\n')
