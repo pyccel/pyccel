@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 -   #1732 : Fix multidimensional list indexing in Python.
 -   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
 -   #1218 : Fix bug when assigning an array to a slice in Fortran.
+-   #1830 : Fix missing allocation when returning an annotated array expression.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
