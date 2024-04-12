@@ -1,15 +1,20 @@
+"""
+File describing commands associated with the lambdify function which converts a
+SymPy expression into a Pyccel-accelerated function.
+"""
 import sympy as sp
 from packaging.version import parse
+
+from pyccel.epyccel import epyccel
+from pyccel.utilities.strings import random_string
 
 if parse(sp.__version__) >= parse('1.8'):
     from sympy.printing.numpy import NumPyPrinter
 else:
     from sympy.printing.pycode import NumPyPrinter
 
-from pyccel.epyccel import epyccel
-from pyccel.utilities.strings import random_string
-
-def lambdify(expr : sp.Expr, args : dict[sp.Symbol, str], result_type : str = None, templates : dict[str,list[str]] = None, **kwargs):
+def lambdify(expr : sp.Expr, args : dict[sp.Symbol, str], result_type : str = None,
+             templates : dict[str,list[str]] = None, **kwargs):
     """
     Convert a SymPy expression into a Pyccel-accelerated function.
 

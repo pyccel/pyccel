@@ -7,10 +7,10 @@ import pytest
 import numpy as np
 import sympy as sp
 
+from pyccel import lambdify as pyc_lambdify
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors   import Errors
-from pyccel.lambdify import lambdify as pyc_lambdify
 
 import scripts.mappings as mappings
 

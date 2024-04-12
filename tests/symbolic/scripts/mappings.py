@@ -1,10 +1,9 @@
+""" A file containing 2D analytical mappings to test Pyccel lambdify function.
+"""
 
 class PolarMapping:
     """
     Represents a Polar 2D Mapping object (Annulus).
-
-    Examples
-
     """
     expressions = {'x': 'c1 + (rmin*(1-x1)+rmax*x1)*cos(x2)',
                     'y': 'c2 + (rmin*(1-x1)+rmax*x1)*sin(x2)'}
@@ -14,9 +13,6 @@ class PolarMapping:
 class TargetMapping:
     """
     Represents a Target 2D Mapping object.
-
-    Examples
-
     """
     expressions = {'x': 'c1 + (1-k)*x1*cos(x2) - D*x1**2',
                     'y': 'c2 + (1+k)*x1*sin(x2)'}
@@ -26,9 +22,6 @@ class TargetMapping:
 class CzarnyMapping:
     """
     Represents a Czarny 2D Mapping object.
-
-    Examples
-
     """
     expressions = {'x': '(1 - sqrt( 1 + eps*(eps + 2*x1*cos(x2)) )) / eps',
                     'y': 'c2 + (b / sqrt(1-eps**2/4) * x1 * sin(x2)) /'
