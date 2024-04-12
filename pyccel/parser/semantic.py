@@ -3855,7 +3855,7 @@ class SemanticParser(BasicParser):
         for o,r in zip(return_objs, results):
             v = o.var
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
-                # Create a syntactic obect to visit
+                # Create a syntactic object to visit
                 if isinstance(v, Variable):
                     v = PyccelSymbol(v.name)
                 a = self._visit(Assign(v, r, python_ast=expr.python_ast))
