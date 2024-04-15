@@ -1611,8 +1611,7 @@ class FCodePrinter(CodePrinter):
                 rankstr = f'({rankstr})'
 
             elif (rank > 0) and (on_heap or is_alias):
-                rankstr = ','.join([':'] * rank)
-                rankstr = f'({rankstr})'
+                rankstr = "(:" + ",:" * (rank-1) + ")"
 
     #        else:
     #            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
