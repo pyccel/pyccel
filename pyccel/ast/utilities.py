@@ -238,7 +238,7 @@ def compatible_operation(*args, language_has_vectors = True):
 #==============================================================================
 def get_deep_indexed_element(expr, indices):
     """
-    Get the scalar element obtained by indexed the expression with all the indices.
+    Get the scalar element obtained by indexing the expression with all the indices.
 
     Get the scalar element obtained by indexed the expression with all the provided
     indices. This element is constructed by calling IndexedElement multiple times
