@@ -4330,12 +4330,6 @@ def test_numpy_mod_array_like_2d(language):
     assert epyccel_func(fl32) == get_mod(fl32)
     assert epyccel_func(fl64) == get_mod(fl64)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_mixed_order(language):
 
