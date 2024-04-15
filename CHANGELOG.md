@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 -   #1740 : Add Python support for set method `copy()`.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1787 : Ensure `STC` is installed with Pyccel.
+-   #1743 : Add Python support for set method `discard()`.
 
 ### Fixed
 
@@ -116,7 +117,7 @@ All notable changes to this project will be documented in this file.
 -   #1425 : Add support for `numpy.isnan`, `numpy.isinf` and `numpy.isfinite`.
 -   #1738 : Add Python support for creating scalar sets with `{}`.
 -   #1738 : Add Python support for set method `add`.
--   #1749 : Add Python support for set method `pop()`
+-   #1749 : Add Python support for set method `pop()`.
 
 ### Fixed
 

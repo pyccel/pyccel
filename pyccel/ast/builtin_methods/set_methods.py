@@ -13,8 +13,15 @@ from pyccel.ast.datatypes import VoidType
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.basic import TypedAstNode
 
-__all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy', 'SetPop', 'SetRemove')
-
+__all__ = (
+    'SetAdd',
+    'SetClear',
+    'SetCopy',
+    'SetDiscard',
+    'SetMethod',
+    'SetPop',
+    'SetRemove'
+)
 
 class SetMethod(PyccelInternalFunction):
     """
@@ -125,6 +132,7 @@ class SetCopy(SetMethod):
         self._class_type = set_variable._class_type
         super().__init__(set_variable)
 
+
 class SetPop(SetMethod):
     """
     Represents a call to the .pop() method.
@@ -149,6 +157,7 @@ class SetPop(SetMethod):
     def __init__(self, set_variable):
         self._class_type = set_variable.class_type.element_type
         super().__init__(set_variable)
+
 
 class SetRemove(SetMethod):
     """
@@ -182,4 +191,38 @@ class SetRemove(SetMethod):
         )
         if not is_homogeneous:
             raise TypeError(f"Can't remove an element of type {item.dtype} from a set of {set_variable.dtype}")
+        super().__init__(set_variable, item)
+
+
+class SetDiscard(SetMethod):
+    """
+    Represents a call to the .discard() method.
+
+    The discard() is a built-in method to remove elements from the set.
+    The discard() method takes exactly one argument. 
+    This method does not return any value.   
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The name of the set.
+
+    item : TypedAstNode
+        The item to search for, and remove.
+    """
+    __slots__ = ()
+    _shape = None
+    _order = None
+    _rank = 0
+    _class_type = VoidType()
+    name = 'discard'
+
+    def __init__(self, set_variable, item) -> None:
+        expected_type = set_variable.class_type.element_type
+        is_homogeneous = (
+            expected_type == item.class_type and
+            set_variable.rank - 1 == item.rank
+        )
+        if not is_homogeneous:
+            raise TypeError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, item)
