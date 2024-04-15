@@ -339,10 +339,8 @@ class SyntacticTypeAnnotation(PyccelAstNode):
 
 typenames_to_dtypes = { 'float'   : PythonNativeFloat(),
                         'double'  : PythonNativeFloat(),
-                        'real'    : PythonNativeFloat(),
                         'complex' : PythonNativeComplex(),
                         'int'     : PythonNativeInt(),
-                        'integer' : PythonNativeInt(),
                         'bool'    : PythonNativeBool(),
                         'b1'      : PythonNativeBool(),
                         'void'    : VoidType(),

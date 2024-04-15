@@ -31,12 +31,12 @@ def test_array_int_1d_scalar_add(language):
 
         assert np.array_equal( x1, x2 )
 
-def test_array_real_1d_scalar_add(language):
-    @template('T', ['float32', 'double'])
-    def array_real_1d_scalar_add(x : 'T[:]', a : 'T', x_len : int):
+def test_array_float_1d_scalar_add(language):
+    @template('T', ['float32', 'float'])
+    def array_float_1d_scalar_add(x : 'T[:]', a : 'T', x_len : int):
         for i in range(x_len):
             x[i] += a
-    f1 = array_real_1d_scalar_add
+    f1 = array_float_1d_scalar_add
     f2 = epyccel(f1, language=language)
 
     for t in float_types:
@@ -92,13 +92,13 @@ def test_array_int_2d_scalar_add(language):
 
         assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_scalar_add(language):
-    @template('T', ['float32', 'double'])
-    def array_real_2d_scalar_add(x : 'T[:,:]', a : 'T', d1 : int, d2 : int):
+def test_array_float_2d_scalar_add(language):
+    @template('T', ['float32', 'float'])
+    def array_float_2d_scalar_add(x : 'T[:,:]', a : 'T', d1 : int, d2 : int):
         for i in range(d1):
             for j in range(d2):
                 x[i, j] += a
-    f1 = array_real_2d_scalar_add
+    f1 = array_float_2d_scalar_add
     f2 = epyccel(f1, language=language)
 
     for t in float_types:
