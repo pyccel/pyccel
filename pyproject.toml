@@ -62,8 +62,7 @@ include = [
 ]
 exclude = [
     "pyccel/extensions/STC/src",
-    "pyccel/extensions/STC/misc",
-    "pyccel/extensions/gFTL/tests"
+    "pyccel/extensions/STC/misc"
 ]
 
 [tool.hatch.build.targets.wheel.hooks.custom]
