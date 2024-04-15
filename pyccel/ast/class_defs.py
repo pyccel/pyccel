@@ -157,9 +157,9 @@ SetClass = ClassDef('set',
             PyccelFunctionDef('add', func_class = SetAdd ),
             PyccelFunctionDef('clear', func_class = SetClear),
             PyccelFunctionDef('copy', func_class = SetCopy),
+            PyccelFunctionDef('discard', func_class = SetDiscard),
             PyccelFunctionDef('pop', func_class = SetPop),
             PyccelFunctionDef('remove', func_class = SetRemove),
-            PyccelFunctionDef('discard', func_class = SetDiscard),
         ])
 
 #=======================================================================================

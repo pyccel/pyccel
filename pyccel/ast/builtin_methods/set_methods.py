@@ -13,7 +13,15 @@ from pyccel.ast.datatypes import VoidType
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.basic import TypedAstNode
 
-__all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy', 'SetPop', 'SetRemove', 'SetDiscard')
+__all__ = (
+    'SetAdd',
+    'SetClear',
+    'SetCopy',
+    'SetDiscard',
+    'SetMethod',
+    'SetPop',
+    'SetRemove'
+)
 
 class SetMethod(PyccelInternalFunction):
     """
@@ -101,6 +109,7 @@ class SetClear(SetMethod):
     def __init__(self, set_variable):
         super().__init__(set_variable)
 
+
 class SetCopy(SetMethod):
     """
     Represents a call to the .copy() method.
@@ -122,6 +131,7 @@ class SetCopy(SetMethod):
         self._rank = set_variable._rank
         self._class_type = set_variable._class_type
         super().__init__(set_variable)
+
 
 class SetPop(SetMethod):
     """
@@ -147,6 +157,7 @@ class SetPop(SetMethod):
     def __init__(self, set_variable):
         self._class_type = set_variable.class_type.element_type
         super().__init__(set_variable)
+
 
 class SetRemove(SetMethod):
     """
@@ -181,6 +192,7 @@ class SetRemove(SetMethod):
         if not is_homogeneous:
             raise TypeError(f"Can't remove an element of type {item.dtype} from a set of {set_variable.dtype}")
         super().__init__(set_variable, item)
+
 
 class SetDiscard(SetMethod):
     """
