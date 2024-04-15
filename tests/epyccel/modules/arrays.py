@@ -1587,6 +1587,29 @@ def array_2d_C_slice_stride_23(a : 'int[:,:]'):
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 #==============================================================================
+# Slice assignment
+#==============================================================================
+
+def copy_to_slice_issue_1218(n : int):
+    from numpy import zeros, array
+    x = 1
+    arr = zeros((2, n))
+    arr[0:x, 0:6:2] = array([2, 5, 6])
+    return arr
+
+def copy_to_slice_1(a : 'float[:]', b : 'float[:]'):
+    a[1:-1] = b
+
+def copy_to_slice_2(a : 'float[:,:]', b : 'float[:]'):
+    a[:, 1:-1] = b
+
+def copy_to_slice_3(a : 'float[:,:]', b : 'float[:]'):
+    a[:, 0] = b
+
+def copy_to_slice_4(a : 'float[:]', b : 'float[:]'):
+    a[::2] = b
+
+#==============================================================================
 # ARITHMETIC OPERATIONS
 #==============================================================================
 

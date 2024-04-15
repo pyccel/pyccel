@@ -889,3 +889,19 @@ def test_copy_f_to_default(language):
         assert pyth_out.dtype is pycc_out.dtype
         assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
+
+def test_annotated_return(language):
+    def annotated_return(b : 'float[:,:]', c : 'float[:,:]') -> 'float[:,:]':
+        return b + c
+
+    epyccel_func = epyccel(annotated_return, language=language)
+    fl_b = np.array(uniform(min_float / 2, max_float / 2, (3,4)))
+    fl_c = np.array(uniform(min_float / 2, max_float / 2, (3,4)))
+
+    pyth_out = annotated_return(fl_b, fl_c)
+    pycc_out = epyccel_func(fl_b, fl_c)
+
+    assert np.array_equal(pyth_out, pycc_out)
+    assert pyth_out.dtype is pycc_out.dtype
+    assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
+    assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
