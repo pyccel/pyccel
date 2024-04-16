@@ -716,7 +716,8 @@ class FCodePrinter(CodePrinter):
                 continue
             else:
                 f = f.value
-            if isinstance(f, (PythonTuple, str)) or isinstance(f.class_type, InhomogeneousTupleType):
+            if (isinstance(f, (PythonTuple, str)) or isinstance(f.class_type, InhomogeneousTupleType)) \
+                    and not isinstance(f, FunctionCall):
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
