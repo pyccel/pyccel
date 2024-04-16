@@ -13,7 +13,7 @@ from pyccel.errors.errors   import Errors
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
-from .datatypes import PyccelType
+from .datatypes import PyccelType, InhomogeneousTupleType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .internals import apply_pickle
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
@@ -840,7 +840,10 @@ class IndexedElement(TypedAstNode):
         new_rank = len(new_shape)
 
         if new_rank == 0:
-            self._class_type = base.class_type.element_type
+            if isinstance(base.class_type, InhomogeneousTupleType):
+                self._class_type = base.class_type[indices[0]]
+            else:
+                self._class_type = base.class_type.element_type
             self._is_slice = False
             if self._class_type.rank:
                 self._shape = base.shape[rank:]
@@ -926,6 +929,15 @@ class IndexedElement(TypedAstNode):
         Indicate whether variables used to index this Variable can be negative.
         """
         return self.base.allows_negative_indexes
+
+    def __hash__(self):
+        return hash((self.base, self._indices))
+
+    def __eq__(self, other):
+        if isinstance(other, IndexedElement):
+            return self.base == other.base and self.indices == other.indices
+        else:
+            return False
 
 class DottedVariable(Variable):
     """

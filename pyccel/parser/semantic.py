@@ -112,7 +112,6 @@ from pyccel.ast.utilities import recognised_source
 
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
-from pyccel.ast.variable import InhomogeneousTupleVariable
 from pyccel.ast.variable import IndexedElement, AnnotatedPyccelSymbol
 from pyccel.ast.variable import DottedName, DottedVariable
 
@@ -799,7 +798,7 @@ class SemanticParser(BasicParser):
 
         indices = tuple(indices)
 
-        if isinstance(var, InhomogeneousTupleVariable):
+        if isinstance(var.class_type, InhomogeneousTupleType):
 
             arg = indices[0]
 
@@ -813,10 +812,10 @@ class SemanticParser(BasicParser):
                 idx = slice(arg.start, arg.stop)
                 selected_vars = var[idx]
                 if len(selected_vars)==1:
+                    var = self.scope.collect_tuple_element(selected_vars[0])
                     if len(indices) == 1:
-                        return selected_vars[0]
+                        return var
                     else:
-                        var = selected_vars[0]
                         return self._extract_indexed_from_var(var, indices[1:], expr)
                 elif len(selected_vars)<1:
                     return None
@@ -828,7 +827,7 @@ class SemanticParser(BasicParser):
             elif isinstance(arg, LiteralInteger):
 
                 if len(indices)==1:
-                    return var[arg]
+                    return self.scope.collect_tuple_element(var[arg])
 
                 var = var[arg]
                 return self._extract_indexed_from_var(var, indices[1:], expr)
@@ -924,10 +923,8 @@ class SemanticParser(BasicParser):
                         symbol=Duplicate(val, length),
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                         severity='fatal')
-            if isinstance(val, InhomogeneousTupleVariable):
-                return PythonTuple(*(val.get_vars()*length))
-            else:
-                return PythonTuple(*(val.args*length))
+
+            return PythonTuple(*([self.scope.collect_tuple_element(v) for v in val]*length))
 
     def _handle_function_args(self, arguments):
         """
@@ -1208,7 +1205,8 @@ class SemanticParser(BasicParser):
             scope.imports['functions'][old_func.name] = func
         return func
 
-    def _create_variable(self, name, class_type, rhs, d_lhs, arr_in_multirets=False):
+    def _create_variable(self, name, class_type, rhs, d_lhs, *, arr_in_multirets=False,
+                         insertion_scope = None):
         """
         Create a new variable.
 
@@ -1238,6 +1236,10 @@ class SemanticParser(BasicParser):
             If True, the variable that will be created is an array
             in multi-values return, false otherwise.
 
+        insertion_scope : Scope, optional
+            The scope where the variable will be inserted. This is used to add any
+            symbolic aliases for inhomogeneous tuples.
+
         Returns
         -------
         Variable
@@ -1248,8 +1250,10 @@ class SemanticParser(BasicParser):
         else:
             is_temp = False
 
-        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, NumpyNonZero)) or \
-                ((isinstance(rhs, FunctionCall) and rhs.pyccel_staging != 'syntactic') and len(rhs.funcdef.results)>1):
+        if insertion_scope is None:
+            insertion_scope = self.scope
+
+        if isinstance(class_type, InhomogeneousTupleType):
             if isinstance(rhs, FunctionCall):
                 iterable = [r.var for r in rhs.funcdef.results]
             else:
@@ -1257,7 +1261,8 @@ class SemanticParser(BasicParser):
             elem_vars = []
             is_homogeneous = True
             elem_d_lhs_ref = None
-            for i,r in enumerate(iterable):
+            for i,tuple_elem in enumerate(iterable):
+                r = self.scope.collect_tuple_element(tuple_elem)
                 elem_name = self.scope.get_new_name( name + '_' + str(i) )
                 elem_d_lhs = self._infer_type( r )
 
@@ -1271,18 +1276,17 @@ class SemanticParser(BasicParser):
 
                 elem_type = elem_d_lhs.pop('class_type')
 
-                var = self._create_variable(elem_name, elem_type, r, elem_d_lhs)
+                var = self._create_variable(elem_name, elem_type, r, elem_d_lhs,
+                        insertion_scope = insertion_scope)
                 elem_vars.append(var)
 
             if any(v.is_alias for v in elem_vars):
                 d_lhs['memory_handling'] = 'alias'
-            else:
-                d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'heap'
 
-            if is_homogeneous and not (d_lhs['memory_handling'] == 'alias' and isinstance(rhs, PythonTuple)):
-                lhs = Variable(class_type, name, **d_lhs, is_temp=is_temp)
-            else:
-                lhs = InhomogeneousTupleVariable(elem_vars, name, class_type = class_type, **d_lhs, is_temp=is_temp)
+            lhs = Variable(class_type, name, **d_lhs, is_temp=is_temp)
+
+            for i, v in enumerate(elem_vars):
+                insertion_scope.insert_symbolic_alias(IndexedElement(lhs, i), v)
 
         else:
             lhs = Variable(class_type, name, **d_lhs, is_temp=is_temp)
@@ -1399,7 +1403,8 @@ class SemanticParser(BasicParser):
                         attribute_name = lhs.name[-1]
                         new_name = class_def.scope.get_expected_name(attribute_name)
                         # Create the attribute
-                        member = self._create_variable(new_name, class_type, rhs, d_lhs)
+                        member = self._create_variable(new_name, class_type, rhs, d_lhs,
+                                insertion_scope = class_def.scope)
 
                         # Insert the attribute to the class scope
                         # Passing the original name ensures that the attribute can be found under this name
@@ -1465,13 +1470,13 @@ class SemanticParser(BasicParser):
                         status='unallocated'
 
                     # Create Allocate node
-                    if isinstance(lhs, InhomogeneousTupleVariable):
-                        args = [v for v in lhs.get_vars() if v.rank>0]
+                    if isinstance(lhs.class_type, InhomogeneousTupleType):
+                        args = [self.scope.collect_tuple_element(v) for v in lhs if v.rank>0]
                         new_args = []
                         while len(args) > 0:
                             for a in args:
-                                if isinstance(a, InhomogeneousTupleVariable):
-                                    new_args.extend(v for v in a.get_vars() if v.rank>0)
+                                if isinstance(a.class_type, InhomogeneousTupleType):
+                                    new_args.extend(self.scope.collect_tuple_element(v) for v in a if v.rank>0)
                                 else:
                                     new_expressions.append(Allocate(a,
                                         shape=a.alloc_shape, status=status))
@@ -1483,13 +1488,13 @@ class SemanticParser(BasicParser):
                 # ...
                 # Add memory deallocation
                 if isinstance(lhs.class_type, CustomDataType) or (not lhs.on_stack and not isinstance(lhs.class_type, StringType)):
-                    if isinstance(lhs, InhomogeneousTupleVariable):
-                        args = [v for v in lhs.get_vars() if v.rank>0]
+                    if isinstance(lhs.class_type, InhomogeneousTupleType):
+                        args = [self.scope.collect_tuple_element(v) for v in lhs if v.rank>0]
                         new_args = []
                         while len(args) > 0:
                             for a in args:
-                                if isinstance(a, InhomogeneousTupleVariable):
-                                    new_args.extend(v for v in a.get_vars() if v.rank>0)
+                                if isinstance(a.class_type, InhomogeneousTupleType):
+                                    new_args.extend(self.scope.collect_tuple_element(v) for v in a if v.rank>0)
                                 else:
                                     self._allocs[-1].add(a)
                             args = new_args
@@ -2383,6 +2388,10 @@ class SemanticParser(BasicParser):
         return Slice(start, stop, step)
 
     def _visit_IndexedElement(self, expr):
+        inhomogeneous_element = self.scope.find(expr, 'symbolic_alias')
+        if inhomogeneous_element is not None:
+            return inhomogeneous_element
+
         var = self._visit(expr.base)
 
         if isinstance(var, (PyccelFunctionDef, VariableTypeAnnotation)):
@@ -2721,27 +2730,20 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr):
         args = [self._visit(a) for a in expr.args]
-        if isinstance(args[0].class_type, (TupleType, HomogeneousListType)):
-            is_inhomogeneous = any(isinstance(a.class_type, InhomogeneousTupleType) for a in args)
-            if is_inhomogeneous:
-                def get_vars(a):
-                    if isinstance(a, InhomogeneousTupleVariable):
-                        return a.get_vars()
-                    elif isinstance(a, PythonTuple):
-                        return a.args
-                    elif isinstance(a.class_type, HomogeneousTupleType):
-                        n_vars = a.shape[0]
-                        if not isinstance(a.shape[0], (LiteralInteger, int)):
-                            errors.report("Can't create an inhomogeneous tuple using a homogeneous tuple of unknown size",
-                                    symbol=expr, severity='fatal')
-                        return [a[i] for i in range(n_vars)]
-                    else:
-                        a_type = type(a)
-                        raise NotImplementedError(f"Unexpected type {a_type} in tuple addition")
-                tuple_args = [ai for a in args for ai in get_vars(a)]
-                expr_new = PythonTuple(*tuple_args)
-            else:
+        arg0 = args[0]
+        if isinstance(arg0.class_type, (TupleType, HomogeneousListType)):
+            arg1 = args[1]
+            is_homogeneous = not isinstance(arg0.class_type, InhomogeneousTupleType) and \
+                                arg0.class_type == arg1.class_type
+            if is_homogeneous:
                 return Concatenate(*args)
+            else:
+                if not (isinstance(arg0.shape[0], (LiteralInteger, int)) and isinstance(arg1.shape[0], (LiteralInteger, int))):
+                    errors.report(f"Can't create an inhomogeneous object from objects of unknown size",
+                            severity='fatal', symbol=expr)
+
+                tuple_args = [self.scope.collect_tuple_element(v) for v in arg0] + [self.scope.collect_tuple_element(v) for v in arg1]
+                expr_new = PythonTuple(*tuple_args)
         else:
             expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
@@ -3235,54 +3237,25 @@ class SemanticParser(BasicParser):
                         severity='error')
                     return None
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign))
-        elif isinstance(lhs, PythonTuple):
+
+        # Handle assignment to multiple variables
+        elif isinstance(lhs, (PythonTuple, PythonList)):
             n = len(lhs)
-            if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, FunctionCall)):
-                if isinstance(rhs, FunctionCall):
-                    r_iter = [r.var for r in rhs.funcdef.results]
-                else:
-                    r_iter = rhs
-                new_lhs = []
-                for i,(l,r) in enumerate(zip(lhs,r_iter)):
-                    d = self._infer_type(r)
-                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign),arr_in_multirets=r.rank>0 ) )
-                lhs = PythonTuple(*new_lhs)
-
-            elif isinstance(rhs.class_type, HomogeneousTupleType):
-                new_lhs = []
-                d_var = self._infer_type(rhs[0])
-                new_rhs = []
-                for i,l in enumerate(lhs):
-                    new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
-                        rhs[i], new_expressions, isinstance(expr, AugAssign)) )
-                    new_rhs.append(rhs[i])
-                rhs = PythonTuple(*new_rhs)
-                d_var = [d_var]
-                lhs = PythonTuple(*new_lhs)
-
-            elif isinstance(d_var, list) and len(d_var)== n:
-                new_lhs = []
-                if hasattr(rhs,'__getitem__'):
-                    for i,l in enumerate(lhs):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs[i], new_expressions, isinstance(expr, AugAssign)) )
-                else:
-                    for i,l in enumerate(lhs):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs, new_expressions, isinstance(expr, AugAssign)) )
-                lhs = PythonTuple(*new_lhs)
-
-            elif d_var['shape'][0]==n or isinstance(d_var['shape'][0], PyccelArrayShapeElement):
-                new_lhs = []
-                new_rhs = []
-
-                for l, r in zip(lhs, rhs):
-                    new_lhs.append( self._assign_lhs_variable(l, self._infer_type(r), r, new_expressions, isinstance(expr, AugAssign)) )
-                    new_rhs.append(r)
-
-                lhs = PythonTuple(*new_lhs)
-                rhs = PythonTuple(*new_rhs)
+            new_lhs = []
+            if isinstance(rhs, FunctionCall):
+                r_iter = [r.var for r in rhs.funcdef.results]
+            elif isinstance(rhs.class_type, InhomogeneousTupleType):
+                r_iter = [self.scope.collect_tuple_element(v) for v in rhs]
             else:
-                errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr, severity='error')
-                return None
+                r_iter = rhs
+
+            body = []
+            for i,(l,r) in enumerate(zip(lhs,r_iter)):
+                pyccel_stage.set_stage('syntactic')
+                local_assign = Assign(l,r, python_ast = expr.python_ast)
+                pyccel_stage.set_stage('semantic')
+                body.append(self._visit(local_assign))
+            return CodeBlock(body)
         else:
             lhs = self._visit(lhs)
 
@@ -3298,8 +3271,6 @@ class SemanticParser(BasicParser):
             is_pointer = lhs.is_alias
         elif isinstance(lhs, IndexedElement):
             is_pointer = False
-        elif isinstance(lhs, (PythonTuple, PythonList)):
-            is_pointer = any(l.is_alias for l in lhs if isinstance(lhs, Variable))
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
         is_pointer = is_pointer and isinstance(rhs, (Variable, Duplicate))
@@ -3315,11 +3286,10 @@ class SemanticParser(BasicParser):
             new_rhs = []
             for l,r in zip(lhs, rhs):
                 # Split assign (e.g. for a,b = 1,c)
-                if isinstance(l, (PythonTuple, InhomogeneousTupleVariable)) \
-                        and isinstance(r.class_type,(TupleType, HomogeneousListType)) \
+                if isinstance(l.class_type, InhomogeneousTupleType) \
                         and not isinstance(r, FunctionCall):
-                    new_lhs.extend(l)
-                    new_rhs.extend(r)
+                    new_lhs.extend(self.scope.collect_tuple_element(v) for v in l)
+                    new_rhs.extend(self.scope.collect_tuple_element(v) for v in r)
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
                 elif isinstance(l, Variable) and l.is_optional:
@@ -4626,3 +4596,13 @@ class SemanticParser(BasicParser):
             var = var[0]
             self.scope.insert_variable(var)
         return FunctionDefResult(var, annotation = expr.annotation)
+
+    def _visit_PythonTupleFunction(self, expr):
+        func_arg, = self._handle_function_args(expr.args)
+        arg = func_arg.value
+        if isinstance(arg, PythonTuple):
+            return arg
+        elif isinstance(arg.shape[0], LiteralInteger):
+            return PythonTuple(*[self.get_tuple_element(a) for a in arg])
+        else:
+            raise TypeError(f"Can't unpack {arg} into a tuple")
