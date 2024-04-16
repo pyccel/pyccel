@@ -20,6 +20,7 @@ dependencies = [
     "sympy >= 1.2",
     "termcolor >= 1.0.0",
     "textx >= 2.2",
+    "packaging",
 ]
 
 [project.optional-dependencies]

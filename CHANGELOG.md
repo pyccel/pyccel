@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
+
 ### Fixed
 
 -   #1762 : Fix array copy between different data types.

@@ -9,24 +9,18 @@ import inspect
 import importlib
 import sys
 import os
-import string
-import random
+
 from filelock import FileLock, Timeout
 
 from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
 
-from pyccel.codegen.pipeline import execute_pyccel
-from pyccel.errors.errors import ErrorsMode
+from pyccel.utilities.strings  import random_string
+from pyccel.codegen.pipeline   import execute_pyccel
+from pyccel.errors.errors      import ErrorsMode
 
-__all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
+__all__ = ['get_source_function', 'epyccel_seq', 'epyccel']
 
-#==============================================================================
-random_selector = random.SystemRandom()
-
-def random_string( n ):
-    chars    = string.ascii_lowercase + string.digits
-    return ''.join( random_selector.choice( chars ) for _ in range(n) )
 
 #==============================================================================
 def get_source_function(func):
@@ -124,8 +118,11 @@ def epyccel_seq(function_or_module, *,
 
     Parameters
     ----------
-    function_or_module : function | module
+    function_or_module : function | module | str
         Python function or module to be accelerated.
+        If a string is passed then it is assumed to be the code from a module which
+        should be accelerated. The module must be capable of running as a standalone
+        file so it must include any necessary import statements.
     language : {'fortran', 'c', 'python'}
         Language of generated code (default: 'fortran').
     compiler : str, optional
@@ -173,7 +170,7 @@ def epyccel_seq(function_or_module, *,
     # Store current directory
     base_dirpath = os.getcwd()
 
-    if isinstance(function_or_module, (FunctionType, type)):
+    if isinstance(function_or_module, (FunctionType, type, str)):
         dirpath = os.getcwd()
 
     elif isinstance(function_or_module, ModuleType):
@@ -202,6 +199,11 @@ def epyccel_seq(function_or_module, *,
         code = ''.join(lines)
 
         module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
+
+    elif isinstance(function_or_module, str):
+        code = function_or_module
+
+        module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
     else:
         raise TypeError('> Expecting a FunctionType, type or a ModuleType')
@@ -283,8 +285,10 @@ def epyccel( python_function_or_module, **kwargs ):
 
     Parameters
     ----------
-    python_function_or_module : function | module
+    python_function_or_module : function | module | str
         Python function or module to be accelerated.
+        If a string is passed then it is assumed to be the code from a module which
+        should be accelerated..
     **kwargs :
         Additional keyword arguments for configuring the compilation and acceleration process.
         Available options are defined in epyccel_seq.
@@ -306,7 +310,7 @@ def epyccel( python_function_or_module, **kwargs ):
     >>> one_f = epyccel(one, language='fortran')
     >>> one_c = epyccel(one, language='c')
     """
-    assert isinstance( python_function_or_module, (FunctionType, type, ModuleType) )
+    assert isinstance( python_function_or_module, (FunctionType, type, ModuleType, str) )
 
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
