@@ -272,7 +272,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     order : str
         The order of the memory layout for the new NumPy array.
     """
-    __slots__ = ('_element_type', '_rank', '_order')
+    __slots__ = ('_element_type', '_container_rank', '_order')
     _name = 'numpy.ndarray'
 
     def __new__(cls, dtype, rank, order):
@@ -290,7 +290,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType))
 
         self._element_type = dtype
-        self._rank = rank
+        self._container_rank = rank
         self._order = order
         super().__init__()
 
@@ -353,7 +353,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         assert isinstance(new_type, FixedSizeNumericType)
         new_type = numpy_precision_map[(new_type.primitive_type, new_type.precision)]
         cls = type(self)
-        return cls(self.element_type.switch_basic_type(new_type), self._rank, self._order)
+        return cls(self.element_type.switch_basic_type(new_type), self._container_rank, self._order)
 
     def switch_rank(self, new_rank, new_order = None):
         """
@@ -397,7 +397,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             The new type.
         """
         order = None if self._order is None else ('C' if self._order == 'F' else 'F')
-        return NumpyNDArrayType(self.element_type, self._rank, order)
+        return NumpyNDArrayType(self.element_type, self._container_rank, order)
 
     @property
     def rank(self):
@@ -407,7 +407,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         Number of dimensions of the object. If the object is a scalar then
         this is equal to 0.
         """
-        return self._rank
+        return self._container_rank
 
     @property
     def order(self):
@@ -421,7 +421,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         return self._order
 
     def __repr__(self):
-        dims = ','.join(':'*self._rank)
+        dims = ','.join(':'*self._container_rank)
         order_str = f'(order={self._order})' if self._order else ''
         return f'{self.element_type}[{dims}]{order_str}'
 

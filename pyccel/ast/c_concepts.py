@@ -47,7 +47,7 @@ class CStackArray(HomogeneousContainerType, metaclass=ArgumentSingleton):
     """
     __slots__ = ('_element_type',)
     _name = 'c_stackarray'
-    _rank = 1
+    _container_rank = 1
     _order = None
 
     def __init__(self, element_type):
