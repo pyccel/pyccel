@@ -121,7 +121,8 @@ def epyccel_seq(function_or_module, *,
     function_or_module : function | module | str
         Python function or module to be accelerated.
         If a string is passed then it is assumed to be the code from a module which
-        should be accelerated..
+        should be accelerated. The module must be capable of running as a standalone
+        file so it must include any necessary import statements.
     language : {'fortran', 'c', 'python'}
         Language of generated code (default: 'fortran').
     compiler : str, optional
