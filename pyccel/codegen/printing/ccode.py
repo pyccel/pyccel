@@ -1275,7 +1275,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Declare(self, expr):
         if isinstance(expr.variable.class_type, InhomogeneousTupleType):
-            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+            return ''
 
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)

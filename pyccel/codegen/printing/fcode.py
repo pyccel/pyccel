@@ -1489,7 +1489,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         if isinstance(expr_type, InhomogeneousTupleType):
-            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+            return ''
 
         # ... TODO improve
         # Group the variables by intent
