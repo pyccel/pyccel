@@ -1565,7 +1565,7 @@ class FCodePrinter(CodePrinter):
                 if is_const:
                     intentstr += ', intent(in)'
             else:
-                intentstr = ', intent({})'.format(intent)
+                intentstr = f', intent({intent})'
 
         # Compute allocatable string
         if not is_static and not is_string:
@@ -1577,7 +1577,7 @@ class FCodePrinter(CodePrinter):
 
             # ISSUES #177: var is allocatable and target
             if is_target:
-                allocatablestr = '{}, target'.format(allocatablestr)
+                allocatablestr = f'{allocatablestr}, target'
 
         # Compute optional string
         if is_optional:
