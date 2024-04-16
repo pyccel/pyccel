@@ -280,13 +280,6 @@ class Assign(PyccelAstNode):
         In the semantic stage :
           TypedAstNode with the same shape as the lhs.
 
-    status : str, optional
-        If lhs is not allocatable, then status is None.
-        otherwise, status is {'allocated', 'unallocated'}.
-
-    like : Variable, optional
-        Contains the name of the variable from which the lhs will be cloned.
-
     python_ast : ast.Ast
         The ast object parsed by Python's ast module.
 
@@ -307,15 +300,13 @@ class Assign(PyccelAstNode):
     >>> Assign(A[0,1], x)
     IndexedElement(A, 0, 1) := x
     """
-    __slots__ = ('_lhs', '_rhs', '_status', '_like')
+    __slots__ = ('_lhs', '_rhs')
     _attribute_nodes = ('_lhs', '_rhs')
 
     def __init__(
         self,
         lhs,
         rhs,
-        status=None,
-        like=None,
         *,
         python_ast = None
         ):
@@ -323,8 +314,6 @@ class Assign(PyccelAstNode):
             lhs = PythonTuple(*lhs)
         self._lhs = lhs
         self._rhs = rhs
-        self._status = status
-        self._like = like
         super().__init__()
         if python_ast is not None:
             self.set_current_ast(python_ast)
@@ -342,20 +331,6 @@ class Assign(PyccelAstNode):
     @property
     def rhs(self):
         return self._rhs
-
-    # TODO : remove
-
-    @property
-    def expr(self):
-        return self.rhs
-
-    @property
-    def status(self):
-        return self._status
-
-    @property
-    def like(self):
-        return self._like
 
     @property
     def is_alias(self):
@@ -804,12 +779,6 @@ class AugAssign(Assign):
     rhs : TypedAstNode
         Object representing the rhs of the expression.
 
-    status : str, optional
-        See Assign.
-
-    like : TypedAstNode, optional
-        See Assign.
-
     python_ast : ast.AST
         The AST node where the object appeared in the original code.
 
@@ -835,8 +804,6 @@ class AugAssign(Assign):
         lhs,
         op,
         rhs,
-        status=None,
-        like=None,
         *,
         python_ast = None
         ):
@@ -846,7 +813,7 @@ class AugAssign(Assign):
 
         self._op = op
 
-        super().__init__(lhs, rhs, status, like, python_ast=python_ast)
+        super().__init__(lhs, rhs, python_ast=python_ast)
 
     def __repr__(self):
         return f'{self.lhs} {self.op}= {self.rhs}'
@@ -857,16 +824,21 @@ class AugAssign(Assign):
 
     def to_basic_assign(self):
         """
-        Convert the AugAssign to an Assign
+        Convert the AugAssign to an Assign.
+
+        Convert the AugAssign to an Assign.
         E.g. convert:
         a += b
         to:
         a = a + b
+
+        Returns
+        -------
+        Assign
+            An assignment equivalent to the AugAssign.
         """
         return Assign(self.lhs,
-                self._accepted_operators[self._op](self.lhs, self.rhs),
-                status = self.status,
-                like   = self.like)
+                self._accepted_operators[self._op](self.lhs, self.rhs))
 
 
 class While(ScopedAstNode):
@@ -1092,8 +1064,8 @@ class Module(ScopedAstNode):
                 raise TypeError('Only a Interface instance is allowed.')
 
         NoneType = type(None)
-        if not isinstance(init_func, (NoneType, FunctionDef)):
-            raise TypeError('init_func must be a FunctionDef')
+        assert (pyccel_stage == 'syntactic' and isinstance(init_func, CodeBlock)) or \
+                isinstance(init_func, (NoneType, FunctionDef))
 
         if not isinstance(free_func, (NoneType, FunctionDef)):
             raise TypeError('free_func must be a FunctionDef')
@@ -1120,21 +1092,22 @@ class Module(ScopedAstNode):
         self._classes = classes
         self._imports = imports
 
-        self._internal_dictionary = {v.name:v for v in variables}
-        self._internal_dictionary.update({f.name:f for f in funcs})
-        self._internal_dictionary.update({i.name:i for i in interfaces})
-        self._internal_dictionary.update({c.name:c for c in classes})
-        import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
-        self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
+        if pyccel_stage != "syntactic":
+            self._internal_dictionary = {v.name:v for v in variables}
+            self._internal_dictionary.update({f.name:f for f in funcs})
+            self._internal_dictionary.update({i.name:i for i in interfaces})
+            self._internal_dictionary.update({c.name:c for c in classes})
+            import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
+            self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
-        if init_func:
-            init_if = init_func.body.body[0]
-            # The init function should always contain an If block unless it is part of a wrapper
-            if isinstance(init_if, If):
-                init_cond = init_if.blocks[0].condition
-                init_var = init_cond.args[0]
-                self._variables.append(init_var)
-                self._variable_inits.append(LiteralFalse())
+            if init_func:
+                init_if = init_func.body.body[0]
+                # The init function should always contain an If block unless it is part of a wrapper
+                if isinstance(init_if, If):
+                    init_cond = init_if.blocks[0].condition
+                    init_var = init_cond.args[0]
+                    self._variables.append(init_var)
+                    self._variable_inits.append(LiteralFalse())
 
         super().__init__(scope)
 
@@ -1306,20 +1279,29 @@ class ModuleHeader(PyccelAstNode):
         return self._module
 
 class Program(ScopedAstNode):
+    """
+    Represents a Program in the code.
 
-    """Represents a Program in the code. A block consists of the following inputs
+    A class representing a program in the code. A program is a set of statements
+    that are executed when the module is run directly. In Python these statements
+    are located in an `if __name__ == '__main__':` block.
 
     Parameters
     ----------
-    variables: list
-        list of the variables that appear in the block.
+    name : str
+        The name used to identify the program (this is used for printing in Fortran).
 
-    body: list
-        a list of statements
+    variables : Iterable[Variable]
+        An iterable object containing the variables that appear in the program.
 
-    imports: list, tuple
-        list of needed imports
+    body : CodeBlock
+        An CodeBlock containing the statements in the body of the program.
 
+    imports : Iterable[Import]
+        An iterable object containing the imports used by the program.
+
+    scope : Scope
+        The scope of the program.
     """
     __slots__ = ('_name', '_variables', '_body', '_imports')
     _attribute_nodes = ('_variables', '_body', '_imports')
@@ -1343,18 +1325,16 @@ class Program(ScopedAstNode):
             if not isinstance(i, Variable):
                 raise TypeError('Only a Variable instance is allowed.')
 
-        if not iterable(body):
-            raise TypeError('body must be an iterable')
-        body = CodeBlock(body)
+        assert isinstance(body, CodeBlock)
 
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        imports = set(imports)  # for unicity
-        imports = tuple(imports)
+        imports = {i : None for i in imports}  # for unicity and ordering
+        imports = tuple(imports.keys())
 
         self._name = name
-        self._variables = variables
+        self._variables = tuple(variables)
         self._body = body
         self._imports = imports
         super().__init__(scope)
@@ -4480,24 +4460,6 @@ class StarredArguments(PyccelAstNode):
     @property
     def args_var(self):
         return self._starred_obj
-
-# ...
-
-class InProgram(TypedAstNode):
-    """
-    Class representing the 'in program' test.
-
-    Class representing the test indicating whether the code should
-    only be executed when the file is executed as a program. In
-    other words, a class representing the boolean:
-    `__name__ == '__main__'`
-    """
-    _rank  = 0
-    _shape = None
-    _order = None
-    _class_type = PythonNativeBool()
-    _attribute_nodes = ()
-    __slots__ = ()
 
 # ...
 
