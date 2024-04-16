@@ -243,6 +243,7 @@ def get_deep_indexed_element(expr, indices):
     Get the scalar element obtained by indexed the expression with all the provided
     indices. This element is constructed by calling IndexedElement multiple times
     to create a recursive object with one IndexedElement for each container type.
+    This function is used by the functions which unravel vector expressions.
 
     Parameters
     ----------
@@ -256,6 +257,7 @@ def get_deep_indexed_element(expr, indices):
     IndexedElement
         The scalar indexed element.
     """
+    assert len(indices) == expr.rank
     result = expr
     while indices:
         depth = result.class_type.container_rank
