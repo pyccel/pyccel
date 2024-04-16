@@ -26,7 +26,7 @@ from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
-from .variable  import IndexedElement, Variable, InhomogeneousTupleVariable
+from .variable  import IndexedElement, Variable
 
 pyccel_stage = PyccelStage()
 
@@ -605,7 +605,7 @@ class PythonTupleFunction(TypedAstNode):
     def __new__(cls, arg):
         if isinstance(arg, PythonTuple):
             return arg
-        elif isinstance(arg, (PythonList, InhomogeneousTupleVariable)):
+        elif isinstance(arg, (PythonList, Variable)):
             return PythonTuple(*arg)
         elif isinstance(arg.shape[0], LiteralInteger):
             return PythonTuple(*[arg[i] for i in range(arg.shape[0])])
