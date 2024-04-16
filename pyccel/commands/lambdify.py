@@ -75,7 +75,6 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', result_type : str = 
     code = f'    return {expr}'
     numpy_import = 'import numpy\n'
     func = '\n'.join((numpy_import, decorators, signature, code))
-    print(func)
     package = epyccel(func, **kwargs)
     return getattr(package, func_name)
 
