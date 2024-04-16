@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 -   #1787 : Ensure `STC` is installed with Pyccel.
 -   #1743 : Add Python support for set method `discard()`.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
+-   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
 ### Fixed
 
@@ -48,6 +49,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
 -   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
 -   \[INTERNALS\] Stop storing `FunctionDef`, `ClassDef`, and `Import` objects inside `CodeBlock`s.
+-   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
+-   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
 
 ### Deprecated
 
