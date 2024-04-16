@@ -28,6 +28,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
+from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType
 
@@ -52,7 +53,6 @@ from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
-from pyccel.ast.variable import InhomogeneousTupleVariable
 
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
 
@@ -1070,7 +1070,7 @@ class CCodePrinter(CodePrinter):
 
         for i, f in enumerate(orig_args):
             f = f.value
-            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple)):
+            if isinstance(f, (PythonTuple, PythonList)) or isinstance(f.class_type, InhomogeneousTupleType):
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
@@ -1272,7 +1272,7 @@ class CCodePrinter(CodePrinter):
         return f'{ret_type} (*{name})({arg_code});\n'
 
     def _print_Declare(self, expr):
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
+        if isinstance(expr.variable.class_type, InhomogeneousTupleType):
             return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         declaration_type = self.get_declare_type(expr.variable)
@@ -1556,7 +1556,7 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(f"Allocate not implemented for {variable}")
 
     def _print_Deallocate(self, expr):
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
+        if isinstance(expr.variable.class_type, InhomogeneousTupleType):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
         variable_address = self._print(ObjectAddress(expr.variable))
         if isinstance(expr.variable.dtype, CustomDataType):
