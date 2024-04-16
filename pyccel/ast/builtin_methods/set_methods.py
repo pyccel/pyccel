@@ -139,8 +139,6 @@ class SetPop(SetMethod):
         The name of the set.
     """
     __slots__ = ('_class_type',)
-    _rank = 0
-    _order = None
     _shape = None
     name = 'pop'
 
@@ -166,8 +164,6 @@ class SetRemove(SetMethod):
     """
     __slots__ = ()
     _shape = None
-    _order = None
-    _rank = 0
     _class_type = VoidType()
     name = 'remove'
 
@@ -197,17 +193,10 @@ class SetDiscard(SetMethod):
     """
     __slots__ = ()
     _shape = None
-    _order = None
-    _rank = 0
     _class_type = VoidType()
     name = 'discard'
 
     def __init__(self, set_variable, item) -> None:
-        expected_type = set_variable.class_type.element_type
-        is_homogeneous = (
-            expected_type == item.class_type and
-            set_variable.rank - 1 == item.rank
-        )
-        if not is_homogeneous:
+        if set_variable.class_type.element_type != item.class_type:
             raise TypeError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, item)
