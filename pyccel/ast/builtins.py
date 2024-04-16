@@ -19,7 +19,7 @@ from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from .datatypes import GenericType, PythonNativeComplex, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
-from .datatypes import FixedSizeNumericType, HomogeneousSetType
+from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
 from .internals import PyccelInternalFunction, Slice, PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
@@ -1135,7 +1135,7 @@ class Lambda(PyccelAstNode):
         return f"{self.variables} -> {self.expr}"
 
 #==============================================================================
-class PythonType(PyccelAstNode):
+class PythonType(TypedAstNode):
     """
     Represents a call to the Python builtin `type` function.
 
@@ -1153,6 +1153,8 @@ class PythonType(PyccelAstNode):
     """
     __slots__ = ('_type','_obj')
     _attribute_nodes = ('_obj',)
+    _class_type = SymbolicType()
+    _shape = None
 
     def __init__(self, obj):
         if not isinstance (obj, TypedAstNode):
