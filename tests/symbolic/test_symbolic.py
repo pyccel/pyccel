@@ -61,6 +61,17 @@ def test_lambdify(language):
         assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
         assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL, atol=ATOL)
 
+        pyc_x = pyc_lambdify(expr_x, {x : 'T', y : 'T'}, templates = {'T': ['float[:]', 'float[:,:]']},
+                    language = language)
+        pyc_y = pyc_lambdify(expr_y, {x : 'T', y : 'T'}, templates = {'T': ['float[:]', 'float[:,:]']},
+                    language = language)
+
+        assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
+        assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL, atol=ATOL)
+
+        assert np.allclose(sp_x(r[0,:], p[0,:]), pyc_x(r[0,:], p[0,:]), rtol=RTOL, atol=ATOL)
+        assert np.allclose(sp_y(r[0,:], p[0,:]), pyc_y(r[0,:], p[0,:]), rtol=RTOL, atol=ATOL)
+
 ######################
 if __name__ == '__main__':
     print('*********************************')
