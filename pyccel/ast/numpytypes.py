@@ -288,8 +288,6 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
 
         if pyccel_stage == 'semantic':
             assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType))
-        if rank < 2:
-            order = None
 
         self._element_type = dtype
         self._rank = rank
