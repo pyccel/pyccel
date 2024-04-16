@@ -462,20 +462,19 @@ import numpy as np
 import sympy as sp
 from pyccel import lambdify
 
-x = sp.Symbols('x')
+x = sp.Symbol('x')
 expr = x**2 + x*5
 f = lambdify(expr, {x : 'float'})
 print(f(3.0))
 
 expr2 = x-x
-f2 = lambdify(expr, {x : 'float'}, float)
+f2 = lambdify(expr, {x : 'float'}, 'float')
 print(f2(3.0))
 
 expr = x**2 + x*5 + 4.5
-f3 = lambdify(expr, {x : 'T'}, 'T', {'T': ['float', 'float[:]', 'float[:,:]']})
+f3 = lambdify(expr, {x : 'T'}, templates = {'T': ['float[:]', 'float[:,:]']})
 x_1d = np.ones(4)
 x_2d = np.ones((4,2))
-print(f3(3.0))
 print(f3(x_1d))
 print(f3(x_2d))
 ```
