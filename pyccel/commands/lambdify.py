@@ -60,15 +60,24 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', result_type : str = 
     epyccel
         The function that accelerates the generated code.
     """
+    if not (isinstance(args, dict) and all(isinstance(k, sp.Symbol) and isinstance(v, str) for k,v in args.items())):
+        raise TypeError("Argument 'args': Expected a dictionary mapping SymPy symbols to string type annotations.")
+
     expr = NumPyPrinter().doprint(expr)
     args = ', '.join(f'{a} : "{annot}"' for a, annot in args.items())
     func_name = 'func_'+random_string(8)
     if result_type:
+        if not isinstance(result_type, str):
+            raise TypeError("Argument 'result_type': Expected a string type annotation.")
         signature = f'def {func_name}({args}) -> "{result_type}":'
     else:
         signature = f'def {func_name}({args}):'
     if templates:
-        decorators = '\n'.join(f'@template({key}, ['+', '.join(f'"{annot}"' for annot in annotations)+']' \
+        if not (isinstance(templates, dict) and all(isinstance(k, str) and hasattr(v, '__iter__') for k,v in templates.items()) \
+                and all(all(isinstance(type_annot, str) for type_annot in v) for v in templates.values())):
+            raise TypeError("Argument 'templates': Expected a dictionary mapping strings describing type specifiers to lists of string type annotations.")
+
+        decorators = '\n'.join(f'@template("{key}", ['+', '.join(f'"{annot}"' for annot in annotations)+'])' \
                 for key, annotations in templates.items())
     else:
         decorators = ''
