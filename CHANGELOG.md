@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1787 : Ensure `STC` is installed with Pyccel.
 -   #1743 : Add Python support for set method `discard()`.
+-   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 

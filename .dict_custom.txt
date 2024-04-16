@@ -5,6 +5,8 @@ NumPy
 NumPy's
 CuPy
 CuPy's
+SymPy
+SymPy's
 BLAS
 LAPACK
 MPI
