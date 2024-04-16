@@ -811,7 +811,7 @@ class SemanticParser(BasicParser):
                         severity='fatal')
 
                 idx = slice(arg.start, arg.stop)
-                selected_vars = var.get_var(idx)
+                selected_vars = var[idx]
                 if len(selected_vars)==1:
                     if len(indices) == 1:
                         return selected_vars[0]

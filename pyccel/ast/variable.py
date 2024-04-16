@@ -641,18 +641,6 @@ class InhomogeneousTupleVariable(Variable):
         """
         return self._vars
 
-    def get_var(self, variable_idx):
-        """ Get the n-th variable saved internally in the
-        tuple (used for inhomogeneous variables)
-
-        Parameters
-        ==========
-        variable_idx : int/LiteralInteger
-                       The index of the variable which we
-                       wish to collect
-        """
-        return self._vars[variable_idx]
-
     def rename_var(self, variable_idx, new_name):
         """ Rename the n-th variable saved internally in the
         tuple (used for inhomogeneous variables)
