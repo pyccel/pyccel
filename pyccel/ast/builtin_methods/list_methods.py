@@ -238,8 +238,6 @@ class ListRemove(ListMethod) :
     """
     __slots__ = ()
     _shape = None
-    _order = None
-    _rank = 0
     _class_type = VoidType()
     name = 'remove'
 
@@ -274,12 +272,10 @@ class ListCopy(ListMethod) :
     list_obj : TypedAstNode
         The list object which the method is called from.
     """
-    __slots__ = ('_class_type', '_rank', '_shape', '_order')
+    __slots__ = ('_class_type', '_shape')
     name = 'copy'
 
     def __init__(self, list_obj) -> None:
-        self._rank = list_obj.rank
         self._shape = list_obj.shape
-        self._order = list_obj.order
         self._class_type = list_obj.class_type
         super().__init__(list_obj)
