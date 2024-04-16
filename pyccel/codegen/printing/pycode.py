@@ -245,18 +245,7 @@ class PythonCodePrinter(CodePrinter):
             type_annotation = f"'{self._print(expr.annotation)}'"
         else:
             var = expr.var
-            def get_type_annotation(var):
-                if isinstance(var, Variable):
-                    type_annotation = str(var.class_type)
-                    if var.rank:
-                        type_annotation += '[' + ','.join(':' for _ in range(var.rank)) + ']'
-                    return f"'{type_annotation}'"
-                elif isinstance(var, FunctionAddress):
-                    results = ', '.join(get_type_annotation(r.var) for r in var.results)
-                    arguments = ', '.join(get_type_annotation(a.var) for a in var.arguments)
-                    return f'"({results})({arguments})"'
-
-            type_annotation = get_type_annotation(var)
+            type_annotation = f"'{var.class_type}'"
 
         if expr.has_default:
             if isinstance(expr.value, FunctionDef):
@@ -282,11 +271,7 @@ class PythonCodePrinter(CodePrinter):
             if len(indices) == 1 and isinstance(indices[0], (tuple, list)):
                 indices = indices[0]
 
-            indices = [self._print(i) for i in indices]
-            if expr.pyccel_staging != 'syntactic' and isinstance(expr.base.class_type, (HomogeneousTupleType, HomogeneousListType)):
-                indices = ']['.join(i for i in indices)
-            else:
-                indices = ','.join(i for i in indices)
+            indices = ','.join(self._print(i) for i in indices)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')

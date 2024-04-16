@@ -236,6 +236,36 @@ def compatible_operation(*args, language_has_vectors = True):
         return all(a.rank == 0 for a in args)
 
 #==============================================================================
+def get_deep_indexed_element(expr, indices):
+    """
+    Get the scalar element obtained by indexing the expression with all the indices.
+
+    Get the scalar element obtained by indexed the expression with all the provided
+    indices. This element is constructed by calling IndexedElement multiple times
+    to create a recursive object with one IndexedElement for each container type.
+    This function is used by the functions which unravel vector expressions.
+
+    Parameters
+    ----------
+    expr : TypedAstNode
+        The base object being indexed.
+    indices : list[TypedAstNode]
+        A list of the indices used to obtain the scalar element.
+
+    Returns
+    -------
+    IndexedElement
+        The scalar indexed element.
+    """
+    assert len(indices) == expr.rank
+    result = expr
+    while indices:
+        depth = result.class_type.container_rank
+        result = IndexedElement(result, *indices[:depth])
+        indices = indices[depth:]
+    return result
+
+#==============================================================================
 def insert_index(expr, pos, index_var):
     """
     Function to insert an index into an expression at a given position.
@@ -260,12 +290,13 @@ def insert_index(expr, pos, index_var):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.datatypes import PythonNativeInt
     >>> from pyccel.ast.operators import PyccelAdd
     >>> from pyccel.ast.utilities import insert_index
-    >>> a = Variable('int', 'a', shape=(4,), rank=1)
-    >>> b = Variable('int', 'b', shape=(4,), rank=1)
-    >>> c = Variable('int', 'c', shape=(4,), rank=1)
-    >>> i = Variable('int', 'i')
+    >>> a = Variable(PythonNativeInt(), 'a', shape=(4,))
+    >>> b = Variable(PythonNativeInt(), 'b', shape=(4,))
+    >>> c = Variable(PythonNativeInt(), 'c', shape=(4,))
+    >>> i = Variable(PythonNativeInt(), 'i')
     >>> d = PyccelAdd(a,b)
     >>> expr = Assign(c,d)
     >>> insert_index(expr, 0, i)
@@ -282,7 +313,7 @@ def insert_index(expr, pos, index_var):
 
         # Add index at the required position
         indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
-        return IndexedElement(expr, *indexes)
+        return get_deep_indexed_element(expr, indexes)
 
     elif isinstance(expr, NumpyTranspose):
         if expr.rank==0 or -pos>expr.rank:
@@ -299,15 +330,30 @@ def insert_index(expr, pos, index_var):
 
     elif isinstance(expr, IndexedElement):
         base = expr.base
+        rank = base.rank
+
+        # If pos indexes base then recurse
+        base_container_rank = base.class_type.container_rank
+        if -pos < rank-base_container_rank:
+            return insert_index(base, pos+base_container_rank, index_var)
+
+        # Ensure current indices are fully defined
         indices = list(expr.indices)
         if len(indices) == 1 and isinstance(indices[0], LiteralEllipsis):
-            indices = [Slice(None,None)]*base.rank
-        i = -1
-        while i>=pos and -i<=base.rank:
+            indices = [Slice(None,None)]*base_container_rank
+
+        if len(indices)<rank:
+            indices += [Slice(None,None)]*(rank-base_container_rank)
+
+        # Start from last index in this indexed element
+        i = base_container_rank-rank-1
+        while i>=pos and -i<=base_container_rank:
             if not isinstance(indices[i], Slice):
                 pos -= 1
             i -= 1
-        if -pos>base.rank:
+
+        # if no slices were found then the object is already correctly indexed
+        if -pos > rank:
             return expr
 
         # Add index at the required position
@@ -323,8 +369,11 @@ def insert_index(expr, pos, index_var):
             if indices[pos].start is not None:
                 index_var = PyccelAdd(index_var, indices[pos].start, simplify=True)
 
+        # Update index
         indices[pos] = index_var
-        return IndexedElement(base, *indices)
+
+        # Get new indexed object
+        return get_deep_indexed_element(base, indices)
 
     elif isinstance(expr, PyccelArithmeticOperator):
         return type(expr)(insert_index(expr.args[0], pos, index_var),
@@ -620,21 +669,27 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
 def insert_fors(blocks, indices, scope, level = 0):
     """
+    Create For loops as requested by the output of collect_loops.
+
     Run through the output of collect_loops and create For loops of the
-    requested sizes
+    requested sizes.
 
     Parameters
-    ==========
-    block   : list of LoopCollection
-            The result of a call to collect_loops
+    ----------
+    blocks : list of LoopCollection
+        The result of a call to collect_loops.
     indices : list
-            The index variables
-    level   : int
-            The index of the index variable used in the outermost loop
-    Results
-    =======
-    block : list of TypedAstNodes
-            The modified expression
+        The index variables.
+    scope : Scope
+        The scope on which the loop is defined. This is where the scope for
+        the new For loop will be created.
+    level : int, default=0
+        The index of the index variable used in the outermost loop.
+
+    Returns
+    -------
+    list[TypedAstNode]
+        The modified expression.
     """
     if all(not isinstance(b, LoopCollection) for b in blocks.body):
         body = blocks.body
@@ -678,9 +733,9 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
     >>> from pyccel.ast.literals  import LiteralInteger
     >>> from pyccel.ast.utilities import expand_to_loops
     >>> from pyccel.ast.variable  import Variable
-    >>> a = Variable(PythonNativeInt(), 'a', shape=(,), rank=0)
-    >>> b = Variable(PythonNativeInt(), 'b', shape=(,), rank=0)
-    >>> c = Variable(PythonNativeInt(), 'c', shape=(,), rank=0)
+    >>> a = Variable(PythonNativeInt(), 'a')
+    >>> b = Variable(PythonNativeInt(), 'b')
+    >>> c = Variable(PythonNativeInt(), 'c')
     >>> expr = [Assign(PythonTuple(a,b,c),PythonTuple(LiteralInteger(0),LiteralInteger(1),LiteralInteger(2))]
     >>> expand_inhomog_tuple_assignments(CodeBlock(expr))
     [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
@@ -713,33 +768,46 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
 #==============================================================================
 def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     """
-    Re-write a list of expressions to include explicit loops where necessary
+    Re-write a list of expressions to include explicit loops where necessary.
+
+    Re-write a list of expressions to include explicit loops where necessary.
+    The provided expression is the Pyccel representation of the user code. It
+    is the output of the semantic stage. The result of this function is the
+    equivalent code where any vector expressions are unrolled into explicit
+    loops. The unrolling is done completely for languages such as C which have
+    no support for vector operations and partially for languages such as
+    Fortran which have support for vector operations on objects of the same
+    shape.
 
     Parameters
-    ==========
-    block          : CodeBlock
-                     The expressions to be modified
-    new_index      : function
-                     A function which provides a new variable from a base name,
-                     avoiding name collisions
+    ----------
+    block : CodeBlock
+        The expressions to be modified.
+    new_index : function
+        A function which provides a new variable from a base name, avoiding
+        name collisions.
+    scope : Scope
+        The scope on which the loop is defined. This is where the scope for
+        the new For loop will be created.
     language_has_vectors : bool
-                     Indicates if the language has support for vector
-                     operations of the same shape
+        Indicates if the language has support for vector operations of the
+        same shape.
 
     Returns
-    =======
-    expr        : list of Ast Nodes
-                The expressions with For loops inserted where necessary
+    -------
+    list[PyccelAstNode]
+        The expressions with `For` loops inserted where necessary.
 
     Examples
     --------
     >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.datatypes import PythonNativeInt
     >>> from pyccel.ast.operators import PyccelAdd
     >>> from pyccel.ast.utilities import expand_to_loops
-    >>> a = Variable('int', 'a', shape=(4,), rank=1)
-    >>> b = Variable('int', 'b', shape=(4,), rank=1)
-    >>> c = Variable('int', 'c', shape=(4,), rank=1)
-    >>> i = Variable('int', 'i')
+    >>> a = Variable(PythonNativeInt(), 'a', shape=(4,))
+    >>> b = Variable(PythonNativeInt(), 'b', shape=(4,))
+    >>> c = Variable(PythonNativeInt(), 'c', shape=(4,))
+    >>> i = Variable(PythonNativeInt(), 'i')
     >>> d = PyccelAdd(a,b)
     >>> expr = [Assign(c,d)]
     >>> expand_to_loops(expr, language_has_vectors = False)

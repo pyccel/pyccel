@@ -9,6 +9,8 @@ Handling the transitions between Python code and C code using (Numpy/C Api).
 
 import numpy as np
 
+from .bind_c            import BindCPointer
+
 from .datatypes         import PythonNativeBool, GenericType, VoidType, FixedSizeType
 
 from .cwrapper          import PyccelPyObject, check_type_registry, c_to_py_registry, pytype_parse_registry
@@ -93,7 +95,7 @@ pyarray_to_ndarray = FunctionDef(
                 name      = 'pyarray_to_ndarray',
                 arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling = 'alias'))],
                 body      = [],
-                results   = [FunctionDefResult(Variable(NumpyNDArrayType(GenericType()), 'array'))])
+                results   = [FunctionDefResult(Variable(NumpyNDArrayType(GenericType(), 1, None), 'array'))])
 
 # NumPy array check elements : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_check = FunctionDef(
@@ -141,7 +143,7 @@ array_get_f_step = FunctionDef(name    = 'nd_nstep_F',
 array_get_data  = FunctionDef(name   = 'nd_data',
                            body      = [],
                            arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional=True))],
-                           results   = [FunctionDefResult(Variable(VoidType(), name = 'v', memory_handling='alias', rank = 1))])
+                           results   = [FunctionDefResult(Variable(BindCPointer(), name = 'v', memory_handling='alias'))])
 
 PyArray_SetBaseObject = FunctionDef(name   = 'PyArray_SetBaseObject',
                                     body      = [],
