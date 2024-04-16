@@ -3,12 +3,12 @@ File describing commands associated with the lambdify function which converts a
 SymPy expression into a Pyccel-accelerated function.
 """
 import sympy as sp
-from packaging.version import parse
+from packaging import version
 
 from pyccel.epyccel import epyccel
 from pyccel.utilities.strings import random_string
 
-if parse(sp.__version__) >= parse('1.8'):
+if version.parse(sp.__version__) >= version.parse('1.8'):
     from sympy.printing.numpy import NumPyPrinter
 else:
     from sympy.printing.pycode import NumPyPrinter
