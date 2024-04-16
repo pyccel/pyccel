@@ -271,8 +271,7 @@ class PythonCodePrinter(CodePrinter):
             if len(indices) == 1 and isinstance(indices[0], (tuple, list)):
                 indices = indices[0]
 
-            indices = [self._print(i) for i in indices]
-            indices = ','.join(i for i in indices)
+            indices = ','.join(self._print(i) for i in indices)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
