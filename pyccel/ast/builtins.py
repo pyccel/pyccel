@@ -771,7 +771,18 @@ class PythonSet(TypedAstNode):
 
 #==============================================================================
 class PythonMap(PyccelInternalFunction):
-    """ Represents the map stmt
+    """
+    Class representing a call to Python's builtin map function.
+
+    Class representing a call to Python's builtin map function.
+
+    Parameters
+    ----------
+    func : FunctionDef
+        The function to be applied to the elements.
+
+    func_args : TypedAstNode
+        The arguments to which the function will be applied.
     """
     __slots__ = ('_func','_func_args')
     _attribute_nodes = ('_func','_func_args')
