@@ -267,10 +267,8 @@ class PyBuildValueNode(PyccelInternalFunction):
     """
     __slots__ = ('_flags','_result_args')
     _attribute_nodes = ('_result_args',)
-    _rank = 0
     _shape = ()
     _class_type = PyccelPyObject()
-    _order = None
 
     def __init__(self, result_args = ()):
         self._flags = ''
@@ -310,8 +308,6 @@ class PyModule_AddObject(PyccelInternalFunction):
     """
     __slots__ = ('_mod_name','_name','_var')
     _attribute_nodes = ('_name','_var')
-    #_precision = 4
-    _rank = 0
     _shape = None
     _class_type = PythonNativeInt()
 
@@ -361,9 +357,7 @@ class PyModule_Create(PyccelInternalFunction):
     """
     __slots__ = ('_module_def_name',)
     _attribute_nodes = ()
-    _rank = 0
     _shape = ()
-    _order = None
     _class_type = PyccelPyObject()
 
     def __init__(self, module_def_name):
@@ -403,9 +397,7 @@ class PyCapsule_New(PyccelInternalFunction):
     """
     __slots__ = ('_capsule_name', '_API_var')
     _attribute_nodes = ('_API_var',)
-    _rank = 0
     _shape = ()
-    _order = None
     _class_type = PyccelPyObject()
 
     def __init__(self, API_var, module_name):
@@ -453,9 +445,7 @@ class PyCapsule_Import(PyccelInternalFunction):
     """
     __slots__ = ('_capsule_name',)
     _attribute_nodes = ()
-    _rank = 0
     _shape = ()
-    _order = None
     _class_type = BindCPointer()
 
     def __init__(self, module_name):
