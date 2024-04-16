@@ -338,7 +338,7 @@ class PythonComplex(PyccelInternalFunction):
         return f"complex({self.real}, {self.imag})"
 
 #==============================================================================
-class PythonEnumerate(PyccelAstNode):
+class PythonEnumerate(PyccelInternalFunction):
     """
     Represents a call to Python's native `enumerate()` function.
 
@@ -355,6 +355,8 @@ class PythonEnumerate(PyccelAstNode):
     __slots__ = ('_element','_start')
     _attribute_nodes = ('_element','_start')
     name = 'enumerate'
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, arg, start = None):
         if pyccel_stage != "syntactic" and \
@@ -768,12 +770,14 @@ class PythonSet(TypedAstNode):
         return True
 
 #==============================================================================
-class PythonMap(PyccelAstNode):
+class PythonMap(PyccelInternalFunction):
     """ Represents the map stmt
     """
     __slots__ = ('_func','_func_args')
     _attribute_nodes = ('_func','_func_args')
     name = 'map'
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, func, func_args):
         self._func = func
@@ -842,7 +846,7 @@ class PythonPrint(PyccelAstNode):
         return self._file
 
 #==============================================================================
-class PythonRange(PyccelAstNode):
+class PythonRange(PyccelInternalFunction):
     """
     Class representing a range.
 
@@ -862,6 +866,8 @@ class PythonRange(PyccelAstNode):
     __slots__ = ('_start','_stop','_step')
     _attribute_nodes = ('_start', '_stop', '_step')
     name = 'range'
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, *args):
         # Define default values
@@ -1135,7 +1141,7 @@ class Lambda(PyccelAstNode):
         return f"{self.variables} -> {self.expr}"
 
 #==============================================================================
-class PythonType(TypedAstNode):
+class PythonType(PyccelInternalFunction):
     """
     Represents a call to the Python builtin `type` function.
 

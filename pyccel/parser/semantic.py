@@ -104,7 +104,6 @@ from pyccel.ast.type_annotations import FunctionTypeAnnotation, typenames_to_dty
 
 from pyccel.ast.typingext import TypingFinal
 
-from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import split_positional_keyword_arguments
@@ -2934,7 +2933,12 @@ class SemanticParser(BasicParser):
         except RuntimeError:
             pass
 
-        func     = self.scope.find(name, 'functions')
+        func = self.scope.find(name, 'functions')
+
+        if func is None:
+            name = str(expr.funcdef)
+            if name in builtin_functions_dict:
+                func = PyccelFunctionDef(name, builtin_functions_dict[name])
 
         # Check for specialised method
         if isinstance(func, PyccelFunctionDef):
@@ -2975,12 +2979,8 @@ class SemanticParser(BasicParser):
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
-        F = pyccel_builtin_function(expr, args)
 
-        if func is None and F is not None:
-            return F
-
-        elif self.scope.find(name, 'cls_constructs'):
+        if self.scope.find(name, 'cls_constructs'):
 
             # TODO improve the test
             # we must not invoke the scope like this

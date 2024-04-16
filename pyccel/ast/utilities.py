@@ -46,32 +46,6 @@ __all__ = (
 )
 
 #==============================================================================
-def builtin_function(expr, args=None):
-    """Returns a builtin-function call applied to given arguments."""
-
-    if isinstance(expr, FunctionCall):
-        name = str(expr.funcdef)
-    elif isinstance(expr, str):
-        name = expr
-    else:
-        raise TypeError('expr must be of type str or FunctionCall')
-
-    dic = builtin_functions_dict
-
-    # Unpack FunctionCallArguments
-    args = [a.value for a in args]
-
-    if name in dic.keys() :
-        try:
-            return dic[name](*args)
-        except PyccelError as e:
-            errors.report(e,
-                    symbol=expr,
-                    severity='fatal')
-
-    return None
-
-#==============================================================================
 decorators_mod = Module('decorators',(),
         funcs = [PyccelFunctionDef(d, PyccelInternalFunction) for d in pyccel_decorators.__all__])
 pyccel_mod = Module('pyccel',(),(),
