@@ -1062,7 +1062,7 @@ class PythonMax(PyccelInternalFunction):
 
         if not x.is_homogeneous:
             types = ', '.join(str(xi.dtype) for xi in x)
-            raise PyccelError("Cannot determine final dtype of 'max' call with arguments of different "
+            raise TypeError("Cannot determine final dtype of 'max' call with arguments of different "
                              f"types ({types}). Please cast arguments to the desired dtype")
         if isinstance(x.class_type, HomogeneousContainerType):
             self._class_type = x.class_type.element_type
@@ -1074,9 +1074,9 @@ class PythonMax(PyccelInternalFunction):
 #==============================================================================
 class PythonMin(PyccelInternalFunction):
     """
-    Represents a call to Python's built-in `max` function.
+    Represents a call to Python's built-in `min` function.
 
-    Represents a call to Python's built-in `max` function.
+    Represents a call to Python's built-in `min` function.
 
     Parameters
     ----------
@@ -1098,7 +1098,7 @@ class PythonMin(PyccelInternalFunction):
 
         if not x.is_homogeneous:
             types = ', '.join(str(xi.dtype) for xi in x)
-            raise PyccelError("Cannot determine final dtype of 'min' call with arguments of different "
+            raise TypeError("Cannot determine final dtype of 'min' call with arguments of different "
                               f"types ({types}). Please cast arguments to the desired dtype")
         if isinstance(x.class_type, HomogeneousContainerType):
             self._class_type = x.class_type.element_type
