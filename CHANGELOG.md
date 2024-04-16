@@ -52,6 +52,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Stop storing `FunctionDef`, `ClassDef`, and `Import` objects inside `CodeBlock`s.
 -   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
 -   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
+-   \[INTERNALS\] All internal classes which can be generated from `FunctionCall`s must inherit from `TypedAstNode`.
 
 ### Deprecated
 
@@ -63,6 +64,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
 -   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 -   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
+-   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
 
 ## \[1.11.2\] - 2024-03-05
 
