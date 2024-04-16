@@ -472,7 +472,7 @@ f2 = lambdify(expr, {x : 'float'}, float)
 print(f2(3.0))
 
 expr = x**2 + x*5 + 4.5
-f3 = lambdify(expr, {x : 'T'}, float, {'T': ['float', 'float[:]', 'float[:,:]']})
+f3 = lambdify(expr, {x : 'T'}, 'T', {'T': ['float', 'float[:]', 'float[:,:]']})
 x_1d = np.ones(4)
 x_2d = np.ones((4,2))
 print(f3(3.0))
