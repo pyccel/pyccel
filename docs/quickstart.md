@@ -468,7 +468,7 @@ f = lambdify(expr, {x : 'float'})
 print(f(3.0))
 
 expr2 = x-x
-f2 = lambdify(expr, {x : 'float'}, 'float')
+f2 = lambdify(expr, {x : 'float'}, result_type = 'float')
 print(f2(3.0))
 
 expr = x**2 + x*5 + 4.5

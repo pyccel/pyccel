@@ -53,9 +53,9 @@ def test_lambdify(language):
         expr_y = sp.sympify(m.expressions['y']).subs(m.constants)
         sp_x = sp.lambdify([x, y], expr_x)
         sp_y = sp.lambdify([x, y], expr_y)
-        pyc_x = pyc_lambdify(expr_x, {x : 'float[:,:]', y : 'float[:,:]'}, 'float[:,:]',
+        pyc_x = pyc_lambdify(expr_x, {x : 'float[:,:]', y : 'float[:,:]'}, result_type = 'float[:,:]',
                     language = language)
-        pyc_y = pyc_lambdify(expr_y, {x : 'float[:,:]', y : 'float[:,:]'}, 'float[:,:]',
+        pyc_y = pyc_lambdify(expr_y, {x : 'float[:,:]', y : 'float[:,:]'}, result_type = 'float[:,:]',
                     language = language)
 
         assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
