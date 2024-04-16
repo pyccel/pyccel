@@ -617,7 +617,7 @@ class HomogeneousContainerType(ContainerType):
         Number of dimensions of the object described by the container. This is
         equal to the number of values required to index an element of this container.
         """
-        return self._rank # pylint: disable=no-member
+        return self._container_rank # pylint: disable=no-member
 
     @property
     def rank(self):
@@ -649,7 +649,7 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
     __slots__ = ()
     _name = 'str'
     _element_type = PrimitiveCharacterType()
-    _rank = 1
+    _container_rank = 1
     _order = None
 
     @property
@@ -712,7 +712,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
         The type of the elements of the homogeneous tuple.
     """
     __slots__ = ('_element_type', '_order')
-    _rank = 1
+    _container_rank = 1
 
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
@@ -737,7 +737,7 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
     """
     __slots__ = ('_element_type', '_order')
     _name = 'list'
-    _rank = 1
+    _container_rank = 1
 
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
@@ -759,7 +759,7 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
     """
     __slots__ = ('_element_type',)
     _name = 'set'
-    _rank = 1
+    _container_rank = 1
     _order = None
 
     def __init__(self, element_type):
@@ -837,7 +837,7 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
     *args : tuple of DataTypes
         The datatypes stored in the inhomogeneous tuple.
     """
-    __slots__ = ('_element_types', '_datatype', '_rank', '_order')
+    __slots__ = ('_element_types', '_datatype', '_container_rank', '_order')
 
     def __init__(self, *args):
         self._element_types = args
@@ -850,14 +850,14 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         # Determine rank
         elem_ranks = set(elem.rank for elem in self._element_types)
         if len(elem_ranks) == 1:
-            self._rank = elem_ranks.pop() + 1
+            self._container_rank = elem_ranks.pop() + 1
         else:
-            self._rank = 1
+            self._container_rank = 1
 
         # Determine order
-        if self._rank == 2:
+        if self._container_rank == 2:
             self._order = 'C'
-        elif self._rank > 2:
+        elif self._container_rank > 2:
             elem_orders = set(elem.order for elem in self._element_types)
             if len(elem_orders) == 1 and elem_orders.pop() == 'C':
                 self._order = 'C'
@@ -926,7 +926,7 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         Number of dimensions of the object. If the object is a scalar then
         this is equal to 0.
         """
-        return self._rank
+        return self._container_rank
 
     @property
     def order(self):
@@ -955,7 +955,7 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
     """
     __slots__ = ('_index_type', '_value_type')
     _name = 'map'
-    _rank = 1
+    _container_rank = 1
     _order = None
 
     def __init__(self, index_type, value_type):
