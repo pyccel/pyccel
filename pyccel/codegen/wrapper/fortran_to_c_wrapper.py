@@ -414,8 +414,7 @@ class FortranToCWrapper(Wrapper):
                 scope.insert_variable(ptr_var)
 
                 # Define the additional steps necessary to define and fill ptr_var
-                alloc = Allocate(ptr_var, shape=result.shape,
-                                 order=var.order, status='unallocated')
+                alloc = Allocate(ptr_var, shape=result.shape, status='unallocated')
                 copy = Assign(ptr_var, local_var)
                 self._additional_exprs.extend([alloc, copy])
             else:
@@ -608,7 +607,7 @@ class FortranToCWrapper(Wrapper):
         result = BindCFunctionDefResult(bind_var, local_var, func_scope)
 
         # Define the additional steps necessary to define and fill ptr_var
-        alloc = Allocate(local_var, shape=(), order=None, status='unallocated')
+        alloc = Allocate(local_var, shape=(), status='unallocated')
         c_loc = CLocFunc(local_var, bind_var)
         body = [alloc, c_loc]
 

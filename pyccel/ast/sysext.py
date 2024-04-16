@@ -32,9 +32,7 @@ class SysExit(PyccelInternalFunction):
     __slots__ = ()
     name      = 'exit'
     _class_type     = VoidType()
-    _rank      = 0
     _shape     = None
-    _order     = None
 
     def __init__(self, status=LiteralInteger(0)):
         super().__init__(status)

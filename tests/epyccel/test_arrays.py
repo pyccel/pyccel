@@ -4105,6 +4105,23 @@ def test_array_float_nested_F_array_initialization_3(language):
 
     assert np.array_equal(x1, x2)
 
+def test_array_float_nested_F_array_initialization_mixed(language):
+    f1 = arrays.array_float_nested_F_array_initialization_mixed
+    f2 = epyccel(f1, language = language)
+
+    x  = np.array(np.random.random((3,2,4)), order="F")
+    y  = np.array(np.random.random((2,4)), order="F")
+    z  = np.array(np.random.random((2,4)), order="F")
+    a  = np.array([x, [y, z, z], x], order="F")
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, z, x1)
+    f2(x, y, z, x2)
+
+    assert np.array_equal(x1, x2)
+
 ##==============================================================================
 ## TEST SIMPLE ARRAY SLICING WITH ORDER C 1D
 ##==============================================================================
@@ -4202,7 +4219,10 @@ def test_array_view_steps_F_2D_3(language):
 #==============================================================================
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template makes interface ambiguous")),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
@@ -4228,7 +4248,10 @@ def test_array_ndmin_1(language):
 
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template makes interface ambiguous")),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
@@ -4254,7 +4277,10 @@ def test_array_ndmin_2(language):
 
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template makes interface ambiguous")),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
@@ -4280,7 +4306,10 @@ def test_array_ndmin_4(language):
 
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template makes interface ambiguous")),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
@@ -6365,3 +6394,12 @@ def test_unpacking_2D_of_known_size(language):
     f1 = arrays.unpack_array_2D_of_known_size
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+
+##==============================================================================
+## TEST INDEXING
+##==============================================================================
+
+def test_multi_layer_index(language):
+    f1 = arrays.multi_layer_index
+    f2 = epyccel(f1, language = language)
+    assert f1(arrays.a_1d, 3, 18, 5, 2) == f2(arrays.a_1d, 3, 18, 5, 2)

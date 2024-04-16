@@ -160,10 +160,8 @@ class PyccelOperator(TypedAstNode):
         if pyccel_stage == 'syntactic':
             super().__init__()
             return
+        self._set_shape()
         self._set_type()
-        self._set_shape_rank()
-        # rank is None for lambda functions
-        self._set_order()
         super().__init__()
 
     def _set_type(self):
@@ -176,15 +174,15 @@ class PyccelOperator(TypedAstNode):
         """
         self._class_type = self._calculate_type(*self._args)  # pylint: disable=no-member
 
-    def _set_shape_rank(self):
+    def _set_shape(self):
         """
-        Set the shape and rank of the result of the operator.
+        Set the shape of the result of the operator.
 
-        Set the shape and rank of the result of the operator. This function
-        uses the static method `_shape_rank` to set these values. If the
-        values are class parameters in a sub-class, this method must be over-ridden.
+        Set the shape of the result of the operator. This function
+        uses the static method `_shape` to set these values. If the
+        values are class parameters in a sub-class, this method must be overridden.
         """
-        self._shape, self._rank = self._calculate_shape_rank(*self._args)  # pylint: disable=no-member
+        self._shape = self._calculate_shape(*self._args)  # pylint: disable=no-member
 
     @property
     def precedence(self):
@@ -246,24 +244,6 @@ class PyccelOperator(TypedAstNode):
     def __str__(self):
         return repr(self)
 
-    def _set_order(self):
-        """
-        Set the order of the result.
-
-        Set the order of the result of the operator.
-        This is chosen to match the arguments if they are in agreement.
-        Otherwise it defaults to 'C'.
-        """
-        if self.rank is not None and self.rank > 1:
-            orders = [a.order for a in self._args if a.order is not None]
-            my_order = orders[0]
-            if all(o == my_order for o in orders):
-                self._order = my_order
-            else:
-                self._order = 'C'
-        else:
-            self._order = None
-
     @property
     def args(self):
         """ Arguments of the operator
@@ -284,7 +264,7 @@ class PyccelUnaryOperator(PyccelOperator):
     arg : TypedAstNode
         The argument passed to the operator.
     """
-    __slots__ = ('_shape','_rank','_order','_class_type')
+    __slots__ = ('_shape','_class_type')
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -311,12 +291,11 @@ class PyccelUnaryOperator(PyccelOperator):
         return arg.class_type
 
     @staticmethod
-    def _calculate_shape_rank(arg):
+    def _calculate_shape(arg):
         """
-        Calculate the shape and rank.
+        Calculate the shape.
 
-        Calculate the shape and rank.
-        They are chosen to match the argument
+        Calculate the shape. It is chosen to match the argument.
 
         Parameters
         ----------
@@ -325,14 +304,10 @@ class PyccelUnaryOperator(PyccelOperator):
 
         Returns
         -------
-        shape : tuple[TypedAstNode]
+        tuple[TypedAstNode]
             The shape of the resulting object.
-        rank : int
-            The rank of the resulting object.
         """
-        rank = arg.rank
-        shape = arg.shape
-        return shape, rank
+        return arg.shape
 
 #==============================================================================
 
@@ -413,12 +388,11 @@ class PyccelNot(PyccelUnaryOperator):
         """
 
     @staticmethod
-    def _calculate_shape_rank(arg):
+    def _calculate_shape(arg):
         """
-        Calculate the shape and rank.
+        Calculate the shape.
 
-        Calculate the shape and rank.
-        They are chosen to match the argument
+        Calculate the shape. It is chosen to match the argument.
 
         Parameters
         ----------
@@ -427,14 +401,10 @@ class PyccelNot(PyccelUnaryOperator):
 
         Returns
         -------
-        shape : tuple[TypedAstNode]
+        tuple[TypedAstNode]
             The shape of the resulting object.
-        rank : int
-            The rank of the resulting object.
         """
-        rank = 0
-        shape = None
-        return shape, rank
+        return None
 
     def __repr__(self):
         return f'not {repr(self.args[0])}'
@@ -477,7 +447,7 @@ class PyccelBinaryOperator(PyccelOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
-    __slots__ = ('_shape','_rank','_order','_class_type')
+    __slots__ = ('_shape','_class_type')
 
     def __init__(self, arg1, arg2):
         super().__init__(arg1, arg2)
@@ -518,13 +488,13 @@ class PyccelBinaryOperator(PyccelOperator):
             raise TypeError(f'Cannot determine the type of ({arg1}, {arg2})') #pylint: disable=raise-missing-from
 
     @staticmethod
-    def _calculate_shape_rank(arg1, arg2):
+    def _calculate_shape(arg1, arg2):
         """
-        Calculate the shape and rank.
+        Calculate the shape.
 
         Strings must be scalars.
 
-        For numeric types the rank and shape is determined according
+        For numeric types the shape is determined according
         to NumPy broadcasting rules where possible.
 
         Parameters
@@ -536,24 +506,20 @@ class PyccelBinaryOperator(PyccelOperator):
 
         Returns
         -------
-        shape : tuple[TypedAstNode]
+        tuple[TypedAstNode]
             The shape of the resulting object.
-        rank : int
-            The rank of the resulting object.
         """
         args = (arg1, arg2)
         strs = [a for a in args if isinstance(a.dtype, StringType)]
         if strs:
             other = [a for a in args if isinstance(a.dtype, FixedSizeNumericType)]
             assert len(other) == 0
-            rank  = 0
             shape = None
         else:
             s = broadcast(arg1.shape, arg2.shape)
 
             shape = s
-            rank  = 0 if s is None else len(s)
-        return shape, rank
+        return shape
 
 #==============================================================================
 
@@ -972,7 +938,7 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
         elif len(possible_class_types) == 1:
             class_type = possible_class_types.pop().switch_basic_type(dtype)
         else:
-            description = f"({arg1} {cls.op} {arg2})" # pylint: disable=no-member
+            description = f"({arg1!r} {cls.op} {arg2!r})" # pylint: disable=no-member
             raise NotImplementedError("Can't deduce type for comparison operator"
                                       f" with multiple containers {description}")
         return class_type
@@ -1140,20 +1106,10 @@ class PyccelBooleanOperator(PyccelOperator):
     *args : tuple of TypedAstNode
         The arguments passed to the operator.
     """
-    _rank = 0
     _shape = None
-    _order = None
     _class_type = PythonNativeBool()
 
     __slots__ = ()
-
-    def _set_order(self):
-        """
-        Set the order of the result.
-
-        Set the order of the result of the operator. Nothing needs to
-        be done here as the order is a class variable.
-        """
 
     def _set_type(self):
         """
@@ -1163,12 +1119,12 @@ class PyccelBooleanOperator(PyccelOperator):
         to be done here as the type is a class variable.
         """
 
-    def _set_shape_rank(self):
+    def _set_shape(self):
         """
-        Set the shape and rank of the result of the operator.
+        Set the shape of the result of the operator.
 
-        Set the shape and rank of the result of the operator. Nothing needs
-        to be done here as the shape and rank are class variables.
+        Set the shape of the result of the operator. Nothing needs
+        to be done here as the shape is a class variable.
         """
 
 #==============================================================================
@@ -1352,7 +1308,7 @@ class IfTernaryOperator(PyccelOperator):
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
-    __slots__ = ('_shape','_rank','_order','_class_type')
+    __slots__ = ('_shape','_class_type')
     _precedence = 3
 
     def __init__(self, cond, value_true, value_false):
@@ -1395,7 +1351,7 @@ class IfTernaryOperator(PyccelOperator):
         DataType
             The Python type of the object.
         """
-        if value_true.dtype is value_false.dtype and value_true.class_type is value_false.class_type:
+        if value_true.class_type is value_false.class_type:
             return value_true.class_type
 
         try:
@@ -1403,19 +1359,36 @@ class IfTernaryOperator(PyccelOperator):
         except NotImplementedError:
             raise TypeError(f'Cannot determine the type of ({value_true}, {value_false})') #pylint: disable=raise-missing-from
 
+        if value_false.class_type.order != value_true.class_type.order :
+            errors.report('Ternary Operator results should have the same order', severity='fatal')
+
         return class_type
 
     @staticmethod
-    def _calculate_shape_rank(cond, value_true, value_false):
+    def _calculate_shape(cond, value_true, value_false):
         """
-        Sets the shape and rank and the order for IfTernaryOperator
+        Calculate the shape of the result.
+
+        Calculate the shape of the result of the IfTernaryOperator.
+        The shape is equal to the shape of one of the outputs.
+
+        Parameters
+        ----------
+        cond : TypedAstNode
+            The first argument passed to the operator representing the condition.
+        value_true : TypedAstNode
+            The second argument passed to the operator representing the result if the
+            condition is true.
+        value_false : TypedAstNode
+            The third argument passed to the operator representing the result if the
+            condition is false.
+
+        Returns
+        -------
+        tuple[TypedAstNode]
+            The shape of the resulting object.
         """
-        shape = value_true.shape
-        rank  = value_true.rank
-        if rank is not None and rank > 1:
-            if value_false.order != value_true.order :
-                errors.report('Ternary Operator results should have the same order', severity='fatal')
-        return shape, rank
+        return value_true.shape
 
     @property
     def cond(self):

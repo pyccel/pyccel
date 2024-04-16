@@ -7,6 +7,7 @@ __all__ = [
         'homogenous_tuple_float',
         'homogenous_tuple_string',
         'homogenous_tuple_math',
+        'homogeneous_tuple_of_arrays',
         'inhomogenous_tuple_1',
         'inhomogenous_tuple_2',
         'inhomogenous_tuple_3',
@@ -461,3 +462,17 @@ def test_tuple_inhomogeneous():
 def tuple_different_ranks():
     a = (1,(2,3))
     return a[0], a[1][0], a[1][1]
+
+def homogeneous_tuple_of_arrays():
+    from numpy import array, empty
+    x = array(((1,2), (3,4)), order='F')
+    y = array(((5,4), (7,8)), order='F')
+    z = array(((9,10), (11,12)), order='F')
+    a = (x, y, z)
+    b = empty((3,2,2))
+    for j in range(2):
+        for k in range(2):
+            b[0,j,k] = a[0][j,k]
+            b[1,j,k] = a[1][j,k]
+            b[2,j,k] = a[2][j,k]
+    return b

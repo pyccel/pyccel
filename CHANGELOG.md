@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1787 : Ensure `STC` is installed with Pyccel.
 -   #1743 : Add Python support for set method `discard()`.
+-   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
+-   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
 ### Fixed
 
@@ -24,6 +26,7 @@ All notable changes to this project will be documented in this file.
 -   Allow printing the result of a function returning multiple objects of different types.
 -   #1732 : Fix multidimensional list indexing in Python.
 -   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
+-   #1821 : Ensure an error is raised when creating an ambiguous interface.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
@@ -34,11 +37,15 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
 -   \[INTERNALS\] Rewrite datatyping system. See #1722.
 -   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
+-   \[INTERNALS\] Moved rank from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.PyccelType` objects.
+-   \[INTERNALS\] Moved order from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
 -   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
 -   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
 -   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
 -   \[INTERNALS\] Stop storing `FunctionDef`, `ClassDef`, and `Import` objects inside `CodeBlock`s.
+-   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
+-   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
 
 
 ### Deprecated

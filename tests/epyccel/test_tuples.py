@@ -42,7 +42,10 @@ def compare_python_pyccel( p_output, f_output ):
 
     for pth, pycc in zip(p_output, f_output):
 
-        if isinstance(pth, bool):
+        if isinstance(pth, np.ndarray):
+            assert np.allclose(pth,pycc)
+
+        elif isinstance(pth, bool):
             pycc_bool = (pycc == 1)
             assert(pth == pycc_bool)
 

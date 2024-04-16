@@ -267,14 +267,31 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     dtype : NumpyNumericType | PythonNativeBool | GenericType
         The internal datatype of the object (GenericType is allowed for external
         libraries, e.g. MPI).
+    rank : int
+        The rank of the new NumPy array.
+    order : str
+        The order of the memory layout for the new NumPy array.
     """
-    __slots__ = ('_element_type',)
+    __slots__ = ('_element_type', '_container_rank', '_order')
     _name = 'numpy.ndarray'
 
-    def __init__(self, dtype):
+    def __new__(cls, dtype, rank, order):
+        if rank == 0:
+            return dtype
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, dtype, rank, order):
+        assert isinstance(rank, int)
+        assert order in (None, 'C', 'F')
+        assert rank < 2 or order is not None
+
         if pyccel_stage == 'semantic':
             assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType))
+
         self._element_type = dtype
+        self._container_rank = rank
+        self._order = order
         super().__init__()
 
     @lru_cache
@@ -287,7 +304,14 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         else:
             return NotImplemented
         result_type = original_type_to_pyccel_type[np.result_type(test_type, comparison_type).type]
-        return NumpyNDArrayType(result_type)
+        rank = max(other.rank, self.rank)
+        if rank < 2:
+            order = None
+        else:
+            other_f_contiguous = other.order in (None, 'F')
+            self_f_contiguous = self.order in (None, 'F')
+            order = 'F' if other_f_contiguous and self_f_contiguous else 'C'
+        return NumpyNDArrayType(result_type, rank, order)
 
     @lru_cache
     def __radd__(self, other):
@@ -329,7 +353,77 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         assert isinstance(new_type, FixedSizeNumericType)
         new_type = numpy_precision_map[(new_type.primitive_type, new_type.precision)]
         cls = type(self)
-        return cls(self.element_type.switch_basic_type(new_type))
+        return cls(self.element_type.switch_basic_type(new_type), self._container_rank, self._order)
+
+    def switch_rank(self, new_rank, new_order = None):
+        """
+        Get a type which is identical to this type in all aspects except the rank and/or order.
+
+        Get a type which is identical to this type in all aspects except the rank and/or order.
+        The order must be provided if the rank is increased from 1. Otherwise it defaults to the
+        same order as the current type.
+
+        Parameters
+        ----------
+        new_rank : int
+            The rank of the new type.
+
+        new_order : str, optional
+            The order of the new type. This should be provided if the rank is increased from 1.
+
+        Returns
+        -------
+        PyccelType
+            The new type.
+        """
+        if new_rank == 0:
+            return self.element_type
+        else:
+            new_order = (new_order or self._order) if new_rank > 1 else None
+            return NumpyNDArrayType(self.element_type, new_rank, new_order)
+
+    def swap_order(self):
+        """
+        Get a type which is identical to this type in all aspects except the order.
+
+        Get a type which is identical to this type in all aspects except the order.
+        In the case of a 1D array the final type will be the same as this type. Otherwise
+        if the array is C-ordered the final type will be F-ordered, while if the array
+        is F-ordered the final type will be C-ordered.
+
+        Returns
+        -------
+        PyccelType
+            The new type.
+        """
+        order = None if self._order is None else ('C' if self._order == 'F' else 'F')
+        return NumpyNDArrayType(self.element_type, self._container_rank, order)
+
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+        """
+        return self._container_rank
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return self._order
+
+    def __repr__(self):
+        dims = ','.join(':'*self._container_rank)
+        order_str = f'(order={self._order})' if self._order else ''
+        return f'{self.element_type}[{dims}]{order_str}'
 
 #==============================================================================
 
@@ -368,3 +462,5 @@ if hasattr(np, 'float128'):
 pyccel_type_to_original_type.update(numpy_type_to_original_type)
 original_type_to_pyccel_type.update({v:k for k,v in numpy_type_to_original_type.items()})
 original_type_to_pyccel_type[np.bool_] = PythonNativeBool()
+
+NumpyInt = numpy_precision_map[PrimitiveIntegerType(), np.dtype(int).alignment]

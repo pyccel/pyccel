@@ -51,9 +51,6 @@ class Variable(TypedAstNode):
         The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
 
-    rank : int, default: 0
-        The number of dimensions for an array.
-
     memory_handling : str, default: 'stack'
         'heap' is used for arrays, if we need to allocate memory on the heap.
         'stack' if memory should be allocated on the stack, represents stack arrays and scalars.
@@ -78,10 +75,6 @@ class Variable(TypedAstNode):
     cls_base : class, default: None
         Class base if variable is an object or an object member.
 
-    order : str, default: 'C'
-        Used for arrays. Indicates whether the data is stored in C or Fortran format in memory.
-        See order_docs.md in the developer docs for more details.
-
     is_argument : bool, default: False
         Indicates if object is the argument of a function.
 
@@ -95,19 +88,19 @@ class Variable(TypedAstNode):
 
     Examples
     --------
+    >>> from pyccel.ast.datatypes import PythonNativeInt, PythonNativeFloat
     >>> from pyccel.ast.core import Variable
-    >>> Variable('int', 'n')
+    >>> Variable(PythonNativeInt(), 'n')
     n
     >>> n = 4
-    >>> Variable('float', 'x', rank=2, shape=(n,2), memory_handling='heap')
+    >>> Variable(PythonNativeFloat(), 'x', shape=(n,2), memory_handling='heap')
     x
-    >>> Variable('int', DottedName('matrix', 'n_rows'))
+    >>> Variable(PythonNativeInt(), DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
-    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
-            '_is_target', '_is_optional', '_allows_negative_indexes',
-            '_cls_base', '_is_argument', '_is_temp',
-            '_rank','_shape','_order','_is_private','_class_type')
+    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const', '_is_target',
+            '_is_optional', '_allows_negative_indexes', '_cls_base', '_is_argument', '_is_temp',
+            '_shape','_is_private','_class_type')
     _attribute_nodes = ()
 
     def __init__(
@@ -115,7 +108,6 @@ class Variable(TypedAstNode):
         class_type,
         name,
         *,
-        rank=0,
         memory_handling='stack',
         is_const=False,
         is_target=False,
@@ -123,7 +115,6 @@ class Variable(TypedAstNode):
         is_private=False,
         shape=None,
         cls_base=None,
-        order=None,
         is_argument=False,
         is_temp =False,
         allows_negative_indexes=False
@@ -171,34 +162,22 @@ class Variable(TypedAstNode):
         self._allows_negative_indexes = allows_negative_indexes
 
         self._cls_base       = cls_base
-        self._order          = order
         self._is_argument    = is_argument
         self._is_temp        = is_temp
 
         # ------------ TypedAstNode Properties ---------------
         assert isinstance(class_type, PyccelType)
-        assert isinstance(rank, int)
+        rank = class_type.rank
 
         if rank == 0:
             assert shape is None
-            assert order is None
 
         elif shape is None:
             shape = tuple(None for i in range(rank))
-        else:
-            assert len(shape) == rank
-
-        if rank == 1:
-            assert order is None
-        elif rank > 1:
-            assert order in ('C', 'F')
 
         self._alloc_shape = shape
         self._class_type = class_type
-        self._rank  = rank
         self._shape = self.process_shape(shape)
-        if self._rank < 2:
-            self._order = None
 
     def process_shape(self, shape):
         """
@@ -339,12 +318,6 @@ class Variable(TypedAstNode):
         return self.on_stack and self.rank > 0
 
     @property
-    def is_stack_scalar(self):
-        """ Indicates if the variable is located on stack and is a scalar
-        """
-        return self.on_stack and self.rank == 0
-
-    @property
     def cls_base(self):
         """ Class from which the Variable inherits
         """
@@ -427,17 +400,15 @@ class Variable(TypedAstNode):
         """
         User friendly method to check if the variable is a numpy.ndarray.
 
-        User friendly method to check if the variable is an ndarray:
-            1. have a rank > 0
-            2. class type is NumpyNDArrayType
+        User friendly method to check if the variable is an ndarray.
         """
-        return isinstance(self.class_type, NumpyNDArrayType) and self.rank > 0
+        return isinstance(self.class_type, NumpyNDArrayType)
 
     def __str__(self):
         return str(self.name)
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.name}, type={self.class_type})'
+        return f'{type(self).__name__}({self.name}, type={repr(self.class_type)})'
 
     def __eq__(self, other):
         if type(self) is type(other):
@@ -458,8 +429,6 @@ class Variable(TypedAstNode):
         print('>>> Variable')
         print(f'  name               = {self.name}')
         print(f'  type               = {self.class_type}')
-        print(f'  rank               = {self.rank}')
-        print(f'  order              = {self.order}')
         print(f'  memory_handling    = {self.memory_handling}')
         print(f'  shape              = {self.shape}')
         print(f'  cls_base           = {self.cls_base}')
@@ -535,10 +504,8 @@ class Variable(TypedAstNode):
             self.class_type,
             self.name)
         kwargs = {
-            'rank' : self.rank,
             'memory_handling': self.memory_handling,
             'is_optional':self.is_optional,
-            'order':self.order,
             'cls_base':self.cls_base,
             }
 
@@ -827,7 +794,7 @@ class IndexedElement(TypedAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
-    __slots__ = ('_label', '_indices','_shape','_rank','_order','_class_type')
+    __slots__ = ('_label', '_indices','_shape','_class_type', '_is_slice')
     _attribute_nodes = ('_label', '_indices', '_shape')
 
     def __init__(self, base, *indices):
@@ -843,7 +810,8 @@ class IndexedElement(TypedAstNode):
             return
 
         shape = base.shape
-        rank  = base.rank
+        rank  = base.class_type.container_rank
+        assert len(indices) <= rank
 
         if any(not isinstance(a, (int, TypedAstNode, Slice, LiteralEllipsis)) for a in indices):
             errors.report("Index is not of valid type",
@@ -881,17 +849,23 @@ class IndexedElement(TypedAstNode):
 
                     _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                 new_shape.append(_shape)
-        self._rank  = len(new_shape)
-        self._shape = None if self._rank == 0 else tuple(new_shape)
+        new_rank = len(new_shape)
 
-        base_type = base.class_type
-        rank = base.rank
-        for _ in range(base.rank-self._rank):
-            rank -= 1
-            if not (rank and isinstance(base_type, NumpyNDArrayType)):
-                base_type = base_type.element_type
-        self._class_type = base_type
-        self._order = None if self.rank < 2 else base.order
+        if new_rank == 0:
+            self._class_type = base.class_type.element_type
+            self._is_slice = False
+            if self._class_type.rank:
+                self._shape = base.shape[rank:]
+            else:
+                self._shape = None
+        elif new_rank != rank:
+            self._class_type = base.class_type.switch_rank(new_rank)
+            self._is_slice = True
+            self._shape = tuple(new_shape) + base.shape[rank:]
+        else:
+            self._class_type = base.class_type
+            self._is_slice = True
+            self._shape = tuple(new_shape) + base.shape[rank:]
 
         super().__init__()
 
@@ -917,27 +891,34 @@ class IndexedElement(TypedAstNode):
 
     def __getitem__(self, *args):
 
+        if self.class_type.container_rank < len(args):
+            raise IndexError('Rank mismatch.')
+
         if len(args) == 1 and isinstance(args[0], (tuple, list)):
             args = args[0]
 
-        if self.rank < len(args):
-            raise IndexError('Rank mismatch.')
-
-        new_indexes = []
-        j = 0
-        base = self.base
-        for i in self.indices:
-            if isinstance(i, Slice) and j<len(args):
-                if i.step == 1 or i.step is None:
-                    incr = args[j]
-                else:
-                    incr = PyccelMul(i.step, args[j], simplify = True)
-                if i.start != 0 and i.start is not None:
-                    incr = PyccelAdd(i.start, incr, simplify = True)
-                i = incr
-                j += 1
-            new_indexes.append(i)
-        return IndexedElement(base, *new_indexes)
+        if self._is_slice:
+            new_indexes = []
+            j = 0
+            base = self.base
+            for i in self.indices:
+                if isinstance(i, Slice) and j<len(args):
+                    current_arg = args[j]
+                    if isinstance(current_arg, Slice):
+                        raise NotImplementedError("Can't extract a slice from a slice")
+                    else:
+                        if i.step == 1 or i.step is None:
+                            incr = current_arg
+                        else:
+                            incr = PyccelMul(i.step, current_arg, simplify = True)
+                        if i.start != 0 and i.start is not None:
+                            incr = PyccelAdd(i.start, incr, simplify = True)
+                    i = incr
+                    j += 1
+                new_indexes.append(i)
+            return IndexedElement(base, *new_indexes)
+        else:
+            return IndexedElement(self, *args)
 
     @property
     def is_const(self):
@@ -948,6 +929,15 @@ class IndexedElement(TypedAstNode):
         True if the Variable is constant, false if it can be modified.
         """
         return self.base.is_const
+
+    @property
+    def allows_negative_indexes(self):
+        """
+        Indicate whether variables used to index this Variable can be negative.
+
+        Indicate whether variables used to index this Variable can be negative.
+        """
+        return self.base.allows_negative_indexes
 
 class DottedVariable(Variable):
     """

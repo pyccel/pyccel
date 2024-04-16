@@ -22,7 +22,7 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefAr
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
-from pyccel.ast.builtins import PythonBool, PythonAbs
+from pyccel.ast.builtins import PythonBool
 
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -35,9 +35,9 @@ from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
-from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
+from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
 from pyccel.ast.datatypes import PythonNativeInt
-from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType
+from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
@@ -53,8 +53,8 @@ from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyEmpty, NumpyInt32
 from pyccel.ast.numpyext import NumpyFloat, NumpyBool
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
-from pyccel.ast.numpyext import NumpyRand
-from pyccel.ast.numpyext import NumpyNewArray
+from pyccel.ast.numpyext import NumpyRand, NumpyAbs
+from pyccel.ast.numpyext import NumpyNewArray, NumpyArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
@@ -735,7 +735,8 @@ class FCodePrinter(CodePrinter):
             elif isinstance(f, PythonType):
                 args_format.append('A')
                 args.append(self._print(f.print_string))
-            elif f.rank > 0 and not isinstance(f, FunctionCall):
+            elif isinstance(f.class_type, (TupleType, HomogeneousContainerType)) and not isinstance(f.class_type, StringType) \
+                    and not isinstance(f, FunctionCall):
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
@@ -1048,7 +1049,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyNorm(self, expr):
         """Fortran print."""
-        arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
+        arg = NumpyAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
         if expr.axis:
             axis = expr.axis
             if arg.order != 'F':
@@ -1201,10 +1202,10 @@ class FCodePrinter(CodePrinter):
             cast_func = DtypePrecisionToCastFunction[expr.dtype]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
-        arg = expr.arg if expr.arg.dtype == expr.dtype else cast_func(expr.arg)
         # If Numpy array is stored with column-major ordering, transpose values
         # use reshape with order for rank > 2
         if expr.rank <= 2:
+            arg = expr.arg if expr.arg.dtype == expr.dtype else cast_func(expr.arg)
             rhs_code = self._print(arg)
             if expr.arg.order and expr.arg.order != expr.order:
                 rhs_code = f'transpose({rhs_code})'
@@ -1221,8 +1222,15 @@ class FCodePrinter(CodePrinter):
             inv_order = 'C' if order == 'F' else 'F'
             for a in expr_args:
                 ac = self._print(a)
+
+                # Pack list/tuple of array/list/tuple into array
+                if a.order is None and a.rank > 1:
+                    a = NumpyArray(a)
+                    ac = self._print(a)
+
+                # Reshape array element if out of order
                 if a.order == inv_order:
-                    shape = a.shape if a.order == 'C' else a.shape[::-1]
+                    shape = a.shape[::-1] if a.order == 'F' else a.shape
                     shape_code = ', '.join(self._print(i) for i in shape)
                     order_code = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
                     ac = f'reshape({ac}, [{shape_code}], order=[{order_code}])'
@@ -1348,8 +1356,7 @@ class FCodePrinter(CodePrinter):
         if (not self._additional_code):
             self._additional_code = ''
         var = self.scope.get_temporary_variable(expr.dtype, memory_handling = 'stack',
-                shape = expr.shape,
-                order = expr.order, rank = expr.rank)
+                shape = expr.shape)
 
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
         return self._print(var)
@@ -1544,9 +1551,9 @@ class FCodePrinter(CodePrinter):
         vstr = self._print(expr.variable.name)
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
-        s = self._print(LiteralInteger(0))
+        start_val = self._print(LiteralInteger(0))
         if not(is_static) and (on_heap or (var.shape is None)):
-            s = ''
+            start_val = ''
 
         # Default empty strings
         intentstr      = ''
@@ -1555,6 +1562,7 @@ class FCodePrinter(CodePrinter):
         privatestr     = ''
         rankstr        = ''
         externalstr    = ''
+        is_string = isinstance(var.class_type, StringType)
 
         # Compute intent string
         if intent:
@@ -1564,10 +1572,10 @@ class FCodePrinter(CodePrinter):
                 if is_const:
                     intentstr += ', intent(in)'
             else:
-                intentstr = ', intent({})'.format(intent)
+                intentstr = f', intent({intent})'
 
         # Compute allocatable string
-        if not is_static:
+        if not is_static and not is_string:
             if is_alias:
                 allocatablestr = ', pointer'
 
@@ -1576,7 +1584,7 @@ class FCodePrinter(CodePrinter):
 
             # ISSUES #177: var is allocatable and target
             if is_target:
-                allocatablestr = '{}, target'.format(allocatablestr)
+                allocatablestr = f'{allocatablestr}, target'
 
         # Compute optional string
         if is_optional:
@@ -1592,29 +1600,29 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, TypedAstNode))) and (is_static or on_stack)):
-            rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
+        if not is_string:
+            if ((rank == 1) and (isinstance(shape, (int, TypedAstNode))) and (is_static or on_stack)):
+                ubound = PyccelMinus(shape, LiteralInteger(1), simplify = True)
+                rankstr = f'({self._print(start_val)}:{self._print(ubound)})'
 
-        elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or on_stack)):
-            #TODO fix bug when we include shape of type list
+            elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or on_stack)):
+                #TODO fix bug when we include shape of type list
 
-            if var.order == 'C':
-                rankstr = ','.join('{0}:{1}'.format(self._print(s),
-                                                      self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape[::-1])
-            else:
-                rankstr =  ','.join('{0}:{1}'.format(self._print(s),
-                                                     self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
-            rankstr = '({rank})'.format(rank=rankstr)
+                ordered_shape = shape[::-1] if var.order == 'C' else shape
+                ubounds = [PyccelMinus(s, LiteralInteger(1), simplify = True) for s in ordered_shape]
+                rankstr = ','.join(f'{self._print(start_val)}:{self._print(u)}' for u in ubounds)
+                rankstr = f'({rankstr})'
 
-        elif (rank > 0) and on_heap and intent_in:
-            rankstr = '({})'.format(','.join(['0:'] * rank))
+            elif (rank > 0) and on_heap and intent_in:
+                rankstr = ','.join(['0:'] * rank)
+                rankstr = f'({rankstr})'
 
-        elif (rank > 0) and (on_heap or is_alias):
-            rankstr = '({})'.format(','.join( [':'] * rank))
+            elif (rank > 0) and (on_heap or is_alias):
+                rankstr = "(:" + ",:" * (rank-1) + ")"
 
-#        else:
-#            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-#                severity='fatal')
+    #        else:
+    #            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+    #                severity='fatal')
 
         mod_str = ''
         if expr.module_variable and not is_private and isinstance(expr.variable.class_type, FixedSizeNumericType):
@@ -1623,7 +1631,7 @@ class FCodePrinter(CodePrinter):
         # Construct declaration
         left  = dtype + allocatablestr + optionalstr + privatestr + externalstr + mod_str + intentstr
         right = vstr + rankstr + code_value
-        return '{} :: {}\n'.format(left, right)
+        return f'{left} :: {right}\n'
 
     def _print_AliasAssign(self, expr):
         code = ''
@@ -2895,13 +2903,25 @@ class FCodePrinter(CodePrinter):
 
     def _print_IndexedElement(self, expr):
         base = expr.base
-        base_code = self._print(base)
 
         inds = list(expr.indices)
         if len(inds) == 1 and isinstance(inds[0], LiteralEllipsis):
             inds = [Slice(None,None)]*expr.rank
 
-        if expr.base.order == 'C':
+        # Condense all indices on homogeneous objects into one IndexedElement for printing
+        # This should be removed when support for lists is added
+        if isinstance(base, IndexedElement):
+            while isinstance(base, IndexedElement) and isinstance(base.class_type, HomogeneousContainerType):
+                inds = list(base.indices) + inds
+                base = base.base
+
+        rank = base.rank
+        if len(inds)<rank:
+            inds += [Slice(None,None)]*(rank-base.class_type.container_rank)
+
+        base_code = self._print(base)
+
+        if base.order != 'F':
             inds = inds[::-1]
         allow_negative_indexes = base.allows_negative_indexes
 

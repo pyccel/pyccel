@@ -4330,6 +4330,22 @@ def test_numpy_mod_array_like_2d(language):
     assert epyccel_func(fl32) == get_mod(fl32)
     assert epyccel_func(fl64) == get_mod(fl64)
 
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
+def test_numpy_mod_mixed_order(language):
+
+    def get_mod(arr1 : 'float[:,:]', arr2 : 'float[:,:](order=F)'):
+        from numpy import mod, shape
+        a = mod(arr1, arr2)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
+
+    epyccel_func = epyccel(get_mod, language=language)
+
+    fl1 = uniform(min_float / 2, max_float / 2, size = (2,5))
+    fl2 = uniform(min_float / 2, max_float / 2, size = (5,2)).T
+
+    assert epyccel_func(fl1, fl2) == get_mod(fl1, fl2)
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [

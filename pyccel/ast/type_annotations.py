@@ -42,23 +42,13 @@ class VariableTypeAnnotation(PyccelAstNode):
     class_type : DataType
         The requested Python type of the variable.
 
-    rank : int
-        The rank of the variable.
-
-    order : str
-        The order of the variable.
-
     is_const : bool, default=False
         True if the variable cannot be modified, false otherwise.
     """
-    __slots__ = ('_class_type', '_rank',
-                 '_order', '_is_const')
+    __slots__ = ('_class_type', '_is_const')
     _attribute_nodes = ()
-    def __init__(self, class_type : 'DataType',
-            rank : int = 0, order : str = None, is_const : bool = False):
+    def __init__(self, class_type : 'DataType', is_const : bool = False):
         self._class_type = class_type
-        self._rank = rank
-        self._order = order
         self._is_const = is_const
 
         super().__init__()
@@ -77,28 +67,12 @@ class VariableTypeAnnotation(PyccelAstNode):
     @property
     def rank(self):
         """
-        Get the rank of the object.
+        Number of dimensions of the object.
 
-        Get the rank of the object that should be created. The rank indicates the
-        number of dimensions.
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
         """
-        return self._rank
-
-    @property
-    def order(self):
-        """
-        Get the order of the object.
-
-        Get the order in which the memory will be laid out in the object. For objects
-        with rank > 1 this is either 'C' or 'F'. 
-        """
-        return self._order
-
-    @order.setter
-    def order(self, order):
-        if order not in ('C', 'F', None):
-            raise ValueError("Order must be C, F, or None")
-        self._order = order
+        return self.class_type.rank
 
     @property
     def is_const(self):
@@ -117,24 +91,17 @@ class VariableTypeAnnotation(PyccelAstNode):
         self._is_const = val
 
     def __hash__(self):
-        return hash((self.class_type, self.rank, self.order))
+        return hash(self.class_type)
 
     def __eq__(self, other):
         # Needed for set
         if isinstance(other, VariableTypeAnnotation):
-            return self.class_type == other.class_type and \
-                   self.rank == other.rank and \
-                   self.order == other.order
+            return self.class_type == other.class_type
         else:
             return False
 
     def __repr__(self):
-        dtype = str(self._class_type)
-        if self._rank:
-            dtype += '['+','.join(':'*self._rank)+']'
-        if self._order:
-            dtype += '(order = {self._order})'
-        return dtype
+        return repr(self._class_type)
 
 #==============================================================================
 

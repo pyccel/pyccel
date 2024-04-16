@@ -12,6 +12,7 @@ from pyccel.utilities.stage import PyccelStage
 from .basic          import TypedAstNode
 from .datatypes      import PythonNativeInt, GenericType
 from .internals      import PyccelSymbol
+from .numpytypes     import NumpyNDArrayType, NumpyInt
 from .variable       import Variable
 
 pyccel_stage = PyccelStage()
@@ -69,20 +70,20 @@ class MacroShape(Macro):
     index : int | LiteralInteger
         The index of the element of the shape we are accessing.
     """
-    __slots__ = ('_index','_rank','_shape')
+    __slots__ = ('_index','_shape','_class_type')
     _name      = 'shape'
     _order     = None
-    _class_type = PythonNativeInt()
 
     def __init__(self, argument, index=None):
         if index is not None:
-            self._rank = 0
+            self._class_type = PythonNativeInt()
             self._shape = None
         elif pyccel_stage != "syntactic":
-            self._rank      = int(argument.rank>1)
+            rank      = int(argument.rank>1)
             self._shape     = (argument.rank,)
+            self._class_type = NumpyNDArrayType(NumpyInt, rank, None)
         else:
-            self._rank      = 1
+            self._class_type = NumpyNDArrayType(NumpyInt, 0, None)
             self._shape     = ()
         self._index = index
         super().__init__(argument)
@@ -111,9 +112,7 @@ class MacroType(Macro):
     """
     __slots__ = ()
     _name      = 'dtype'
-    _rank      = 0
     _shape     = None
-    _order     = None
     _class_type = GenericType()
 
     def __str__(self):
@@ -134,9 +133,7 @@ class MacroCount(Macro):
     """
     __slots__ = ()
     _name      = 'count'
-    _rank      = 0
     _shape     = None
-    _order     = None
     _class_type = PythonNativeInt()
 
     def __str__(self):

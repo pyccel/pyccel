@@ -22,9 +22,10 @@ Generally a variable in Pyccel should always keep its initial type, this also tr
 ```Python
 import numpy as np
 
-a = np.array([1, 2, 3], dtype=float)
-#(some code...)
-a = np.array([1, 2, 3], dtype=int)
+if __name__ == '__main__':
+    a = np.array([1, 2, 3], dtype=float)
+    #(some code...)
+    a = np.array([1, 2, 3], dtype=int)
 ```
 
 _OUTPUT_ :
@@ -46,9 +47,10 @@ Pyccel calls its own garbage collector when needed, but has a set of rules to do
     ```Python
     import numpy as np
 
-    a = np.ones((10, 20))
-    #(some code...)
-    a = np.ones(10)
+    if __name__ == '__main__':
+        a = np.ones((10, 20))
+        #(some code...)
+        a = np.ones(10)
     ```
 
     _OUTPUT_ :
@@ -66,9 +68,10 @@ This limitation is due to the fact that the rank of Fortran allocatable objects 
     ```Python
     import numpy as np
 
-    a = np.array([1, 2, 3, 4, 5])
-    b = np.array([1, 2, 3])
-    a = b
+    if __name__ == '__main__':
+        a = np.array([1, 2, 3, 4, 5])
+        b = np.array([1, 2, 3])
+        a = b
     ```
 
     _OUTPUT_ :
@@ -139,10 +142,11 @@ This limitation is due to the fact that the rank of Fortran allocatable objects 
     ```Python
     import numpy as np
 
-    a = np.ones(10)
-    b = a[:5]
-    #(some code...)
-    a = np.zeros(20)
+    if __name__ == '__main__':
+        a = np.ones(10)
+        b = a[:5]
+        #(some code...)
+        a = np.zeros(20)
     ```
 
     _OUTPUT_ :
@@ -157,7 +161,7 @@ This limitation is set since we need to free the previous data when we reallocat
 
 ### Slicing and indexing ###
 
-The indexing and slicing in Pyccel handles only the basic indexing of [numpy arrays](https://numpy.org/doc/stable/user/basics.indexing.html).
+The indexing and slicing in Pyccel handles only the basic indexing of [numpy arrays](https://numpy.org/doc/stable/user/basics.indexing.html). When multiple indexing expressions are used on the same variable Pyccel squashes them into one object. This means that we do not handle multiple slice indices applied to the same variable (e.g. `a[1::2][2:]`). This is not recommended anyway as it makes code hard to read.
 
 Some examples:
 
@@ -166,8 +170,9 @@ Some examples:
     ```Python
     import numpy as np
 
-    a = np.array([1, 3, 4, 5])
-    a[0] = 0
+    if __name__ == '__main__':
+        a = np.array([1, 3, 4, 5])
+        a[0] = 0
     ```
 
     -   C equivalent:
@@ -211,8 +216,9 @@ Some examples:
     ```Python
     import numpy as np
 
-    a = np.ones((10, 20))
-    b = a[2:, :5]
+    if __name__ == '__main__':
+        a = np.ones((10, 20))
+        b = a[2:, :5]
     ```
 
     -   C equivalent:
@@ -257,10 +263,11 @@ Some examples:
     ```Python
     import numpy as np
 
-    a = np.array([[1, 2, 3, 4], [5, 6, 7, 8]])
-    b = a[1]
-    c = b[2]
-    print(c)
+    if __name__ == '__main__':
+        a = np.array([[1, 2, 3, 4], [5, 6, 7, 8]])
+        b = a[1]
+        c = b[2]
+        print(c)
     ```
 
     -   C equivalent:
@@ -309,6 +316,65 @@ Some examples:
         print *, c
 
         end program prog_ex
+        ```
+
+-   Python code:
+
+    ```Python
+    import numpy as np
+
+    if __name__ == '__main__':
+        a = np.array([1, 2, 3, 4, 5, 6, 7, 8])
+        b = a[1::2][2]
+        print(b)
+    ```
+
+    -   C equivalent:
+
+        ```C
+        #include <stdlib.h>
+        #include "ndarrays.h"
+        #include <stdint.h>
+        #include <string.h>
+        #include <stdio.h>
+        #include <inttypes.h>
+        int main()
+        {
+            t_ndarray a = {.shape = NULL};
+            int64_t b;
+            a = array_create(1, (int64_t[]){INT64_C(8)}, nd_int64, false, order_c);
+            int64_t Dummy_0000[] = {INT64_C(1), INT64_C(2), INT64_C(3), INT64_C(4), INT64_C(5), INT64_C(6), INT64_C(7), INT64_C(8)};
+            memcpy(&a.nd_int64[INT64_C(0)], Dummy_0000, 8 * a.type_size);
+            b = GET_ELEMENT(a, nd_int64, INT64_C(5));
+            printf("%"PRId64"\n", b);
+            free_array(&a);
+            return 0;
+        }
+        ```
+
+    -   Fortran equivalent:
+
+        ```Fortran
+        program prog_prog_tmp_index
+
+          use tmp_index
+
+          use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
+          use, intrinsic :: ISO_FORTRAN_ENV, only : stdout => output_unit
+          implicit none
+
+          integer(i64), allocatable :: a(:)
+          integer(i64) :: b
+
+          allocate(a(0:7_i64))
+          a = [1_i64, 2_i64, 3_i64, 4_i64, 5_i64, 6_i64, 7_i64, 8_i64]
+          b = a(5_i64)
+          write(stdout, '(I0)', advance="yes") b
+          if (allocated(a)) then
+            deallocate(a)
+          end if
+
+        end program prog_prog_tmp_index
         ```
 
 ## NumPy [ndarray](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html) functions/properties progress in Pyccel ##

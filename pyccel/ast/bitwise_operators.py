@@ -86,8 +86,6 @@ class PyccelBitOperator(PyccelOperator):
         The second argument passed to the operator.
     """
     _shape = None
-    _rank  = 0
-    _order = None
     __slots__ = ('_class_type',)
 
     def __init__(self, arg1, arg2):
@@ -130,12 +128,12 @@ class PyccelBitOperator(PyccelOperator):
 
         return class_type
 
-    def _set_shape_rank(self):
+    def _set_shape(self):
         """
-        Set the shape and rank of the resulting object.
+        Set the shape of the resulting object.
 
-        Set the shape and rank of the resulting object. For a PyccelBitOperator,
-        the shape and rank are class attributes so nothing needs to be done.
+        Set the shape of the resulting object. For a PyccelBitOperator,
+        the shape is a class attribute so nothing needs to be done.
         """
 
     def __repr__(self):

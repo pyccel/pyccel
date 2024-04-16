@@ -40,9 +40,7 @@ class Literal(TypedAstNode):
     """
     __slots__ = ()
     _attribute_nodes  = ()
-    _rank      = 0
     _shape     = None
-    _order     = None
 
     @property
     def python_value(self):

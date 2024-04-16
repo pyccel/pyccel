@@ -86,9 +86,7 @@ class PyccelArraySize(PyccelInternalFunction):
     __slots__ = ()
     name = 'size'
 
-    _rank  = 0
     _shape = None
-    _order = None
     _class_type = PythonNativeInt()
 
     def __init__(self, arg):
@@ -132,9 +130,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     __slots__ = ()
     name = 'shape'
 
-    _rank  = 0
     _shape = None
-    _order = None
     _class_type = PythonNativeInt()
 
     def __init__(self, arg, index):

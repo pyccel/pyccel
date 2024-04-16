@@ -54,14 +54,6 @@ The order indicates how an array is laid out in memory. This can either be row-m
 
 The static type is the class type that would be assigned to an object created using an instance of this class as a type annotation.
 
-### Static rank
-
-The static rank is the rank that would be assigned to an object created using an instance of this class as a type annotation.
-
-### Static order
-
-The static order is the order that would be assigned to an object created using an instance of this class as a type annotation.
-
 ## Pyccel Internal Function
 
 The class `pyccel.ast.internals.PyccelInternalFunction` is a super class. This class should never be used directly but provides functionalities which are common to certain AST objects. These AST nodes are those which describe functions which are supported by Pyccel. For example it is used for functions from the `math` library, the `cmath` library, the `numpy` library, etc. `PyccelInternalFunction` inherits from `TypedAstNode`. The type information for the sub-class describes the type of the result of the function.

@@ -341,7 +341,7 @@ class BindCFunctionDefResult(FunctionDefResult):
         name = original_res_var.name
         self._shape   = [scope.get_temporary_variable(PythonNativeInt(),
                             name=f'{name}_shape_{i+1}')
-                         for i in range(original_res_var._rank)]
+                         for i in range(original_res_var.rank)]
         self._original_res_var = original_res_var
         super().__init__(var, **kwargs)
 
