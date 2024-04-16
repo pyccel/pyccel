@@ -30,7 +30,6 @@ __all__ = (
     'DottedName',
     'DottedVariable',
     'IndexedElement',
-    'InhomogeneousTupleVariable',
     'TupleVariable',
     'Variable'
 )
@@ -596,111 +595,6 @@ class DottedName(PyccelAstNode):
 
     def __hash__(self):
         return hash(str(self))
-
-class InhomogeneousTupleVariable(Variable):
-    """
-    Represents an inhomogeneous tuple variable in the code.
-
-    Represents an inhomogeneous tuple variable in the code.
-
-    Parameters
-    ----------
-    arg_vars : tuple of Variable
-        The variables contained within the tuple.
-    name : str
-        The name of the variable.
-    *args : tuple
-        See Variable.
-    class_type : PyccelType
-        The Python type of the variable. In the case of scalars this is equivalent to
-        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
-        this is the type of the container.
-    **kwargs : dict
-        See Variable.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import TupleVariable, Variable
-    >>> v1 = Variable('int','v1')
-    >>> v2 = Variable('bool','v2')
-    >>> n  = TupleVariable([v1, v2],'n')
-    >>> n
-    n
-    """
-    __slots__ = ('_vars',)
-    _attribute_nodes = ('_vars',)
-    is_homogeneous = False
-
-    def __init__(self, arg_vars, name, *args, class_type, **kwargs):
-        self._vars = tuple(arg_vars)
-        super().__init__(class_type, name, *args, **kwargs)
-
-    def get_vars(self):
-        """ Get the variables saved internally in the tuple
-        (used for inhomogeneous variables)
-        """
-        return self._vars
-
-    def rename_var(self, variable_idx, new_name):
-        """ Rename the n-th variable saved internally in the
-        tuple (used for inhomogeneous variables)
-
-        Parameters
-        ==========
-        variable_idx : int/LiteralInteger
-                       The index of the variable which we
-                       wish to collect
-        new_name     : str
-                       The new name of the variable
-        """
-        self._vars[variable_idx].rename(new_name)
-
-    def __getitem__(self, idx):
-        if isinstance(idx, tuple):
-            sub_idx = idx[1:]
-            idx = idx[0]
-        else:
-            sub_idx = []
-
-        var = self.get_var(idx)
-
-        if len(sub_idx) > 0:
-            return var[sub_idx]
-        else:
-            return var
-
-    def __iter__(self):
-        return self._vars.__iter__()
-
-    def __len__(self):
-        return len(self._vars)
-
-    @Variable.memory_handling.setter
-    def memory_handling(self, memory_handling):
-        if memory_handling not in ('heap', 'stack', 'alias'):
-            raise ValueError("memory_handling must be 'heap', 'stack' or 'alias'")
-        self._memory_handling = memory_handling
-        for var in self._vars:
-            if var.rank > 0:
-                var.memory_handling = memory_handling
-
-    @Variable.is_target.setter
-    def is_target(self, is_target):
-        if not isinstance(is_target, bool):
-            raise TypeError('is_target must be a boolean.')
-        self._is_target = is_target
-        for var in self._vars:
-            if var.rank > 0:
-                var.is_target = is_target
-
-    @property
-    def is_ndarray(self):
-        """
-        Helper function to determine whether the variable is a NumPy array.
-
-        Helper function to determine whether the variable is a NumPy array.
-        """
-        return False
 
 class Constant(Variable):
     """
