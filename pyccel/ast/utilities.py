@@ -19,7 +19,7 @@ from .core          import (AsName, Import, FunctionDef, FunctionCall,
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
 from .cmathext      import cmath_mod
-from .datatypes     import HomogeneousTupleType, PythonNativeInt
+from .datatypes     import HomogeneousTupleType, InhomogeneousTupleType, PythonNativeInt
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
@@ -31,7 +31,7 @@ from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .scipyext      import scipy_mod
 from .typingext     import typing_mod
-from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable )
+from .variable      import Variable, IndexedElement
 
 from .c_concepts import ObjectAddress
 
@@ -758,8 +758,8 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
         block.substitute(allocs_to_unravel, new_allocs)
 
     assigns = [a for a in block.get_attribute_nodes(Assign) \
-                if isinstance(a.lhs, InhomogeneousTupleVariable) \
-                and isinstance(a.rhs, (PythonTuple, InhomogeneousTupleVariable))]
+                if isinstance(a.lhs.class_type, InhomogeneousTupleType) \
+                and isinstance(a.rhs, (PythonTuple, Variable))]
     if len(assigns) != 0:
         new_assigns = [[Assign(l,r) for l,r in zip(a.lhs, a.rhs)] for a in assigns]
         block.substitute(assigns, new_assigns)
