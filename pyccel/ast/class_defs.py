@@ -160,7 +160,6 @@ SetClass = ClassDef('set',
             PyccelFunctionDef('discard', func_class = SetDiscard),
             PyccelFunctionDef('pop', func_class = SetPop),
             PyccelFunctionDef('remove', func_class = SetRemove),
-            PyccelFunctionDef('discard', func_class = SetDiscard),
             PyccelFunctionDef('update', func_class = SetUpdate),
         ])
 
