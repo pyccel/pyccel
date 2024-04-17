@@ -968,7 +968,7 @@ class SemanticParser(BasicParser):
             a = self._visit(arg.value)
             if isinstance(a, FunctionDef) and not isinstance(a, PyccelFunctionDef) and not a.is_semantic:
                 self._annotate_the_called_function_def(a)
-            a = self._visit(arg)
+            a = FunctionCallArgument(a)
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
             else:
@@ -1070,11 +1070,11 @@ class SemanticParser(BasicParser):
             if hasattr(self, annotation_method) and use_build_functions:
                 if isinstance(expr, DottedName):
                     pyccel_stage.set_stage('syntactic')
-                    new_expr = FunctionCall(func, args)
-                    new_expr.set_current_ast(expr.python_ast)
                     if is_method:
-                        new_expr = DottedName(*expr.name[:-1], new_expr)
-                        new_expr.set_current_ast(expr.python_ast)
+                        new_expr = DottedName(args[0].value, FunctionCall(func, args[1:]))
+                    else:
+                        new_expr = FunctionCall(func, args)
+                    new_expr.set_current_ast(expr.python_ast)
                     pyccel_stage.set_stage('semantic')
                     expr = new_expr
                 return getattr(self, annotation_method)(expr)
