@@ -505,7 +505,7 @@ class PythonTuple(TypedAstNode):
         orders = set(a.order for a in args)
         if len(ranks) == 1:
             rank = next(iter(ranks))
-            shapes = tuple(set(a.shape[i] for a in args if not (isinstance(a.shape[i], PyccelArrayShapeElement) or \
+            shapes = tuple(set(a.shape[i] for a in args if not (a.shape[i] is None or isinstance(a.shape[i], PyccelArrayShapeElement) or \
                                a.shape[i].get_attribute_nodes(PyccelArrayShapeElement))) \
                                for i in range(rank))
         else:

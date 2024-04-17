@@ -13,8 +13,9 @@ All notable changes to this project will be documented in this file.
 -   #1739 : Add Python support for set method `clear()`.
 -   #1740 : Add Python support for set method `copy()`.
 -   #1750 : Add Python support for set method `remove()`.
--   #1787 : Ensure `STC` is installed with Pyccel.
 -   #1743 : Add Python support for set method `discard()`.
+-   #1787 : Ensure `STC` is installed with Pyccel.
+-   #1656 : Ensure `gFTL` is installed with Pyccel.
 -   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
@@ -34,6 +35,7 @@ All notable changes to this project will be documented in this file.
 -   #1218 : Fix bug when assigning an array to a slice in Fortran.
 -   #1830 : Fix missing allocation when returning an annotated array expression.
 -   #1821 : Ensure an error is raised when creating an ambiguous interface.
+-   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
@@ -53,6 +55,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Stop storing `FunctionDef`, `ClassDef`, and `Import` objects inside `CodeBlock`s.
 -   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
 -   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
+-   \[INTERNALS\] Ensure `SemanticParser.infer_type` returns all documented information.
 
 ### Deprecated
 
