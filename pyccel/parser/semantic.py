@@ -1068,10 +1068,13 @@ class SemanticParser(BasicParser):
         if isinstance(func, PyccelFunctionDef):
             annotation_method = '_build_' + func.cls_name.__name__
             if hasattr(self, annotation_method) and use_build_functions:
-                if isinstance(expr, DottedName) and not is_method:
+                if isinstance(expr, DottedName):
                     pyccel_stage.set_stage('syntactic')
                     new_expr = FunctionCall(func, args)
                     new_expr.set_current_ast(expr.python_ast)
+                    if is_method:
+                        new_expr = DottedName(*expr.name[:-1], new_expr)
+                        new_expr.set_current_ast(expr.python_ast)
                     pyccel_stage.set_stage('semantic')
                     expr = new_expr
                 return getattr(self, annotation_method)(expr)
