@@ -232,7 +232,7 @@ def test_update_multiple(language):
 
 def test_update_boolean_tuple(language):
     def update_boolean_tuple():
-        a = {True, False, True}
+        a = {True}
         b = (False, True, False)
         a.update(b)
         return a
