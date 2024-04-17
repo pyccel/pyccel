@@ -4668,3 +4668,4 @@ class SemanticParser(BasicParser):
             for_obj = For(for_target, iterable, body)
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
+
