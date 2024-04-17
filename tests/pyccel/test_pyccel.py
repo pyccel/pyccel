@@ -793,7 +793,6 @@ def test_basic_header():
     compile_pyccel(cwd, filename)
 
 #------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
                                         "scripts/classes/classes_2.py",
@@ -806,6 +805,7 @@ def test_basic_header():
                                         "scripts/classes/class_headers.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
+                                        "scripts/classes/tuples_in_classes.py",
                                         "scripts/classes/class_temporary_in_constructor.py",
                                         "scripts/classes/class_with_non_target_array_arg.py",
                                         "scripts/classes/class_pointer.py",
