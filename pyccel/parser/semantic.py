@@ -1018,7 +1018,7 @@ class SemanticParser(BasicParser):
                 return False
         return True
 
-    def _handle_function(self, expr, func, args, is_method = False):
+    def _handle_function(self, expr, func, args, *, is_method = False, force_PyccelFunctionDef_call = False):
         """
         Create the node representing the function call.
 
@@ -1036,8 +1036,12 @@ class SemanticParser(BasicParser):
         args : iterable
                The arguments passed to the function.
 
-        is_method : bool
+        is_method : bool, default = False
                 Indicates if the function is a class method.
+
+        force_PyccelFunctionDef_call : bool, default = False
+                In `func` is a PyccelFunctionDef, indicates that the wrapped class
+                constructor should be called even if a _visit method exists.
 
         Returns
         -------
@@ -1045,6 +1049,10 @@ class SemanticParser(BasicParser):
             The semantic representation of the call.
         """
         if isinstance(func, PyccelFunctionDef):
+            annotation_method = '_visit_' + func.cls_name.__name__
+            if hasattr(self, annotation_method) and not force_PyccelFunctionDef_call:
+                return getattr(self, annotation_method)(expr)
+
             argument_description = func.argument_description
             func = func.cls_name
             args, kwargs = split_positional_keyword_arguments(*args)
@@ -2619,7 +2627,10 @@ class SemanticParser(BasicParser):
                     if new_name != rhs_name:
                         if hasattr(func, 'clone') and not isinstance(func, PyccelFunctionDef):
                             func  = func.clone(new_name)
-                    return self._handle_function(expr, func, args)
+                    pyccel_stage.set_stage('syntactic')
+                    syntactic_call = FunctionCall(func, args)
+                    pyccel_stage.set_stage('semantic')
+                    return self._handle_function(syntactic_call, func, args)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
                     if new_name != rhs_name:
@@ -2645,10 +2656,6 @@ class SemanticParser(BasicParser):
         # look for a class method
         if isinstance(rhs, FunctionCall):
             method = cls_base.get_method(rhs_name)
-            if isinstance(method, PyccelFunctionDef):
-                annotation_method = '_visit_' + method.cls_name.__name__
-                if hasattr(self, annotation_method):
-                    return getattr(self, annotation_method)(expr)
             macro = self.scope.find(rhs_name, 'macros')
             if macro is not None:
                 master = macro.master
@@ -2865,7 +2872,7 @@ class SemanticParser(BasicParser):
 
                 return self._visit(new_call)
 
-        return self._handle_function(expr, func, (arg,))
+        return self._handle_function(expr, func, (arg,), force_PyccelFunctionDef_call = True)
 
     def _visit_CmathPolar(self, expr):
         arg, = self._handle_function_args(expr.args) #pylint: disable=unbalanced-tuple-unpacking
@@ -2939,12 +2946,6 @@ class SemanticParser(BasicParser):
             name = str(expr.funcdef)
             if name in builtin_functions_dict:
                 func = PyccelFunctionDef(name, builtin_functions_dict[name])
-
-        # Check for specialised method
-        if isinstance(func, PyccelFunctionDef):
-            annotation_method = '_visit_' + func.cls_name.__name__
-            if hasattr(self, annotation_method):
-                return getattr(self, annotation_method)(expr)
 
         args = self._handle_function_args(expr.args)
 
