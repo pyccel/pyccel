@@ -965,12 +965,12 @@ class SemanticParser(BasicParser):
         """
         args  = []
         for arg in arguments:
-            a = self._visit(arg.value)
-            if isinstance(a, FunctionDef) and not isinstance(a, PyccelFunctionDef) and not a.is_semantic:
-                self._annotate_the_called_function_def(a)
-            a = FunctionCallArgument(a)
-            if isinstance(a.value, StarredArguments):
-                args.extend([FunctionCallArgument(av) for av in a.value.args_var])
+            a = self._visit(arg)
+            val = a.value
+            if isinstance(val, FunctionDef) and not isinstance(val, PyccelFunctionDef) and not val.is_semantic:
+                self._annotate_the_called_function_def(val)
+            elif isinstance(val, StarredArguments):
+                args.extend([FunctionCallArgument(av) for av in val.args_var])
             else:
                 args.append(a)
         return args
