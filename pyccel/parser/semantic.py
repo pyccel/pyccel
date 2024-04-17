@@ -64,7 +64,7 @@ from pyccel.ast.datatypes import PrimitiveIntegerType, HomogeneousListType, Stri
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from pyccel.ast.datatypes import DataTypeFactory, PrimitiveFloatingPointType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType
-from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType
+from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType, HomogeneousContainerType
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
@@ -4642,6 +4642,47 @@ class SemanticParser(BasicParser):
         if isinstance(arg, PythonTuple):
             return arg
         elif isinstance(arg.shape[0], LiteralInteger):
-            return PythonTuple(*[self.get_tuple_element(a) for a in arg])
+            return PythonTuple(*[self.scope.collect_tuple_element(a) for a in arg])
         else:
             raise TypeError(f"Can't unpack {arg} into a tuple")
+
+    def _visit_NumpyArray(self, func_call):
+        func_call_args = self._handle_function_args(func_call.args)
+        args, kwargs = split_positional_keyword_arguments(*func_call_args)
+        nargs = len(args)
+        # expr is a FunctionCall
+        arg = func_call_args[0].value if nargs > 0 else kwargs['arg']
+        dtype = func_call_args[1].value if nargs > 1 else kwargs.get('dtype', None)
+        order = func_call_args[2].value if nargs > 2 else kwargs.get('order', 'K')
+        ndmin = func_call_args[3].value if nargs > 3 else kwargs.get('ndmin', None)
+
+        if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
+            errors.report('Unexpected object passed to numpy.array',
+                    severity='fatal', symbol=expr)
+
+        is_homogeneous_tuple = isinstance(arg.class_type, HomogeneousTupleType)
+        # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
+        if isinstance(arg.class_type, InhomogeneousTupleType):
+            is_homogeneous_tuple = isinstance(arg.dtype, FixedSizeNumericType) and len(set(a.rank for a in arg))
+            if not isinstance(arg, PythonTuple):
+                arg = PythonTuple(*(self.scope.collect_tuple_element(a) for a in arg))
+
+        if not (is_homogeneous_tuple or isinstance(arg.class_type, HomogeneousContainerType)):
+            errors.report('Inhomogeneous type passed to numpy.array',
+                    severity='fatal', symbol=expr)
+
+        if not isinstance(order, (LiteralString, str)):
+            errors.report('Order must be specified with a literal string',
+                    severity='fatal', symbol=expr)
+        elif isinstance(order, LiteralString):
+            order = order.python_value
+
+        if ndmin is not None:
+            if not isinstance(ndmin, (LiteralInteger, int)):
+                errors.report("The minimum number of dimensions must be specified explicitly with an integer.",
+                        severity='fatal', symbol=expr)
+            elif isinstance(ndmin, LiteralInteger):
+                ndmin = ndmin.python_value
+
+
+        return NumpyArray(arg, dtype, order, ndmin)
