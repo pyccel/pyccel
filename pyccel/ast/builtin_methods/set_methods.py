@@ -220,11 +220,11 @@ class SetUpdate(SetMethod):
 
     Parameters
     ----------
-    set_variable : TypedAstNode
+    set_obj : TypedAstNode
         The set object which the method is called from.
 
         The argument passed to update() method.
-    item : TypedAstNode
+    iterable : TypedAstNode
         The item to search for, and remove.
     """
     __slots__ = ()
