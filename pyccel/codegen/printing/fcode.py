@@ -726,7 +726,8 @@ class FCodePrinter(CodePrinter):
                     end_of_tuple = empty_end
                 else:
                     end_of_tuple = FunctionCallArgument(sep, 'end')
-                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                args = [FunctionCallArgument(print_arg) for tuple_elem in f \
+                        for print_arg in (self.scope.collect_tuple_element(tuple_elem), tuple_sep)][:-1]
                 if f.shape[0] == 1:
                     args.append(FunctionCallArgument(LiteralString(',')))
                 code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple], file=expr.file))
