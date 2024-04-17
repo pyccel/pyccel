@@ -174,3 +174,32 @@ def test_remove_float(language):
     python_result = remove_float()
     assert python_result == pyccel_result
 
+def test_Discard_int(language):
+    def Discard_int():
+        se = {2.7, 4.3, 9.2}
+        se.discard(4.3)
+        return se
+    epyccel_remove = epyccel(Discard_int, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = Discard_int()
+    assert python_result == pyccel_result
+
+def test_Discard_complex(language):
+    def Discard_complex():
+        se = {2j, 5j, 3j, 7j}
+        se.discard(5j)
+        return se
+    epyccel_remove = epyccel(Discard_complex, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = Discard_complex()
+    assert python_result == pyccel_result
+
+def test_Discard_wrong_arg(language):
+    def Discard_wrong_arg():
+        se = {4.7, 1.3, 8.2}
+        se.discard(8.6)
+        return se
+    epyccel_remove = epyccel(Discard_wrong_arg, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = Discard_wrong_arg()
+    assert python_result == pyccel_result
