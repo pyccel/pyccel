@@ -332,6 +332,7 @@ class LiteralString(Literal):
     __slots__ = ('_string',)
     _class_type = StringType()
     _static_type = StringType()
+    _shape = (None,)
 
     def __init__(self, arg):
         super().__init__()

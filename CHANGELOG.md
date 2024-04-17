@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 -   #1732 : Fix multidimensional list indexing in Python.
 -   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
 -   #1821 : Ensure an error is raised when creating an ambiguous interface.
+-   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
@@ -47,6 +48,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Stop storing `FunctionDef`, `ClassDef`, and `Import` objects inside `CodeBlock`s.
 -   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
 -   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
+-   \[INTERNALS\] Ensure `SemanticParser.infer_type` returns all documented information.
 
 
 ### Deprecated

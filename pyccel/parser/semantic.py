@@ -669,9 +669,8 @@ class SemanticParser(BasicParser):
         inferred about the expression `expr`. This includes information about:
         - `class_type`
         - `shape`
-        - `memory_handling`
         - `cls_base`
-        - `is_target`
+        - `memory_handling`
 
         Parameters
         ----------
@@ -685,28 +684,19 @@ class SemanticParser(BasicParser):
             Dictionary containing all the type information which was inferred.
         """
         d_var = {
-                'shape'    : expr.shape,
                 'class_type' : expr.class_type,
+                'shape'      : expr.shape,
+                'cls_base'   : self.scope.find(str(expr.class_type), 'classes') or get_cls_base(expr.class_type),
+                'memory_handling' : 'heap' if expr.rank > 0 else 'stack'
             }
 
         if isinstance(expr, Variable):
             d_var['memory_handling'] = expr.memory_handling
-            d_var['class_type'     ] = expr.class_type
-            d_var['cls_base'       ] = expr.cls_base or self.scope.find(str(expr.dtype), 'classes')
-            d_var['is_target'      ] = expr.is_target
-            return d_var
-
-        elif isinstance(expr, LiteralString):
-            d_var['memory_handling'] = 'stack'
-            return d_var
-
-        elif isinstance(expr, PythonTuple):
-            d_var['cls_base'       ] = TupleClass
-            d_var['memory_handling'] = 'heap'
+            if expr.cls_base:
+                d_var['cls_base'   ] = expr.cls_base
             return d_var
 
         elif isinstance(expr, Concatenate):
-            d_var['cls_base'      ] = TupleClass
             if any(getattr(a, 'on_heap', False) for a in expr.args):
                 d_var['memory_handling'] = 'heap'
             else:
@@ -715,24 +705,16 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, Duplicate):
             d = self._infer_type(expr.val)
-            d_var['cls_base'      ] = TupleClass
             if d.get('on_stack', False) and isinstance(expr.length, LiteralInteger):
                 d_var['memory_handling'] = 'stack'
             else:
                 d_var['memory_handling'] = 'heap'
             return d_var
 
-        elif isinstance(expr, NumpyNewArray):
-            d_var['cls_base'   ] = NumpyArrayClass
-            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
-            return d_var
-
         elif isinstance(expr, NumpyTranspose):
 
             var = expr.internal_var
 
-            d_var['cls_base'      ] = var.cls_base
-            d_var['is_target'     ] = var.is_target
             d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
             return d_var
 
@@ -2994,7 +2976,6 @@ class SemanticParser(BasicParser):
             d_var = {'class_type' : dtype,
                     'memory_handling':'stack',
                     'shape' : None,
-                    'is_target' : False,
                     'cls_base' : cls_def,
                     }
             new_expression = []
@@ -3209,18 +3190,16 @@ class SemanticParser(BasicParser):
                 if name.startswith('Pyccel'):
                     name = name[6:]
                     d['cls_base'] = self.scope.find(name, 'classes')
-                    #TODO: Avoid writing the default variables here
-                    if d_var.get('is_target', False) or d_var.get('memory_handling', False) == 'alias':
+                    if d_var['memory_handling'] == 'alias':
                         d['memory_handling'] = 'alias'
                     else:
-                        d['memory_handling'] = d_var.get('memory_handling', False) or 'heap'
+                        d['memory_handling'] = d_var['memory_handling'] or 'heap'
 
                     # TODO if we want to use pointers then we set target to true
                     # in the ConsturcterCall
 
                 if isinstance(rhs, Variable) and rhs.is_target:
                     # case of rhs is a target variable the lhs must be a pointer
-                    d['is_target' ] = False
                     d['memory_handling'] = 'alias'
 
         lhs = expr.lhs

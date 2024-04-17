@@ -2,17 +2,18 @@
 from pyccel.decorators import pure
 
 __all__ = [
-        'homogenous_tuple_int',
-        'homogenous_tuple_bool',
-        'homogenous_tuple_float',
-        'homogenous_tuple_string',
-        'homogenous_tuple_math',
+        'homogeneous_tuple_int',
+        'homogeneous_tuple_bool',
+        'homogeneous_tuple_float',
+        'homogeneous_tuple_string',
+        'homogeneous_tuple_math',
+        'homogeneous_tuple_containing_var',
         'homogeneous_tuple_of_arrays',
-        'inhomogenous_tuple_1',
-        'inhomogenous_tuple_2',
-        'inhomogenous_tuple_3',
-        'inhomogenous_tuple_2_levels_1',
-        'inhomogenous_tuple_2_levels_2',
+        'inhomogeneous_tuple_1',
+        'inhomogeneous_tuple_2',
+        'inhomogeneous_tuple_3',
+        'inhomogeneous_tuple_2_levels_1',
+        'inhomogeneous_tuple_2_levels_2',
         'homogeneous_tuple_2_levels',
         'tuple_unpacking_1',
         'tuple_unpacking_2',
@@ -77,45 +78,56 @@ __all__ = [
         'tuple_different_ranks',
         ]
 
-def homogenous_tuple_int():
+def homogeneous_tuple_int():
     ai = (1,4,5)
-    return ai[0], ai[1], ai[2]
+    i = 1
+    return ai[0], ai[i], ai[2]
 
-def homogenous_tuple_bool():
+def homogeneous_tuple_bool():
     ai = (False, True)
-    return ai[0], ai[1]
+    i = 1
+    return ai[0], ai[i]
 
-def homogenous_tuple_float():
+def homogeneous_tuple_float():
     ai = (1.5, 4.3, 5.2, 7.2, 9.999)
-    return ai[0], ai[1], ai[2], ai[3], ai[4]
+    i = 1
+    return ai[0], ai[i], ai[2], ai[3], ai[4]
 
-def homogenous_tuple_string():
+def homogeneous_tuple_string():
     ai = ('hello', 'tuple', 'world', '!!')
-    return ai[0], ai[1], ai[2], ai[3]
+    i = 1
+    return ai[0], ai[i], ai[2], ai[3]
 
-def homogenous_tuple_math():
+def homogeneous_tuple_math():
     ai = (4+5,3*9, 2**3)
-    return ai[0], ai[1], ai[2]
+    i = 1
+    return ai[0], ai[i], ai[2]
 
-def inhomogenous_tuple_1():
+def homogeneous_tuple_containing_var():
+    elem = 4
+    ai = (1, elem, 5)
+    i = 1
+    return ai[0], ai[i], ai[2]
+
+def inhomogeneous_tuple_1():
     ai = (0, False, 3+1j)
     return ai[0], ai[1], ai[2]
 
-def inhomogenous_tuple_2():
+def inhomogeneous_tuple_2():
     ai = (0, False, 3)
     return ai[0], ai[1], ai[2]
 
-def inhomogenous_tuple_3():
+def inhomogeneous_tuple_3():
     ai = (0, 1.0, 3)
     return ai[0], ai[1], ai[2]
 
-def inhomogenous_tuple_2_levels_1():
+def inhomogeneous_tuple_2_levels_1():
     # TODO [EB 15.06.21] Put back original test when strings are supported in C
     #ai = ((1,2), (4,False), (3.0, 'boo'))
     ai = ((1,2), (4,False), (3.0, True))
     return ai[0][0], ai[0][1], ai[1][0], ai[1][1], ai[2][0]
 
-def inhomogenous_tuple_2_levels_2():
+def inhomogeneous_tuple_2_levels_2():
     ai = ((0,1,2), (True,False,True))
     return ai[0][0], ai[0][1] ,ai[0][2], ai[1][0], ai[1][1], ai[1][2]
 
@@ -271,23 +283,27 @@ def tuples_inhomogeneous_copies_have_pointers():
 def tuples_mul_homogeneous():
     a = (1,2,3)
     b = a*2
-    return b[0], b[1], b[2], b[3], b[4], b[5]
+    i = 1
+    return b[0], b[i], b[2], b[3], b[4], b[5]
 
 def tuples_mul_homogeneous2():
     a = (1,2,3)
     b = 2*a
-    return b[0], b[1], b[2], b[3], b[4], b[5]
+    i = 1
+    return b[0], b[i], b[2], b[3], b[4], b[5]
 
 def tuples_mul_homogeneous3():
     a = (1,2,3)
     s = 2
     b = a*s
-    return b[0], b[1], b[2], b[3], b[4], b[5]
+    i = 1
+    return b[0], b[i], b[2], b[3], b[4], b[5]
 
 def tuples_mul_homogeneous4():
     s = 2
     b = (1,2,3)*s
-    return b[0], b[1], b[2], b[3], b[4], b[5]
+    i = 1
+    return b[0], b[i], b[2], b[3], b[4], b[5]
 
 def tuples_mul_homogeneous5():
     import numpy as np
@@ -327,23 +343,27 @@ def tuples_mul_inhomogeneous_2d():
 
 def tuples_add_homogeneous():
     a = (1,2,3) + (4,5,6)
-    return a[0], a[1], a[2], a[3], a[4], a[5]
+    i = 1
+    return a[0], a[i], a[2], a[3], a[4], a[5]
 
 def tuples_add_homogeneous_variables():
     a = (1,2,3)
     b = (4,5,6)
     c = a + b
-    return c[0], c[1], c[2], c[3], c[4], c[5]
+    i = 1
+    return c[0], c[i], c[2], c[3], c[4], c[5]
 
 def tuples_add_homogeneous_with_variables():
     a = (1,2,3)
     c = a + (4,5,6)
-    return c[0], c[1], c[2], c[3], c[4], c[5]
+    i = 1
+    return c[0], c[i], c[2], c[3], c[4], c[5]
 
 def tuples_add_homogeneous_with_variables2():
     a = (1,2,3)
     c = (4,5,6) + a
-    return c[0], c[1], c[2], c[3], c[4], c[5]
+    i = 1
+    return c[0], c[i], c[2], c[3], c[4], c[5]
 
 def tuples_add_inhomogeneous():
     a = (1,2,True) + (False,5,6)
@@ -383,7 +403,8 @@ def tuples_add_mixed_homogeneous_with_variables():
 def tuples_2d_sum():
     a = ((1,2), (3,4))
     b = a + ((5,6),)
-    return b[0][0], b[0][1], b[1][0], b[1][1], b[2][0], b[2][1]
+    i = 1
+    return b[0][0], b[0][i], b[1][0], b[i][i], b[2][0], b[2][1]
 
 def tuples_func():
     def my_tup():
@@ -419,23 +440,28 @@ def tuple_index():
 
 def tuple_homogeneous_int():
     a = tuple((1, 2, 3))
-    return a[0], a[1], a[2], len(a)
+    i = 1
+    return a[0], a[i], a[2], len(a)
 
 def tuple_homogeneous_bool():
     a = tuple((False, True))
-    return a[0], a[1], len(a)
+    i = 1
+    return a[0], a[i], len(a)
 
 def tuple_homogeneous_float():
     a = tuple((1.5, 4.3, 5.2, 7.2, 9.999))
-    return a[0], a[1], a[2], a[3], a[4], len(a)
+    i = 1
+    return a[0], a[i], a[2], a[3], a[4], len(a)
 
 def tuple_homogeneous_string():
     a = tuple(('hello', 'tuple', 'world', '!!'))
-    return a[0], a[1], a[2], a[3], len(a)
+    i = 1
+    return a[0], a[i], a[2], a[3], len(a)
 
 def tuple_homogeneous_math():
     a = tuple((4 + 5, 3 * 9, 2 ** 3))
-    return a[0], a[1], a[2], len(a)
+    i = 1
+    return a[0], a[i], a[2], len(a)
 
 def tuple_inhomogeneous_1():
     a = tuple((0, False, 3 + 1j))
