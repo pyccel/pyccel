@@ -50,7 +50,6 @@ artifacts = [
   "*.pyccel",
 ]
 include = [
-  "include",
   "*.py",
   "*.pyh",
   "*.pyccel",
@@ -58,7 +57,8 @@ include = [
   "pyccel/stdlib/*/*.h",
   "pyccel/stdlib/*/*.c",
   "pyccel/stdlib/*/*.f90",
-  "pyccel/extensions/STC/include/*/*.c"
+  "pyccel/extensions/STC/include",
+  "pyccel/extensions/gFTL/include/v2"
 ]
 exclude = [
     "pyccel/extensions/STC/src",
