@@ -4810,8 +4810,10 @@ class SemanticParser(BasicParser):
             arg = expr.name[0]
             dtype = None
             ndmin = None
-            func_call_args = expr.name[1].args
-            order = func_call_args[0].value if func_call_args else 'K'
+            func_call = expr.name[1]
+            func = func_call.funcdef
+            func_call_args = func_call.args
+            order = func_call_args[0].value if func_call_args else func.argument_description['order']
         else:
             func_call_args = self._handle_function_args(expr.args)
             args, kwargs = split_positional_keyword_arguments(*func_call_args)
