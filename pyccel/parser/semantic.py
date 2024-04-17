@@ -4491,6 +4491,23 @@ class SemanticParser(BasicParser):
     #====================================================
 
     def _build_NumpyWhere(self, func_call):
+        """
+        Method for building the node created by a call to `numpy.where`.
+
+        Method for building the node created by a call to `numpy.where`. If only one argument is passed to `numpy.where`
+        then it is equivalent to a call to `numpy.nonzero`. The result of a call to `numpy.nonzero`
+        is a complex object so there is a `_build_NumpyNonZero` function which must be called.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The syntactic FunctionCall describing the call to `numpy.nonzero.
+
+        Returns
+        -------
+        TypedAstNode
+            A node describing the result of a call to the `numpy.nonzero` function.
+        """
         func_call_args = self._handle_function_args(func_call.args)
         # expr is a FunctionCall
         args = [a.value for a in func_call_args if not a.has_keyword]
@@ -4501,12 +4518,33 @@ class SemanticParser(BasicParser):
         return NumpyWhere(*args, **kwargs)
 
     def _build_NumpyNonZero(self, func_call):
+        """
+        Method for building the node created by a call to `numpy.nonzero`.
+
+        Method for building the node created by a call to `numpy.nonzero`. The result of a call to `numpy.nonzero`
+        is a complex object (tuple of arrays) in order to ensure that the results are correctly saved into the
+        correct objects it is therefore important to call `_visit` on any intermediate expressions that are required.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The syntactic FunctionCall describing the call to `numpy.nonzero.
+
+        Returns
+        -------
+        TypedAstNode
+            A node describing the result of a call to the `numpy.nonzero` function.
+        """
         func_call_args = self._handle_function_args(func_call.args)
         # expr is a FunctionCall
         arg = func_call_args[0].value
         if not isinstance(arg, Variable):
+            pyccel_stage.set_stage('syntactic')
             new_symbol = PyccelSymbol(self.scope.get_new_name())
-            creation = self._visit(Assign(new_symbol, arg, python_ast=func_call.python_ast))
+            syntactic_assign = Assign(new_symbol, arg, python_ast=func_call.python_ast)
+            pyccel_stage.set_stage('semantic')
+
+            creation = self._visit(syntactic_assign)
             self._additional_exprs[-1].append(creation)
             arg = self._visit(new_symbol)
         return NumpyWhere(arg)
@@ -4559,6 +4597,24 @@ class SemanticParser(BasicParser):
             return self._visit(for_obj)
 
     def _build_MathSqrt(self, func_call):
+        """
+        Method for building the node created by a call to `cmath.sqrt`.
+
+        Method for building the node created by a call to `cmath.sqrt`. A separate method is needed for
+        this because some expressions are simplified. This is notably the case for expressions such as
+        `math.sqrt(a**2)`. When `a` is a complex number this expression is equivalent to a call to `math.fabs`.
+        The expression is translated to this node. The associated imports therefore need to be inserted into the parser.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The syntactic FunctionCall describing the call to `cmath.polar`.
+
+        Returns
+        -------
+        TypedAstNode
+            A node describing the result of a call to the `cmath.polar` function.
+        """
         func = self.scope.find(func_call.funcdef, 'functions')
         arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
         if isinstance(arg.value, PyccelMul):
@@ -4616,6 +4672,23 @@ class SemanticParser(BasicParser):
         return self._handle_function(func_call, func, (arg,), use_build_functions = False)
 
     def _build_CmathPolar(self, func_call):
+        """
+        Method for building the node created by a call to `cmath.polar`.
+
+        Method for building the node created by a call to `cmath.polar`. A separate method is needed for
+        this because the function is translated to an expression including calls to `math.sqrt` and
+        `math.atan2`. The associated imports therefore need to be inserted into the parser.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The syntactic FunctionCall describing the call to `cmath.polar`.
+
+        Returns
+        -------
+        TypedAstNode
+            A node describing the result of a call to the `cmath.polar` function.
+        """
         arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
         z = arg.value
         x = PythonReal(z)
@@ -4631,6 +4704,23 @@ class SemanticParser(BasicParser):
         return PythonTuple(r,t)
 
     def _build_CmathRect(self, func_call):
+        """
+        Method for building the node created by a call to `cmath.rect`.
+
+        Method for building the node created by a call to `cmath.rect`. A separate method is needed for
+        this because the function is translated to an expression including calls to `math.cos` and
+        `math.sin`. The associated imports therefore need to be inserted into the parser.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The syntactic FunctionCall describing the call to `cmath.rect`.
+
+        Returns
+        -------
+        TypedAstNode
+            A node describing the result of a call to the `cmath.rect` function.
+        """
         arg_r, arg_phi = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
         r = arg_r.value
         phi = arg_phi.value
@@ -4641,6 +4731,23 @@ class SemanticParser(BasicParser):
         return PyccelAdd(x, PyccelMul(y, LiteralImaginaryUnit()))
 
     def _build_CmathPhase(self, func_call):
+        """
+        Method for building the node created by a call to `cmath.phase`.
+
+        Method for building the node created by a call to `cmath.phase`. A separate method is needed for
+        this because the function is translated to a call to `math.atan2`. The associated import therefore
+        needs to be inserted into the parser.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The syntactic FunctionCall describing the call to `cmath.phase`.
+
+        Returns
+        -------
+        TypedAstNode
+            A node describing the result of a call to the `cmath.phase` function.
+        """
         arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
         var = arg.value
         if not isinstance(var.dtype.primitive_type, PrimitiveComplexType):
