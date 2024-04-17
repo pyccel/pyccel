@@ -14,6 +14,7 @@ runs:
         pyccel_loc = pyccel.__path__[0]
         print(pyccel_loc)
         print("${{ inputs.not_editable }}")
-        assert(exists(join(pyccel_loc,'extensions/STC/include/stc')))
+        assert exists(join(pyccel_loc,'extensions/STC/include/stc'))
         if ${{ inputs.not_editable }}:
-          assert(not exists(join(pyccel_loc,'extensions/STC/docs')))
+          assert not exists(join(pyccel_loc,'extensions/STC/docs'))
+
