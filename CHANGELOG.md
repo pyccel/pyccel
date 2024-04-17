@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 -   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
+-   #1754 : Add Python support for set method `update()`.
 
 ### Fixed
 
