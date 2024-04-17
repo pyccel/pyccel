@@ -13,8 +13,17 @@ from pyccel.ast.datatypes import VoidType
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.basic import TypedAstNode
 
-__all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy', 'SetPop', 'SetRemove', 'SetDiscard')
+__all__ = (
+    'SetAdd',
+    'SetClear',
+    'SetMethod',
+    'SetCopy',
+    'SetPop',
+    'SetRemove',
+    'SetDiscard'
+    )
 
+#==============================================================================
 class SetMethod(PyccelInternalFunction):
     """
     Abstract class for set method calls.
@@ -45,7 +54,7 @@ class SetMethod(PyccelInternalFunction):
         """
         return self._set_variable
 
-
+#==============================================================================
 class SetAdd(SetMethod) :
     """
     Represents a call to the .add() method.
@@ -78,7 +87,7 @@ class SetAdd(SetMethod) :
             raise TypeError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, new_elem)
 
-
+#==============================================================================
 class SetClear(SetMethod):
     """
     Represents a call to the .clear() method.
@@ -101,6 +110,7 @@ class SetClear(SetMethod):
     def __init__(self, set_variable):
         super().__init__(set_variable)
 
+#==============================================================================
 class SetCopy(SetMethod):
     """
     Represents a call to the .copy() method.
@@ -123,6 +133,7 @@ class SetCopy(SetMethod):
         self._class_type = set_variable._class_type
         super().__init__(set_variable)
 
+#==============================================================================
 class SetPop(SetMethod):
     """
     Represents a call to the .pop() method.
@@ -148,6 +159,7 @@ class SetPop(SetMethod):
         self._class_type = set_variable.class_type.element_type
         super().__init__(set_variable)
 
+#==============================================================================
 class SetRemove(SetMethod):
     """
     Represents a call to the .remove() method.
@@ -182,6 +194,7 @@ class SetRemove(SetMethod):
             raise TypeError(f"Can't remove an element of type {item.dtype} from a set of {set_variable.dtype}")
         super().__init__(set_variable, item)
 
+#==============================================================================
 class SetDiscard(SetMethod):
     """
     Represents a call to the .discard() method.
@@ -214,3 +227,33 @@ class SetDiscard(SetMethod):
         if not is_homogeneous:
             raise TypeError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, item)
+
+#==============================================================================
+class SetUpdate(SetMethod):
+    """
+    Represents a call to the .update() method.
+
+    Represents a call to the .update() method of an object with a set type,
+    Which adds items from another set (or any other iterable).
+    This method is handled through the call to `_visit_SetUpdate` in
+    the semantic stage. It then attempts to construct a `For` loop node with
+    a body that calls `add()`, or direct `add()` nodes depending on
+    the type of the iterable passed to `update()`.
+    This class should never be instantiated; it's only purpose is to help
+    construct the annotation_method `_visit_SetUpdate`. 
+    The update method is called as follows:
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The set object which the method is called from.
+
+        The argument passed to update() method.
+    item : TypedAstNode
+        The item to search for, and remove.
+    """
+    __slots__ = ()
+    name = 'update'
+
+    def __init__(self, set_obj, iterable) -> None:
+        super().__init__(set_obj, iterable)
