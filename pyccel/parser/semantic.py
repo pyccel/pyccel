@@ -4787,7 +4787,7 @@ class SemanticParser(BasicParser):
         else:
             raise TypeError(f"Can't unpack {arg} into a tuple")
 
-    def _build_NumpyArray(self, func_call):
+    def _build_NumpyArray(self, expr):
         """
         Method for building the node created by a call to `numpy.array`.
 
@@ -4797,23 +4797,31 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        expr : FunctionCall | DottedName
             The syntactic FunctionCall describing the call to `numpy.array`.
+            If `numpy.array` is called via a call to `numpy.copy` then this is a DottedName describing the call.
 
         Returns
         -------
         NumpyArray
             A node describing the result of a call to the `numpy.array` function.
         """
-        func_call_args = self._handle_function_args(func_call.args)
-        args, kwargs = split_positional_keyword_arguments(*func_call_args)
+        if isinstance(expr, DottedName):
+            arg = expr.name[0]
+            dtype = None
+            ndmin = None
+            func_call_args = expr.name[1].args
+            order = func_call_args[0].value if func_call_args else 'K'
+        else:
+            func_call_args = self._handle_function_args(expr.args)
+            args, kwargs = split_positional_keyword_arguments(*func_call_args)
 
-        def unpack_args(arg, dtype = None, order = 'K', ndmin = None):
-            """ Small function to reorder and get access to the named variables from args and kwargs.
-            """
-            return arg, dtype,  order, ndmin
+            def unpack_args(arg, dtype = None, order = 'K', ndmin = None):
+                """ Small function to reorder and get access to the named variables from args and kwargs.
+                """
+                return arg, dtype,  order, ndmin
 
-        arg, dtype,  order, ndmin = unpack_args(*args, **kwargs)
+            arg, dtype,  order, ndmin = unpack_args(*args, **kwargs)
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
             errors.report('Unexpected object passed to numpy.array',
