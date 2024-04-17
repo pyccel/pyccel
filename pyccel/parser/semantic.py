@@ -2706,6 +2706,7 @@ class SemanticParser(BasicParser):
             CodeBlock or For containing ListAppend objects.
         """
         iterable = expr.name[1].args[0].value
+
         if isinstance(iterable, (PythonList, PythonTuple)):
             list_variable = self._visit(expr.name[0])
             added_list = self._visit(iterable)
