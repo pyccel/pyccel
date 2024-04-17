@@ -496,7 +496,7 @@ def test_sort_bool(language):
 
 def test_sort_float(language):
     def f():
-        a = [3.4, 1.0, -4,5, 0.0, 2.1]
+        a = [3.4, 1.0, -4.5, 0.0, 2.1]
         a.sort()
         return a
 
