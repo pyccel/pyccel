@@ -1433,12 +1433,7 @@ class SemanticParser(BasicParser):
                         # Passing the original name ensures that the attribute can be found under this name
                         class_def.scope.insert_variable(member, attribute_name)
 
-                        # Create the local DottedVariable
-                        lhs = member.clone(member.name, new_class = DottedVariable, lhs = var)
-
-                        # update the attributes of the class and push it to the scope
-                        class_def.add_new_attribute(lhs)
-
+                        lhs = self.insert_attribute_to_class(class_def, var, member)
                     else:
                         errors.report(f"{lhs.name[0]} should be named : self", symbol=lhs, severity='fatal')
                 # Update variable's dictionary with information from function decorators
@@ -1950,6 +1945,18 @@ class SemanticParser(BasicParser):
         raise errors.report("Unrecognised type slice",
                 severity='fatal', symbol=expr)
 
+    def insert_attribute_to_class(self, class_def, self_var, attrib):
+        # Create the local DottedVariable
+        lhs = attrib.clone(attrib.name, new_class = DottedVariable, lhs = self_var)
+
+        if isinstance(attrib.class_type, InhomogeneousTupleType):
+            for v in attrib:
+                self.insert_attribute_to_class(class_def, self_var, class_def.scope.collect_tuple_element(v))
+        else:
+            # update the attributes of the class and push it to the scope
+            class_def.add_new_attribute(lhs)
+
+        return lhs
 
     #====================================================
     #                 _visit functions
