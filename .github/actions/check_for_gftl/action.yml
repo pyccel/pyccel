@@ -16,3 +16,4 @@ runs:
         assert(exists(join(pyccel_loc,'extensions/gFTL/include/v2')))
         if ${{ inputs.not_editable }}:
           assert(not exists(join(pyccel_loc,'extensions/gFTL/doc')))
+
