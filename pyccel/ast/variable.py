@@ -709,48 +709,55 @@ class IndexedElement(TypedAstNode):
         else:
             self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
 
-        # Calculate new shape
-        new_shape = []
-        from .mathext import MathCeil
-        for a,s in zip(indices, shape):
-            if isinstance(a, Slice):
-                start = a.start
-                stop  = a.stop if a.stop is not None else s
-                step  = a.step
-                if isinstance(start, PyccelUnarySub):
-                    start = PyccelAdd(s, start, simplify=True)
-                if isinstance(stop, PyccelUnarySub):
-                    stop = PyccelAdd(s, stop, simplify=True)
-
-                _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
-                if step is not None:
-                    if isinstance(step, PyccelUnarySub):
-                        start = s if a.start is None else start
-                        _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
-                        step = PyccelUnarySub(step)
-
-                    _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
-                new_shape.append(_shape)
-        new_rank = len(new_shape)
-
-        if new_rank == 0:
-            if isinstance(base.class_type, InhomogeneousTupleType):
-                self._class_type = base.class_type[indices[0]]
-            else:
-                self._class_type = base.class_type.element_type
+        if isinstance(base.class_type, InhomogeneousTupleType):
+            assert len(self._indices) == 1 and isinstance(self._indices[0], LiteralInteger)
+            self._class_type = base.class_type[self._indices[0]]
             self._is_slice = False
-            if self._class_type.rank:
-                self._shape = base.shape[rank:]
-            else:
-                self._shape = None
-        elif new_rank != rank:
-            self._class_type = base.class_type.switch_rank(new_rank)
-            self._is_slice = True
-            self._shape = tuple(new_shape) + base.shape[rank:]
+            self._shape = (None,)*self.rank
+
         else:
-            self._class_type = base.class_type
-            self._is_slice = True
-            self._shape = tuple(new_shape) + base.shape[rank:]
+            # Calculate new shape
+            new_shape = []
+            from .mathext import MathCeil
+            for a,s in zip(indices, shape):
+                if isinstance(a, Slice):
+                    start = a.start
+                    stop  = a.stop if a.stop is not None else s
+                    step  = a.step
+                    if isinstance(start, PyccelUnarySub):
+                        start = PyccelAdd(s, start, simplify=True)
+                    if isinstance(stop, PyccelUnarySub):
+                        stop = PyccelAdd(s, stop, simplify=True)
+
+                    _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
+                    if step is not None:
+                        if isinstance(step, PyccelUnarySub):
+                            start = s if a.start is None else start
+                            _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
+                            step = PyccelUnarySub(step)
+
+                        _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
+                    new_shape.append(_shape)
+            new_rank = len(new_shape)
+
+            if new_rank == 0:
+                if isinstance(base.class_type, InhomogeneousTupleType):
+                    self._class_type = base.class_type[indices[0]]
+                else:
+                    self._class_type = base.class_type.element_type
+                self._is_slice = False
+                if self._class_type.rank:
+                    self._shape = base.shape[rank:]
+                else:
+                    self._shape = None
+            elif new_rank != rank:
+                self._class_type = base.class_type.switch_rank(new_rank)
+                self._is_slice = True
+                self._shape = tuple(new_shape) + base.shape[rank:]
+            else:
+                self._class_type = base.class_type
+                self._is_slice = True
+                self._shape = tuple(new_shape) + base.shape[rank:]
 
         super().__init__()
 
