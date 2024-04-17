@@ -2711,7 +2711,6 @@ class SemanticParser(BasicParser):
             for_obj = For(for_target, iterable, body)
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
-    
 
     def _visit_PyccelOperator(self, expr):
         args     = [self._visit(a) for a in expr.args]
@@ -3121,8 +3120,7 @@ class SemanticParser(BasicParser):
                     symbol=expr, severity='error')
 
         # Checking for the result of _visit_ListExtend
-        if isinstance(rhs, For) or (isinstance(rhs, CodeBlock) and
-            (isinstance(rhs.body[0], ListMethod) or isinstance(rhs.body[0], SetMethod))):
+        if isinstance(rhs, For) or (isinstance(rhs, CodeBlock) and isinstance(rhs.body[0], ListMethod, SetMethod)):
             return rhs
         if isinstance(rhs, ConstructorCall):
             return rhs
