@@ -83,8 +83,11 @@ jobs:
       - name: Check for STC installation
         id: stc_check
         uses: ./.github/actions/check_for_stc
+      - name: Check for gFTL installation
+        id: gFTL_check
+        uses: ./.github/actions/check_for_gftl
       - name: "Post completed"
         if: always() && github.event_name != 'push'
         run: |
-          python ci_tools/basic_json_check_output.py --statuses ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }} ${{ steps.stc_check.outcome }} --reasons "Installation failed." "Pickled files were not found in installaion." "STC was not found during installation."
-          python ci_tools/complete_check_run.py ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }} ${{ steps.stc_check.outcome }}
+          python ci_tools/basic_json_check_output.py --statuses ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}} --reasons "Installation failed." "Pickled files were not found in installaion." "STC was not found during installation." "gFTL was not found during installation."
+          python ci_tools/complete_check_run.py ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}}
