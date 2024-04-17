@@ -832,9 +832,11 @@ class Scope(object):
         """
         if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.class_type, InhomogeneousTupleType):
             if isinstance(tuple_elem.base, DottedVariable):
+                class_var = tuple_elem.base.lhs
                 base = tuple_elem.base.clone(tuple_elem.base.name, Variable)
                 tuple_elem_search = IndexedElement(base, *tuple_elem.indices)
             else:
+                class_var = None
                 tuple_elem_search = tuple_elem
 
             result = self.find(tuple_elem_search, 'symbolic_alias')
@@ -844,6 +846,8 @@ class Scope(object):
                 return errors.report(msg,
                         symbol = tuple_elem,
                         severity='fatal')
+            elif class_var:
+                return result.clone(result.name, DottedVariable, lhs=class_var)
             else:
                 return result
         else:
