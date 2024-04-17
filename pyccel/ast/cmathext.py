@@ -10,7 +10,7 @@ import cmath
 from pyccel.ast.builtins  import PythonReal, PythonImag
 from pyccel.ast.core      import PyccelFunctionDef, Module
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat, PythonNativeComplex
-from pyccel.ast.datatypes import PrimitiveComplexType
+from pyccel.ast.datatypes import PrimitiveComplexType, HomogeneousTupleType
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.literals  import LiteralInteger
 from pyccel.ast.operators import PyccelAnd, PyccelOr
@@ -75,8 +75,6 @@ class CmathFunctionComplex(MathFunctionBase):
     """
     __slots__ = ()
     _shape = None
-    _rank  = 0
-    _order = None
     _class_type = PythonNativeComplex()
 
     def __init__(self, z : 'TypedAstNode'):
@@ -436,9 +434,7 @@ class CmathPolar(PyccelInternalFunction):
     __slots__ = ()
     name = 'polar'
     _shape = (LiteralInteger(2),)
-    _rank  = 1
-    _order = None
-    _class_type = PythonNativeFloat()
+    _class_type = HomogeneousTupleType(PythonNativeFloat())
 
     def __init__(self, z):
         super().__init__(z)
@@ -459,8 +455,6 @@ class CmathRect(PyccelInternalFunction):
     __slots__ = ()
     name = 'rect'
     _shape = None
-    _rank  = 0
-    _order = None
     _class_type = PythonNativeComplex()
     def __init__(self, r, phi):
         super().__init__(r, phi)

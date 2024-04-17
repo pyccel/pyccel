@@ -82,9 +82,7 @@ class PyccelArraySize(PyccelInternalFunction):
     __slots__ = ()
     name = 'size'
 
-    _rank  = 0
     _shape = None
-    _order = None
     _class_type = PythonNativeInt()
 
     def __init__(self, arg):
@@ -128,9 +126,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     __slots__ = ()
     name = 'shape'
 
-    _rank  = 0
     _shape = None
-    _order = None
     _class_type = PythonNativeInt()
 
     def __init__(self, arg, index):
@@ -271,7 +267,7 @@ class Slice(PyccelAstNode):
             stop = ''
         else:
             stop = str(self.stop)
-        return '{0} : {1}'.format(start, stop)
+        return f'{start} : {stop}'
 
 
 class PyccelSymbol(str, Immutable):

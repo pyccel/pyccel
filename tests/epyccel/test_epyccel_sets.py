@@ -204,7 +204,6 @@ def test_Discard_wrong_arg(language):
     python_result = Discard_wrong_arg()
     assert python_result == pyccel_result
 
-
 def test_update_basic(language):
     def update_basic():
         a = {1, 2, 3}
