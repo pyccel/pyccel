@@ -311,8 +311,6 @@ class ListSort(ListMethod) :
         unsupported so it should not be provided.
     """
     __slots__ = ()
-    _rank = 0
-    _order = None
     _shape = None
     _class_type = VoidType()
     name = 'sort'
