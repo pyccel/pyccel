@@ -2705,7 +2705,6 @@ class SemanticParser(BasicParser):
         PyccelAstNode
             CodeBlock or For containing ListAppend objects.
         """
-        print("I'm hereee 111")
         iterable = expr.name[1].args[0].value
         if isinstance(iterable, (PythonList, PythonTuple)):
             list_variable = self._visit(expr.name[0])
