@@ -3261,22 +3261,28 @@ class SemanticParser(BasicParser):
 
         # Handle assignment to multiple variables
         elif isinstance(lhs, (PythonTuple, PythonList)):
-            n = len(lhs)
-            new_lhs = []
             if isinstance(rhs, FunctionCall):
+                new_lhs = []
                 r_iter = [r.var for r in rhs.funcdef.results]
-            elif isinstance(rhs.class_type, InhomogeneousTupleType):
-                r_iter = [self.scope.collect_tuple_element(v) for v in rhs]
+                for i,(l,r) in enumerate(zip(lhs,r_iter)):
+                    d = self._infer_type(r)
+                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign),
+                                                    arr_in_multirets=r.rank>0 ) )
+                lhs = PythonTuple(*new_lhs)
             else:
-                r_iter = rhs
+                n = len(lhs)
+                if isinstance(rhs.class_type, InhomogeneousTupleType):
+                    r_iter = [self.scope.collect_tuple_element(v) for v in rhs]
+                else:
+                    r_iter = rhs
 
-            body = []
-            for i,(l,r) in enumerate(zip(lhs,r_iter)):
-                pyccel_stage.set_stage('syntactic')
-                local_assign = Assign(l,r, python_ast = expr.python_ast)
-                pyccel_stage.set_stage('semantic')
-                body.append(self._visit(local_assign))
-            return CodeBlock(body)
+                body = []
+                for i,(l,r) in enumerate(zip(lhs,r_iter)):
+                    pyccel_stage.set_stage('syntactic')
+                    local_assign = Assign(l,r, python_ast = expr.python_ast)
+                    pyccel_stage.set_stage('semantic')
+                    body.append(self._visit(local_assign))
+                return CodeBlock(body)
         else:
             lhs = self._visit(lhs)
 
@@ -3292,6 +3298,8 @@ class SemanticParser(BasicParser):
             is_pointer = lhs.is_alias
         elif isinstance(lhs, IndexedElement):
             is_pointer = False
+        elif isinstance(lhs, (PythonTuple, PythonList)):
+            is_pointer = any(l.is_alias for l in lhs if isinstance(lhs, Variable))
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
         is_pointer = is_pointer and isinstance(rhs, (Variable, Duplicate))
