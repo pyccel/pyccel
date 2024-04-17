@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 -   #1218 : Fix bug when assigning an array to a slice in Fortran.
 -   #1830 : Fix missing allocation when returning an annotated array expression.
 -   #1821 : Ensure an error is raised when creating an ambiguous interface.
+-   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
