@@ -476,6 +476,33 @@ def test_extend_function_return(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
+def test_sort_basic(language):
+    def f():
+        a = [4, 0, 1, -1]
+        a.sort()
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_sort_bool(language):
+    def f():
+        a = [True, False, False, True, False]
+        a.sort()
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_sort_float(language):
+    def f():
+        a = [3.4, 1.0, -4.5, 0.0, 2.1]
+        a.sort()
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
 def test_extend_list_as_arg(language):
     def f():
         a = [1, 2, 3]
