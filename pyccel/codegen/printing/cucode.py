@@ -11,7 +11,7 @@ enabling the direct translation of high-level Pyccel expressions into CUDA code.
 
 from pyccel.codegen.printing.ccode import CCodePrinter, c_library_headers
 
-from pyccel.ast.core        import Import, Module
+from pyccel.ast.core        import Import, Module, AsName
 
 from pyccel.errors.errors   import Errors
 
@@ -62,9 +62,9 @@ class CudaCodePrinter(CCodePrinter):
                 local_imports += self._print(imp)
 
         imports = f'{c_headers_imports}\
-                    extern "C"{{\n\
+                   \n\
                     {local_imports}\
-                    }}'
+                    '
 
         code = f'{imports}\n\
                  {global_variables}\n\
@@ -72,3 +72,53 @@ class CudaCodePrinter(CCodePrinter):
 
         self.exit_scope()
         return code
+    def _print_ModuleHeader(self, expr):
+        self.set_scope(expr.module.scope)
+        self._in_header = True
+        name = expr.module.name
+        if isinstance(name, AsName):
+            name = name.name
+        # TODO: Add interfaces
+        classes = ""
+        funcs = ""
+        for classDef in expr.module.classes:
+            if classDef.docstring is not None:
+                classes += self._print(classDef.docstring)
+            classes += f"struct {classDef.name} {{\n"
+            classes += ''.join(self._print(Declare(var)) for var in classDef.attributes)
+            class_scope = classDef.scope
+            for method in classDef.methods:
+                if not method.is_inline:
+                    class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
+                    funcs += f"{self.function_signature(method)};\n"
+            for interface in classDef.interfaces:
+                for func in interface.functions:
+                    if not func.is_inline:
+                        class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
+                        funcs += f"{self.function_signature(func)};\n"
+            classes += "};\n"
+        cuda_headers = ''
+        for f in expr.module.funcs:
+            if not f.is_inline:
+                if 'kernel' in f.decorators:  # Checking for 'kernel' decorator
+                    cuda_headers += self.function_signature(f) + ';'
+                else:
+                    funcs += self.function_signature(f) + ';'
+        global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
+
+        # Print imports last to be sure that all additional_imports have been collected
+        imports = [*expr.module.imports, *self._additional_imports.values()]
+        imports = ''.join(self._print(i) for i in imports)
+
+        self._in_header = False
+        self.exit_scope()
+        imports = f'{cuda_headers}\n\
+                    extern "C"{{\n\
+                    {funcs}\n\
+                    }}'
+        return (f"#ifndef {name.upper()}_H\n \
+                #define {name.upper()}_H\n\n \
+                {global_variables}\n \
+                {classes}\n \
+                {imports}\n \
+                #endif // {name}_H\n")
