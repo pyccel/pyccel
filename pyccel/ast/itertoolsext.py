@@ -18,7 +18,12 @@ class Product(PyccelFunction):
     """
     Represents a call to itertools.product for code generation.
 
-    arg : list, tuple
+    Represents a call to itertools.product for code generation.
+
+    Parameters
+    ----------
+    args : PyccelAstType
+        The arguments passed to the product function.
     """
     __slots__ = ('_elements',)
     _attribute_nodes = ('_elements',)
