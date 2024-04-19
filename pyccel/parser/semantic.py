@@ -4537,7 +4537,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        func_call : FunctionCall
             The syntactic FunctionCall describing the call to `numpy.nonzero.
 
         Returns
@@ -4564,7 +4564,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        func_call : FunctionCall
             The syntactic FunctionCall describing the call to `numpy.nonzero.
 
         Returns
@@ -4644,7 +4644,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        func_call : FunctionCall
             The syntactic FunctionCall describing the call to `cmath.polar`.
 
         Returns
@@ -4718,7 +4718,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        func_call : FunctionCall
             The syntactic FunctionCall describing the call to `cmath.polar`.
 
         Returns
@@ -4750,7 +4750,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        func_call : FunctionCall
             The syntactic FunctionCall describing the call to `cmath.rect`.
 
         Returns
@@ -4777,7 +4777,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        func_call : FunctionCall
             The syntactic FunctionCall describing the call to `cmath.phase`.
 
         Returns
