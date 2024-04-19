@@ -1175,7 +1175,7 @@ class PythonType(PyccelInternalFunction):
 
     def __init__(self, obj):
         if not isinstance (obj, TypedAstNode):
-            raise PyccelError(f"Python's type function is not implemented for {type(obj)} object")
+            raise TypeError(f"Python's type function is not implemented for {type(obj)} object")
         self._type = obj.class_type
         self._obj = obj
 
