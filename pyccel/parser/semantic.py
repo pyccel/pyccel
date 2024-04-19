@@ -71,7 +71,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
+from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -668,7 +668,6 @@ class SemanticParser(BasicParser):
         - `class_type`
         - `shape`
         - `cls_base`
-        - `is_target`
         - `memory_handling`
 
         Parameters
@@ -686,7 +685,6 @@ class SemanticParser(BasicParser):
                 'class_type' : expr.class_type,
                 'shape'      : expr.shape,
                 'cls_base'   : self.scope.find(str(expr.class_type), 'classes') or get_cls_base(expr.class_type),
-                'is_target'  : False,
                 'memory_handling' : 'heap' if expr.rank > 0 else 'stack'
             }
 
@@ -694,7 +692,6 @@ class SemanticParser(BasicParser):
             d_var['memory_handling'] = expr.memory_handling
             if expr.cls_base:
                 d_var['cls_base'   ] = expr.cls_base
-            d_var['is_target'      ] = expr.is_target
             return d_var
 
         elif isinstance(expr, Concatenate):
@@ -716,7 +713,6 @@ class SemanticParser(BasicParser):
 
             var = expr.internal_var
 
-            d_var['is_target'     ] = var.is_target
             d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
             return d_var
 
@@ -1024,7 +1020,7 @@ class SemanticParser(BasicParser):
         """
         Create the node representing the function call.
 
-        Create a FunctionCall or an instance of a PyccelInternalFunction
+        Create a FunctionCall or an instance of a PyccelFunction
         from the function information and arguments.
 
         Parameters
@@ -1032,7 +1028,7 @@ class SemanticParser(BasicParser):
         expr : TypedAstNode
                The expression where this call is found (used for error output).
 
-        func : FunctionDef instance, Interface instance or PyccelInternalFunction type
+        func : FunctionDef instance, Interface instance or PyccelFunction type
                The function being called.
 
         args : iterable
@@ -1048,7 +1044,7 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        FunctionCall/PyccelInternalFunction
+        FunctionCall/PyccelFunction
             The semantic representation of the call.
         """
         if isinstance(func, PyccelFunctionDef):
@@ -1975,7 +1971,7 @@ class SemanticParser(BasicParser):
         
         Parameters
         ----------
-        expr : pyccel.ast.basic.PyccelAstNode
+        expr : pyccel.ast.basic.PyccelAstNode | PyccelSymbol
             Object to visit of type X.
         
         Returns
@@ -2263,7 +2259,7 @@ class SemanticParser(BasicParser):
             assign = self._visit(syntactic_assign)
             self._additional_exprs[-1].append(assign)
             return FunctionCallArgument(self._visit(tmp_var))
-        if isinstance(value, (PyccelArithmeticOperator, PyccelInternalFunction)) and value.rank:
+        if isinstance(value, (PyccelArithmeticOperator, PyccelFunction)) and value.rank:
             a = generate_and_assign_temp_var()
         elif isinstance(value, FunctionCall) and isinstance(value.class_type, CustomDataType):
             if not value.funcdef.results[0].var.is_alias:
@@ -2776,7 +2772,10 @@ class SemanticParser(BasicParser):
 
             sqrt_name = self.scope.get_new_name('sqrt')
             imp_name = AsName('sqrt', sqrt_name)
-            new_import = Import('math',imp_name)
+            if isinstance(base.class_type.primitive_type, PrimitiveComplexType) or isinstance(exponent.class_type.primitive_type, PrimitiveComplexType):
+                new_import = Import('cmath',imp_name)
+            else:
+                new_import = Import('math',imp_name)
             self._visit(new_import)
             if isinstance(expr.args[0], PyccelAssociativeParenthesis):
                 new_call = FunctionCall(sqrt_name, [expr.args[0].args[0]])
@@ -2883,7 +2882,6 @@ class SemanticParser(BasicParser):
             d_var = {'class_type' : dtype,
                     'memory_handling':'stack',
                     'shape' : None,
-                    'is_target' : False,
                     'cls_base' : cls_def,
                     }
             new_expression = []
@@ -3082,7 +3080,7 @@ class SemanticParser(BasicParser):
             d_var  = self._infer_type(rhs)
             if d_var['memory_handling'] == 'alias' and not isinstance(lhs, IndexedElement):
                 rhs = rhs.internal_var
-        elif isinstance(rhs, PyccelInternalFunction) and isinstance(rhs.dtype, VoidType):
+        elif isinstance(rhs, PyccelFunction) and isinstance(rhs.dtype, VoidType):
             if expr.lhs.is_temp:
                 return rhs
             else:
@@ -3098,18 +3096,16 @@ class SemanticParser(BasicParser):
                 if name.startswith('Pyccel'):
                     name = name[6:]
                     d['cls_base'] = self.scope.find(name, 'classes')
-                    #TODO: Avoid writing the default variables here
-                    if d_var.get('is_target', False) or d_var.get('memory_handling', False) == 'alias':
+                    if d_var['memory_handling'] == 'alias':
                         d['memory_handling'] = 'alias'
                     else:
-                        d['memory_handling'] = d_var.get('memory_handling', False) or 'heap'
+                        d['memory_handling'] = d_var['memory_handling'] or 'heap'
 
                     # TODO if we want to use pointers then we set target to true
                     # in the ConsturcterCall
 
                 if isinstance(rhs, Variable) and rhs.is_target:
                     # case of rhs is a target variable the lhs must be a pointer
-                    d['is_target' ] = False
                     d['memory_handling'] = 'alias'
 
         lhs = expr.lhs
@@ -4511,7 +4507,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        func_call : FunctionCall
             The syntactic FunctionCall describing the call to `numpy.nonzero.
 
         Returns
@@ -4538,7 +4534,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        func_call : FunctionCall
             The syntactic FunctionCall describing the call to `numpy.nonzero.
 
         Returns
@@ -4575,7 +4571,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : DottedName
-            The syntactic DottedName node that represent the call to `.extend()`
+            The syntactic DottedName node that represent the call to `.extend()`.
 
         Returns
         -------
@@ -4609,47 +4605,86 @@ class SemanticParser(BasicParser):
 
     def _build_MathSqrt(self, func_call):
         """
-        Method for building the node created by a call to `cmath.sqrt`.
+        Method for building the node created by a call to `math.sqrt`.
 
-        Method for building the node created by a call to `cmath.sqrt`. A separate method is needed for
+        Method for building the node created by a call to `math.sqrt`. A separate method is needed for
         this because some expressions are simplified. This is notably the case for expressions such as
         `math.sqrt(a**2)`. When `a` is a complex number this expression is equivalent to a call to `math.fabs`.
         The expression is translated to this node. The associated imports therefore need to be inserted into the parser.
 
         Parameters
         ----------
-        expr : FunctionCall
-            The syntactic FunctionCall describing the call to `cmath.polar`.
+        func_call : FunctionCall
+            The syntactic FunctionCall describing the call to `cmath.sqrt`.
 
         Returns
         -------
         TypedAstNode
-            A node describing the result of a call to the `cmath.polar` function.
+            A node describing the result of a call to the `cmath.sqrt` function.
         """
         func = self.scope.find(func_call.funcdef, 'functions')
         arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
-            mul1_syn, mul2_syn = func_call.args[0].value.args
-            is_abs = False
-            if mul1 is mul2 and isinstance(mul1.dtype.primitive_type, (PrimitiveIntegerType, PrimitiveFloatingPointType)):
+            if mul1 is mul2:
                 pyccel_stage.set_stage('syntactic')
 
                 fabs_name = self.scope.get_new_name('fabs')
                 imp_name = AsName('fabs', fabs_name)
                 new_import = Import('math',imp_name)
                 self._visit(new_import)
-                new_call = FunctionCall(fabs_name, [mul1_syn])
+                new_call = FunctionCall(fabs_name, [mul1])
 
                 pyccel_stage.set_stage('semantic')
 
                 return self._visit(new_call)
-            elif isinstance(mul1, (NumpyConjugate, PythonConjugate)) and mul1.internal_var is mul2:
+        elif isinstance(arg.value, PyccelPow):
+            base, exponent = arg.value.args
+            if exponent == 2:
+                pyccel_stage.set_stage('syntactic')
+
+                fabs_name = self.scope.get_new_name('fabs')
+                imp_name = AsName('fabs', fabs_name)
+                new_import = Import('math',imp_name)
+                self._visit(new_import)
+                new_call = FunctionCall(fabs_name, [base])
+
+                pyccel_stage.set_stage('semantic')
+
+                return self._visit(new_call)
+
+        return self._handle_function(func_call, func, (arg,), use_build_functions = False)
+
+    def _build_CmathSqrt(self, func_call):
+        """
+        Method for building the node created by a call to `cmath.sqrt`.
+
+        Method for building the node created by a call to `cmath.sqrt`. A separate method is needed for
+        this because some expressions are simplified. This is notably the case for expressions such as
+        `cmath.sqrt(a**2)`. When `a` is a complex number this expression is equivalent to a call to `cmath.fabs`.
+        The expression is translated to this node. The associated imports therefore need to be inserted into the parser.
+
+        Parameters
+        ----------
+        func_call : FunctionCall
+            The syntactic FunctionCall describing the call to `cmath.sqrt`.
+
+        Returns
+        -------
+        TypedAstNode
+            A node describing the result of a call to the `cmath.sqrt` function.
+        """
+        func = self.scope.find(func_call.funcdef, 'functions')
+        arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
+        if isinstance(arg.value, PyccelMul):
+            mul1, mul2 = arg.value.args
+            is_abs = False
+            if isinstance(mul1, (NumpyConjugate, PythonConjugate)) and mul1.internal_var is mul2:
                 is_abs = True
-                abs_arg = mul2_syn
+                abs_arg = mul2
             elif isinstance(mul2, (NumpyConjugate, PythonConjugate)) and mul1 is mul2.internal_var:
                 is_abs = True
-                abs_arg = mul1_syn
+                abs_arg = mul1
 
             if is_abs:
                 pyccel_stage.set_stage('syntactic')
@@ -4664,21 +4699,6 @@ class SemanticParser(BasicParser):
 
                 # Cast to preserve final dtype
                 return PythonComplex(self._visit(new_call))
-        elif isinstance(arg.value, PyccelPow):
-            base, exponent = arg.value.args
-            base_syn, _ = func_call.args[0].value.args
-            if exponent == 2 and isinstance(base.dtype.primitive_type, (PrimitiveIntegerType, PrimitiveFloatingPointType)):
-                pyccel_stage.set_stage('syntactic')
-
-                fabs_name = self.scope.get_new_name('fabs')
-                imp_name = AsName('fabs', fabs_name)
-                new_import = Import('math',imp_name)
-                self._visit(new_import)
-                new_call = FunctionCall(fabs_name, [base_syn])
-
-                pyccel_stage.set_stage('semantic')
-
-                return self._visit(new_call)
 
         return self._handle_function(func_call, func, (arg,), use_build_functions = False)
 
@@ -4692,7 +4712,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        func_call : FunctionCall
             The syntactic FunctionCall describing the call to `cmath.polar`.
 
         Returns
@@ -4724,7 +4744,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        func_call : FunctionCall
             The syntactic FunctionCall describing the call to `cmath.rect`.
 
         Returns
@@ -4751,7 +4771,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        func_call : FunctionCall
             The syntactic FunctionCall describing the call to `cmath.phase`.
 
         Returns
