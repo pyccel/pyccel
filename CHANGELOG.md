@@ -52,7 +52,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Stop storing `FunctionDef`, `ClassDef`, and `Import` objects inside `CodeBlock`s.
 -   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
 -   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
--   \[INTERNALS\] All internal classes which can be generated from `FunctionCall`s must inherit from `TypedAstNode`.
+-   \[INTERNALS\] All internal classes which can be generated from `FunctionCall`s must inherit from `PyccelInternalFunction`.
 
 ### Deprecated
 
