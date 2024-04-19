@@ -53,6 +53,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
 -   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
 -   \[INTERNALS\] All internal classes which can be generated from `FunctionCall`s must inherit from `PyccelInternalFunction`.
+-   \[INTERNALS\] `PyccelInternalFunction` objects which do not represent objects in memory have the type `SymbolicType`.
 
 ### Deprecated
 
