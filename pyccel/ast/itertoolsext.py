@@ -22,7 +22,7 @@ class Product(PyccelFunction):
 
     Parameters
     ----------
-    args : PyccelAstType
+    *args : PyccelAstType
         The arguments passed to the product function.
     """
     __slots__ = ('_elements',)
