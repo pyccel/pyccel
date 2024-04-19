@@ -58,6 +58,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Ensure `SemanticParser.infer_type` returns all documented information.
 -   \[INTERNALS\] Enforce correct value for `pyccel_staging` property of `PyccelAstNode`.
 -   \[INTERNALS\] Allow visiting objects containing both syntactic and semantic elements in `SemanticParser`.
+-   \[INTERNALS\] Rename `pyccel.ast.internals.PyccelInternalFunction` to `pyccel.ast.internals.PyccelFunction`.
 -   \[INTERNALS\] All internal classes which can be generated from `FunctionCall`s must inherit from `PyccelFunction`.
 -   \[INTERNALS\] `PyccelFunction` objects which do not represent objects in memory have the type `SymbolicType`.
 
