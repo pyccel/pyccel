@@ -28,7 +28,7 @@ from .core      import Module, Interface, Declare
 
 from .c_concepts import ObjectAddress, CNativeInt
 
-from .internals import PyccelInternalFunction
+from .internals import PyccelFunction
 
 from .literals  import LiteralString, LiteralInteger
 
@@ -251,7 +251,7 @@ class PyArg_ParseTupleNode(PyccelAstNode):
         return self._arg_names
 
 #-------------------------------------------------------------------
-class PyBuildValueNode(PyccelInternalFunction):
+class PyBuildValueNode(PyccelFunction):
     """
     Represents a call to the function PyBuildValueNode.
 
@@ -289,7 +289,7 @@ class PyBuildValueNode(PyccelInternalFunction):
         return self._result_args
 
 #-------------------------------------------------------------------
-class PyModule_AddObject(PyccelInternalFunction):
+class PyModule_AddObject(PyccelFunction):
     """
     Represents a call to the PyModule_AddObject function.
 
@@ -341,7 +341,7 @@ class PyModule_AddObject(PyccelInternalFunction):
         return self._var
 
 #-------------------------------------------------------------------
-class PyModule_Create(PyccelInternalFunction):
+class PyModule_Create(PyccelFunction):
     """
     Represents a call to the PyModule_Create function.
 
@@ -374,7 +374,7 @@ class PyModule_Create(PyccelInternalFunction):
         return self._module_def_name
 
 #-------------------------------------------------------------------
-class PyCapsule_New(PyccelInternalFunction):
+class PyCapsule_New(PyccelFunction):
     """
     Represents a call to the function PyCapsule_New.
 
@@ -425,7 +425,7 @@ class PyCapsule_New(PyccelInternalFunction):
         return self._API_var
 
 #-------------------------------------------------------------------
-class PyCapsule_Import(PyccelInternalFunction):
+class PyCapsule_Import(PyccelFunction):
     """
     Represents a call to the function PyCapsule_Import.
 
