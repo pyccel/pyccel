@@ -4615,11 +4615,11 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
 
-    def _build_CmathSqrt(self, func_call):
+    def _build_MathSqrt(self, func_call):
         """
-        Method for building the node created by a call to `cmath.sqrt`.
+        Method for building the node created by a call to `math.sqrt`.
 
-        Method for building the node created by a call to `cmath.sqrt`. A separate method is needed for
+        Method for building the node created by a call to `math.sqrt`. A separate method is needed for
         this because some expressions are simplified. This is notably the case for expressions such as
         `math.sqrt(a**2)`. When `a` is a complex number this expression is equivalent to a call to `math.fabs`.
         The expression is translated to this node. The associated imports therefore need to be inserted into the parser.
@@ -4627,20 +4627,19 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         func_call : FunctionCall
-            The syntactic FunctionCall describing the call to `cmath.polar`.
+            The syntactic FunctionCall describing the call to `cmath.sqrt`.
 
         Returns
         -------
         TypedAstNode
-            A node describing the result of a call to the `cmath.polar` function.
+            A node describing the result of a call to the `cmath.sqrt` function.
         """
         func = self.scope.find(func_call.funcdef, 'functions')
         arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
-            mul1_syn, mul2_syn = func_call.args[0].value.args
-            is_abs = False
-            if mul1 is mul2 and isinstance(mul1.dtype.primitive_type, (PrimitiveIntegerType, PrimitiveFloatingPointType)):
+            mul1_syn, _ = func_call.args[0].value.args
+            if mul1 is mul2:
                 pyccel_stage.set_stage('syntactic')
 
                 fabs_name = self.scope.get_new_name('fabs')
@@ -4652,12 +4651,55 @@ class SemanticParser(BasicParser):
                 pyccel_stage.set_stage('semantic')
 
                 return self._visit(new_call)
-            elif isinstance(mul1, (NumpyConjugate, PythonConjugate)) and mul1.internal_var is mul2:
+        elif isinstance(arg.value, PyccelPow):
+            base, exponent = arg.value.args
+            base_syn, _ = func_call.args[0].value.args
+            if exponent == 2:
+                pyccel_stage.set_stage('syntactic')
+
+                fabs_name = self.scope.get_new_name('fabs')
+                imp_name = AsName('fabs', fabs_name)
+                new_import = Import('math',imp_name)
+                self._visit(new_import)
+                new_call = FunctionCall(fabs_name, [base_syn])
+
+                pyccel_stage.set_stage('semantic')
+
+                return self._visit(new_call)
+
+        return self._handle_function(func_call, func, (arg,), use_build_functions = False)
+
+    def _build_CmathSqrt(self, func_call):
+        """
+        Method for building the node created by a call to `cmath.sqrt`.
+
+        Method for building the node created by a call to `cmath.sqrt`. A separate method is needed for
+        this because some expressions are simplified. This is notably the case for expressions such as
+        `cmath.sqrt(a**2)`. When `a` is a complex number this expression is equivalent to a call to `cmath.fabs`.
+        The expression is translated to this node. The associated imports therefore need to be inserted into the parser.
+
+        Parameters
+        ----------
+        func_call : FunctionCall
+            The syntactic FunctionCall describing the call to `cmath.sqrt`.
+
+        Returns
+        -------
+        TypedAstNode
+            A node describing the result of a call to the `cmath.sqrt` function.
+        """
+        func = self.scope.find(func_call.funcdef, 'functions')
+        arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
+        if isinstance(arg.value, PyccelMul):
+            mul1, mul2 = arg.value.args
+            mul1_sym, mul2_sym = func_call.args[0].value.args
+            is_abs = False
+            if isinstance(mul1, (NumpyConjugate, PythonConjugate)) and mul1.internal_var is mul2:
                 is_abs = True
-                abs_arg = mul2_syn
+                abs_arg = mul2_sym
             elif isinstance(mul2, (NumpyConjugate, PythonConjugate)) and mul1 is mul2.internal_var:
                 is_abs = True
-                abs_arg = mul1_syn
+                abs_arg = mul1_sym
 
             if is_abs:
                 pyccel_stage.set_stage('syntactic')
@@ -4672,21 +4714,6 @@ class SemanticParser(BasicParser):
 
                 # Cast to preserve final dtype
                 return PythonComplex(self._visit(new_call))
-        elif isinstance(arg.value, PyccelPow):
-            base, exponent = arg.value.args
-            base_syn, _ = func_call.args[0].value.args
-            if exponent == 2 and isinstance(base.dtype.primitive_type, (PrimitiveIntegerType, PrimitiveFloatingPointType)):
-                pyccel_stage.set_stage('syntactic')
-
-                fabs_name = self.scope.get_new_name('fabs')
-                imp_name = AsName('fabs', fabs_name)
-                new_import = Import('math',imp_name)
-                self._visit(new_import)
-                new_call = FunctionCall(fabs_name, [base_syn])
-
-                pyccel_stage.set_stage('semantic')
-
-                return self._visit(new_call)
 
         return self._handle_function(func_call, func, (arg,), use_build_functions = False)
 
