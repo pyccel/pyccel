@@ -318,12 +318,13 @@ class Errors(metaclass = Singleton):
                 column = getattr(ast_node, 'col_offset', None)
 
         if self.mode == 'developer':
+            stack = tb.extract_stack()[:-1]
             if traceback:
-                traceback = ''.join(tb.format_tb(traceback, limit=-5))
-            else:
-                traceback = ''.join(tb.format_stack(limit=5))
+                stack += tb.extract_tb(tb)
+
+            traceback_str = ''.join(tb.format_list(stack[-5:]))
         else:
-            traceback = None
+            traceback_str = ''
 
         info = ErrorInfo(stage=pyccel_stage.current_stage,
                          filename=filename,
@@ -332,7 +333,7 @@ class Errors(metaclass = Singleton):
                          column=column,
                          severity=severity,
                          symbol=symbol,
-                         traceback=traceback)
+                         traceback=traceback_str)
 
         if verbose: print(info)
 
