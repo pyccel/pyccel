@@ -4633,7 +4633,7 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
 
-    def _build_MathSqrt(self, func_call):
+    def _build_CmathSqrt(self, func_call):
         """
         Method for building the node created by a call to `cmath.sqrt`.
 
