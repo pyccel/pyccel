@@ -2778,7 +2778,10 @@ class SemanticParser(BasicParser):
 
             sqrt_name = self.scope.get_new_name('sqrt')
             imp_name = AsName('sqrt', sqrt_name)
-            new_import = Import('math',imp_name)
+            if isinstance(base.class_type.primitive_type, PrimitiveComplexType) or isinstance(exponent.class_type.primitive_type, PrimitiveComplexType):
+                new_import = Import('cmath',imp_name)
+            else:
+                new_import = Import('math',imp_name)
             self._visit(new_import)
             if isinstance(expr.args[0], PyccelAssociativeParenthesis):
                 new_call = FunctionCall(sqrt_name, [expr.args[0].args[0]])
