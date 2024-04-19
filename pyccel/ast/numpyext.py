@@ -25,7 +25,7 @@ from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, Primitiv
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
 from .datatypes      import InhomogeneousTupleType, ContainerType
 
-from .internals      import PyccelInternalFunction, Slice
+from .internals      import PyccelFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
 
 from .literals       import LiteralInteger, LiteralString, convert_to_literal
@@ -521,7 +521,7 @@ class NumpyComplex128(NumpyComplex):
 
 #=======================================================================================
 
-class NumpyResultType(PyccelInternalFunction):
+class NumpyResultType(PyccelFunction):
     """
     Class representing a call to the `numpy.result_type` function.
 
@@ -604,7 +604,7 @@ def process_dtype(dtype):
         raise TypeError(f'Unknown type of {dtype}.')
 
 #==============================================================================
-class NumpyNewArray(PyccelInternalFunction):
+class NumpyNewArray(PyccelFunction):
     """
     Superclass for nodes representing NumPy array allocation functions.
 
@@ -614,7 +614,7 @@ class NumpyNewArray(PyccelInternalFunction):
     Parameters
     ----------
     *args : tuple of TypedAstNode
-        The arguments of the superclass PyccelInternalFunction.
+        The arguments of the superclass PyccelFunction.
     class_type : NumpyNDArrayType
         The type of the new array.
     init_dtype : PythonType, PyccelFunctionDef, LiteralString, str
@@ -835,7 +835,7 @@ class NumpyArange(NumpyNewArray):
         return PyccelAdd(self.start, step, simplify=True)
 
 #==============================================================================
-class NumpySum(PyccelInternalFunction):
+class NumpySum(PyccelFunction):
     """
     Represents a call to  numpy.sum for code generation.
 
@@ -866,7 +866,7 @@ class NumpySum(PyccelInternalFunction):
         return self._args[0]
 
 #==============================================================================
-class NumpyProduct(PyccelInternalFunction):
+class NumpyProduct(PyccelFunction):
     """
     Represents a call to numpy.prod for code generation.
 
@@ -902,7 +902,7 @@ class NumpyProduct(PyccelInternalFunction):
 
 
 #==============================================================================
-class NumpyMatmul(PyccelInternalFunction):
+class NumpyMatmul(PyccelFunction):
     """
     Represents a call to numpy.matmul for code generation.
 
@@ -964,7 +964,7 @@ class NumpyMatmul(PyccelInternalFunction):
         return self._args[1]
 
 #==============================================================================
-class NumpyShape(PyccelInternalFunction):
+class NumpyShape(PyccelFunction):
     """
     Represents a call to numpy.shape for code generation.
 
@@ -1129,7 +1129,7 @@ class NumpyLinspace(NumpyNewArray):
         return True
 
 #==============================================================================
-class NumpyWhere(PyccelInternalFunction):
+class NumpyWhere(PyccelFunction):
     """
     Represents a call to `numpy.where`.
 
@@ -1200,7 +1200,7 @@ class NumpyWhere(PyccelInternalFunction):
         return True
 
 #==============================================================================
-class NumpyRand(PyccelInternalFunction):
+class NumpyRand(PyccelFunction):
     """
     Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
@@ -1225,7 +1225,7 @@ class NumpyRand(PyccelInternalFunction):
             self._class_type = NumpyNDArrayType(NumpyFloat64Type(), rank, order)
 
 #==============================================================================
-class NumpyRandint(PyccelInternalFunction):
+class NumpyRandint(PyccelFunction):
     """
     Class representing a call to NumPy's randint function.
 
@@ -1439,7 +1439,7 @@ class NumpyOnes(NumpyAutoFill):
         return convert_to_literal(1, self.dtype)
 
 #==============================================================================
-class NumpyFullLike(PyccelInternalFunction):
+class NumpyFullLike(PyccelFunction):
     """
     Represents a call to numpy.full_like for code generation.
 
@@ -1486,7 +1486,7 @@ class NumpyFullLike(PyccelInternalFunction):
         return NumpyFull(shape, fill_value, dtype, order)
 
 #==============================================================================
-class NumpyEmptyLike(PyccelInternalFunction):
+class NumpyEmptyLike(PyccelFunction):
     """
     Represents a call to numpy.empty_like for code generation.
 
@@ -1532,7 +1532,7 @@ class NumpyEmptyLike(PyccelInternalFunction):
         return NumpyEmpty(shape, dtype, order)
 
 #==============================================================================
-class NumpyOnesLike(PyccelInternalFunction):
+class NumpyOnesLike(PyccelFunction):
     """
     Represents a call to numpy.ones_like for code generation.
 
@@ -1577,7 +1577,7 @@ class NumpyOnesLike(PyccelInternalFunction):
         return NumpyOnes(shape, dtype, order)
 
 #==============================================================================
-class NumpyZerosLike(PyccelInternalFunction):
+class NumpyZerosLike(PyccelFunction):
     """
     Represents a call to numpy.zeros_like for code generation.
 
@@ -1623,7 +1623,7 @@ class NumpyZerosLike(PyccelInternalFunction):
         return NumpyZeros(shape, dtype, order)
 
 #==============================================================================
-class NumpyNorm(PyccelInternalFunction):
+class NumpyNorm(PyccelFunction):
     """
     Represents call to `numpy.norm`.
 
@@ -1684,7 +1684,7 @@ class NumpyNorm(PyccelInternalFunction):
 # Numpy universal functions
 # https://numpy.org/doc/stable/reference/ufuncs.html#available-ufuncs
 #==============================================================================
-class NumpyUfuncBase(PyccelInternalFunction):
+class NumpyUfuncBase(PyccelFunction):
     """
     Base class for Numpy's universal functions.
 
@@ -2162,7 +2162,7 @@ class NumpyMod(NumpyUfuncBinary):
                 arg_dtype = arg_class_type
             return process_dtype(arg_dtype)
 
-class NumpyAmin(PyccelInternalFunction):
+class NumpyAmin(PyccelFunction):
     """
     Represents a call to  numpy.min for code generation.
 
@@ -2190,7 +2190,7 @@ class NumpyAmin(PyccelInternalFunction):
         """
         return self._args[0]
 
-class NumpyAmax(PyccelInternalFunction):
+class NumpyAmax(PyccelFunction):
     """
     Represents a call to  numpy.max for code generation.
 
@@ -2397,7 +2397,7 @@ class NumpyNonZeroElement(NumpyNewArray):
         """
         return self._dim
 
-class NumpyNonZero(PyccelInternalFunction):
+class NumpyNonZero(PyccelFunction):
     """
     Class representing a call to the function `numpy.nonzero`.
 
@@ -2443,7 +2443,7 @@ class NumpyNonZero(PyccelInternalFunction):
     def __iter__(self):
         return self._elements.__iter__()
 
-class NumpyCountNonZero(PyccelInternalFunction):
+class NumpyCountNonZero(PyccelFunction):
     """
     Class representing a call to the NumPy function `count_nonzero`.
 
@@ -2519,7 +2519,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
         return self._keep_dims
 
 
-class NumpySize(PyccelInternalFunction):
+class NumpySize(PyccelFunction):
     """
     Represent a call to numpy.size in the user code.
 

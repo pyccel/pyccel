@@ -71,7 +71,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
+from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -1021,7 +1021,7 @@ class SemanticParser(BasicParser):
         """
         Create the node representing the function call.
 
-        Create a FunctionCall or an instance of a PyccelInternalFunction
+        Create a FunctionCall or an instance of a PyccelFunction
         from the function information and arguments.
 
         Parameters
@@ -1029,7 +1029,7 @@ class SemanticParser(BasicParser):
         expr : TypedAstNode
                The expression where this call is found (used for error output).
 
-        func : FunctionDef instance, Interface instance or PyccelInternalFunction type
+        func : FunctionDef instance, Interface instance or PyccelFunction type
                The function being called.
 
         args : iterable
@@ -1040,7 +1040,7 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        FunctionCall/PyccelInternalFunction
+        FunctionCall/PyccelFunction
             The semantic representation of the call.
         """
         if isinstance(func, PyccelFunctionDef):
@@ -2227,7 +2227,7 @@ class SemanticParser(BasicParser):
             assign = self._visit(syntactic_assign)
             self._additional_exprs[-1].append(assign)
             return FunctionCallArgument(self._visit(tmp_var))
-        if isinstance(value, (PyccelArithmeticOperator, PyccelInternalFunction)) and value.rank:
+        if isinstance(value, (PyccelArithmeticOperator, PyccelFunction)) and value.rank:
             a = generate_and_assign_temp_var()
         elif isinstance(value, FunctionCall) and isinstance(value.class_type, CustomDataType):
             if not value.funcdef.results[0].var.is_alias:
@@ -3193,7 +3193,7 @@ class SemanticParser(BasicParser):
             d_var  = self._infer_type(rhs)
             if d_var['memory_handling'] == 'alias' and not isinstance(lhs, IndexedElement):
                 rhs = rhs.internal_var
-        elif isinstance(rhs, PyccelInternalFunction) and isinstance(rhs.dtype, VoidType):
+        elif isinstance(rhs, PyccelFunction) and isinstance(rhs.dtype, VoidType):
             if expr.lhs.is_temp:
                 return rhs
             else:

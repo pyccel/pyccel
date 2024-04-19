@@ -20,7 +20,7 @@ from .datatypes import GenericType, PythonNativeComplex, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
-from .internals import PyccelInternalFunction, Slice, PyccelArrayShapeElement
+from .internals import PyccelFunction, Slice, PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
@@ -59,7 +59,7 @@ __all__ = (
 )
 
 #==============================================================================
-class PythonComplexProperty(PyccelInternalFunction):
+class PythonComplexProperty(PyccelFunction):
     """
     Represents a call to the .real or .imag property.
 
@@ -144,7 +144,7 @@ class PythonImag(PythonComplexProperty):
         return f'Imag({self.internal_var})'
 
 #==============================================================================
-class PythonConjugate(PyccelInternalFunction):
+class PythonConjugate(PyccelFunction):
     """
     Represents a call to the .conjugate() function.
 
@@ -187,7 +187,7 @@ class PythonConjugate(PyccelInternalFunction):
         return f'Conjugate({self.internal_var})'
 
 #==============================================================================
-class PythonBool(PyccelInternalFunction):
+class PythonBool(PyccelFunction):
     """
     Represents a call to Python's native `bool()` function.
 
@@ -226,7 +226,7 @@ class PythonBool(PyccelInternalFunction):
         return f'Bool({self.arg})'
 
 #==============================================================================
-class PythonComplex(PyccelInternalFunction):
+class PythonComplex(PyccelFunction):
     """
     Represents a call to Python's native `complex()` function.
 
@@ -338,7 +338,7 @@ class PythonComplex(PyccelInternalFunction):
         return f"complex({self.real}, {self.imag})"
 
 #==============================================================================
-class PythonEnumerate(PyccelInternalFunction):
+class PythonEnumerate(PyccelFunction):
     """
     Represents a call to Python's native `enumerate()` function.
 
@@ -392,7 +392,7 @@ class PythonEnumerate(PyccelInternalFunction):
         return PythonLen(self.element)
 
 #==============================================================================
-class PythonFloat(PyccelInternalFunction):
+class PythonFloat(PyccelFunction):
     """
     Represents a call to Python's native `float()` function.
 
@@ -433,7 +433,7 @@ class PythonFloat(PyccelInternalFunction):
         return f'float({self.arg})'
 
 #==============================================================================
-class PythonInt(PyccelInternalFunction):
+class PythonInt(PyccelFunction):
     """
     Represents a call to Python's native `int()` function.
 
@@ -615,7 +615,7 @@ class PythonTupleFunction(TypedAstNode):
             raise TypeError(f"Can't unpack {arg} into a tuple")
 
 #==============================================================================
-class PythonLen(PyccelInternalFunction):
+class PythonLen(PyccelFunction):
     """
     Represents a `len` expression in the code.
 
@@ -770,7 +770,7 @@ class PythonSet(TypedAstNode):
         return True
 
 #==============================================================================
-class PythonMap(PyccelInternalFunction):
+class PythonMap(PyccelFunction):
     """
     Class representing a call to Python's builtin map function.
 
@@ -857,7 +857,7 @@ class PythonPrint(PyccelAstNode):
         return self._file
 
 #==============================================================================
-class PythonRange(PyccelInternalFunction):
+class PythonRange(PyccelFunction):
     """
     Class representing a range.
 
@@ -934,7 +934,7 @@ class PythonRange(PyccelInternalFunction):
 
 
 #==============================================================================
-class PythonZip(PyccelInternalFunction):
+class PythonZip(PyccelFunction):
     """
     Represents a call to Python `zip` for code generation.
 
@@ -974,7 +974,7 @@ class PythonZip(PyccelInternalFunction):
         return [a[index] for a in self.args]
 
 #==============================================================================
-class PythonAbs(PyccelInternalFunction):
+class PythonAbs(PyccelFunction):
     """
     Represents a call to Python `abs` for code generation.
 
@@ -1002,7 +1002,7 @@ class PythonAbs(PyccelInternalFunction):
         return self._args[0]
 
 #==============================================================================
-class PythonSum(PyccelInternalFunction):
+class PythonSum(PyccelFunction):
     """
     Represents a call to Python `sum` for code generation.
 
@@ -1036,7 +1036,7 @@ class PythonSum(PyccelInternalFunction):
         return self._args[0]
 
 #==============================================================================
-class PythonMax(PyccelInternalFunction):
+class PythonMax(PyccelFunction):
     """
     Represents a call to Python's built-in `max` function.
 
@@ -1072,7 +1072,7 @@ class PythonMax(PyccelInternalFunction):
 
 
 #==============================================================================
-class PythonMin(PyccelInternalFunction):
+class PythonMin(PyccelFunction):
     """
     Represents a call to Python's built-in `min` function.
 
@@ -1152,7 +1152,7 @@ class Lambda(PyccelAstNode):
         return f"{self.variables} -> {self.expr}"
 
 #==============================================================================
-class PythonType(PyccelInternalFunction):
+class PythonType(PyccelFunction):
     """
     Represents a call to the Python builtin `type` function.
 
