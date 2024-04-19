@@ -60,7 +60,7 @@ from pyccel.ast.literals import Nil, LiteralEllipsis
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 
-from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
+from pyccel.ast.internals import Slice, PyccelSymbol, PyccelFunction
 
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation
 
@@ -961,7 +961,7 @@ class SyntaxParser(BasicParser):
         body = CodeBlock(body)
 
         returns = [i.expr for i in body.get_attribute_nodes(Return,
-                    excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction, FunctionDef))]
+                    excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))]
         assert all(len(i) == len(returns[0]) for i in returns)
         if is_inline and len(returns)>1:
             errors.report("Inline functions cannot have multiple return statements",

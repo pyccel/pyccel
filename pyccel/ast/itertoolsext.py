@@ -7,18 +7,23 @@ This module represent a call to the itertools functions for code generation.
 """
 from .builtins  import PythonLen, PythonRange
 from .core      import PyccelFunctionDef, Module
-from .internals import PyccelInternalFunction
+from .internals import PyccelFunction
 
 __all__ = (
     'Product',
     'itertools_mod',
 )
 
-class Product(PyccelInternalFunction):
+class Product(PyccelFunction):
     """
     Represents a call to itertools.product for code generation.
 
-    arg : list, tuple
+    Represents a call to itertools.product for code generation.
+
+    Parameters
+    ----------
+    *args : PyccelAstType
+        The arguments passed to the product function.
     """
     __slots__ = ('_elements',)
     _attribute_nodes = ('_elements',)

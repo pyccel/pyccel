@@ -11,7 +11,7 @@ This module contains objects which describe these methods within Pyccel's AST.
 """
 
 from pyccel.ast.datatypes import VoidType
-from pyccel.ast.internals import PyccelInternalFunction
+from pyccel.ast.internals import PyccelFunction
 
 __all__ = ('ListAppend',
            'ListClear',
@@ -25,7 +25,7 @@ __all__ = ('ListAppend',
            )
 
 #==============================================================================
-class ListMethod(PyccelInternalFunction):
+class ListMethod(PyccelFunction):
     """
     Abstract class for list method calls.
 

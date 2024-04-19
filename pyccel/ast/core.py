@@ -21,7 +21,7 @@ from .datatypes import (PyccelType, SymbolicType, HomogeneousTupleType,
                         PythonNativeBool, InhomogeneousTupleType,
                         VoidType)
 
-from .internals import PyccelSymbol, PyccelInternalFunction, apply_pickle
+from .internals import PyccelSymbol, PyccelFunction, apply_pickle
 
 from .literals  import Nil, LiteralFalse, LiteralInteger
 from .literals  import NilArgument, LiteralTrue
@@ -2861,19 +2861,19 @@ class InlineFunctionDef(FunctionDef):
 
 class PyccelFunctionDef(FunctionDef):
     """
-    Class used for storing `PyccelInternalFunction` objects in a FunctionDef.
+    Class used for storing `PyccelFunction` objects in a FunctionDef.
 
     Class inheriting from `FunctionDef` which can store a pointer
     to a class type defined by pyccel for treating internal functions.
     This is useful for importing builtin functions and for defining
-    classes which have `PyccelInternalFunction`s as attributes or methods.
+    classes which have `PyccelFunction`s as attributes or methods.
 
     Parameters
     ----------
     name : str
         The name of the function.
 
-    func_class : type inheriting from PyccelInternalFunction / TypedAstNode
+    func_class : type inheriting from PyccelFunction / TypedAstNode
         The class which should be instantiated upon a FunctionCall
         to this FunctionDef object.
 
@@ -2889,7 +2889,7 @@ class PyccelFunctionDef(FunctionDef):
     __slots__ = ('_argument_description',)
     def __init__(self, name, func_class, *, decorators = {}, argument_description = {}):
         assert isinstance(func_class, type) and \
-                issubclass(func_class, (PyccelInternalFunction, TypedAstNode))
+                issubclass(func_class, (PyccelFunction, TypedAstNode))
         assert isinstance(argument_description, dict)
         arguments = ()
         results = ()

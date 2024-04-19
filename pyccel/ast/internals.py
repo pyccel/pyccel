@@ -24,13 +24,13 @@ __all__ = (
     'PrecomputedCode',
     'PyccelArrayShapeElement',
     'PyccelArraySize',
-    'PyccelInternalFunction',
+    'PyccelFunction',
     'PyccelSymbol',
     'Slice',
 )
 
 
-class PyccelInternalFunction(TypedAstNode):
+class PyccelFunction(TypedAstNode):
     """
     Abstract class for function calls translated to Pyccel objects.
 
@@ -71,7 +71,7 @@ class PyccelInternalFunction(TypedAstNode):
         return False
 
 
-class PyccelArraySize(PyccelInternalFunction):
+class PyccelArraySize(PyccelFunction):
     """
     Gets the total number of elements in an array.
 
@@ -112,7 +112,7 @@ class PyccelArraySize(PyccelInternalFunction):
             return False
 
 
-class PyccelArrayShapeElement(PyccelInternalFunction):
+class PyccelArrayShapeElement(PyccelFunction):
     """
     Gets the number of elements in a given dimension of an array.
 

@@ -71,7 +71,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
+from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -104,7 +104,6 @@ from pyccel.ast.type_annotations import FunctionTypeAnnotation, typenames_to_dty
 
 from pyccel.ast.typingext import TypingFinal
 
-from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import split_positional_keyword_arguments
@@ -1022,7 +1021,7 @@ class SemanticParser(BasicParser):
         """
         Create the node representing the function call.
 
-        Create a FunctionCall or an instance of a PyccelInternalFunction
+        Create a FunctionCall or an instance of a PyccelFunction
         from the function information and arguments.
 
         Parameters
@@ -1030,7 +1029,7 @@ class SemanticParser(BasicParser):
         expr : TypedAstNode
                The expression where this call is found (used for error output).
 
-        func : FunctionDef instance, Interface instance or PyccelInternalFunction type
+        func : FunctionDef instance, Interface instance or PyccelFunction type
                The function being called.
 
         args : iterable
@@ -1041,7 +1040,7 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        FunctionCall/PyccelInternalFunction
+        FunctionCall/PyccelFunction
             The semantic representation of the call.
         """
         if isinstance(func, PyccelFunctionDef):
@@ -2230,7 +2229,7 @@ class SemanticParser(BasicParser):
             assign = self._visit(syntactic_assign)
             self._additional_exprs[-1].append(assign)
             return FunctionCallArgument(self._visit(tmp_var))
-        if isinstance(value, (PyccelArithmeticOperator, PyccelInternalFunction)) and value.rank:
+        if isinstance(value, (PyccelArithmeticOperator, PyccelFunction)) and value.rank:
             a = generate_and_assign_temp_var()
         elif isinstance(value, FunctionCall) and isinstance(value.class_type, CustomDataType):
             if not value.funcdef.results[0].var.is_alias:
@@ -2930,7 +2929,12 @@ class SemanticParser(BasicParser):
         except RuntimeError:
             pass
 
-        func     = self.scope.find(name, 'functions')
+        func = self.scope.find(name, 'functions')
+
+        if func is None:
+            name = str(expr.funcdef)
+            if name in builtin_functions_dict:
+                func = PyccelFunctionDef(name, builtin_functions_dict[name])
 
         # Check for specialised method
         if isinstance(func, PyccelFunctionDef):
@@ -2971,12 +2975,8 @@ class SemanticParser(BasicParser):
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
-        F = pyccel_builtin_function(expr, args)
 
-        if func is None and F is not None:
-            return F
-
-        elif self.scope.find(name, 'cls_constructs'):
+        if self.scope.find(name, 'cls_constructs'):
 
             # TODO improve the test
             # we must not invoke the scope like this
@@ -3195,7 +3195,7 @@ class SemanticParser(BasicParser):
             d_var  = self._infer_type(rhs)
             if d_var['memory_handling'] == 'alias' and not isinstance(lhs, IndexedElement):
                 rhs = rhs.internal_var
-        elif isinstance(rhs, PyccelInternalFunction) and isinstance(rhs.dtype, VoidType):
+        elif isinstance(rhs, PyccelFunction) and isinstance(rhs.dtype, VoidType):
             if expr.lhs.is_temp:
                 return rhs
             else:

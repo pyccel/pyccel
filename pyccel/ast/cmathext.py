@@ -11,7 +11,7 @@ from pyccel.ast.builtins  import PythonReal, PythonImag
 from pyccel.ast.core      import PyccelFunctionDef, Module
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat, PythonNativeComplex
 from pyccel.ast.datatypes import PrimitiveComplexType, HomogeneousTupleType
-from pyccel.ast.internals import PyccelInternalFunction
+from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.literals  import LiteralInteger
 from pyccel.ast.operators import PyccelAnd, PyccelOr
 from pyccel.ast.variable  import Constant
@@ -403,7 +403,7 @@ class CmathIsnan   (CmathFunctionBool):
 # Dictionary to map math functions to classes above
 #==============================================================================
 
-class CmathPhase(PyccelInternalFunction):
+class CmathPhase(PyccelFunction):
     """
     Class representing a call to the `cmath.phase` function.
 
@@ -420,7 +420,7 @@ class CmathPhase(PyccelInternalFunction):
     def __init__(self, z):
         super().__init__(z)
 
-class CmathPolar(PyccelInternalFunction):
+class CmathPolar(PyccelFunction):
     """
     Class representing a call to the `cmath.polar` function.
 
@@ -439,7 +439,7 @@ class CmathPolar(PyccelInternalFunction):
     def __init__(self, z):
         super().__init__(z)
 
-class CmathRect(PyccelInternalFunction):
+class CmathRect(PyccelFunction):
     """
     Class representing a call to the `cmath.rect` function.
 

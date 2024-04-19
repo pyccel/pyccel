@@ -20,7 +20,7 @@ from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
 from .cmathext      import cmath_mod
 from .datatypes     import HomogeneousTupleType, PythonNativeInt
-from .internals     import PyccelInternalFunction, Slice
+from .internals     import PyccelFunction, Slice
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
 from .mathext       import math_mod
@@ -46,34 +46,8 @@ __all__ = (
 )
 
 #==============================================================================
-def builtin_function(expr, args=None):
-    """Returns a builtin-function call applied to given arguments."""
-
-    if isinstance(expr, FunctionCall):
-        name = str(expr.funcdef)
-    elif isinstance(expr, str):
-        name = expr
-    else:
-        raise TypeError('expr must be of type str or FunctionCall')
-
-    dic = builtin_functions_dict
-
-    # Unpack FunctionCallArguments
-    args = [a.value for a in args]
-
-    if name in dic.keys() :
-        try:
-            return dic[name](*args)
-        except PyccelError as e:
-            errors.report(e,
-                    symbol=expr,
-                    severity='fatal')
-
-    return None
-
-#==============================================================================
 decorators_mod = Module('decorators',(),
-        funcs = [PyccelFunctionDef(d, PyccelInternalFunction) for d in pyccel_decorators.__all__])
+        funcs = [PyccelFunctionDef(d, PyccelFunction) for d in pyccel_decorators.__all__])
 pyccel_mod = Module('pyccel',(),(),
         imports = [Import('decorators', decorators_mod)])
 
@@ -437,7 +411,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
     current_level = 0
     array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
-                                or (isinstance(f, PyccelInternalFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
+                                or (isinstance(f, PyccelFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
                                     and not isinstance(f, (NumpyTranspose))))
     for line in block:
 
@@ -462,14 +436,14 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                                                        ObjectAddress,
                                                        NumpyTranspose,
                                                        FunctionCall,
-                                                       PyccelInternalFunction,
+                                                       PyccelFunction,
                                                        PyccelIs))
 
             # Find all elemental function calls. Normally function call arguments are not indexed
             # However elemental functions are an exception
             elemental_func_calls  = [f for f in notable_nodes if (isinstance(f, FunctionCall) \
                                                                 and f.funcdef.is_elemental)]
-            elemental_func_calls += [f for f in notable_nodes if (isinstance(f, PyccelInternalFunction) \
+            elemental_func_calls += [f for f in notable_nodes if (isinstance(f, PyccelFunction) \
                                                                 and f.is_elemental)]
 
             # Collect all objects into which indices may be inserted
@@ -481,7 +455,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             transposed_vars = [v for v in notable_nodes if isinstance(v, NumpyTranspose)] \
                                 + [v for f in elemental_func_calls \
                                      for v in f.get_attribute_nodes(NumpyTranspose)]
-            indexed_funcs = [v for v in notable_nodes if isinstance(v, PyccelInternalFunction) and hasattr(v, '__getitem__')]
+            indexed_funcs = [v for v in notable_nodes if isinstance(v, PyccelFunction) and hasattr(v, '__getitem__')]
 
             is_checks = [n for n in notable_nodes if isinstance(n, PyccelIs)]
 
@@ -497,7 +471,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             # Find function calls in this line
             funcs           = [f for f in notable_nodes+transposed_vars if (isinstance(f, FunctionCall) \
                                                             and not f.funcdef.is_elemental)]
-            internal_funcs  = [f for f in notable_nodes+transposed_vars if (isinstance(f, PyccelInternalFunction) \
+            internal_funcs  = [f for f in notable_nodes+transposed_vars if (isinstance(f, PyccelFunction) \
                                                             and not f.is_elemental and not hasattr(f, '__getitem__')) \
                                                             and not isinstance(f, NumpyTranspose)]
 
@@ -560,7 +534,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars,
-                    excluded_nodes = (FunctionCall, PyccelInternalFunction))
+                    excluded_nodes = (FunctionCall, PyccelFunction))
             line.substitute(transposed_vars + indexed_funcs, handled_funcs,
                     excluded_nodes = (FunctionCall))
             _ = [f.substitute(variables, new_vars) for f in elemental_func_calls]

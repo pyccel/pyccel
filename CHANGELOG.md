@@ -52,6 +52,9 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Ensure `SemanticParser.infer_type` returns all documented information.
 -   \[INTERNALS\] Enforce correct value for `pyccel_staging` property of `PyccelAstNode`.
 -   \[INTERNALS\] Allow visiting objects containing both syntactic and semantic elements in `SemanticParser`.
+-   \[INTERNALS\] Rename `pyccel.ast.internals.PyccelInternalFunction` to `pyccel.ast.internals.PyccelFunction`.
+-   \[INTERNALS\] All internal classes which can be generated from `FunctionCall`s must inherit from `PyccelFunction`.
+-   \[INTERNALS\] `PyccelFunction` objects which do not represent objects in memory have the type `SymbolicType`.
 
 
 ### Deprecated
@@ -64,6 +67,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
 -   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 -   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
+-   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
 
 ## \[1.12.1\] - 2024-10-01
 

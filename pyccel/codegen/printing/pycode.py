@@ -165,7 +165,7 @@ class PythonCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelInternalFunction
+        expr : PyccelFunction
             A Pyccel node describing a NumPy function.
 
         Returns
@@ -772,7 +772,7 @@ class PythonCodePrinter(CodePrinter):
                           dtype] if a != '')
         return f"{name}({args})"
 
-    def _print_PyccelInternalFunction(self, expr):
+    def _print_PyccelFunction(self, expr):
         name = self._aliases.get(type(expr),expr.name)
         args = ', '.join(self._print(a) for a in expr.args)
         return "{}({})".format(name, args)
