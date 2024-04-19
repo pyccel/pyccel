@@ -4638,7 +4638,6 @@ class SemanticParser(BasicParser):
         arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
-            mul1_syn, _ = func_call.args[0].value.args
             if mul1 is mul2:
                 pyccel_stage.set_stage('syntactic')
 
@@ -4646,14 +4645,13 @@ class SemanticParser(BasicParser):
                 imp_name = AsName('fabs', fabs_name)
                 new_import = Import('math',imp_name)
                 self._visit(new_import)
-                new_call = FunctionCall(fabs_name, [mul1_syn])
+                new_call = FunctionCall(fabs_name, [mul1])
 
                 pyccel_stage.set_stage('semantic')
 
                 return self._visit(new_call)
         elif isinstance(arg.value, PyccelPow):
             base, exponent = arg.value.args
-            base_syn, _ = func_call.args[0].value.args
             if exponent == 2:
                 pyccel_stage.set_stage('syntactic')
 
@@ -4661,7 +4659,7 @@ class SemanticParser(BasicParser):
                 imp_name = AsName('fabs', fabs_name)
                 new_import = Import('math',imp_name)
                 self._visit(new_import)
-                new_call = FunctionCall(fabs_name, [base_syn])
+                new_call = FunctionCall(fabs_name, [base])
 
                 pyccel_stage.set_stage('semantic')
 
@@ -4692,14 +4690,13 @@ class SemanticParser(BasicParser):
         arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
-            mul1_sym, mul2_sym = func_call.args[0].value.args
             is_abs = False
             if isinstance(mul1, (NumpyConjugate, PythonConjugate)) and mul1.internal_var is mul2:
                 is_abs = True
-                abs_arg = mul2_sym
+                abs_arg = mul2
             elif isinstance(mul2, (NumpyConjugate, PythonConjugate)) and mul1 is mul2.internal_var:
                 is_abs = True
-                abs_arg = mul1_sym
+                abs_arg = mul1
 
             if is_abs:
                 pyccel_stage.set_stage('syntactic')
