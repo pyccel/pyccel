@@ -50,6 +50,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
 -   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
 -   \[INTERNALS\] Ensure `SemanticParser.infer_type` returns all documented information.
+-   \[INTERNALS\] Enforce correct value for `pyccel_staging` property of `PyccelAstNode`.
+-   \[INTERNALS\] Allow visiting objects containing both syntactic and semantic elements in `SemanticParser`.
 
 
 ### Deprecated
