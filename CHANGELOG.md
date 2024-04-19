@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 -   #1787 : Ensure `STC` is installed with Pyccel.
 -   #1656 : Ensure `gFTL` is installed with Pyccel.
 -   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
+-   #1844 : Added line numbers and code to errors from built-in function calls.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
@@ -61,6 +62,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Rename `pyccel.ast.internals.PyccelInternalFunction` to `pyccel.ast.internals.PyccelFunction`.
 -   \[INTERNALS\] All internal classes which can be generated from `FunctionCall`s must inherit from `PyccelFunction`.
 -   \[INTERNALS\] `PyccelFunction` objects which do not represent objects in memory have the type `SymbolicType`.
+-   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
 
 ### Deprecated
 
