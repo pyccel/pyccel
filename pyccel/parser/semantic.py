@@ -4604,7 +4604,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : DottedName
-            The syntactic DottedName node that represent the call to `.extend()`
+            The syntactic DottedName node that represent the call to `.extend()`.
 
         Returns
         -------
