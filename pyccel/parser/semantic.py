@@ -1885,7 +1885,7 @@ class SemanticParser(BasicParser):
                 raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
             rank = 1
-            if len(args) == 2 and args[1] is LiteralEllipsis():
+            if (len(args) == 2 and args[1] is LiteralEllipsis()) or (len(args) > 0):
                 syntactic_annotation = args[0]
                 if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
                     syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
@@ -2270,6 +2270,7 @@ class SemanticParser(BasicParser):
                 if len(line) != 1:
                     errors.report(f"Variable {line[0]} cannot have multiple types",
                             severity='error', symbol=line[0])
+                ls.extend(line)
             # ---------------------------- End of if block ------------------------------------------
             else:
                 ls.append(line)
