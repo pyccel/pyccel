@@ -29,7 +29,6 @@ from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
-from pyccel.ast.builtin_methods.set_methods  import SetMethod, SetAdd
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -3142,8 +3141,7 @@ class SemanticParser(BasicParser):
                     symbol=expr, severity='error')
 
         # Checking for the result of _visit_ListExtend
-        if isinstance(rhs, For) or (isinstance(rhs, CodeBlock) and
-            isinstance(rhs.body[0], (ListMethod, SetMethod))):
+        if isinstance(rhs, For) or (isinstance(rhs, CodeBlock) and isinstance(rhs.body[0], ListMethod)):
             return rhs
         if isinstance(rhs, ConstructorCall):
             return rhs
@@ -4661,50 +4659,3 @@ class SemanticParser(BasicParser):
             var = var[0]
             self.scope.insert_variable(var)
         return FunctionDefResult(var, annotation = expr.annotation)
-
-    def _visit_SetUpdate(self, expr):
-        """
-        Method to navigate the syntactic DottedName node of an `update()` call.
-
-        The purpose of this `_visit` method is to construct new nodes from a syntactic 
-        DottedName node. It checks the type of the iterable passed to `update()`.
-        If the iterable is an instance of `PythonList`, `PythonSet` or `PythonTuple`, it constructs 
-        a CodeBlock node where its body consists of `SetAdd` objects with the 
-        elements of the iterable. If not, it attempts to construct a syntactic `For` 
-        loop to iterate over the iterable object and added its elements to the set 
-        object. Finally, it passes to a `_visit()` call for semantic parsing.
-
-        Parameters
-        ----------
-        expr : DottedName
-            The syntactic DottedName node that represent the call to `.update()`
-
-        Returns
-        -------
-        PyccelAstNode
-            CodeBlock or For containing SetAdd objects.
-        """
-        iterable = expr.name[1].args[0].value
-        if isinstance(iterable, (PythonList, PythonSet, PythonTuple)):
-            list_variable = self._visit(expr.name[0])
-            added_list = self._visit(iterable)
-            try:
-                store = [SetAdd(list_variable, a) for a in added_list]
-            except TypeError as e:
-                msg = str(e)
-                errors.report(msg, symbol=expr, severity='fatal')
-            return CodeBlock(store)
-        else:
-            pyccel_stage.set_stage('syntactic')
-            for_target = self.scope.get_new_name('index')
-            arg = FunctionCallArgument(for_target)
-            func_call = FunctionCall('add', [arg])
-            dotted = DottedName(expr.name[0], func_call)
-            lhs = PyccelSymbol('_', is_temp=True)
-            assign = Assign(lhs, dotted)
-            assign.set_current_ast(expr.python_ast)
-            body = CodeBlock([assign])
-            for_obj = For(for_target, iterable, body)
-            pyccel_stage.set_stage('semantic')
-            return self._visit(for_obj)
-
