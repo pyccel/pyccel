@@ -467,11 +467,11 @@ def test_copysign_return_type_1(language): # copysign
     y = rand() # real
 
     # Same sign
-    assert type(f1(x, y)) == type(copysign_return_type(x, y))
-    assert type(f1(-x, -y)) == type(copysign_return_type(-x, -y))
+    assert isinstance(f1(x, y), type(copysign_return_type(x, y)))
+    assert isinstance(f1(-x, -y), type(copysign_return_type(-x, -y)))
     # Different sign
-    assert type(f1(-x, y)) == type(copysign_return_type(-x, y))
-    assert type(f1(x, -y)) == type(copysign_return_type(x, -y))
+    assert isinstance(f1(-x, y), type(copysign_return_type(-x, y)))
+    assert isinstance(f1(x, -y), type(copysign_return_type(x, -y)))
 
 def test_copysign_return_type_2(language): # copysign
     '''test type copysign(int, int) => should return real type'''
@@ -486,11 +486,11 @@ def test_copysign_return_type_2(language): # copysign
     y = randint(high)   # int
 
     # Same sign
-    assert type(f1(x, y)) == type(copysign_return_type(x, y))
-    assert type(f1(-x, -y)) == type(copysign_return_type(-x, -y))
+    assert isinstance(f1(x, y), type(copysign_return_type(x, y)))
+    assert isinstance(f1(-x, -y), type(copysign_return_type(-x, -y)))
     # Different sign
-    assert type(f1(-x, y)) == type(copysign_return_type(-x, y))
-    assert type(f1(x, -y)) == type(copysign_return_type(x, -y))
+    assert isinstance(f1(-x, y), type(copysign_return_type(-x, y)))
+    assert isinstance(f1(x, -y), type(copysign_return_type(x, -y)))
 
 def test_copysign_return_type_3(language): # copysign
     '''test type copysign(int, real) => should return real type'''
@@ -505,11 +505,11 @@ def test_copysign_return_type_3(language): # copysign
     y = rand()          # real
 
     # Same sign
-    assert type(f1(x, y)) == type(copysign_return_type(x, y))
-    assert type(f1(-x, -y)) == type(copysign_return_type(-x, -y))
+    assert isinstance(f1(x, y), type(copysign_return_type(x, y)))
+    assert isinstance(f1(-x, -y), type(copysign_return_type(-x, -y)))
     # Different sign
-    assert type(f1(-x, y)) == type(copysign_return_type(-x, y))
-    assert type(f1(x, -y)) == type(copysign_return_type(x, -y))
+    assert isinstance(f1(-x, y), type(copysign_return_type(-x, y)))
+    assert isinstance(f1(x, -y), type(copysign_return_type(x, -y)))
 
 def test_copysign_return_type_4(language): # copysign
     '''test type copysign(real, int) => should return real type'''
@@ -524,11 +524,11 @@ def test_copysign_return_type_4(language): # copysign
     y = randint(high)   # int
 
     # Same sign
-    assert type(f1(x, y)) == type(copysign_return_type(x, y))
-    assert type(f1(-x, -y)) == type(copysign_return_type(-x, -y))
+    assert isinstance(f1(x, y), type(copysign_return_type(x, y)))
+    assert isinstance(f1(-x, -y), type(copysign_return_type(-x, -y)))
     # Different sign
-    assert type(f1(-x, y)) == type(copysign_return_type(-x, y))
-    assert type(f1(x, -y)) == type(copysign_return_type(x, -y))
+    assert isinstance(f1(-x, y), type(copysign_return_type(-x, y)))
+    assert isinstance(f1(x, -y), type(copysign_return_type(x, -y)))
 
 
 #----------------------------- isfinite function -----------------------------#
@@ -652,13 +652,13 @@ def test_ldexp_return_type(language): # ldexp
     x = rand()
     exp = randint(high)
 
-    assert type(ldexp_type(x, exp)) == type(f1(x, exp))
+    assert isinstance(ldexp_type(x, exp), type(f1(x, exp)))
     # Negative exponent
-    assert type(ldexp_type(x, -exp)) == type(f1(x, -exp))
+    assert isinstance(ldexp_type(x, -exp), type(f1(x, -exp)))
     # Negative value
-    assert type(ldexp_type(-x, exp)) == type(f1(-x, exp))
+    assert isinstance(ldexp_type(-x, exp), type(f1(-x, exp)))
     # Negative value and negative exponent
-    assert type(ldexp_type(-x, -exp)) == type(f1(-x, -exp))
+    assert isinstance(ldexp_type(-x, -exp), type(f1(-x, -exp)))
 
 #--------------------------- remainder function ------------------------------#
 
@@ -708,12 +708,12 @@ def test_remainder_return_type(language): # remainder
     y = rand()
 
     # Same sign
-    assert type(remainder_type(x, y)) == type(f1(x, y))
-    assert type(remainder_type(-x, -y)) == type(f1(-x, -y))
+    assert isinstance(remainder_type(x, y), type(f1(x, y)))
+    assert isinstance(remainder_type(-x, -y), type(f1(-x, -y)))
 
     # Different sign
-    assert type(remainder_type(x, -y)) == type(f1(x, -y))
-    assert type(remainder_type(-x, y)) == type(f1(-x, y))
+    assert isinstance(remainder_type(x, -y), type(f1(x, -y)))
+    assert isinstance(remainder_type(-x, y), type(f1(-x, y)))
 
 #----------------------------- trunc function --------------------------------#
 
@@ -752,8 +752,8 @@ def test_trunc_return_type(language): # trunc
     f1 = epyccel(trunc_type, language = language)
     x = uniform(high = 10000.0)
 
-    assert type(trunc_type((x))) == type(f1((x)))
-    assert type(trunc_type(-x)) == type(f1(-x))
+    assert isinstance(trunc_type((x)), type(f1((x))))
+    assert isinstance(trunc_type(-x), type(f1(-x)))
 
 #--------------------------- expm1 function ------------------------------#
 @pytest.mark.parametrize( 'language', (
@@ -829,8 +829,8 @@ def test_expm1_return_type(language): # expm1 # expm1
     f1 = epyccel(expm1_type, language = language)
     x = uniform(high = 700.0)
 
-    assert type(expm1_type(x)) == type(f1(x))
-    assert type(expm1_type(-x)) == type(f1(-x))
+    assert isinstance(expm1_type(x), type(f1(x)))
+    assert isinstance(expm1_type(-x), type(f1(-x)))
 
 #--------------------------- log1p function ------------------------------#
 
