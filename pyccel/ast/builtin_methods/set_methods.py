@@ -19,7 +19,8 @@ __all__ = (
     'SetCopy',
     'SetDiscard',
     'SetMethod',
-    'SetPop'
+    'SetPop',
+    'SetRemove'
 )
 
 class SetMethod(PyccelFunction):
@@ -52,6 +53,7 @@ class SetMethod(PyccelFunction):
         """
         return self._set_variable
 
+
 class SetAdd(SetMethod) :
     """
     Represents a call to the .add() method.
@@ -78,6 +80,7 @@ class SetAdd(SetMethod) :
             raise TypeError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, new_elem)
 
+
 class SetClear(SetMethod):
     """
     Represents a call to the .clear() method.
@@ -98,6 +101,7 @@ class SetClear(SetMethod):
     def __init__(self, set_variable):
         super().__init__(set_variable)
 
+
 class SetCopy(SetMethod):
     """
     Represents a call to the .copy() method.
@@ -117,6 +121,7 @@ class SetCopy(SetMethod):
         self._shape = set_variable._shape
         self._class_type = set_variable._class_type
         super().__init__(set_variable)
+
 
 class SetPop(SetMethod):
     """
@@ -140,6 +145,7 @@ class SetPop(SetMethod):
     def __init__(self, set_variable):
         self._class_type = set_variable.class_type.element_type
         super().__init__(set_variable)
+
 
 class SetRemove(SetMethod):
     """
@@ -168,6 +174,7 @@ class SetRemove(SetMethod):
             raise TypeError(f"Can't remove an element of type {item.dtype} from a set of {set_variable.dtype}")
         super().__init__(set_variable, item)
 
+
 class SetDiscard(SetMethod):
     """
     Represents a call to the .discard() method.
@@ -193,4 +200,3 @@ class SetDiscard(SetMethod):
         if set_variable.class_type.element_type != item.class_type:
             raise TypeError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, item)
-
