@@ -1051,18 +1051,19 @@ class SemanticParser(BasicParser):
             The semantic representation of the call.
         """
         if isinstance(func, PyccelFunctionDef):
-            annotation_method = '_build_' + func.cls_name.__name__
-            if hasattr(self, annotation_method) and use_build_functions:
-                if isinstance(expr, DottedName):
-                    pyccel_stage.set_stage('syntactic')
-                    if is_method:
-                        new_expr = DottedName(args[0].value, FunctionCall(func, args[1:]))
-                    else:
-                        new_expr = FunctionCall(func, args)
-                    new_expr.set_current_ast(expr.python_ast)
-                    pyccel_stage.set_stage('semantic')
-                    expr = new_expr
-                return getattr(self, annotation_method)(expr)
+            if use_build_functions:
+                annotation_method = '_build_' + func.cls_name.__name__
+                if hasattr(self, annotation_method):
+                    if isinstance(expr, DottedName):
+                        pyccel_stage.set_stage('syntactic')
+                        if is_method:
+                            new_expr = DottedName(args[0].value, FunctionCall(func, args[1:]))
+                        else:
+                            new_expr = FunctionCall(func, args)
+                        new_expr.set_current_ast(expr.python_ast)
+                        pyccel_stage.set_stage('semantic')
+                        expr = new_expr
+                    return getattr(self, annotation_method)(expr)
 
             argument_description = func.argument_description
             func = func.cls_name
