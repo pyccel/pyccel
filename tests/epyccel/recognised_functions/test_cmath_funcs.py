@@ -55,8 +55,8 @@ def test_sqrt_complex_abs(language):
 
     f1 = epyccel(sqrt_complex_abs, language = language)
     x = rand() + 1j * rand()
-    assert(isclose(f1(x) ,  sqrt_complex_abs(x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x))  == type(sqrt_complex_abs(x))) # pylint: disable=unidiomatic-typecheck
+    assert isclose(f1(x), sqrt_complex_abs(x), rtol=RTOL, atol=ATOL)
+    assert type(f1(x)) == type(sqrt_complex_abs(x)) # pylint: disable=unidiomatic-typecheck
 
 def test_sin_call(language):
     def sin_call(x : complex):
