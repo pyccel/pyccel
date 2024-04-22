@@ -59,6 +59,11 @@ def get_default_path(name):
     ----------
     name : PyccelSymbol | DottedName
         The name of the source file for the import.
+
+    Returns
+    -------
+    PyccelSymbol | DottedName
+        The name of the Pyccel-compatible source file for the import.
     """
     name_ = str(name)
     name = pyccel_external_lib.get(name_, name_).split('.')
