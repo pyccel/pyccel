@@ -1031,7 +1031,7 @@ class SemanticParser(BasicParser):
         expr : TypedAstNode
                The expression where this call is found (used for error output).
 
-        func : FunctionDef instance, Interface instance or PyccelFunction type
+        func : FunctionDef | Interface
                The function being called.
 
         args : iterable
