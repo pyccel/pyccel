@@ -2196,9 +2196,9 @@ def test_rand_basic(language):
 
     f1 = epyccel(create_val, language = language)
     y = [f1() for i in range(10)]
-    assert all([yi <  1 for yi in y])
-    assert all([yi >= 0 for yi in y])
-    assert all([isinstance(yi,float) for yi in y])
+    assert all(yi <  1 for yi in y)
+    assert all(yi >= 0 for yi in y)
+    assert all(isinstance(yi,float) for yi in y)
     assert len(set(y))>1
 
 @pytest.mark.parametrize( 'language', (
@@ -2253,16 +2253,16 @@ def test_rand_args(language):
 
     g_1d = epyccel(create_array_vals_1d, language = language)
     y = g_1d()
-    assert all([yi <  1 for yi in y])
-    assert all([yi >= 0 for yi in y])
-    assert all([isinstance(yi,float) for yi in y])
+    assert all(yi <  1 for yi in y)
+    assert all(yi >= 0 for yi in y)
+    assert all(isinstance(yi,float) for yi in y)
     assert len(set(y))>1
 
     g_2d = epyccel(create_array_vals_2d, language = language)
     y = g_2d()
-    assert all([yi <  1 for yi in y])
-    assert all([yi >= 0 for yi in y])
-    assert all([isinstance(yi,float) for yi in y])
+    assert all(yi <  1 for yi in y)
+    assert all(yi >= 0 for yi in y)
+    assert all(isinstance(yi,float) for yi in y)
     assert len(set(y))>1
 
 @pytest.mark.parametrize( 'language', (
@@ -2282,9 +2282,9 @@ def test_rand_expr(language):
 
     f1 = epyccel(create_val, language = language)
     y = [f1() for i in range(10)]
-    assert all([yi <  2 for yi in y])
-    assert all([yi >= 0 for yi in y])
-    assert all([isinstance(yi,float) for yi in y])
+    assert all(yi <  2 for yi in y)
+    assert all(yi >= 0 for yi in y)
+    assert all(isinstance(yi,float) for yi in y)
     assert len(set(y))>1
 
 @pytest.mark.xfail(reason="a is not allocated")
@@ -2296,9 +2296,9 @@ def test_rand_expr_array(language):
 
     f2 = epyccel(create_array_vals_2d, language = language)
     y = f2()
-    assert all([yi <  3.5 for yi in y])
-    assert all([yi >= 3   for yi in y])
-    assert all([isinstance(yi,float) for yi in y])
+    assert all(yi <  3.5 for yi in y)
+    assert all(yi >= 3   for yi in y)
+    assert all(isinstance(yi,float) for yi in y)
     assert len(set(y))>1
 
 @pytest.mark.parametrize( 'language', (
@@ -2325,23 +2325,23 @@ def test_randint_basic(language):
 
     f0 = epyccel(create_rand, language = language)
     y = [f0() for i in range(10)]
-    assert all([yi <  10 for yi in y])
-    assert all([yi >= -10 for yi in y])
-    assert all([isinstance(yi,int) for yi in y])
+    assert all(yi <  10 for yi in y)
+    assert all(yi >= -10 for yi in y)
+    assert all(isinstance(yi,int) for yi in y)
     assert len(set(y))>1
 
     f1 = epyccel(create_val, language = language)
     y = [f1(100) for i in range(10)]
-    assert all([yi <  100 for yi in y])
-    assert all([yi >= 0 for yi in y])
-    assert all([isinstance(yi,int) for yi in y])
+    assert all(yi <  100 for yi in y)
+    assert all(yi >= 0 for yi in y)
+    assert all(isinstance(yi,int) for yi in y)
     assert len(set(y))>1
 
     f2 = epyccel(create_val_low, language = language)
     y = [f2(25, 100) for i in range(10)]
-    assert all([yi <  100 for yi in y])
-    assert all([yi >= 25 for yi in y])
-    assert all([isinstance(yi,int) for yi in y])
+    assert all(yi <  100 for yi in y)
+    assert all(yi >= 25 for yi in y)
+    assert all(isinstance(yi,int) for yi in y)
     assert len(set(y))>1
 
 @pytest.mark.parametrize( 'language', (
@@ -2366,16 +2366,16 @@ def test_randint_expr(language):
 
     f1 = epyccel(create_val, language = language)
     y = [f1(27) for i in range(10)]
-    assert all([yi <  54 for yi in y])
-    assert all([yi >= 0  for yi in y])
-    assert all([isinstance(yi,int) for yi in y])
+    assert all(yi <  54 for yi in y)
+    assert all(yi >= 0  for yi in y)
+    assert all(isinstance(yi,int) for yi in y)
     assert len(set(y))>1
 
     f2 = epyccel(create_val_low, language = language)
     y = [f2(21,46) for i in range(10)]
-    assert all([yi <  92 for yi in y])
-    assert all([yi >= 42 for yi in y])
-    assert all([isinstance(yi,int) for yi in y])
+    assert all(yi <  92 for yi in y)
+    assert all(yi >= 42 for yi in y)
+    assert all(isinstance(yi,int) for yi in y)
     assert len(set(y))>1
 
 def test_sum_int(language):
