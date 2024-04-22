@@ -183,7 +183,7 @@ class ErrorsMode(metaclass = Singleton):
         return self._mode
 
     def set_mode(self, mode):
-        assert(mode in ['user', 'developer'])
+        assert mode in ['user', 'developer']
         self._mode = mode
 
 
@@ -223,11 +223,11 @@ class Errors(metaclass = Singleton):
         self.initialize()
 
     def set_target(self, target, kind):
-        assert(kind in ['file', 'module', 'function', 'class'])
+        assert kind in ['file', 'module', 'function', 'class']
         self._target[kind] = target
 
     def unset_target(self, kind):
-        assert(kind in ['file', 'module', 'function', 'class'])
+        assert kind in ['file', 'module', 'function', 'class']
         self._target[kind] = None
 
     def reset_target(self):

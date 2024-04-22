@@ -83,7 +83,7 @@ def accelerator_statement(stmt, accel):
 
     In general you can use the functions omp_statement and acc_statement
     """
-    assert(accel in ['omp', 'acc'])
+    assert accel in ['omp', 'acc']
 
     if not isinstance(stmt, CommentLine): return None
     if not stmt.value.startswith('#$'): return None

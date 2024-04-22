@@ -280,8 +280,8 @@ class PyccelAstNode:
         self._recursion_in_progress = True
 
         if iterable(original):
-            assert(iterable(replacement))
-            assert(len(original) == len(replacement))
+            assert iterable(replacement)
+            assert len(original) == len(replacement)
         else:
             original = (original,)
             replacement = (replacement,)
@@ -466,7 +466,7 @@ class PyccelAstNode:
                     Indicates whether the removed object should
                     be invalidated
         """
-        assert(user_node in self._user_nodes)
+        assert user_node in self._user_nodes
         self._user_nodes.remove(user_node)
         if self.is_unused and invalidate:
             self.invalidate_node()
