@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
 -   #1750 : Add Python support for set method `remove()`.
 
 ### Fixed
--   #1820 : Deprecated unused decorator '@lambdify'
+-   #1820 : Deprecated unused decorator `@lambdify`
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
 -   #1762 : Fix array copy between different data types.
 -   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
