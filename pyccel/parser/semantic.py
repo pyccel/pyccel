@@ -72,7 +72,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
+from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -105,7 +105,6 @@ from pyccel.ast.type_annotations import FunctionTypeAnnotation, typenames_to_dty
 
 from pyccel.ast.typingext import TypingFinal
 
-from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import split_positional_keyword_arguments
@@ -776,9 +775,11 @@ class SemanticParser(BasicParser):
                 else:
                     return self._visit(var[indices[0]][indices[1:]])
             else:
+                pyccel_stage.set_stage('syntactic')
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, var)
                 assign.set_current_ast(expr.python_ast)
+                pyccel_stage.set_stage('semantic')
                 self._additional_exprs[-1].append(self._visit(assign))
                 var = self._visit(tmp_var)
 
@@ -1021,7 +1022,7 @@ class SemanticParser(BasicParser):
         """
         Create the node representing the function call.
 
-        Create a FunctionCall or an instance of a PyccelInternalFunction
+        Create a FunctionCall or an instance of a PyccelFunction
         from the function information and arguments.
 
         Parameters
@@ -1029,7 +1030,7 @@ class SemanticParser(BasicParser):
         expr : TypedAstNode
                The expression where this call is found (used for error output).
 
-        func : FunctionDef instance, Interface instance or PyccelInternalFunction type
+        func : FunctionDef instance, Interface instance or PyccelFunction type
                The function being called.
 
         args : iterable
@@ -1040,7 +1041,7 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        FunctionCall/PyccelInternalFunction
+        FunctionCall/PyccelFunction
             The semantic representation of the call.
         """
         if isinstance(func, PyccelFunctionDef):
@@ -1075,9 +1076,11 @@ class SemanticParser(BasicParser):
 
             func_results = func.results if isinstance(func, FunctionDef) else func.functions[0].results
             if not parent_assign and len(func_results) == 1 and func_results[0].var.rank > 0:
+                pyccel_stage.set_stage('syntactic')
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, expr)
                 assign.set_current_ast(expr.python_ast)
+                pyccel_stage.set_stage('semantic')
                 self._additional_exprs[-1].append(self._visit(assign))
                 return self._visit(tmp_var)
 
@@ -1715,7 +1718,10 @@ class SemanticParser(BasicParser):
             # Use _visit_Assign to create the requested iterator with the correct type
             # The result of this operation is not stored, it is just used to declare
             # iterator with the correct dtype to allow correct dtype deductions later
-            self._visit(Assign(iterator, iterator_rhs, python_ast=expr.python_ast))
+            pyccel_stage.set_stage('syntactic')
+            syntactic_assign = Assign(iterator, iterator_rhs, python_ast=expr.python_ast)
+            pyccel_stage.set_stage('semantic')
+            self._visit(syntactic_assign)
 
             loop_elem = loop.body.body[0]
 
@@ -1725,9 +1731,13 @@ class SemanticParser(BasicParser):
                 gens = set(loop_elem.get_attribute_nodes(GeneratorComprehension))
                 if len(gens)==1:
                     gen = gens.pop()
+                    pyccel_stage.set_stage('syntactic')
                     assert isinstance(gen.lhs, PyccelSymbol) and gen.lhs.is_temp
                     gen_lhs = self.scope.get_new_name() if gen.lhs.is_temp else gen.lhs
-                    assign = self._visit(Assign(gen_lhs, gen, python_ast=gen.python_ast))
+                    syntactic_assign = Assign(gen_lhs, gen, python_ast=gen.python_ast)
+                    pyccel_stage.set_stage('semantic')
+                    assign = self._visit(syntactic_assign)
+
                     new_expr.append(assign)
                     loop.substitute(gen, assign.lhs)
                     loop_elem = loop.body.body[0]
@@ -1858,7 +1868,9 @@ class SemanticParser(BasicParser):
         if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingFinal:
             syntactic_annotation = args[0]
             if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
+                pyccel_stage.set_stage('syntactic')
                 syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
+                pyccel_stage.set_stage('semantic')
             annotation = self._visit(syntactic_annotation)
             for t in annotation.type_list:
                 t.is_const = True
@@ -1888,7 +1900,9 @@ class SemanticParser(BasicParser):
             if (len(args) == 2 and args[1] is LiteralEllipsis()) or (len(args) > 0):
                 syntactic_annotation = args[0]
                 if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
+                    pyccel_stage.set_stage('syntactic')
                     syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
+                    pyccel_stage.set_stage('semantic')
                 internal_datatypes = self._visit(syntactic_annotation)
                 type_annotations = []
                 if dtype_cls is PythonTupleFunction:
@@ -1926,7 +1940,7 @@ class SemanticParser(BasicParser):
         
         Parameters
         ----------
-        expr : pyccel.ast.basic.PyccelAstNode
+        expr : pyccel.ast.basic.PyccelAstNode | PyccelSymbol
             Object to visit of type X.
         
         Returns
@@ -1934,6 +1948,8 @@ class SemanticParser(BasicParser):
         pyccel.ast.basic.PyccelAstNode
             AST object which is the semantic equivalent of expr.
         """
+        if getattr(expr, 'pyccel_staging', 'syntactic') == 'semantic':
+            return expr
 
         # TODO - add settings to Errors
         #      - line and column
@@ -2204,11 +2220,15 @@ class SemanticParser(BasicParser):
         value = self._visit(expr.value)
         a = FunctionCallArgument(value, expr.keyword)
         def generate_and_assign_temp_var():
+            pyccel_stage.set_stage('syntactic')
             tmp_var = self.scope.get_new_name()
-            assign = self._visit(Assign(tmp_var, expr.value, python_ast = expr.value.python_ast))
+            syntactic_assign = Assign(tmp_var, expr.value, python_ast = expr.value.python_ast)
+            pyccel_stage.set_stage('semantic')
+
+            assign = self._visit(syntactic_assign)
             self._additional_exprs[-1].append(assign)
             return FunctionCallArgument(self._visit(tmp_var))
-        if isinstance(value, (PyccelArithmeticOperator, PyccelInternalFunction)) and value.rank:
+        if isinstance(value, (PyccelArithmeticOperator, PyccelFunction)) and value.rank:
             a = generate_and_assign_temp_var()
         elif isinstance(value, FunctionCall) and isinstance(value.class_type, CustomDataType):
             if not value.funcdef.results[0].var.is_alias:
@@ -2909,7 +2929,12 @@ class SemanticParser(BasicParser):
         except RuntimeError:
             pass
 
-        func     = self.scope.find(name, 'functions')
+        func = self.scope.find(name, 'functions')
+
+        if func is None:
+            name = str(expr.funcdef)
+            if name in builtin_functions_dict:
+                func = PyccelFunctionDef(name, builtin_functions_dict[name])
 
         # Check for specialised method
         if isinstance(func, PyccelFunctionDef):
@@ -2950,12 +2975,8 @@ class SemanticParser(BasicParser):
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
-        F = pyccel_builtin_function(expr, args)
 
-        if func is None and F is not None:
-            return F
-
-        elif self.scope.find(name, 'cls_constructs'):
+        if self.scope.find(name, 'cls_constructs'):
 
             # TODO improve the test
             # we must not invoke the scope like this
@@ -3175,7 +3196,7 @@ class SemanticParser(BasicParser):
             d_var  = self._infer_type(rhs)
             if d_var['memory_handling'] == 'alias' and not isinstance(lhs, IndexedElement):
                 rhs = rhs.internal_var
-        elif isinstance(rhs, PyccelInternalFunction) and isinstance(rhs.dtype, VoidType):
+        elif isinstance(rhs, PyccelFunction) and isinstance(rhs.dtype, VoidType):
             if expr.lhs.is_temp:
                 return rhs
             else:
@@ -3666,12 +3687,15 @@ class SemanticParser(BasicParser):
     def _visit_GeneratorComprehension(self, expr):
         lhs = self.check_for_variable(expr.lhs)
         if lhs is None:
+            pyccel_stage.set_stage('syntactic')
             if expr.lhs.is_temp:
                 lhs = PyccelSymbol(self.scope.get_new_name(), is_temp=True)
             else:
                 lhs = expr.lhs
+            syntactic_assign = Assign(lhs, expr, python_ast=expr.python_ast)
+            pyccel_stage.set_stage('semantic')
 
-            creation = self._visit(Assign(lhs, expr, python_ast=expr.python_ast))
+            creation = self._visit(syntactic_assign)
             self._additional_exprs[-1].append(creation)
             return self.get_variable(lhs)
         else:
@@ -3777,9 +3801,13 @@ class SemanticParser(BasicParser):
             v = o.var
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
                 # Create a syntactic object to visit
+                pyccel_stage.set_stage('syntactic')
                 if isinstance(v, Variable):
                     v = PyccelSymbol(v.name)
-                a = self._visit(Assign(v, r, python_ast=expr.python_ast))
+                syntactic_assign = Assign(v, r, python_ast=expr.python_ast)
+                pyccel_stage.set_stage('semantic')
+
+                a = self._visit(syntactic_assign)
                 assigns.append(a)
                 if isinstance(a, ConstructorCall):
                     a.cls_variable.is_temp = False
@@ -3874,6 +3902,7 @@ class SemanticParser(BasicParser):
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
         # Create new temparary templates for the arguments with a Union data type.
+        pyccel_stage.set_stage('syntactic')
         tmp_templates = {}
         new_expr_args = []
         for a in expr.arguments:
@@ -3892,6 +3921,7 @@ class SemanticParser(BasicParser):
                                         value=a.value, kwonly=a.is_kwonly, annotation=dtype_symb))
             else:
                 new_expr_args.append(a)
+        pyccel_stage.set_stage('semantic')
 
         templates.update(tmp_templates)
         template_combinations = list(product(*[v.type_list for v in templates.values()]))
@@ -4516,10 +4546,15 @@ class SemanticParser(BasicParser):
             for hd in header:
                 for i,_ in enumerate(hd.dtypes):
                     self.scope.insert_symbol(f'arg_{i}')
-                arguments = [FunctionDefArgument(self._visit(AnnotatedPyccelSymbol(f'arg_{i}', annotation = arg))[0]) \
+                pyccel_stage.set_stage('syntactic')
+                syntactic_args = [AnnotatedPyccelSymbol(f'arg_{i}', annotation = arg) \
                         for i, arg in enumerate(hd.dtypes)]
-                results = [FunctionDefResult(self._visit(AnnotatedPyccelSymbol(f'out_{i}', annotation = arg))[0]) \
+                syntactic_results = [AnnotatedPyccelSymbol(f'out_{i}', annotation = arg) \
                         for i, arg in enumerate(hd.results)]
+                pyccel_stage.set_stage('semantic')
+
+                arguments = [FunctionDefArgument(self._visit(a)[0]) for a in syntactic_args]
+                results = [FunctionDefResult(self._visit(r)[0]) for r in syntactic_results]
                 interfaces.append(FunctionDef(f_name, arguments, results, []))
 
             # TODO -> Said: must handle interface
@@ -4603,8 +4638,12 @@ class SemanticParser(BasicParser):
         # expr is a FunctionCall
         arg = func_call_args[0].value
         if not isinstance(arg, Variable):
+            pyccel_stage.set_stage('syntactic')
             new_symbol = PyccelSymbol(self.scope.get_new_name())
-            creation = self._visit(Assign(new_symbol, arg, python_ast=func_call.python_ast))
+            syntactic_assign = Assign(new_symbol, arg, python_ast=func_call.python_ast)
+            pyccel_stage.set_stage('semantic')
+
+            creation = self._visit(syntactic_assign)
             self._additional_exprs[-1].append(creation)
             arg = self._visit(new_symbol)
         return NumpyWhere(arg)
