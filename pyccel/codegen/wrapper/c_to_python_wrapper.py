@@ -2105,6 +2105,39 @@ class CToPythonWrapper(Wrapper):
             return None
 
     def _extract_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+        """
+        Extract the C-compatible FunctionDefArgument from the PythonObject.
+
+        Extract the C-compatible FunctionDefArgument from the PythonObject.
+        The C-compatible argument is extracted from collect_arg which holds a Python
+        oject into arg_var.
+
+        The extraction is done by finding the appropriate function
+        _extract_X_FunctionDefArgument for the object expr. X is the class type of the
+        object expr. If this function does not exist then the method resolution order
+        is used to search for other compatible _extract_X_FunctionDefArgument functions.
+        If none are found then an error is raised.
+
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        arg_var : Variable | IndexedElement
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            A list of expressions which extract the argument from collect_arg into arg_var.
+        """
         class_type = orig_var.class_type
 
         classes = type(class_type).__mro__
@@ -2118,6 +2151,35 @@ class CToPythonWrapper(Wrapper):
             severity='fatal')
 
     def _extract_FixedSizeType_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+        """
+        Extract the C-compatible scalar FunctionDefArgument from the PythonObject.
+
+        Extract the C-compatible scalar FunctionDefArgument from the PythonObject.
+        The C-compatible argument is extracted from collect_arg which holds a Python
+        oject into arg_var.
+
+        The extraction is done by calling a function from the C-Python API. These functions
+        are indexed in the dictionary `py_to_c_registry`.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        arg_var : Variable | IndexedElement
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            A list of expressions which extract the argument from collect_arg into arg_var.
+        """
         dtype = orig_var.dtype
         try :
             cast_function = py_to_c_registry[(dtype.primitive_type, dtype.precision)]
@@ -2130,6 +2192,35 @@ class CToPythonWrapper(Wrapper):
         return [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
 
     def _extract_CustomDataType_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+        """
+        Extract the C-compatible class FunctionDefArgument from the PythonObject.
+
+        Extract the C-compatible class FunctionDefArgument from the PythonObject.
+        The C-compatible argument is extracted from collect_arg which holds a Python
+        oject into arg_var.
+
+        The extraction is done by accessing the pointer from the `instance` attribute of the
+        Pyccel generated class definition.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        arg_var : Variable | IndexedElement
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            A list of expressions which extract the argument from collect_arg into arg_var.
+        """
         dtype = orig_var.dtype
         python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
         scope = python_cls_base.scope
@@ -2150,9 +2241,66 @@ class CToPythonWrapper(Wrapper):
         return cast
 
     def _extract_NumpyNDArrayType_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+        """
+        Extract the C-compatible NumPy array FunctionDefArgument from the PythonObject.
+
+        Extract the C-compatible NumPy array FunctionDefArgument from the PythonObject.
+        The C-compatible argument is extracted from collect_arg which holds a Python
+        oject into arg_var.
+
+        The extraction is done by calling the function `pyarray_to_ndarray` from the stdlib.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        arg_var : Variable | IndexedElement
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            A list of expressions which extract the argument from collect_arg into arg_var.
+        """
         return [Assign(arg_var, FunctionCall(pyarray_to_ndarray, [collect_arg]))]
 
     def _extract_HomogeneousTupleType_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+        """
+        Extract the C-compatible homogeneous tuple FunctionDefArgument from the PythonObject.
+
+        Extract the C-compatible homogeneous tuple FunctionDefArgument from the PythonObject.
+        The C-compatible argument is extracted from collect_arg which holds a Python
+        oject into arg_var.
+
+        The extraction is done by allocating an array and filling the elements with values
+        extracted from the indexed Python tuple in collect_arg.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        arg_var : Variable | IndexedElement
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            A list of expressions which extract the argument from collect_arg into arg_var.
+        """
         idx = self.scope.get_temporary_variable(CNativeInt())
         size_var = self.scope.get_temporary_variable(PythonNativeInt(), f'{orig_var.name}_size')
         indexed_orig_var = IndexedElement(orig_var, idx)
