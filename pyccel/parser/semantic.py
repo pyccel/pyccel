@@ -4017,6 +4017,32 @@ class SemanticParser(BasicParser):
             return isinstance(var, Variable) \
                 and isinstance(var.dtype, SymbolicType)
 
+        def build_tuple_of_inhomogeneous_elements(tuple_var):
+            if isinstance(tuple_var.class_type, InhomogeneousTupleType):
+                return PythonTuple(*[build_tuple_of_inhomogeneous_elements(self.scope.collect_tuple_element(v)) for v in tuple_var])
+            else:
+                return tuple_var
+
+        if any(isinstance(a.value.class_type, InhomogeneousTupleType) for a in args):
+            new_args = []
+            for a in args:
+                val = a.value
+                if isinstance(val.class_type, InhomogeneousTupleType):
+                    assert not a.has_keyword
+                    if isinstance(val, FunctionCall):
+                        pyccel_stage.set_stage('syntactic')
+                        tmp_var = PyccelSymbol(self.scope.get_new_name())
+                        assign = Assign(tmp_var, val)
+                        assign.set_current_ast(expr.python_ast)
+                        pyccel_stage.set_stage('semantic')
+                        self._additional_exprs[-1].append(self._visit(assign))
+                        val = self._visit(tmp_var)
+                    new_args.append(FunctionCallArgument(build_tuple_of_inhomogeneous_elements(val)))
+                else:
+                    new_args.append(a)
+
+            args = new_args
+
         # TODO fix: not yet working because of mpi examples
 #        if not test:
 #            # TODO: Add description to parser/messages.py
