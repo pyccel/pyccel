@@ -1422,10 +1422,10 @@ class CToPythonWrapper(Wrapper):
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
         bound_argument = getattr(expr, 'wrapping_bound_argument', expr.bound_argument)
 
-        if orig_var.is_ndarray:
+        if isinstance(orig_var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     memory_handling='alias', new_class = Variable)
-            self._wrapping_arrays = orig_var.is_ndarray
+            self._wrapping_arrays = True
             self.scope.insert_variable(arg_var, orig_var.name)
         else:
             kwargs = {'is_argument':False}
@@ -1497,7 +1497,7 @@ class CToPythonWrapper(Wrapper):
 
         orig_var = expr.original_function_argument_variable
 
-        if orig_var.rank:
+        if isinstance(orig_var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             bound_var_name = expr.var.name
             # Create variable to hold raw data pointer
             arg_var = expr.var.clone(self.scope.get_expected_name(bound_var_name), is_argument = False)
