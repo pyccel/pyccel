@@ -2104,7 +2104,7 @@ class CToPythonWrapper(Wrapper):
         else:
             return None
 
-    def _extract_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+    def _extract_FunctionDefArgument(self, orig_var, arg_var, collect_arg, bound_argument):
         """
         Extract the C-compatible FunctionDefArgument from the PythonObject.
 
@@ -2133,6 +2133,10 @@ class CToPythonWrapper(Wrapper):
             A variable with type PythonObject* holding the Python argument from which the
             C-compatible argument should be collected.
 
+        bound_argument : bool
+            True if the argument is the self argument of a class method. False otherwise.
+            This should always be False for this function.
+
         Returns
         -------
         list[PyccelAstNode]
@@ -2144,13 +2148,13 @@ class CToPythonWrapper(Wrapper):
         for cls in classes:
             annotation_method = f'_extract_{cls.__name__}_FunctionDefArgument'
             if hasattr(self, annotation_method):
-                return getattr(self, annotation_method)(orig_var, arg_var, collect_arg)
+                return getattr(self, annotation_method)(orig_var, arg_var, collect_arg, bound_argument)
 
         # Unknown object, we raise an error.
         return errors.report(PYCCEL_RESTRICTION_TODO, symbol=orig_var,
             severity='fatal')
 
-    def _extract_FixedSizeType_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+    def _extract_FixedSizeType_FunctionDefArgument(self, orig_var, arg_var, collect_arg, bound_argument):
         """
         Extract the C-compatible scalar FunctionDefArgument from the PythonObject.
 
@@ -2175,11 +2179,16 @@ class CToPythonWrapper(Wrapper):
             A variable with type PythonObject* holding the Python argument from which the
             C-compatible argument should be collected.
 
+        bound_argument : bool
+            True if the argument is the self argument of a class method. False otherwise.
+            This should always be False for this function.
+
         Returns
         -------
         list[PyccelAstNode]
             A list of expressions which extract the argument from collect_arg into arg_var.
         """
+        assert not bound_argument
         dtype = orig_var.dtype
         try :
             cast_function = py_to_c_registry[(dtype.primitive_type, dtype.precision)]
@@ -2191,7 +2200,7 @@ class CToPythonWrapper(Wrapper):
                            results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
         return [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
 
-    def _extract_CustomDataType_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+    def _extract_CustomDataType_FunctionDefArgument(self, orig_var, arg_var, collect_arg, bound_argument):
         """
         Extract the C-compatible class FunctionDefArgument from the PythonObject.
 
@@ -2215,6 +2224,10 @@ class CToPythonWrapper(Wrapper):
         collect_arg : Variable
             A variable with type PythonObject* holding the Python argument from which the
             C-compatible argument should be collected.
+
+        bound_argument : bool
+            True if the argument is the self argument of a class method. False otherwise.
+            This should always be False for this function.
 
         Returns
         -------
@@ -2240,7 +2253,7 @@ class CToPythonWrapper(Wrapper):
         cast.append(AliasAssign(arg_var, cast_c_res))
         return cast
 
-    def _extract_NumpyNDArrayType_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+    def _extract_NumpyNDArrayType_FunctionDefArgument(self, orig_var, arg_var, collect_arg, bound_argument):
         """
         Extract the C-compatible NumPy array FunctionDefArgument from the PythonObject.
 
@@ -2264,14 +2277,19 @@ class CToPythonWrapper(Wrapper):
             A variable with type PythonObject* holding the Python argument from which the
             C-compatible argument should be collected.
 
+        bound_argument : bool
+            True if the argument is the self argument of a class method. False otherwise.
+            This should always be False for this function.
+
         Returns
         -------
         list[PyccelAstNode]
             A list of expressions which extract the argument from collect_arg into arg_var.
         """
+        assert not bound_argument
         return [Assign(arg_var, FunctionCall(pyarray_to_ndarray, [collect_arg]))]
 
-    def _extract_HomogeneousTupleType_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+    def _extract_HomogeneousTupleType_FunctionDefArgument(self, orig_var, arg_var, collect_arg, bound_argument):
         """
         Extract the C-compatible homogeneous tuple FunctionDefArgument from the PythonObject.
 
@@ -2296,11 +2314,16 @@ class CToPythonWrapper(Wrapper):
             A variable with type PythonObject* holding the Python argument from which the
             C-compatible argument should be collected.
 
+        bound_argument : bool
+            True if the argument is the self argument of a class method. False otherwise.
+            This should always be False for this function.
+
         Returns
         -------
         list[PyccelAstNode]
             A list of expressions which extract the argument from collect_arg into arg_var.
         """
+        assert not bound_argument
         idx = self.scope.get_temporary_variable(CNativeInt())
         size_var = self.scope.get_temporary_variable(PythonNativeInt(), f'{orig_var.name}_size')
         indexed_orig_var = IndexedElement(orig_var, idx)
@@ -2313,7 +2336,7 @@ class CToPythonWrapper(Wrapper):
         for_scope = self.scope.create_new_loop_scope()
         self.scope = for_scope
         for_body = [AliasAssign(indexed_collect_arg, FunctionCall(PyTuple_GetItem, [collect_arg, idx]))]
-        for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_arg_var, indexed_collect_arg)
+        for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_arg_var, indexed_collect_arg, bound_argument)
         self.exit_scope()
 
         cast.append(For(idx, Iterable(PythonRange(size_var)), for_body, scope = for_scope))
