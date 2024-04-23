@@ -1523,20 +1523,18 @@ class FCodePrinter(CodePrinter):
         elif isinstance(dtype, FixedSizeNumericType):
             dtype = self._print(dtype.primitive_type)
             dtype += f'({self.print_kind(var)})'
+        elif isinstance(dtype, StringType):
+            dtype = self._print(dtype)
+
+            if intent_in:
+                dtype = dtype[:9] +'(len =*)'
+                #TODO improve ,this is the case of character as argument
+        elif isinstance(dtype, BindCPointer):
+            dtype = 'type(c_ptr)'
+            self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
         else:
-
-        # ...
-            if isinstance(dtype, StringType):
-                dtype = self._print(dtype)
-
-                if intent_in:
-                    dtype = dtype[:9] +'(len =*)'
-                    #TODO improve ,this is the case of character as argument
-            elif isinstance(dtype, BindCPointer):
-                dtype = 'type(c_ptr)'
-                self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
-            else:
-                dtype = self._print(dtype)
+            errors.report("Unrecognised datatype",
+                    symbol=expr, severity='fatal')
 
         code_value = ''
         if expr.value:
