@@ -1071,10 +1071,7 @@ class CCodePrinter(CodePrinter):
         for i, f in enumerate(orig_args):
             f = f.value
 
-            if isinstance(f, PythonType):
-                f = f.print_string
-
-            if isinstance(f, (PythonTuple, PythonList)):
+            if isinstance(f, PythonTuple):
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
@@ -1088,8 +1085,11 @@ class CCodePrinter(CodePrinter):
                     end_of_tuple = FunctionCallArgument(LiteralString(sep), 'end')
                 code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple]))
                 args = []
+                continue
+            if isinstance(f, PythonType):
+                f = f.print_string
 
-            elif isinstance(f, FunctionCall) and isinstance(f.class_type, TupleType):
+            if isinstance(f, FunctionCall) and isinstance(f.class_type, TupleType):
                 tmp_list = [self.scope.get_temporary_variable(a.var.dtype) for a in f.funcdef.results]
                 tmp_arg_format_list = []
                 for a in tmp_list:
@@ -1100,7 +1100,6 @@ class CCodePrinter(CodePrinter):
                 args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)
-
             elif f.rank > 0 and not isinstance(f.class_type, StringType):
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
