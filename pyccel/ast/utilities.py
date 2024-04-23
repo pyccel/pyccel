@@ -29,6 +29,7 @@ from .sysext        import sys_mod
 from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
+from .operators     import PyccelUnarySub
 from .scipyext      import scipy_mod
 from .typingext     import typing_mod
 from .variable      import Variable, IndexedElement
@@ -796,3 +797,22 @@ def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     body = [bi for b in body for bi in b]
 
     return body
+
+#==============================================================================
+def is_literal_integer(expr):
+    """
+    Determine whether the expression is a literal integer.
+    Determine whether the expression is a literal integer. A literal integer
+    can be described by a LiteralInteger, a PyccelUnarySub(LiteralInteger) or
+    a Constant.
+    Parameters
+    ----------
+    expr : object
+        Any Python object which should be analysed to determine whether it is an integer.
+    Returns
+    -------
+    bool
+        True if the object represents a literal integer, false otherwise.
+    """
+    return isinstance(expr, (int, LiteralInteger)) or \
+        isinstance(expr, PyccelUnarySub) and isinstance(expr.args[0], (int, LiteralInteger))
