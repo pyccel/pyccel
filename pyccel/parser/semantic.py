@@ -833,15 +833,7 @@ class SemanticParser(BasicParser):
                 idx = slice(arg.start, arg.stop)
                 orig_vars = [self.scope.collect_tuple_element(v) for v in var]
                 selected_vars = orig_vars[idx]
-                if len(selected_vars)==1:
-                    var = selected_vars[0]
-                    if len(indices) == 1:
-                        return var
-                    else:
-                        return self._extract_indexed_from_var(var, indices[1:], expr)
-                elif len(selected_vars)<1:
-                    return PythonTuple()
-                elif len(indices)==1:
+                if len(indices)==1:
                     return PythonTuple(*selected_vars)
                 else:
                     return PythonTuple(*[self._extract_indexed_from_var(var, indices[1:], expr) for var in selected_vars])
