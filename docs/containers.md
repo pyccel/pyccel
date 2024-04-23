@@ -18,6 +18,8 @@ Currently Pyccel cannot wrap tuples so they can be used in functions but cannot 
 
 Homogeneous tuples are handled as though they were arrays. This means that they have the same restrictions and advantages as NumPy arrays. In particular they can be indexed at an arbitrary point.
 
+Elements of a homogeneous tuple should have the same type, the same number of dimensions, and (if relevant) the same NumPy ordering. If any of these constraints is not respected then you may unexpectedly find yourself using the more inflexible inhomogeneous tuples. Further tuples containing pointers to other objects cannot always be stored in a homogeneous tuple.
+
 ### Inhomogeneous tuples
 
 Inhomogeneous tuples are handled symbolically. This means that an inhomogeneous tuple is treated as a collection of translatable objects. Each of these objects is then handled individually. In particular this means that tuples can only be indexed by compile-time constants.
