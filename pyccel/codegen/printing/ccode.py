@@ -1074,7 +1074,22 @@ class CCodePrinter(CodePrinter):
             if isinstance(f, PythonType):
                 f = f.print_string
 
-            if isinstance(f, FunctionCall) and isinstance(f.class_type, TupleType):
+            if isinstance(f, (PythonTuple, PythonList)):
+                if args_format:
+                    code += formatted_args_to_printf(args_format, args, sep)
+                    args_format = []
+                    args = []
+                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                if len(f) == 1:
+                    args.append(FunctionCallArgument(LiteralString(',')))
+                if i + 1 == len(orig_args):
+                    end_of_tuple = FunctionCallArgument(LiteralString(end), 'end')
+                else:
+                    end_of_tuple = FunctionCallArgument(LiteralString(sep), 'end')
+                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple]))
+                args = []
+
+            elif isinstance(f, FunctionCall) and isinstance(f.class_type, TupleType):
                 tmp_list = [self.scope.get_temporary_variable(a.var.dtype) for a in f.funcdef.results]
                 tmp_arg_format_list = []
                 for a in tmp_list:
@@ -1085,22 +1100,6 @@ class CCodePrinter(CodePrinter):
                 args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)
-
-            elif isinstance(f, (PythonTuple, PythonList)) or isinstance(f.class_type, InhomogeneousTupleType):
-                if args_format:
-                    code += formatted_args_to_printf(args_format, args, sep)
-                    args_format = []
-                    args = []
-                args = [FunctionCallArgument(print_arg) for tuple_elem in f \
-                        for print_arg in (self.scope.collect_tuple_element(tuple_elem), tuple_sep)][:-1]
-                if f.shape[0] == 1:
-                    args.append(FunctionCallArgument(LiteralString(',')))
-                if i + 1 == len(orig_args):
-                    end_of_tuple = FunctionCallArgument(LiteralString(end), 'end')
-                else:
-                    end_of_tuple = FunctionCallArgument(LiteralString(sep), 'end')
-                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple]))
-                args = []
 
             elif f.rank > 0 and not isinstance(f.class_type, StringType):
                 if args_format:

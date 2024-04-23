@@ -716,8 +716,7 @@ class FCodePrinter(CodePrinter):
                 continue
             else:
                 f = f.value
-            if (isinstance(f, (PythonTuple, str)) or isinstance(f.class_type, InhomogeneousTupleType)) \
-                    and not isinstance(f, FunctionCall):
+            if isinstance(f, (PythonTuple, str)):
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
@@ -726,9 +725,8 @@ class FCodePrinter(CodePrinter):
                     end_of_tuple = empty_end
                 else:
                     end_of_tuple = FunctionCallArgument(sep, 'end')
-                args = [FunctionCallArgument(print_arg) for tuple_elem in f \
-                        for print_arg in (self.scope.collect_tuple_element(tuple_elem), tuple_sep)][:-1]
-                if f.shape[0] == 1:
+                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                if len(f) == 1:
                     args.append(FunctionCallArgument(LiteralString(',')))
                 code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple], file=expr.file))
                 args = []
