@@ -282,7 +282,7 @@ class CToPythonWrapper(Wrapper):
                                results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
 
             func_call = FunctionCall(func, [py_obj])
-        else:
+        elif isinstance(arg.class_type, NumpyNDArrayType):
             try :
                 type_ref = numpy_dtype_registry[dtype]
             except KeyError:
@@ -301,6 +301,9 @@ class CToPythonWrapper(Wrapper):
             # No error code required as the error is raised inside pyarray_check
 
             func_call = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
+        else:
+            errors.report(f"Can't check the type of an array of {arg.class_type}\n"+PYCCEL_RESTRICTION_TODO,
+                    symbol=arg, severity='fatal')
 
         if raise_error:
             message = LiteralString(f"Expected an argument of type {arg.class_type} for argument {arg.name}")
