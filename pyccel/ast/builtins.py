@@ -596,23 +596,10 @@ class PythonTupleFunction(TypedAstNode):
     different to the `(,)` syntax as it only takes one argument
     and unpacks any variables.
 
-    Parameters
-    ----------
-    arg : TypedAstNode
-        The argument passed to the function call.
+    This class should not be used to create an instance, it is
+    simply a place-holder to indicate the class to the semantic parser.
     """
     __slots__ = ()
-    _attribute_nodes = ()
-
-    def __new__(cls, arg):
-        if isinstance(arg, PythonTuple):
-            return arg
-        elif isinstance(arg, (PythonList, Variable)):
-            return PythonTuple(*arg)
-        elif isinstance(arg.shape[0], LiteralInteger):
-            return PythonTuple(*[arg[i] for i in range(arg.shape[0])])
-        else:
-            raise TypeError(f"Can't unpack {arg} into a tuple")
 
 #==============================================================================
 class PythonLen(PyccelFunction):
