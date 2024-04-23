@@ -191,6 +191,11 @@ class ErrorsMode(metaclass = Singleton):
         Set the error mode.
 
         Set the error mode to either 'developer' or 'user'.
+
+        Parameters
+        ----------
+        mode : str
+            The new error mode.
         """
         assert mode in ['user', 'developer']
         self._mode = mode
@@ -220,11 +225,24 @@ class Errors(metaclass = Singleton):
         return self._mode.value
 
     def initialize(self):
+        """
+        Initialise the Errors singleton.
+
+        Initialise the Errors singleton. This function is necessary so
+        the singleton can be reinitialised using the `reset` function.
+        """
         self.error_info_map = OrderedDict()
 
         self._target = None
 
     def reset(self):
+        """
+        Reset the Errors singleton.
+
+        Reset the Errors singleton. This removes any information about
+        previously generated errors or warnings. This method should be
+        called before starting a new translation.
+        """
         self.initialize()
 
     def set_target(self, target):
