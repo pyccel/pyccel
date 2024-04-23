@@ -10,13 +10,20 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 from pyccel.ast.datatypes import VoidType
-from pyccel.ast.internals import PyccelInternalFunction
+from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.basic import TypedAstNode
 
-__all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy', 'SetPop', 'SetRemove')
+__all__ = (
+    'SetAdd',
+    'SetClear',
+    'SetCopy',
+    'SetDiscard',
+    'SetMethod',
+    'SetPop',
+    'SetRemove'
+)
 
-
-class SetMethod(PyccelInternalFunction):
+class SetMethod(PyccelFunction):
     """
     Abstract class for set method calls.
 
@@ -65,17 +72,11 @@ class SetAdd(SetMethod) :
     """
     __slots__ = ()
     _shape = None
-    _order = None
-    _rank = 0
     _class_type = VoidType()
     name = 'add'
 
     def __init__(self, set_variable, new_elem) -> None:
-        is_homogeneous = (
-            set_variable.class_type.element_type == new_elem.class_type and
-            set_variable.rank - 1 == new_elem.rank
-        )
-        if not is_homogeneous:
+        if set_variable.class_type.element_type != new_elem.class_type:
             raise TypeError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, new_elem)
 
@@ -94,8 +95,6 @@ class SetClear(SetMethod):
     """
     __slots__ = ()
     _shape = None
-    _order = None
-    _rank = 0
     _class_type = VoidType()
     name = 'clear'
 
@@ -115,15 +114,14 @@ class SetCopy(SetMethod):
     set_variable : TypedAstNode
         The set on which the method will operate.
     """
-    __slots__ = ("_shape", "_order", "_rank", "_class_type",)
+    __slots__ = ("_shape", "_class_type",)
     name = 'copy'
 
     def __init__(self, set_variable):
         self._shape = set_variable._shape
-        self._order = set_variable._order
-        self._rank = set_variable._rank
         self._class_type = set_variable._class_type
         super().__init__(set_variable)
+
 
 class SetPop(SetMethod):
     """
@@ -141,14 +139,13 @@ class SetPop(SetMethod):
         The name of the set.
     """
     __slots__ = ('_class_type',)
-    _rank = 0
-    _order = None
     _shape = None
     name = 'pop'
 
     def __init__(self, set_variable):
         self._class_type = set_variable.class_type.element_type
         super().__init__(set_variable)
+
 
 class SetRemove(SetMethod):
     """
@@ -167,19 +164,39 @@ class SetRemove(SetMethod):
     """
     __slots__ = ()
     _shape = None
-    _order = None
-    _rank = 0
     _class_type = VoidType()
     name = 'remove'
 
     def __init__(self, set_variable, item) -> None:
         if not isinstance(item, TypedAstNode):
             raise TypeError(f"It is not possible to look for a {type(item).__name__} object in a set of {set_variable.dtype}")
-        expected_type = set_variable.class_type.element_type
-        is_homogeneous = (
-            expected_type == item.class_type and
-            set_variable.rank - 1 == item.rank
-        )
-        if not is_homogeneous:
+        if item.class_type != set_variable.class_type.element_type:
             raise TypeError(f"Can't remove an element of type {item.dtype} from a set of {set_variable.dtype}")
+        super().__init__(set_variable, item)
+
+
+class SetDiscard(SetMethod):
+    """
+    Represents a call to the .discard() method.
+
+    The discard() is a built-in method to remove elements from the set.
+    The discard() method takes exactly one argument. 
+    This method does not return any value.   
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The name of the set.
+
+    item : TypedAstNode
+        The item to search for, and remove.
+    """
+    __slots__ = ()
+    _shape = None
+    _class_type = VoidType()
+    name = 'discard'
+
+    def __init__(self, set_variable, item) -> None:
+        if set_variable.class_type.element_type != item.class_type:
+            raise TypeError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, item)

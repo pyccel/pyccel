@@ -6,12 +6,20 @@ All notable changes to this project will be documented in this file.
 ### Added
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1694 : Add Python support for list method `extend()`.
+-   #1700 : Add Python support for list method `sort()`.
 -   #1696 : Add Python support for list method `copy()`.
 -   #1693 : Add Python support for list method `remove()`.
 -   #1739 : Add abstract class `SetMethod` to handle calls to various set methods.
 -   #1739 : Add Python support for set method `clear()`.
 -   #1740 : Add Python support for set method `copy()`.
 -   #1750 : Add Python support for set method `remove()`.
+-   #1743 : Add Python support for set method `discard()`.
+-   #1787 : Ensure `STC` is installed with Pyccel.
+-   #1656 : Ensure `gFTL` is installed with Pyccel.
+-   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
+-   #1844 : Add line numbers and code to errors from built-in function calls.
+-   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
+-   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
 ### Fixed
 
@@ -24,26 +32,49 @@ All notable changes to this project will be documented in this file.
 -   #1792 : Fix array unpacking.
 -   #1795 : Fix bug when returning slices in C.
 -   #1732 : Fix multidimensional list indexing in Python.
+-   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
+-   #1218 : Fix bug when assigning an array to a slice in Fortran.
+-   #1830 : Fix missing allocation when returning an annotated array expression.
+-   #1821 : Ensure an error is raised when creating an ambiguous interface.
+-   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
+-   \[TESTS\] Filter out cast warnings in cast tests.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
 -   \[INTERNALS\] Rewrite datatyping system. See #1722.
 -   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
+-   \[INTERNALS\] Moved rank from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.PyccelType` objects.
+-   \[INTERNALS\] Moved order from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
 -   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
 -   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
 -   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
+-   \[INTERNALS\] Stop storing `FunctionDef`, `ClassDef`, and `Import` objects inside `CodeBlock`s.
+-   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
+-   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
+-   \[INTERNALS\] Ensure `SemanticParser.infer_type` returns all documented information.
+-   \[INTERNALS\] Enforce correct value for `pyccel_staging` property of `PyccelAstNode`.
+-   \[INTERNALS\] Allow visiting objects containing both syntactic and semantic elements in `SemanticParser`.
+-   \[INTERNALS\] Rename `pyccel.ast.internals.PyccelInternalFunction` to `pyccel.ast.internals.PyccelFunction`.
+-   \[INTERNALS\] All internal classes which can be generated from `FunctionCall`s must inherit from `PyccelFunction`.
+-   \[INTERNALS\] `PyccelFunction` objects which do not represent objects in memory have the type `SymbolicType`.
+-   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
 
 ### Deprecated
 
+-   #1786 : Remove support for `real` and `integer` as type annotations.
+-   #1812 : Stop allowing multiple main blocks inside a module.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
 -   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
+-   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
+-   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
+-   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
 
 ## \[1.11.2\] - 2024-03-05
 
@@ -57,7 +88,7 @@ All notable changes to this project will be documented in this file.
 -   #1425 : Add support for `numpy.isnan`, `numpy.isinf` and `numpy.isfinite`.
 -   #1738 : Add Python support for creating scalar sets with `{}`.
 -   #1738 : Add Python support for set method `add`.
--   #1749 : Add Python support for set method `pop()`
+-   #1749 : Add Python support for set method `pop()`.
 
 ### Fixed
 

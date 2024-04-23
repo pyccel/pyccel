@@ -17,7 +17,7 @@ tuple_funcs = [(f, getattr(tuples_module,f)) for f in tuples_module.__all__
                                             if is_func_with_0_args(f)]
 
 failing_tests = {
-        'homogenous_tuple_string':'String has no precision',
+        'homogeneous_tuple_string':"Can't save a list of strings (#459)",
         'tuple_homogeneous_return':"Can't return a tuple",
         'tuple_inhomogeneous_return':"Can't return a tuple",
         'tuple_visitation_inhomogeneous':"Can't iterate over an inhomogeneous tuple",
@@ -42,7 +42,10 @@ def compare_python_pyccel( p_output, f_output ):
 
     for pth, pycc in zip(p_output, f_output):
 
-        if isinstance(pth, bool):
+        if isinstance(pth, np.ndarray):
+            assert np.allclose(pth,pycc)
+
+        elif isinstance(pth, bool):
             pycc_bool = (pycc == 1)
             assert(pth == pycc_bool)
 

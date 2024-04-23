@@ -52,10 +52,8 @@ runs:
         curl https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi -o msmpisdk.msi
         #
         # Install MS MPI
-        ./msmpisetup.exe -unattend -verbose
-        sleep 30
-        msiexec /quiet /i msmpisdk.msi
-        sleep 1
+        Start-Process msmpisetup.exe -Wait -ArgumentList '-unattend -verbose'
+        Start-Process msiexec -Wait -ArgumentList '/quiet /i msmpisdk.msi'
         echo "MS MPI runtime and SDK installed"
       shell: powershell
     - name: Setup MPI
