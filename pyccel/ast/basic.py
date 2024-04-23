@@ -454,17 +454,21 @@ class PyccelAstNode:
         self._user_nodes = [u for u in self._user_nodes if u.pyccel_staging != 'syntactic']
 
     def remove_user_node(self, user_node, invalidate = True):
-        """ Indicate that the current node is no longer used
-        by the user_node. This function is usually called by
-        the substitute method
+        """
+        Remove the specified user node from the AST tree.
+
+        Indicate that the current node is no longer used by the user_node.
+        This function is usually called by the substitute method. It removes
+        the specified user node from the user nodes internal property
+        meaning that the node cannot appear in the results when searching
+        through the tree.
 
         Parameters
         ----------
         user_node : PyccelAstNode
-                    Node which previously used the current node
+            Node which previously used the current node.
         invalidate : bool
-                    Indicates whether the removed object should
-                    be invalidated
+            Indicates whether the removed object should be invalidated.
         """
         assert user_node in self._user_nodes
         self._user_nodes.remove(user_node)

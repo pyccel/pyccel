@@ -330,7 +330,12 @@ class PythonComplex(PyccelFunction):
 
     @property
     def internal_var(self):
-        """ When the complex call is a cast, returns the variable being cast """
+        """
+        When the complex call is a cast, returns the variable being cast.
+
+        When the complex call is a cast, returns the variable being cast.
+        This property should only be used when handling a cast.
+        """
         assert self._is_cast
         return self._internal_var
 
