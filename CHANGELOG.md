@@ -70,6 +70,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 -   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
 -   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
+-   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
 
 ## \[1.12.1\] - 2024-10-01
 
