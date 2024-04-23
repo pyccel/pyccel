@@ -57,12 +57,12 @@ from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 
-from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
+from pyccel.ast.class_defs import get_cls_base
 
 from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
 from pyccel.ast.datatypes import PrimitiveIntegerType, HomogeneousListType, StringType, SymbolicType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-from pyccel.ast.datatypes import DataTypeFactory, PrimitiveFloatingPointType
+from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType
 from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType, HomogeneousContainerType
 
@@ -71,7 +71,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
+from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -84,7 +84,7 @@ from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, Ma
 from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
 from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
-from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero, NumpyResultType
+from pyccel.ast.numpyext import NumpyNewArray, NumpyResultType
 from pyccel.ast.numpyext import process_dtype as numpy_process_dtype
 
 from pyccel.ast.numpytypes import NumpyNDArrayType
@@ -94,7 +94,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
-from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow
+from pyccel.ast.operators import PyccelNot, PyccelAdd, PyccelMul, PyccelPow
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
@@ -1279,8 +1279,6 @@ class SemanticParser(BasicParser):
             else:
                 iterable = rhs
             elem_vars = []
-            is_homogeneous = True
-            elem_d_lhs_ref = None
             for i,tuple_elem in enumerate(iterable):
                 r = self.scope.collect_tuple_element(tuple_elem)
                 elem_name = self.scope.get_new_name( name + '_' + str(i) )
@@ -1288,11 +1286,6 @@ class SemanticParser(BasicParser):
 
                 if not arr_in_multirets:
                     self._ensure_target( r, elem_d_lhs )
-                if elem_d_lhs_ref is None:
-                    elem_d_lhs_ref = elem_d_lhs.copy()
-                    is_homogeneous = getattr(elem_d_lhs['class_type'], 'datatype', GenericType()) is not GenericType()
-                elif elem_d_lhs != elem_d_lhs_ref:
-                    is_homogeneous = False
 
                 elem_type = elem_d_lhs.pop('class_type')
 
@@ -2567,8 +2560,6 @@ class SemanticParser(BasicParser):
         return possible_args
 
     def _visit_SyntacticTypeAnnotation(self, expr):
-        types = []
-
         self._in_annotation = True
         visited_dtype = self._visit(expr.dtype)
         self._in_annotation = False
@@ -2735,7 +2726,7 @@ class SemanticParser(BasicParser):
                 return Concatenate(*args)
             else:
                 if not (isinstance(arg0.shape[0], (LiteralInteger, int)) and isinstance(arg1.shape[0], (LiteralInteger, int))):
-                    errors.report(f"Can't create an inhomogeneous object from objects of unknown size",
+                    errors.report("Can't create an inhomogeneous object from objects of unknown size",
                             severity='fatal', symbol=expr)
 
                 tuple_args = [self.scope.collect_tuple_element(v) for v in arg0] + [self.scope.collect_tuple_element(v) for v in arg1]
@@ -3149,7 +3140,6 @@ class SemanticParser(BasicParser):
                                                     arr_in_multirets=r.rank>0 ) )
                 lhs = PythonTuple(*new_lhs)
             else:
-                n = len(lhs)
                 if isinstance(rhs.class_type, InhomogeneousTupleType):
                     r_iter = [self.scope.collect_tuple_element(v) for v in rhs]
                 else:
@@ -4806,8 +4796,8 @@ class SemanticParser(BasicParser):
         PythonTuple
             A node describing the result of a call to the `tuple()` function.
         """
-        func_arg, = self._handle_function_args(func_call.args)
-        arg = func_arg.value
+        func_args = self._handle_function_args(func_call.args)
+        arg = func_args[0].value
         if isinstance(arg, PythonTuple):
             return arg
         elif isinstance(arg.shape[0], LiteralInteger):
