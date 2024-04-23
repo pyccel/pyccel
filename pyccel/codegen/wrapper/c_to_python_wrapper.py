@@ -11,13 +11,13 @@ import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
 from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
-from pyccel.ast.builtins      import PythonTuple
+from pyccel.ast.builtins      import PythonTuple, PythonRange
 from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
-from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
-from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, AsName
+from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock, For
+from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, AsName, Iterable
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
@@ -29,9 +29,10 @@ from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataT
 from pyccel.ast.cwrapper      import PyList_New, PyList_Append, PyList_GetItem, PyList_SetItem
 from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, PyCapsule_Import
 from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString, PyGetSetDefElement
+from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_New, PyTuple_GetItem
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
-from pyccel.ast.datatypes     import FixedSizeNumericType
+from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse
 from pyccel.ast.numpyext      import NumpyNDArrayType
@@ -301,6 +302,8 @@ class CToPythonWrapper(Wrapper):
             # No error code required as the error is raised inside pyarray_check
 
             func_call = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
+        elif isinstance(arg.class_type, HomogeneousTupleType):
+            func_call = FunctionCall(PyTuple_Check, [py_obj])
         else:
             errors.report(f"Can't check the type of an array of {arg.class_type}\n"+PYCCEL_RESTRICTION_TODO,
                     symbol=arg, severity='fatal')
@@ -1447,35 +1450,7 @@ class CToPythonWrapper(Wrapper):
 
         # Collect the function which casts from a Python object to a C object
         dtype = orig_var.dtype
-        if isinstance(dtype, CustomDataType):
-            python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
-            scope = python_cls_base.scope
-            attribute = scope.find('instance', 'variables', raise_if_missing = True)
-            if bound_argument:
-                cast_type = collect_arg
-                cast = []
-            else:
-                cast_type = Variable(self._python_object_map[dtype],
-                                    self.scope.get_new_name(collect_arg.name),
-                                    memory_handling='alias',
-                                    cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True))
-                self.scope.insert_variable(cast_type)
-                cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type))]
-            c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = cast_type)
-            cast_c_res = PointerCast(c_res, orig_var)
-            cast.append(AliasAssign(arg_var, cast_c_res))
-        elif arg_var.rank == 0:
-            try :
-                cast_function = py_to_c_registry[(dtype.primitive_type, dtype.precision)]
-            except KeyError:
-                errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
-            cast_func = FunctionDef(name = cast_function,
-                               body      = [],
-                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                               results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
-            cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
-        else:
-            cast = [Assign(arg_var, FunctionCall(pyarray_to_ndarray, [collect_arg]))]
+        cast = self._extract_FunctionDefArgument(orig_var, arg_var, collect_arg)
 
         if arg_var.is_optional and not isinstance(dtype, CustomDataType):
             memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
@@ -2128,3 +2103,70 @@ class CToPythonWrapper(Wrapper):
             return Import(wrapper_name, AsName(mod_spoof, expr.source), mod = mod_spoof)
         else:
             return None
+
+    def _extract_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+        class_type = orig_var.class_type
+
+        classes = type(class_type).__mro__
+        for cls in classes:
+            annotation_method = f'_extract_{cls.__name__}_FunctionDefArgument'
+            if hasattr(self, annotation_method):
+                return getattr(self, annotation_method)(orig_var, arg_var, collect_arg)
+
+        # Unknown object, we raise an error.
+        return errors.report(PYCCEL_RESTRICTION_TODO, symbol=orig_var,
+            severity='fatal')
+
+    def _extract_FixedSizeType_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+        dtype = orig_var.dtype
+        try :
+            cast_function = py_to_c_registry[(dtype.primitive_type, dtype.precision)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
+        cast_func = FunctionDef(name = cast_function,
+                           body      = [],
+                           arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
+                           results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
+        return [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
+
+    def _extract_CustomDataType_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+        dtype = orig_var.dtype
+        python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
+        scope = python_cls_base.scope
+        attribute = scope.find('instance', 'variables', raise_if_missing = True)
+        if bound_argument:
+            cast_type = collect_arg
+            cast = []
+        else:
+            cast_type = Variable(self._python_object_map[dtype],
+                                self.scope.get_new_name(collect_arg.name),
+                                memory_handling='alias',
+                                cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True))
+            self.scope.insert_variable(cast_type)
+            cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type))]
+        c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = cast_type)
+        cast_c_res = PointerCast(c_res, orig_var)
+        cast.append(AliasAssign(arg_var, cast_c_res))
+        return cast
+
+    def _extract_NumpyNDArrayType_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+        return [Assign(arg_var, FunctionCall(pyarray_to_ndarray, [collect_arg]))]
+
+    def _extract_HomogeneousTupleType_FunctionDefArgument(self, orig_var, arg_var, collect_arg):
+        idx = self.scope.get_temporary_variable(CNativeInt())
+        size_var = self.scope.get_temporary_variable(PythonNativeInt(), f'{orig_var.name}_size')
+        indexed_orig_var = IndexedElement(orig_var, idx)
+        indexed_arg_var = IndexedElement(arg_var, idx)
+        indexed_collect_arg = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
+
+        cast = [Assign(size_var, FunctionCall(PyTuple_Size, [collect_arg])),
+                Allocate(arg_var, shape = (size_var,), status = 'unallocated')]
+
+        for_scope = self.scope.create_new_loop_scope()
+        self.scope = for_scope
+        for_body = [AliasAssign(indexed_collect_arg, FunctionCall(PyTuple_GetItem, [collect_arg, idx]))]
+        for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_arg_var, indexed_collect_arg)
+        self.exit_scope()
+
+        cast.append(For(idx, Iterable(PythonRange(size_var)), for_body, scope = for_scope))
+        return cast
