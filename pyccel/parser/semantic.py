@@ -1941,12 +1941,35 @@ class SemanticParser(BasicParser):
                 severity='fatal', symbol=expr)
 
     def insert_attribute_to_class(self, class_def, self_var, attrib):
+        """
+        Insert a new attribute into an existing class.
+
+        Insert a new attribute into an existing class definition. In order to do this a dotted
+        variable must be created. If the new attribute is an inhomogeneous tuple then this
+        function is called recursively to insert each variable comprising the tuple into the
+        class definition.
+
+        Parameters
+        ----------
+        class_def : ClassDef
+            The class defintion to which the attribute should be added.
+        self_var : Variable
+            The variable representing the 'self' variable of the class instance.
+        attrib : Variable
+            The attribute which should be inserted into the class defintion.
+
+        Returns
+        -------
+        DottedVariable | PythonTuple
+            The object that was inserted into the class definition.
+        """
         # Create the local DottedVariable
         lhs = attrib.clone(attrib.name, new_class = DottedVariable, lhs = self_var)
 
         if isinstance(attrib.class_type, InhomogeneousTupleType):
-            for v in attrib:
-                self.insert_attribute_to_class(class_def, self_var, class_def.scope.collect_tuple_element(v))
+            new_lhs = [self.insert_attribute_to_class(class_def, self_var, class_def.scope.collect_tuple_element(v)) \
+                       for v in attrib]
+            lhs = PythonTuple(*new_lhs)
         else:
             # update the attributes of the class and push it to the scope
             class_def.add_new_attribute(lhs)
