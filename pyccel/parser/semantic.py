@@ -4850,7 +4850,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : FunctionCall
+        func_call : FunctionCall
             The syntactic FunctionCall describing the call to `tuple()`.
 
         Returns
