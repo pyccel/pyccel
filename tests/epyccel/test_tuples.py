@@ -103,3 +103,46 @@ def test_tuples_with_2d_args(test_func, language):
     f2(pyccel_x)
     np.allclose(python_x, pyccel_x)
 
+def test_homogeneous_tuples_of_bools_as_args(language):
+    def my_tuple(a : 'tuple[bool,...]'):
+        return len(a), a[0], a[1], a[2]
+
+    epyc_func = epyccel(my_tuple, language=language)
+    assert my_tuple((True, False, False)) == epyc_func((True, False, False))
+    tuple_arg = (False, True, False, True, True, True)
+    assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
+
+def test_homogeneous_tuples_of_ints_as_args(language):
+    def my_tuple(a : 'tuple[int,...]'):
+        return len(a), a[0], a[1], a[2]
+
+    epyc_func = epyccel(my_tuple, language=language)
+    assert my_tuple((1,2,3)) == epyc_func((1,2,3))
+    tuple_arg = (-1, 9, 20, -55, 23)
+    assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
+
+def test_homogeneous_tuples_of_floats_as_args(language):
+    def my_tuple(a : 'tuple[float,...]'):
+        return len(a), a[0], a[1], a[2]
+
+    epyc_func = epyccel(my_tuple, language=language)
+    assert my_tuple((1.0,2.0,3.0)) == epyc_func((1.0,2.0,3.0))
+    tuple_arg = (-1.0, 9.0, 20.0, -55.3, 23.2)
+    assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
+
+def test_homogeneous_tuples_of_complexes_as_args(language):
+    def my_tuple(a : 'tuple[complex,...]'):
+        return len(a), a[0], a[1], a[2]
+
+    epyc_func = epyccel(my_tuple, language=language)
+    assert my_tuple((1.0+4j, 2.0-2j, 3.0+0j)) == epyc_func((1.0+4j, 2.0-2j, 3.0+0j))
+    tuple_arg = (1.0+4j, 2.0-2j, 3.0+0j, -23.12-4.4j)
+    assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
+
+def test_homogeneous_tuples_of_numpy_ints_as_args(language):
+    def my_tuple(a : 'tuple[int8,...]'):
+        return len(a), a[0], a[1], a[2]
+
+    epyc_func = epyccel(my_tuple, language=language)
+    tuple_arg = (np.int8(1), np.int8(2), np.int8(3))
+    assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
