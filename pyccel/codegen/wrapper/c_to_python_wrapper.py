@@ -1450,7 +1450,7 @@ class CToPythonWrapper(Wrapper):
 
         # Collect the function which casts from a Python object to a C object
         dtype = orig_var.dtype
-        cast = self._extract_FunctionDefArgument(orig_var, arg_var, collect_arg)
+        cast = self._extract_FunctionDefArgument(orig_var, arg_var, collect_arg, bound_argument)
 
         if arg_var.is_optional and not isinstance(dtype, CustomDataType):
             memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
