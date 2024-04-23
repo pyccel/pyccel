@@ -2465,10 +2465,6 @@ class SemanticParser(BasicParser):
         return Slice(start, stop, step)
 
     def _visit_IndexedElement(self, expr):
-        inhomogeneous_element = self.scope.find(expr, 'symbolic_alias')
-        if inhomogeneous_element is not None:
-            return inhomogeneous_element
-
         var = self._visit(expr.base)
 
         if isinstance(var, (PyccelFunctionDef, VariableTypeAnnotation)):
