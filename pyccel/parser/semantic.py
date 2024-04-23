@@ -525,6 +525,11 @@ class SemanticParser(BasicParser):
             container = container.parent_scope
         return headers
 
+    def collect_tuple_of_inhomogeneous_elements(self, tuple_var):
+        if isinstance(tuple_var.class_type, InhomogeneousTupleType):
+            return PythonTuple(*[self.collect_tuple_of_inhomogeneous_elements(self.scope.collect_tuple_element(v)) for v in tuple_var])
+        else:
+            return tuple_var
 
     #=======================================================
     #              Utility functions
@@ -3190,6 +3195,11 @@ class SemanticParser(BasicParser):
                     new_rhs.extend(self.scope.collect_tuple_element(v) for v in r)
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
+                elif isinstance(l, Variable) and isinstance(l.class_type, InhomogeneousTupleType):
+                    new_lhs.append(self.collect_tuple_of_inhomogeneous_elements(l))
+                    new_rhs.append(r)
+                    # Repeat step to handle tuples of tuples of etc.
+                    unravelling = True
                 elif isinstance(l, Variable) and l.is_optional:
                     if l in self._optional_params:
                         # Collect temporary variable which provides
@@ -4017,12 +4027,6 @@ class SemanticParser(BasicParser):
             return isinstance(var, Variable) \
                 and isinstance(var.dtype, SymbolicType)
 
-        def build_tuple_of_inhomogeneous_elements(tuple_var):
-            if isinstance(tuple_var.class_type, InhomogeneousTupleType):
-                return PythonTuple(*[build_tuple_of_inhomogeneous_elements(self.scope.collect_tuple_element(v)) for v in tuple_var])
-            else:
-                return tuple_var
-
         if any(isinstance(a.value.class_type, InhomogeneousTupleType) for a in args):
             new_args = []
             for a in args:
@@ -4036,8 +4040,9 @@ class SemanticParser(BasicParser):
                         assign.set_current_ast(expr.python_ast)
                         pyccel_stage.set_stage('semantic')
                         self._additional_exprs[-1].append(self._visit(assign))
+                        val.remove_user_node(assign)
                         val = self._visit(tmp_var)
-                    new_args.append(FunctionCallArgument(build_tuple_of_inhomogeneous_elements(val)))
+                    new_args.append(FunctionCallArgument(self.collect_tuple_of_inhomogeneous_elements(val)))
                 else:
                     new_args.append(a)
 
