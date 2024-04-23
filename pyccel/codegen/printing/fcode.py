@@ -2896,10 +2896,6 @@ class FCodePrinter(CodePrinter):
         return "({}, {})".format(real_str, imag_str)
 
     def _print_IndexedElement(self, expr):
-        tuple_var = self.scope.find(expr, 'symbolic_alias')
-        if tuple_var:
-            return self._print(tuple_var)
-
         base = expr.base
 
         inds = list(expr.indices)
