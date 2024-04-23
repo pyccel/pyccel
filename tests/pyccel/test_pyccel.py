@@ -805,13 +805,16 @@ def test_basic_header():
                                         "scripts/classes/class_headers.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
-                                        "scripts/classes/tuples_in_classes.py",
                                         "scripts/classes/class_temporary_in_constructor.py",
                                         "scripts/classes/class_with_non_target_array_arg.py",
                                         "scripts/classes/class_pointer.py",
                                         ] )
 def test_classes( test_file , language):
     pyccel_test(test_file, language=language)
+
+def test_tuples_in_classes(language):
+    test_file = "scripts/classes/tuples_in_classes.py"
+    pyccel_test(test_file, language=language, output_dtype = [float, float, float, bool])
 
 def test_classes_type_print(language):
     test_file = "scripts/classes/empty_class.py"
