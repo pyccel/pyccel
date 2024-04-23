@@ -21,7 +21,7 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefAr
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
-from pyccel.ast.builtins import PythonBool
+from pyccel.ast.builtins import PythonBool, PythonList
 
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -716,7 +716,7 @@ class FCodePrinter(CodePrinter):
                 continue
             else:
                 f = f.value
-            if isinstance(f, (PythonTuple, str)):
+            if isinstance(f, (PythonTuple, PythonList, str)):
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
