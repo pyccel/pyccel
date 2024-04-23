@@ -95,6 +95,9 @@ class FortranToCWrapper(Wrapper):
             body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa].base, s)
                     for fa,s in zip(func_def_args, orig_size)
                     if isinstance(func_arg_to_call_arg[fa], IndexedElement)]
+            body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa], [fa.shape[0]])
+                    for fa in func_def_args
+                    if isinstance(fa.original_function_argument_variable.class_type, HomogeneousTupleType)]
             body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa])
                      for fa in func_def_args
                      if not isinstance(func_arg_to_call_arg[fa], IndexedElement) \
