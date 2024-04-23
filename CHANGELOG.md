@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## \[UNRELEASED\]
 
 ### Added
+
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1694 : Add Python support for list method `extend()`.
 -   #1700 : Add Python support for list method `sort()`.
@@ -40,6 +41,7 @@ All notable changes to this project will be documented in this file.
 -   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
 
 ### Changed
+
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
 -   \[TESTS\] Filter out cast warnings in cast tests.
