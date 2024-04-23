@@ -107,7 +107,7 @@ from pyccel.ast.typingext import TypingFinal
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import split_positional_keyword_arguments
-from pyccel.ast.utilities import recognised_source
+from pyccel.ast.utilities import recognised_source, is_literal_integer
 
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
@@ -824,22 +824,23 @@ class SemanticParser(BasicParser):
             arg = indices[0]
 
             if isinstance(arg, Slice):
-                if ((arg.start is not None and not isinstance(arg.start, LiteralInteger)) or
-                        (arg.stop is not None and not isinstance(arg.stop, LiteralInteger))):
+                if ((arg.start is not None and not is_literal_integer(arg.start)) or
+                        (arg.stop is not None and not is_literal_integer(arg.stop))):
                     errors.report(INDEXED_TUPLE, symbol=var,
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                         severity='fatal')
 
                 idx = slice(arg.start, arg.stop)
-                selected_vars = var[idx]
+                orig_vars = [self.scope.collect_tuple_element(v) for v in var]
+                selected_vars = orig_vars[idx]
                 if len(selected_vars)==1:
-                    var = self.scope.collect_tuple_element(selected_vars[0])
+                    var = selected_vars[0]
                     if len(indices) == 1:
                         return var
                     else:
                         return self._extract_indexed_from_var(var, indices[1:], expr)
                 elif len(selected_vars)<1:
-                    return None
+                    return PythonTuple()
                 elif len(indices)==1:
                     return PythonTuple(*selected_vars)
                 else:
