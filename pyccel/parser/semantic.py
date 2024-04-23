@@ -1896,7 +1896,7 @@ class SemanticParser(BasicParser):
                 raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
             rank = 1
-            if (len(args) == 2 and args[1] is LiteralEllipsis()) or (len(args) > 0):
+            if len(args) > 0:
                 syntactic_annotation = args[0]
                 if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
                     pyccel_stage.set_stage('syntactic')
