@@ -802,13 +802,16 @@ def expand_to_loops(block, new_index, scope, language_has_vectors = False):
 def is_literal_integer(expr):
     """
     Determine whether the expression is a literal integer.
+
     Determine whether the expression is a literal integer. A literal integer
     can be described by a LiteralInteger, a PyccelUnarySub(LiteralInteger) or
     a Constant.
+
     Parameters
     ----------
     expr : object
         Any Python object which should be analysed to determine whether it is an integer.
+
     Returns
     -------
     bool
