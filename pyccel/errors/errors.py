@@ -172,8 +172,12 @@ class ErrorInfo:
 
 
 class ErrorsMode(metaclass = Singleton):
-    """Developper or User mode.
-    pyccel command line will set it.
+    """
+    The mode for the error output.
+
+    The mode for the error output. This is either 'developer' or 'user'.
+    In developer mode the errors are more verbose and include a traceback
+    this helps developers debug errors.
     """
     def __init__(self):
         self._mode = 'user'
@@ -183,6 +187,11 @@ class ErrorsMode(metaclass = Singleton):
         return self._mode
 
     def set_mode(self, mode):
+        """
+        Set the error mode.
+
+        Set the error mode to either 'developer' or 'user'.
+        """
         assert mode in ['user', 'developer']
         self._mode = mode
 
@@ -213,30 +222,24 @@ class Errors(metaclass = Singleton):
     def initialize(self):
         self.error_info_map = OrderedDict()
 
-        self._target = {}
-        self._target['file'] = None
-        self._target['module'] = None
-        self._target['function'] = None
-        self._target['class'] = None
+        self._target = None
 
     def reset(self):
         self.initialize()
 
-    def set_target(self, target, kind):
-        assert kind in ['file', 'module', 'function', 'class']
-        self._target[kind] = target
+    def set_target(self, target):
+        """
+        Set the current translation target.
 
-    def unset_target(self, kind):
-        assert kind in ['file', 'module', 'function', 'class']
-        self._target[kind] = None
+        Set the current translation target which describes the location
+        from which the error is being raised.
 
-    def reset_target(self):
-        """."""
-        self._target = {}
-        self._target['file'] = None
-        self._target['module'] = None
-        self._target['function'] = None
-        self._target['class'] = None
+        Parameters
+        ----------
+        target : str
+            The name of the file being translated.
+        """
+        self._target = target
 
     def report(self,
                message,
@@ -292,7 +295,7 @@ class Errors(metaclass = Singleton):
             return
 
         if filename is None:
-            filename = self.target['file']
+            filename = self.target
 
         # TODO improve. it is assumed here that tl and br have the same line
         if bounding_box:

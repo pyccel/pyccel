@@ -287,7 +287,7 @@ class SemanticParser(BasicParser):
 
         errors = Errors()
         if self.filename:
-            errors.set_target(self.filename, 'file')
+            errors.set_target(self.filename)
 
         # then we treat the current file
 
