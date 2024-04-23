@@ -741,10 +741,7 @@ class IndexedElement(TypedAstNode):
             new_rank = len(new_shape)
 
             if new_rank == 0:
-                if isinstance(base.class_type, InhomogeneousTupleType):
-                    self._class_type = base.class_type[indices[0]]
-                else:
-                    self._class_type = base.class_type.element_type
+                self._class_type = base.class_type.element_type
                 self._is_slice = False
                 if self._class_type.rank:
                     self._shape = base.shape[rank:]
