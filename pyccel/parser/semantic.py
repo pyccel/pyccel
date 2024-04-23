@@ -1979,9 +1979,8 @@ class SemanticParser(BasicParser):
         lhs = attrib.clone(attrib.name, new_class = DottedVariable, lhs = self_var)
 
         if isinstance(attrib.class_type, InhomogeneousTupleType):
-            new_lhs = [self.insert_attribute_to_class(class_def, self_var, class_def.scope.collect_tuple_element(v)) \
-                       for v in attrib]
-            lhs = PythonTuple(*new_lhs)
+            for v in attrib:
+                self.insert_attribute_to_class(class_def, self_var, class_def.scope.collect_tuple_element(v))
         else:
             # update the attributes of the class and push it to the scope
             class_def.add_new_attribute(lhs)
