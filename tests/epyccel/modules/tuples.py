@@ -63,6 +63,7 @@ __all__ = [
         'tuple_variable_slice',
         'tuple_negative_slice',
         'inhomogeneous_tuple_negative_slice',
+        'inhomogeneous_tuple_var_negative_slice',
         'tuple_index',
         'tuple_homogeneous_int',
         'tuple_homogeneous_bool',
@@ -423,6 +424,11 @@ def tuple_negative_slice():
 
 def inhomogeneous_tuple_negative_slice():
     a,b = (1,False,3)[:-1]
+    return a,b
+
+def inhomogeneous_tuple_var_negative_slice():
+    c = (1,False,3)
+    a,b = c[:-1]
     return a,b
 
 def tuple_index():
