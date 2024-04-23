@@ -600,6 +600,7 @@ class PythonTupleFunction(TypedAstNode):
     simply a place-holder to indicate the class to the semantic parser.
     """
     __slots__ = ()
+    _attribute_nodes = ()
 
 #==============================================================================
 class PythonLen(PyccelFunction):
