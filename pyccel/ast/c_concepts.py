@@ -82,8 +82,7 @@ class ObjectAddress(TypedAstNode):
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):
-        if not isinstance(obj, TypedAstNode):
-            raise TypeError("object must be an instance of TypedAstNode")
+        assert isinstance(obj, TypedAstNode)
         self._obj        = obj
         self._shape      = obj.shape
         self._class_type = obj.class_type
@@ -125,8 +124,7 @@ class PointerCast(TypedAstNode):
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj, cast_type):
-        if not isinstance(obj, TypedAstNode):
-            raise TypeError("object must be an instance of TypedAstNode")
+        assert isinstance(obj, TypedAstNode)
         assert getattr(obj, 'is_alias', False)
         self._obj        = obj
         self._shape      = cast_type.shape
@@ -310,8 +308,7 @@ class CMacro(PyccelAstNode):
 
     def __init__(self, arg):
         super().__init__()
-        if not isinstance(arg, str):
-            raise TypeError('arg must be of type str')
+        assert isinstance(arg, str)
         self._macro = arg
 
     def __repr__(self):

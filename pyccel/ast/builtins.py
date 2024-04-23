@@ -357,9 +357,7 @@ class PythonEnumerate(PyccelAstNode):
     name = 'enumerate'
 
     def __init__(self, arg, start = None):
-        if pyccel_stage != "syntactic" and \
-                not isinstance(arg, TypedAstNode):
-            raise TypeError('Expecting an arg of valid type')
+        assert isinstance(arg, TypedAstNode)
         self._element = arg
         self._start   = start or LiteralInteger(0)
         super().__init__()
@@ -610,7 +608,7 @@ class PythonTupleFunction(TypedAstNode):
         elif isinstance(arg.shape[0], LiteralInteger):
             return PythonTuple(*[arg[i] for i in range(arg.shape[0])])
         else:
-            raise TypeError(f"Can't unpack {arg} into a tuple")
+            raise PyccelError(f"Can't unpack {arg} into a tuple")
 
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
@@ -673,7 +671,7 @@ class PythonList(TypedAstNode):
             self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
 
         else:
-            raise TypeError("Can't create an inhomogeneous list")
+            raise PyccelError("Can't create an inhomogeneous list")
 
         self._class_type = HomogeneousListType(dtype)
 
@@ -738,9 +736,9 @@ class PythonSet(TypedAstNode):
             inner_shape = [() if a.rank == 0 else a.shape for a in args]
             self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
             if elem_type.rank > 0:
-                raise TypeError("Pyccel can't hash non-scalar types")
+                raise PyccelError("Pyccel can't hash non-scalar types")
         else:
-            raise TypeError("Can't create an inhomogeneous set")
+            raise PyccelError("Can't create an inhomogeneous set")
 
         self._class_type = HomogeneousSetType(elem_type)
 
@@ -820,8 +818,7 @@ class PythonPrint(PyccelAstNode):
     name = 'print'
 
     def __init__(self, expr, file="stdout"):
-        if file not in ('stdout', 'stderr'):
-            raise ValueError('output_unit can be `stdout` or `stderr`')
+        assert file in ('stdout', 'stderr')
         self._expr = expr
         self._file = file
         super().__init__()
@@ -932,9 +929,7 @@ class PythonZip(PyccelInternalFunction):
     name = 'zip'
 
     def __init__(self, *args):
-        if not isinstance(args, (tuple, list)):
-            raise TypeError('args must be a list or tuple')
-        elif len(args) < 2:
+        if len(args) < 2:
             raise ValueError('args must be of length > 2')
         super().__init__(*args)
         if pyccel_stage == 'syntactic':
@@ -1001,8 +996,7 @@ class PythonSum(PyccelInternalFunction):
     _shape = None
 
     def __init__(self, arg):
-        if not isinstance(arg, TypedAstNode):
-            raise TypeError(f'Unknown type of {type(arg)}.' )
+        assert isinstance(arg, TypedAstNode)
         if isinstance(arg.class_type, HomogeneousContainerType):
             self._class_type = arg.class_type.element_type
         else:
@@ -1037,11 +1031,11 @@ class PythonMax(PyccelInternalFunction):
     def __init__(self, *x):
         if len(x)==1:
             x = x[0]
-
-        if isinstance(x, (list, tuple)):
+        else:
             x = PythonTuple(*x)
-        elif not isinstance(x, (PythonTuple, PythonList)):
-            raise TypeError(f'Unknown type of {type(x)}.' )
+
+        if not isinstance(x, (PythonTuple, PythonList)):
+            raise PyccelError(f'Unknown type of {type(x)}.' )
 
         if not x.is_homogeneous:
             types = ', '.join(str(xi.dtype) for xi in x)
@@ -1073,11 +1067,11 @@ class PythonMin(PyccelInternalFunction):
     def __init__(self, *x):
         if len(x)==1:
             x = x[0]
-
-        if isinstance(x, (list, tuple)):
+        else:
             x = PythonTuple(*x)
-        elif not isinstance(x, (PythonTuple, PythonList)):
-            raise TypeError(f'Unknown type of {type(x)}.' )
+
+        if not isinstance(x, (PythonTuple, PythonList)):
+            raise PyccelError(f'Unknown type of {type(x)}.' )
 
         if not x.is_homogeneous:
             types = ', '.join(str(xi.dtype) for xi in x)
@@ -1106,8 +1100,7 @@ class Lambda(PyccelAstNode):
     __slots__ = ('_variables', '_expr')
     _attribute_nodes = ('_variables', '_expr')
     def __init__(self, variables, expr):
-        if not isinstance(variables, (list, tuple)):
-            raise TypeError("Lambda arguments must be a tuple or list")
+        assert isinstance(variables, (list, tuple))
         self._variables = tuple(variables)
         self._expr = expr
         super().__init__()

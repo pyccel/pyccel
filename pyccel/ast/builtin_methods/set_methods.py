@@ -77,7 +77,7 @@ class SetAdd(SetMethod) :
 
     def __init__(self, set_variable, new_elem) -> None:
         if set_variable.class_type.element_type != new_elem.class_type:
-            raise TypeError("Expecting an argument of the same type as the elements of the set")
+            raise PyccelError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, new_elem)
 
 
@@ -169,9 +169,9 @@ class SetRemove(SetMethod):
 
     def __init__(self, set_variable, item) -> None:
         if not isinstance(item, TypedAstNode):
-            raise TypeError(f"It is not possible to look for a {type(item).__name__} object in a set of {set_variable.dtype}")
+            raise PyccelError(f"It is not possible to look for a {type(item).__name__} object in a set of {set_variable.dtype}")
         if item.class_type != set_variable.class_type.element_type:
-            raise TypeError(f"Can't remove an element of type {item.dtype} from a set of {set_variable.dtype}")
+            raise PyccelError(f"Can't remove an element of type {item.dtype} from a set of {set_variable.dtype}")
         super().__init__(set_variable, item)
 
 
@@ -198,5 +198,5 @@ class SetDiscard(SetMethod):
 
     def __init__(self, set_variable, item) -> None:
         if set_variable.class_type.element_type != item.class_type:
-            raise TypeError("Expecting an argument of the same type as the elements of the set")
+            raise PyccelError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, item)

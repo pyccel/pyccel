@@ -6,7 +6,7 @@
 #------------------------------------------------------------------------------------------#
 from itertools import chain
 
-from pyccel.errors.errors     import Errors
+from pyccel.errors.errors     import PyccelError, Errors
 from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 
 from pyccel.utilities.stage   import PyccelStage
@@ -404,24 +404,21 @@ class Allocate(PyccelAstNode):
     def __init__(self, variable, *, shape, status, like = None):
 
         if not isinstance(variable, (Variable, PointerCast)):
-            raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
+            raise PyccelError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
 
         if variable.on_stack:
             # Variable may only be a pointer in the wrapper
-            raise ValueError("Variable must be allocatable")
+            raise PyccelError("Variable must be allocatable")
 
         if shape and not isinstance(shape, (int, tuple, list)):
-            raise TypeError(f"Cannot understand 'shape' parameter of type '{type(shape)}'")
+            raise PyccelError(f"Cannot understand 'shape' parameter of type '{type(shape)}'")
 
         class_type = variable.class_type
         if class_type.rank != len(shape):
-            raise ValueError("Incompatible rank in variable allocation")
+            raise PyccelError("Incompatible rank in variable allocation")
 
-        if not isinstance(status, str):
-            raise TypeError(f"Cannot understand 'status' parameter of type '{type(status)}'")
-
-        if status not in ('allocated', 'unallocated', 'unknown'):
-            raise ValueError(f"Value of 'status' not allowed: '{status}'")
+        assert isinstance(status, str)
+        assert status in ('allocated', 'unallocated', 'unknown')
 
         self._variable = variable
         self._shape    = shape
@@ -519,8 +516,7 @@ class Deallocate(PyccelAstNode):
     # ...
     def __init__(self, variable):
 
-        if not isinstance(variable, Variable):
-            raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
+        assert isinstance(variable, Variable)
 
         self._variable = variable
         super().__init__()
@@ -569,8 +565,7 @@ class CodeBlock(PyccelAstNode):
                 ls += i.body
             elif i is not None and not isinstance(i, EmptyNode):
                 ls.append(i)
-        if not isinstance(unravelled, bool):
-            raise TypeError("unravelled must be a boolean")
+        assert isinstance(unravelled, bool)
         self._body = tuple(ls)
         self._unravelled = unravelled
         super().__init__()
@@ -683,10 +678,10 @@ class AliasAssign(PyccelAstNode):
     def __init__(self, lhs, rhs):
         if pyccel_stage == 'semantic':
             if not lhs.is_alias:
-                raise TypeError('lhs must be a pointer')
+                raise PyccelError('lhs must be a pointer')
 
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].var.is_alias:
-                raise TypeError("A pointer cannot point to the address of a temporary variable")
+                raise PyccelError("A pointer cannot point to the address of a temporary variable")
 
         self._lhs = lhs
         self._rhs = rhs
@@ -798,7 +793,7 @@ class AugAssign(Assign):
         ):
 
         if op not in self._accepted_operators.keys():
-            raise TypeError('Unrecognized Operator')
+            raise PyccelError('Unrecognized Operator')
 
         self._op = op
 
@@ -866,8 +861,8 @@ class While(ScopedAstNode):
 
         if iterable(body):
             body = CodeBlock(body)
-        elif not isinstance(body,CodeBlock):
-            raise TypeError('body must be an iterable or a CodeBlock')
+
+        assert isinstance(body,CodeBlock)
 
         self._test = test
         self._body = body
@@ -921,8 +916,8 @@ class With(ScopedAstNode):
 
         if iterable(body):
             body = CodeBlock(body)
-        elif not isinstance(body,CodeBlock):
-            raise TypeError('body must be an iterable')
+
+        assert isinstance(body,CodeBlock)
 
         self._test = test
         self._body = body
@@ -1023,47 +1018,25 @@ class Module(ScopedAstNode):
         imports=(),
         scope = None
         ):
-        if not isinstance(name, (str, AsName)):
-            raise TypeError('name must be a string or an AsName')
-
-        if not iterable(variables):
-            raise TypeError('variables must be an iterable')
-        for i in variables:
-            if not isinstance(i, Variable):
-                raise TypeError('Only a Variable instance is allowed.')
-
-        if not iterable(funcs):
-            raise TypeError('funcs must be an iterable')
-
-        for i in funcs:
-            if not isinstance(i, FunctionDef):
-                raise TypeError('Only a FunctionDef instance is allowed.'
-                                )
-
-        if not iterable(classes):
-            raise TypeError('classes must be an iterable')
-        for i in classes:
-            if not isinstance(i, ClassDef):
-                raise TypeError('Only a ClassDef instance is allowed.')
-
-        if not iterable(interfaces):
-            raise TypeError('interfaces must be an iterable')
-        for i in interfaces:
-            if not isinstance(i, Interface):
-                raise TypeError('Only a Interface instance is allowed.')
+        assert isinstance(name, (str, AsName))
+        assert iterable(variables)
+        assert all(isinstance(v, Variable) for v in variables)
+        assert iterable(funcs)
+        assert all(isinstance(f, FunctionDef) for f in funcs)
+        assert iterable(classes):
+        assert all(isinstance(c, ClassDef) for c in classes)
+        assert iterable(interfaces)
+        assert all(isinstance(i, Interface) for i in interfaces)
 
         NoneType = type(None)
         assert (pyccel_stage == 'syntactic' and isinstance(init_func, CodeBlock)) or \
                 isinstance(init_func, (NoneType, FunctionDef))
 
-        if not isinstance(free_func, (NoneType, FunctionDef)):
-            raise TypeError('free_func must be a FunctionDef')
+        assert isinstance(free_func, (NoneType, FunctionDef))
+        assert isinstance(program, (NoneType, Program, CodeBlock))
+        assert iterable(imports)
+        assert all(isinstance(i, Import) for i in imports)
 
-        if not isinstance(program, (NoneType, Program, CodeBlock)):
-            raise TypeError('program must be a Program (or a CodeBlock at the syntactic stage)')
-
-        if not iterable(imports):
-            raise TypeError('imports must be an iterable')
         imports = list(imports)
         for i in classes:
             imports += i.imports
@@ -1257,8 +1230,7 @@ class ModuleHeader(PyccelAstNode):
     _attribute_nodes = ('_module',)
 
     def __init__(self, module):
-        if not isinstance(module, Module):
-            raise TypeError('module must be a Module')
+        assert isinstance(module, Module)
 
         self._module = module
         super().__init__()
@@ -1304,20 +1276,11 @@ class Program(ScopedAstNode):
         scope=None
         ):
 
-        if not isinstance(name, str):
-            raise TypeError('name must be a string')
-
-        if not iterable(variables):
-            raise TypeError('variables must be an iterable')
-
-        for i in variables:
-            if not isinstance(i, Variable):
-                raise TypeError('Only a Variable instance is allowed.')
-
+        assert isinstance(name, str)
+        assert iterable(variables)
+        assert all(isinstance(v, Variable) for v in variables)
         assert isinstance(body, CodeBlock)
-
-        if not iterable(imports):
-            raise TypeError('imports must be an iterable')
+        assert iterable(imports)
 
         imports = {i : None for i in imports}  # for unicity and ordering
         imports = tuple(imports.keys())
@@ -1394,7 +1357,7 @@ class Iterable(PyccelAstNode):
         elif hasattr(iterable, 'n_indices') and hasattr(iterable, 'to_range'):
             self._num_indices_required = iterable.n_indices
         else:
-            raise TypeError(f"Unknown iterator type {type(iterable)}")
+            raise PyccelError(f"Unknown iterator type {type(iterable)}")
 
         super().__init__()
 
@@ -1481,7 +1444,7 @@ class Iterable(PyccelAstNode):
             length = getattr(self._iterable, '__len__',
                     getattr(self._iterable, 'length', None))
 
-            # Only create PythonLen if length is None to avoid unnecessary TypeErrors
+            # Only create PythonLen if length is None to avoid unnecessary PyccelErrors
             if length is None:
                 length = PythonLen(self._iterable)
 
@@ -1547,12 +1510,12 @@ class For(ScopedAstNode):
             if not isinstance(iter_obj, Iterable):
                 iter_obj = Iterable(iter_obj)
                 if iter_obj.num_loop_counters_required!=0:
-                    raise TypeError('iter_obj must be an iterable')
+                    raise PyccelError('iter_obj must be an iterable')
 
         if iterable(body):
             body = CodeBlock(body)
-        elif not isinstance(body,CodeBlock):
-            raise TypeError('body must be an iterable or a Codeblock')
+
+        assert isinstance(body,CodeBlock)
 
         self._target = target
         self._iterable = iter_obj
@@ -1710,8 +1673,7 @@ class FunctionDefArgument(TypedAstNode):
             self._name = name.name
         else:
             raise TypeError("Name must be a PyccelSymbol, Variable or FunctionAddress")
-        if not isinstance(bound_argument, bool):
-            raise TypeError("bound_argument must be a boolean")
+        assert isinstance(bound_argument, bool)
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
@@ -1823,8 +1785,7 @@ class FunctionDefArgument(TypedAstNode):
 
     @bound_argument.setter
     def bound_argument(self, bound):
-        if not isinstance(bound, bool):
-            raise TypeError("bound must be a boolean")
+        assert isinstance(bound, bool)
         self._bound_argument = bound
 
     def __str__(self):
@@ -1874,11 +1835,9 @@ class FunctionDefResult(TypedAstNode):
         self._annotation = annotation
 
         if pyccel_stage == 'syntactic':
-            if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol)):
-                raise TypeError(f"Var must be a PyccelSymbol or an AnnotatedPyccelSymbol, not a {type(var)}")
-        elif not isinstance(var, Variable):
-            raise TypeError(f"Var must be a Variable not a {type(var)}")
+            assert isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol))
         else:
+            assert isinstance(var, Variable)
             self._is_argument = var.is_argument
 
         super().__init__()
@@ -1959,7 +1918,7 @@ class FunctionCall(TypedAstNode):
 
         # ...
         if not isinstance(func, (FunctionDef, Interface)):
-            raise TypeError('> expecting a FunctionDef or an Interface')
+            raise PyccelError('> expecting a FunctionDef or an Interface')
 
         if isinstance(func, Interface):
             self._interface = func
@@ -1975,8 +1934,7 @@ class FunctionCall(TypedAstNode):
         if current_function == name:
             func.set_recursive()
 
-        if not isinstance(args, (tuple, list)):
-            raise TypeError('args must be a list or tuple')
+        assert isinstance(args, (tuple, list))
 
         # add the missing argument in the case of optional arguments
         f_args = func.arguments
@@ -2102,8 +2060,7 @@ class ConstructorCall(FunctionCall):
         arguments,
         cls_variable
         ):
-        if not isinstance(func, (FunctionDef, Interface, str)):
-            raise TypeError('Expecting func to be a FunctionDef or str')
+        assert isinstance(func, (FunctionDef, Interface, str)):
 
         self._cls_variable = cls_variable
         super().__init__(func, arguments, self._cls_variable)
@@ -2143,8 +2100,7 @@ class Return(PyccelAstNode):
 
     def __init__(self, expr, stmt=None):
 
-        if stmt and not isinstance(stmt, CodeBlock):
-            raise TypeError('stmt should only be of type CodeBlock')
+        assert isinstance(stmt, (type(None), CodeBlock))
 
         self._expr = expr
         self._stmt = stmt
@@ -2331,21 +2287,16 @@ class FunctionDef(ScopedAstNode):
         elif isinstance(name, (tuple, list)):
             name_ = []
             for i in name:
-                if isinstance(i, str):
-                    name_.append(PyccelSymbol(i))
-                else:
-                    raise TypeError('Function name must be PyccelSymbol or string'
-                                    )
+                assert isinstance(i, str)
+                name_.append(PyccelSymbol(i))
             name = tuple(name_)
         else:
             raise TypeError('Function name must be PyccelSymbol or string')
 
         # arguments
 
-        if not iterable(arguments):
-            raise TypeError('arguments must be an iterable')
-        if not all(isinstance(a, FunctionDefArgument) for a in arguments):
-            raise TypeError('arguments must be all be FunctionDefArguments')
+        assert iterable(arguments)
+        assert all(isinstance(a, FunctionDefArgument) for a in arguments)
 
         arg_vars = [a.var for a in arguments]
 
@@ -2353,51 +2304,27 @@ class FunctionDef(ScopedAstNode):
 
         if iterable(body):
             body = CodeBlock(body)
-        elif not isinstance(body,CodeBlock):
-            raise TypeError('body must be an iterable or a CodeBlock')
+
+        assert isinstance(body, CodeBlock)
 
         # results
 
-        if not iterable(results):
-            raise TypeError('results must be an iterable')
-        if not all(isinstance(r, FunctionDefResult) for r in results):
-            raise TypeError('results must be all be FunctionDefResults')
+        assert iterable(results):
+        assert all(isinstance(r, FunctionDefResult) for r in results)
 
-        if cls_name:
+        assert cls_name is None or isinstance(cls_name, str)
 
-            if not isinstance(cls_name, str):
-                raise TypeError('cls_name must be a string')
+        assert isinstance(is_static, bool)
+        assert iterable(imports)
+        assert isinstance(decorators, dict)
+        assert isinstance(is_pure, bool)
+        assert isinstance(is_elemental, bool)
+        assert isinstance(is_private, bool)
+        assert isinstance(is_header, bool)
+        assert isinstance(is_external, bool)
+        is_external = is_external and is_header and ( len(results) == 1 )
 
-        if not isinstance(is_static, bool):
-            raise TypeError('Expecting a boolean for is_static attribute')
-
-        if not iterable(imports):
-            raise TypeError('imports must be an iterable')
-
-        if not isinstance(decorators, dict):
-            raise TypeError('decorators must be a dict')
-
-        if not isinstance(is_pure, bool):
-            raise TypeError('Expecting a boolean for pure')
-
-        if not isinstance(is_elemental, bool):
-            raise TypeError('Expecting a boolean for elemental')
-
-        if not isinstance(is_private, bool):
-            raise TypeError('Expecting a boolean for private')
-
-        if not isinstance(is_header, bool):
-            raise TypeError('Expecting a boolean for header')
-
-        if not isinstance(is_external, bool):
-            raise TypeError('Expecting a boolean for external')
-        else:
-            is_external = is_external and is_header and ( len(results) == 1 )
-
-        if functions:
-            for i in functions:
-                if not isinstance(i, FunctionDef):
-                    raise TypeError('Expecting a FunctionDef')
+        assert all(isinstance(f, FunctionDef) for f in functions)
 
         self._name            = name
         self._arguments       = arguments
@@ -2451,8 +2378,8 @@ class FunctionDef(ScopedAstNode):
     def body(self, body):
         if iterable(body):
             body = CodeBlock(body)
-        elif not isinstance(body, CodeBlock):
-            raise TypeError('body must be an iterable or a CodeBlock')
+        assert isinstance(body, CodeBlock)
+
         self._body.remove_user_node(self)
         self._body = body
         self._body.set_current_user_node(self)
@@ -2971,9 +2898,7 @@ class Interface(PyccelAstNode):
         syntactic_node=None,
         ):
 
-        if not isinstance(name, str):
-            raise TypeError('Expecting an str')
-
+        assert isinstance(name, str)
         assert iterable(functions)
 
         self._name = name
@@ -3207,17 +3132,10 @@ class FunctionAddress(FunctionDef):
         **kwargs
         ):
         super().__init__(name, arguments, results, body=[], scope=None, **kwargs)
-        if not isinstance(is_argument, bool):
-            raise TypeError('Expecting a boolean for is_argument')
-
-        if memory_handling not in ('heap', 'alias', 'stack'):
-            raise TypeError('Expecting \'heap\', \'stack\', \'alias\' or None for memory_handling')
-
-        if not isinstance(is_kwonly, bool):
-            raise TypeError('Expecting a boolean for kwonly')
-
-        elif not isinstance(is_optional, bool):
-            raise TypeError('is_optional must be a boolean.')
+        assert isinstance(is_argument, bool)
+        assert memory_handling in ('heap', 'alias', 'stack')
+        assert isinstance(is_kwonly, bool)
+        assert isinstance(is_optional, bool)
 
         self._is_optional   = is_optional
         self._is_kwonly     = is_kwonly
@@ -3365,71 +3283,23 @@ class ClassDef(ScopedAstNode):
 
         # attributes
 
-        if not iterable(attributes):
-            raise TypeError('attributes must be an iterable')
+        assert iterable(attributes)
         attributes = tuple(attributes)
+        assert iterable(methods)
+        assert iterable(options)
+        assert iterable(imports)
+        assert iterable(superclasses)
 
-        # methods
-
-        if not iterable(methods):
-            raise TypeError('methods must be an iterable')
-
-        # options
-
-        if not iterable(options):
-            raise TypeError('options must be an iterable')
-
-        # imports
-
-        if not iterable(imports):
-            raise TypeError('imports must be an iterable')
-
-        if not iterable(superclasses):
-            raise TypeError('superclasses must be iterable')
         if pyccel_stage.current_stage and pyccel_stage != 'syntactic':
-            for s in superclasses:
-                if not isinstance(s, ClassDef):
-                    raise TypeError('superclass item must be a ClassDef')
+            assert all(isinstance(s, ClassDef) for s in superclasses)
+            assert isinstance(class_type, PyccelType)
 
-            if not isinstance(class_type, PyccelType):
-                raise TypeError("class_type must be a PyccelType")
+        assert iterable(interfaces)
 
-        if not iterable(interfaces):
-            raise TypeError('interfaces must be iterable')
-
-        imports = list(imports)
-        for i in methods:
-            imports += list(i.imports)
+        imports = list(imports) + [i for i in m.imports for m in methods]
 
         imports = set(imports)  # for unicity
         imports = tuple(imports)
-
-        # ...
-        # look if the class has the method __del__
-        # d_methods = {}
-        # for i in methods:
-        #    d_methods[str(i.name).replace('\'','')] = i
-        # if not ('__del__' in d_methods):
-        #    dtype = DataTypeFactory(str(name), ("_name"), prefix='Custom')
-        #    this  = Variable(dtype(), 'self')
-
-            # constructs the __del__ method if not provided
-         #   args = []
-         #   for a in attributes:
-         #       if isinstance(a, Variable):
-         #           if a.allocatable:
-         #              args.append(a)
-
-         #   args = [Variable(a.dtype, DottedName(str(this), str(a.name))) for a in args]
-         #   body = [Del(a) for a in args]
-
-         #   free = FunctionDef('__del__', [this], [], \
-         #                      body, local_vars=[], global_vars=[], \
-         #                      cls_name='__UNDEFINED__', imports=[])
-
-         #  methods = list(methods) + [free]
-         # TODO move this somewhere else
-
         methods = tuple(methods)
 
         # ...
@@ -3540,8 +3410,7 @@ class ClassDef(ScopedAstNode):
             The Variable that will be added.
         """
 
-        if not isinstance(attr, Variable):
-            raise TypeError("Attributes must be Variables")
+        assert isinstance(attr, Variable)
         attr.set_current_user_node(self)
         self._attributes += (attr,)
 
@@ -3557,8 +3426,7 @@ class ClassDef(ScopedAstNode):
             The Method that will be added.
         """
 
-        if not isinstance(method, FunctionDef):
-            raise TypeError("Method must be FunctionDef")
+        assert isinstance(method, FunctionDef)
         method.set_current_user_node(self)
         self._methods += (method,)
 
@@ -3574,8 +3442,7 @@ class ClassDef(ScopedAstNode):
             The interface that will be added.
         """
 
-        if not isinstance(interface, Interface):
-            raise TypeError("Argument 'interface' must be of type Interface")
+        assert isinstance(interface, Interface)
         interface.set_current_user_node(self)
         self._interfaces += (interface,)
 
@@ -3600,7 +3467,7 @@ class ClassDef(ScopedAstNode):
 
         Raises
         ------
-        ValueError
+        PyccelError
             Raised if the method cannot be found.
         """
         if self.scope is not None:
@@ -3637,9 +3504,9 @@ class ClassDef(ScopedAstNode):
         if '__next__' in names and '__iter__' in names:
             return True
         elif '__next__' in names:
-            raise ValueError('ClassDef does not contain __iter__ method')
+            raise PyccelError('ClassDef does not contain __iter__ method')
         elif '__iter__' in names:
-            raise ValueError('ClassDef does not contain __next__ method')
+            raise PyccelError('ClassDef does not contain __next__ method')
         else:
             return False
 
@@ -3651,9 +3518,9 @@ class ClassDef(ScopedAstNode):
         if '__enter__' in names and '__exit__' in names:
             return True
         elif '__enter__' in names:
-            raise ValueError('ClassDef does not contain __exit__ method')
+            raise PyccelError('ClassDef does not contain __exit__ method')
         elif '__exit__' in names:
-            raise ValueError('ClassDef does not contain __enter__ method')
+            raise PyccelError('ClassDef does not contain __enter__ method')
         else:
             return False
 
@@ -3722,10 +3589,8 @@ class Import(PyccelAstNode):
         self._source_mod      = mod
         self._ignore_at_print = ignore_at_print
         if target is None:
-            if pyccel_stage == "syntactic":
-                target = []
-            else:
-                raise KeyError("Missing argument 'target'")
+            assert pyccel_stage == "syntactic":
+            target = []
         elif not iterable(target):
             target = [target]
         if pyccel_stage == "syntactic":
@@ -3788,8 +3653,7 @@ class Import(PyccelAstNode):
 
     @ignore.setter
     def ignore(self, to_ignore):
-        if not isinstance(to_ignore, bool):
-            raise TypeError('to_ignore must be a boolean.')
+        assert isinstance(to_ignore, bool)
         self._ignore_at_print = to_ignore
 
     def __str__(self):
@@ -3872,15 +3736,9 @@ class FuncAddressDeclare(PyccelAstNode):
         static=False,
         ):
 
-        if not isinstance(variable, FunctionAddress):
-            raise TypeError(f'variable must be of type FunctionAddress, given {variable}')
-
-        if intent:
-            if not intent in ['in', 'out', 'inout']:
-                raise ValueError("intent must be one among {'in', 'out', 'inout'}")
-
-        if not isinstance(static, bool):
-            raise TypeError('Expecting a boolean for static attribute')
+        assert isinstance(variable, FunctionAddress)
+        assert intent in (None, 'in', 'out', 'inout')
+        assert isinstance(static, bool)
 
         self._variable  = variable
         self._intent    = intent
@@ -3960,21 +3818,11 @@ class Declare(PyccelAstNode):
         external = False,
         module_variable = False
         ):
-        if not isinstance(variable, Variable):
-            raise TypeError(f'var must be of type Variable, given {variable}')
-
-        if intent:
-            if not intent in ['in', 'out', 'inout']:
-                raise ValueError("intent must be one among {'in', 'out', 'inout'}")
-
-        if not isinstance(static, bool):
-            raise TypeError('Expecting a boolean for static attribute')
-
-        if not isinstance(external, bool):
-            raise TypeError('Expecting a boolean for external attribute')
-
-        if not isinstance(module_variable, bool):
-            raise TypeError('Expecting a boolean for module_variable attribute')
+        assert isinstance(variable, Variable)
+        assert intent in (None, 'in', 'out', 'inout')
+        assert isinstance(static, bool)
+        assert isinstance(external, bool)
+        assert isinstance(module_variable, bool)
 
         self._variable = variable
         self._intent = intent
@@ -4057,13 +3905,8 @@ class SymbolicPrint(PyccelAstNode):
     _attribute_nodes = ('_expr',)
 
     def __init__(self, expr):
-        if not iterable(expr):
-            raise TypeError('Expecting an iterable')
-
-        for i in expr:
-            if not isinstance(i, (Lambda, SymbolicAssign,
-                              SympyFunction)):
-                raise TypeError('Expecting Lambda, SymbolicAssign, SympyFunction for {}'.format(i))
+        assert iterable(expr)
+        assert all(isinstance(i, (Lambda, SymbolicAssign, SympyFunction)) for i in expr)
 
         self._expr = expr
 
@@ -4263,8 +4106,7 @@ class CommentBlock(PyccelAstNode):
     _attribute_nodes = ()
 
     def __init__(self, txt, header = 'CommentBlock'):
-        if not isinstance(txt, str):
-            raise TypeError('txt must be of type str')
+        assert isinstance(txt, str)
         txt = txt.replace('"','')
         txts = txt.split('\n')
 
@@ -4414,8 +4256,7 @@ class If(PyccelAstNode):
 
     def __init__(self, *args):
 
-        if not all(isinstance(a, IfSection) for a in args):
-            raise TypeError("An If must be composed of IfSections")
+        assert all(isinstance(a, IfSection) for a in args)
 
         self._blocks = args
 

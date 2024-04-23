@@ -8,7 +8,7 @@
 """
 import numpy
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors import Errors, PyccelError
 from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT, NON_LITERAL_KEEP_DIMS, NON_LITERAL_AXIS
 
 from pyccel.utilities.stage import PyccelStage
@@ -594,14 +594,14 @@ def process_dtype(dtype):
         try:
             dtype = dtype_registry[str(dtype)]
         except KeyError:
-            raise TypeError(f'Unknown type of {dtype}.')
+            raise PyccelError(f'Unknown type of {dtype}.')
 
     if isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType)):
         return dtype
     if isinstance(dtype, FixedSizeNumericType):
         return numpy_precision_map[(dtype.primitive_type, dtype.precision)]
     else:
-        raise TypeError(f'Unknown type of {dtype}.')
+        raise PyccelError(f'Unknown type of {dtype}.')
 
 #==============================================================================
 class NumpyNewArray(PyccelInternalFunction):
@@ -698,7 +698,7 @@ class NumpyArray(NumpyNewArray):
     def __init__(self, arg, dtype=None, order='K', ndmin=None):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
-            raise TypeError(f'Unknown type of  {type(arg)}')
+            raise PyccelError(f'Unknown type of  {type(arg)}')
 
         is_homogeneous_tuple = isinstance(arg.class_type, HomogeneousTupleType)
         # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
@@ -709,16 +709,16 @@ class NumpyArray(NumpyNewArray):
 
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
         if not (is_homogeneous_tuple or isinstance(arg.class_type, HomogeneousContainerType)):
-            raise TypeError('we only accept homogeneous arguments')
+            raise PyccelError('we only accept homogeneous arguments')
 
         if not isinstance(order, (LiteralString, str)):
-            raise TypeError("The order must be specified explicitly with a string.")
+            raise PyccelError("The order must be specified explicitly with a string.")
         elif isinstance(order, LiteralString):
             order = order.python_value
 
         if ndmin is not None:
             if not isinstance(ndmin, (LiteralInteger, int)):
-                raise TypeError("The minimum number of dimensions must be specified explicitly with an integer.")
+                raise PyccelError("The minimum number of dimensions must be specified explicitly with an integer.")
             elif isinstance(ndmin, LiteralInteger):
                 ndmin = ndmin.python_value
 
@@ -851,8 +851,7 @@ class NumpySum(PyccelInternalFunction):
     _shape = None
 
     def __init__(self, arg):
-        if not isinstance(arg, TypedAstNode):
-            raise TypeError(f'Unknown type of {type(arg)}.')
+        assert isinstance(arg, TypedAstNode)
         super().__init__(arg)
         lowest_possible_type = process_dtype(PythonNativeInt())
         if isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and \
@@ -882,8 +881,7 @@ class NumpyProduct(PyccelInternalFunction):
     _shape = None
 
     def __init__(self, arg):
-        if not isinstance(arg, TypedAstNode):
-            raise TypeError(f'Unknown type of {type(arg)}.')
+        assert isinstance(arg, TypedAstNode)
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
         lowest_possible_type = process_dtype(PythonNativeInt())
@@ -923,10 +921,8 @@ class NumpyMatmul(PyccelInternalFunction):
         if pyccel_stage == 'syntactic':
             return
 
-        if not isinstance(a, TypedAstNode):
-            raise TypeError(f'Unknown type of {type(a)}.')
-        if not isinstance(b, TypedAstNode):
-            raise TypeError(f'Unknown type of {type(a)}.')
+        assert isinstance(a, TypedAstNode)
+        assert isinstance(b, TypedAstNode)
 
         args      = (a, b)
         type_info = NumpyResultType(*args)
@@ -1034,10 +1030,9 @@ class NumpyLinspace(NumpyNewArray):
             num = LiteralInteger(50)
 
         if num.rank != 0 or not isinstance(getattr(num.dtype, 'primitive_type', None), PrimitiveIntegerType):
-            raise TypeError('Expecting positive integer num argument.')
+            raise PyccelError('Expecting positive integer num argument.')
 
-        if any(not isinstance(arg, TypedAstNode) for arg in (start, stop, num)):
-            raise TypeError('Expecting valid args.')
+        assert all(isinstance(arg, TypedAstNode) for arg in (start, stop, num))
 
         init_dtype = dtype
         if dtype:
@@ -1156,7 +1151,7 @@ class NumpyWhere(PyccelInternalFunction):
         if x is None and y is None:
             return NumpyNonZero(condition)
         elif x is None or y is None:
-            raise TypeError("Either both or neither of x and y should be given")
+            raise PyccelError("Either both or neither of x and y should be given")
         else:
             return super().__new__(cls)
 
@@ -1346,8 +1341,7 @@ class NumpyAutoFill(NumpyFull):
     """
     __slots__ = ()
     def __init__(self, shape, dtype='float', order='C'):
-        if not dtype:
-            raise TypeError("Data type must be provided")
+        assert dtype
         super().__init__(shape, Nil(), dtype, order)
 
 #==============================================================================

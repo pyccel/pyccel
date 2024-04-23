@@ -85,7 +85,7 @@ class ListAppend(ListMethod):
     def __init__(self, list_obj, new_elem) -> None:
         expected_type = list_obj.class_type.element_type
         if new_elem.class_type != expected_type:
-            raise TypeError(f"Expecting an argument of the same type as the elements of the list ({expected_type}) but received {new_elem.class_type}")
+            raise PyccelError(f"Expecting an argument of the same type as the elements of the list ({expected_type}) but received {new_elem.class_type}")
         super().__init__(list_obj, new_elem)
 
 #==============================================================================
@@ -176,7 +176,7 @@ class ListInsert(ListMethod):
 
     def __init__(self, list_obj, index, new_elem) -> None:
         if new_elem.class_type != list_obj.class_type.element_type:
-            raise TypeError("Expecting an argument of the same type as the elements of the list")
+            raise PyccelError("Expecting an argument of the same type as the elements of the list")
         super().__init__(list_obj, index, new_elem)
 
 #==============================================================================
@@ -243,7 +243,7 @@ class ListRemove(ListMethod) :
 
     def __init__(self, list_obj, removed_obj) -> None:
         if removed_obj.class_type != list_obj.class_type.element_type:
-            raise TypeError(f"Can't remove an element of type {removed_obj.class_type} from {list_obj.class_type}")
+            raise PyccelError(f"Can't remove an element of type {removed_obj.class_type} from {list_obj.class_type}")
         super().__init__(list_obj, removed_obj)
 
 #==============================================================================
