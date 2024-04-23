@@ -1422,9 +1422,14 @@ class CToPythonWrapper(Wrapper):
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
         bound_argument = getattr(expr, 'wrapping_bound_argument', expr.bound_argument)
 
-        if isinstance(orig_var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+        if isinstance(orig_var.class_type, NumpyNDArrayType):
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     memory_handling='alias', new_class = Variable)
+            self._wrapping_arrays = True
+            self.scope.insert_variable(arg_var, orig_var.name)
+        elif isinstance(orig_var.class_type, HomogeneousTupleType):
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+                                    memory_handling='heap', new_class = Variable)
             self._wrapping_arrays = True
             self.scope.insert_variable(arg_var, orig_var.name)
         else:
