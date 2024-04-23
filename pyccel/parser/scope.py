@@ -825,10 +825,26 @@ class Scope(object):
         """
         Get an element of a tuple.
 
+        This function is mainly designed to handle inhomogeneous tuples. Such tuples
+        cannot be directly represented in low-level languages. Instead they are replaced
+        by multiple variables representing each of the elements of the tuple. This
+        function maps tuple elements (e.g. `var[0]`) to the variable representing that
+        element in the low-level language (e.g. `var_0`).
+
         Parameters
         ----------
         tuple_elem : PyccelAstNode
             The element of the tuple obtained via the `__getitem__` function.
+
+        Returns
+        -------
+        Variable
+            The variable which represents the tuple element in a low-level language.
+
+        Raises
+        ------
+        PyccelError
+            An error is raised if the tuple element has not yet been added to the scope.
         """
         if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.class_type, InhomogeneousTupleType):
             if isinstance(tuple_elem.base, DottedVariable):
