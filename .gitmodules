@@ -1,0 +1,6 @@
+[submodule "pyccel/extensions/STC"]
+	path = pyccel/extensions/STC
+	url = https://github.com/Stclib/STC/
+[submodule "pyccel/extensions/gFTL"]
+	path = pyccel/extensions/gFTL
+	url = https://github.com/Goddard-Fortran-Ecosystem/gFTL

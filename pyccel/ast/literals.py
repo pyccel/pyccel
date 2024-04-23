@@ -40,9 +40,7 @@ class Literal(TypedAstNode):
     """
     __slots__ = ()
     _attribute_nodes  = ()
-    _rank      = 0
     _shape     = None
-    _order     = None
 
     @property
     def python_value(self):
@@ -334,6 +332,7 @@ class LiteralString(Literal):
     __slots__ = ('_string',)
     _class_type = StringType()
     _static_type = StringType()
+    _shape = (None,)
 
     def __init__(self, arg):
         super().__init__()

@@ -47,6 +47,8 @@ class CStackArray(HomogeneousContainerType, metaclass=ArgumentSingleton):
     """
     __slots__ = ('_element_type',)
     _name = 'c_stackarray'
+    _container_rank = 1
+    _order = None
 
     def __init__(self, element_type):
         assert isinstance(element_type, FixedSizeType)
@@ -76,16 +78,14 @@ class ObjectAddress(TypedAstNode):
     'a'
     """
 
-    __slots__ = ('_obj', '_rank', '_shape', '_order', '_class_type')
+    __slots__ = ('_obj', '_shape', '_class_type')
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):
         if not isinstance(obj, TypedAstNode):
             raise TypeError("object must be an instance of TypedAstNode")
         self._obj        = obj
-        self._rank       = obj.rank
         self._shape      = obj.shape
-        self._order      = obj.order
         self._class_type = obj.class_type
         super().__init__()
 
@@ -121,8 +121,7 @@ class PointerCast(TypedAstNode):
     cast_type : TypedAstNode
         A TypedAstNode describing the object resulting from the cast.
     """
-    __slots__ = ('_obj', '_rank', '_shape', '_order',
-            '_class_type', '_cast_type')
+    __slots__ = ('_obj', '_shape', '_class_type', '_cast_type')
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj, cast_type):
@@ -130,10 +129,8 @@ class PointerCast(TypedAstNode):
             raise TypeError("object must be an instance of TypedAstNode")
         assert getattr(obj, 'is_alias', False)
         self._obj        = obj
-        self._rank       = cast_type.rank
         self._shape      = cast_type.shape
         self._class_type = cast_type.class_type
-        self._order      = cast_type.order
         self._cast_type  = cast_type
         super().__init__()
 

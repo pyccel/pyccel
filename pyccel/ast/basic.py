@@ -407,15 +407,26 @@ class PyccelAstNode:
         return self._user_nodes
 
     def get_direct_user_nodes(self, condition):
-        """ For an object with multiple user nodes
-        Get the objects which satisfy a given
-        condition
+        """
+        Get the direct user nodes which satisfy the condition.
+
+        This function returns all the direct user nodes which satisfy the
+        provided condition. A "direct" user node is a node which uses the
+        instance directly (e.g. a `FunctionCall` uses a `FunctionDef` directly
+        while a `FunctionDef` uses a `Variable` indirectly via a `FunctionDefArgument`
+        or a `CodeBlock`). Most objects only have 1 direct user node so
+        this function only makes sense for an object with multiple user nodes.
+        E.g. a `Variable`, or a `FunctionDef`.
 
         Parameters
         ----------
         condition : lambda
-                    The condition which the user nodes
-                    must satisfy to be returned
+            The condition which the user nodes must satisfy to be returned.
+
+        Returns
+        -------
+        list
+            The user nodes which satisfy the condition.
         """
         return [p for p in self._user_nodes if condition(p)]
 
@@ -523,7 +534,7 @@ class TypedAstNode(PyccelAstNode):
         Number of dimensions of the object. If the object is a scalar then
         this is equal to 0.
         """
-        return self._rank # pylint: disable=no-member
+        return self.class_type.rank
 
     @property
     def dtype(self):
@@ -546,7 +557,7 @@ class TypedAstNode(PyccelAstNode):
         ('F') format. This is only relevant if rank > 1. When it is not relevant
         this function returns None.
         """
-        return self._order # pylint: disable=no-member
+        return self.class_type.order
 
     @property
     def class_type(self):
@@ -558,33 +569,6 @@ class TypedAstNode(PyccelAstNode):
         this is the type of the container.
         """
         return self._class_type # pylint: disable=no-member
-
-    @classmethod
-    def static_rank(cls):
-        """
-        Number of dimensions of the object.
-
-        Number of dimensions of the object. If the object is a scalar then
-        this is equal to 0.
-
-        This function is static and will return an AttributeError if the
-        class does not have a predetermined rank.
-        """
-        return cls._rank # pylint: disable=no-member
-
-    @classmethod
-    def static_order(cls):
-        """
-        The data layout ordering in memory.
-
-        Indicates whether the data is stored in row-major ('C') or column-major
-        ('F') format. This is only relevant if rank > 1. When it is not relevant
-        this function returns None.
-
-        This function is static and will return an AttributeError if the
-        class does not have a predetermined order.
-        """
-        return cls._order # pylint: disable=no-member
 
     @classmethod
     def static_type(cls):
@@ -614,8 +598,6 @@ class TypedAstNode(PyccelAstNode):
             The node from which the attributes should be copied.
         """
         self._shape      = x.shape
-        self._rank       = x.rank
-        self._order      = x.order
         self._class_type = x.class_type
 
 

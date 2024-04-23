@@ -19,8 +19,8 @@ from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from .datatypes import GenericType, PythonNativeComplex, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
-from .datatypes import FixedSizeNumericType, HomogeneousSetType
-from .internals import PyccelInternalFunction, Slice, PyccelArrayShapeElement
+from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
+from .internals import PyccelFunction, Slice, PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
@@ -59,7 +59,7 @@ __all__ = (
 )
 
 #==============================================================================
-class PythonComplexProperty(PyccelInternalFunction):
+class PythonComplexProperty(PyccelFunction):
     """
     Represents a call to the .real or .imag property.
 
@@ -77,9 +77,7 @@ class PythonComplexProperty(PyccelInternalFunction):
         The object which the property is called from.
     """
     __slots__ = ()
-    _rank  = 0
     _shape = None
-    _order = None
     _class_type = PythonNativeFloat()
 
     def __init__(self, arg):
@@ -146,7 +144,7 @@ class PythonImag(PythonComplexProperty):
         return f'Imag({self.internal_var})'
 
 #==============================================================================
-class PythonConjugate(PyccelInternalFunction):
+class PythonConjugate(PyccelFunction):
     """
     Represents a call to the .conjugate() function.
 
@@ -165,9 +163,7 @@ class PythonConjugate(PyccelInternalFunction):
         conjugate function.
     """
     __slots__ = ()
-    _rank  = 0
     _shape = None
-    _order = None
     _class_type = PythonNativeComplex()
     name = 'conjugate'
 
@@ -191,7 +187,7 @@ class PythonConjugate(PyccelInternalFunction):
         return f'Conjugate({self.internal_var})'
 
 #==============================================================================
-class PythonBool(PyccelInternalFunction):
+class PythonBool(PyccelFunction):
     """
     Represents a call to Python's native `bool()` function.
 
@@ -206,9 +202,7 @@ class PythonBool(PyccelInternalFunction):
     __slots__ = ()
     name = 'bool'
     _static_type = PythonNativeBool()
-    _rank  = 0
     _shape = None
-    _order = None
     _class_type = PythonNativeBool()
 
     def __new__(cls, arg):
@@ -232,7 +226,7 @@ class PythonBool(PyccelInternalFunction):
         return f'Bool({self.arg})'
 
 #==============================================================================
-class PythonComplex(PyccelInternalFunction):
+class PythonComplex(PyccelFunction):
     """
     Represents a call to Python's native `complex()` function.
 
@@ -251,9 +245,7 @@ class PythonComplex(PyccelInternalFunction):
     name = 'complex'
 
     _static_type = PythonNativeComplex()
-    _rank  = 0
     _shape = None
-    _order = None
     _class_type = PythonNativeComplex()
     _real_cast = PythonReal
     _imag_cast = PythonImag
@@ -346,7 +338,7 @@ class PythonComplex(PyccelInternalFunction):
         return f"complex({self.real}, {self.imag})"
 
 #==============================================================================
-class PythonEnumerate(PyccelAstNode):
+class PythonEnumerate(PyccelFunction):
     """
     Represents a call to Python's native `enumerate()` function.
 
@@ -363,6 +355,8 @@ class PythonEnumerate(PyccelAstNode):
     __slots__ = ('_element','_start')
     _attribute_nodes = ('_element','_start')
     name = 'enumerate'
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, arg, start = None):
         if pyccel_stage != "syntactic" and \
@@ -398,7 +392,7 @@ class PythonEnumerate(PyccelAstNode):
         return PythonLen(self.element)
 
 #==============================================================================
-class PythonFloat(PyccelInternalFunction):
+class PythonFloat(PyccelFunction):
     """
     Represents a call to Python's native `float()` function.
 
@@ -413,9 +407,7 @@ class PythonFloat(PyccelInternalFunction):
     __slots__ = ()
     name = 'float'
     _static_type = PythonNativeFloat()
-    _rank  = 0
     _shape = None
-    _order = None
     _class_type = PythonNativeFloat()
 
     def __new__(cls, arg):
@@ -441,7 +433,7 @@ class PythonFloat(PyccelInternalFunction):
         return f'float({self.arg})'
 
 #==============================================================================
-class PythonInt(PyccelInternalFunction):
+class PythonInt(PyccelFunction):
     """
     Represents a call to Python's native `int()` function.
 
@@ -457,9 +449,7 @@ class PythonInt(PyccelInternalFunction):
     __slots__ = ()
     name = 'int'
     _static_type = PythonNativeInt()
-    _rank  = 0
     _shape = None
-    _order = None
     _class_type = PythonNativeInt()
 
     def __new__(cls, arg):
@@ -493,9 +483,8 @@ class PythonTuple(TypedAstNode):
     *args : tuple of TypedAstNode
         The arguments passed to the tuple function.
     """
-    __slots__ = ('_args','_is_homogeneous',
-            '_rank','_shape','_order', '_class_type')
-    _iterable        = True
+    __slots__ = ('_args','_is_homogeneous', '_shape', '_class_type')
+    _iterable = True
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
@@ -505,19 +494,12 @@ class PythonTuple(TypedAstNode):
             return
         elif len(args) == 0:
             self._class_type = HomogeneousTupleType(GenericType())
-            self._rank  = 0
-            self._shape = None
-            self._order = None
+            self._shape = (LiteralInteger(0),)
             self._is_homogeneous = False
             return
 
         # Get possible datatypes
         dtypes = [a.class_type.datatype for a in args]
-        # Extract all dtypes inside any inhomogeneous tuples
-        while any(isinstance(d, InhomogeneousTupleType) for d in dtypes):
-            dtypes = [di for d in dtypes for di in ((d_elem.datatype for d_elem in d)
-                                                    if isinstance(d, InhomogeneousTupleType)
-                                                    else [d])]
         # Create a set of dtypes using the same key for compatible types
         dtypes = set((d.primitive_type, d.precision) if isinstance(d, FixedSizeNumericType) else d for d in dtypes)
 
@@ -525,7 +507,7 @@ class PythonTuple(TypedAstNode):
         orders = set(a.order for a in args)
         if len(ranks) == 1:
             rank = next(iter(ranks))
-            shapes = tuple(set(a.shape[i] for a in args if not (isinstance(a.shape[i], PyccelArrayShapeElement) or \
+            shapes = tuple(set(a.shape[i] for a in args if not (a.shape[i] is None or isinstance(a.shape[i], PyccelArrayShapeElement) or \
                                a.shape[i].get_attribute_nodes(PyccelArrayShapeElement))) \
                                for i in range(rank))
         else:
@@ -539,7 +521,6 @@ class PythonTuple(TypedAstNode):
         if is_homogeneous:
             inner_shape = [() if a.rank == 0 else a.shape for a in args]
             self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
-            self._rank  = len(self._shape)
 
             if contains_pointers:
                 self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
@@ -547,11 +528,8 @@ class PythonTuple(TypedAstNode):
                 self._class_type = HomogeneousTupleType(args[0].class_type)
 
         else:
-            self._rank       = 1 if not is_homogeneous else max(a.rank for a in args) + 1
             self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
             self._shape      = (LiteralInteger(len(args)), )
-
-        self._order = None if self._rank < 2 else 'C'
 
     def __getitem__(self,i):
         def is_int(a):
@@ -637,7 +615,7 @@ class PythonTupleFunction(TypedAstNode):
             raise TypeError(f"Can't unpack {arg} into a tuple")
 
 #==============================================================================
-class PythonLen(PyccelInternalFunction):
+class PythonLen(PyccelFunction):
     """
     Represents a `len` expression in the code.
 
@@ -674,7 +652,7 @@ class PythonList(TypedAstNode):
     FunctionalFor
         The `[]` function when it describes a comprehension.
     """
-    __slots__ = ('_args','_rank','_shape','_order', '_class_type')
+    __slots__ = ('_args', '_shape', '_class_type')
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
@@ -683,30 +661,23 @@ class PythonList(TypedAstNode):
         if pyccel_stage == 'syntactic':
             return
         elif len(args) == 0:
-            self._rank  = 0
-            self._shape = None
-            self._order = None
+            self._shape = (LiteralInteger(0),)
             self._class_type = HomogeneousListType(GenericType())
             return
         arg0 = args[0]
         is_homogeneous = arg0.class_type is not GenericType() and \
                          all(a.class_type is not GenericType() and \
-                             arg0.class_type == a.class_type and \
-                             arg0.rank  == a.rank  and \
-                             arg0.order == a.order for a in args[1:])
+                             arg0.class_type == a.class_type for a in args[1:])
         if is_homogeneous:
             dtype = arg0.class_type
 
             inner_shape = [() if a.rank == 0 else a.shape for a in args]
-            self._rank = max(a.rank for a in args) + 1
             self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
-            self._rank  = len(self._shape)
 
         else:
             raise TypeError("Can't create an inhomogeneous list")
 
         self._class_type = HomogeneousListType(dtype)
-        self._order = None if self._rank < 2 else 'C'
 
     def __iter__(self):
         return self._args.__iter__()
@@ -752,7 +723,7 @@ class PythonSet(TypedAstNode):
     *args : tuple of TypedAstNodes
         The arguments passed to the operator.
     """
-    __slots__ = ('_args','_class_type','_rank','_shape','_order')
+    __slots__ = ('_args','_class_type','_shape')
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
@@ -763,21 +734,17 @@ class PythonSet(TypedAstNode):
         arg0 = args[0]
         is_homogeneous = arg0.class_type is not GenericType() and \
                          all(a.class_type is not GenericType() and \
-                             arg0.class_type == a.class_type and \
-                             arg0.rank  == a.rank  and \
-                             arg0.order == a.order for a in args[1:])
+                             arg0.class_type == a.class_type for a in args[1:])
         if is_homogeneous:
-            dtype = arg0.dtype
+            elem_type = arg0.class_type
             inner_shape = [() if a.rank == 0 else a.shape for a in args]
             self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
-            self._rank  = len(self._shape)
-            if self._rank > 1:
+            if elem_type.rank > 0:
                 raise TypeError("Pyccel can't hash non-scalar types")
         else:
             raise TypeError("Can't create an inhomogeneous set")
 
-        self._class_type = HomogeneousSetType(dtype)
-        self._order = None if self._rank < 2 else 'C'
+        self._class_type = HomogeneousSetType(elem_type)
 
     def __iter__(self):
         return self._args.__iter__()
@@ -803,12 +770,25 @@ class PythonSet(TypedAstNode):
         return True
 
 #==============================================================================
-class PythonMap(PyccelAstNode):
-    """ Represents the map stmt
+class PythonMap(PyccelFunction):
+    """
+    Class representing a call to Python's builtin map function.
+
+    Class representing a call to Python's builtin map function.
+
+    Parameters
+    ----------
+    func : FunctionDef
+        The function to be applied to the elements.
+
+    func_args : TypedAstNode
+        The arguments to which the function will be applied.
     """
     __slots__ = ('_func','_func_args')
     _attribute_nodes = ('_func','_func_args')
     name = 'map'
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, func, func_args):
         self._func = func
@@ -877,7 +857,7 @@ class PythonPrint(PyccelAstNode):
         return self._file
 
 #==============================================================================
-class PythonRange(PyccelAstNode):
+class PythonRange(PyccelFunction):
     """
     Class representing a range.
 
@@ -897,6 +877,8 @@ class PythonRange(PyccelAstNode):
     __slots__ = ('_start','_stop','_step')
     _attribute_nodes = ('_start', '_stop', '_step')
     name = 'range'
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, *args):
         # Define default values
@@ -952,7 +934,7 @@ class PythonRange(PyccelAstNode):
 
 
 #==============================================================================
-class PythonZip(PyccelInternalFunction):
+class PythonZip(PyccelFunction):
     """
     Represents a call to Python `zip` for code generation.
 
@@ -992,7 +974,7 @@ class PythonZip(PyccelInternalFunction):
         return [a[index] for a in self.args]
 
 #==============================================================================
-class PythonAbs(PyccelInternalFunction):
+class PythonAbs(PyccelFunction):
     """
     Represents a call to Python `abs` for code generation.
 
@@ -1003,12 +985,10 @@ class PythonAbs(PyccelInternalFunction):
     x : TypedAstNode
         The argument passed to the function.
     """
-    __slots__ = ('_rank','_shape','_order','_class_type')
+    __slots__ = ('_shape','_class_type')
     name = 'abs'
     def __init__(self, x):
         self._shape     = x.shape
-        self._rank      = x.rank
-        self._order     = x.order
         self._class_type = PythonNativeInt() if x.dtype is PythonNativeInt() else PythonNativeFloat()
         super().__init__(x)
 
@@ -1022,7 +1002,7 @@ class PythonAbs(PyccelInternalFunction):
         return self._args[0]
 
 #==============================================================================
-class PythonSum(PyccelInternalFunction):
+class PythonSum(PyccelFunction):
     """
     Represents a call to Python `sum` for code generation.
 
@@ -1035,9 +1015,7 @@ class PythonSum(PyccelInternalFunction):
     """
     __slots__ = ('_class_type',)
     name   = 'sum'
-    _rank  = 0
     _shape = None
-    _order = None
 
     def __init__(self, arg):
         if not isinstance(arg, TypedAstNode):
@@ -1058,7 +1036,7 @@ class PythonSum(PyccelInternalFunction):
         return self._args[0]
 
 #==============================================================================
-class PythonMax(PyccelInternalFunction):
+class PythonMax(PyccelFunction):
     """
     Represents a call to Python's built-in `max` function.
 
@@ -1071,9 +1049,7 @@ class PythonMax(PyccelInternalFunction):
     """
     __slots__ = ('_class_type',)
     name   = 'max'
-    _rank  = 0
     _shape = None
-    _order = None
 
     def __init__(self, *x):
         if len(x)==1:
@@ -1086,7 +1062,7 @@ class PythonMax(PyccelInternalFunction):
 
         if not x.is_homogeneous:
             types = ', '.join(str(xi.dtype) for xi in x)
-            raise PyccelError("Cannot determine final dtype of 'max' call with arguments of different "
+            raise TypeError("Cannot determine final dtype of 'max' call with arguments of different "
                              f"types ({types}). Please cast arguments to the desired dtype")
         if isinstance(x.class_type, HomogeneousContainerType):
             self._class_type = x.class_type.element_type
@@ -1096,11 +1072,11 @@ class PythonMax(PyccelInternalFunction):
 
 
 #==============================================================================
-class PythonMin(PyccelInternalFunction):
+class PythonMin(PyccelFunction):
     """
-    Represents a call to Python's built-in `max` function.
+    Represents a call to Python's built-in `min` function.
 
-    Represents a call to Python's built-in `max` function.
+    Represents a call to Python's built-in `min` function.
 
     Parameters
     ----------
@@ -1109,9 +1085,8 @@ class PythonMin(PyccelInternalFunction):
     """
     __slots__ = ('_class_type',)
     name   = 'min'
-    _rank  = 0
     _shape = None
-    _order = None
+
     def __init__(self, *x):
         if len(x)==1:
             x = x[0]
@@ -1123,7 +1098,7 @@ class PythonMin(PyccelInternalFunction):
 
         if not x.is_homogeneous:
             types = ', '.join(str(xi.dtype) for xi in x)
-            raise PyccelError("Cannot determine final dtype of 'min' call with arguments of different "
+            raise TypeError("Cannot determine final dtype of 'min' call with arguments of different "
                               f"types ({types}). Please cast arguments to the desired dtype")
         if isinstance(x.class_type, HomogeneousContainerType):
             self._class_type = x.class_type.element_type
@@ -1177,7 +1152,7 @@ class Lambda(PyccelAstNode):
         return f"{self.variables} -> {self.expr}"
 
 #==============================================================================
-class PythonType(PyccelAstNode):
+class PythonType(PyccelFunction):
     """
     Represents a call to the Python builtin `type` function.
 
@@ -1195,10 +1170,12 @@ class PythonType(PyccelAstNode):
     """
     __slots__ = ('_type','_obj')
     _attribute_nodes = ('_obj',)
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, obj):
         if not isinstance (obj, TypedAstNode):
-            raise PyccelError(f"Python's type function is not implemented for {type(obj)} object")
+            raise TypeError(f"Python's type function is not implemented for {type(obj)} object")
         self._type = obj.class_type
         self._obj = obj
 

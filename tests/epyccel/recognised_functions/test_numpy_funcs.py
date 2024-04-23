@@ -2160,24 +2160,25 @@ def test_array(language):
     tmp_arr = np.ones((3,4), dtype=int)
     assert np.allclose(array_tuple_ref(tmp_arr), create_array_tuple_ref(tmp_arr))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Changing dtype is broken in C. See #1641"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_array_new_dtype(language):
     def create_float_array_tuple_ref(a : 'int[:,:]'):
         from numpy import array
         b = (a[0,:], a[1,:])
         c = array(b, dtype=float)
         return c
+    def create_bool_array_tuple_ref(a : 'int[:,:]'):
+        from numpy import array
+        b = (a[0,:], a[1,:])
+        c = array(b, dtype=bool)
+        return c
+
     array_float_tuple_ref = epyccel(create_float_array_tuple_ref, language = language)
     tmp_arr = np.ones((3,4), dtype=int)
     assert np.allclose(array_float_tuple_ref(tmp_arr), create_float_array_tuple_ref(tmp_arr))
+
+    array_bool_tuple_ref = epyccel(create_float_array_tuple_ref, language = language)
+    tmp_arr = np.ones((3,4), dtype=int)
+    assert np.allclose(array_bool_tuple_ref(tmp_arr), create_bool_array_tuple_ref(tmp_arr))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -4328,6 +4329,22 @@ def test_numpy_mod_array_like_2d(language):
     assert epyccel_func(fl) == get_mod(fl)
     assert epyccel_func(fl32) == get_mod(fl32)
     assert epyccel_func(fl64) == get_mod(fl64)
+
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
+def test_numpy_mod_mixed_order(language):
+
+    def get_mod(arr1 : 'float[:,:]', arr2 : 'float[:,:](order=F)'):
+        from numpy import mod, shape
+        a = mod(arr1, arr2)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
+
+    epyccel_func = epyccel(get_mod, language=language)
+
+    fl1 = uniform(min_float / 2, max_float / 2, size = (2,5))
+    fl2 = uniform(min_float / 2, max_float / 2, size = (5,2)).T
+
+    assert epyccel_func(fl1, fl2) == get_mod(fl1, fl2)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
