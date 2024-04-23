@@ -525,9 +525,28 @@ class SemanticParser(BasicParser):
             container = container.parent_scope
         return headers
 
-    def collect_tuple_of_inhomogeneous_elements(self, tuple_var):
+    def create_tuple_of_inhomogeneous_elements(self, tuple_var):
+        """
+        Create a tuple of variables from a variable representing an inhomogeneous object.
+
+        Create a tuple of variables that can be printed in a low-level language. An
+        inhomogeneous object cannot be represented as is in a low-level language so
+        it must be unpacked into a PythonTuple. This function is recursive so that
+        variables with a type such as `tuple[tuple[int,bool],float]` generate
+        `PythonTuple(PythonTuple(var_0_0, var_0_1), var_1)`.
+
+        Parameters
+        ----------
+        tuple_var : Variable
+            A variable which may or may not be an inhomogeneous tuple.
+
+        Returns
+        -------
+        Variable | PythonTuple
+            An object containing only variables that can be printed in a low-level language.
+        """
         if isinstance(tuple_var.class_type, InhomogeneousTupleType):
-            return PythonTuple(*[self.collect_tuple_of_inhomogeneous_elements(self.scope.collect_tuple_element(v)) for v in tuple_var])
+            return PythonTuple(*[self.create_tuple_of_inhomogeneous_elements(self.scope.collect_tuple_element(v)) for v in tuple_var])
         else:
             return tuple_var
 
@@ -3219,7 +3238,7 @@ class SemanticParser(BasicParser):
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
                 elif isinstance(l, Variable) and isinstance(l.class_type, InhomogeneousTupleType):
-                    new_lhs.append(self.collect_tuple_of_inhomogeneous_elements(l))
+                    new_lhs.append(self.create_tuple_of_inhomogeneous_elements(l))
                     new_rhs.append(r)
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
@@ -4065,7 +4084,7 @@ class SemanticParser(BasicParser):
                         self._additional_exprs[-1].append(self._visit(assign))
                         val.remove_user_node(assign)
                         val = self._visit(tmp_var)
-                    new_args.append(FunctionCallArgument(self.collect_tuple_of_inhomogeneous_elements(val)))
+                    new_args.append(FunctionCallArgument(self.create_tuple_of_inhomogeneous_elements(val)))
                 else:
                     new_args.append(a)
 
