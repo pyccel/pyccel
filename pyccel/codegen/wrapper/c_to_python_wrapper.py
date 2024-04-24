@@ -2123,7 +2123,6 @@ class CToPythonWrapper(Wrapper):
         is used to search for other compatible _extract_X_FunctionDefArgument functions.
         If none are found then an error is raised.
 
-
         Parameters
         ----------
         orig_var : Variable | IndexedElement
