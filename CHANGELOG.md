@@ -22,7 +22,7 @@ All notable changes to this project will be documented in this file.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
 ### Fixed
--   #1820 : Deprecated unused decorator `@lambdify`
+
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
 -   #1762 : Fix array copy between different data types.
 -   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
@@ -66,6 +66,7 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   #1820 : Deprecated unused decorator '@lambdify'
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
