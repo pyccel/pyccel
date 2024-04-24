@@ -10,9 +10,12 @@ which creates an interface exposing Cuda code to C.
 
 from pyccel.codegen.wrapper.c_to_python_wrapper import CToPythonWrapper
 from pyccel.parser.scope import Scope
-from pyccel.ast.core import Allocate, EmptyNode ,Import, FunctionDef
-from pyccel.ast.bind_c import CLocFunc, BindCModule
+from pyccel.ast.core import Import, FunctionDef
 from pyccel.ast.cwrapper      import PyModule
+from pyccel.ast.core import Module
+
+cwrapper_ndarray_imports = [Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))]
+
 class CudaToCWrapper(CToPythonWrapper):
     """
     Class for creating a wrapper exposing Fortran code to C.
@@ -24,7 +27,7 @@ class CudaToCWrapper(CToPythonWrapper):
     def __init__(self, file_location):
         self._wrapper_names_dict = {}
         super().__init__(file_location)
-    
+
     def _wrap_Module(self, expr):
         """
         Build a `PyModule` from a `Module`.
@@ -74,7 +77,7 @@ class CudaToCWrapper(CToPythonWrapper):
         imports += cwrapper_ndarray_imports if self._wrapping_arrays else []
 
         original_mod = getattr(expr, 'original_module', expr)
-        
+
         external_funcs = []
         # Add external functions for normal functions
         for f in expr.funcs:
@@ -95,4 +98,3 @@ class CudaToCWrapper(CToPythonWrapper):
                         interfaces = interfaces, classes = classes, scope = mod_scope,
                         init_func = init_func, import_func = import_func , external_funcs = external_funcs)
 
-    
