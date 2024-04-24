@@ -20,6 +20,9 @@ from pyccel.naming                               import name_clash_checkers
 from pyccel.parser.scope                         import Scope
 from pyccel.utilities.stage                      import PyccelStage
 from .compiling.basic                            import CompileObj
+from pyccel.codegen.printing.ccode               import CCodePrinter
+from pyccel.codegen.wrapper.cuda_to_c_wrapper import CudaToCWrapper
+from pyccel.codegen.printing.cucode import CudaCodePrinter
 
 from pyccel.errors.errors import Errors
 
@@ -108,6 +111,7 @@ def create_shared_library(codegen,
     # Name of shared library
     if sharedlib_modname is None:
         sharedlib_modname = module_name
+    print(sharedlib_modname)
 
     wrapper_filename_root = f'{module_name}_wrapper'
     wrapper_header_filename = f'{wrapper_filename_root}.h'
@@ -120,7 +124,6 @@ def create_shared_library(codegen,
 
     if language == 'fortran':
         start_bind_c_wrapping = time.time()
-        # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
         wrapper = FortranToCWrapper()
         bind_c_mod = wrapper.wrap(codegen.ast)
         timings['Bind C wrapping'] = time.time() - start_bind_c_wrapping
@@ -173,8 +176,10 @@ def create_shared_library(codegen,
     codegen.ast.set_name(sharedlib_modname)
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
     Scope.name_clash_checker = name_clash_checkers['c']
-    wrapper = CToPythonWrapper(base_dirpath)
-
+    if language == 'cuda':
+        wrapper = CudaToCWrapper(base_dirpath)
+    else:
+        wrapper = CToPythonWrapper(base_dirpath)
     start_wrapper_creation = time.time()
     cwrap_ast = wrapper.wrap(c_ast)
     timings['Wrapper creation'] = time.time() - start_wrapper_creation

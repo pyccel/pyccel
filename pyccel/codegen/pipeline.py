@@ -420,7 +420,7 @@ def execute_pyccel(fname, *,
         handle_error('shared library generation')
         raise
 
-    timers.update(shared_lib_timers)
+    # timers.update(shared_lib_timers)
 
     if errors.has_errors():
         handle_error('code generation (wrapping)')
@@ -428,12 +428,12 @@ def execute_pyccel(fname, *,
 
     # Move shared library to folder directory
     # (First construct absolute path of target location)
-    generated_filename = os.path.basename(generated_filepath)
-    target = os.path.join(folder, generated_filename)
-    shutil.move(generated_filepath, target)
-    generated_filepath = target
-    if verbose:
-        print( '> Shared library has been created: {}'.format(generated_filepath))
+    # generated_filename = os.path.basename(generated_filepath)
+    # target = os.path.join(folder, generated_filename)
+    # shutil.move(generated_filepath, target)
+    # generated_filepath = target
+    # if verbose:
+    #     print( '> Shared library has been created: {}'.format(generated_filepath))
 
     if codegen.is_program:
         generated_program_filename = os.path.basename(generated_program_filepath)
