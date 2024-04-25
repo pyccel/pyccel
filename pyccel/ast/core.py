@@ -1023,7 +1023,7 @@ class Module(ScopedAstNode):
         imports=(),
         scope = None
         ):
-        if not isinstance(name, (str, AsName)):
+        if not isinstance(name, str):
             raise TypeError('name must be a string or an AsName')
 
         if not iterable(variables):
@@ -1178,11 +1178,6 @@ class Module(ScopedAstNode):
         in the module
         """
         return self.interfaces + self.funcs + self.classes
-
-    def set_name(self, new_name):
-        """ Function for changing the name of a module
-        """
-        self._name = new_name
 
     def __getitem__(self, arg):
         assert isinstance(arg, str)
