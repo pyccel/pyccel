@@ -2243,13 +2243,13 @@ def test_rand_args(language):
     m = randint(10)
     p = randint(5)
     f_1d = epyccel(create_array_size_1d, language = language)
-    assert  f_1d(n) == create_array_size_1d(n)
+    assert f_1d(n) == create_array_size_1d(n)
 
     f_2d = epyccel(create_array_size_2d, language = language)
-    assert  f_2d(n, m) == create_array_size_2d(n, m)
+    assert f_2d(n, m) == create_array_size_2d(n, m)
 
     f_3d = epyccel(create_array_size_3d, language = language)
-    assert  f_3d(n, m, p) == create_array_size_3d(n, m, p)
+    assert f_3d(n, m, p) == create_array_size_3d(n, m, p)
 
     g_1d = epyccel(create_array_vals_1d, language = language)
     y = g_1d()
