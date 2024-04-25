@@ -1530,36 +1530,36 @@ def test_full_dtype(language):
     val_int   = randint(100)
     val_float = rand()*100
 
-    f_int_int   = epyccel(create_full_val_int_int, language = language)
-    assert      f_int_int(val_int)        ==      create_full_val_int_int(val_int)
+    f_int_int = epyccel(create_full_val_int_int, language = language)
+    assert f_int_int(val_int) == create_full_val_int_int(val_int)
     assert matching_types(f_int_int(val_int), create_full_val_int_int(val_int))
 
     f_int_float = epyccel(create_full_val_int_float, language = language)
-    assert isclose(     f_int_float(val_int)     ,      create_full_val_int_float(val_int), rtol=RTOL, atol=ATOL)
+    assert isclose(f_int_float(val_int), create_full_val_int_float(val_int), rtol=RTOL, atol=ATOL)
     assert matching_types(f_int_float(val_int), create_full_val_int_float(val_int))
 
     f_int_complex = epyccel(create_full_val_int_complex, language = language)
-    assert isclose(     f_int_complex(val_int)     ,      create_full_val_int_complex(val_int), rtol=RTOL, atol=ATOL)
+    assert isclose(f_int_complex(val_int), create_full_val_int_complex(val_int), rtol=RTOL, atol=ATOL)
     assert matching_types(f_int_complex(val_int), create_full_val_int_complex(val_int))
 
-    f_real_int32   = epyccel(create_full_val_real_int32, language = language)
-    assert      f_real_int32(val_float)        ==      create_full_val_real_int32(val_float)
+    f_real_int32 = epyccel(create_full_val_real_int32, language = language)
+    assert f_real_int32(val_float) == create_full_val_real_int32(val_float)
     assert matching_types(f_real_int32(val_float), create_full_val_real_int32(val_float))
 
-    f_real_float32   = epyccel(create_full_val_real_float32, language = language)
-    assert isclose(     f_real_float32(val_float)       ,      create_full_val_real_float32(val_float), rtol=RTOL, atol=ATOL)
+    f_real_float32 = epyccel(create_full_val_real_float32, language = language)
+    assert isclose(f_real_float32(val_float), create_full_val_real_float32(val_float), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_float32(val_float), create_full_val_real_float32(val_float))
 
-    f_real_float64   = epyccel(create_full_val_real_float64, language = language)
-    assert isclose(     f_real_float64(val_float)       ,      create_full_val_real_float64(val_float), rtol=RTOL, atol=ATOL)
+    f_real_float64 = epyccel(create_full_val_real_float64, language = language)
+    assert isclose(f_real_float64(val_float), create_full_val_real_float64(val_float), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_float64(val_float), create_full_val_real_float64(val_float))
 
-    f_real_complex64   = epyccel(create_full_val_real_complex64, language = language)
-    assert isclose(     f_real_complex64(val_float)       ,      create_full_val_real_complex64(val_float), rtol=RTOL, atol=ATOL)
+    f_real_complex64 = epyccel(create_full_val_real_complex64, language = language)
+    assert isclose(f_real_complex64(val_float), create_full_val_real_complex64(val_float), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_complex64(val_float), create_full_val_real_complex64(val_float))
 
-    f_real_complex128   = epyccel(create_full_val_real_complex128, language = language)
-    assert isclose(     f_real_complex128(val_float)       ,      create_full_val_real_complex128(val_float), rtol=RTOL, atol=ATOL)
+    f_real_complex128 = epyccel(create_full_val_real_complex128, language = language)
+    assert isclose(f_real_complex128(val_float), create_full_val_real_complex128(val_float), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_complex128(val_float), create_full_val_real_complex128(val_float))
 
 @pytest.mark.parametrize( 'language', (
