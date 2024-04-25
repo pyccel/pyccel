@@ -197,7 +197,7 @@ def test_breaks(language):
     out1 = f1(fizz, buzz, max_val)
     out2 = f2(fizz, buzz, max_val)
 
-    assert( out1 == out2 )
+    assert  out1 == out2
 
 def test_continue(language):
     f1 = loops.fizzbuzz_sum_with_continue
@@ -210,7 +210,7 @@ def test_continue(language):
     out1 = f1(fizz, buzz, max_val)
     out2 = f2(fizz, buzz, max_val)
 
-    assert( out1 == out2 )
+    assert  out1 == out2
 
 def test_temp_array_in_loop(language):
     f1 = loops.temp_array_in_loop

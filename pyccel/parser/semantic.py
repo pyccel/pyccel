@@ -287,7 +287,7 @@ class SemanticParser(BasicParser):
 
         errors = Errors()
         if self.filename:
-            errors.set_target(self.filename, 'file')
+            errors.set_target(self.filename)
 
         # then we treat the current file
 
@@ -2927,7 +2927,7 @@ class SemanticParser(BasicParser):
         # TODO unset position at the end of this part
         new_expressions = []
         python_ast = expr.python_ast
-        assert(python_ast)
+        assert python_ast
 
         rhs = expr.rhs
         lhs = expr.lhs
@@ -3060,7 +3060,7 @@ class SemanticParser(BasicParser):
                 c_ranks = [x.value.rank for x in call_args]
                 same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
                 if not all(same_ranks):
-                    assert(len(c_ranks) == 1)
+                    assert len(c_ranks) == 1
                     arg = call_args[0].value
                     d_var['shape'          ] = arg.shape
                     d_var['memory_handling'] = arg.memory_handling
@@ -4480,7 +4480,7 @@ class SemanticParser(BasicParser):
 
     def _visit_StarredArguments(self, expr):
         var = self._visit(expr.args_var)
-        assert(var.rank==1)
+        assert var.rank==1
         size = var.shape[0]
         return StarredArguments([var[i] for i in range(size)])
 

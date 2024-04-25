@@ -35,7 +35,7 @@ def test_call_factorial(language):
     f = epyccel(call_factorial, language=language)
     x = randint(10)
 
-    assert(f(x) == call_factorial(x))
+    assert f(x) == call_factorial(x)
 
 # -----------------------------------------------------------------------------
 

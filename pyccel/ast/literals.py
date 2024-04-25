@@ -137,7 +137,7 @@ class LiteralInteger(Literal):
     __slots__   = ('_value', '_class_type')
 
     def __init__(self, value, dtype = PythonNativeInt()):
-        assert(value >= 0)
+        assert value >= 0
         if not isinstance(value, int):
             raise TypeError("A LiteralInteger can only be created with an integer")
         self._value = value

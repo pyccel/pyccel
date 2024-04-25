@@ -38,7 +38,7 @@ def test_syntax_blockers(f):
     with pytest.raises(PyccelSyntaxError):
         ast = pyccel.parse()
 
-    assert(errors.has_blockers())
+    assert errors.has_blockers()
 
 @pytest.mark.parametrize("f",get_files_from_folder("syntax_errors"))
 def test_syntax_errors(f):
@@ -50,7 +50,7 @@ def test_syntax_errors(f):
 
     ast = pyccel.parse()
 
-    assert(errors.has_errors())
+    assert errors.has_errors()
 
 @pytest.mark.parametrize("f", get_files_from_folder("semantic/blocking"))
 def test_semantic_blocking_errors(f):
@@ -67,7 +67,7 @@ def test_semantic_blocking_errors(f):
     with pytest.raises(PyccelSemanticError):
         ast = pyccel.annotate(**settings)
 
-    assert(errors.has_blockers())
+    assert errors.has_blockers()
 
 @pytest.mark.xdist_incompatible
 def test_traceback():
@@ -92,7 +92,7 @@ def test_traceback():
             severity='error',
             traceback=e.__traceback__)
 
-    assert(errors.has_blockers())
+    assert errors.has_blockers()
     assert errors.num_messages() == 2
     error_mode.set_mode('user')
 
@@ -111,7 +111,7 @@ def test_semantic_non_blocking_errors(f):
     settings = {}
     ast = pyccel.annotate(**settings)
 
-    assert(errors.has_errors())
+    assert errors.has_errors()
 
 @pytest.mark.xdist_incompatible
 @pytest.mark.parametrize("f", semantic_non_blocking_errors_args)
@@ -131,7 +131,7 @@ def test_semantic_non_blocking_developer_errors(f):
         ast = pyccel.annotate(**settings)
 
     error_mode.set_mode('user')
-    assert(errors.has_errors())
+    assert errors.has_errors()
 
 @pytest.mark.parametrize("f",get_files_from_folder("codegen/fortran_blocking"))
 def test_codegen_blocking_errors(f):
@@ -152,7 +152,7 @@ def test_codegen_blocking_errors(f):
     with pytest.raises(PyccelCodegenError):
         codegen.printer.doprint(codegen.ast)
 
-    assert(errors.has_errors())
+    assert errors.has_errors()
 
 @pytest.mark.parametrize("f",get_files_from_folder("codegen/fortran_non_blocking"))
 def test_codegen_non_blocking_errors(f):
@@ -183,7 +183,7 @@ def test_neat_errors_for_known_bugs(f):
     with pytest.raises(PyccelError):
         execute_pyccel(f)
 
-    assert(errors.has_errors())
+    assert errors.has_errors()
 
 ######################
 if __name__ == '__main__':

@@ -75,7 +75,7 @@ class PythonCodePrinter(CodePrinter):
     }
 
     def __init__(self, filename):
-        errors.set_target(filename, 'file')
+        errors.set_target(filename)
         super().__init__()
         self._additional_imports = {}
         self._aliases = {}

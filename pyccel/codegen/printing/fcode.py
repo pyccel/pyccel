@@ -247,7 +247,7 @@ class FCodePrinter(CodePrinter):
 
     def __init__(self, filename, prefix_module = None):
 
-        errors.set_target(filename, 'file')
+        errors.set_target(filename)
 
         super().__init__()
         self._constantImports = {}

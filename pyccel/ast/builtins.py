@@ -330,8 +330,13 @@ class PythonComplex(PyccelFunction):
 
     @property
     def internal_var(self):
-        """ When the complex call is a cast, returns the variable being cast """
-        assert(self._is_cast)
+        """
+        When the complex call is a cast, returns the variable being cast.
+
+        When the complex call is a cast, returns the variable being cast.
+        This property should only be used when handling a cast.
+        """
+        assert self._is_cast
         return self._internal_var
 
     def __str__(self):
@@ -1145,7 +1150,7 @@ class Lambda(PyccelAstNode):
         """ Returns the expression with the arguments replaced with
         the calling arguments
         """
-        assert(len(args) == len(self.variables))
+        assert len(args) == len(self.variables)
         return self.expr.subs(self.variables, args)
 
     def __str__(self):

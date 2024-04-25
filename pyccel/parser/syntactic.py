@@ -129,7 +129,7 @@ class SyntaxParser(BasicParser):
         if os.path.isfile(inputs):
 
             self._filename = inputs
-            errors.set_target(self.filename, 'file')
+            errors.set_target(self.filename)
 
             # we don't use is_valid_filename_py since it uses absolute path
             # file extension

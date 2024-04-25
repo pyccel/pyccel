@@ -20,7 +20,7 @@ def test_dnrm2_1():
     # ...
     err_expected = sp_blas.dnrm2(x)
     err_pyccel   = blas_dnrm2(x)
-    assert(np.abs(err_pyccel - err_expected) < 1.e-14)
+    assert np.abs(err_pyccel - err_expected) < 1.e-14
     # ...
 
 # ==============================================================================
@@ -37,7 +37,7 @@ def test_dasum_1():
     # ...
     expected = sp_blas.dasum(x)
     result   = blas_dasum (x)
-    assert(np.allclose(result, expected, 1.e-14))
+    assert np.allclose(result, expected, 1.e-14)
     # ...
 
 # ==============================================================================
@@ -55,7 +55,7 @@ def test_ddot_1():
     # ...
     expected = sp_blas.ddot(x, y)
     result   = blas_ddot (x, y)
-    assert(np.allclose(result, expected, 1.e-14))
+    assert np.allclose(result, expected, 1.e-14)
     # ...
 
 # ==============================================================================
@@ -73,7 +73,7 @@ def test_ddot_2():
     # ...
     expected = sp_blas.ddot(x, y)
     result   = blas_ddot (x, y)
-    assert(np.allclose(result, expected, 1.e-14))
+    assert np.allclose(result, expected, 1.e-14)
     # ...
 
 # ==============================================================================
@@ -90,5 +90,5 @@ def test_idamax_1():
     # ...
     expected = sp_blas.idamax(x)
     result   = blas_idamax (x)
-    assert(result == expected)
+    assert result == expected
     # ...

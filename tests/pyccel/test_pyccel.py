@@ -39,7 +39,7 @@ def get_exe(filename, language=None):
     if os.path.isfile(exefile2):
         return exefile2
     else:
-        assert(os.path.isfile(exefile1))
+        assert os.path.isfile(exefile1)
         return exefile1
 
 #------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ def insert_pyccel_folder(abs_path):
 def get_python_output(abs_path, cwd = None):
     with subprocess.Popen([sys.executable , abs_path], stdout=subprocess.PIPE, universal_newlines=True, cwd=cwd) as p:
         out, _ = p.communicate()
-        assert(p.returncode==0)
+        assert p.returncode==0
     return out
 
 #------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ def compile_pyccel(path_dir, test_file, options = ""):
         cmd += options.strip().split()
     p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir)
     p.wait()
-    assert(p.returncode==0)
+    assert p.returncode==0
 
 #------------------------------------------------------------------------------
 def compile_c(path_dir, test_file, dependencies, is_mod=False):
@@ -164,7 +164,7 @@ def compile_fortran_or_c(compiler, extension, path_dir, test_file, dependencies,
     """
     root = insert_pyccel_folder(test_file)[:-3]
 
-    assert(os.path.isfile(root+extension))
+    assert os.path.isfile(root+extension)
 
     deps = [dependencies] if isinstance(dependencies, str) else dependencies
     base_dir = os.path.dirname(root)
@@ -214,13 +214,13 @@ def get_lang_output(abs_path, language):
     else:
         p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
         out, _ = p.communicate()
-        assert(p.returncode==0)
+        assert p.returncode==0
         return out
 
 #------------------------------------------------------------------------------
 def get_value(string, regex, conversion):
     match = regex.search(string)
-    assert(match)
+    assert match
     value = conversion(match.group())
     string = string[match.span()[1]:]
     return value, string
@@ -234,7 +234,7 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=
         f_list = f_output_split[0].strip()
         p_output = '\n'.join(p_output_split[1:])
         f_output = '\n'.join(f_output_split[1:])
-        assert(p_list==f_list)
+        assert p_list==f_list
     elif dtype is complex:
         rx = re.compile('-?[0-9.]+([eE][+-]?[0-9]+)?j?')
         p, p_output = get_value(p_output, rx, complex)
@@ -251,25 +251,25 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=
             f, f_output  = get_value(f_output, rx, float)
             f2, f_output = get_value(f_output, rx, float)
             f = f+f2*1j
-        assert(np.isclose(p, f))
+        assert np.isclose(p, f)
     elif dtype is bool:
         rx = re.compile('TRUE|True|true|1|T|t|FALSE|False|false|F|f|0')
         bool_conversion = lambda m: m.lower() in ['true', 't', '1']
         p, p_output = get_value(p_output, rx, bool_conversion)
         f, f_output = get_value(f_output, rx, bool_conversion)
-        assert(p==f)
+        assert p==f
 
     elif dtype is float:
         rx = re.compile('-?[0-9.]+([eE][+-]?[0-9]+)?')
         p, p_output = get_value(p_output, rx, float)
         f, f_output = get_value(f_output, rx, float)
-        assert(np.isclose(p, f))
+        assert np.isclose(p, f)
 
     elif dtype is int:
         rx = re.compile('-?[0-9]+([eE][+-]?[0-9]+)?')
         p, p_output = get_value(p_output, rx, int)
         f, f_output = get_value(f_output, rx, int)
-        assert(p==f)
+        assert p==f
     else:
         raise NotImplementedError("Type comparison not implemented")
     return p_output, f_output
@@ -448,7 +448,7 @@ def test_rel_imports_python_accessible_folder(language):
     p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), test_location],
                 stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
-    assert(p.returncode==0)
+    assert p.returncode==0
 
     compare_pyth_fort_output(pyth_out, fort_out)
 
@@ -523,7 +523,7 @@ def test_folder_imports(language):
     p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), test_location],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
-    assert(p.returncode==0)
+    assert p.returncode==0
 
     compare_pyth_fort_output(pyth_out, fort_out)
 
