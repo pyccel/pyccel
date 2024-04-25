@@ -3,7 +3,7 @@ import os
 import sys
 import pytest
 from numpy.random import rand, randn, randint, uniform
-from numpy import isclose, iinfo, finfo, complex64, complex128
+from numpy import isclose, iinfo, finfo, complex64, complex128, array_equal
 import numpy as np
 
 from pyccel.decorators import template, types
@@ -1203,7 +1203,7 @@ def test_shape_property(language):
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
     assert f1(x1) == test_shape_1d(x1)
-    assert all(isclose(f2(x2), test_shape_2d(x2)))
+    assert f2(x2) == test_shape_2d(x2)
 
 def test_shape_tuple_output(language):
     def test_shape_1d(f : 'int[:]'):
