@@ -322,7 +322,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         funcs = []
 
-        self._module_name  = self.get_python_name(scope, expr)
+        self._module_name  = expr.name
         sep = self._print(SeparatorComment(40))
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
