@@ -1052,7 +1052,7 @@ class CToPythonWrapper(Wrapper):
 
         imports += cwrapper_ndarray_imports if self._wrapping_arrays else []
         if not isinstance(expr, BindCModule):
-            imports.append(Import(self.scope.get_python_name(expr.name), expr))
+            imports.append(Import(mod_scope.get_python_name(expr.name), expr))
         original_mod = getattr(expr, 'original_module', expr)
         original_mod_name = mod_scope.get_python_name(original_mod.name)
         return PyModule(original_mod_name, [API_var], funcs, imports = imports,
