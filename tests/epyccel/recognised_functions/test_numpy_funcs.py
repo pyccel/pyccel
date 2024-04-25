@@ -3,7 +3,7 @@ import os
 import sys
 import pytest
 from numpy.random import rand, randn, randint, uniform
-from numpy import isclose, iinfo, finfo, complex64, complex128, array_equal
+from numpy import isclose, iinfo, finfo, complex64, complex128
 import numpy as np
 
 from pyccel.decorators import template, types
