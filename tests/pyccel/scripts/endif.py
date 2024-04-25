@@ -1,3 +1,5 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
+
 def matmul(a: 'float[:,:](order=C)',
            b: 'float[:,:](order=F)',
            c: 'float[:,:](order=C)'):
