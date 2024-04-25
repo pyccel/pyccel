@@ -32,13 +32,13 @@ failing_c_tests = {
 
 def compare_python_pyccel( p_output, f_output ):
     if p_output is None:
-        assert(f_output is None)
+        assert f_output is None
         return
     if not hasattr(p_output, '__len__'):
         p_output = [p_output]
     if not hasattr(f_output, '__len__'):
         f_output = [f_output]
-    assert(len(p_output) == len(f_output))
+    assert len(p_output) == len(f_output)
 
     for pth, pycc in zip(p_output, f_output):
 
@@ -47,14 +47,14 @@ def compare_python_pyccel( p_output, f_output ):
 
         elif isinstance(pth, bool):
             pycc_bool = (pycc == 1)
-            assert(pth == pycc_bool)
+            assert pth == pycc_bool
 
         elif isinstance(pth, (int, str)):
-            assert(isinstance(pycc,type(pth)))
-            assert(pth==pycc)
+            assert isinstance(pycc,type(pth))
+            assert pth==pycc
 
         else:
-            assert(np.isclose(pth,pycc))
+            assert np.isclose(pth,pycc)
 
 marks = [f[1] if f[0] not in failing_tests else
         pytest.param(f[1], marks = pytest.mark.xfail(reason=failing_tests[f[0]])) \
