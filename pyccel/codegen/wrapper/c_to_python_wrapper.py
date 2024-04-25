@@ -2122,7 +2122,7 @@ class CToPythonWrapper(Wrapper):
 
         if import_wrapper:
             wrapper_name = f'{expr.source}_wrapper'
-            mod_spoof = PyModule(expr.source_module.name.name, (), (), scope = Scope())
+            mod_spoof = PyModule(expr.source_module.name, (), (), scope = Scope())
             return Import(wrapper_name, AsName(mod_spoof, expr.source), mod = mod_spoof)
         else:
             return None
