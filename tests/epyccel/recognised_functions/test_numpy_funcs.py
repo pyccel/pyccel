@@ -1609,19 +1609,19 @@ def test_full_dtype_auto(language):
     assert matching_types(f_int32(integer32), create_full_val_auto(integer32))
 
     f_float32 = epyccel(create_full_val_auto, language = language)
-    assert isclose(f_float32(fl32)  , create_full_val_auto(fl32), rtol=RTOL, atol=ATOL)
+    assert isclose(f_float32(fl32), create_full_val_auto(fl32), rtol=RTOL, atol=ATOL)
     assert matching_types(f_float32(fl32), create_full_val_auto(fl32))
 
     f_float64 = epyccel(create_full_val_auto, language = language)
-    assert isclose(f_float64(fl64)  , create_full_val_auto(fl64), rtol=RTOL, atol=ATOL)
+    assert isclose(f_float64(fl64), create_full_val_auto(fl64), rtol=RTOL, atol=ATOL)
     assert matching_types(f_float64(fl64), create_full_val_auto(fl64))
 
     f_complex64 = epyccel(create_full_val_auto, language = language)
-    assert isclose(f_complex64(cmplx64)  , create_full_val_auto(cmplx64), rtol=RTOL, atol=ATOL)
+    assert isclose(f_complex64(cmplx64), create_full_val_auto(cmplx64), rtol=RTOL, atol=ATOL)
     assert matching_types(f_complex64(cmplx64), create_full_val_auto(cmplx64))
 
     f_complex128 = epyccel(create_full_val_auto, language = language)
-    assert isclose(f_complex128(cmplx128)  , create_full_val_auto(cmplx128), rtol=RTOL, atol=ATOL)
+    assert isclose(f_complex128(cmplx128), create_full_val_auto(cmplx128), rtol=RTOL, atol=ATOL)
     assert matching_types(f_complex128(cmplx128), create_full_val_auto(cmplx128))
 
 def test_full_combined_args(language):
@@ -1662,13 +1662,13 @@ def test_full_combined_args(language):
     f2_shape = epyccel(create_full_2_shape, language = language)
     f2_val   = epyccel(create_full_2_val, language = language)
     assert f2_shape() == create_full_2_shape()
-    assert isclose(f2_val()  , create_full_2_val()      , rtol=RTOL, atol=ATOL)
+    assert isclose(f2_val(), create_full_2_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f2_val(), create_full_2_val())
 
     f3_shape = epyccel(create_full_3_shape, language = language)
     f3_val   = epyccel(create_full_3_val, language = language)
-    assert              f3_shape() ==    create_full_3_shape()
-    assert isclose(     f3_val()  ,      create_full_3_val()        , rtol=RTOL, atol=ATOL)
+    assert f3_shape() == create_full_3_shape()
+    assert isclose(f3_val(), create_full_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_full_3_val())
 
 def test_empty_basic(language):
@@ -1686,10 +1686,10 @@ def test_empty_basic(language):
     size = randint(10)
 
     f_shape_1d  = epyccel(create_empty_shape_1d, language = language)
-    assert      f_shape_1d(size)      ==      create_empty_shape_1d(size)
+    assert f_shape_1d(size) == create_empty_shape_1d(size)
 
     f_shape_2d  = epyccel(create_empty_shape_2d, language = language)
-    assert      f_shape_2d(size)      ==      create_empty_shape_2d(size)
+    assert f_shape_2d(size) == create_empty_shape_2d(size)
 
 def test_empty_order(language):
     def create_empty_shape_C(n : 'int', m : 'int'):
@@ -1707,10 +1707,10 @@ def test_empty_order(language):
     size_2 = randint(10)
 
     f_shape_C  = epyccel(create_empty_shape_C, language = language)
-    assert      f_shape_C(size_1,size_2) == create_empty_shape_C(size_1,size_2)
+    assert f_shape_C(size_1,size_2) == create_empty_shape_C(size_1,size_2)
 
     f_shape_F  = epyccel(create_empty_shape_F, language = language)
-    assert      f_shape_F(size_1,size_2) == create_empty_shape_F(size_1,size_2)
+    assert f_shape_F(size_1,size_2) == create_empty_shape_F(size_1,size_2)
 
 def test_empty_dtype(language):
     def create_empty_val_int():
@@ -1801,17 +1801,17 @@ def test_empty_combined_args(language):
 
     f1_shape = epyccel(create_empty_1_shape, language = language)
     f1_val   = epyccel(create_empty_1_val, language = language)
-    assert      f1_shape() ==      create_empty_1_shape()
+    assert f1_shape() == create_empty_1_shape()
     assert matching_types(f1_val(), create_empty_1_val())
 
     f2_shape = epyccel(create_empty_2_shape, language = language)
     f2_val   = epyccel(create_empty_2_val, language = language)
-    assert all(isclose(     f2_shape(),      create_empty_2_shape()      ))
+    assert f2_shape() == create_empty_2_shape()
     assert matching_types(f2_val(), create_empty_2_val())
 
     f3_shape = epyccel(create_empty_3_shape, language = language)
     f3_val   = epyccel(create_empty_3_val, language = language)
-    assert all(isclose(     f3_shape(),      create_empty_3_shape()      ))
+    assert f3_shape() == create_empty_3_shape()
     assert matching_types(f3_val(), create_empty_3_val())
 
 def test_ones_basic(language):
@@ -1829,10 +1829,10 @@ def test_ones_basic(language):
     size = randint(10)
 
     f_shape_1d  = epyccel(create_ones_shape_1d, language = language)
-    assert      f_shape_1d(size)      ==      create_ones_shape_1d(size)
+    assert f_shape_1d(size) == create_ones_shape_1d(size)
 
     f_shape_2d  = epyccel(create_ones_shape_2d, language = language)
-    assert      f_shape_2d(size)      ==      create_ones_shape_2d(size)
+    assert f_shape_2d(size) == create_ones_shape_2d(size)
 
 def test_ones_order(language):
     def create_ones_shape_C(n : 'int', m : 'int'):
@@ -1850,10 +1850,10 @@ def test_ones_order(language):
     size_2 = randint(10)
 
     f_shape_C  = epyccel(create_ones_shape_C, language = language)
-    assert      f_shape_C(size_1,size_2) == create_ones_shape_C(size_1,size_2)
+    assert f_shape_C(size_1, size_2) == create_ones_shape_C(size_1, size_2)
 
     f_shape_F  = epyccel(create_ones_shape_F, language = language)
-    assert      f_shape_F(size_1,size_2) == create_ones_shape_F(size_1,size_2)
+    assert f_shape_F(size_1, size_2) == create_ones_shape_F(size_1, size_2)
 
 def test_ones_dtype(language):
     def create_ones_val_int():
@@ -1890,35 +1890,35 @@ def test_ones_dtype(language):
         return a[0]
 
     f_int_int   = epyccel(create_ones_val_int, language = language)
-    assert      f_int_int()          ==      create_ones_val_int()
+    assert f_int_int() == create_ones_val_int()
     assert matching_types(f_int_int(), create_ones_val_int())
 
     f_int_float = epyccel(create_ones_val_float, language = language)
-    assert isclose(     f_int_float()       ,      create_ones_val_float(), rtol=RTOL, atol=ATOL)
+    assert isclose(f_int_float(), create_ones_val_float(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_int_float(), create_ones_val_float())
 
     f_int_complex = epyccel(create_ones_val_complex, language = language)
-    assert isclose(     f_int_complex()     ,      create_ones_val_complex(), rtol=RTOL, atol=ATOL)
+    assert isclose(f_int_complex(), create_ones_val_complex(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_int_complex(), create_ones_val_complex())
 
     f_real_int32   = epyccel(create_ones_val_int32, language = language)
-    assert      f_real_int32()       ==      create_ones_val_int32()
+    assert f_real_int32() == create_ones_val_int32()
     assert matching_types(f_real_int32(), create_ones_val_int32())
 
     f_real_float32   = epyccel(create_ones_val_float32, language = language)
-    assert isclose(     f_real_float32()    ,      create_ones_val_float32(), rtol=RTOL, atol=ATOL)
+    assert isclose(f_real_float32(), create_ones_val_float32(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_float32(), create_ones_val_float32())
 
     f_real_float64   = epyccel(create_ones_val_float64, language = language)
-    assert isclose(     f_real_float64()    ,      create_ones_val_float64(), rtol=RTOL, atol=ATOL)
+    assert isclose(f_real_float64(), create_ones_val_float64(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_float64(), create_ones_val_float64())
 
     f_real_complex64   = epyccel(create_ones_val_complex64, language = language)
-    assert isclose(     f_real_complex64()  ,      create_ones_val_complex64(), rtol=RTOL, atol=ATOL)
+    assert isclose(f_real_complex64(), create_ones_val_complex64(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_complex64(), create_ones_val_complex64())
 
     f_real_complex128   = epyccel(create_ones_val_complex128, language = language)
-    assert isclose(     f_real_complex128() ,      create_ones_val_complex128(), rtol=RTOL, atol=ATOL)
+    assert isclose(f_real_complex128(), create_ones_val_complex128(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_complex128(), create_ones_val_complex128())
 
 def test_ones_combined_args(language):
@@ -1952,20 +1952,20 @@ def test_ones_combined_args(language):
 
     f1_shape = epyccel(create_ones_1_shape, language = language)
     f1_val   = epyccel(create_ones_1_val, language = language)
-    assert      f1_shape() ==      create_ones_1_shape()
-    assert      f1_val()   ==      create_ones_1_val()
+    assert f1_shape() == create_ones_1_shape()
+    assert f1_val()   == create_ones_1_val()
     assert matching_types(f1_val(), create_ones_1_val())
 
     f2_shape = epyccel(create_ones_2_shape, language = language)
     f2_val   = epyccel(create_ones_2_val, language = language)
-    assert      f2_shape() ==      create_ones_2_shape()
-    assert isclose(     f2_val()  ,      create_ones_2_val()        , rtol=RTOL, atol=ATOL)
+    assert f2_shape() == create_ones_2_shape()
+    assert isclose(f2_val(), create_ones_2_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f2_val(), create_ones_2_val())
 
     f3_shape = epyccel(create_ones_3_shape, language = language)
     f3_val   = epyccel(create_ones_3_val, language = language)
-    assert      f3_shape() ==      create_ones_3_shape()
-    assert isclose(     f3_val()  ,      create_ones_3_val()        , rtol=RTOL, atol=ATOL)
+    assert f3_shape() == create_ones_3_shape()
+    assert isclose(f3_val(), create_ones_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_ones_3_val())
 
 def test_zeros_basic(language):
@@ -1983,10 +1983,10 @@ def test_zeros_basic(language):
     size = randint(10)
 
     f_shape_1d  = epyccel(create_zeros_shape_1d, language = language)
-    assert      f_shape_1d(size)      ==      create_zeros_shape_1d(size)
+    assert f_shape_1d(size) == create_zeros_shape_1d(size)
 
     f_shape_2d  = epyccel(create_zeros_shape_2d, language = language)
-    assert      f_shape_2d(size)      ==      create_zeros_shape_2d(size)
+    assert f_shape_2d(size) == create_zeros_shape_2d(size)
 
 def test_zeros_order(language):
     def create_zeros_shape_C(n : 'int', m : 'int'):
@@ -2004,10 +2004,10 @@ def test_zeros_order(language):
     size_2 = randint(10)
 
     f_shape_C  = epyccel(create_zeros_shape_C, language = language)
-    assert      f_shape_C(size_1,size_2) == create_zeros_shape_C(size_1,size_2)
+    assert f_shape_C(size_1, size_2) == create_zeros_shape_C(size_1, size_2)
 
     f_shape_F  = epyccel(create_zeros_shape_F, language = language)
-    assert      f_shape_F(size_1,size_2) == create_zeros_shape_F(size_1,size_2)
+    assert f_shape_F(size_1, size_2) == create_zeros_shape_F(size_1, size_2)
 
 def test_zeros_dtype(language):
     def create_zeros_val_int():
@@ -2044,7 +2044,7 @@ def test_zeros_dtype(language):
         return a[0]
 
     f_int_int   = epyccel(create_zeros_val_int, language = language)
-    assert      f_int_int()          ==      create_zeros_val_int()
+    assert f_int_int() == create_zeros_val_int()
     assert matching_types(f_int_int(), create_zeros_val_int())
 
     f_int_float = epyccel(create_zeros_val_float, language = language)
