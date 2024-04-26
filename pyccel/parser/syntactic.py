@@ -66,7 +66,6 @@ from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnota
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
-from pyccel.parser.utilities   import read_file
 from pyccel.parser.utilities   import get_default_path
 
 from pyccel.parser.syntax.headers import parse as hdr_parse, types_meta
@@ -130,12 +129,13 @@ class SyntaxParser(BasicParser):
         if os.path.isfile(inputs):
 
             self._filename = inputs
-            errors.set_target(self.filename, 'file')
+            errors.set_target(self.filename)
 
             # we don't use is_valid_filename_py since it uses absolute path
             # file extension
 
-            code = read_file(inputs)
+            with open(inputs, 'r', encoding="utf-8") as file:
+                code = file.read()
 
         self._code    = code
         self._context = []

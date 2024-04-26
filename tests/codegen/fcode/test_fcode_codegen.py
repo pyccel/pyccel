@@ -33,13 +33,13 @@ def test_codegen(f):
     ast = pyccel.parse()
 
     # Assert syntactic success
-    assert(not errors.has_errors())
+    assert not errors.has_errors()
 
     settings = {}
     ast = pyccel.annotate(**settings)
 
     # Assert semantic success
-    assert(not errors.has_errors())
+    assert not errors.has_errors()
 
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
@@ -48,7 +48,7 @@ def test_codegen(f):
     codegen.printer.doprint(codegen.ast)
 
     # Assert codegen success
-    assert(not errors.has_errors())
+    assert not errors.has_errors()
 
 ######################
 if __name__ == '__main__':
