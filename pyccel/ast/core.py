@@ -3716,6 +3716,10 @@ class Import(PyccelAstNode):
         self._target = set()
         self._source_mod      = mod
         self._ignore_at_print = ignore_at_print
+
+        if mod is None and isinstance(target, Module):
+            self._source_mod = target
+
         if target is None:
             if pyccel_stage == "syntactic":
                 target = []

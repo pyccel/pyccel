@@ -2194,7 +2194,7 @@ class SemanticParser(BasicParser):
 
         if expr.program:
             container = prog_scope.imports
-            container['imports'][mod_name] = Import(mod_name, mod)
+            container['imports'][mod_name] = Import(self.scope.get_python_name(mod_name), mod)
 
             if init_func:
                 import_init  = FunctionCall(init_func, [], [])
