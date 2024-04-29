@@ -64,6 +64,7 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   #1820 : Deprecated unused decorator `@lambdify`
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
