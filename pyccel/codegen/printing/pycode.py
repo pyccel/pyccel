@@ -389,7 +389,8 @@ class PythonCodePrinter(CodePrinter):
     def _print_Program(self, expr):
         mod_scope = self.scope
         self.set_scope(expr.scope)
-        imports  = ''.join(self._print(i) for i in expr.imports)
+        module = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))
+        imports  = ''.join(self._print(i) for i in expr.imports if i.source_module not in module)
         body     = self._print(expr.body)
         imports += ''.join(self._print(i) for i in self.get_additional_imports())
 
