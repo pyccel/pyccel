@@ -1226,6 +1226,7 @@ builtin_functions_dict = {
     'min'      : PythonMin,
     'not'      : PyccelNot,
     'map'      : PythonMap,
+    'set'      : PythonSet,
     'str'      : LiteralString,
     'type'     : PythonType,
     'tuple'    : PythonTupleFunction,

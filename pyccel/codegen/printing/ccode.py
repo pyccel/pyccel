@@ -27,7 +27,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
-from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
+from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType
 
@@ -225,6 +225,11 @@ c_library_headers = (
 
 import_dict = {'omp_lib' : 'omp' }
 
+import_stc = {'_SET_INT' : '#ifndef _SET_INT\n#define _STC_INT\n\n#define i_key int\n',
+              '_SET_FLOAT_' : '#ifndef _SET_FLAOT\n#define _STC_FLAOT\n\n#define i_key float\n',
+              'stc/hset' : '#include "stc/hset.h"\n#endif\n',
+              }
+
 c_imports = {n : Import(n, Module(n, (), ())) for n in
                 ['stdlib',
                  'math',
@@ -237,7 +242,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  "inttypes",
                  'stdbool',
                  'assert',
-                 'numpy_c']}
+                 'numpy_c',
+                 'stc/hset',]}
 
 class CCodePrinter(CodePrinter):
     """
@@ -312,7 +318,7 @@ class CCodePrinter(CodePrinter):
         return self._additional_imports.keys()
 
     def add_import(self, import_obj):
-        if import_obj.source not in self._additional_imports:
+         if import_obj.source not in self._additional_imports:
             self._additional_imports[import_obj.source] = import_obj
 
     def _get_statement(self, codestring):
@@ -788,8 +794,9 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
-        imports = ''.join(self._print(i) for i in imports)
+        
 
+        imports = ''.join(self._print(i) for i in imports)
         self._in_header = False
         self.exit_scope()
         return (f"#ifndef {name.upper()}_H\n \
@@ -944,7 +951,8 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1]
         else:
             source = self._print(source)
-
+        if source in import_stc:
+            return import_stc[source]
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
@@ -1160,6 +1168,12 @@ class CCodePrinter(CodePrinter):
                 return 'bool'
 
             key = (primitive_type, dtype.precision)
+        elif isinstance(dtype, HomogeneousSetType):
+            key = 'hset_' + dtype._name
+            defi = '_SET_' + dtype.datatype._name.upper() 
+            self.add_import(Import(defi, Module(defi, (), ())))
+            self.add_import(c_imports['stc/hset'])
+            return key
         else:
             key = dtype
 
@@ -1238,6 +1252,9 @@ class CCodePrinter(CodePrinter):
             if expr.is_ndarray or isinstance(expr.class_type, HomogeneousContainerType):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
+                if isinstance(expr.class_type, HomogeneousSetType):
+                    dtype = self.find_in_dtype_registry(expr.class_type)
+                    return dtype
                 self.add_import(c_imports['ndarrays'])
                 dtype = 't_ndarray'
             else:

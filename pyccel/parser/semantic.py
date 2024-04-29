@@ -60,7 +60,7 @@ from pyccel.ast.core import Assert
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
-from pyccel.ast.datatypes import PrimitiveIntegerType, HomogeneousListType, StringType, SymbolicType
+from pyccel.ast.datatypes import PrimitiveIntegerType, HomogeneousListType, StringType, SymbolicType, HomogeneousSetType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from pyccel.ast.datatypes import DataTypeFactory, PrimitiveFloatingPointType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType
@@ -1929,6 +1929,8 @@ class SemanticParser(BasicParser):
                     class_type = HomogeneousTupleType
                 elif dtype_cls is PythonList:
                     class_type = HomogeneousListType
+                elif dtype_cls is PythonSet:
+                    class_type = HomogeneousSetType
                 else:
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                             severity='fatal', symbol=expr)
