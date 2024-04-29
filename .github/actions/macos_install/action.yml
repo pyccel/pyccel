@@ -5,10 +5,13 @@ runs:
   steps:
     - name: Install MPI, OpenMP
       run: |
-        brew install gcc # Ensure gfortran is installed
         brew install open-mpi
         brew install libomp
-        if [[ ! -f "/usr/local/bin/gfortran" ]]; then
+        GFORTRAN_FILE=$(which gfortran)
+        echo $GFORTRAN_FILE
+        if [[ ! -f "$GFORTRAN_FILE" ]]; then
+          ls /usr/local/bin/
+          which gcc
           gfort=$(ls /usr/local/bin/gfortran-* | tail -n 1)
           ln -s ${gfort} /usr/local/bin/gfortran
         fi
