@@ -9,6 +9,7 @@ runs:
         brew install open-mpi
         brew install libomp
         which gcc
+        gcc --version
         ls /usr/bin
         ls /usr/local/bin/
         which gfortran-13
