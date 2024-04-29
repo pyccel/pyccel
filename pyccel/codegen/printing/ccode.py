@@ -802,7 +802,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
-        self._current_module = expr.name
+        self._current_module = expr
         body    = ''.join(self._print(i) for i in expr.body)
 
         global_variables = ''.join([self._print(d) for d in expr.declarations])
@@ -951,7 +951,7 @@ class CCodePrinter(CodePrinter):
         if source in import_dict: # pylint: disable=consider-using-get
             source = import_dict[source]
 
-        if expr.source_module:
+        if expr.source_module and expr.source_module is not self._current_module:
             for classDef in expr.source_module.classes:
                 class_scope = classDef.scope
                 for method in classDef.methods:
