@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.random import randint, rand
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 def test_sum_range(language):
     def f(a0 : 'int[:]'):
