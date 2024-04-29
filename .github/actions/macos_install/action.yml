@@ -9,6 +9,8 @@ runs:
         brew install open-mpi
         brew install libomp
         which gcc
+        ls /usr/bin
+        ls /usr/local/bin/
         GFORTRAN_FILE=$(which gfortran)
         echo $GFORTRAN_FILE
         if [[ ! -f "$GFORTRAN_FILE" ]]; then
