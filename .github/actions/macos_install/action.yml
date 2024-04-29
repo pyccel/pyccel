@@ -11,6 +11,7 @@ runs:
         which gcc
         ls /usr/bin
         ls /usr/local/bin/
+        which gfortran-13
         GFORTRAN_FILE=$(which gfortran)
         echo $GFORTRAN_FILE
         if [[ ! -f "$GFORTRAN_FILE" ]]; then
