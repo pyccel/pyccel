@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   #1820 : Deprecated unused decorator `@lambdify`
 -   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 
 ## \[1.11.2\] - 2024-03-05
