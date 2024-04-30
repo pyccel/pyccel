@@ -77,7 +77,7 @@ def test_parse(f):
         o = orig_lines[oi]
         c = copy_lines[ci]
         # Check for the same indentation
-        assert(orig_indents[oi] == copy_indents[ci])
+        assert orig_indents[oi] == copy_indents[ci]
         # Handle change between elif and else
         if o.startswith('else') and c.startswith('elif'):
             oi += 1
