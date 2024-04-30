@@ -58,6 +58,7 @@ def test_lambdify(language):
         pyc_y = pyc_lambdify(expr_y, {x : 'float[:,:]', y : 'float[:,:]'}, result_type = 'float[:,:]',
                     language = language)
 
+        print("Abs err:", np.abs(sp_x(r, p) - pyc_x(r, p)).max(), "<", ATOL)
         assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
         assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL, atol=ATOL)
 
