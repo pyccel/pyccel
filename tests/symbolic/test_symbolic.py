@@ -66,6 +66,7 @@ def test_lambdify(language):
         pyc_y = pyc_lambdify(expr_y, {x : 'T', y : 'T'}, templates = {'T': ['float[:]', 'float[:,:]']},
                     language = language)
 
+        print(np.abs(sp_x(r, p) - pyc_x(r, p)).max())
         assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
         assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL, atol=ATOL)
 
