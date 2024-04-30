@@ -58,7 +58,6 @@ def test_lambdify(language):
         pyc_y = pyc_lambdify(expr_y, {x : 'float[:,:]', y : 'float[:,:]'}, result_type = 'float[:,:]',
                     language = language)
 
-        print("Abs err:", np.abs(sp_x(r, p) - pyc_x(r, p)).max(), "<", ATOL)
         assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
         assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL, atol=ATOL)
 
@@ -67,8 +66,6 @@ def test_lambdify(language):
         pyc_y = pyc_lambdify(expr_y, {x : 'T', y : 'T'}, templates = {'T': ['float[:]', 'float[:,:]']},
                     language = language)
 
-        print("Abs err:", np.abs(sp_x(r, p) - pyc_x(r, p)).max(), "<", ATOL)
-        print("Rel err:", np.min(np.where(np.abs(pyc_x(r, p))== 0, RTOL, RTOL*np.abs(pyc_x(r, p)))))
         assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
         assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL, atol=ATOL)
 
