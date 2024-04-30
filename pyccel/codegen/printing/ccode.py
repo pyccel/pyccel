@@ -948,13 +948,20 @@ class CCodePrinter(CodePrinter):
             source = self._print(source)
         if expr.target:
            dtype = expr.target.pop().name
-           if source == ('stc/hset_' + str(dtype)):
+           if source.startswith('stc'):
              dtype_macro = dtype.upper()
-             return (f'#ifndef _SET_{dtype_macro}\n'
-             f'#define _SET_{dtype_macro}\n'
-             f'#define i_key {dtype}\n'
-             f'#include "stc/hset.h"\n'
-             f'#endif\n')
+             _,container_type = source.split("/")
+             class_type_macro = "SET" if container_type.startswith("hset") else "VEC"
+             import_file,_ = source.split('_')
+             if class_type_macro == 'SET':
+                  additional_defines = ''
+             additional_defines = '' if class_type_macro == 'SET' else "#define i_use_cmp\n"
+             return '\n'.join((f'#ifndef _{class_type_macro}_{dtype_macro}',
+             f'#define _{class_type_macro}_{dtype_macro}',
+             f'#define i_key {dtype}',
+             additional_defines,
+             f'#include "{import_file}.h"',
+             f'#endif\n'))
 
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
@@ -1171,11 +1178,13 @@ class CCodePrinter(CodePrinter):
                 return 'bool'
 
             key = (primitive_type, dtype.precision)
-        elif isinstance(dtype, HomogeneousSetType):
-            key = 'hset_' + dtype._name
-            types = dtype.datatype._name
-            source = 'stc/hset_' + types
-            self.add_import(Import(source, Module(types, (), ())))
+        elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
+            cointainer_type = 'hset_' if dtype._name == 'set' else 'vec_'
+            dtype = dtype.element_type._name
+            key = cointainer_type + dtype
+            source = 'stc/'+ cointainer_type + dtype
+        
+            self.add_import(Import(source, Module(dtype, (), ())))
             return key
         else:
             key = dtype
@@ -1255,7 +1264,7 @@ class CCodePrinter(CodePrinter):
             if expr.is_ndarray or isinstance(expr.class_type, HomogeneousContainerType):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
-                if isinstance(expr.class_type, HomogeneousSetType):
+                if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType)):
                     dtype = self.find_in_dtype_registry(expr.class_type)
                     return dtype
                 self.add_import(c_imports['ndarrays'])
