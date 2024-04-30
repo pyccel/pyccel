@@ -948,20 +948,18 @@ class CCodePrinter(CodePrinter):
             source = self._print(source)
         if expr.target:
            dtype = expr.target.pop().name
-           if source.startswith('stc'):
+           if source.startswith('stc/'):
              dtype_macro = dtype.upper()
              _,container_type = source.split("/")
              class_type_macro = "SET" if container_type.startswith("hset") else "VEC"
              import_file,_ = source.split('_')
-             if class_type_macro == 'SET':
-                  additional_defines = ''
-             additional_defines = '' if class_type_macro == 'SET' else "#define i_use_cmp\n"
+             additional_defines = '#define i_use_cmp\n' if class_type_macro == 'VEC' else ''
              return '\n'.join((f'#ifndef _{class_type_macro}_{dtype_macro}',
-             f'#define _{class_type_macro}_{dtype_macro}',
-             f'#define i_key {dtype}',
-             additional_defines,
-             f'#include "{import_file}.h"',
-             f'#endif\n'))
+                               f'#define _{class_type_macro}_{dtype_macro}',
+                               f'#define i_key {dtype}',
+                               additional_defines,
+                               f'#include "{import_file}.h"',
+                               f'#endif\n'))
 
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
