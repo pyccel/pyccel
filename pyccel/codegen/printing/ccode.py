@@ -316,7 +316,7 @@ class CCodePrinter(CodePrinter):
         return self._additional_imports.keys()
 
     def add_import(self, import_obj):
-         if import_obj.source not in self._additional_imports:
+        if import_obj.source not in self._additional_imports:
             self._additional_imports[import_obj.source] = import_obj
 
     def _get_statement(self, codestring):
@@ -792,7 +792,6 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
-        
 
         imports = ''.join(self._print(i) for i in imports)
         self._in_header = False
@@ -949,6 +948,7 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1]
         else:
             source = self._print(source)
+
         if source in import_stc:
             dtype = import_stc[source]
             return (f'#ifndef {source}\n'
