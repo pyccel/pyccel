@@ -67,7 +67,7 @@ def test_lambdify(language):
                     language = language)
 
         print("Abs err:", np.abs(sp_x(r, p) - pyc_x(r, p)).max(), "<", ATOL)
-        print("Rel err:", np.max(np.where(np.abs(pyc_x(r, p))== 0, RTOL, RTOL*np.abs(pyc_x(r, p))))
+        print("Rel err:", np.min(np.where(np.abs(pyc_x(r, p))== 0, RTOL, RTOL*np.abs(pyc_x(r, p)))))
         assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
         assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL, atol=ATOL)
 
