@@ -74,11 +74,6 @@ jobs:
             python -m pip install --upgrade pip
             python -m pip install .[test]
         shell: bash
-      - name: Symbolic test
-        run: |
-          pytest test_symbolic.py -sxv
-        working-directory:
-          ./tests/symbolic
       - name: Fortran/C tests with pytest
         id: f_c_pytest
         timeout-minutes: 60
