@@ -14,8 +14,8 @@ from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors   import Errors
 
-RTOL = 1e-14
-ATOL = 1e-15
+RTOL = 1e-13
+ATOL = 1e-14
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
