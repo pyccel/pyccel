@@ -225,9 +225,6 @@ c_library_headers = (
 
 import_dict = {'omp_lib' : 'omp' }
 
-import_stc = {'_SET_INT' : 'int',
-              '_SET_FLOAT' : 'float',
-}
 
 c_imports = {n : Import(n, Module(n, (), ())) for n in
                 ['stdlib',
@@ -302,7 +299,7 @@ class CCodePrinter(CodePrinter):
 
         errors.set_target(filename, 'file')
 
-        super().__init__()
+        super().__init__() 
         self.prefix_module = prefix_module
         self._additional_imports = {'stdlib':c_imports['stdlib']}
         self._additional_code = ''
@@ -936,7 +933,8 @@ class CCodePrinter(CodePrinter):
         e = self._print(e if e.dtype.primitive_type is PrimitiveFloatingPointType() else NumpyFloat(e))
         code = 'pow({}, {})'.format(b, e)
         return self._cast_to(expr, expr.dtype).format(code)
-
+            
+        
     def _print_Import(self, expr):
         if expr.ignore:
             return ''
@@ -948,14 +946,16 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1]
         else:
             source = self._print(source)
+        if expr.target:
+           dtype = expr.target.pop().name
+           if source == ('stc/hset_' + str(dtype)):
+             dtype_macro = dtype.upper()
+             return (f'#ifndef _SET_{dtype_macro}\n'
+             f'#define _SET_{dtype_macro}\n'
+             f'#define i_key {dtype}\n'
+             f'#include "stc/hset.h"\n'
+             f'#endif\n')
 
-        if source in import_stc:
-            dtype = import_stc[source]
-            return (f'#ifndef {source}\n'
-            f'#define {source}\n'
-            f'#define i_key {dtype}\n'
-            f'#include "stc/hset.h"\n'
-            f'#endif\n')  
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
@@ -1173,8 +1173,9 @@ class CCodePrinter(CodePrinter):
             key = (primitive_type, dtype.precision)
         elif isinstance(dtype, HomogeneousSetType):
             key = 'hset_' + dtype._name
-            defi = '_SET_' + dtype.datatype._name.upper() 
-            self.add_import(Import(defi, Module(defi, (), ())))
+            types = dtype.datatype._name
+            source = 'stc/hset_' + types
+            self.add_import(Import(source, Module(types, (), ())))
             return key
         else:
             key = dtype
