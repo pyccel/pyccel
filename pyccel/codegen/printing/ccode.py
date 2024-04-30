@@ -792,8 +792,8 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
-
         imports = ''.join(self._print(i) for i in imports)
+
         self._in_header = False
         self.exit_scope()
         return (f"#ifndef {name.upper()}_H\n \
