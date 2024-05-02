@@ -6,7 +6,7 @@ if __name__ == '__main__':
     n = np.int32(4)
     m = np.int32(5)
 
-    a = np.zeros((n,m))
+    a = np.zeros((n,m), order='F')
     x = np.zeros(m)
     y = np.zeros(n)
 

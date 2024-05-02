@@ -378,10 +378,18 @@ def C_to_Python(c_object):
     -------
     FunctionDef : cast type FunctionDef
     """
-    try :
-        cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]
-    except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
+    if c_object.rank != 0:
+        if c_object.order == 'C':
+            cast_function = 'c_ndarray_to_pyarray'
+        elif c_object.order == 'F':
+            cast_function = 'fortran_ndarray_to_pyarray'
+        else:
+            cast_function = 'ndarray_to_pyarray'
+    else:
+        try :
+            cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],

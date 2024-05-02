@@ -67,12 +67,15 @@ class CompileObj:
         rel_mod_name = os.path.join(folder, self._module_name)
         self._module_target = rel_mod_name+'.o'
 
-        self._prog_target = prog_target or rel_mod_name
+        if prog_target:
+            self._prog_target = os.path.join(folder, prog_target)
+        else:
+            self._prog_target = rel_mod_name
         if sys.platform == "win32":
             self._prog_target += '.exe'
 
-        self._prog_target = os.path.join(folder, self._prog_target)
-        self._module_target = os.path.join(folder, self._module_target)
+        self._prog_target   = self._prog_target
+        self._module_target = self._module_target
 
         self._lock         = FileLock(self.module_target+'.lock')
 

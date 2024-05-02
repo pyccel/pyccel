@@ -35,7 +35,7 @@ def test_complex_imag_expr(language):
 def test_complex_real(language):
     def f():
         a = 1+2j
-        return a.imag
+        return a.real
 
     epyc_f = epyccel(f, language=language)
 
@@ -53,6 +53,36 @@ def test_complex_real_expr(language):
 
     a = randint(20)+1j*randint(20)
     b = randint(20)+1j*randint(20)
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
+def test_complex_conjugate(language):
+    def f(a : 'complex', b : 'complex'):
+        return (a+b).conjugate()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = randint(20)+1j*randint(20)
+    b = randint(20)+1j*randint(20)
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
+def test_complex_conjugate64(language):
+    def f(a : 'complex64', b : 'complex64'):
+        return (a+b).conj()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = np.complex64(randint(20)+1j*randint(20))
+    b = np.complex64(randint(20)+1j*randint(20))
 
     r = f(a,b)
     epyc_r = epyc_f(a,b)

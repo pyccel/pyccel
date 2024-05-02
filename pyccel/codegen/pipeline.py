@@ -20,7 +20,9 @@ from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.utilities      import internal_libs
 from pyccel.codegen.python_wrapper import create_shared_library
+from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
+from pyccel.parser.scope           import Scope
 
 from .compiling.basic     import CompileObj
 from .compiling.compilers import Compiler
@@ -209,9 +211,11 @@ def execute_pyccel(fname, *,
         if not fname:
             return
 
+    Scope.name_clash_checker = name_clash_checkers[language]
+
     # Parse Python file
     try:
-        parser = Parser(pymod_filepath, show_traceback=verbose)
+        parser = Parser(pymod_filepath)
         parser.parse(verbose=verbose)
     except NotImplementedError as error:
         msg = str(error)

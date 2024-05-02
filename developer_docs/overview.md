@@ -20,15 +20,17 @@ The role of this stage has decreased significantly since we moved from [redbaron
 
 This is the most important stage in pyccel. It is here that all the information about types is calculated. This stage strives to be **language-agnostic**; this means for example, that additional variables required to handle problems appearing in one specific language should not be created here.
 
-When adding functions to this stage the aim is often to create a `PyccelAstNode` (see [ast/basic.py](../pyccel/ast/basic.py)) and correctly define all of its parameters. This information is sometimes readily available (e.g. the type of a `PyccelAdd` can be derived from the type of the variables passed to it), but sometimes the information must be collected from elsewhere (e.g. when creating a `Variable` from a `PyccelSymbol` (roughly equivalent to a string). In this case information is needed from a `Scope` instance which is stored in the `namespace`.
+When adding functions to this stage the aim is often to create a `PyccelAstNode` (see [ast/basic.py](../pyccel/ast/basic.py)) and correctly define all of its parameters. This information is sometimes readily available (e.g. the type of a `PyccelAdd` can be derived from the type of the variables passed to it), but sometimes the information must be collected from elsewhere (e.g. when creating a `Variable` from a `PyccelSymbol` (roughly equivalent to a string). In this case information is needed from a `Scope` instance which is stored in the `scope`.
 
 In computer science, the _scope_ is the area of a program where an item (e.g. variable, function, etc.) is recognised. For example a variable defined in a function will not be recognised outside of that function, therefore the function defines its scope.
 
-In Pyccel, a `Scope` is an object defined in [parser/base.py](../pyccel/parser/base.py) which represents this concept. It includes all the functions, imports, variables, and classes which are available at a given point in the code. It also contains pointers to nested and parent scopes. The `namespace` in the `SemanticParser` (`SemanticParser._namespace`) stores the Scope relevant to the line of code being treated. It must be updated whenever the scope changes (e.g. through the `create_new_function_scope` function when entering into a function body).
+In Pyccel, a `Scope` is an object defined in [parser/base.py](../pyccel/parser/base.py) which represents this concept. It includes all the functions, imports, variables, and classes which are available at a given point in the code. It also contains pointers to nested and parent scopes. The `scope` in the `SemanticParser` (`SemanticParser._scope`) stores the Scope relevant to the line of code being treated. It must be updated whenever the scope changes (e.g. through the `create_new_function_scope` function when entering into a function body). The Scope is also used to avoid naming collisions. See [Scope documentation](./scope.md) for details.
 
 ### Code Generation Stage
 
-In this stage the Pyccel nodes are converted into a string which contains the translation into the requested language. Each language has its own printer. The printers are found in the folder [codegen/printing](../pyccel/codegen/printing)
+In this stage the Pyccel nodes are converted into a string which contains the translation into the requested language. Each language has its own printer. The printers are found in the folder [codegen/printing](../pyccel/codegen/printing).
+
+As in the Semantic stage, the Code Generation stage also stores the current Scope in a `scope` variable which must be updated whenever the scope changes.
 
 ### Compilation Stage
 

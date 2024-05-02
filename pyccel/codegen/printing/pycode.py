@@ -12,6 +12,7 @@ from pyccel.ast.builtins   import PythonMin, PythonMax
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module
 from pyccel.ast.datatypes  import default_precision
+from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.numpyext   import Shape as NumpyShape, numpy_target_swap
@@ -62,8 +63,8 @@ class PythonCodePrinter(CodePrinter):
         'tabwidth': 4,
     }
 
-    def __init__(self, parser=None):
-        self._parser = parser
+    def __init__(self, filename):
+        errors.set_target(filename, 'file')
         super().__init__()
         self._additional_imports = {}
         self._aliases = {}
@@ -119,14 +120,24 @@ class PythonCodePrinter(CodePrinter):
         body = expr.loops[1]
         while not isinstance(body, Assign):
             if isinstance(body, CodeBlock):
-                body = body.body
+                body = list(body.body)
+                while isinstance(body[0], FunctionalFor):
+                    func_for = body.pop(0)
+                    # Replace the temporary assign value with the FunctionalFor expression
+                    # so the loop is printed inline
+                    for b in body:
+                        b.substitute(func_for.lhs, func_for)
                 if len(body) > 1:
+                    # Ensure all assigns assign to the dummy we are searching for and do not introduce unexpected variables
                     if any(not(isinstance(b, Assign) and b.lhs is dummy_var) for b in body[1:]):
                         raise NotImplementedError("Pyccel has introduced unnecessary statements which it cannot yet disambiguate in the python printer")
                 body = body[0]
             elif isinstance(body, For):
                 iterables.append(body.iterable)
                 body = body.body
+            elif isinstance(body, FunctionalFor):
+                body, it = self._find_functional_expr_and_iterables(body)
+                iterables.extend(it)
             else:
                 raise NotImplementedError("Type {} not handled in a FunctionalFor".format(type(body)))
         return body, iterables
@@ -200,6 +211,7 @@ class PythonCodePrinter(CodePrinter):
         return self._print(func)
 
     def _print_FunctionDef(self, expr):
+        self.set_scope(expr.scope)
         name       = self._print(expr.name)
         imports    = ''.join(self._print(i) for i in expr.imports)
         interfaces = ''.join(self._print(i) for i in expr.interfaces if not i.is_argument)
@@ -259,6 +271,7 @@ class PythonCodePrinter(CodePrinter):
             headers = self._print(headers)
             code = '{header}\n{code}'.format(header=headers, code=code)
 
+        self.exit_scope()
         return code
 
     def _print_FunctionAddress(self, expr):
@@ -277,6 +290,8 @@ class PythonCodePrinter(CodePrinter):
         return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars))
 
     def _print_Program(self, expr):
+        mod_scope = self.scope
+        self.set_scope(expr.scope)
         imports  = ''.join(self._print(i) for i in expr.imports)
         body     = self._print(expr.body)
         imports += ''.join(self._print(i) for i in self.get_additional_imports())
@@ -284,6 +299,9 @@ class PythonCodePrinter(CodePrinter):
         body = imports+body
         body = self._indent_codestring(body)
 
+        self.exit_scope()
+        if mod_scope:
+            self.set_scope(mod_scope)
         return ('if __name__ == "__main__":\n'
                 '{body}\n').format(body=body)
 
@@ -384,6 +402,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonImag(self, expr):
         return '({}).imag'.format(self._print(expr.internal_var))
 
+    def _print_PythonConjugate(self, expr):
+        return '({}).conjugate()'.format(self._print(expr.internal_var))
+
     def _print_PythonPrint(self, expr):
         return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))
 
@@ -412,7 +433,7 @@ class PythonCodePrinter(CodePrinter):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
-        if expr.funcdef.name in self._ignore_funcs:
+        if expr.funcdef in self._ignore_funcs:
             return ''
         if expr.interface:
             func_name = expr.interface_name
@@ -426,14 +447,14 @@ class PythonCodePrinter(CodePrinter):
             return code+'\n'
 
     def _print_Import(self, expr):
-        p       = self._parser.d_parsers.get(expr.source, None)
+        mod = expr.source_module
         init_func_name = ''
         free_func_name = ''
-        if p:
-            init_func = p.semantic_parser.ast.init_func
+        if mod:
+            init_func = mod.init_func
             if init_func:
                 init_func_name = init_func.name
-            free_func = p.semantic_parser.ast.free_func
+            free_func = mod.free_func
             if free_func:
                 free_func_name = free_func.name
 
@@ -462,11 +483,11 @@ class PythonCodePrinter(CodePrinter):
             if source in pyccel_builtin_import_registery:
                 self._aliases.update([(pyccel_builtin_import_registery[source][t.name].cls_name, t.target) for t in target if t.name != t.target])
 
-            target_names = {t.name:t.target for t in target}
-            if init_func_name in target_names:
-                self._ignore_funcs.append(target_names[init_func_name])
-            if free_func_name in target_names:
-                self._ignore_funcs.append(target_names[free_func_name])
+            if expr.source_module:
+                if expr.source_module.init_func:
+                    self._ignore_funcs.append(expr.source_module.init_func)
+                if expr.source_module.free_func:
+                    self._ignore_funcs.append(expr.source_module.free_func)
             target = [self._print(t) for t in target if t.name not in (init_func_name, free_func_name)]
             target = ', '.join(target)
             return 'from {source} import {target}\n'.format(source=source, target=target)
@@ -479,6 +500,7 @@ class PythonCodePrinter(CodePrinter):
             return code
 
     def _print_For(self, expr):
+        self.set_scope(expr.scope)
         iterable = self._print(expr.iterable)
         target   = expr.target
         if not isinstance(target,(list, tuple)):
@@ -489,6 +511,7 @@ class PythonCodePrinter(CodePrinter):
         code   = ('for {0} in {1}:\n'
                 '{2}').format(target,iterable,body)
 
+        self.exit_scope()
         return code
 
     def _print_FunctionalFor(self, expr):
@@ -513,16 +536,21 @@ class PythonCodePrinter(CodePrinter):
                 else:
                     rhs = type(body.rhs)(*args)
 
-        lhs = self._print(expr.lhs)
         body = self._print(rhs)
         for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
                         for idx, iters in zip(expr.indices, iterators)])
 
-        return '{} = {}({} {})\n'.format(lhs, expr.name, body, for_loops)
+        if expr.get_user_nodes(FunctionalFor):
+            return '{}({} {})'.format(expr.name, body, for_loops)
+        else:
+            lhs = self._print(expr.lhs)
+            return '{} = {}({} {})\n'.format(lhs, expr.name, body, for_loops)
 
     def _print_While(self, expr):
         cond = self._print(expr.test)
+        self.set_scope(expr.scope)
         body = self._indent_codestring(self._print(expr.body))
+        self.exit_scope()
         return 'while {cond}:\n{body}'.format(
                 cond = cond,
                 body = body)
@@ -772,6 +800,7 @@ class PythonCodePrinter(CodePrinter):
         return 'print({0})\n'.format(fs)
 
     def _print_Module(self, expr):
+        self.set_scope(expr.scope)
         # Print interface functions (one function with multiple decorators describes the problem)
         imports  = ''.join(self._print(i) for i in expr.imports)
         interfaces = ''.join(self._print(i) for i in expr.interfaces)
@@ -783,7 +812,7 @@ class PythonCodePrinter(CodePrinter):
 
         init_func = expr.init_func
         if init_func:
-            self._ignore_funcs.append(init_func.name)
+            self._ignore_funcs.append(init_func)
             # Collect initialisation body
             init_if = init_func.get_attribute_nodes(IfSection)[0]
             # Remove boolean from init_body
@@ -794,7 +823,7 @@ class PythonCodePrinter(CodePrinter):
 
         free_func = expr.free_func
         if free_func:
-            self._ignore_funcs.append(free_func.name)
+            self._ignore_funcs.append(free_func)
 
         imports += ''.join(self._print(i) for i in self.get_additional_imports())
 
@@ -806,6 +835,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             prog = ''
 
+        self.exit_scope()
         return ('{imports}\n'
                 '{body}'
                 '{prog}').format(
