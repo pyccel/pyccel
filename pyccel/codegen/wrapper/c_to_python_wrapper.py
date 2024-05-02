@@ -32,7 +32,7 @@ from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString, PyGe
 from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_GetItem
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
-from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType
+from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse
 from pyccel.ast.numpyext      import NumpyNDArrayType
@@ -42,7 +42,7 @@ from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
-from pyccel.ast.operators     import PyccelLt, IfTernaryOperator
+from pyccel.ast.operators     import PyccelLt, IfTernaryOperator, PyccelAnd
 from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
@@ -237,9 +237,9 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map.update(dict(zip(results, collect_results)))
         return collect_results
 
-    def _get_check_function(self, py_obj, arg, raise_error):
+    def _get_type_check_condition(self, py_obj, arg, raise_error, body):
         """
-        Get the function which checks if an argument has the expected type.
+        Get the condition which checks if an argument has the expected type.
 
         Using the c-compatible description of a function argument, determine whether the Python
         object (with datatype `PyccelPyObject`) holds data which is compatible with the expected
@@ -257,10 +257,16 @@ class CToPythonWrapper(Wrapper):
         raise_error : bool
             True if an error should be raised in case of an unexpected type, False otherwise.
 
+        body : list
+            A list describing code where the type check will occur. This allows any necessary code
+            to be inserted into the code block. E.g. code which should be run before the condition
+            can be checked.
+
         Returns
         -------
-        func_call : FunctionCall
-            The function call which checks if the argument has the expected type.
+        type_check_condition : FunctionCall | Variable
+            The function call which checks if the argument has the expected type or the variable
+            indicating if the argument has the expected type.
 
         error_code : tuple of pyccel.ast.basic.PyccelAstNode
             The code which raises any necessary errors.
@@ -270,7 +276,7 @@ class CToPythonWrapper(Wrapper):
         dtype = arg.dtype
         if isinstance(dtype, CustomDataType):
             python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
-            func_call = FunctionCall(PyObject_TypeCheck, [py_obj, python_cls_base.type_object])
+            type_check_condition = FunctionCall(PyObject_TypeCheck, [py_obj, python_cls_base.type_object])
         elif rank == 0:
             try :
                 cast_function = check_type_registry[dtype]
@@ -282,7 +288,7 @@ class CToPythonWrapper(Wrapper):
                                arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
                                results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
 
-            func_call = FunctionCall(func, [py_obj])
+            type_check_condition = FunctionCall(func, [py_obj])
         elif isinstance(arg.class_type, NumpyNDArrayType):
             try :
                 type_ref = numpy_dtype_registry[dtype]
@@ -301,9 +307,30 @@ class CToPythonWrapper(Wrapper):
             check_func = pyarray_check if raise_error else is_numpy_array
             # No error code required as the error is raised inside pyarray_check
 
-            func_call = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
+            type_check_condition = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
         elif isinstance(arg.class_type, HomogeneousTupleType):
-            func_call = FunctionCall(PyTuple_Check, [py_obj])
+            # Create type check result variable
+            type_check_condition = self.scope.get_temporary_variable(PythonNativeBool(), 'is_homog_tuple')
+
+            # Check if the object is a tuple
+            tuple_check = FunctionCall(PyTuple_Check, [py_obj])
+
+            # If the tuple is an object check that the elements have the right type
+            for_scope = self.scope.create_new_loop_scope()
+            size_var = self.scope.get_temporary_variable(PythonNativeInt(), f'size')
+            idx = self.scope.get_temporary_variable(CNativeInt())
+            indexed_py_obj = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
+
+            indexed_init = AliasAssign(indexed_py_obj, FunctionCall(PyTuple_GetItem, [py_obj, idx]))
+            size_assign = Assign(size_var, FunctionCall(PyTuple_Size, [py_obj]))
+            for_body = [indexed_init]
+            internal_type_check_condition, _ = self._get_type_check_condition(indexed_py_obj, arg[0], False, for_body)
+            for_body.append(Assign(type_check_condition, PyccelAnd(type_check_condition, internal_type_check_condition)))
+            internal_type_check = For(idx, Iterable(PythonRange(size_var)), for_body, scope = for_scope)
+
+            tuple_checks = IfSection(tuple_check, [size_assign, Assign(type_check_condition, LiteralTrue()), internal_type_check])
+            default_value = IfSection(LiteralTrue(), [Assign(type_check_condition, LiteralFalse())])
+            body.append(If(tuple_checks, default_value))
         else:
             errors.report(f"Can't check the type of an array of {arg.class_type}\n"+PYCCEL_RESTRICTION_TODO,
                     symbol=arg, severity='fatal')
@@ -313,7 +340,7 @@ class CToPythonWrapper(Wrapper):
             python_error = FunctionCall(PyErr_SetString, [PyTypeError, message])
             error_code = (python_error,)
 
-        return func_call, error_code
+        return type_check_condition, error_code
 
     def _get_type_check_function(self, name, args, funcs):
         """
@@ -399,7 +426,7 @@ class CToPythonWrapper(Wrapper):
                 # Create the type checks and incrementation of the type_indicator
                 if_blocks = []
                 for index, t in enumerate(possible_types):
-                    check_func_call, _ = self._get_check_function(py_arg, type_to_example_arg[t], False)
+                    check_func_call, _ = self._get_type_check_condition(py_arg, type_to_example_arg[t], False, body)
                     if_blocks.append(IfSection(check_func_call, [AugAssign(type_indicator, '+', LiteralInteger(index*step))]))
                 body.append(If(*if_blocks, IfSection(LiteralTrue(),
                             [FunctionCall(PyErr_SetString, [PyTypeError, f"Unexpected type for argument {interface_args[0].name}"]),
@@ -1463,12 +1490,12 @@ class CToPythonWrapper(Wrapper):
 
         # Create any necessary type checks and errors
         if expr.has_default:
-            check_func, err = self._get_check_function(collect_arg, orig_var, False)
+            check_func, err = self._get_type_check_condition(collect_arg, orig_var, False, body)
             body.append(If( IfSection(check_func, cast),
                         IfSection(PyccelIsNot(collect_arg, Py_None), [*err, Return([self._error_exit_code])])
                         ))
         elif not (in_interface or bound_argument):
-            check_func, err = self._get_check_function(collect_arg, orig_var, True)
+            check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body)
             body.append(If( IfSection(check_func, cast),
                         IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])])
                         ))
