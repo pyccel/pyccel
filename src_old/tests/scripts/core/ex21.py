@@ -10,7 +10,7 @@
 #            array F(x,y) = {y'[0],y'[1],...,y'[n-1]}.
 
 #'''
-#TODO improve inout hadeling 
+#TODO improve inout hadeling
 #TODO fix comment bug when it's not properly alligned in a blog
 #TODO fix the bug of two variables with the same name but one is lower case and the other is upper
 

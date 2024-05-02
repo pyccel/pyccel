@@ -43,18 +43,18 @@ def get_source_function(func):
 
 #==============================================================================
 def epyccel_seq(function_or_module,
-                compiler    = None,
-                fflags      = None,
-                accelerator = None,
-                verbose     = False,
-                debug       = False,
-                includes    = (),
-                libdirs     = (),
-                modules     = (),
-                libs        = (),
-                extra_args  = '',
-                mpi         = False,
-                folder      = None):
+                compiler     = None,
+                mpi_compiler = None,
+                fflags       = None,
+                accelerator  = None,
+                verbose      = False,
+                debug        = False,
+                includes     = (),
+                libdirs      = (),
+                modules      = (),
+                libs         = (),
+                extra_args   = '',
+                folder       = None):
 
     # ... get the module source code
     if isinstance(function_or_module, FunctionType):
@@ -107,6 +107,7 @@ def epyccel_seq(function_or_module,
         execute_pyccel(pymod_filename,
                        verbose     = verbose,
                        compiler    = compiler,
+                       mpi_compiler= mpi_compiler,
                        fflags      = fflags,
                        includes    = includes,
                        libdirs     = libdirs,
@@ -115,7 +116,6 @@ def epyccel_seq(function_or_module,
                        debug       = debug,
                        extra_args  = extra_args,
                        accelerator = accelerator,
-                       mpi         = mpi,
                        output_name = module_name)
     finally:
         # Change working directory back to starting point
@@ -152,21 +152,20 @@ def epyccel( inputs, **kwargs ):
         assert isinstance( comm, MPI.Comm )
         assert isinstance( root, int      )
 
+        # TODO [YG, 25.02.2020] Get default MPI compiler from somewhere else
+        kwargs.setdefault('mpi_compiler', 'mpif90')
+
         # Master process calls epyccel
         if comm.rank == root:
-            kwargs['mpi'] = True
-
             fmod      = epyccel_seq( inputs, **kwargs )
             fmod_path = os.path.abspath(fmod.__file__)
             fmod_name = fmod.__name__
-
         else:
+            fmod      = None
             fmod_path = None
             fmod_name = None
-            fmod      = None
 
         if bcast:
-
             # Broadcast Fortran module path/name to all processes
             fmod_path = comm.bcast( fmod_path, root=root )
             fmod_name = comm.bcast( fmod_name, root=root )

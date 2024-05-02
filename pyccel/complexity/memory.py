@@ -8,7 +8,7 @@ from sympy.core.expr import Expr
 from pyccel.ast import (For, Assign, While,NewLine,
                         FunctionDef, Import, Print,
                         Comment, AnnotatedComment,
-                        If, Zeros, Ones, Array, 
+                        If, Zeros, Ones, Array,
                         Len, Dot, IndexedElement)
 
 from pyccel.complexity.basic import Complexity
@@ -31,25 +31,25 @@ def count_access(expr, visual=True):
         list of variables that are supposed to be in the fast memory. We will
         ignore their corresponding memory accesses.
     """
- 
+
     WRITE = Symbol('WRITE')
     READ  = Symbol('READ')
 
 
     if isinstance(expr, Expr):
-       
+
         atoms = expr.atoms(Symbol)
         return READ*len(atoms)
 
     elif isinstance(expr, Assign):
         return count_access(expr.rhs, visual) + WRITE
-   
+
     elif isinstance(expr, Tuple):
         return sum(count_access(i, visual) for i in expr)
 
     elif isinstance(expr, For):
         s = expr.iterable.size
-        ops = sum(count_access(i, visual) for i in expr.body)
+        ops = sum(count_access(i, visual) for i in expr.body.body)
         return ops*s
 
     elif isinstance(expr, (Zeros, Ones)):

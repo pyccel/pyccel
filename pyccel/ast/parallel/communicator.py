@@ -6,6 +6,13 @@ from pyccel.ast.parallel.basic import Basic
 from pyccel.ast.parallel.group import UniversalGroup
 from pyccel.ast.parallel.group import Split
 
+__all__ = (
+    'Communicator',
+    'UniversalCommunicator',
+    'split'
+)
+
+#==============================================================================
 class UniversalCommunicator(Basic):
     """Represents the communicator to all processes."""
 
@@ -17,6 +24,7 @@ class UniversalCommunicator(Basic):
     def group(self):
         return UniversalGroup()
 
+#==============================================================================
 class Communicator(Basic):
     """
     Represents a communicator in the code.
@@ -73,6 +81,7 @@ class Communicator(Basic):
         """
         pass
 
+#==============================================================================
 def split(comm, group, rank=None):
     """
     Splits the communicator over a given color.

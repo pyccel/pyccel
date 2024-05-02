@@ -11,15 +11,15 @@ from pyccel.stdlib.internal.mpi import mpi_send
 from pyccel.stdlib.internal.mpi import mpi_type_contiguous
 from pyccel.stdlib.internal.mpi import mpi_type_commit
 from pyccel.stdlib.internal.mpi import mpi_type_free
-from pyccel.stdlib.internal.mpi import MPI_INTEGER
+from pyccel.stdlib.internal.mpi import MPI_INTEGER8
 
-from numpy import zeros
+import numpy as np
 
 # we need to declare these variables somehow,
 # since we are calling mpi subroutines
-ierr = -1
-size = -1
-rank = -1
+ierr = np.int32(-1)
+size = np.int32(-1)
+rank = np.int32(-1)
 
 mpi_init(ierr)
 
@@ -28,30 +28,33 @@ comm = mpi_comm_world
 mpi_comm_size(comm, size, ierr)
 mpi_comm_rank(comm, rank, ierr)
 
-nb_lines   = 3
-nb_columns = 4
-tag        = 100
+nb_lines   = np.int32(3)
+nb_columns = np.int32(4)
+tag        = np.int32(100)
 
-a      = zeros((nb_lines, nb_columns), 'int')
-status = zeros(mpi_status_size, 'int')
+a      = np.zeros((nb_lines, nb_columns), 'int')
+status = np.zeros(mpi_status_size, dtype='int32')
 
 # Initialization of the matrix on each process
 a[:,:] = 1000 + rank
 
 # Definition of the type_column datatype
-type_column = -1
-mpi_type_contiguous (nb_lines, MPI_INTEGER, type_column, ierr)
+type_column = np.int32(-1)
+mpi_type_contiguous (nb_lines, MPI_INTEGER8, type_column, ierr)
 
 # Validation of the type_column datatype
 mpi_type_commit (type_column, ierr)
 
 # Sending of the first column
 if ( rank == 0 ):
-    mpi_send (a[0,0], 1, type_column, 1, tag, comm , ierr)
+    count = np.int32(1)
+    dest  = np.int32(1)
+    mpi_send (a[0,0], count, type_column, dest, tag, comm, ierr)
 
 # Reception in the last column
 if ( rank == 1 ):
-    mpi_recv (a[0,nb_columns-1], nb_lines, MPI_INTEGER, 0, tag, comm, status, ierr)
+    source = np.int32(0)
+    mpi_recv (a[0,nb_columns-1], nb_lines, MPI_INTEGER8, source, tag, comm, status, ierr)
 
 print('I process ', rank, ', has a = ', a)
 

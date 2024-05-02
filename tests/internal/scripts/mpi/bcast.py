@@ -7,13 +7,15 @@ from pyccel.stdlib.internal.mpi import mpi_comm_rank
 from pyccel.stdlib.internal.mpi import mpi_comm_world
 from pyccel.stdlib.internal.mpi import mpi_status_size
 from pyccel.stdlib.internal.mpi import mpi_bcast
-from pyccel.stdlib.internal.mpi import MPI_INTEGER
+from pyccel.stdlib.internal.mpi import MPI_INTEGER8
+
+import numpy as np
 
 # we need to declare these variables somehow,
 # since we are calling mpi subroutines
-ierr = -1
-size = -1
-rank = -1
+ierr = np.int32(-1)
+size = np.int32(-1)
+rank = np.int32(-1)
 
 mpi_init(ierr)
 
@@ -21,13 +23,14 @@ comm = mpi_comm_world
 mpi_comm_size(comm, size, ierr)
 mpi_comm_rank(comm, rank, ierr)
 
-master = 1
+master = np.int32(1)
 if rank == master:
     msg = rank + 1000
 else:
     msg = 0
 
-mpi_bcast (msg, 1, MPI_INTEGER, master, comm, ierr)
+length = np.int32(1)
+mpi_bcast (msg, length, MPI_INTEGER8, master, comm, ierr)
 
 print('I, process ', rank, ', received ', msg, ' from process ', master)
 

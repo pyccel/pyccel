@@ -7,6 +7,15 @@ from sympy import sympify
 from .core import Basic
 from .core import local_sympify
 
+__all__ = (
+    'Macro',
+    'MacroCount',
+    'MacroShape',
+    'MacroType',
+    'construct_macro'
+)
+
+#==============================================================================
 class Macro(AtomicExpr):
     """."""
     _name = '__UNDEFINED__'
@@ -25,8 +34,7 @@ class Macro(AtomicExpr):
     def name(self):
         return self._name
 
-
-
+#==============================================================================
 class MacroShape(Macro):
     """."""
     _name = 'shape'
@@ -48,6 +56,7 @@ class MacroShape(Macro):
             return 'MacroShape({}, {})'.format(sstr(self.argument),
                                                sstr(self.index))
 
+#==============================================================================
 class MacroType(Macro):
     """."""
     _name = 'dtype'
@@ -58,24 +67,21 @@ class MacroType(Macro):
     def _sympystr(self, printer):
         sstr = printer.doprint
         return 'MacroType({})'.format(sstr(self.argument))
-        
 
-
-    
-
+#==============================================================================
 class MacroCount(Macro):
     """."""
     _name = 'count'
 
     def __new__(cls, argument):
         return Macro.__new__(cls, argument)
-   
+
     def _sympystr(self, printer):
         sstr = printer.doprint
         return 'MacroCount({})'.format(sstr(self.argument))
-   
-    
-    
+
+
+
 
 
 def construct_macro(name, argument, parameter=None):

@@ -1,6 +1,6 @@
 from pyccel.decorators import types
 
-@types('int')
+@types('int', results='int')
 def fib(n) :
     if n < 2:
         result = n

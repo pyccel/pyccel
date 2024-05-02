@@ -1,7 +1,5 @@
 from mpi4py import MPI
 
-rank = -1
-#we must initialize rank
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 

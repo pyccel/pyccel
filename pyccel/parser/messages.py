@@ -53,6 +53,8 @@ BARE_GENERIC = 'Missing type parameters for generic type'
 IMPLICIT_GENERIC_ANY_BUILTIN = 'Implicit generic "Any". Use \'{}\' and specify generic parameters'
 INCOMPATIBLE_TYPEVAR_VALUE = 'Value of type variable "{}" of {} cannot be {}'
 UNSUPPORTED_ARGUMENT_2_FOR_SUPER = 'Unsupported argument 2 for "super"'
+WRONG_NUMBER_OUTPUT_ARGS = 'Number of output arguments does not match number of provided variables'
+MULTIPLE_OUTPUT_CALL = 'This expression contains a function with multiple outputs and is not an assignment. It may not work correctly'
 
 # sympy limitation
 SYMPY_RESTRICTION_DICT_KEYS = 'sympy does not allow dictionary keys to be strings'
@@ -62,7 +64,7 @@ PYCCEL_RESTRICTION_UNARY_OPERATOR = 'Invert unary operator is not covered by Pyc
 PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY = 'Uncovered try/except/finally statements by Pyccel'
 PYCCEL_RESTRICTION_RAISE = 'Uncovered raise statement by Pyccel'
 PYCCEL_RESTRICTION_YIELD = 'Uncovered yield statement by Pyccel'
-PYCCEL_RESTRICTION_IS_RHS = 'Only None is allowed as rhs for is statement'
+PYCCEL_RESTRICTION_IS_RHS = 'Only booleans and None are allowed as rhs for is statement'
 PYCCEL_RESTRICTION_IMPORT = 'Import must be inside a def statement or a module'
 PYCCEL_RESTRICTION_IMPORT_IN_DEF = 'Only From Import is allowed inside a def statement'
 PYCCEL_RESTRICTION_IMPORT_STAR = 'import * not allowed'

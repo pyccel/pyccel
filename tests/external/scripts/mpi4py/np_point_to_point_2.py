@@ -2,10 +2,6 @@
 from mpi4py import MPI
 from numpy import zeros
 
-# we need to declare these variables somehow,
-# since we are calling mpi subroutines
-size_ = -1
-rank = -1
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size_ = comm.Get_size()
@@ -23,4 +19,3 @@ if rank == source:
     comm.Send(x[1], 1, tag=1234)
     print("> processor ", rank, " sent x(1) = ", x)
 # ...
-

@@ -32,7 +32,7 @@ class Codegen(object):
         """Constructor for Codegen.
 
         parser: pyccel parser
-            
+
 
         name: str
             name of the generated module or program.
@@ -63,7 +63,7 @@ class Codegen(object):
         self._collect_statments()
         self._set_kind()
 
-        
+
     @property
     def parser(self):
         return self._parser
@@ -160,37 +160,37 @@ class Codegen(object):
 
     def _collect_statments(self):
         """Collects statments and split them into routines, classes, etc."""
-         
+
         namespace  = self.parser.namespace
 
         funcs      = []
         interfaces = []
         body = []
-        
+
 
         for i in namespace.functions.values():
             if isinstance(i, FunctionDef) and not i.is_header:
                 funcs.append(i)
             elif isinstance(i, Interface):
                 interfaces.append(i)
-            
+
         self._stmts['imports'   ] = list(namespace.imports['imports'].values())
         self._stmts['variables' ] = list(set(self.parser.get_variables(namespace)))
         self._stmts['routines'  ] = funcs
         self._stmts['classes'   ] = list(namespace.classes.values())
         self._stmts['interfaces'] = interfaces
         self._stmts['body']       = self.ast
-        
+
 
 
 
     def _set_kind(self):
         """Finds the source code kind."""
- 
-        
+
+
         cls = (Header, EmptyLine, NewLine, Comment, CommentBlock, Module)
         is_module = all(isinstance(i,cls) for i in self.ast)
-        
+
 
 
         if is_module:
@@ -250,19 +250,19 @@ class Codegen(object):
 
         # ...
 
-  
+
         errors = Errors()
         errors.set_parser_stage('codegen')
-        
+
         # ...
-        
+
         code = printer(self.expr, self.parser, **settings)
 
         # ...
         errors.check()
-        
+
         self._code = code
-        
+
         return code
 
 

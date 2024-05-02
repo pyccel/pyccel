@@ -1,7 +1,7 @@
 ## module rootsearch
 #''' x1,x2 = rootsearch(f,a,b,dx).
 #    Searches the interval (a,b) in increments dx for
-#    the bounds (x1,x2) of the smallest root of f(x). 
+#    the bounds (x1,x2) of the smallest root of f(x).
 #    Returns x1 = x2 = None if no roots were detected.
 #'''
 #
@@ -18,7 +18,7 @@ f1 = f(a)
 x2 = a + dx
 f2 = f(x2)
 while sign(f1) == sign(f2):
-    if x1  >=  b: 
+    if x1  >=  b:
         break
     x1 = x2
     f1 = f2

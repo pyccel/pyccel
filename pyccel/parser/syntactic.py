@@ -101,10 +101,10 @@ from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast import VariableHeader, InterfaceHeader
 from pyccel.ast import MetaVariable
 from pyccel.ast import MacroFunction, MacroVariable
-from pyccel.ast import Concatinate
+from pyccel.ast import Concatenate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
-from pyccel.ast import Is
+from pyccel.ast import Is, IsNot
 from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
 from pyccel.ast import AnnotatedComment, CommentBlock
@@ -126,7 +126,7 @@ from pyccel.ast.datatypes import sp_dtype, str_dtype
 
 
 from pyccel.parser.utilities import omp_statement, acc_statement
-from pyccel.parser.utilities import fst_move_directives, preprocess_imports
+from pyccel.parser.utilities import fst_move_directives, preprocess_imports, preprocess_default_args
 from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.parser.utilities import read_file
@@ -229,9 +229,11 @@ class SyntaxParser(BasicParser):
             errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
                           severity='fatal')
             errors.check()
-            raise SystemExit(0)
+            raise e
 
         preprocess_imports(red)
+        preprocess_default_args(red)
+
         red = fst_move_directives(red)
         self._fst = red
 
@@ -239,7 +241,7 @@ class SyntaxParser(BasicParser):
 
     def parse(self, verbose=False):
         """converts redbaron fst to sympy ast."""
-        
+
         if self.syntax_done:
             print ('> syntax analysis already done')
             return self.ast
@@ -257,16 +259,15 @@ class SyntaxParser(BasicParser):
             ast = self._visit(self.fst)
         except Exception as e:
             errors.check()
-            if self.show_traceback:
-                traceback.print_exc()
-            raise SystemExit(0)
+            traceback.print_exc()
+            raise e
 
-            
+
         self._ast = ast
 
         errors.check()
         self._visit_done = True
-        
+
         return ast
 
     def _treat_iterable(self, stmt):
@@ -579,45 +580,42 @@ class SyntaxParser(BasicParser):
         first = self._visit(stmt.first)
         second = self._visit(stmt.second)
         if stmt.value == 'and':
-
             return And(first, second, evaluate=False)
-        elif stmt.value == 'or':
-
+        if stmt.value == 'or':
             return Or(first, second, evaluate=False)
-        else:
-            msg = 'unknown/unavailable BooleanOperatorNode {node}'
-            msg = msg.format(node=type(stmt.value))
-            raise PyccelSyntaxError(msg)
+
+        msg = 'unknown/unavailable BooleanOperatorNode {node}'
+        msg = msg.format(node=type(stmt.value))
+        raise PyccelSyntaxError(msg)
 
     def _visit_ComparisonNode(self, stmt):
 
         first = self._visit(stmt.first)
         second = self._visit(stmt.second)
         op = stmt.value.first
+        if(stmt.value.second):
+            op=op+' '+stmt.value.second
+
         if op == '==':
             return Eq(first, second, evaluate=False)
-        elif op == '!=':
-
+        if op == '!=':
             return Ne(first, second, evaluate=False)
-        elif op == '<':
-
+        if op == '<':
             return Lt(first, second, evaluate=False)
-        elif op == '>':
-
+        if op == '>':
             return Gt(first, second, evaluate=False)
-        elif op == '<=':
-
+        if op == '<=':
             return Le(first, second, evaluate=False)
-        elif op == '>=':
-
+        if op == '>=':
             return Ge(first, second, evaluate=False)
-        elif op == 'is':
-
+        if op == 'is':
             return Is(first, second)
-        else:
-            msg = 'unknown/unavailable binary operator {node}'
-            msg = msg.format(node=type(op))
-            raise PyccelSyntaxError(msg)
+        if op == 'is not':
+            return IsNot(first, second)
+
+        msg = 'unknown/unavailable binary operator {node}'
+        msg = msg.format(node=op)
+        raise PyccelSyntaxError(msg)
 
     def _visit_PrintNode(self, stmt):
 
@@ -684,7 +682,7 @@ class SyntaxParser(BasicParser):
 
         if 'bypass' in decorators:
             return EmptyLine()
-            
+
         if 'stack_array' in decorators:
             args = decorators['stack_array']
             for i in range(len(args)):
@@ -706,7 +704,7 @@ class SyntaxParser(BasicParser):
                     container.append(arg)
                 elif isinstance(arg, String):
                     arg = str(arg)
-                    arg = arg.replace("'", '')
+                    arg = arg.strip("'").strip('"')
                     container.append(arg)
                 elif isinstance(arg, ValuedArgument):
                     arg_name = arg.name
@@ -717,7 +715,6 @@ class SyntaxParser(BasicParser):
                         raise NotImplementedError(msg)
                     ls = arg if isinstance(arg, Tuple) else [arg]
                     i = -1
-
                 else:
                     msg = '> Wrong type, given {}'.format(type(arg))
                     raise NotImplementedError(msg)
@@ -728,7 +725,6 @@ class SyntaxParser(BasicParser):
             txt += '(' + ','.join(types) + ')'
             if results:
                 txt += ' results(' + ','.join(results) + ')'
-
             header = hdr_parse(stmts=txt)
             if name in self.namespace.static_functions:
                 header = header.to_static()
@@ -887,7 +883,7 @@ class SyntaxParser(BasicParser):
         f_name = str(stmt.previous.value)
         f_name = strip_ansi_escape.sub('', f_name)
         if len(args) == 0:
-            args = (Nil(), )
+            args = ( )
         func = Function(f_name)(*args)
         return func
 

@@ -43,7 +43,7 @@ known_functions = {
 dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
                   ('complex',8) : 'double complex',
-                  ('complex',4) : 'float complex', 
+                  ('complex',4) : 'float complex',
                   ('int',4)     : 'int',
                   ('int',8)     : 'long',
                   ('bool',1)    : 'int'}
@@ -101,11 +101,11 @@ class CCodePrinter(CodePrinter):
         prec  = expr.variable.precision
         rank  = expr.variable.rank
         dtype = dtype_registry[(dtype, prec)]
-        variable = self._print(expr.variable) 
+        variable = self._print(expr.variable)
 
         if rank > 0:
             return '{0} *{1};'.format(dtype, variable)
-        
+
         return '{0} {1};'.format(dtype, variable)
 
     def _print_NativeBool(self, expr):
@@ -242,7 +242,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
-        
+
         return '/*' + comments + '*/'
 
 
@@ -282,9 +282,9 @@ class CCodePrinter(CodePrinter):
         imports  = '\n'.join(self._print(i) for i in imports)
         body     = '\n'.join(self._print(i) for i in expr.body)
         decs     = '\n'.join(self._print(i) for i in expr.declarations)
-  
+
         sep = self._print(SeparatorComment(40))
-        
+
         funcs = ''
         for i in expr.funcs:
             funcs = ('{funcs}\n'
@@ -294,7 +294,7 @@ class CCodePrinter(CodePrinter):
 
         if funcs:
             funcs = 'contains\n{0}'.format(funcs)
-        
+
         return ('{imports}\n'
                 '{funcs}\n'
                 'int main(){{\n'

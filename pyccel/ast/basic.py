@@ -1,5 +1,8 @@
 from sympy.core.basic import Basic as sp_Basic
 
+__all__ = ('Basic',)
+
+#==============================================================================
 class Basic(sp_Basic):
     """Basic class for Pyccel AST."""
     _fst = None
@@ -11,4 +14,3 @@ class Basic(sp_Basic):
     @property
     def fst(self):
         return self._fst
-

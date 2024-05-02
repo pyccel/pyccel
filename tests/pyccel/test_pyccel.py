@@ -3,6 +3,7 @@ import os
 import pytest
 import shutil
 import numpy as np
+import re
 
 def get_abs_path(relative_path):
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -66,6 +67,12 @@ def setup():
 def teardown(path_dir = None):
     if path_dir is None:
         path_dir = os.path.dirname(os.path.realpath(__file__))
+
+    for root, _, files in os.walk(path_dir):
+        for name in files:
+            if name.startswith(".coverage"):
+                shutil.copyfile(os.path.join(root,name),os.path.join(os.getcwd(),name))
+
     files = os.listdir(path_dir)
     for f in files:
         file_name = os.path.join(path_dir,f)
@@ -76,17 +83,58 @@ def teardown(path_dir = None):
         elif not f.endswith(".py"):
             os.remove(file_name)
 
-def compare_pyth_fort_output( p_output, f_output ):
-    p_output = p_output.strip().split()
-    f_output = f_output.strip().split()
+def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
 
-    assert(len(p_output) == len(f_output))
-    for p, f in zip(p_output, f_output):
-        p = float(p)
-        f = float(f)
+    if dtype is str:
+        assert(p_output.strip()==f_output.strip())
+    elif dtype is complex:
+        p_output, f_output = compare_pyth_fort_output_by_type( p_output, f_output, float)
+        p_output, f_output = compare_pyth_fort_output_by_type( p_output, f_output, float)
+    elif dtype is bool:
+        rx = re.compile('TRUE|True|true|1|T|t|FALSE|False|false|F|f|0')
+        p_match = rx.search(p_output)
+        f_match = rx.search(f_output)
+        assert(p_match)
+        assert(f_match)
+        p = p_match.group().lower() in ['true', 't', '1']
+        f = f_match.group().lower() in ['true', 't', '1']
+        assert(p==f)
+        p_output=p_output[p_match.span()[1]:]
+        f_output=f_output[f_match.span()[1]:]
+
+    elif dtype is float or dtype is int:
+        if dtype is float:
+            rx = re.compile('[-0-9.eE]+')
+        elif dtype is int:
+            rx = re.compile('[-0-9eE]+')
+        p_match = rx.search(p_output)
+        f_match = rx.search(f_output)
+        assert(p_match)
+        assert(f_match)
+        p = dtype(p_match.group())
+        f = dtype(f_match.group())
         assert(np.isclose(p,f))
+        p_output=p_output[p_match.span()[1]:]
+        f_output=f_output[f_match.span()[1]:]
+    else:
+        raise NotImplementedError("Type comparison not implemented")
+    return p_output,f_output
 
-def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd = None, pyccel_commands = ""):
+def compare_pyth_fort_output( p_output, f_output, dtype=float ):
+
+    if isinstance(dtype,list):
+        for d in dtype:
+            p_output,f_output = compare_pyth_fort_output_by_type(p_output,f_output,d)
+    elif dtype is complex:
+        while len(p_output)>0 and len(f_output)>0:
+            p_output,f_output = compare_pyth_fort_output_by_type(p_output,f_output,complex)
+    else:
+        p_output = p_output.strip().split()
+        f_output = f_output.strip().split()
+        for p, f in zip(p_output, f_output):
+            compare_pyth_fort_output_by_type(p,f,dtype)
+
+def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd = None, pyccel_commands = "", output_dtype = float):
     if (cwd is None):
         cwd = os.path.dirname(test_file)
 
@@ -110,7 +158,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd 
 
     fort_out = get_fortran_output(test_file[:-3])
 
-    compare_pyth_fort_output(pyth_out, fort_out)
+    compare_pyth_fort_output(pyth_out, fort_out, output_dtype)
 
 def test_rel_imports_python_accessible_folder():
     # pyccel is called on scripts/folder2/test_imports2.py from the scripts folder
@@ -183,6 +231,16 @@ def test_folder_imports():
 def test_funcs():
     pyccel_test("scripts/test_funcs.py")
 
+def test_bool():
+    pyccel_test("scripts/bool_comp.py", output_dtype = bool)
+
+def test_default_arguments():
+    pyccel_test("scripts/test_default_args.py",
+            dependencies = "scripts/default_args_mod.py",
+            output_dtype = [int,int,float,float,float,
+                float,float,float,float,bool,bool,bool,
+                float,float,float,float])
+
 def test_f2py_compat():
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
@@ -215,6 +273,7 @@ def test_in_specified():
     pyccel_test("scripts/test_degree_in.py")
 
 @pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/fib.py",
+                                        "scripts/hope_benchmarks/quicksort.py",
                                         "scripts/hope_benchmarks/pisum.py",
                                         "scripts/hope_benchmarks/ln_python.py",
                                         "scripts/hope_benchmarks/pairwise_python.py",
@@ -223,17 +282,12 @@ def test_in_specified():
                                         "scripts/hope_benchmarks_decorators/ln_python.py",
                                         "scripts/hope_benchmarks_decorators/pairwise_python.py",
                                         "scripts/hope_benchmarks_decorators/point_spread_func.py",
-                                        "scripts/hope_benchmarks_decorators/simplify.py"
-                                        ] )
-def test_hope_benchmarks( test_file ):
-    pyccel_test(test_file)
-
-@pytest.mark.xfail
-@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/quicksort.py",
+                                        "scripts/hope_benchmarks_decorators/simplify.py",
                                         "scripts/hope_benchmarks_decorators/fib.py",
                                         "scripts/hope_benchmarks_decorators/quicksort.py",
+
                                         ] )
-def test_hope_benchmarks_xfail( test_file ):
+def test_hope_benchmarks( test_file ):
     pyccel_test(test_file)
 
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import.py",
@@ -244,3 +298,15 @@ def test_hope_benchmarks_xfail( test_file ):
                                         ] )
 def test_import_syntax( test_file ):
     pyccel_test(test_file)
+
+def test_numpy_kernels_compile():
+    cwd = get_abs_path(".")
+    compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "test_kernels.py")
+
+def test_multiple_results():
+    pyccel_test("scripts/test_multiple_results.py",
+            dependencies = "scripts/default_args_mod.py",
+            output_dtype = [int,float,complex,bool,int,complex,
+                int,bool,float,float,float,float,float,float,
+                float,float,float,float,float,float,
+                float,float,float,float,float,float])

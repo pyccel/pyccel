@@ -6,8 +6,7 @@ def pdf ( density , x_range , y_range , x_center , y_center , w2D, r50 , b , a) 
         for y in range ( y_range ) :
             dr = sqrt ( ( x - x_center ) ** 2 + ( y - y_center ) ** 2)
             tmp = 2 * (b - 1) / (2 * pi * ( r50 * a ) **2) * (1 + ( dr / ( r50 * a ) ) **2)**(-b)
-            tmp2 = w2D * tmp
-            density [ x , y ] = np_sum(tmp2 )
+            density [ x , y ] = tmp * np_sum(w2D)
 
 from numpy import zeros
 

@@ -26,17 +26,17 @@ def execute_pyccel(fname, *,
                    recursive     = False,
                    verbose       = False,
                    folder        = None,
-                   compiler    = None,
-                   fflags      = None,
-                   includes    = (),
-                   libdirs     = (),
-                   modules     = (),
-                   libs        = (),
-                   debug       = False,
-                   extra_args  = '',
-                   accelerator = None,
-                   mpi         = False,
-                   output_name = None):
+                   compiler      = None,
+                   mpi_compiler  = None,
+                   fflags        = None,
+                   includes      = (),
+                   libdirs       = (),
+                   modules       = (),
+                   libs          = (),
+                   debug         = False,
+                   extra_args    = '',
+                   accelerator   = None,
+                   output_name   = None):
 
     # TODO [YG, 03.02.2020]: test validity of function arguments
 
@@ -83,7 +83,7 @@ def execute_pyccel(fname, *,
     if compiler is None:
         compiler = 'gfortran'
 
-    f90exec = 'mpif90' if mpi else compiler
+    f90exec = mpi_compiler if mpi_compiler else compiler
 
     # ...
     # Construct flags for the Fortran compiler
@@ -101,7 +101,7 @@ def execute_pyccel(fname, *,
 
     # Parse Python file
     try:
-        parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'))
+        parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'), show_traceback=verbose)
         ast = parser.parse()
     except Exception:
         handle_error('parsing (syntax)')
@@ -210,8 +210,8 @@ def execute_pyccel(fname, *,
         sharedlib_filepath = create_shared_library(codegen,
                                                    pyccel_dirpath,
                                                    compiler,
+                                                   mpi_compiler,
                                                    accelerator,
-                                                   mpi,
                                                    dep_mods,
                                                    extra_args,
                                                    output_name)

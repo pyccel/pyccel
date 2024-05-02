@@ -1,7 +1,5 @@
 from mpi4py import MPI
 
-rank = -1
-#we must initialize rank
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 
@@ -14,8 +12,6 @@ else:
 
 sum_value = 0
 
-sum_value = comm.allreduce (value, MPI.SUM)
+sum_value = comm.allreduce(value, MPI.SUM)
 
 print('I, process ', root,', have the global sum value ', sum_value)
-
-

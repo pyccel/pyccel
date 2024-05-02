@@ -101,7 +101,7 @@ from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast import VariableHeader, InterfaceHeader
 from pyccel.ast import MetaVariable
 from pyccel.ast import MacroFunction, MacroVariable
-from pyccel.ast import Concatinate
+from pyccel.ast import Concatenate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
 from pyccel.ast import Is

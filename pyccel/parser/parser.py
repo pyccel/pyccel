@@ -14,7 +14,7 @@ class Parser(object):
 
         self._filename = filename
         self._kwargs = kwargs
-        
+
         # we use it to store the imports
         self._parents = []
 
@@ -28,7 +28,6 @@ class Parser(object):
 
         self._output_folder = kwargs.pop('output_folder', '')
         self._input_folder = os.path.dirname(filename)
-
 
     @property
     def filename(self):
@@ -52,21 +51,21 @@ class Parser(object):
         """Returns the sons parser."""
 
         return self._sons
-        
+
     @property
     def metavars(self):
         if self._semantic_parser:
             return self._semantic_parser.metavars
         else:
             return self._syntax_parser.metavars
-            
+
     @property
     def namespace(self):
         if self._semantic_parser:
             return self._semantic_parser.namespace
         else:
             return self._syntax_parser.namespace
-            
+
     @property
     def imports(self):
         if self._semantic_parser:
@@ -90,16 +89,22 @@ class Parser(object):
 
     def annotate(self, **settings):
 
+        # If the semantic parser already exists, do nothing
+        if self._semantic_parser:
+            return self._semantic_parser
+
         # we first treat all sons to get imports
         verbose = settings.pop('verbose', False)
-        self._annotate_parents(verbose=verbose)
+        self._annotate_sons(verbose=verbose)
 
+        # Create a new semantic parser and store it in object
         parser = SemanticParser(self._syntax_parser,
                                 d_parsers=self.d_parsers,
                                 parents=self.parents,
                                 **settings)
         self._semantic_parser = parser
-        
+
+        # Return the new semantic parser (maybe used by codegen)
         return parser
 
     def append_parent(self, parent):
@@ -123,37 +128,33 @@ class Parser(object):
         for all involved files.
         """
 
-        treated = set(d_parsers.keys())
-        imports = set(self.imports.keys())
-        imports = imports.difference(treated)
-        if not imports:
-            return d_parsers
+        imports = self.imports.keys()
+        treated = d_parsers.keys()
+        not_treated = [i for i in imports if i not in treated]
 
-        for source in imports:
+        for source in not_treated:
             if verbose:
                 print ('>>> treating :: {}'.format(source))
 
             # get the absolute path corresponding to source
 
-            filename = get_filename_from_import(source,self._input_folder)
+            filename = get_filename_from_import(source, self._input_folder)
 
             q = Parser(filename)
             q.parse(d_parsers=d_parsers)
             d_parsers[source] = q
 
         # link self to its sons
-
-        imports = list(self.imports.keys())
         for source in imports:
             d_parsers[source].append_parent(self)
             self.append_son(d_parsers[source])
 
         return d_parsers
 
-    def _annotate_parents(self, **settings):
+    def _annotate_sons(self, **settings):
 
         verbose = settings.pop('verbose', False)
-        
+
         # we first treat sons that have no imports
 
         for p in self.sons:

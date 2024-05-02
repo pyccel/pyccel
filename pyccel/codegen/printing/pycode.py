@@ -59,7 +59,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         body = '\n'.join(self._print(i) for i in expr.body)
         body = self._indent_codestring(body)
         args = ', '.join(self._print(i) for i in expr.arguments)
-    
+
         imports = '\n'.join(self._print(i) for i in expr.imports)
         imports = self._indent_codestring(imports)
         code = ('def {name}({args}):\n'
@@ -148,7 +148,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         stop  = self._print(expr.stop)
         step  = self._print(expr.step)
         return 'range({}, {}, {})'.format(start,stop,step)
-        
+
     def _print_Product(self, expr):
         args = ','.join(self._print(i) for i in expr.elements)
         return 'product({})'.format(args)
@@ -173,6 +173,14 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_ZerosLike(self, expr):
         return 'zeros_like('+ self._print(expr.rhs)+')'
 
+    def _print_Max(self, expr):
+        args = ', '.join(self._print(e) for e in expr.args)
+        return 'max({})'.format(args)
+
+    def _print_Min(self, expr):
+        args = ', '.join(self._print(e) for e in expr.args)
+        return 'min({})'.format(args)
+        
     def _print_Slice(self, expr):
         return str(expr)
 

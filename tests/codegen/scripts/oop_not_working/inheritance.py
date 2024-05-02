@@ -19,8 +19,8 @@ class Point3d(Point2d):
     def __init__(self, x, y, z):
         self.z = z
         Point2d.__init__(self,x, y)
-        #super().__init__(x, y) 
-        
+        #super().__init__(x, y)
+
     def translate(self, a, b, c):
         self.z = self.z + c
         Point2d.translate(self,a,b)

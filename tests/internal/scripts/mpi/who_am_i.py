@@ -6,11 +6,13 @@ from pyccel.stdlib.internal.mpi import mpi_comm_size
 from pyccel.stdlib.internal.mpi import mpi_comm_rank
 from pyccel.stdlib.internal.mpi import mpi_comm_world
 
+import numpy as np
+
 # we need to declare these variables somehow,
 # since we are calling mpi subroutines
-ierr = -1
-size = -1
-rank = -1
+ierr = np.int32(-1)
+size = np.int32(-1)
+rank = np.int32(-1)
 
 mpi_init(ierr)
 

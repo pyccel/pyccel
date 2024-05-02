@@ -2,6 +2,9 @@
 
 from sympy.core.basic import Basic as sm_Basic
 
+__all__ = ('Basic',)
+
+#==============================================================================
 class Basic(sm_Basic):
     is_integer = False
     _dtypes = {}

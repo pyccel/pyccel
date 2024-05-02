@@ -67,8 +67,11 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
 
     # ... backend compiler options
     group = parser.add_argument_group('Backend compiler options')
-    group.add_argument('--compiler', type=str, \
-                       help='Used compiler')
+
+    group.add_argument('--compiler', choices=('gfortran', 'ifort', 'pgfortran'), help='Compiler name')
+
+    group.add_argument('--mpi-compiler', help='MPI compiler wrapper')
+
     group.add_argument('--fflags', type=str, \
                        help='Fortran compiler flags.')
     group.add_argument('--debug', action='store_true', \
@@ -210,6 +213,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        convert_only  = args.convert_only,
                        verbose       = args.verbose,
                        compiler      = compiler,
+                       mpi_compiler  = args.mpi_compiler,
                        fflags        = args.fflags,
                        includes      = args.includes,
                        libdirs       = args.libdirs,
@@ -218,7 +222,6 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        debug         = args.debug,
                        extra_args    = '',
                        accelerator   = accelerator,
-                       mpi           = False,
                        folder        = args.output)
     finally:
         os.chdir(base_dirpath)

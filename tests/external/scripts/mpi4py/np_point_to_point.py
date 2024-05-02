@@ -3,7 +3,6 @@ from numpy import zeros
 from numpy import ones
 
 
-rank = -1
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 

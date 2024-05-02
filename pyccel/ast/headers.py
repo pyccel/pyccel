@@ -16,9 +16,23 @@ from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
 from .core import local_sympify
 
+__all__ = (
+    'ClassHeader',
+    'FunctionHeader',
+    'Header',
+    'InterfaceHeader',
+    'MacroFunction',
+    'MacroVariable',
+    'MetaVariable',
+    'MethodHeader',
+    'VariableHeader',
+)
+
+#==============================================================================
 class Header(Basic):
     pass
 
+#==============================================================================
 class MetaVariable(Header):
     """Represents the MetaVariable."""
 
@@ -38,6 +52,7 @@ class MetaVariable(Header):
     def value(self):
         return self._args[1]
 
+#==============================================================================
 # TODO rename dtypes to arguments
 class VariableHeader(Header):
     """Represents a variable header in the code.
@@ -75,6 +90,7 @@ class VariableHeader(Header):
         args = (self._args[0],)
         return args
 
+#==============================================================================
 class FunctionHeader(Header):
     """Represents function/subroutine header in the code.
 
@@ -163,7 +179,7 @@ class FunctionHeader(Header):
         imports   = []
         funcs = []
         dtypes = []
-       
+
         for i in self.dtypes:
             if isinstance(i, UnionType):
                 dtypes += [i.args]
@@ -253,7 +269,7 @@ class FunctionHeader(Header):
                 self.is_static,)
         return args
 
-
+#==============================================================================
 # TODO to be improved => use FunctionHeader
 class MethodHeader(FunctionHeader):
     """Represents method header in the code.
@@ -338,6 +354,7 @@ class MethodHeader(FunctionHeader):
     def is_static(self):
         return self._args[4]
 
+#==============================================================================
 class ClassHeader(Header):
     """Represents class header in the code.
 
@@ -368,7 +385,7 @@ class ClassHeader(Header):
     def options(self):
         return self._args[1]
 
-
+#==============================================================================
 # TODO must extend Header rather than Basic
 class InterfaceHeader(Basic):
 
@@ -388,6 +405,7 @@ class InterfaceHeader(Basic):
     def funcs(self):
         return self._args[1]
 
+#==============================================================================
 class MacroFunction(Header):
     """."""
 
@@ -457,8 +475,8 @@ class MacroFunction(Header):
             for i in self.arguments[len(sorted_args):]:
                 if not isinstance(i, ValuedArgument):
                     raise ValueError('variable not allowed after an optional argument')
-       
-             
+
+
 
             for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
                 if not isinstance(arg, Tuple):
@@ -482,7 +500,7 @@ class MacroFunction(Header):
             d_unsorted_args = {}
             for arg in self.arguments[len(sorted_args):]:
                 d_unsorted_args[arg.name] = arg.value
-            
+
             for arg in unsorted_args:
                 if arg.name in d_unsorted_args.keys():
                     d_unsorted_args[arg.name] = arg.value
@@ -496,8 +514,8 @@ class MacroFunction(Header):
                                       d_arguments[arg.argument.name])
                     if isinstance(arg, MacroShape):
                         d_arguments[i]._index = arg.index
-            
-                
+
+
         d_results = {}
         if not(results is None) and not(self.results is None):
             for (r_macro, r) in zip(self.results, results):
@@ -511,7 +529,7 @@ class MacroFunction(Header):
         argument_keys = d_arguments.keys()
         result_keys = d_results.keys()
         for i,arg in enumerate(self.master_arguments):
-            
+
             if isinstance(arg, Symbol):
                 if arg.name in argument_keys:
                     new = d_arguments[arg.name]
@@ -533,7 +551,7 @@ class MacroFunction(Header):
                     new = d_results[arg.argument.name]
                 else:
                     raise ValueError('Unkonwn variable name')
- 
+
                 new = construct_macro(arg.name, new)
                 if isinstance(arg, MacroShape):
                         new._index = arg.index
@@ -541,6 +559,7 @@ class MacroFunction(Header):
             newargs[i] = new
         return newargs
 
+#==============================================================================
 class MacroVariable(Header):
     """."""
 
@@ -548,11 +567,11 @@ class MacroVariable(Header):
         if not isinstance(name, (str, Symbol, DottedName)):
             raise TypeError('name must be of type str or DottedName')
 
-    
+
         if not isinstance(master, (str, Variable, DottedVariable)):
             raise ValueError('Expecting a master name of Variable')
 
-        
+
         return Basic.__new__(cls, name, master)
 
 
@@ -563,6 +582,3 @@ class MacroVariable(Header):
     @property
     def master(self):
         return self._args[1]
-
-
-

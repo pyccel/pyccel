@@ -20,8 +20,8 @@ from pyccel.ast import If, IfTernaryOperator
 
 
 def cse(expr):
-    """ symplify a complicated sympy expression 
-        into a list of expression using the cse 
+    """ symplify a complicated sympy expression
+        into a list of expression using the cse
         sympy function
     """
     ls = list(expr.atoms(Sum))
@@ -75,12 +75,12 @@ def cse(expr):
     stmts[-1] = Assign(lhs, stmts[-1])
     imports = [Import('empty', 'numpy')]
     return imports + allocate + stmts
-    
+
 
 def pyccel_sum(expr):
-    """ convert the sympy sum to the 
+    """ convert the sympy sum to the
         pyccel node FunctionalSum
-    """ 
+    """
     if not(isinstance(expr, Assign) and isinstance(expr.rhs, Sum)):
         return expr
     lhs = expr.lhs
@@ -90,7 +90,7 @@ def pyccel_sum(expr):
     body = AugAssign(lhs, '+', expr.args[0])
     stmt = For(index[0], target, [body], strict=False)
     stmt = FunctionalSum([stmt], expr.args[0], lhs)
-    
+
     return stmt
 
 
@@ -102,8 +102,8 @@ def lambdify(expr, args):
         f_arguments = args.variables
         func = FunctionDef('lambda', f_arguments, [], [new_expr])
         return func
-           
-    
+
+
     code = compile(args.body[0],'','single')
     g={}
     eval(code,g)

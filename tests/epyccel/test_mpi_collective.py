@@ -30,9 +30,9 @@ def test_np_allreduce( ne=15 ):
     Initialize a 1D integer array with the process rank, and sum across
     all processes using an MPI_SUM global reduction operation.
     The exact result will be an integer array with all elements equal to
-    
+
     N*(N-1)//2
-    
+
     with 'N' the number of processes.
 
     Parameters
