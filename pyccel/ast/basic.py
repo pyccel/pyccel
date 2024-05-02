@@ -280,8 +280,8 @@ class PyccelAstNode:
         self._recursion_in_progress = True
 
         if iterable(original):
-            assert(iterable(replacement))
-            assert(len(original) == len(replacement))
+            assert iterable(replacement)
+            assert len(original) == len(replacement)
         else:
             original = (original,)
             replacement = (replacement,)
@@ -407,15 +407,26 @@ class PyccelAstNode:
         return self._user_nodes
 
     def get_direct_user_nodes(self, condition):
-        """ For an object with multiple user nodes
-        Get the objects which satisfy a given
-        condition
+        """
+        Get the direct user nodes which satisfy the condition.
+
+        This function returns all the direct user nodes which satisfy the
+        provided condition. A "direct" user node is a node which uses the
+        instance directly (e.g. a `FunctionCall` uses a `FunctionDef` directly
+        while a `FunctionDef` uses a `Variable` indirectly via a `FunctionDefArgument`
+        or a `CodeBlock`). Most objects only have 1 direct user node so
+        this function only makes sense for an object with multiple user nodes.
+        E.g. a `Variable`, or a `FunctionDef`.
 
         Parameters
         ----------
         condition : lambda
-                    The condition which the user nodes
-                    must satisfy to be returned
+            The condition which the user nodes must satisfy to be returned.
+
+        Returns
+        -------
+        list
+            The user nodes which satisfy the condition.
         """
         return [p for p in self._user_nodes if condition(p)]
 
@@ -443,19 +454,23 @@ class PyccelAstNode:
         self._user_nodes = [u for u in self._user_nodes if u.pyccel_staging != 'syntactic']
 
     def remove_user_node(self, user_node, invalidate = True):
-        """ Indicate that the current node is no longer used
-        by the user_node. This function is usually called by
-        the substitute method
+        """
+        Remove the specified user node from the AST tree.
+
+        Indicate that the current node is no longer used by the user_node.
+        This function is usually called by the substitute method. It removes
+        the specified user node from the user nodes internal property
+        meaning that the node cannot appear in the results when searching
+        through the tree.
 
         Parameters
         ----------
         user_node : PyccelAstNode
-                    Node which previously used the current node
+            Node which previously used the current node.
         invalidate : bool
-                    Indicates whether the removed object should
-                    be invalidated
+            Indicates whether the removed object should be invalidated.
         """
-        assert(user_node in self._user_nodes)
+        assert user_node in self._user_nodes
         self._user_nodes.remove(user_node)
         if self.is_unused and invalidate:
             self.invalidate_node()
@@ -523,7 +538,7 @@ class TypedAstNode(PyccelAstNode):
         Number of dimensions of the object. If the object is a scalar then
         this is equal to 0.
         """
-        return self._rank # pylint: disable=no-member
+        return self.class_type.rank
 
     @property
     def dtype(self):
@@ -546,7 +561,7 @@ class TypedAstNode(PyccelAstNode):
         ('F') format. This is only relevant if rank > 1. When it is not relevant
         this function returns None.
         """
-        return self._order # pylint: disable=no-member
+        return self.class_type.order
 
     @property
     def class_type(self):
@@ -558,33 +573,6 @@ class TypedAstNode(PyccelAstNode):
         this is the type of the container.
         """
         return self._class_type # pylint: disable=no-member
-
-    @classmethod
-    def static_rank(cls):
-        """
-        Number of dimensions of the object.
-
-        Number of dimensions of the object. If the object is a scalar then
-        this is equal to 0.
-
-        This function is static and will return an AttributeError if the
-        class does not have a predetermined rank.
-        """
-        return cls._rank # pylint: disable=no-member
-
-    @classmethod
-    def static_order(cls):
-        """
-        The data layout ordering in memory.
-
-        Indicates whether the data is stored in row-major ('C') or column-major
-        ('F') format. This is only relevant if rank > 1. When it is not relevant
-        this function returns None.
-
-        This function is static and will return an AttributeError if the
-        class does not have a predetermined order.
-        """
-        return cls._order # pylint: disable=no-member
 
     @classmethod
     def static_type(cls):
@@ -614,8 +602,6 @@ class TypedAstNode(PyccelAstNode):
             The node from which the attributes should be copied.
         """
         self._shape      = x.shape
-        self._rank       = x.rank
-        self._order      = x.order
         self._class_type = x.class_type
 
 

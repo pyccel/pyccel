@@ -14,7 +14,6 @@ from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunction
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
-from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpytypes import NumpyNumericType
@@ -76,7 +75,7 @@ class PythonCodePrinter(CodePrinter):
     }
 
     def __init__(self, filename):
-        errors.set_target(filename, 'file')
+        errors.set_target(filename)
         super().__init__()
         self._additional_imports = {}
         self._aliases = {}
@@ -166,7 +165,7 @@ class PythonCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelInternalFunction
+        expr : PyccelFunction
             A Pyccel node describing a NumPy function.
 
         Returns
@@ -246,18 +245,7 @@ class PythonCodePrinter(CodePrinter):
             type_annotation = f"'{self._print(expr.annotation)}'"
         else:
             var = expr.var
-            def get_type_annotation(var):
-                if isinstance(var, Variable):
-                    type_annotation = str(var.class_type)
-                    if var.rank:
-                        type_annotation += '[' + ','.join(':' for _ in range(var.rank)) + ']'
-                    return f"'{type_annotation}'"
-                elif isinstance(var, FunctionAddress):
-                    results = ', '.join(get_type_annotation(r.var) for r in var.results)
-                    arguments = ', '.join(get_type_annotation(a.var) for a in var.arguments)
-                    return f'"({results})({arguments})"'
-
-            type_annotation = get_type_annotation(var)
+            type_annotation = f"'{var.class_type}'"
 
         if expr.has_default:
             if isinstance(expr.value, FunctionDef):
@@ -283,11 +271,7 @@ class PythonCodePrinter(CodePrinter):
             if len(indices) == 1 and isinstance(indices[0], (tuple, list)):
                 indices = indices[0]
 
-            indices = [self._print(i) for i in indices]
-            if expr.pyccel_staging != 'syntactic' and isinstance(expr.base.class_type, (HomogeneousTupleType, HomogeneousListType)):
-                indices = ']['.join(i for i in indices)
-            else:
-                indices = ','.join(i for i in indices)
+            indices = ','.join(self._print(i) for i in indices)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
@@ -785,7 +769,7 @@ class PythonCodePrinter(CodePrinter):
                           dtype] if a != '')
         return f"{name}({args})"
 
-    def _print_PyccelInternalFunction(self, expr):
+    def _print_PyccelFunction(self, expr):
         name = self._aliases.get(type(expr),expr.name)
         args = ', '.join(self._print(a) for a in expr.args)
         return "{}({})".format(name, args)

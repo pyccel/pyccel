@@ -10,7 +10,6 @@ from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 
 from pyccel.utilities.stage   import PyccelStage
-from pyccel.utilities.strings import create_incremented_string
 
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
@@ -22,7 +21,7 @@ from .datatypes import (PyccelType, SymbolicType, HomogeneousTupleType,
                         PythonNativeBool, InhomogeneousTupleType,
                         VoidType)
 
-from .internals import PyccelSymbol, PyccelInternalFunction, apply_pickle
+from .internals import PyccelSymbol, PyccelFunction, apply_pickle
 
 from .literals  import Nil, LiteralFalse, LiteralInteger
 from .literals  import NilArgument, LiteralTrue
@@ -107,9 +106,18 @@ __all__ = (
 
 
 class AsName(PyccelAstNode):
-
     """
-    Represents a renaming of a variable, used with Import.
+    Represents a renaming of an object, used with Import.
+
+    A class representing the renaming of an object such as a function or a
+    variable. This usually occurs during an Import.
+
+    Parameters
+    ----------
+    obj : PyccelAstNode or PyccelAstNodeType
+        The variable, function, or module being renamed.
+    target : str
+        Name of variable or function in this context.
 
     Examples
     --------
@@ -120,13 +128,6 @@ class AsName(PyccelAstNode):
     old as new
     >>> AsName(NumpyFull, 'fill_func')
     full as fill_func
-
-    Parameters
-    ==========
-    obj    : PyccelAstNode or PyccelAstNodeType
-             The variable, function, or module being renamed
-    target : str
-             name of variable or function in this context
     """
     __slots__ = ('_obj', '_target')
     _attribute_nodes = ()
@@ -163,10 +164,7 @@ class AsName(PyccelAstNode):
         return self._obj
 
     def __repr__(self):
-        return '{0} as {1}'.format(str(self.name), str(self.target))
-
-    def __str__(self):
-        return '{0} as {1}'.format(str(self.name), str(self.target))
+        return f'{self.name} as {self.target}'
 
     def __eq__(self, string):
         if isinstance(string, str):
@@ -200,13 +198,11 @@ class Duplicate(TypedAstNode):
     length : TypedAstNode
         The number of times the val should appear in the final object.
     """
-    __slots__ = ('_val', '_length','_rank','_shape','_order','_class_type')
+    __slots__ = ('_val', '_length','_shape','_class_type')
     _attribute_nodes = ('_val', '_length')
 
     def __init__(self, val, length):
-        self._rank       = val.rank
         self._shape      = tuple(s if i!= 0 else PyccelMul(s, length, simplify=True) for i,s in enumerate(val.shape))
-        self._order      = val.order
         self._class_type = val.class_type
 
         self._val       = val
@@ -222,10 +218,10 @@ class Duplicate(TypedAstNode):
         return self._length
 
     def __str__(self):
-        return '{} * {}'.format(str(self.val), str(self.length))
+        return f'{self.val} * {self.length}'
 
     def __repr__(self):
-        return '{} * {}'.format(repr(self.val), repr(self.length))
+        return f'{repr(self.val)} * {repr(self.length)}'
 
 class Concatenate(TypedAstNode):
     """
@@ -240,14 +236,12 @@ class Concatenate(TypedAstNode):
     arg2 : TypedAstNodes
            The second tuple.
     """
-    __slots__ = ('_args','_rank','_shape','_order','_class_type')
+    __slots__ = ('_args','_shape','_class_type')
     _attribute_nodes = ('_args',)
 
     def __init__(self, arg1, arg2):
-        self._rank       = arg1.rank
         shape_addition   = arg2.shape[0]
         self._shape      = tuple(s if i!= 0 else PyccelAdd(s, shape_addition) for i,s in enumerate(arg1.shape))
-        self._order      = arg1.order
         self._class_type = arg1.class_type
 
         self._args = (arg1, arg2)
@@ -282,13 +276,6 @@ class Assign(PyccelAstNode):
         In the semantic stage :
           TypedAstNode with the same shape as the lhs.
 
-    status : str, optional
-        If lhs is not allocatable, then status is None.
-        otherwise, status is {'allocated', 'unallocated'}.
-
-    like : Variable, optional
-        Contains the name of the variable from which the lhs will be cloned.
-
     python_ast : ast.Ast
         The ast object parsed by Python's ast module.
 
@@ -309,15 +296,13 @@ class Assign(PyccelAstNode):
     >>> Assign(A[0,1], x)
     IndexedElement(A, 0, 1) := x
     """
-    __slots__ = ('_lhs', '_rhs', '_status', '_like')
+    __slots__ = ('_lhs', '_rhs')
     _attribute_nodes = ('_lhs', '_rhs')
 
     def __init__(
         self,
         lhs,
         rhs,
-        status=None,
-        like=None,
         *,
         python_ast = None
         ):
@@ -325,17 +310,15 @@ class Assign(PyccelAstNode):
             lhs = PythonTuple(*lhs)
         self._lhs = lhs
         self._rhs = rhs
-        self._status = status
-        self._like = like
         super().__init__()
         if python_ast is not None:
             self.set_current_ast(python_ast)
 
     def __str__(self):
-        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
+        return f'{self.lhs} := {self.rhs}'
 
     def __repr__(self):
-        return '({0} := {1})'.format(repr(self.lhs), repr(self.rhs))
+        return f'{repr(self.lhs)} := {repr(self.rhs)}'
 
     @property
     def lhs(self):
@@ -344,20 +327,6 @@ class Assign(PyccelAstNode):
     @property
     def rhs(self):
         return self._rhs
-
-    # TODO : remove
-
-    @property
-    def expr(self):
-        return self.rhs
-
-    @property
-    def status(self):
-        return self._status
-
-    @property
-    def like(self):
-        return self._like
 
     @property
     def is_alias(self):
@@ -415,10 +384,6 @@ class Allocate(PyccelAstNode):
     shape : int or iterable or None
         Shape of the array after allocation (None for scalars).
 
-    order : str {'C'|'F'}
-        Ordering of multi-dimensional array after allocation
-        ('C' = row-major, 'F' = column-major).
-
     status : str {'allocated'|'unallocated'|'unknown'}
         Variable allocation status at object creation.
 
@@ -436,34 +401,31 @@ class Allocate(PyccelAstNode):
     _attribute_nodes = ('_variable', '_like')
 
     # ...
-    def __init__(self, variable, *, shape, order, status, like = None):
+    def __init__(self, variable, *, shape, status, like = None):
 
         if not isinstance(variable, (Variable, PointerCast)):
-            raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
+            raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
 
         if variable.on_stack:
             # Variable may only be a pointer in the wrapper
             raise ValueError("Variable must be allocatable")
 
         if shape and not isinstance(shape, (int, tuple, list)):
-            raise TypeError("Cannot understand 'shape' parameter of type '{}'".format(type(shape)))
+            raise TypeError(f"Cannot understand 'shape' parameter of type '{type(shape)}'")
 
-        if variable.rank != len(shape):
+        class_type = variable.class_type
+        if class_type.rank != len(shape):
             raise ValueError("Incompatible rank in variable allocation")
 
-        # rank is None for lambda functions
-        if variable.rank is not None and variable.rank > 1 and variable.order != order:
-            raise ValueError("Incompatible order in variable allocation")
-
         if not isinstance(status, str):
-            raise TypeError("Cannot understand 'status' parameter of type '{}'".format(type(status)))
+            raise TypeError(f"Cannot understand 'status' parameter of type '{type(status)}'")
 
         if status not in ('allocated', 'unallocated', 'unknown'):
-            raise ValueError("Value of 'status' not allowed: '{}'".format(status))
+            raise ValueError(f"Value of 'status' not allowed: '{status}'")
 
         self._variable = variable
         self._shape    = shape
-        self._order    = order
+        self._order    = variable.order
         self._status   = status
         self._like = like
         super().__init__()
@@ -518,8 +480,7 @@ class Allocate(PyccelAstNode):
         return self._like
 
     def __str__(self):
-        return 'Allocate({}, shape={}, order={}, status={})'.format(
-                str(self.variable), str(self.shape), str(self.order), str(self.status))
+        return f'Allocate({self.variable}, shape={self.shape}, order={self.order}, status={self.status})'
 
     def __eq__(self, other):
         if isinstance(other, Allocate):
@@ -536,6 +497,8 @@ class Allocate(PyccelAstNode):
 #------------------------------------------------------------------------------
 class Deallocate(PyccelAstNode):
     """
+    Class representing memory deallocation.
+
     Represents memory deallocation (usually of an array) for code generation.
     This is relevant to low-level target languages, such as C or Fortran,
     where the programmer must take care of heap memory deallocation.
@@ -549,7 +512,6 @@ class Deallocate(PyccelAstNode):
     -----
     An object of this class is immutable, although it contains a reference to a
     mutable Variable object.
-
     """
     __slots__ = ('_variable',)
     _attribute_nodes = ('_variable',)
@@ -558,7 +520,7 @@ class Deallocate(PyccelAstNode):
     def __init__(self, variable):
 
         if not isinstance(variable, Variable):
-            raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
+            raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
 
         self._variable = variable
         super().__init__()
@@ -640,7 +602,7 @@ class CodeBlock(PyccelAstNode):
             self._body = tuple([*obj, *self.body])
 
     def __repr__(self):
-        return 'CodeBlock({})'.format(self.body)
+        return f'CodeBlock({self.body})'
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
@@ -731,7 +693,7 @@ class AliasAssign(PyccelAstNode):
         super().__init__()
 
     def __str__(self):
-        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
+        return f'{self.lhs} := {self.rhs}'
 
     @property
     def lhs(self):
@@ -806,12 +768,6 @@ class AugAssign(Assign):
     rhs : TypedAstNode
         Object representing the rhs of the expression.
 
-    status : str, optional
-        See Assign.
-
-    like : TypedAstNode, optional
-        See Assign.
-
     python_ast : ast.AST
         The AST node where the object appeared in the original code.
 
@@ -837,8 +793,6 @@ class AugAssign(Assign):
         lhs,
         op,
         rhs,
-        status=None,
-        like=None,
         *,
         python_ast = None
         ):
@@ -848,13 +802,10 @@ class AugAssign(Assign):
 
         self._op = op
 
-        super().__init__(lhs, rhs, status, like, python_ast=python_ast)
+        super().__init__(lhs, rhs, python_ast=python_ast)
 
     def __repr__(self):
-        return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
-
-    def __str__(self):
-        return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
+        return f'{self.lhs} {self.op}= {self.rhs}'
 
     @property
     def op(self):
@@ -862,16 +813,21 @@ class AugAssign(Assign):
 
     def to_basic_assign(self):
         """
-        Convert the AugAssign to an Assign
+        Convert the AugAssign to an Assign.
+
+        Convert the AugAssign to an Assign.
         E.g. convert:
         a += b
         to:
         a = a + b
+
+        Returns
+        -------
+        Assign
+            An assignment equivalent to the AugAssign.
         """
         return Assign(self.lhs,
-                self._accepted_operators[self._op](self.lhs, self.rhs),
-                status = self.status,
-                like   = self.like)
+                self._accepted_operators[self._op](self.lhs, self.rhs))
 
 
 class While(ScopedAstNode):
@@ -1097,8 +1053,8 @@ class Module(ScopedAstNode):
                 raise TypeError('Only a Interface instance is allowed.')
 
         NoneType = type(None)
-        if not isinstance(init_func, (NoneType, FunctionDef)):
-            raise TypeError('init_func must be a FunctionDef')
+        assert (pyccel_stage == 'syntactic' and isinstance(init_func, CodeBlock)) or \
+                isinstance(init_func, (NoneType, FunctionDef))
 
         if not isinstance(free_func, (NoneType, FunctionDef)):
             raise TypeError('free_func must be a FunctionDef')
@@ -1125,21 +1081,22 @@ class Module(ScopedAstNode):
         self._classes = classes
         self._imports = imports
 
-        self._internal_dictionary = {v.name:v for v in variables}
-        self._internal_dictionary.update({f.name:f for f in funcs})
-        self._internal_dictionary.update({i.name:i for i in interfaces})
-        self._internal_dictionary.update({c.name:c for c in classes})
-        import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
-        self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
+        if pyccel_stage != "syntactic":
+            self._internal_dictionary = {v.name:v for v in variables}
+            self._internal_dictionary.update({f.name:f for f in funcs})
+            self._internal_dictionary.update({i.name:i for i in interfaces})
+            self._internal_dictionary.update({c.name:c for c in classes})
+            import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
+            self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
-        if init_func:
-            init_if = init_func.body.body[0]
-            # The init function should always contain an If block unless it is part of a wrapper
-            if isinstance(init_if, If):
-                init_cond = init_if.blocks[0].condition
-                init_var = init_cond.args[0]
-                self._variables.append(init_var)
-                self._variable_inits.append(LiteralFalse())
+            if init_func:
+                init_if = init_func.body.body[0]
+                # The init function should always contain an If block unless it is part of a wrapper
+                if isinstance(init_if, If):
+                    init_cond = init_if.blocks[0].condition
+                    init_var = init_cond.args[0]
+                    self._variables.append(init_var)
+                    self._variable_inits.append(LiteralFalse())
 
         super().__init__(scope)
 
@@ -1311,20 +1268,29 @@ class ModuleHeader(PyccelAstNode):
         return self._module
 
 class Program(ScopedAstNode):
+    """
+    Represents a Program in the code.
 
-    """Represents a Program in the code. A block consists of the following inputs
+    A class representing a program in the code. A program is a set of statements
+    that are executed when the module is run directly. In Python these statements
+    are located in an `if __name__ == '__main__':` block.
 
     Parameters
     ----------
-    variables: list
-        list of the variables that appear in the block.
+    name : str
+        The name used to identify the program (this is used for printing in Fortran).
 
-    body: list
-        a list of statements
+    variables : Iterable[Variable]
+        An iterable object containing the variables that appear in the program.
 
-    imports: list, tuple
-        list of needed imports
+    body : CodeBlock
+        An CodeBlock containing the statements in the body of the program.
 
+    imports : Iterable[Import]
+        An iterable object containing the imports used by the program.
+
+    scope : Scope
+        The scope of the program.
     """
     __slots__ = ('_name', '_variables', '_body', '_imports')
     _attribute_nodes = ('_variables', '_body', '_imports')
@@ -1348,18 +1314,16 @@ class Program(ScopedAstNode):
             if not isinstance(i, Variable):
                 raise TypeError('Only a Variable instance is allowed.')
 
-        if not iterable(body):
-            raise TypeError('body must be an iterable')
-        body = CodeBlock(body)
+        assert isinstance(body, CodeBlock)
 
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        imports = set(imports)  # for unicity
-        imports = tuple(imports)
+        imports = {i : None for i in imports}  # for unicity and ordering
+        imports = tuple(imports.keys())
 
         self._name = name
-        self._variables = variables
+        self._variables = tuple(variables)
         self._body = body
         self._imports = imports
         super().__init__(scope)
@@ -1430,7 +1394,7 @@ class Iterable(PyccelAstNode):
         elif hasattr(iterable, 'n_indices') and hasattr(iterable, 'to_range'):
             self._num_indices_required = iterable.n_indices
         else:
-            raise TypeError("Unknown iterator type {}".format(type(iterable)))
+            raise TypeError(f"Unknown iterator type {type(iterable)}")
 
         super().__init__()
 
@@ -1678,15 +1642,15 @@ class FunctionCallArgument(PyccelAstNode):
 
     def __repr__(self):
         if self.has_keyword:
-            return 'FunctionCallArgument({} = {})'.format(self.keyword, repr(self.value))
+            return f'FunctionCallArgument({self.keyword} = {repr(self.value)})'
         else:
-            return 'FunctionCallArgument({})'.format(repr(self.value))
+            return f'FunctionCallArgument({repr(self.value)})'
 
     def __str__(self):
         if self.has_keyword:
-            return '{} = {}'.format(self.keyword, str(self.value))
+            return f'{self.keyword} = {self.value}'
         else:
-            return '{}'.format(str(self.value))
+            return f'{self.value}'
 
 class FunctionDefArgument(TypedAstNode):
     """
@@ -1865,19 +1829,15 @@ class FunctionDefArgument(TypedAstNode):
 
     def __str__(self):
         if self.has_default:
-            argument = str(self.name)
-            value = str(self.value)
-            return '{0}={1}'.format(argument, value)
+            return f'{self.name}={self.value}'
         else:
             return str(self.name)
 
     def __repr__(self):
         if self.has_default:
-            argument = str(self.name)
-            value = str(self.value)
-            return 'FunctionDefArgument({0}={1})'.format(argument, value)
+            return f'FunctionDefArgument({self.name}={self.value})'
         else:
-            return 'FunctionDefArgument({})'.format(repr(self.name))
+            return f'FunctionDefArgument({repr(self.name)})'
 
 class FunctionDefResult(TypedAstNode):
     """
@@ -1955,7 +1915,7 @@ class FunctionDefResult(TypedAstNode):
         return self._is_argument
 
     def __repr__(self):
-        return 'FunctionDefResult({})'.format(repr(self.var))
+        return f'FunctionDefResult({repr(self.var)})'
 
     def __str__(self):
         return str(self.var)
@@ -1979,7 +1939,7 @@ class FunctionCall(TypedAstNode):
         The function where the call takes place.
     """
     __slots__ = ('_arguments','_funcdef','_interface','_func_name','_interface_name',
-                 '_shape','_rank','_order','_class_type')
+                 '_shape','_class_type')
     _attribute_nodes = ('_arguments','_funcdef','_interface')
 
     def __init__(self, func, args, current_function=None):
@@ -2053,14 +2013,10 @@ class FunctionCall(TypedAstNode):
         self._func_name  = func.name
         n_results = len(func.results)
         if n_results == 1:
-            self._rank       = func.results[0].var.rank
             self._shape      = func.results[0].var.shape
-            self._order      = func.results[0].var.order
             self._class_type = func.results[0].var.class_type
         elif n_results == 0:
-            self._rank       = 0
             self._shape      = None
-            self._order      = None
             self._class_type = VoidType()
         else:
             dtypes = [r.var.dtype for r in func.results]
@@ -2068,9 +2024,7 @@ class FunctionCall(TypedAstNode):
                 dtype = HomogeneousTupleType(dtypes[0])
             else:
                 dtype = InhomogeneousTupleType(*dtypes)
-            self._rank       = 1
             self._shape      = (LiteralInteger(n_results),)
-            self._order      = None
             self._class_type = dtype
 
         super().__init__()
@@ -2107,7 +2061,8 @@ class FunctionCall(TypedAstNode):
         return self._interface_name
 
     def __repr__(self):
-        return '{}({})'.format(self.func_name, ', '.join(str(a) for a in self.args))
+        args = ', '.join(str(a) for a in self.args)
+        return f'{self.func_name}({args})'
 
     @classmethod
     def _ignore(cls, c):
@@ -2170,15 +2125,18 @@ class ConstructorCall(FunctionCall):
 
 
 class Return(PyccelAstNode):
+    """
+    Represents a return statement in a function in the code.
 
-    """Represents a function return in the code.
+    Represents a return statement in a function in the code.
 
     Parameters
     ----------
     expr : TypedAstNode
         The expression to return.
 
-    stmts :represent assign stmts in the case of expression return
+    stmt : PyccelAstNode
+        Any assign statements in the case of expression return.
     """
     __slots__ = ('_expr', '_stmt')
     _attribute_nodes = ('_expr', '_stmt')
@@ -2212,7 +2170,8 @@ class Return(PyccelAstNode):
             code = repr(self.stmt)+';'
         else:
             code = ''
-        return code+"Return({})".format(','.join([repr(e) for e in self.expr]))
+        exprs = ','.join(repr(e) for e in self.expr)
+        return code+f"Return({exprs})"
 
 class FunctionDef(ScopedAstNode):
 
@@ -2762,10 +2721,7 @@ class FunctionDef(ScopedAstNode):
         result = 'None' if len(self.results) == 0 else \
                     ', '.join(str(r) for r in self.results)
         args = ', '.join(str(a) for a in self.arguments)
-        return '{name}({args}) -> {result}'.format(
-                name   = self.name,
-                args   = args,
-                result = result)
+        return f'{self.name}({args}) -> {result}'
 
     @property
     def is_unused(self):
@@ -2910,19 +2866,19 @@ class InlineFunctionDef(FunctionDef):
 
 class PyccelFunctionDef(FunctionDef):
     """
-    Class used for storing `PyccelInternalFunction` objects in a FunctionDef.
+    Class used for storing `PyccelFunction` objects in a FunctionDef.
 
     Class inheriting from `FunctionDef` which can store a pointer
     to a class type defined by pyccel for treating internal functions.
     This is useful for importing builtin functions and for defining
-    classes which have `PyccelInternalFunction`s as attributes or methods.
+    classes which have `PyccelFunction`s as attributes or methods.
 
     Parameters
     ----------
     name : str
         The name of the function.
 
-    func_class : type inheriting from PyccelInternalFunction / TypedAstNode
+    func_class : type inheriting from PyccelFunction / TypedAstNode
         The class which should be instantiated upon a FunctionCall
         to this FunctionDef object.
 
@@ -2938,7 +2894,7 @@ class PyccelFunctionDef(FunctionDef):
     __slots__ = ('_argument_description',)
     def __init__(self, name, func_class, *, decorators = {}, argument_description = {}):
         assert isinstance(func_class, type) and \
-                issubclass(func_class, (PyccelInternalFunction, TypedAstNode))
+                issubclass(func_class, (PyccelFunction, TypedAstNode))
         assert isinstance(argument_description, dict)
         arguments = ()
         results = ()
@@ -3721,19 +3677,23 @@ class ClassDef(ScopedAstNode):
 
 
 class Import(PyccelAstNode):
+    """
+    Represents inclusion of dependencies in the code.
 
-    """Represents inclusion of dependencies in the code.
+    Represents the importation of targets from another source code. This is
+    usually used to represent an import statement in the original code but
+    it is also used to import language/library specific dependencies.
 
     Parameters
     ----------
     source : str, DottedName, AsName
-        the module from which we import
+        The module from which we import.
     target : str, AsName, list, tuple
-        targets to import
+        Targets to import.
     ignore_at_print : bool
-        indicates whether the import should be printed
+        Indicates whether the import should be printed.
     mod : Module
-        The module describing the source
+        The module describing the source.
 
     Examples
     --------
@@ -3782,6 +3742,28 @@ class Import(PyccelAstNode):
 
     @staticmethod
     def _format(i):
+        """
+        Format a string passed to this file into a Pyccel object.
+
+        Format a string passed to this file into a Pyccel object or confirm
+        that it is already correctly formatted.
+
+        Parameters
+        ----------
+        i : Any
+            The object to be formatted.
+
+        Returns
+        -------
+        DottedName | PyccelSymbol | AsName
+            The formatted object.
+
+        Raises
+        ------
+        TypeError
+            Raised if the input is not a string or one of the acceptable
+            output types.
+        """
         if isinstance(i, str):
             if '.' in i:
                 return DottedName(*i.split('.'))
@@ -3790,7 +3772,7 @@ class Import(PyccelAstNode):
         if isinstance(i, (DottedName, AsName, PyccelSymbol)):
             return i
         else:
-            raise TypeError('Expecting a string, PyccelSymbol DottedName, given {}'.format(type(i)))
+            raise TypeError(f'Expecting a string, PyccelSymbol DottedName, given {type(i)}')
 
     @property
     def target(self):
@@ -3813,11 +3795,10 @@ class Import(PyccelAstNode):
     def __str__(self):
         source = str(self.source)
         if len(self.target) == 0:
-            return 'import {source}'.format(source=source)
+            return f'import {source}'
         else:
             target = ', '.join([str(i) for i in self.target])
-            return 'from {source} import {target}'.format(source=source,
-                    target=target)
+            return f'from {source} import {target}'
 
     def define_target(self, new_target):
         """
@@ -3892,7 +3873,7 @@ class FuncAddressDeclare(PyccelAstNode):
         ):
 
         if not isinstance(variable, FunctionAddress):
-            raise TypeError('variable must be of type FunctionAddress, given {0}'.format(variable))
+            raise TypeError(f'variable must be of type FunctionAddress, given {variable}')
 
         if intent:
             if not intent in ['in', 'out', 'inout']:
@@ -3980,7 +3961,7 @@ class Declare(PyccelAstNode):
         module_variable = False
         ):
         if not isinstance(variable, Variable):
-            raise TypeError('var must be of type Variable, given {0}'.format(variable))
+            raise TypeError(f'var must be of type Variable, given {variable}')
 
         if intent:
             if not intent in ['in', 'out', 'inout']:
@@ -4033,7 +4014,7 @@ class Declare(PyccelAstNode):
         return self._module_variable
 
     def __repr__(self):
-        return 'Declare({})'.format(repr(self.variable))
+        return f'Declare({repr(self.variable)})'
 
 class Break(PyccelAstNode):
 
@@ -4186,7 +4167,7 @@ class Comment(PyccelAstNode):
         return self._text
 
     def __str__(self):
-        return '# {0}'.format(str(self.text))
+        return f'# {self.text}'
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
@@ -4405,16 +4386,18 @@ class IfSection(PyccelAstNode):
         return iter((self.condition, self.body))
 
     def __str__(self):
-        return "IfSec({},{})".format(str(self.condition), str(self.body))
+        return f"IfSec({self.condition}, {self.body})"
 
 class If(PyccelAstNode):
+    """
+    Represents an if statement in the code.
 
-    """Represents a if statement in the code.
+    Represents an if statement in the code.
 
     Parameters
     ----------
-    args : IfSection
-           All arguments are sections of the complete If block
+    *args : IfSection
+        All arguments are sections of the complete If block.
 
     Examples
     --------
@@ -4449,7 +4432,8 @@ class If(PyccelAstNode):
         return [b.body for b in self._blocks]
 
     def __str__(self):
-        return "If({})".format(','.join(str(b) for b in self.blocks))
+        blocks = ','.join(str(b) for b in self.blocks)
+        return f"If({blocks})"
 
 class StarredArguments(PyccelAstNode):
     __slots__ = ('_starred_obj',)
@@ -4464,23 +4448,6 @@ class StarredArguments(PyccelAstNode):
 
 # ...
 
-class InProgram(TypedAstNode):
-    """
-    Class representing the 'in program' test.
-
-    Class representing the test indicating whether the code should
-    only be executed when the file is executed as a program. In
-    other words, a class representing the boolean:
-    `__name__ == '__main__'`
-    """
-    _rank  = 0
-    _shape = None
-    _order = None
-    _class_type = PythonNativeBool()
-    _attribute_nodes = ()
-    __slots__ = ()
-
-# ...
 
 class Decorator(PyccelAstNode):
     """ Class representing a function decorator.

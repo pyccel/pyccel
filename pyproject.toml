@@ -21,6 +21,7 @@ dependencies = [
     "termcolor >= 1.0.0",
     "textx >= 2.2",
     "astunparse >= 1.6.0", # astunparse is only needed for Python3.8, we should use ast.unparse when we drop Python3.8.
+    "packaging",
 ]
 
 [project.optional-dependencies]
@@ -47,6 +48,21 @@ path = "pyccel/version.py"
 [tool.hatch.build.targets.wheel]
 artifacts = [
   "*.pyccel",
+]
+include = [
+  "*.py",
+  "*.pyh",
+  "*.pyccel",
+  "pyccel/parser/grammar/*.tx",
+  "pyccel/stdlib/*/*.h",
+  "pyccel/stdlib/*/*.c",
+  "pyccel/stdlib/*/*.f90",
+  "pyccel/extensions/STC/include",
+  "pyccel/extensions/gFTL/include/v2"
+]
+exclude = [
+    "pyccel/extensions/STC/src",
+    "pyccel/extensions/STC/misc"
 ]
 
 [tool.hatch.build.targets.wheel.hooks.custom]

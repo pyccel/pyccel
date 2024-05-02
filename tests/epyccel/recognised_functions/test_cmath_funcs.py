@@ -7,7 +7,7 @@ import pytest
 from numpy.random import rand, uniform
 from numpy import isclose
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from pyccel.decorators import template
 
 RTOL = sys.float_info.epsilon*1000
@@ -46,6 +46,17 @@ def test_sqrt_return_type(language):
     x = rand() + rand()*1j
     assert isclose(f1(x) ,  sqrt_return_type_real(x), rtol=RTOL, atol=ATOL)
     assert(type(f1(x))  == type(sqrt_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
+
+def test_sqrt_complex_abs(language):
+    def sqrt_complex_abs(x : 'complex'):
+        from cmath import sqrt
+        a = sqrt(x * x.conjugate()) + sqrt(x.conjugate() * x)
+        return a
+
+    f1 = epyccel(sqrt_complex_abs, language = language)
+    x = rand() + 1j * rand()
+    assert isclose(f1(x), sqrt_complex_abs(x), rtol=RTOL, atol=ATOL)
+    assert type(f1(x)) == type(sqrt_complex_abs(x)) # pylint: disable=unidiomatic-typecheck
 
 def test_sin_call(language):
     def sin_call(x : complex):

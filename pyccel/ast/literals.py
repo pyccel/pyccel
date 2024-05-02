@@ -40,9 +40,7 @@ class Literal(TypedAstNode):
     """
     __slots__ = ()
     _attribute_nodes  = ()
-    _rank      = 0
     _shape     = None
-    _order     = None
 
     @property
     def python_value(self):
@@ -139,7 +137,7 @@ class LiteralInteger(Literal):
     __slots__   = ('_value', '_class_type')
 
     def __init__(self, value, dtype = PythonNativeInt()):
-        assert(value >= 0)
+        assert value >= 0
         if not isinstance(value, int):
             raise TypeError("A LiteralInteger can only be created with an integer")
         self._value = value
@@ -334,6 +332,7 @@ class LiteralString(Literal):
     __slots__ = ('_string',)
     _class_type = StringType()
     _static_type = StringType()
+    _shape = (None,)
 
     def __init__(self, arg):
         super().__init__()

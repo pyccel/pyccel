@@ -3,7 +3,8 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-
+""" File containing functions for calling Pyccel interactively (epyccel and epyccel_seq)
+"""
 
 import inspect
 import importlib
@@ -24,23 +25,37 @@ __all__ = ['get_source_function', 'epyccel_seq', 'epyccel']
 
 #==============================================================================
 def get_source_function(func):
+    """
+    Get the source code from a function.
+
+    Get a string containing the source code of a function from a function
+    object. Excessive indenting is stripped away.
+
+    Parameters
+    ----------
+    func : Function
+        A Python function.
+
+    Returns
+    -------
+    str
+        A string containing the source code.
+
+    Raises
+    ------
+    TypeError
+        A type error is raised if the object passed to the function is not
+        callable.
+    """
     if not callable(func):
         raise TypeError('Expecting a callable function')
 
-    lines = inspect.getsourcelines(func)
-    lines = lines[0]
+    lines, _ = inspect.getsourcelines(func)
     # remove indentation if the first line is indented
     a = lines[0]
     leading_spaces = len(a) - len(a.lstrip())
-    code = ''
-    for a in lines:
-        if leading_spaces > 0:
-            line = a[leading_spaces:]
-        else:
-            line = a
-        code = '{code}{line}'.format(code=code, line=line)
 
-    return code
+    return ''.join(a[leading_spaces:] for a in lines)
 
 #==============================================================================
 def get_unique_name(prefix, path):
@@ -118,8 +133,11 @@ def epyccel_seq(function_or_module, *,
 
     Parameters
     ----------
-    function_or_module : function | module
+    function_or_module : function | module | str
         Python function or module to be accelerated.
+        If a string is passed then it is assumed to be the code from a module which
+        should be accelerated. The module must be capable of running as a standalone
+        file so it must include any necessary import statements.
     language : {'fortran', 'c', 'python'}
         Language of generated code (default: 'fortran').
     compiler : str, optional
@@ -167,7 +185,7 @@ def epyccel_seq(function_or_module, *,
     # Store current directory
     base_dirpath = os.getcwd()
 
-    if isinstance(function_or_module, (FunctionType, type)):
+    if isinstance(function_or_module, (FunctionType, type, str)):
         dirpath = os.getcwd()
 
     elif isinstance(function_or_module, ModuleType):
@@ -196,6 +214,11 @@ def epyccel_seq(function_or_module, *,
         code = ''.join(lines)
 
         module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
+
+    elif isinstance(function_or_module, str):
+        code = function_or_module
+
+        module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
     else:
         raise TypeError('> Expecting a FunctionType, type or a ModuleType')
@@ -277,8 +300,10 @@ def epyccel( python_function_or_module, **kwargs ):
 
     Parameters
     ----------
-    python_function_or_module : function | module
+    python_function_or_module : function | module | str
         Python function or module to be accelerated.
+        If a string is passed then it is assumed to be the code from a module which
+        should be accelerated..
     **kwargs :
         Additional keyword arguments for configuring the compilation and acceleration process.
         Available options are defined in epyccel_seq.
@@ -300,7 +325,7 @@ def epyccel( python_function_or_module, **kwargs ):
     >>> one_f = epyccel(one, language='fortran')
     >>> one_c = epyccel(one, language='c')
     """
-    assert isinstance( python_function_or_module, (FunctionType, type, ModuleType) )
+    assert isinstance( python_function_or_module, (FunctionType, type, ModuleType, str) )
 
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
