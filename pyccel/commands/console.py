@@ -32,7 +32,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     """
     parser = MyParser(description='pyccel command line')
 
-    parser.add_argument('files', metavar='N', type=str, nargs='+',
+    parser.add_argument('files', metavar='N', type=str, nargs='*',
                         help='a Pyccel file')
 
     #... Version
@@ -113,6 +113,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                         help='enables verbose mode.')
     group.add_argument('--developer-mode', action='store_true', \
                         help='shows internal messages')
+    group.add_argument('--export-compile-info', type=str, default = None, \
+                        help='file to which the compiler json file is exported')
     # ...
 
     # TODO move to another cmd line
@@ -161,31 +163,52 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
         sys.exit(1)
     # ...
 
-    filename = files[0]
+    compiler_export_file = args.export_compile_info
 
-    # ... report error
-    if os.path.isfile(filename):
-        # we don't use is_valid_filename_py since it uses absolute path
-        # file extension
-        ext = filename.split('.')[-1]
-        if not(ext in ['py', 'pyh']):
+    if len(files) == 0:
+        if compiler_export_file is None:
+            parser.error("please specify a file to pyccelise")
+        else:
+            filename = ''
+    else:
+        filename = files[0]
+
+        # ... report error
+        if os.path.isfile(filename):
+            # we don't use is_valid_filename_py since it uses absolute path
+            # file extension
+            ext = filename.split('.')[-1]
+            if not(ext in ['py', 'pyh']):
+                errors = Errors()
+                # severity is error to avoid needing to catch exception
+                errors.report(INVALID_FILE_EXTENSION,
+                              symbol=ext,
+                              severity='error')
+                errors.check()
+                sys.exit(1)
+        else:
+            # we use Pyccel error manager, although we can do it in other ways
             errors = Errors()
             # severity is error to avoid needing to catch exception
-            errors.report(INVALID_FILE_EXTENSION,
+            errors.report(INVALID_FILE_DIRECTORY,
+                          symbol=filename,
+                          severity='error')
+            errors.check()
+            sys.exit(1)
+        # ...
+
+    if compiler_export_file is not None:
+        _, ext = os.path.splitext(compiler_export_file)
+        if ext == '':
+            compiler_export_file = compiler_export_file + '.json'
+        elif ext != '.json':
+            errors = Errors()
+            # severity is error to avoid needing to catch exception
+            errors.report('Wrong file extension. Expecting `json`, but found',
                           symbol=ext,
                           severity='error')
             errors.check()
             sys.exit(1)
-    else:
-        # we use Pyccel error manager, although we can do it in other ways
-        errors = Errors()
-        # severity is error to avoid needing to catch exception
-        errors.report(INVALID_FILE_DIRECTORY,
-                      symbol=filename,
-                      severity='error')
-        errors.check()
-        sys.exit(1)
-    # ...
 
     accelerators = []
     if mpi:
@@ -228,7 +251,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                        libs          = args.libs,
                        debug         = args.debug,
                        accelerators  = accelerators,
-                       folder        = args.output)
+                       folder        = args.output,
+                       compiler_export_file = compiler_export_file)
     except PyccelError:
         sys.exit(1)
     finally:

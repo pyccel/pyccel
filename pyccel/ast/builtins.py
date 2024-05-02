@@ -12,6 +12,8 @@ In this module we implement some of them in alphabetical order.
 """
 from pyccel.errors.errors import PyccelError
 
+from pyccel.utilities.stage import PyccelStage
+
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, str_dtype,
@@ -23,6 +25,8 @@ from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
 from .variable  import IndexedElement
+
+pyccel_stage = PyccelStage()
 
 __all__ = (
     'PythonReal',
@@ -261,7 +265,7 @@ class PythonEnumerate(Basic):
     name = 'enumerate'
 
     def __init__(self, arg, start = None):
-        if PyccelAstNode.stage != "syntactic" and \
+        if pyccel_stage != "syntactic" and \
                 not isinstance(arg, PyccelAstNode):
             raise TypeError('Expecting an arg of valid type')
         self._element = arg
@@ -359,7 +363,7 @@ class PythonTuple(PyccelAstNode):
     def __init__(self, *args):
         self._args = args
         super().__init__()
-        if self.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             return
         elif len(args) == 0:
             self._dtype = NativeGeneric()
@@ -643,7 +647,7 @@ class PythonZip(PyccelInternalFunction):
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
         super().__init__(*args)
-        if PyccelAstNode.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             self._length = None
             return
         else:

@@ -12,6 +12,8 @@ import numpy
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT
 
+from pyccel.utilities.stage import PyccelStage
+
 from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
@@ -34,6 +36,7 @@ from .operators      import broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, Constant, HomogeneousTupleVariable)
 
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 __all__ = (
     'NumpyAbs',
@@ -507,7 +510,7 @@ class NumpyMatmul(PyccelInternalFunction):
 
     def __init__(self, a ,b):
         super().__init__(a, b)
-        if PyccelAstNode.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             return
 
         if not isinstance(a, PyccelAstNode):

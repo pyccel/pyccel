@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import subprocess
+import json
 import os
 import shutil
 import sys
@@ -849,3 +850,16 @@ def test_inline_import(language):
     pyccel_test("scripts/runtest_decorators_inline.py",
             dependencies = ("scripts/decorators_inline.py"),
                 language = language)
+
+#------------------------------------------------------------------------------
+def test_json():
+    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
+            pyccel_commands='--export-compile-info test.json')
+    with open(get_abs_path('scripts/test.json'),'r') as f:
+        dict_1 = json.load(f)
+    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
+        pyccel_commands='--compiler test.json --export-compile-info test2.json')
+    with open(get_abs_path('scripts/test2.json'),'r') as f:
+        dict_2 = json.load(f)
+
+    assert dict_1 == dict_2

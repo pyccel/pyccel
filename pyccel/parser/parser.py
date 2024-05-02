@@ -9,7 +9,6 @@ Module containing the Parser object
 """
 
 import os
-from collections import OrderedDict
 
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
@@ -30,7 +29,7 @@ class Parser(object):
         # a Parser can have parents, who are importing it.
         # imports are then its sons.
         self._sons      = []
-        self._d_parsers = OrderedDict()
+        self._d_parsers = {}
 
         self._syntax_parser   = None
         self._semantic_parser = None
@@ -187,7 +186,7 @@ class Parser(object):
     def parse_sons(self, d_parsers, verbose=False):
         """Recursive algorithm for syntax analysis on a given file and its
         dependencies.
-        This function always terminates with an OrderedDict that contains parsers
+        This function always terminates with an dict that contains parsers
         for all involved files.
 
          Parameters

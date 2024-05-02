@@ -780,7 +780,6 @@ class PythonCodePrinter(CodePrinter):
                         or f is expr.init_func or f is expr.free_func)]
         funcs = ''.join(self._print(f) for f in funcs)
         classes = ''.join(self._print(c) for c in expr.classes)
-        imports += ''.join(self._print(i) for i in self.get_additional_imports())
 
         init_func = expr.init_func
         if init_func:
@@ -796,6 +795,8 @@ class PythonCodePrinter(CodePrinter):
         free_func = expr.free_func
         if free_func:
             self._ignore_funcs.append(free_func.name)
+
+        imports += ''.join(self._print(i) for i in self.get_additional_imports())
 
         body = ''.join((interfaces, funcs, classes, init_body))
 

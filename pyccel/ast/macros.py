@@ -7,10 +7,14 @@
 """
 This module contains all classes and functions used for handling macros.
 """
+from pyccel.utilities.stage import PyccelStage
+
 from .basic          import PyccelAstNode
 from .datatypes      import NativeInteger, NativeGeneric
 from .internals      import PyccelSymbol
 from .variable       import Variable
+
+pyccel_stage = PyccelStage()
 
 __all__ = (
     'Macro',
@@ -55,7 +59,7 @@ class MacroShape(Macro):
         if index is not None:
             self._rank = 0
             self._shape = ()
-        elif PyccelAstNode.stage != "syntactic":
+        elif pyccel_stage != "syntactic":
             self._rank      = int(argument.rank>1)
             self._shape     = (argument.rank,)
         else:

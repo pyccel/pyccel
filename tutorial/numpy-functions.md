@@ -439,6 +439,108 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     }
     ```
 
+## [Transpose](https://numpy.org/doc/stable/reference/generated/numpy.transpose.html)
+
+-   Supported languages: C, fortran
+
+-   Supported parameters:
+
+    a: array_like,
+
+-   python code:
+
+    ```python
+    from numpy import transpose
+
+    def print_transpose(y : 'int[:,:,:]'):
+        print(transpose(y))
+        print(y.T)
+    ```
+
+-   fortran equivalent:
+
+    ```fortran
+    program prog_prog_tmp
+
+      use tmp
+
+      use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T , f64 => &
+            C_DOUBLE
+      implicit none
+
+      real(f64), allocatable :: a(:,:)
+      integer(i64) :: i
+      integer(i64) :: j
+      real(f64), allocatable :: b(:,:)
+      real(f64), allocatable :: c(:,:)
+      integer(i64) :: i_0001
+
+      allocate(a(0:3_i64, 0:2_i64))
+      do i = 0_i64, 2_i64, 1_i64
+        do j = 0_i64, 3_i64, 1_i64
+          a(j, i) = i * 4_i64 + j
+        end do
+      end do
+      allocate(b(0:2_i64, 0:3_i64))
+      allocate(c(0:2_i64, 0:3_i64))
+      do i_0001 = 0_i64, 3_i64, 1_i64
+        b(:, i_0001) = a(i_0001, :)
+        c(:, i_0001) = a(i_0001, :)
+      end do
+      if (allocated(a)) then
+        deallocate(a)
+      end if
+      if (allocated(b)) then
+        deallocate(b)
+      end if
+      if (allocated(c)) then
+        deallocate(c)
+      end if
+
+    end program prog_prog_tmp
+    ```
+
+-   C equivalent:
+
+    ```C
+    #include "tmp.h"
+    #include <stdlib.h>
+    #include "ndarrays.h"
+    #include <stdint.h>
+    int main()
+    {
+        t_ndarray a = {.shape = NULL};
+        int64_t i;
+        int64_t j;
+        t_ndarray b = {.shape = NULL};
+        t_ndarray c = {.shape = NULL};
+        int64_t i_0001;
+        int64_t i_0002;
+        a = array_create(2, (int64_t[]){3, 4}, nd_double);
+        for (i = 0; i < 3; i += 1)
+        {
+            for (j = 0; j < 4; j += 1)
+            {
+                GET_ELEMENT(a, nd_double, (int64_t)i, (int64_t)j) = i * 4 + j;
+            }
+        }
+        b = array_create(2, (int64_t[]){4, 3}, nd_double);
+        c = array_create(2, (int64_t[]){4, 3}, nd_double);
+        for (i_0001 = 0; i_0001 < 4; i_0001 += 1)
+        {
+            for (i_0002 = 0; i_0002 < 3; i_0002 += 1)
+            {
+                GET_ELEMENT(b, nd_double, (int64_t)i_0001, (int64_t)i_0002) = GET_ELEMENT(a, nd_double, (int64_t)i_0002, (int64_t)i_0001);
+                GET_ELEMENT(c, nd_double, (int64_t)i_0001, (int64_t)i_0002) = GET_ELEMENT(a, nd_double, (int64_t)i_0002, (int64_t)i_0001);
+            }
+        }
+        free_array(a);
+        free_array(b);
+        free_array(c);
+        return 0;
+    }
+    ```
+
 ## Other functions
 
 -   Supported [math functions](https://numpy.org/doc/stable/reference/routines.math.html) (optional parameters are not supported):
