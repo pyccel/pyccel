@@ -734,6 +734,19 @@ def test_print_strings(language):
     pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="Can't print NaN in Fortran"),
+            pytest.mark.fortran])
+    )
+)
+def test_print_nan(language):
+    types = str
+    pyccel_test("scripts/print_nan.py", language=language, output_dtype=types)
+
+#------------------------------------------------------------------------------
 def test_print_integers(language):
     types = str
     pyccel_test("scripts/print_integers.py", language=language, output_dtype=types)
