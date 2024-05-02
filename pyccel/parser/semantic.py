@@ -256,6 +256,7 @@ class SemanticParser(BasicParser):
 
     def _get_new_name(self, current_name):
         if current_name not in self._possible_names:
+            self._possible_names.add(current_name)
             return current_name
         current_name = current_name + '_' + create_random_string(current_name)
         while current_name in self._possible_names:
