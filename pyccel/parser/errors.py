@@ -53,13 +53,13 @@ class PyccelError(Exception):
         # Now for your custom code...
         self.errors = errors
 
-class PyccelSyntaxError(Exception):
+class PyccelSyntaxError(PyccelError):
     pass
 
-class PyccelSemanticError(Exception):
+class PyccelSemanticError(PyccelError):
     pass
 
-class PyccelCodegenError(Exception):
+class PyccelCodegenError(PyccelError):
     pass
 
 
@@ -214,6 +214,9 @@ class Errors:
         if (self.mode == 'user') and (severity == 'internal'):
             return
 
+        if (severity == 'fatal'):
+            blocker = True
+
         if filename is None:
             filename = self.target['file']
 
@@ -234,13 +237,17 @@ class Errors:
 
         if verbose: print(info)
 
-        if blocker:
-            # we first print all messages
-            self.check()
-            print(info)
-            raise SystemExit(0)
-
         self.add_error_info(info)
+
+        if blocker:
+            if self._parser_stage == 'syntax':
+                raise PyccelSyntaxError(message)
+            elif self._parser_stage == 'semantic':
+                raise PyccelSemanticError(message)
+            elif self._parser_stage == 'codegen':
+                raise PyccelCodegenError(message)
+            else:
+                raise PyccelError(message)
 
     def _add_error_info(self, file, info):
         if file not in self.error_info_map:

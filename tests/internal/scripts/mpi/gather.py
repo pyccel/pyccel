@@ -26,7 +26,7 @@ mpi_comm_rank(comm, rank, ierr)
 master    = np.int32(1)
 nb_values = 8
 
-block_length = nb_values // size
+block_length = np.int32(nb_values // size)
 
 # ...
 values = np.zeros(block_length, 'int')

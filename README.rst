@@ -1,7 +1,7 @@
 Welcome to Pyccel
 =================
 
-|build-status| |docs|
+|build-status| |docs| |codacy|
 
 **Pyccel** stands for Python extension language using accelerators.
 
@@ -106,6 +106,14 @@ Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows
   LIBRARY_DIR=/c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib
   curl $WEB_ADDRESS/libblas.dll -o $LIBRARY_DIR/libblas.dll
   curl $WEB_ADDRESS/liblapack.dll -o $LIBRARY_DIR/liblapack.dll
+
+Generate static MS C runtime library from corresponding dynamic link library::
+
+  cd "$LIBRARY_DIR"
+  cp $SYSTEMROOT/SysWOW64/vcruntime140.dll .
+  gendef vcruntime140.dll
+  dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
+  cd -
 
 Download MS MPI runtime and SDK, then install MPI::
 
@@ -223,12 +231,17 @@ Contributing
 
 TODO
 
-.. |build-status| image:: https://travis-ci.org/pyccel/pyccel.svg?branch=master
+.. |build-status| image:: https://travis-ci.com/pyccel/pyccel.svg?branch=master
     :alt: build status
     :scale: 100%
-    :target: https://travis-ci.org/pyccel/pyccel
+    :target: https://travis-ci.com/pyccel/pyccel
 
 .. |docs| image:: https://readthedocs.org/projects/pyccel/badge/?version=latest
     :alt: Documentation Status
     :scale: 100%
     :target: http://pyccel.readthedocs.io/
+
+.. |codacy| image:: https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698
+    :alt: Codacy Badge
+    :scale: 100%
+    :target: https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pyccel/pyccel&amp;utm_campaign=Badge_Grade

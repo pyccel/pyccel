@@ -1,4 +1,5 @@
 # coding: utf-8
+# pylint: disable=unused-variable
 
 from numpy import zeros
 from numpy import ones

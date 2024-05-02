@@ -45,7 +45,7 @@ def _which(program):
 # TODO - remove output_dir froms args
 #      - remove files from args
 #      but quickstart and build are still calling it for the moment
-def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfortran'):
+def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None):
     """
     pyccel console command.
     """
@@ -70,12 +70,15 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     # ... backend compiler options
     group = parser.add_argument_group('Backend compiler options')
 
-    group.add_argument('--compiler', choices=('gfortran', 'ifort', 'pgfortran'), help='Compiler name')
+    group.add_argument('--language', choices=('fortran', 'c', 'python'), help='Generated language')
+
+    group.add_argument('--compiler', choices=('gfortran', 'ifort', 'pgfortran', \
+            'gcc', 'icc'), help='Compiler name')
 
     group.add_argument('--mpi-compiler', help='MPI compiler wrapper')
 
-    group.add_argument('--fflags', type=str, \
-                       help='Fortran compiler flags.')
+    group.add_argument('--flags', type=str, \
+                       help='Compiler flags.')
     group.add_argument('--debug', action='store_true', \
                        help='compiles the code in a debug mode.')
 
@@ -131,7 +134,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     # ...
 
     # Imports
-    from pyccel.parser.errors     import Errors
+    from pyccel.parser.errors     import Errors, PyccelError
     from pyccel.parser.errors     import ErrorsMode
     from pyccel.parser.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
     from pyccel.codegen.pipeline  import execute_pyccel
@@ -214,9 +217,10 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        semantic_only = args.semantic_only,
                        convert_only  = args.convert_only,
                        verbose       = args.verbose,
+                       language      = args.language,
                        compiler      = compiler,
                        mpi_compiler  = args.mpi_compiler,
-                       fflags        = args.fflags,
+                       fflags        = args.flags,
                        includes      = args.includes,
                        libdirs       = args.libdirs,
                        modules       = (),
@@ -225,6 +229,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        extra_args    = '',
                        accelerator   = accelerator,
                        folder        = args.output)
+    except PyccelError:
+        sys.exit(1)
     finally:
         os.chdir(base_dirpath)
 

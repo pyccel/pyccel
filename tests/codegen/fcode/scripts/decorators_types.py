@@ -1,7 +1,7 @@
 @types(int)
 def incr_(x):
     @types(int)
-    def decr_(y):
+    def decr_(y): # pylint: disable=unused-variable
         y = y-1
     x = x + 1
 

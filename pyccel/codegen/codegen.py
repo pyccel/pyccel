@@ -180,7 +180,7 @@ class Codegen(object):
 
 
         cls = (Header, EmptyLine, NewLine, Comment, CommentBlock, Module)
-        is_module = all(isinstance(i,cls) for i in self.ast)
+        is_module = all(isinstance(i,cls) for i in self.ast.body)
 
 
 
@@ -211,7 +211,7 @@ class Codegen(object):
                 self.routines,
                 self.interfaces,
                 self.classes,
-                self.body,
+                self.body.body,
                 imports=self.imports,
                 modules=self.modules)
 
@@ -250,10 +250,10 @@ class Codegen(object):
 
         return code
 
-    def export(self, filename=None):
+    def export(self, filename=None, **settings):
 
         if self.code is None:
-            code = self.doprint()
+            code = self.doprint(**settings)
         else:
             code = self.code
 

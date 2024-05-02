@@ -16,6 +16,7 @@ class Basic(sp_Basic):
         return self._fst
 
 class PyccelAstNode:
+    stage      = None
     _shape     = None
     _rank      = None
     _dtype     = None

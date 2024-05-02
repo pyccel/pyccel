@@ -2,7 +2,6 @@
 # pylint: disable=R0201
 
 import redbaron
-import traceback
 import os
 import re
 
@@ -10,7 +9,6 @@ import re
 
 from redbaron import RedBaron
 from redbaron import AssignmentNode
-from redbaron import BinaryOperatorNode
 from redbaron import DefNode
 from redbaron import ClassNode
 from redbaron import TupleNode, ListNode
@@ -22,7 +20,7 @@ from redbaron import GetitemNode
 
 #==============================================================================
 
-from pyccel.ast import String, Integer, Float, Complex, BooleanFalse, BooleanTrue
+from pyccel.ast import String, Integer, Float, BooleanFalse, BooleanTrue
 from pyccel.ast import Nil
 from pyccel.ast import DottedName, DottedVariable
 from pyccel.ast import Assign
@@ -50,14 +48,19 @@ from pyccel.ast import Import
 from pyccel.ast import AsName
 from pyccel.ast import CommentBlock
 from pyccel.ast import With
-from pyccel.ast import List, Dlist
+from pyccel.ast import List
 from pyccel.ast import StarredArguments
-from pyccel.ast import Add, Mul
+from pyccel.ast import CodeBlock
 from pyccel.ast import create_variable
 
-from pyccel.ast.core      import Pow
+from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
+from pyccel.ast.core import PyccelOperator, PyccelUnary
 
-from pyccel.parser.utilities import fst_move_directives, preprocess_imports, preprocess_default_args
+from pyccel.ast.numbers import Complex
+
+from pyccel.parser.utilities import fst_move_directives, preprocess_imports
 from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import read_file
 from pyccel.parser.utilities import get_default_path
@@ -72,21 +75,16 @@ from pyccel.parser.errors import Errors, PyccelSyntaxError
 #      - use OrderedDict whenever it is possible
 
 from pyccel.parser.messages import *
-
+from pyccel.ast.basic       import PyccelAstNode
 #==============================================================================
 
 from sympy.core.function       import Function
 
 from sympy import Symbol
-from sympy import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import IndexedBase
-from sympy import And, Or
-from sympy import floor, Mod
-
 from sympy import Tuple
 from sympy import Lambda
 from sympy import Dict
-from sympy import Not
 
 errors = Errors()
 #==============================================================================
@@ -102,6 +100,36 @@ redbaron.ipython_behavior = False
 
 from pyccel.parser.base import BasicParser
 from pyccel.parser.base import is_ignored_module
+
+def change_priority( expr ):
+    """
+       RedBaron parses an expression from right to left
+       this function makes sure that we evaluate our expression
+       from left to right based in the priority of the operator.
+
+       Examples
+       --------
+       >>> change_priority(PyccelMinus(1,PyccelMinus(1,1)))
+       PyccelMinus(PyccelMinus(1,1),1)
+
+       >>> change_priority(PyccelMinus(1,PyccelMul(1,1)))
+       PyccelMinus(1,PyccelMul(1,1))
+
+       >>> change_priority(PyccelDiv(1,PyccelMul(1,1)))
+       PyccelMul(PyccelDiv(1, 1), 1)
+
+    """
+    first  = expr.args[0]
+    second = expr.args[1]
+    if isinstance(second, PyccelOperator) and second.p<=expr.p:
+            a    = first
+            b    = second.args[0]
+            c    = second.args[1]
+            a    = expr.func(a,b)
+            a    = change_priority(a)
+            return second.func(a,c)
+    else:
+        return expr
 
 class SyntaxParser(BasicParser):
 
@@ -141,14 +169,12 @@ class SyntaxParser(BasicParser):
             errors = Errors()
             errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
                           severity='fatal')
-            errors.check()
-            raise e
 
         preprocess_imports(red)
-        preprocess_default_args(red)
 
         red = fst_move_directives(red)
         self._fst = red
+        
 
         self.parse(verbose=True)
 
@@ -168,17 +194,11 @@ class SyntaxParser(BasicParser):
         errors.set_parser_stage('syntax')
 
         # we add the try/except to allow the parser to find all possible errors
-        try:
-            ast = self._visit(self.fst)
-        except Exception as e:
-            errors.check()
-            traceback.print_exc()
-            raise e
-
+        PyccelAstNode.stage = 'syntactic'
+        ast = self._visit(self.fst)
 
         self._ast = ast
 
-        errors.check()
         self._visit_done = True
 
         return ast
@@ -197,7 +217,7 @@ class SyntaxParser(BasicParser):
 
             return List(*ls, sympify=False)
         elif isinstance(stmt, (tuple, TupleNode)):
-            return PythonTuple(ls)
+            return PythonTuple(*ls)
         else:
             return Tuple(*ls, sympify=False)
 
@@ -218,7 +238,9 @@ class SyntaxParser(BasicParser):
 
 
     def _visit_RedBaron(self, stmt):
-        return self._treat_iterable(stmt)
+        code = CodeBlock([self._visit(i) for i in stmt])
+        code.set_fst(stmt)
+        return code
 
     def _visit_LineProxyList(self, stmt):
         return self._treat_iterable(stmt)
@@ -420,13 +442,11 @@ class SyntaxParser(BasicParser):
 
         target = self._visit(stmt.target)
         if stmt.value == 'not':
-            return Not(target)
+            return PyccelUnary(PyccelNot(target))
         elif stmt.value == '+':
-
-            return target
+            return PyccelUnary(target)
         elif stmt.value == '-':
-
-            return -target
+            return PyccelUnary(PyccelMinus(target))
         elif stmt.value == '~':
 
             errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
@@ -439,65 +459,61 @@ class SyntaxParser(BasicParser):
 
     def _visit_BinaryOperatorNode(self, stmt):
 
-        first = self._visit(stmt.first)
+        first  = self._visit(stmt.first)
         second = self._visit(stmt.second)
+
         if stmt.value == '+':
-            return Add(first, second)
+            expr = PyccelAdd(first, second)
+            return change_priority(expr)
+
         elif stmt.value == '*':
+            expr = PyccelMul(first, second)
+            return change_priority(expr)
 
-            if isinstance(first, (PythonTuple, Tuple, List)):
-                return Dlist(first, second)
-            return Mul(first, second)
         elif stmt.value == '-':
+            expr = PyccelMinus(first, second)
+            return change_priority(expr)
 
-            if isinstance(stmt.second, BinaryOperatorNode) \
-                and isinstance(second, (Add, Mul)):
-                args = second.args
-                second = second._new_rawargs(-args[0], args[1])
-            else:
-                second = Mul(-1, second)
-            return Add(first, second)
         elif stmt.value == '/':
-            if isinstance(second, Mul) and isinstance(stmt.second,
-                                           BinaryOperatorNode):
-                args = list(second.args)
-                second = Pow(args[0], Integer(-1))
-                second = Mul(second, args[1])
-            else:
-                second = Pow(second, Integer(-1))
-            return Mul(first, second)
+            expr = PyccelDiv(first, second)
+            return change_priority(expr)
 
         elif stmt.value == '**':
+            expr = PyccelPow(first, second)
+            return change_priority(expr)
 
-            return Pow(first, second)
         elif stmt.value == '//':
-
-            if isinstance(second, Mul) and isinstance(stmt.second,
-                                           BinaryOperatorNode):
-                args = second.args
-                second = Pow(args[0], Integer(-1))
-                first =  floor(Mul(first, second), evaluate=False)
-                return Mul(first, args[1])
-            else:
-                second = Pow(second, Integer(-1))
-                return floor(Mul(first, second), evaluate=False)
+            expr = PyccelFloorDiv(first, second)
+            return change_priority(expr)
 
         elif stmt.value == '%':
-            return Mod(first, second)
+            expr = PyccelMod(first, second)
+            return change_priority(expr)
         else:
             msg = 'unknown/unavailable BinaryOperatorNode {node}'
             msg = msg.format(node=type(stmt.value))
             raise PyccelSyntaxError(msg)
 
-
     def _visit_BooleanOperatorNode(self, stmt):
 
         first = self._visit(stmt.first)
         second = self._visit(stmt.second)
+
         if stmt.value == 'and':
-            return And(first, second, evaluate=False)
+            if isinstance(second, PyccelOr):
+                args  = second.args
+                first = PyccelAnd(first, args[0]  )
+                return  PyccelOr (first, *args[1:])
+            else:
+                return PyccelAnd(first, second)
+
         if stmt.value == 'or':
-            return Or(first, second, evaluate=False)
+            if isinstance(second, PyccelAnd):
+                args  = second.args
+                first = PyccelOr(first, args[0])
+                return  PyccelAnd(first, *args[1:])
+            else:
+                return PyccelOr(first, second)
 
         msg = 'unknown/unavailable BooleanOperatorNode {node}'
         msg = msg.format(node=type(stmt.value))
@@ -509,20 +525,20 @@ class SyntaxParser(BasicParser):
         second = self._visit(stmt.second)
         op = stmt.value.first
         if(stmt.value.second):
-            op=op+' '+stmt.value.second
+            op = op + ' ' + stmt.value.second
 
         if op == '==':
-            return Eq(first, second, evaluate=False)
+            return PyccelEq(first, second)
         if op == '!=':
-            return Ne(first, second, evaluate=False)
+            return PyccelNe(first, second)
         if op == '<':
-            return Lt(first, second, evaluate=False)
+            return PyccelLt(first, second)
         if op == '>':
-            return Gt(first, second, evaluate=False)
+            return PyccelGt(first, second)
         if op == '<=':
-            return Le(first, second, evaluate=False)
+            return PyccelLe(first, second)
         if op == '>=':
-            return Ge(first, second, evaluate=False)
+            return PyccelGe(first, second)
         if op == 'is':
             return Is(first, second)
         if op == 'is not':
@@ -533,16 +549,14 @@ class SyntaxParser(BasicParser):
         raise PyccelSyntaxError(msg)
 
     def _visit_PrintNode(self, stmt):
-
-        expr = self._visit(stmt.value)
+        expr = self._visit(stmt.value[0])
+        expr = PythonTuple(*expr.args)
         return Print(expr)
 
     def _visit_AssociativeParenthesisNode(self, stmt):
-
-        return self._visit(stmt.value)
+        return PyccelAssociativeParenthesis(self._visit(stmt.value))
 
     def _visit_DefArgumentNode(self, stmt):
-
         name = str(self._visit(stmt.target))
         name = strip_ansi_escape.sub('', name)
         arg = Argument(name)
@@ -554,19 +568,33 @@ class SyntaxParser(BasicParser):
             return ValuedArgument(arg, value)
 
     def _visit_ReturnNode(self, stmt):
+        results = self._visit(stmt.value)
+        if not isinstance(results, (list, PythonTuple, List)):
+            results = [results]
+        assigns  = []
+        new_vars = []
+        for result in results:
+            if not isinstance(result, Symbol):
+                new_vars.append(create_variable(result))
+                new_stmt  = Assign(new_vars[-1], result)
+                new_stmt.set_fst(stmt)
+                assigns.append(new_stmt)
+            else:
+                new_vars.append(result)
 
-        expr = Return(self._visit(stmt.value))
+        if assigns:
+            expr = Return(new_vars, CodeBlock(assigns))
+        else:
+            expr = Return(new_vars)
         expr.set_fst(stmt)
         return expr
 
     def _visit_PassNode(self, stmt):
-
         return Pass()
 
     def _visit_DefNode(self, stmt):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
-
         if isinstance(stmt.parent, ClassNode):
             cls_name = stmt.parent.name
         else:
@@ -636,8 +664,10 @@ class SyntaxParser(BasicParser):
 
             txt  = '#$ header ' + name
             txt += '(' + ','.join(types) + ')'
+
             if results:
                 txt += ' results(' + ','.join(results) + ')'
+
             header = hdr_parse(stmts=txt)
             if name in self.namespace.static_functions:
                 header = header.to_static()
@@ -916,7 +946,6 @@ class SyntaxParser(BasicParser):
         return While(test, body)
 
     def _visit_AssertNode(self, stmt):
-
         expr = self._visit(stmt.value)
         return Assert(expr)
 
@@ -1017,7 +1046,7 @@ class SyntaxParser(BasicParser):
         assign1.set_fst(stmt)
         target.set_fst(stmt)
         generators[-1].insert2body(target)
-        assign2 = Assign(index, Add(index, Integer(1)))
+        assign2 = Assign(index, PyccelAdd(index, Integer(1)))
         assign2.set_fst(stmt)
         generators[-1].insert2body(assign2)
 

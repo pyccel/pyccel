@@ -10,6 +10,7 @@ NO_RETURN_EXPECTED = 'Return statement in function which does not return'
 INCOMPATIBLE_TYPES = 'Incompatible types'
 INCOMPATIBLE_TYPES_IN_ASSIGNMENT = 'Incompatible types in assignment'
 INCOMPATIBLE_REDEFINITION = 'Incompatible redefinition'
+UNSUPPORTED_ARRAY_RETURN_VALUE = 'Array return arguments are currently not supported'
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
 MUST_HAVE_NONE_RETURN_TYPE = 'The return type of "{}" must be None'
@@ -67,6 +68,7 @@ PYCCEL_RESTRICTION_IS_RHS = 'Only booleans and None are allowed as rhs for is st
 PYCCEL_RESTRICTION_IMPORT = 'Import must be inside a def statement or a module'
 PYCCEL_RESTRICTION_IMPORT_IN_DEF = 'Only From Import is allowed inside a def statement'
 PYCCEL_RESTRICTION_IMPORT_STAR = 'import * not allowed'
+PYCCEL_RESTRICTION_OPTIONAL_NONE = 'Variables cannot be equal to None unless they are optional arguments and None is the default value'
 
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header'

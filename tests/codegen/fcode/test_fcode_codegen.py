@@ -13,14 +13,15 @@ base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
 
 files = sorted(os.listdir(path_dir))
-files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
-
-failing_files = [os.path.join(path_dir,'cross.py')]
-passing_files = list(set(files).difference(set(failing_files)))
-    
-def call_test_codegen(f):
-
-    print('> testing {0}'.format(str(f)))
+files = [os.path.join(path_dir,f) \
+         #if f not in failing_files \
+         #else pytest.param(os.path.join(path_dir,f), marks = pytest.mark.xfail(reason=failing_files[f])) \
+         for f in files \
+         if f.endswith(".py") \
+        ]
+@pytest.mark.fortran
+@pytest.mark.parametrize("f", files)
+def test_codegen(f):
 
     pyccel = Parser(f)
     ast = pyccel.parse()
@@ -32,20 +33,11 @@ def call_test_codegen(f):
     name = os.path.splitext(name)[0]
 
     codegen = Codegen(ast, name)
-    code = codegen.doprint()
+    codegen.doprint()
 
     # reset Errors singleton
     errors = Errors()
     errors.reset()
-
-@pytest.mark.parametrize( "f", passing_files )
-def test_passing_codegen(f):
-    call_test_codegen(f)
-
-@pytest.mark.parametrize( "f", failing_files )
-@pytest.mark.xfail
-def test_failing_codegen(f):
-    call_test_codegen(f)
 
 ######################
 if __name__ == '__main__':
@@ -56,6 +48,7 @@ if __name__ == '__main__':
     print('*********************************')
 
     for f in files:
+        print('> testing {0}'.format(str(os.path.basename(f))))
         call_test_codegen(f)
 
     print('\n')

@@ -4,45 +4,59 @@
 import numpy
 from sympy import Basic, Function, Tuple
 from sympy import Integer as sp_Integer
-from sympy import Float
-from sympy import asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log, tan
+from sympy import Expr
 from sympy import Rational as sp_Rational
 from sympy import IndexedBase
 from sympy.core.function import Application
 from sympy.core.assumptions import StdFactKB
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
-from .core import (Variable, IndexedElement, Slice, Len,
-                   For, Range, Assign, List, Nil, Add, Mul,
-                   ValuedArgument, Constant, Pow, process_shape)
-from .builtins  import Int as PythonInt
-from .builtins  import PythonFloat, PythonTuple
-from .datatypes import dtype_and_precision_registry as dtype_registry
-from .datatypes import sp_dtype, str_dtype
-from .datatypes import default_precision
-from .datatypes import datatype
-from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
-from .numbers   import Integer
+from .basic import PyccelAstNode
+from .core  import (Variable, IndexedElement, Slice, Len,
+                   For, Range, Assign, List, Nil,
+                   ValuedArgument, Constant, process_shape)
+
+from .core           import PyccelPow, PyccelMinus, PyccelAssociativeParenthesis
+
+from .builtins       import Int as PythonInt, Bool as PythonBool
+from .builtins       import PythonFloat, PythonTuple, PythonComplex
+from .datatypes      import dtype_and_precision_registry as dtype_registry
+from .datatypes      import default_precision
+from .datatypes      import datatype
+from .datatypes      import NativeInteger, NativeReal, NativeComplex, NativeBool
+from .numbers        import Integer, Float
+from .type_inference import str_dtype
+
 
 __all__ = (
-    'Abs',
-    'Acos',
-    'Acot',
-    'Acsc',
-    'Array',
-    'Asec',
-    'Asin',
-    'Atan',
-    'Bounds',
-    'Complex',
-    'Complex64',
-    'Complex128',
-    'Cosh',
+    'NumpyAbs',
+    'NumpyFloor',
+    # ---
+    'NumpySqrt',
+    'NumpySin',
+    'NumpyCos',
+    'NumpyExp',
+    'NumpyLog',
+    'NumpyTan',
+    'NumpyArcsin',
+    'NumpyArccos',
+    'NumpyArctan',
+    'NumpyArctan2',
+    'NumpySinh',
+    'NumpyCosh',
+    'NumpyTanh',
+    'NumpyArcsinh',
+    'NumpyArccosh',
+    'NumpyArctanh',
+    # ---
     'Cross',
     'Diag',
     'Empty',
     'EmptyLike',
     'NumpyFloat',
+    'NumpyComplex',
+    'Complex64',
+    'Complex128',
     'Float32',
     'Float64',
     'Full',
@@ -52,7 +66,6 @@ __all__ = (
     'Int32',
     'Int64',
     'Linspace',
-    'Log',
     'Matmul',
     'Max',
     'Min',
@@ -66,10 +79,6 @@ __all__ = (
     'Rand',
     'Real',
     'Shape',
-    'Sinh',
-    'Sqrt',
-    'Tanh',
-    'Tan',
     'Where',
     'Zeros',
     'ZerosLike'
@@ -83,31 +92,37 @@ numpy_constants = {
 #==============================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
-class Array(Application):
+# TODO [YG, 22.05.2020]: move dtype & prec processing to __init__
+# TODO [YG, 22.05.2020]: change properties to read _dtype, _prec, _rank, etc...
+class Array(Application, PyccelAstNode):
     """
     Represents a call to  numpy.array for code generation.
 
     arg : list ,tuple ,Tuple, List
 
     """
-    is_zero = False
+
     def __new__(cls, arg, dtype=None, order='C'):
 
-        if not isinstance(arg, (list, tuple, Tuple, PythonTuple, List)):
+        if not isinstance(arg, (Tuple, PythonTuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
-        prec = 0
-
-        if not dtype is None:
+        # Determine dtype and (if possible) precision
+        if dtype is not None:
             if isinstance(dtype, ValuedArgument):
                 dtype = dtype.value
             dtype = str(dtype).replace('\'', '')
             dtype, prec = dtype_registry[dtype]
+        else:
+            dtype = arg.dtype
+            prec  = arg.precision
 
-            dtype = datatype('ndarray' + dtype)
-
-        if not prec and dtype:
+        # If necessary, use default precision
+        if not prec:
             prec = default_precision[dtype]
+
+        # Convert dtype from string to Singleton
+        dtype = datatype(dtype)
 
         # ... Determine ordering
         if isinstance(order, ValuedArgument):
@@ -126,7 +141,8 @@ class Array(Application):
         return Basic.__new__(cls, arg, dtype, order, prec)
 
     def __init__(self, arg, dtype=None, order='C'):
-        self._shape = process_shape(numpy.shape(arg))
+        arg_shape   = numpy.asarray(arg).shape
+        self._shape = process_shape(arg_shape)
         self._rank  = len(self._shape)
 
     def _sympystr(self, printer):
@@ -164,11 +180,7 @@ class Array(Application):
         # row-major ordering, while Fortran initial values are column-major
         shape = self.shape[::-1]
 
-        if isinstance(shape, (list, PythonTuple, Tuple, tuple)):
-            # this is a correction. problem on LRZ
-            shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
-        else:
-            shape_code = '0:' + printer(Add(shape, Integer(-1)))
+        shape_code = ', '.join('0:' + printer(PyccelMinus(i, Integer(1))) for i in shape)
 
         lhs_code = printer(lhs)
         code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
@@ -191,37 +203,28 @@ class Array(Application):
         return code
 
 #==============================================================================
-class NumpySum(Function):
+class NumpySum(Function, PyccelAstNode):
     """Represents a call to  numpy.sum for code generation.
 
     arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
-    is_zero = False
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         return Basic.__new__(cls, arg)
 
     def __init__(self, arg):
-        dtype = str_dtype(sp_dtype(arg))
-        assumptions = {dtype: True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
+        self._dtype = arg.dtype
+        self._rank  = 0
+        self._shape = ()
+        self._precision = default_precision[str_dtype(self._dtype)]
 
     @property
     def arg(self):
         return self._args[0]
 
-    @property
-    def dtype(self):
-        return self._args[0].dtype
-
-    @property
-    def rank(self):
-        return 0
 
     def fprint(self, printer, lhs=None):
         """Fortran print."""
@@ -233,29 +236,26 @@ class NumpySum(Function):
         return 'sum({0})'.format(rhs_code)
 
 #==============================================================================
-class Product(Function):
+class Product(Function, PyccelAstNode):
     """Represents a call to  numpy.prod for code generation.
 
     arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
-    is_zero = False
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         return Basic.__new__(cls, arg)
+
+    def __init__(self, arg):
+        self._dtype = arg.dtype
+        self._rank  = 0
+        self._shape = ()
+        self._precision = default_precision[str_dtype(self._dtype)]
 
     @property
     def arg(self):
         return self._args[0]
-
-    @property
-    def dtype(self):
-        return self._args[0].dtype
-
-    @property
-    def rank(self):
-        return 0
 
     def fprint(self, printer, lhs=None):
         """Fortran print."""
@@ -267,15 +267,15 @@ class Product(Function):
         return 'product({0})'.format(rhs_code)
 
 #==============================================================================
-class Matmul(Application):
+class Matmul(Application, PyccelAstNode):
     """Represents a call to numpy.matmul for code generation.
     arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
 
     def __new__(cls, a, b):
-        if not isinstance(a, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(a, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(a))
-        if not isinstance(b, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(b, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(a))
         return Basic.__new__(cls, a, b)
 
@@ -320,7 +320,7 @@ class Matmul(Application):
 
 #==============================================================================
 
-class PyccelArraySize(Function):
+class PyccelArraySize(Function, PyccelAstNode):
     def __new__(cls, arg, index):
         if not isinstance(arg, (list,
                                 tuple,
@@ -334,6 +334,12 @@ class PyccelArraySize(Function):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         return Basic.__new__(cls, arg, index)
+
+    def __init__(self, arg, index):
+        self._dtype = NativeInteger()
+        self._rank  = 0
+        self._shape = ()
+        self._precision = default_precision['integer']
 
     @property
     def arg(self):
@@ -369,55 +375,39 @@ class PyccelArraySize(Function):
 
 def Shape(arg):
     if arg.shape is None:
-        return PythonTuple([PyccelArraySize(arg,i) for i in range(arg.rank)])
+        return PythonTuple(*(PyccelArraySize(arg,i) for i in range(arg.rank)))
     elif isinstance(arg.shape, PythonTuple):
         return arg.shape
     else:
-        return PythonTuple(arg.shape)
+        return PythonTuple(*arg.shape)
 
 #==============================================================================
 # TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Float
-class Real(Function):
+class Real(Function, PyccelAstNode):
 
     """Represents a call to  numpy.real for code generation.
 
     arg : Variable, Float, sp_Integer, Complex
     """
-    is_zero = False
+
     def __new__(cls, arg):
 
         _valid_args = (Variable, IndexedElement, sp_Integer, Nil,
-                       Float, Mul, Add, Pow, sp_Rational, Application)
+                       Float, Expr, Application)
 
         if not isinstance(arg, _valid_args):
             raise TypeError('Uknown type of  %s.' % type(arg))
         return Basic.__new__(cls, arg)
 
     def __init__(self, arg):
-        assumptions = {'real':True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
+        self._dtype = NativeReal()
+        self._rank  = 0
+        self._shape = ()
+        self._precision = default_precision['real']
 
     @property
     def arg(self):
         return self._args[0]
-
-    @property
-    def dtype(self):
-        return 'real'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['real']
 
     def fprint(self, printer):
         """Fortran print."""
@@ -455,73 +445,7 @@ class Imag(Real):
         return 'imag({0})'.format(str(self.arg))
 
 #==============================================================================
-# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Complex
-class Complex(Function):
-
-    """Represents a call to  numpy.complex for code generation.
-
-    arg : Variable, Float, sp_Integer
-    """
-    is_zero = False
-
-    def __new__(cls, arg0, arg1=Float(0)):
-
-        _valid_args = (Variable, IndexedElement, Integer,
-                       Float, Mul, Add, Pow)
-
-        for arg in [arg0, arg1]:
-            if not isinstance(arg, _valid_args):
-                raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg0, arg1)
-
-    def __init__(self, arg0, arg1=Float(0)):
-        assumptions = {'complex':True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
-
-    @property
-    def real_part(self):
-        return self._args[0]
-
-    @property
-    def imag_part(self):
-        return self._args[1]
-
-    @property
-    def dtype(self):
-        return 'complex'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['complex']
-
-    def fprint(self, printer):
-        """Fortran print."""
-
-        value0 = printer(self.real_part)
-        value1 = printer(self.imag_part)
-        prec   = printer(self.precision)
-        code = 'cmplx({0}, {1}, {2})'.format(value0, value1, prec)
-        return code
-
-
-    def __str__(self):
-        return self.fprint(str)
-
-    def _sympystr(self, printer):
-        return self.fprint(str)
-
-#==============================================================================
-class Linspace(Application):
+class Linspace(Application, PyccelAstNode):
 
     """
     Represents numpy.linspace.
@@ -624,7 +548,7 @@ class Linspace(Application):
         return code
 
 #==============================================================================
-class Diag(Application):
+class Diag(Application, PyccelAstNode):
 
     """
     Represents numpy.diag.
@@ -714,7 +638,7 @@ class Diag(Application):
         return alloc + '\n' + code
 
 #==============================================================================
-class Cross(Application):
+class Cross(Application, PyccelAstNode):
 
     """
     Represents numpy.cross.
@@ -834,7 +758,7 @@ class Cross(Application):
         return code
 
 #==============================================================================
-class Where(Application):
+class Where(Application, PyccelAstNode):
     """ Represents a call to  numpy.where """
 
     def __new__(cls, mask):
@@ -881,33 +805,49 @@ class Where(Application):
         return alloc +'\n' + stmt
 
 #==============================================================================
-class Rand(Real):
+class Rand(Function, PyccelAstNode):
 
     """
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
     """
-    def __new__(cls, arg = Nil()):
-        return Real.__new__(cls, arg)
+    _dtype = NativeReal()
+    _precision = default_precision['real']
 
-    def __init__(self):
-        Real.__init__(self, None)
-
-    @property
-    def arg(self):
-        return self._args[0]
+    def __init__(self, *args):
+        self._shape = args
+        self._rank  = len(self.shape)
 
     @property
-    def rank(self):
-        return 0
+    def order(self):
+        return 'C'
 
-    def fprint(self, printer):
+    def fprint(self, printer, lhs, stack_array=False):
         """Fortran print."""
 
-        return 'rand()'
+        lhs_code = printer(lhs)
+        stmts = []
+
+        if self.rank>0:
+            # Create statement for allocation
+            if not stack_array:
+                # Transpose indices because of Fortran column-major ordering
+                shape = self.shape[::-1]
+
+                shape_code = ', '.join('0:' + printer(PyccelMinus(i, Integer(1))) for i in shape)
+
+                code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
+                stmts.append(code_alloc)
+
+        # Create statement for initialization
+        code_init = 'call random_number({0})'.format(lhs_code)
+        stmts.append(code_init)
+
+        return '\n'.join(stmts)
+
 
 #==============================================================================
-class Full(Application):
+class Full(Application, PyccelAstNode):
     """
     Represents a call to numpy.full for code generation.
 
@@ -936,16 +876,7 @@ class Full(Application):
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
         if (dtype is None) or isinstance(dtype, Nil):
-            if fill_value.is_integer:
-                dtype = 'int'
-            elif fill_value.is_real:
-                dtype = 'float'
-            elif fill_value.is_complex:
-                dtype = 'complex'
-            elif fill_value.is_Boolean:
-                dtype = 'bool'
-            else:
-                raise TypeError('Could not determine dtype from fill_value {}'.format(fill_value))
+            dtype = fill_value.dtype
 
         # Verify dtype and get precision
         dtype, precision = cls._process_dtype(dtype)
@@ -983,10 +914,14 @@ class Full(Application):
     #--------------------------------------------------------------------------
     @staticmethod
     def _process_dtype(dtype):
-
-        dtype = str(dtype).replace('\'', '').lower()
+        if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt, 
+                      Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
+                      Float64, Float32):
+            dtype = dtype.__name__.lower()
+        else:
+            dtype            = str(dtype).replace('\'', '').lower()
         dtype, precision = dtype_registry[dtype]
-        dtype = datatype('ndarray' + dtype)
+        dtype            = datatype(dtype)
 
         return dtype, precision
 
@@ -1014,11 +949,7 @@ class Full(Application):
             # Transpose indices because of Fortran column-major ordering
             shape = self.shape if self.order == 'F' else self.shape[::-1]
 
-            if isinstance(self.shape, (PythonTuple,Tuple,tuple)):
-                # this is a correction. problem on LRZ
-                shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
-            else:
-                shape_code = '0:' + printer(Add(shape, Integer(-1)))
+            shape_code = ', '.join('0:' + printer(PyccelMinus(i, Integer(1))) for i in shape)
 
             code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
             stmts.append(code_alloc)
@@ -1136,26 +1067,7 @@ class ZerosLike(Application):
 
 #=======================================================================================
 
-class Bounds(Basic):
-
-    """
-    Represents bounds of NdArray.
-
-    Examples
-
-    """
-
-    def __new__(cls, var):
-        # TODO check type of var
-        return Basic.__new__(cls, var)
-
-    @property
-    def var(self):
-        return self._args[0]
-
-#=======================================================================================
-
-class Norm(Function):
+class Norm(Function, PyccelAstNode):
     """ Represents call to numpy.norm"""
 
     is_zero = False
@@ -1202,17 +1114,14 @@ class Norm(Function):
 
         return rhs
 
-#=======================================================================================
-
-class Sqrt(Pow):
-
+#=====================================================
+class Sqrt(PyccelPow):
     def __new__(cls, base):
-        return Pow(base, 0.5, evaluate=False)
+        return PyccelPow(PyccelAssociativeParenthesis(base), Float(0.5))
 
-#=======================================================================================
+#====================================================
 
-class Mod(Function):
-    is_zero = False
+class Mod(Function, PyccelAstNode):
     def __new__(cls,*args):
         return Basic.__new__(cls, *args)
 
@@ -1222,170 +1131,105 @@ class Mod(Function):
         self._assumptions = StdFactKB(assumptions)
         self._assumptions._generator = ass_copy
 
-class Asin(Function):
-    is_zero = False
-    def __new__(cls,arg):
-        obj = asin(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
+#==============================================================================
+# Numpy universal functions
+# https://numpy.org/doc/stable/reference/ufuncs.html#available-ufuncs
+#
+# NOTE: since we are subclassing sympy.Function, we need to use a name ending
+#       with "Base", otherwise the Sympy's printer is going to skip this class.
+#==============================================================================
+class NumpyUfuncBase(Function, PyccelAstNode):
+    """Base class for Numpy's universal functions."""
 
+#------------------------------------------------------------------------------
+class NumpyUfuncUnary(NumpyUfuncBase):
+    """Numpy's universal function with one argument.
+    """
+    def __init__(self, x):
+        self._shape     = x.shape
+        self._rank      = x.rank
+        self._dtype     = x.dtype if x.dtype is NativeComplex() else NativeReal()
+        self._precision = default_precision[str_dtype(self._dtype)]
 
-class Acos(Function):
-    is_zero = False
-    def __new__(cls,arg):
-        obj = acos(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
+#------------------------------------------------------------------------------
+class NumpyUfuncBinary(NumpyUfuncBase):
+    """Numpy's universal function with two arguments.
+    """
+    # TODO: apply Numpy's broadcasting rules to get shape/rank of output
+    def __init__(self, x1, x2):
+        self._shape     = x1.shape  # TODO ^^
+        self._rank      = x1.rank   # TODO ^^
+        self._dtype     = NativeReal()
+        self._precision = default_precision['real']
 
-class Asec(Function):
-    is_zero = False
-    def __new__(cls,arg):
-        obj = asec(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
+#------------------------------------------------------------------------------
+# Math operations
+#------------------------------------------------------------------------------
+#class NumpyAbsolute(NumpyUfuncUnary): pass
+#class NumpyFabs    (NumpyUfuncUnary): pass
+class NumpyExp     (NumpyUfuncUnary): pass
+class NumpyLog     (NumpyUfuncUnary): pass
+class NumpySqrt    (NumpyUfuncUnary): pass
 
-#=======================================================================================
-
-class Atan(Function):
-    is_zero = False
-    def __new__(cls,arg):
-        obj = atan(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
-
-
-class Acot(Function):
-    is_zero = False
-    def __new__(cls,arg):
-        obj = acot(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
-
-
-class Acsc(Function):
-    is_zero = False
-    def __new__(cls,arg):
-        obj = acsc(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
+#------------------------------------------------------------------------------
+# Trigonometric functions
+#------------------------------------------------------------------------------
+class NumpySin    (NumpyUfuncUnary) : pass
+class NumpyCos    (NumpyUfuncUnary) : pass
+class NumpyTan    (NumpyUfuncUnary) : pass
+class NumpyArcsin (NumpyUfuncUnary) : pass
+class NumpyArccos (NumpyUfuncUnary) : pass
+class NumpyArctan (NumpyUfuncUnary) : pass
+class NumpyArctan2(NumpyUfuncBinary): pass
+class NumpyHypot  (NumpyUfuncBinary): pass
+class NumpySinh   (NumpyUfuncUnary) : pass
+class NumpyCosh   (NumpyUfuncUnary) : pass
+class NumpyTanh   (NumpyUfuncUnary) : pass
+class NumpyArcsinh(NumpyUfuncUnary) : pass
+class NumpyArccosh(NumpyUfuncUnary) : pass
+class NumpyArctanh(NumpyUfuncUnary) : pass
+#class NumpyDeg2rad(NumpyUfuncUnary) : pass
+#class NumpyRad2deg(NumpyUfuncUnary) : pass
 
 #=======================================================================================
 
-class Sinh(Function):
-    is_zero = False
-    def __new__(cls,arg):
-        obj = sinh(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
-
-class Cosh(Function):
-    is_zero = False
-    def __new__(cls,arg):
-        obj = cosh(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
+class NumpyAbs(NumpyUfuncUnary):
+    def __init__(self, x):
+        self._shape     = x.shape
+        self._rank      = x.rank
+        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
+        self._precision = default_precision[str_dtype(self._dtype)]
 
 
-class Tanh(Function):
-    is_zero = False
-    def __new__(cls,arg):
-        obj = tanh(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
+class NumpyFloor(NumpyUfuncUnary):
+    def __init__(self, x):
+        self._shape     = x.shape
+        self._rank      = x.rank
+        self._dtype     = NativeReal()
+        self._precision = default_precision[str_dtype(self._dtype)]
 
-class Tan(Function):
-    is_zero = False
-    def __new__(cls,arg):
-        obj = tan(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
-#=======================================================================================
 
-class Log(Function):
-    is_zero = False
-    def __new__(cls,arg):
-        obj = log(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
-
-#=======================================================================================
-
-class Abs(Function):
-    is_zero = False
-    is_real = True
+class Min(Function, PyccelAstNode):
     def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
-#=======================================================================================
-
-class Min(Function):
-    is_zero = False
-    is_real = True
-    def _eval_is_integer(self):
-        return all(i.is_integer for i in self.args)
-
-class Max(Function):
-    is_zero = False
-    is_real = True
+class Max(Function, PyccelAstNode):
     def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
 
 #=======================================================================================
+class NumpyComplex(PythonComplex):
+    """ Represents a call to numpy.complex() function.
+    """
+    def __new__(cls, arg0, arg1=Float(0)):
+        return PythonComplex.__new__(cls, arg0, arg1)
 
-class Complex64(Complex):
-    @property
-    def precision(self):
-        return dtype_registry['complex64'][1]
+class Complex64(NumpyComplex):
+    _precision = dtype_registry['complex64'][1]
 
-class Complex128(Complex):
-    @property
-    def precision(self):
-        return dtype_registry['complex128'][1]
+class Complex128(NumpyComplex):
+    _precision = dtype_registry['complex128'][1]
 
 #=======================================================================================
 class NumpyFloat(PythonFloat):
@@ -1397,16 +1241,12 @@ class NumpyFloat(PythonFloat):
 class Float32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
     """
-    @property
-    def precision(self):
-        return dtype_registry['float32'][1]
+    _precision = dtype_registry['float32'][1]
 
 class Float64(NumpyFloat):
     """ Represents a call to numpy.float64() function.
     """
-    @property
-    def precision(self):
-        return dtype_registry['float64'][1]
+    _precision = dtype_registry['float64'][1]
 
 #=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10
@@ -1419,13 +1259,11 @@ class NumpyInt(PythonInt):
 class Int32(NumpyInt):
     """ Represents a call to numpy.int32() function.
     """
-    @property
-    def precision(self):
-        return dtype_registry['int32'][1]
+    _precision = dtype_registry['int32'][1]
 
 class Int64(NumpyInt):
     """ Represents a call to numpy.int64() function.
     """
-    @property
-    def precision(self):
-        return dtype_registry['int64'][1]
+    _precision = dtype_registry['int64'][1]
+
+

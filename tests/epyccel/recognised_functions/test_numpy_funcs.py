@@ -3,6 +3,7 @@ from pyccel import epyccel
 import pytest
 from numpy.random import rand, randint
 from numpy import isclose
+from conftest       import *
 
 # Functions still to be tested:
 #    full_like
@@ -351,7 +352,7 @@ def test_arctan2_call():
     @types('real')
     def arctan2_call(x,y):
         from numpy import arctan2
-        return arctan2(x)
+        return arctan2(x,y)
 
     f1 = epyccel(arctan2_call)
     x = rand()
@@ -360,14 +361,14 @@ def test_arctan2_call():
 
 @pytest.mark.xfail(reason = "scipy translation error (see issue #207)")
 def test_arctan2_phrase():
-    @types('real','real')
+    @types('real','real','real')
     def arctan2_phrase(x,y,z):
         from numpy import arctan2
-        a = arctan2(x,y)+arctan2(x,y,z)
+        a = arctan2(x,y)+arctan2(x,z)
         return a
 
     f2 = epyccel(arctan2_phrase)
-    x = rand()
+    x = -rand()
     y = rand()
     z = rand()
     assert(isclose(f2(x,y,z), arctan2_phrase(x,y,z), rtol=1e-15, atol=1e-15))
@@ -440,7 +441,6 @@ def test_floor_phrase():
     y = rand()
     assert(isclose(f2(x,y), floor_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail(reason = "numpy floor returns the same type as the input")
 def test_floor_return_type():
     @types('int')
     def floor_return_type_int(x):
@@ -1354,3 +1354,101 @@ def test_array():
     assert(f2_shape() == create_array_tuple_shape())
     assert(f2_val()   == create_array_tuple_val())
     assert(type(f2_val()) == type(create_array_tuple_val().item())) # pylint: disable=unidiomatic-typecheck
+
+def test_rand_basic():
+    def create_val():
+        from numpy.random import rand # pylint: disable=reimported
+        return rand()
+
+    f1 = epyccel(create_val)
+    y = [f1() for i in range(10)]
+    assert(all([yi <  1 for yi in y]))
+    assert(all([yi >= 0 for yi in y]))
+    assert(all([isinstance(yi,float) for yi in y]))
+    assert(len(set(y))>1)
+
+def test_rand_args():
+
+    @types('int')
+    def create_array_size_1d(n):
+        from numpy.random import rand # pylint: disable=reimported
+        from numpy import shape
+        a = rand(n)
+        return shape(a)[0]
+
+    @types('int','int')
+    def create_array_size_2d(n,m):
+        from numpy.random import rand # pylint: disable=reimported
+        from numpy import shape
+        a = rand(n,m)
+        return shape(a)[0], shape(a)[1]
+
+    @types('int','int','int')
+    def create_array_size_3d(n,m,p):
+        from numpy.random import rand # pylint: disable=reimported
+        from numpy import shape
+        a = rand(n,m,p)
+        return shape(a)[0], shape(a)[1], shape(a)[2]
+
+    def create_array_vals_1d():
+        from numpy.random import rand # pylint: disable=reimported
+        a = rand(4)
+        return a[0], a[1], a[2], a[3]
+
+    def create_array_vals_2d():
+        from numpy.random import rand # pylint: disable=reimported
+        a = rand(2,2)
+        return a[0,0], a[0,1], a[1,0], a[1,1]
+
+    n = randint(10)
+    m = randint(10)
+    p = randint(5)
+    f_1d = epyccel(create_array_size_1d)
+    assert( f_1d(n)       == create_array_size_1d(n)      )
+
+    f_2d = epyccel(create_array_size_2d)
+    assert( f_2d(n, m)    == create_array_size_2d(n, m)   )
+
+    f_3d = epyccel(create_array_size_3d)
+    assert( f_3d(n, m, p) == create_array_size_3d(n, m, p))
+
+    g_1d = epyccel(create_array_vals_1d)
+    y = g_1d()
+    assert(all([yi <  1 for yi in y]))
+    assert(all([yi >= 0 for yi in y]))
+    assert(all([isinstance(yi,float) for yi in y]))
+    assert(len(set(y))>1)
+
+    g_2d = epyccel(create_array_vals_2d)
+    y = g_2d()
+    assert(all([yi <  1 for yi in y]))
+    assert(all([yi >= 0 for yi in y]))
+    assert(all([isinstance(yi,float) for yi in y]))
+    assert(len(set(y))>1)
+
+def test_rand_expr():
+    def create_val():
+        from numpy.random import rand # pylint: disable=reimported
+        x = 2*rand()
+        return x
+
+    f1 = epyccel(create_val)
+    y = [f1() for i in range(10)]
+    assert(all([yi <  2 for yi in y]))
+    assert(all([yi >= 0 for yi in y]))
+    assert(all([isinstance(yi,float) for yi in y]))
+    assert(len(set(y))>1)
+
+@pytest.mark.xfail(reason="a is not allocated")
+def test_rand_expr_array():
+    def create_array_vals_2d():
+        from numpy.random import rand # pylint: disable=reimported
+        a = rand(2,2)*0.5 + 3
+        return a[0,0], a[0,1], a[1,0], a[1,1]
+
+    f2 = epyccel(create_array_vals_2d)
+    y = f2()
+    assert(all([yi <  3.5 for yi in y]))
+    assert(all([yi >= 3   for yi in y]))
+    assert(all([isinstance(yi,float) for yi in y]))
+    assert(len(set(y))>1)

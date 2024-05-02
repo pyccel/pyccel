@@ -5,7 +5,7 @@ from .basic import Basic
 
 from sympy.core.singleton import Singleton
 from sympy.core.compatibility import with_metaclass
-from sympy import Eq, Ne, Lt, Gt, Le, Ge
+
 import numpy
 
 # TODO [YG, 12.03.2020] verify why we need all these types
@@ -19,26 +19,17 @@ __all__ = (
     'FunctionType',
     'NativeBool',
     'NativeComplex',
-    'NativeComplexList',
     'NativeGeneric',
     'NativeInteger',
-    'NativeIntegerList',
-    'NativeList',
     'NativeTuple',
 #    'NativeNil',
 #    'NativeParallelRange',
     'NativeRange',
     'NativeReal',
-    'NativeRealList',
     'NativeString',
     'NativeSymbol',
     'NativeTensor',
     'NativeVoid',
-#    'NdArray',
-#    'NdArrayBool',
-#    'NdArrayComplex',
-#    'NdArrayInt',
-#    'NdArrayReal',
     'UnionType',
     'VariableType',
     'DataTypeFactory',
@@ -50,25 +41,15 @@ __all__ = (
     'is_iterable_datatype',
     'is_pyccel_datatype',
     'is_with_construct_datatype',
-    'sp_dtype',
-    'str_dtype',
 #
 # --------- VARIABLES -----------
 #
     'Bool',
-    'Complex',
-    'ComplexList',
+    'Cmplx',
     'Generic',
     'Int',
-    'IntegerList',
-#    'NdArray',
-#    'NdArrayBool',
-#    'NdArrayComplex',
-#    'NdArrayInt',
-#    'NdArrayReal',
     'Nil',
     'Real',
-    'RealList',
     'String',
     'Void',
 #    '_Symbol',
@@ -79,14 +60,15 @@ __all__ = (
 
 #==============================================================================
 
-default_precision = {'real': 8, 'int': numpy.dtype(int).alignment, 'complex': 8, 'bool':4, 'float':8}
+default_precision = {'real': 8, 'int': numpy.dtype(int).alignment, 'integer': numpy.dtype(int).alignment, 'complex': 8, 'bool':4, 'float':8}
 dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'double':('real',default_precision['float']),
                                  'float':('real',default_precision['float']),       # sympy.Float
                                  'pythonfloat':('real',default_precision['float']), # built-in float
                                  'float32':('real',4),
                                  'float64':('real',8),
-                                 'complex':('complex',default_precision['complex']),
+                                 'pythoncomplex':('complex',default_precision['complex']),
+                                 'complex':('complex',default_precision['complex']),  # to create numpy array with dtype='complex'
                                  'complex64':('complex',4),
                                  'complex128':('complex',8),
                                  'int8' :('int',1),
@@ -111,88 +93,41 @@ class DataType(with_metaclass(Singleton, Basic)):
 
 class NativeBool(DataType):
     _name = 'Bool'
-    pass
 
 class NativeInteger(DataType):
     _name = 'Int'
-    pass
 
 class NativeReal(DataType):
     _name = 'Real'
-    pass
 
 class NativeComplex(DataType):
     _name = 'Complex'
-    pass
 
 class NativeString(DataType):
     _name = 'String'
-    pass
 
 class NativeVoid(DataType):
     _name = 'Void'
-    pass
 
 class NativeNil(DataType):
     _name = 'Nil'
-    pass
-
-class NativeList(DataType):
-    _name = 'List'
-    pass
 
 class NativeTuple(DataType):
     """Base class representing native datatypes"""
     _name = 'Tuple'
 
-class NativeIntegerList(NativeInteger, NativeList):
-    _name = 'IntegerList'
-    pass
-
-class NativeRealList(NativeReal, NativeList):
-    _name = 'RealList'
-    pass
-
-class NativeComplexList(NativeComplex, NativeList):
-    _name = 'ComplexList'
-    pass
-
 class NativeRange(DataType):
     _name = 'Range'
-    pass
 
 class NativeTensor(DataType):
     _name = 'Tensor'
-    pass
 
 class NativeParallelRange(NativeRange):
     _name = 'ParallelRange'
-    pass
 
 class NativeSymbol(DataType):
     _name = 'Symbol'
-    pass
 
-class NdArray(DataType):
-    _name = 'NdArray'
-    pass
-
-class NdArrayInt(NdArray, NativeInteger):
-    _name = 'int'
-    pass
-
-class NdArrayReal(NdArray, NativeReal):
-    _name = 'real'
-    pass
-
-
-class NdArrayComplex(NdArray, NativeComplex):
-    _name = 'complex'
-    pass
-
-class NdArrayBool(NdArray, NativeBool):
-    _name = 'bool'
-    pass
 
 # TODO to be removed
 class CustomDataType(DataType):
@@ -237,41 +172,24 @@ class FunctionType(DataType):
 
 
 
-Bool    = NativeBool()
-Int     = NativeInteger()
-Real    = NativeReal()
-Complex = NativeComplex()
-Void    = NativeVoid()
-Nil     = NativeNil()
-String  = NativeString()
-_Symbol = NativeSymbol()
-IntegerList = NativeIntegerList()
-RealList = NativeRealList()
-ComplexList = NativeComplexList()
-NdArray = NdArray()
-NdArrayInt = NdArrayInt()
-NdArrayReal = NdArrayReal()
-NdArrayComplex = NdArrayComplex()
-NdArrayBool = NdArrayBool()
-Generic    = NativeGeneric()
-
+Bool           = NativeBool()
+Int            = NativeInteger()
+Real           = NativeReal()
+Cmplx          = NativeComplex()
+Void           = NativeVoid()
+Nil            = NativeNil()
+String         = NativeString()
+_Symbol        = NativeSymbol()
+Generic        = NativeGeneric()
 
 dtype_registry = {'bool': Bool,
                   'int': Int,
                   'integer': Int,
                   'real'   : Real,
-                  'complex': Complex,
+                  'complex': Cmplx,
                   'void': Void,
                   'nil': Nil,
                   'symbol': _Symbol,
-                  '*int': IntegerList,
-                  '*real': RealList,
-                  '*complex': ComplexList,
-                  'ndarrayint': NdArrayInt,
-                  'ndarrayinteger':NdArrayInt,
-                  'ndarrayreal': NdArrayReal,
-                  'ndarraycomplex': NdArrayComplex,
-                  'ndarraybool': NdArrayBool,
                   '*': Generic,
                   'str': String}
 
@@ -386,53 +304,8 @@ def datatype(arg):
             raise ValueError("Unrecognized datatype " + arg)
         return dtype_registry[arg]
     if isinstance(arg, DataType):
-        return dtype_registry[arg.dtype.name.lower()]
+        return dtype_registry[arg.name.lower()]
     else:
         raise TypeError('Expecting a DataType')
-
-
-def sp_dtype(expr):
-    """
-    return the datatype of a sympy types expression
-
-    """
-    if expr.is_integer:
-        return 'int'
-    elif expr.is_real:
-        return 'real'
-    elif expr.is_complex:
-        return 'complex'
-    elif expr.is_Boolean:
-        return 'bool'
-    elif isinstance(expr,(Eq, Ne, Lt, Gt, Le, Ge)):
-        return 'bool'
-    else:
-        raise TypeError('Unknown datatype {0}'.format(str(expr)))
-
-
-def str_dtype(dtype):
-
-    """
-    return a sympy datatype as string
-    dtype: str, Native Type
-
-    """
-    if isinstance(dtype, str):
-        if dtype == 'int':
-            return 'integer'
-        elif dtype== 'real':
-            return 'real'
-        else:
-            return dtype
-    if isinstance(dtype, NativeInteger):
-        return 'integer'
-    elif isinstance(dtype, NativeReal):
-        return 'real'
-    elif isinstance(dtype, NativeComplex):
-        return 'complex'
-    elif isinstance(dtype, NativeBool):
-        return 'bool'
-    else:
-        raise TypeError('Unknown datatype {0}'.format(str(dtype)))
 
 

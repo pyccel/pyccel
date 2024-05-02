@@ -3,8 +3,11 @@
 from sympy.core.expr import AtomicExpr
 from sympy import sympify
 
-from .core import Basic
-from .core import local_sympify
+from .basic          import Basic, PyccelAstNode
+from .core           import local_sympify
+from .datatypes      import default_precision
+from .datatypes      import datatype
+from .datatypes      import NativeInteger, NativeGeneric
 
 __all__ = (
     'Macro',
@@ -15,7 +18,7 @@ __all__ = (
 )
 
 #==============================================================================
-class Macro(AtomicExpr):
+class Macro(AtomicExpr, PyccelAstNode):
     """."""
     _name = '__UNDEFINED__'
 
@@ -36,7 +39,11 @@ class Macro(AtomicExpr):
 #==============================================================================
 class MacroShape(Macro):
     """."""
-    _name = 'shape'
+    _name      = 'shape'
+    _rank      = 1
+    _shape     = ()
+    _dtype     = NativeInteger()
+    _precision = default_precision['integer']
 
     def __new__(cls, argument, index=None):
         return Macro.__new__(cls, argument)
@@ -59,7 +66,11 @@ class MacroShape(Macro):
 #==============================================================================
 class MacroType(Macro):
     """."""
-    _name = 'dtype'
+    _name      = 'dtype'
+    _dtype     = NativeGeneric()
+    _rank      = 0
+    _shape     = ()
+    _precision = 0
 
     def __new__(cls, argument):
         return Macro.__new__(cls, argument)
@@ -71,7 +82,11 @@ class MacroType(Macro):
 #==============================================================================
 class MacroCount(Macro):
     """."""
-    _name = 'count'
+    _name      = 'count'
+    _rank      = 0
+    _shape     = ()
+    _dtype     = NativeInteger()
+    _precision = default_precision['integer']
 
     def __new__(cls, argument):
         return Macro.__new__(cls, argument)

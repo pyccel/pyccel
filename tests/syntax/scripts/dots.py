@@ -1,3 +1,5 @@
+# pylint: disable=pointless-statement
+
 U.matrix.shape
 U.matrix.dot(x, y)
 a[:].v.dot(x,y)

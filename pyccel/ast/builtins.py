@@ -8,19 +8,21 @@ In this module we implement some of them in alphabetical order.
 """
 
 from sympy import Symbol, Function, Tuple
-from sympy import Float
+from sympy import Float, Expr
 from sympy import sympify
 from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
-from sympy.utilities.iterables          import iterable
 
-from .basic import Basic
-from .datatypes import default_precision
-from .numbers import Integer
+from .basic     import Basic, PyccelAstNode
+from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
+                        NativeInteger, NativeBool, NativeReal,
+                        NativeComplex, NativeRange, NativeTensor, NativeString,
+                        NativeGeneric, NativeTuple, default_precision)
+from .numbers   import Integer
 
 __all__ = (
     'Bool',
-    'Complex',
+    'PythonComplex',
     'Enumerate',
     'PythonFloat',
     'Int',
@@ -45,35 +47,20 @@ local_sympify = {
 }
 
 #==============================================================================
-class Bool(Function):
+class Bool(Expr, PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
-    is_Boolean = True
+    _rank = 0
+    _shape = ()
+    _precision = default_precision['bool']
+    _dtype = NativeBool()
 
     def __new__(cls, arg):
-        if arg.is_Boolean:
-            return arg
-        return Basic.__new__(cls, arg)
+        return Expr.__new__(cls, arg)
 
     @property
     def arg(self):
         return self.args[0]
-
-    @property
-    def dtype(self):
-        return 'bool'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['bool']
 
     def __str__(self):
         return 'Bool({})'.format(str(self.arg))
@@ -86,19 +73,17 @@ class Bool(Function):
         return 'merge(.true., .false., ({}) /= 0)'.format(printer(self.arg))
 
 #==============================================================================
-class Complex(Function):
+class PythonComplex(Expr, PyccelAstNode):
     """ Represents a call to Python's native complex() function.
     """
-    is_zero = False
+
+    _rank = 0
+    _shape = ()
+    _precision = default_precision['complex']
+    _dtype = NativeComplex()
 
     def __new__(cls, arg0, arg1=Float(0)):
-        return Basic.__new__(cls, arg0, arg1)
-
-    def __init__(self, arg0, arg1=Float(0)):
-        assumptions = {'complex': True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
+        return Expr.__new__(cls, arg0, arg1)
 
     @property
     def real_part(self):
@@ -107,22 +92,6 @@ class Complex(Function):
     @property
     def imag_part(self):
         return self._args[1]
-
-    @property
-    def dtype(self):
-        return 'complex'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['complex']
 
     def __str__(self):
         return self.fprint(str)
@@ -156,38 +125,21 @@ class Enumerate(Basic):
         return self._args[0]
 
 #==============================================================================
-class PythonFloat(Function):
+class PythonFloat(Expr, PyccelAstNode):
     """ Represents a call to Python's native float() function.
     """
-    is_zero = False
-    def __new__(cls, arg):
-        return Basic.__new__(cls, arg)
+    _rank = 0
+    _shape = ()
+    _precision = default_precision['real']
+    _dtype = NativeReal()
 
-    def __init__(self, arg):
-        assumptions = {'real': True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
+    def __new__(cls, arg):
+        return Expr.__new__(cls, arg)
 
     @property
     def arg(self):
         return self._args[0]
 
-    @property
-    def dtype(self):
-        return 'float'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['real']
 
     def __str__(self):
         return 'Float({0})'.format(str(self.arg))
@@ -203,39 +155,21 @@ class PythonFloat(Function):
         return code
 
 #==============================================================================
-class Int(Function):
+class Int(Expr, PyccelAstNode):
     """ Represents a call to Python's native int() function.
     """
-    is_zero = False
 
+    _rank      = 0
+    _shape     = ()
+    _precision = default_precision['integer']
+    _dtype     = NativeInteger()
+        
     def __new__(cls, arg):
-        return Basic.__new__(cls, arg)
-
-    def __init__(self, arg):
-        assumptions = {'integer': True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
+        return Expr.__new__(cls, arg)
 
     @property
     def arg(self):
         return self._args[0]
-
-    @property
-    def dtype(self):
-        return 'int'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['int']
 
     def fprint(self, printer):
         """Fortran print."""
@@ -245,49 +179,67 @@ class Int(Function):
         return code
 
 #==============================================================================
-class PythonTuple(Function):
+class PythonTuple(Expr, PyccelAstNode):
     """ Represents a call to Python's native tuple() function.
     """
-    _iterable = True
-    _arg_dtypes = None
-    _is_homogeneous = False
-    is_zero = False
-    def __new__(cls, args):
-        if not iterable(args):
-            args = [args]
-        args = tuple(args)
+    _iterable        = True
+    _is_homogeneous  = False
 
-        return Basic.__new__(cls, *args)
+    def __new__(cls, *args):
+        return Expr.__new__(cls, *args)
 
-    @property
-    def dtype(self):
-        return 'tuple'
+    def __init__(self, *args):
+        if self.stage == 'syntactic' or len(args) == 0:
+            return
+        is_homogeneous = all(args[0].dtype==a.dtype for a in args[1:])
+        is_homogeneous = is_homogeneous and all(args[0].rank==a.rank   for a in args[1:])
+        self._inconsistent_shape = not all(args[0].shape==a.shape   for a in args[1:])
+        self._is_homogeneous = is_homogeneous
+        if is_homogeneous:
+            integers  = [a for a in args if a.dtype is NativeInteger()]
+            reals     = [a for a in args if a.dtype is NativeReal()]
+            complexes = [a for a in args if a.dtype is NativeComplex()]
+            bools     = [a for a in args if a.dtype is NativeBool()]
+            strs      = [a for a in args if a.dtype is NativeString()]
+            if strs:
+                self._dtype = NativeString()
+                self._rank  = 0
+                self._shape = ()
+            else:
+                if complexes:
+                    self._dtype     = NativeComplex()
+                    self._precision = max(a.precision for a in complexes)
+                elif reals:
+                    self._dtype     = NativeReal()
+                    self._precision = max(a.precision for a in reals)
+                elif integers:
+                    self._dtype     = NativeInteger()
+                    self._precision = max(a.precision for a in integers)
+                elif bools:
+                    self._dtype     = NativeBool()
+                    self._precision  = max(a.precision for a in bools)
+                else:
+                    raise TypeError('cannot determine the type of {}'.format(self))
 
-    @property
-    def homogeneous_dtype(self):
-        assert(self.is_homogeneous)
-        return self._homogeneous_dtype
-
-    @property
-    def shape(self):
-        if(self._arg_dtypes is None):
-            return [Integer(len(self._args))]
+                
+                shapes = [a.shape for a in args]
+                
+                if all(sh is not None for sh in shapes):
+                    self._shape = (len(args), ) + shapes[0]
+                    self._rank  = len(self._shape)
+                else:
+                    self._rank = max(a.rank for a in args) + 1
         else:
-            shape = [Integer(len(self._args))]
-            if self.is_homogeneous and self._arg_dtypes[0]['rank'] > 0:
-                shape = shape + list(self._arg_dtypes[0]['shape'])
-
-            return tuple(shape)
-
-    @property
-    def rank(self):
-        return max(getattr(a,'rank',0) for a in self._args)+1
+            self._rank      = max(a.rank for a in args) + 1
+            self._dtype     = NativeGeneric()
+            self._precision = 0
+            self._shape     = (len(args), ) + args[0].shape
 
     def __getitem__(self,i):
         return self._args[i]
 
     def __add__(self,other):
-        return PythonTuple(self._args+other._args)
+        return PythonTuple(*(self._args + other._args))
 
     def __iter__(self):
         return self._args.__iter__()
@@ -297,79 +249,67 @@ class PythonTuple(Function):
 
     @property
     def is_homogeneous(self):
-        if (self._arg_dtypes is None):
-            raise RuntimeError("This function cannot be used until the type has been infered")
         return self._is_homogeneous
 
-    def set_arg_types(self,d_vars):
-        """ set the types of each argument by providing
-        the list of d_vars calculated using the function
-        _infere_type in parser/semantics.py
-
-        This allows the homogeneity properties to be calculated
-        """
-        self._arg_dtypes = d_vars
-        dtypes = [str(a['datatype']) for a in d_vars]
-
-        #If all arguments are provided then the homogeneity must be checked
-        if (len(self._args)==len(d_vars)):
-            self._is_homogeneous = len(set(dtypes))==1
-
-            if self._is_homogeneous and d_vars[0]['datatype'] == 'tuple':
-                self._is_homogeneous = all(a.is_homogeneous for a in self._vars)
-                if self._is_homogeneous:
-                    dtypes = [str(v.homogeneous_dtype) for v in self._vars]
-                    self._is_homogeneous = len(set(dtypes))==1
-                    if self._is_homogeneous:
-                        self._homogeneous_dtype = d_vars[0].homogeneous_dtype
-            else:
-                self._homogeneous_dtype = d_vars[0]['datatype']
-        else:
-            # If one argument is provided then the tuple must be homogeneous
-            # unless it contains tuples as these tuples are not necessarily homogeneous
-            assert(len(d_vars)==1)
-            self._is_homogeneous = True
-            self._homogeneous_dtype = d_vars[0]['datatype']
-            if d_vars[0]['datatype'] == 'tuple':
-                self._is_homogeneous = self._vars[0]._is_homogeneous
-                if self._is_homogeneous:
-                    self._is_homogeneous_dtype = self._vars[0]._homogeneous_dtype
-
     @property
-    def arg_types(self):
-        if (self._arg_dtypes is None):
-            raise RuntimeError("This function cannot be used until the type has been infered")
-        return self._arg_dtypes
+    def inconsistent_shape(self):
+        return self._inconsistent_shape
 
 #==============================================================================
-class Len(Function):
+class Len(Function, PyccelAstNode):
 
     """
     Represents a 'len' expression in the code.
     """
-    is_zero = False
+
+    _rank      = 0
+    _shape     = ()
+    _precision = default_precision['int']
+    _dtype     = NativeInteger()
 
     def __new__(cls, arg):
         return Basic.__new__(cls, arg)
-
-    def __init__(self, arg):
-        assumptions = {'integer': True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
 
     @property
     def arg(self):
         return self._args[0]
 
-    @property
-    def dtype(self):
-        return 'int'
-
 #==============================================================================
-class List(Tuple):
+class List(Tuple, PyccelAstNode):
     """ Represent lists in the code with dynamic memory management."""
-
+    def __init__(self, *args, **kwargs):
+        if self.stage == 'syntactic':
+            return
+        integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
+        reals     = [a for a in args if a.dtype is NativeReal()]
+        complexes = [a for a in args if a.dtype is NativeComplex()]
+        strs      = [a for a in args if a.dtype is NativeString()]
+        if strs:
+            self._dtype = NativeString()
+            self._rank  = 0
+            self._shape = ()
+            assert len(integers + reals + complexes) == 0
+        else:
+            if complexes:
+                self._dtype     = NativeComplex()
+                self._precision = max(a.precision for a in complexes)
+            elif reals:
+                self._dtype     = NativeReal()
+                self._precision = max(a.precision for a in reals)
+            elif integers:
+                self._dtype     = NativeInteger()
+                self._precision = max(a.precision for a in integers)
+            else:
+                raise TypeError('cannot determine the type of {}'.format(self))
+            
+            shapes = [a.shape for a in args]
+            
+            if all(sh is not None for sh in shapes):
+                assert all(sh==shapes[0] for sh in shapes)
+                self._shape = (len(args), ) + shapes[0]
+                self._rank  = len(self._shape)
+            else:
+                self._rank = max(a.rank for a in args) + 1
 #==============================================================================
 class Map(Basic):
     """ Represents the map stmt
@@ -489,7 +429,7 @@ python_builtin_datatypes_dict = {
     'bool'   : Bool,
     'float'  : PythonFloat,
     'int'    : Int,
-    'complex': Complex
+    'complex': PythonComplex
 }
 
 def python_builtin_datatype(name):
@@ -507,3 +447,4 @@ def python_builtin_datatype(name):
         return python_builtin_datatypes_dict[name]
 
     return None
+

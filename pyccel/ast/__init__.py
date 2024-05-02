@@ -7,6 +7,7 @@
 from .basic          import *
 from .builtins       import *
 from .datatypes      import *
+from .type_inference import *
 from .core           import *
 from .macros         import *
 from .headers        import *

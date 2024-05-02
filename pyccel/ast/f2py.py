@@ -11,7 +11,7 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import Comment
 
-from pyccel.ast.datatypes import str_dtype
+from pyccel.ast.type_inference import str_dtype
 
 __all__ = (
    'as_static_function',
@@ -142,7 +142,6 @@ def as_static_function(func, name=None):
     if f2py_instructions:
         body = f2py_instructions + body.body
     # ...
-
     return F2PYFunctionDef( name, list(args), results, body,
                         local_vars = func.local_vars,
                         is_static = True,
@@ -166,9 +165,11 @@ def as_static_function_call(func, mod_name, name=None):
     # function arguments
     args = sanitize_arguments(func.arguments)
     # function body
-    call = FunctionCall(func_alias, args)
-    stmt = call if func.is_procedure else Assign(func.results[0], call)
-    body = [stmt]
+    call    = FunctionCall(func_alias, args)
+    results = func.results
+    results = results[0] if len(results) == 1 else results
+    stmt    = call if len(func.results) == 0 else Assign(results, call)
+    body    = [stmt]
 
     # new function declaration
     new_func = FunctionDef(func.name, list(args), func.results, body,

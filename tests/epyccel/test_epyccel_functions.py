@@ -6,12 +6,22 @@ import shutil
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
+from conftest       import *
 
 
 def clean_test():
     shutil.rmtree('__pycache__', ignore_errors=True)
     shutil.rmtree('__epyccel__', ignore_errors=True)
 
+
+def test_func_no_args_f1():
+    def f1():
+        from numpy import pi
+        value = (2*pi)**(3/2)
+        return value
+
+    f = epyccel(f1)
+    assert abs(f()-f1()) < 1e-13
 #------------------------------------------------------------------------------
 def test_decorator_f1():
     @types('int')
@@ -53,9 +63,8 @@ def test_decorator_f3():
         y[:] = x - 1
         return y
 
-    from pyccel.ast import AstFunctionResultError
-    with pytest.raises(AstFunctionResultError):
-        f = epyccel(f3)
+    with pytest.raises(RuntimeError):
+        epyccel(f3)
 
 #------------------------------------------------------------------------------
 def test_decorator_f4():
@@ -66,9 +75,8 @@ def test_decorator_f4():
         y[:] = x - 1.0
         return y
 
-    from pyccel.ast import AstFunctionResultError
-    with pytest.raises(AstFunctionResultError):
-        f = epyccel(f4)
+    with pytest.raises(RuntimeError):
+        epyccel(f4)
 
 #------------------------------------------------------------------------------
 def test_decorator_f5():

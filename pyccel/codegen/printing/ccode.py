@@ -3,10 +3,20 @@
 
 from sympy.core import S
 from sympy.printing.precedence import precedence
-from sympy.sets.fancysets import Range
 
-from pyccel.ast.core import Assign, datatype, Import
+from pyccel.ast.core import Assign, datatype, Variable, Import
+from pyccel.ast.core import CommentBlock, Comment
+
+
+from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+
+
+from pyccel.ast.builtins  import Range
+from pyccel.ast.core import Declare
 from pyccel.ast.core import SeparatorComment
+
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 # TODO: add examples
@@ -61,10 +71,9 @@ class CCodePrinter(CodePrinter):
         'dereference': set()
     }
 
-    def __init__(self, settings={}):
+    def __init__(self, parser, settings={}):
 
         prefix_module = settings.pop('prefix_module', None)
-
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
@@ -118,20 +127,62 @@ class CCodePrinter(CodePrinter):
     def _print_NativeVoid(self, expr):
         return 'void'
 
-    def _print_FunctionDef(self, expr):
+    def function_signature(self, expr):
         if len(expr.results) == 1:
-            ret_type = self._print(expr.results[0].dtype)
+            result = expr.results[0]
+            dtype = self._print(result.dtype)
+            prec  = result.precision
+            #rank  = result.rank
+            ret_type = dtype_registry[(dtype, prec)]
         elif len(expr.results) > 1:
             raise ValueError("C doesn't support multiple return values.")
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
-        arg_code = ', '.join(self._print(i) for i in expr.arguments)
-        body = '\n'.join(self._print(i) for i in expr.body)
-        return '{0} {1}({2}) {{\n{3}\n}}'.format(ret_type, name, arg_code, body)
+
+        arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
+        arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
+        arguments  = [self._print(i) for i in expr.arguments]
+        arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
+
+        return '{0} {1}({2})'.format(ret_type, name, arg_code)
+
+    def _print_FunctionDef(self, expr):
+
+        decs  = [Declare(i.dtype, i) for i in expr.local_vars]
+        decs += [Declare(i.dtype, i) for i in expr.results]
+        decs       = '\n'.join(self._print(i) for i in decs)
+        body       = '\n'.join(self._print(i) for i in expr.body.body)
+
+        return '{0} {{\n{1}\n{2}\n}}'.format(self.function_signature(expr), decs, body)
 
     def _print_Return(self, expr):
-        return 'return {0};'.format(self._print(expr.expr))
+        code = ''
+        if expr.stmt:
+            code += self._print(expr.stmt)+'\n'
+        code +='return {0};'.format(self._print(expr.expr[0]))
+        return code
+
+    def _print_PyccelAdd(self, expr):
+        return ' + '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMinus(self, expr):
+        return ' - '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMul(self, expr):
+        return ' * '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelDiv(self, expr):
+        args = [self._print(a) for a in expr.args]
+        if all(a.dtype is NativeInteger() for a in expr.args):
+            return ' / '.join('real({})'.format(self._print(a)) for a in args)
+        return  ' / '.join(self._print(a) for a in args)
+
+    def _print_PyccelAssociativeParenthesis(self, expr):
+        return '({})'.format(self._print(expr.args[0]))
+
+    def _print_PyccelUnary(self, expr):
+        return '({})'.format(self._print(expr.args[0]))
 
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -147,13 +198,16 @@ class CCodePrinter(CodePrinter):
     def _print_For(self, expr):
         target = self._print(expr.target)
         if isinstance(expr.iterable, Range):
-            start, stop, step = expr.iterable.args
+            start, stop, step = [self._print(e) for e in expr.iterable.args]
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
-        body = '\n'.join(self._print(i) for i in expr.body)
+        body = '\n'.join(self._print(i) for i in expr.body.body)
         return ('for ({target} = {start}; {target} < {stop}; {target} += '
                 '{step}) {{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
+
+    def _print_CodeBlock(self, expr):
+        return '\n'.join(self._print(b) for b in expr.body)
 
     def _print_Pow(self, expr):
         if "Pow" in self.known_functions:
@@ -278,7 +332,7 @@ class CCodePrinter(CodePrinter):
         imports  = list(expr.imports)
         imports += [Import('stdlib.h')]
         imports  = '\n'.join(self._print(i) for i in imports)
-        body     = '\n'.join(self._print(i) for i in expr.body)
+        body     = '\n'.join(self._print(i) for i in expr.body.body)
         decs     = '\n'.join(self._print(i) for i in expr.declarations)
 
         sep = self._print(SeparatorComment(40))
@@ -289,9 +343,6 @@ class CCodePrinter(CodePrinter):
                      '{sep}\n'
                      '{f}\n'
                      '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
-
-        if funcs:
-            funcs = 'contains\n{0}'.format(funcs)
 
         return ('{imports}\n'
                 '{funcs}\n'

@@ -2,10 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core.function import Application
-from sympy import floor
 from sympy import Not, Float
 from sympy import Function
-from sympy import (sin, cos, exp, atan2)
 import scipy.constants as sc_constants
 
 from pyccel.symbolic import lambdify
@@ -14,20 +12,27 @@ from .core import AsName
 from .core import Import
 from .core import Product
 from .core import FunctionDef
-from .core import ValuedArgument
+from .core import ValuedVariable
 from .core import Constant, Variable, IndexedVariable
 
-from .builtins import Bool, Enumerate, Int, PythonFloat, Len, Map, Range, Zip
+from .builtins import Bool, Enumerate, Int, PythonFloat, PythonComplex, Len, Map, Range, Zip
+
+from .mathext  import math_functions
 
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from .numpyext import Diag, Cross
-from .numpyext import Min, Max, Abs, Norm, Where
-from .numpyext import Array, Shape, Rand, NumpySum, Matmul, Real, Complex, Imag, Mod
+from .numpyext import Min, Max, NumpyAbs, NumpyFloor, Norm, Where
+from .numpyext import Array, Shape, Rand, NumpySum, Matmul, Real, NumpyComplex, Imag, Mod
 from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
-from .numpyext import Sqrt, Asin, Acos, Atan, Sinh, Cosh, Tanh, Log, Tan
+from .numpyext import NumpyExp, NumpyLog, NumpySqrt
+from .numpyext import NumpySin, NumpyCos, NumpyTan
+from .numpyext import NumpyArcsin, NumpyArccos, NumpyArctan, NumpyArctan2
+from .numpyext import NumpySinh, NumpyCosh, NumpyTanh
+from .numpyext import NumpyArcsinh, NumpyArccosh, NumpyArctanh
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
+
 
 __all__ = (
     'build_types_decorator',
@@ -38,26 +43,9 @@ __all__ = (
 )
 
 #==============================================================================
-math_functions = {
-    'fabs'   : Abs,
-    'sqrt'   : Sqrt,
-    'sin'    : sin,
-    'cos'    : cos,
-    'exp'    : exp,
-    'log'    : Log,
-    'tan'    : Tan,
-    'asin'   : Asin,
-    'acos'   : Acos,
-    'atan'   : Atan,
-    'sinh'   : Sinh,
-    'cosh'   : Cosh,
-    'tanh'   : Tanh,
-    'atan2'  : atan2,
-    'floor'  : floor
-    }
-
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
+# TODO [YG, 20.05.2020]: Move dictionary to 'numpyext' module
 numpy_functions = {
     # ... array creation routines
     'full'      : Full,
@@ -82,6 +70,7 @@ numpy_functions = {
     'float64'   : Float64,
     'int32'     : Int32,
     'int64'     : Int64,
+    'complex'   : NumpyComplex,
     'complex128': Complex128,
     'complex64' : Complex64,
     'matmul'    : Matmul,
@@ -92,23 +81,31 @@ numpy_functions = {
     'diag'      : Diag,
     'where'     : Where,
     'cross'     : Cross,
-    'floor'     : floor,
     # ---
-    'sin'       : sin,
-    'cos'       : cos,
-    'tan'       : Tan,
-    'arcsin'    : Asin,
-    'arccos'    : Acos,
-    'arctan'    : Atan,
-    'arctan2'   : atan2,
-    'sinh'      : Sinh,
-    'cosh'      : Cosh,
-    'tanh'      : Tanh,
-    'exp'       : exp,
-    'log'       : Log,
-    'fabs'      : Abs,
-    'absolute'  : Abs,
-    'sqrt'      : Sqrt
+    'abs'       : NumpyAbs,
+    'floor'     : NumpyFloor,
+    'absolute'  : NumpyAbs,
+    'fabs'      : NumpyAbs,
+    'exp'       : NumpyExp,
+    'log'       : NumpyLog,
+    'sqrt'      : NumpySqrt,
+    # ---
+    'sin'       : NumpySin,
+    'cos'       : NumpyCos,
+    'tan'       : NumpyTan,
+    'arcsin'    : NumpyArcsin,
+    'arccos'    : NumpyArccos,
+    'arctan'    : NumpyArctan,
+    'arctan2'   : NumpyArctan2,
+#    'hypot'     : NumpyHypot,
+    'sinh'      : NumpySinh,
+    'cosh'      : NumpyCosh,
+    'tanh'      : NumpyTanh,
+    'arcsinh'   : NumpyArcsinh,
+    'arccosh'   : NumpyArccosh,
+    'arctanh'   : NumpyArctanh,
+#    'deg2rad'   : NumpyDeg2rad,
+#    'rad2deg'   : NumpyRad2deg,
 }
 
 numpy_linalg_functions = {
@@ -121,23 +118,22 @@ numpy_random_functions = {
 }
 
 builtin_functions_dict = {
-    'abs'      : Abs,
+    'abs'      : NumpyAbs,  # TODO: create a built-in Abs
     'range'    : Range,
     'zip'      : Zip,
     'enumerate': Enumerate,
     'int'      : Int,
     'float'    : PythonFloat,
+    'complex'  : PythonComplex,
     'bool'     : Bool,
     'sum'      : NumpySum,
     'len'      : Len,
     'Mod'      : Mod,
-    'abs'      : Abs,
     'max'      : Max,
 #    'Max'      : Max,
     'min'      : Min,
 #    'Min'      : Min,
-    'not'      : Not,
-    'floor'    : floor
+    'not'      : Not,   # TODO [YG, 20.05.2020]: do not use Sympy's Not
 }
 
 scipy_constants = {
@@ -159,11 +155,6 @@ def builtin_function(expr, args=None):
 
     if name in dic.keys() :
         return dic[name](*args)
-
-    if name in ['complex']:
-        if len(args)==1:
-            args = [args[0], Float(0)]
-        return Complex(args[0],args[1])
 
     if name == 'Not':
         return Not(*args)
@@ -287,15 +278,16 @@ def split_positional_keyword_arguments(*args):
     # Distinguish between positional and keyword arguments
     val_args = ()
     for i, a in enumerate(args):
-        if isinstance(a, ValuedArgument):
+        if isinstance(a, ValuedVariable):
             args, val_args = args[:i], args[i:]
             break
 
     # Convert list of keyword arguments into dictionary
     kwargs = {}
     for v in val_args:
-        key   = str(v.argument.name)
+        key   = str(v.name)
         value = v.value
         kwargs[key] = value
 
     return args, kwargs
+

@@ -2,7 +2,6 @@ from pyccel.decorators import types
 from pyccel import epyccel
 import shutil
 
-
 def clean_test():
     shutil.rmtree('__pycache__', ignore_errors=True)
     shutil.rmtree('__epyccel__', ignore_errors=True)

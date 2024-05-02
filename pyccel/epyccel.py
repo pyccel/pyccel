@@ -11,15 +11,17 @@ from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
 
 from pyccel.codegen.pipeline import execute_pyccel
+from pyccel.parser.errors import PyccelError
 
 __all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
 
 #==============================================================================
+random_selector = random.SystemRandom()
+
 def random_string( n ):
     # we remove uppercase letters because of f2py
     chars    = string.ascii_lowercase + string.digits
-    selector = random.SystemRandom()
-    return ''.join( selector.choice( chars ) for _ in range( n ) )
+    return ''.join( random_selector.choice( chars ) for _ in range(n) )
 
 #==============================================================================
 def get_source_function(func):
@@ -43,6 +45,7 @@ def get_source_function(func):
 
 #==============================================================================
 def epyccel_seq(function_or_module,
+                language     = None,
                 compiler     = None,
                 mpi_compiler = None,
                 fflags       = None,
@@ -106,6 +109,7 @@ def epyccel_seq(function_or_module,
         # Generate shared library
         execute_pyccel(pymod_filename,
                        verbose     = verbose,
+                       language    = language,
                        compiler    = compiler,
                        mpi_compiler= mpi_compiler,
                        fflags      = fflags,
@@ -117,12 +121,21 @@ def epyccel_seq(function_or_module,
                        extra_args  = extra_args,
                        accelerator = accelerator,
                        output_name = module_name)
+    except PyccelError:
+        # Raise a new error to avoid a large traceback
+        raise RuntimeError("Pyccel translation failed")
     finally:
         # Change working directory back to starting point
         os.chdir(base_dirpath)
 
+
     # Import shared library
     sys.path.insert(0, epyccel_dirpath)
+
+    # http://ballingt.com/import-invalidate-caches
+    # https://docs.python.org/3/library/importlib.html#importlib.invalidate_caches
+    importlib.invalidate_caches()
+
     package = importlib.import_module(module_name)
     sys.path.remove(epyccel_dirpath)
 

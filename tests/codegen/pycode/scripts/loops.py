@@ -22,7 +22,7 @@ def factorial( n ):
 def fibonacci( n ):
     x = 0
     y = 1
-    for i in range( n ):
+    for i in range( n ): # pylint: disable=unused-variable
         z = x+y
         x = y
         y = z
@@ -32,10 +32,10 @@ def fibonacci( n ):
 @types( int )
 def double_loop( n ):
     x = 0
-    for i in range( 3, 10 ):
+    for i in range( 3, 10 ): # pylint: disable=unused-variable
         x += 1
         y  = n*x
-        for j in range( 4, 15 ):
+        for j in range( 4, 15 ): # pylint: disable=unused-variable
             z = x-y
     return z
 
@@ -45,9 +45,7 @@ def double_loop_on_2d_array_C( z ):
 
     from numpy import shape
 
-    s = shape( z )
-    m = s[0]
-    n = s[1]
+    m, n = shape( z )
 
     for i in range( m ):
         for j in range( n ):
@@ -60,9 +58,7 @@ def double_loop_on_2d_array_F( z ):
 
     from numpy import shape
 
-    s = shape( z )
-    m = s[0]
-    n = s[1]
+    m, n = shape( z )
 
     for i in range( m ):
         for j in range( n ):
@@ -74,8 +70,7 @@ def product_loop_on_real_array( z, out ):
 
     from numpy     import shape
 
-    s = shape( z )
-    n = s[0]
+    n, = shape( z )
 
     for i in range(n):
         out[i] = z[i]**2

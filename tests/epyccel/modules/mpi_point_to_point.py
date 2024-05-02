@@ -12,7 +12,6 @@ from pyccel.decorators import types
 def np_sendrecv( sendbuf, dest, sendtag, recvbuf, source, recvtag ):
 
     comm = MPI.COMM_WORLD
-    ierr = -1
     recvbuf[:] = 0
 
     comm.Sendrecv( sendbuf, dest, sendtag, recvbuf, source, recvtag )
