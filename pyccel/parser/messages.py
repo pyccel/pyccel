@@ -54,7 +54,8 @@ IMPLICIT_GENERIC_ANY_BUILTIN = 'Implicit generic "Any". Use \'{}\' and specify g
 INCOMPATIBLE_TYPEVAR_VALUE = 'Value of type variable "{}" of {} cannot be {}'
 UNSUPPORTED_ARGUMENT_2_FOR_SUPER = 'Unsupported argument 2 for "super"'
 WRONG_NUMBER_OUTPUT_ARGS = 'Number of output arguments does not match number of provided variables'
-MULTIPLE_OUTPUT_CALL = 'This expression contains a function with multiple outputs and is not an assignment. It may not work correctly'
+INDEXED_TUPLE = 'Tuples must be indexed with constant integers for the type inference to work'
+LIST_OF_TUPLES = 'Cannot create list of non-homogeneous tuples'
 
 # sympy limitation
 SYMPY_RESTRICTION_DICT_KEYS = 'sympy does not allow dictionary keys to be strings'

@@ -51,7 +51,7 @@ script:
   - python -m pytest ../tests/codegen/pycode/test_pycode_codegen.py
   - python -m pytest ../tests/complexity/test_complexity.py
   - python -m pytest ../tests/epyccel -v -m "not parallel"
-  - python -m pytest ../tests/pyccel/test_pyccel.py -v
+  - python -m pytest ../tests/pyccel -v
   - mpirun -n 4 python -m pytest ../tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel
 #  - mpirun -n 4 python -m pytest ../tests/epyccel -v -m parallel
 # this test must be executed with python, since we are calling mpif90 inside it
@@ -67,6 +67,6 @@ script:
   - rm ${SITE_DIR}/pyccel_cov.pth
 
 after_script:
-  - bash <(curl -Ls https://coverage.codacy.com/get.sh)
+  - bash <(wget -q -O - https://coverage.codacy.com/get.sh)
   - cd -
   - rm -rf __pytest__

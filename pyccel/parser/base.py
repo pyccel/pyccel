@@ -119,7 +119,7 @@ from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros, Where, Linspace, Diag, Complex
-from pyccel.ast import inline, subs, create_variable, extract_subexpressions
+from pyccel.ast import inline, subs, extract_subexpressions
 
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
 from pyccel.ast.datatypes import sp_dtype, str_dtype

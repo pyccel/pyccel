@@ -47,18 +47,18 @@ from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import Product, Block
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
-                             Declare, ValuedVariable,
+                             TupleVariable, Declare, ValuedVariable,
                              FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
                              If, Nil, Is, IsNot)
 from pyccel.ast.core import create_variable
-from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip
+from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, NativeList
 from pyccel.ast.datatypes import NativeComplex, NativeReal, NativeInteger
-from pyccel.ast.datatypes import NativeRange, NativeTensor
+from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
@@ -157,7 +157,6 @@ class FCodePrinter(CodePrinter):
         self._additional_code = None
 
         self.prefix_module = prefix_module
-
 
     def set_current_function(self, name):
 
@@ -469,7 +468,7 @@ class FCodePrinter(CodePrinter):
         for f in expr.expr:
             if isinstance(f, str):
                 args.append("'{}'".format(f))
-            elif isinstance(f, Tuple):
+            elif isinstance(f, (Tuple, PythonTuple, TupleVariable)):
                 for i in f:
                     args.append("{}".format(self._print(i)))
             else:
@@ -542,6 +541,14 @@ class FCodePrinter(CodePrinter):
             arg = functools.reduce(operator.concat, expr)
             elements = ', '.join(self._print(i) for i in arg)
             return 'reshape(['+ elements + '], '+ self._print(Tuple(*shape)) + ')'
+        fs = ', '.join(self._print(f) for f in expr)
+        return '[{0}]'.format(fs)
+
+    def _print_PythonTuple(self, expr):
+        fs = ', '.join(self._print(f) for f in expr)
+        return '[{0}]'.format(fs)
+
+    def _print_TupleVariable(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
 
@@ -843,6 +850,9 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
+        if isinstance(expr.variable, TupleVariable) and not expr.variable.rank>1:
+            return '\n'.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+
         # ... TODO improve
         # Group the variables by intent
         var = expr.variable
@@ -858,7 +868,7 @@ class FCodePrinter(CodePrinter):
         is_static = expr.static
         intent = expr.intent
 
-        if isinstance(shape, tuple) and len(shape) ==1:
+        if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:
             shape = shape[0]
         # ...
 
@@ -882,6 +892,12 @@ class FCodePrinter(CodePrinter):
             else:
                 name = alias
             dtype = '{0}({1})'.format(sig, name)
+        elif isinstance(expr.dtype, NativeTuple):
+            # Non-homogenous NativeTuples must be stored in TupleVariable
+            if not expr.variable.is_homogeneous:
+                errors.report(LIST_OF_TUPLES,
+                              symbol=expr.variable, severity='error')
+            dtype = self._print(expr.variable[0].dtype)
         else:
             dtype = self._print(expr.dtype)
 
@@ -919,7 +935,7 @@ class FCodePrinter(CodePrinter):
             rankstr =  '({0}:{1}-1)'.format(self._print(s), self._print(shape))
             enable_alloc = False
 
-        elif ((rank > 0) and (isinstance(shape, (Tuple, tuple))) and
+        elif ((rank > 0) and (isinstance(shape, (PythonTuple, Tuple, tuple))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             #TODO fix bug when we inclue shape of type list
 
@@ -1027,17 +1043,21 @@ class FCodePrinter(CodePrinter):
 
 
     def _print_Assign(self, expr):
+        if isinstance(expr.lhs, TupleVariable) and isinstance(expr.rhs, (PythonTuple,TupleVariable)):
+            return '\n'.join(self._print_Assign(
+                        Assign(lhs,
+                                rhs,
+                                strict=expr.strict,
+                                status=expr.status,
+                                like=expr.like,
+                                )
+                        ) for lhs,rhs in zip(expr.lhs,expr.rhs))
 
         lhs_code = self._print(expr.lhs)
         is_procedure = False
         rhs = expr.rhs
         # we don't print Range, Tensor
         # TODO treat the case of iterable classes
-        if isinstance(rhs, Is):
-            errors.report(FOUND_IS_IN_ASSIGN, symbol=expr.lhs,
-                          severity='warning')
-            return self._print_Comment(Comment(str(expr)))
-
         if isinstance(rhs, NINF):
             rhs_code = '-Huge({0})'.format(lhs_code)
             return '{0} = {1}'.format(lhs_code, rhs_code)
@@ -1142,7 +1162,7 @@ class FCodePrinter(CodePrinter):
 
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
-            if isinstance(expr.lhs, (tuple, list, Tuple)):
+            if isinstance(expr.lhs, (tuple, list, Tuple, PythonTuple)):
 
                 name = type(rhs).__name__
                 rhs_code = self._print(name)
@@ -1576,7 +1596,7 @@ class FCodePrinter(CodePrinter):
         elif isinstance(op, DivOp):
             rhs = lhs / rhs
         else:
-            raise ValueError('Unrecongnized operation', op)
+            raise ValueError('Unrecognized operation', op)
 
         stmt = Assign(lhs, rhs, strict=strict, status=status, like=like)
         return self._print_Assign(stmt)

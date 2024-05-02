@@ -13,6 +13,7 @@ from sympy import Float
 from sympy import sympify
 from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
+from sympy.utilities.iterables          import iterable
 
 from .basic import Basic
 from .datatypes import default_precision
@@ -23,6 +24,7 @@ __all__ = (
     'Enumerate',
     'PythonFloat',
     'Int',
+    'PythonTuple',
     'Len',
     'List',
     'Map',
@@ -233,6 +235,60 @@ class Int(Function):
         prec  = printer(self.precision)
         code  = 'Int({0}, {1})'.format(value, prec)
         return code
+
+#==============================================================================
+class PythonTuple(Function):
+    """ Represents a call to Python's native tuple() function.
+    """
+    _iterable = True
+    _arg_dtypes = None
+    _is_homogeneous = False
+    def __new__(cls, args):
+        if not iterable(args):
+            args = [args]
+        args = tuple(args)
+
+        obj = Basic.__new__(cls, *args)
+
+        return obj
+
+    @property
+    def dtype(self):
+        return 'tuple'
+
+    @property
+    def shape(self):
+        return [len(self._args)]
+
+    @property
+    def rank(self):
+        return 1 if self.is_homogeneous else 0
+
+    def __getitem__(self,i):
+        return self._args[i]
+
+    def __iter__(self):
+        return self._args.__iter__()
+
+    def __len__(self):
+        return len(self._args)
+
+    @property
+    def is_homogeneous(self):
+        if (self._arg_dtypes is None):
+            raise RuntimeError("This function cannot be used until the type has been infered")
+        return self._is_homogeneous
+
+    def set_arg_types(self,d_vars):
+        self._arg_dtypes = d_vars
+        dtypes = [str(a['datatype']) for a in d_vars]
+        self._is_homogeneous = len(set(dtypes))==1
+
+    @property
+    def arg_types(self):
+        if (self._arg_dtypes is None):
+            raise RuntimeError("This function cannot be used until the type has been infered")
+        return self._arg_dtypes
 
 #==============================================================================
 class Len(Function):
