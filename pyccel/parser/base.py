@@ -12,6 +12,7 @@ from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import Import, AsName
+from pyccel.ast.core import create_incremented_string, create_variable
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
@@ -201,15 +202,11 @@ class Scope(object):
 
 class BasicParser(object):
 
-    """ Class for a base Parser."""
+    """ Class for a base Parser.
+    This class contains functions and properties which are common to SyntacticParser and SemanticParser
 
-    def __init__(self,
-                 debug=False,
-                 headers=None,
-                 static=None,
-                 show_traceback=False,
-                 output_folder=''):
-        """Parser constructor.
+    Parameters
+    ----------
 
         debug: bool
             True if in debug mode.
@@ -221,9 +218,15 @@ class BasicParser(object):
             a list of 'static' functions as strings
 
         show_traceback: bool
-            prints Tracebacke exception if True
+            prints Traceback exception if True
 
-        """
+    """
+
+    def __init__(self,
+                 debug=False,
+                 headers=None,
+                 static=None,
+                 show_traceback=False):
         self._fst = None
         self._ast = None
 
@@ -231,8 +234,7 @@ class BasicParser(object):
         self._metavars  = OrderedDict()
         self._namespace = Scope()
 
-
-        self._output_folder    = output_folder
+        self._used_names = None
 
         # represent the namespace of a function
 
@@ -242,6 +244,9 @@ class BasicParser(object):
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
         self._semantic_done = False
+
+        # the next expected Dummy variable
+        self._dummy_counter = 1
 
         # current position for errors
 
@@ -334,6 +339,60 @@ class BasicParser(object):
     def show_traceback(self):
         return self._show_traceback
 
+    @property
+    def used_names(self):
+        """Returns a set of all names used in the current file.
+        The set is used to prevent name collisions when creating new variables
+        """
+        return self._used_names
+
+    def get_new_name(self, current_name = None):
+        """
+        Creates a new name. A current_name can be provided indicating the name the
+        user would like to use if possible. If this name is not available then it
+        will be used as a prefix for the new name.
+        If no current_name is provided, then the standard prefix is used, and the
+        dummy counter is used and updated to facilitate finding the next value of
+        this common case
+
+          Parameters
+          ----------
+          current_name : str
+
+          Returns
+          -------
+          new_name     : str
+        """
+        if current_name is not None and current_name not in self.used_names:
+            self.used_names.add(current_name)
+            return current_name
+
+        if current_name is not None:
+            new_name, self._dummy_counter = create_incremented_string(self.used_names, prefix = current_name, counter = self._dummy_counter)
+        else:
+            new_name,_ = create_incremented_string(self.used_names, prefix = current_name)
+        return new_name
+
+    def get_new_variable(self, prefix = None):
+        """
+        Creates a new sympy Symbol using the prefix provided. If this prefix is None,
+        then the standard prefix is used, and the dummy counter is used and updated
+        to facilitate finding the next value of this common case
+
+          Parameters
+          ----------
+          prefix   : str
+
+          Returns
+          -------
+          variable : sympy.Symbol
+        """
+        if prefix is not None:
+            var,_ = create_variable(self._used_names, prefix)
+        else:
+            var, self._dummy_counter = create_variable(self._used_names, prefix, counter = self._dummy_counter)
+        return var
+
     # TODO shall we need to export the Parser too?
 
 
@@ -409,41 +468,6 @@ class BasicParser(object):
         for (k, v) in self.namespace.items():
             print ('{var} \t :: \t {dtype}'.format(var=k, dtype=type(v)))
         print ('-------------------------')
-
-    def view_namespace(self, entry):
-
-        # TODO improve
-
-        try:
-            from tabulate import tabulate
-
-            table = []
-            for (k, v) in self.namespace[entry].items():
-                k_str = '{}'.format(k)
-                if entry == 'imports':
-                    if v is None:
-                        v_str = '*'
-                    else:
-                        v_str = '{}'.format(v)
-                elif entry == 'variables':
-                    v_str = '{}'.format(type(v))
-                else:
-                    raise NotImplementedError('TODO')
-
-                line = [k_str, v_str]
-                table.append(line)
-            headers = ['module', 'target']
-
-#            txt = tabulate(table, headers, tablefmt="rst")
-
-            txt = tabulate(table, tablefmt='rst')
-            print (txt)
-        except NotImplementedError:
-
-            print ('------- namespace.{} -------'.format(entry))
-            for (k, v) in self.namespace[entry].items():
-                print ('{var} \t :: \t {value}'.format(var=k, value=v))
-            print ('-------------------------')
 
     def _visit(self, expr, **settings):
         raise NotImplementedError('Must be implemented by the extension')

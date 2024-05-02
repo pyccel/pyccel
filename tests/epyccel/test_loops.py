@@ -6,17 +6,6 @@ from pyccel.epyccel import epyccel
 from modules        import loops
 from conftest       import *
 
-@pytest.fixture( params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.c]
-        )
-    ],
-    scope='module'
-)
-def language(request):
-    return request.param
-
 #==============================================================================
 
 def test_sum_natural_numbers(language):
@@ -31,6 +20,26 @@ def test_factorial(language):
 
 def test_fibonacci(language):
     f1 = loops.fibonacci
+    f2 = epyccel( f1, language = language, verbose = True )
+    assert f1( 42 ) == f2( 42 )
+
+def test_sum_nat_numbers_while(language):
+    f1 = loops.sum_nat_numbers_while
+    f2 = epyccel( f1, language = language, verbose = True )
+    assert f1( 42 ) == f2( 42 )
+
+def test_factorial_while(language):
+    f1 = loops.factorial_while
+    f2 = epyccel( f1, language = language, verbose = True )
+    assert f1( 10 ) == f2( 10 )
+
+def test_double_while_sum(language):
+    f1 = loops.double_while_sum
+    f2 = epyccel( f1, language = language, verbose = True )
+    assert f1( 10, 10 ) == f2( 10, 10 )
+
+def test_fibonacci_while(language):
+    f1 = loops.fibonacci_while
     f2 = epyccel( f1, language = language, verbose = True )
     assert f1( 42 ) == f2( 42 )
 

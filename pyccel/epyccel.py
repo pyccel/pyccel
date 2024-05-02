@@ -63,8 +63,14 @@ def epyccel_seq(function_or_module,
     if isinstance(function_or_module, FunctionType):
         pyfunc = function_or_module
         code = get_source_function(pyfunc)
+
         tag = random_string(8)
         module_name = 'mod_{}'.format(tag)
+
+        while module_name in sys.modules.keys():
+            tag = random_string(8)
+            module_name = 'mod_{}'.format(tag)
+
         pymod_filename = '{}.py'.format(module_name)
         pymod_filepath = os.path.abspath(pymod_filename)
 
@@ -74,7 +80,12 @@ def epyccel_seq(function_or_module,
         pymod_filename = os.path.basename(pymod_filepath)
         lines = inspect.getsourcelines(pymod)[0]
         code = ''.join(lines)
+
         tag = random_string(8)
+        module_import_prefix = pymod.__name__ + '_'
+        while module_import_prefix + tag in sys.modules.keys():
+            tag = random_string(n=8)
+
         module_name = pymod.__name__.split('.')[-1] + '_' + tag
 
     else:

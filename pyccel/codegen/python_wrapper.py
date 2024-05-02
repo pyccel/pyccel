@@ -6,6 +6,7 @@ import os
 import glob
 
 from pyccel.ast.f2py                import as_static_function_call
+from pyccel.ast.core                import SeparatorComment
 from pyccel.codegen.printing.fcode  import fcode
 from .utilities import language_extension
 from .cwrapper import create_c_wrapper, create_c_setup
@@ -196,8 +197,9 @@ def create_shared_library(codegen,
         # Construct f2py interface for assembly and write it to file f2py_MOD.f90
         # be careful: because of f2py we must use lower case
         funcs = codegen.routines + codegen.interfaces
+        sep = fcode(SeparatorComment(40), codegen.parser)
         f2py_funcs = [as_static_function_call(f, module_name, name=f.name) for f in funcs]
-        f2py_code = '\n\n'.join([fcode(f, codegen.parser) for f in f2py_funcs])
+        f2py_code = '\n'.join([sep + fcode(f, codegen.parser) + sep for f in f2py_funcs])
         f2py_filename = 'f2py_{}.f90'.format(module_name)
 
         with open(f2py_filename, 'w') as f:

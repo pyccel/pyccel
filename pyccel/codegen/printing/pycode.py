@@ -106,7 +106,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         txt = self._print(expr.text)
         return '# {0} '.format(txt)
 
-    def _print_EmptyLine(self, expr):
+    def _print_EmptyNode(self, expr):
         return ''
 
     def _print_NewLine(self, expr):

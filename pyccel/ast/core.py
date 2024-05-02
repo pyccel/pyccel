@@ -96,7 +96,7 @@ __all__ = (
     'DoConcurrent',
     'DottedName',
     'DottedVariable',
-    'EmptyLine',
+    'EmptyNode',
     'ErrorExit',
     'Eval',
     'Exit',
@@ -156,7 +156,7 @@ __all__ = (
     '_atomic',
 #    'allocatable_like',
     'create_variable',
-    'create_random_string',
+    'create_incremented_string',
     'extract_subexpressions',
 #    'float2int',
     'get_assigned_symbols',
@@ -210,11 +210,28 @@ def broadcast(shape_1, shape_2):
             errors.report(msg,severity='fatal')
     return tuple(new_shape)
 
+def handle_precedence(args, my_precedence):
+    precedence = [getattr(a, 'precedence', 17) for a in args]
+
+    if min(precedence) <= my_precedence:
+
+        new_args = []
+
+        for i, (a,p) in enumerate(zip(args, precedence)):
+            if (p < my_precedence or (p == my_precedence and i != 0)):
+                new_args.append(PyccelAssociativeParenthesis(a))
+            else:
+                new_args.append(a)
+        args = tuple(new_args)
+
+    return args
+
 class PyccelOperator(Expr, PyccelAstNode):
 
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
             return
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
         reals     = [a for a in args if a.dtype is NativeReal()]
@@ -260,18 +277,24 @@ class PyccelOperator(Expr, PyccelAstNode):
                 self._rank  = max(a.rank for a in args)
                 self._shape = [None]*self._rank
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelPow(PyccelOperator):
-    p = 4
+    _precedence  = 15
 class PyccelAdd(PyccelOperator):
-    p = 1
+    _precedence = 12
 class PyccelMul(PyccelOperator):
-    p = 2
+    _precedence = 13
 class PyccelMinus(PyccelAdd):
     pass
 class PyccelDiv(PyccelOperator):
-    p = 2
+    _precedence = 13
     def __init__(self, *args):
+
         if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
             return
 
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
@@ -307,15 +330,19 @@ class PyccelDiv(PyccelOperator):
             self._shape = [None]*self._rank
 
 class PyccelMod(PyccelOperator):
-    p = 2
+    _precedence = 13
 class PyccelFloorDiv(PyccelOperator):
-    p = 2
+    _precedence = 13
 
 class PyccelBooleanOperator(Expr, PyccelAstNode):
+    _precedence = 7
 
     def __init__(self, *args):
+
         if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
             return
+
         self._dtype = NativeBool()
         self._precision = default_precision['bool']
         
@@ -337,6 +364,10 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
             self._rank = max(a.rank for a in args)
             self._shape = [None]*self._rank
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelEq(PyccelBooleanOperator):
     pass
 class PyccelNe(PyccelBooleanOperator):
@@ -351,6 +382,7 @@ class PyccelGe(PyccelBooleanOperator):
     pass
 
 class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
+    _precedence = 18
     def __init__(self, a):
         if self.stage == 'syntactic':
             return
@@ -359,32 +391,74 @@ class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
         self._precision = a.precision
         self._shape     = a.shape
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelUnary(Expr, PyccelAstNode):
+    _precedence = 14
+
     def __init__(self, a):
+
         if self.stage == 'syntactic':
+            if (getattr(a, 'precedence', 17) <= self.precedence):
+                a = PyccelAssociativeParenthesis(a)
+                self._args = (a,)
             return
+
         self._dtype     = a.dtype
         self._rank      = a.rank
         self._precision = a.precision
         self._shape     = a.shape
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class PyccelAnd(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 5
+
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class PyccelOr(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 4
+
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class PyccelNot(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 6
+
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class Is(Basic, PyccelAstNode):
 
@@ -402,9 +476,11 @@ class Is(Basic, PyccelAstNode):
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 7
 
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
 
     @property
     def lhs(self):
@@ -413,6 +489,10 @@ class Is(Basic, PyccelAstNode):
     @property
     def rhs(self):
         return self._args[1]
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 
 class IsNot(Basic, PyccelAstNode):
@@ -432,9 +512,11 @@ class IsNot(Basic, PyccelAstNode):
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 7
 
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
 
     @property
     def lhs(self):
@@ -443,6 +525,10 @@ class IsNot(Basic, PyccelAstNode):
     @property
     def rhs(self):
         return self._args[1]
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 
 Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot)
@@ -681,7 +767,7 @@ def extract_subexpressions(expr):
             return args
 
         else:
-            raise TypeError('statment {} not supported yet'.format(type(expr)))
+            raise TypeError('statement {} not supported yet'.format(type(expr)))
 
 
     new_expr  = substitute(expr)
@@ -733,23 +819,79 @@ def int2float(expr):
 def float2int(expr):
     return expr
 
-def create_random_string(expr):
-    import numpy as np
-    try:
-        randstr = str(abs(hash(expr)
-                                  + np.random.randint(500)))[-4:]
-    except TypeError:
-        # Catch unhashable type (e.g. list, FunctionalSum)
-        randstr = str(abs(np.random.randint(10000)))[-4:]
-    return randstr
+def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
+    """This function takes a prefix and a counter and uses them to construct
+    a new name of the form:
+            prefix_counter
+    Where counter is formatted to fill 4 characters
+    The new name is checked against a list of forbidden expressions. If the
+    constructed name is forbidden then the counter is incremented until a valid
+    name is found
 
-def create_variable(expr):
-    """."""
+      Parameters
+      ----------
+      forbidden_exprs : Set
+                        A set of all the values which are not valid solutions to this problem
+      prefix          : str
+                        The prefix used to begin the string
+      counter         : int
+                        The expected value of the next name
 
-    import numpy as np
-    name = 'Dummy_' + create_random_string(expr)
+      Returns
+      ----------
+      name            : str
+                        The incremented string name
+      counter         : int
+                        The expected value of the next name
 
-    return Symbol(name)
+    """
+    assert(isinstance(forbidden_exprs, set))
+    nDigits = 4
+
+    if prefix is None:
+        prefix = 'Dummy'
+
+    name_format = "{prefix}_{counter:0="+str(nDigits)+"d}"
+    name = name_format.format(prefix=prefix, counter = counter)
+    counter += 1
+    while name in forbidden_exprs:
+        name = name_format.format(prefix=prefix, counter = counter)
+        counter += 1
+
+    forbidden_exprs.add(name)
+
+    return name, counter
+
+def create_variable(forbidden_names, prefix = None, counter = 1):
+    """This function takes a prefix and a counter and uses them to construct
+    a Symbol with a name of the form:
+            prefix_counter
+    Where counter is formatted to fill 4 characters
+    The new name is checked against a list of forbidden expressions. If the
+    constructed name is forbidden then the counter is incremented until a valid
+    name is found
+
+      Parameters
+      ----------
+      forbidden_exprs : Set
+                        A set of all the values which are not valid solutions to this problem
+      prefix          : str
+                        The prefix used to begin the string
+      counter         : int
+                        The expected value of the next name
+
+      Returns
+      ----------
+      name            : sympy.Symbol
+                        A sympy Symbol with the incremented string name
+      counter         : int
+                        The expected value of the next name
+
+    """
+
+    name, counter = create_incremented_string(forbidden_names, prefix, counter = counter)
+
+    return Symbol(name), counter
 
 class DottedName(Basic):
 
@@ -1796,52 +1938,20 @@ class Program(Basic):
     declarations: list
         list of declarations of the variables that appear in the block.
 
-    funcs: list
-        a list of FunctionDef instances
-
-    classes: list
-        a list of ClassDef instances
-
     body: list
         a list of statements
 
     imports: list, tuple
         list of needed imports
 
-    modules: list, tuple
-        list of needed modules
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable, Assign
-    >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> z = Variable('real', 'z')
-    >>> t = Variable('real', 't')
-    >>> a = Variable('real', 'a')
-    >>> b = Variable('real', 'b')
-    >>> body = [Assign(y,x+a)]
-    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
-    >>> attributs   = [x,y]
-    >>> methods     = [translate]
-    >>> Point = ClassDef('Point', attributs, methods)
-    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
-    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
-    >>> Module('my_module', [], [incr, decr], [Point])
-    Module(my_module, [], [FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function), FunctionDef(decr, (x,), (y,), [y := -1 + x], [], [], None, False, function)], [ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])])
     """
 
     def __new__(
         cls,
         name,
         variables,
-        funcs,
-        interfaces,
-        classes,
         body,
         imports=[],
-        modules=[],
         ):
 
         if not isinstance(name, str):
@@ -1854,57 +1964,22 @@ class Program(Basic):
             if not isinstance(i, Variable):
                 raise TypeError('Only a Variable instance is allowed.')
 
-        if not iterable(funcs):
-            raise TypeError('funcs must be an iterable')
-        for i in funcs:
-            if not isinstance(i, FunctionDef):
-                raise TypeError('Only a FunctionDef instance is allowed.'
-                                )
-
-        if not iterable(interfaces):
-            raise TypeError('interfaces must be an iterable')
-        for i in interfaces:
-            if not isinstance(i, Interface):
-                raise TypeError('Only a Interface instance is allowed.')
-
         if not iterable(body):
             raise TypeError('body must be an iterable')
         body = CodeBlock(body)
 
-        if not iterable(classes):
-            raise TypeError('classes must be an iterable')
-        for i in classes:
-            if not isinstance(i, ClassDef):
-                raise TypeError('Only a ClassDef instance is allowed.')
-
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        for i in funcs:
-            imports += i.imports
-        for i in classes:
-            imports += i.imports
         imports = set(imports)  # for unicity
         imports = Tuple(*imports, sympify=False)
-
-        if not iterable(modules):
-            raise TypeError('modules must be an iterable')
-
-        # TODO
-#        elif isinstance(stmt, list):
-#            for s in stmt:
-#                body += printer(s) + "\n"
 
         return Basic.__new__(
             cls,
             name,
             variables,
-            funcs,
-            interfaces,
-            classes,
             body,
             imports,
-            modules,
             )
 
     @property
@@ -1916,28 +1991,12 @@ class Program(Basic):
         return self._args[1]
 
     @property
-    def funcs(self):
+    def body(self):
         return self._args[2]
 
     @property
-    def interfaces(self):
-        return self._args[3]
-
-    @property
-    def classes(self):
-        return self._args[4]
-
-    @property
-    def body(self):
-        return self._args[5]
-
-    @property
     def imports(self):
-        return self._args[6]
-
-    @property
-    def modules(self):
-        return self._args[7]
+        return self._args[3]
 
     @property
     def declarations(self):
@@ -2747,7 +2806,13 @@ class TupleVariable(Variable):
         Variable.__init__(self, dtype, name, *args, **kwargs)
 
     def get_vars(self):
-        return self._vars
+        if self._is_homogeneous:
+            indexed_var = IndexedVariable(self, dtype=self.dtype, shape=self.shape,
+                prec=self.precision, order=self.order, rank=self. rank)
+            args = [Slice(None,None)]*(self.rank-1)
+            return [indexed_var[args + [i]] for i in range(len(self._vars))]
+        else:
+            return self._vars
 
     def get_var(self, variable_idx):
         return self._vars[variable_idx]
@@ -4286,9 +4351,13 @@ class Del(Basic):
         return self._args[0]
 
 
-class EmptyLine(Basic):
-
-    """Represents a EmptyLine in the code.
+class EmptyNode(Basic):
+    """
+    Represents an empty node in the abstract syntax tree (AST).
+    When a subtree is removed from the AST, we replace it with an EmptyNode
+    object that acts as a placeholder. Using an EmptyNode instead of None
+    is more explicit and avoids confusion. Further, finding a None in the AST
+    is signal of an internal bug.
 
     Parameters
     ----------
@@ -4297,8 +4366,8 @@ class EmptyLine(Basic):
 
     Examples
     --------
-    >>> from pyccel.ast.core import EmptyLine
-    >>> EmptyLine()
+    >>> from pyccel.ast.core import EmptyNode
+    >>> EmptyNode()
 
     """
 
@@ -4523,8 +4592,12 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
 
     def __getitem__(self, *args):
 
+        if len(args) == 1 and isinstance(args[0], (Tuple, tuple, list)):
+            args = args[0]
+
         if self.shape and len(self.shape) != len(args):
             raise IndexError('Rank mismatch.')
+
         obj = IndexedElement(self, *args)
         return obj
 
@@ -4632,6 +4705,8 @@ class IndexedElement(Expr, PyccelAstNode):
             raise TypeError('Undefined datatype')
 
         if shape is not None:
+            if self.order == 'C':
+                shape = shape[::-1]
             new_shape = []
             for a,s in zip(args, shape):
                 if isinstance(a, Slice):

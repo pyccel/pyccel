@@ -119,7 +119,7 @@ def execute_pyccel(fname, *,
 
     # Parse Python file
     try:
-        parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'), show_traceback=verbose)
+        parser = Parser(pymod_filepath, show_traceback=verbose)
         parser.parse(verbose=verbose)
     except NotImplementedError as error:
         msg = str(error)
@@ -128,7 +128,7 @@ def execute_pyccel(fname, *,
     except PyccelError:
         handle_error('parsing (syntax)')
         raise
-    if errors.is_errors():
+    if errors.has_errors():
         handle_error('parsing (syntax)')
         raise PyccelSyntaxError('Syntax step failed')
 
@@ -146,7 +146,7 @@ def execute_pyccel(fname, *,
     except PyccelError:
         handle_error('annotation (semantic)')
         raise
-    if errors.is_errors():
+    if errors.has_errors():
         handle_error('annotation (semantic)')
         raise PyccelSemanticError('Semantic step failed')
 
@@ -175,9 +175,12 @@ def execute_pyccel(fname, *,
         except PyccelError:
             handle_error('code generation')
             raise
-        if errors.is_errors():
+        if errors.has_errors():
             handle_error('code generation')
             raise PyccelCodegenError('Code generation failed')
+
+        if errors.has_warnings():
+            errors.check()
 
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively

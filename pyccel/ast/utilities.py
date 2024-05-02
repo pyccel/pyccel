@@ -4,9 +4,9 @@
 import inspect
 
 from sympy.core.function import Application
-from sympy import Not, Float
+from sympy import Not
 from sympy import Function
-import scipy.constants as sc_constants
+from numpy import pi
 
 from pyccel.symbolic import lambdify
 
@@ -81,6 +81,8 @@ numpy_functions = {
     'complex64' : Complex64,
     'matmul'    : Matmul,
     'sum'       : NumpySum,
+    'max'      : NumpyMax,
+    'min'      : NumpyMin,
     'prod'      : Prod,
     'product'   : Prod,
     'linspace'  : Linspace,
@@ -141,7 +143,7 @@ builtin_functions_dict = {
 }
 
 scipy_constants = {
-    'pi': Constant('real', 'pi', value=sc_constants.pi),
+    'pi': Constant('real', 'pi', value=pi),
                   }
 
 #==============================================================================
@@ -289,4 +291,3 @@ def split_positional_keyword_arguments(*args):
         kwargs[key] = value
 
     return args, kwargs
-

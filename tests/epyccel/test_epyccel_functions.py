@@ -13,6 +13,57 @@ def clean_test():
     shutil.rmtree('__pycache__', ignore_errors=True)
     shutil.rmtree('__epyccel__', ignore_errors=True)
 
+def test_func_no_args_1(language):
+    '''test function with return value but no args'''
+    def free_gift():
+        gift = 10
+        return gift
+
+    c_gift = epyccel(free_gift, language=language)
+    assert c_gift() == free_gift()
+    assert isinstance(c_gift(), type(free_gift()))
+    unexpected_arg = 0
+    with pytest.raises(TypeError):
+        c_gift(unexpected_arg)
+
+def test_func_no_args_2(language):
+    '''test function with negative return value but no args'''
+    def p_lose():
+        lose = -10
+        return lose
+
+    c_lose = epyccel(p_lose, language=language)
+    assert c_lose() == p_lose()
+    assert isinstance(c_lose(), type(p_lose()))
+    unexpected_arg = 0
+    with pytest.raises(TypeError):
+        c_lose(unexpected_arg)
+
+def test_func_no_return_1(language):
+    '''Test function with args and no return '''
+    @types(int)
+    def p_func(x):
+        x *= 2
+
+    c_func = epyccel(p_func, language=language)
+    x = np.random.randint(100)
+    assert c_func(x) == p_func(x)
+    # Test type return sould be NoneType
+    x = np.random.randint(100)
+    assert isinstance(c_func(x), type(p_func(x)))
+
+def test_func_no_return_2(language):
+    '''Test function with no args and no return '''
+    def p_func():
+        x = 2
+        x *= 2
+
+    c_func = epyccel(p_func, language=language)
+    assert c_func() == p_func()
+    assert isinstance(c_func(), type(p_func()))
+    unexpected_arg = 0
+    with pytest.raises(TypeError):
+        c_func(unexpected_arg)
 
 def test_func_no_args_f1():
     def f1():

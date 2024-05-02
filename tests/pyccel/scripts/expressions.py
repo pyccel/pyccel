@@ -15,6 +15,7 @@ a10 = 1.*10j
 b1 = 1-1-2-4-5
 b2 = 1-1-2j-4.-5
 b3 = 1-1-2j-5
+b4 = 1-(1-1)
 
 c1 = 2**2
 c2 = 2**2.
@@ -50,6 +51,18 @@ e4 = 2 * 4 + 3**4 - 3*5**3//2
 e5 = (1%16.032/16.032//25.9948+25.9948*25.99-(25.9-33.74//33.746134%33.746139653844324-33.7464%36.13899562242578)-36.13899562242578*\
      (36.1389-36.138*6.133%6.1332**6.1332%6.1332)%(11.57607+11.5747*11.5760-11.57609-22.9+ 100//6//2.//3)**(0.5))**(3/4 + 3//2)
 
+x = 10
+y = 4
+g1 = (x==10 or y==10) and (x==20 or y== 20)
+g2 = True or True and False
+g3 = not True or True and False
+g4 = not (True or True and False)
+g5 = True and True or False
+g6 = x==1 or y == 3 or x == 7 or y == 4
+g7 = x==10 and y == 4 and x == 7
+g8 = True and True or False and False
+g9 = False or True and False or True
+
 print(a1)
 print(a2)
 print(a3)
@@ -64,6 +77,7 @@ print(a10)
 print(b1)
 print(b2)
 print(b3)
+print(b4)
 
 print(c1)
 print(c2)
@@ -98,4 +112,12 @@ print(f10)
 print(f11)
 print(f12)
 
-
+print(g1)
+print(g2)
+print(g3)
+print(g4)
+print(g5)
+print(g6)
+print(g7)
+print(g8)
+print(g9)

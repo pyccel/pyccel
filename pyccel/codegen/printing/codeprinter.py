@@ -57,10 +57,10 @@ class CodePrinter(StrPrinter):
             expr = _sympify(expr)
 
         # Do the actual printing
-        lines = self._print(expr).splitlines()
+        lines = self._print(expr).splitlines(True)
 
         # Format the output
-        return "\n".join(self._format_code(lines))
+        return ''.join(self._format_code(lines))
 
 
 

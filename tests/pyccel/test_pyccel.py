@@ -337,9 +337,9 @@ def test_bool():
 #------------------------------------------------------------------------------
 def test_expressions():
     types = [float, complex, int, float, float, int] + [float]*3 + \
-            [complex, int, complex, complex, int, float] + [complex]*3 + \
+            [complex, int, complex, complex, int, int, float] + [complex]*3 + \
             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
-            [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex]
+            [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
     pyccel_test("scripts/expressions.py",
                 output_dtype = types)
 
@@ -399,7 +399,9 @@ def test_hope_benchmarks( test_file ):
                                         "scripts/import_syntax/import_mod_func.py",
                                         "scripts/import_syntax/import_mod_as_func.py",
                                         "scripts/import_syntax/collisions.py",
-                                        "scripts/import_syntax/collisions3.py"
+                                        "scripts/import_syntax/collisions3.py",
+                                        "scripts/import_syntax/collisions5.py",
+                                        "scripts/import_syntax/collisions6.py",
                                         ] )
 def test_import_syntax( test_file ):
     pyccel_test(test_file)

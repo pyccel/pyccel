@@ -58,3 +58,13 @@ def test_module_2():
 
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
+
+def test_module_3(language):
+    import modules.call_user_defined_funcs as mod
+
+    modnew = epyccel(mod, language=language)
+
+    r = 4.5
+    x_expected = mod.circle_volume(r)
+    x = modnew.circle_volume(r)
+    assert np.isclose( x, x_expected, rtol=1e-14, atol=1e-14 )

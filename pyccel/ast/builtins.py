@@ -194,8 +194,9 @@ class PythonTuple(Expr, PyccelAstNode):
     def __init__(self, *args):
         if self.stage == 'syntactic' or len(args) == 0:
             return
-        is_homogeneous = all(args[0].dtype==a.dtype for a in args[1:])
-        is_homogeneous = is_homogeneous and all(args[0].rank==a.rank   for a in args[1:])
+        is_homogeneous = all(a.dtype is not NativeGeneric() and \
+                             args[0].dtype == a.dtype and \
+                             args[0].rank  == a.rank  for a in args[1:])
         self._inconsistent_shape = not all(args[0].shape==a.shape   for a in args[1:])
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
@@ -228,7 +229,7 @@ class PythonTuple(Expr, PyccelAstNode):
                 shapes = [a.shape for a in args]
                 
                 if all(sh is not None for sh in shapes):
-                    self._shape = (len(args), ) + shapes[0]
+                    self._shape = (Integer(len(args)), ) + shapes[0]
                     self._rank  = len(self._shape)
                 else:
                     self._rank = max(a.rank for a in args) + 1
@@ -236,7 +237,7 @@ class PythonTuple(Expr, PyccelAstNode):
             self._rank      = max(a.rank for a in args) + 1
             self._dtype     = NativeGeneric()
             self._precision = 0
-            self._shape     = (len(args), ) + args[0].shape
+            self._shape     = (Integer(len(args)), ) + args[0].shape
 
     def __getitem__(self,i):
         return self._args[i]

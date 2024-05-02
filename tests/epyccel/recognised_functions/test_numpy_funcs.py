@@ -27,7 +27,6 @@ from conftest import *
 #    complex128
 #    complex64
 #    matmul
-#    sum
 #    prod
 #    product
 #    linspace
@@ -473,6 +472,27 @@ def test_shape_indexed():
     def test_shape_2d(f):
         from numpy import shape
         a = shape(f)
+        return a[0], a[1]
+
+    from numpy import empty
+    f1 = epyccel(test_shape_1d)
+    f2 = epyccel(test_shape_2d)
+    n1 = randint(20)
+    n2 = randint(20)
+    n3 = randint(20)
+    x1 = empty(n1,dtype = int)
+    x2 = empty((n2,n3), dtype = int)
+    assert(f1(x1) == test_shape_1d(x1))
+    assert(f2(x2) == test_shape_2d(x2))
+
+def test_shape_property():
+    @types('int[:]')
+    def test_shape_1d(f):
+        return f.shape[0]
+
+    @types('int[:,:]')
+    def test_shape_2d(f):
+        a = f.shape
         return a[0], a[1]
 
     from numpy import empty
@@ -1503,3 +1523,127 @@ def test_randint_expr():
     assert(all([yi >= 42 for yi in y]))
     assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
+
+def test_sum_int():
+    @types('int[:]')
+    def sum_call(x):
+        from numpy import sum as np_sum
+        return np_sum(x)
+
+    f1 = epyccel(sum_call)
+    x = randint(99,size=10)
+    assert(f1(x) == sum_call(x))
+
+def test_sum_real():
+    @types('real[:]')
+    def sum_call(x):
+        from numpy import sum as np_sum
+        return np_sum(x)
+
+    f1 = epyccel(sum_call)
+    x = rand(10)
+    assert(isclose(f1(x), sum_call(x), rtol=1e-15, atol=1e-15))
+
+def test_sum_phrase():
+    @types('real[:]','real[:]')
+    def sum_phrase(x,y):
+        from numpy import sum as np_sum
+        a = np_sum(x)*np_sum(y)
+        return a
+
+    f2 = epyccel(sum_phrase)
+    x = rand(10)
+    y = rand(15)
+    assert(isclose(f2(x,y), sum_phrase(x,y), rtol=1e-15, atol=1e-15))
+
+def test_sum_property():
+    @types('int[:]')
+    def sum_call(x):
+        return x.sum()
+
+    f1 = epyccel(sum_call)
+    x = randint(99,size=10)
+    assert(f1(x) == sum_call(x))
+
+def test_min_int():
+    @types('int[:]')
+    def min_call(x):
+        from numpy import min as np_min
+        return np_min(x)
+
+    f1 = epyccel(min_call)
+    x = randint(99,size=10)
+    assert(f1(x) == min_call(x))
+
+def test_min_real():
+    @types('real[:]')
+    def min_call(x):
+        from numpy import min as np_min
+        return np_min(x)
+
+    f1 = epyccel(min_call)
+    x = rand(10)
+    assert(isclose(f1(x), min_call(x), rtol=1e-15, atol=1e-15))
+
+def test_min_phrase():
+    @types('real[:]','real[:]')
+    def min_phrase(x,y):
+        from numpy import min as np_min
+        a = np_min(x)*np_min(y)
+        return a
+
+    f2 = epyccel(min_phrase)
+    x = rand(10)
+    y = rand(15)
+    assert(isclose(f2(x,y), min_phrase(x,y), rtol=1e-15, atol=1e-15))
+
+def test_min_property():
+    @types('int[:]')
+    def min_call(x):
+        return x.min()
+
+    f1 = epyccel(min_call)
+    x = randint(99,size=10)
+    assert(f1(x) == min_call(x))
+
+def test_max_int():
+    @types('int[:]')
+    def max_call(x):
+        from numpy import max as np_max
+        return np_max(x)
+
+    f1 = epyccel(max_call)
+    x = randint(99,size=10)
+    assert(f1(x) == max_call(x))
+
+def test_max_real():
+    @types('real[:]')
+    def max_call(x):
+        from numpy import max as np_max
+        return np_max(x)
+
+    f1 = epyccel(max_call)
+    x = rand(10)
+    assert(isclose(f1(x), max_call(x), rtol=1e-15, atol=1e-15))
+
+def test_max_phrase():
+    @types('real[:]','real[:]')
+    def max_phrase(x,y):
+        from numpy import max as np_max
+        a = np_max(x)*np_max(y)
+        return a
+
+    f2 = epyccel(max_phrase)
+    x = rand(10)
+    y = rand(15)
+    assert(isclose(f2(x,y), max_phrase(x,y), rtol=1e-15, atol=1e-15))
+
+def test_max_property():
+    @types('int[:]')
+    def max_call(x):
+        return x.max()
+
+    f1 = epyccel(max_call)
+    x = randint(99,size=10)
+    assert(f1(x) == max_call(x))
+

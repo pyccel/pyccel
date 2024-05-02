@@ -30,6 +30,21 @@ __all__ = [
         'tuples_inhomogeneous_have_pointers',
         'tuples_homogeneous_copies_have_pointers',
         'tuples_inhomogeneous_copies_have_pointers',
+        'tuples_mul_homogeneous',
+        'tuples_mul_inhomogeneous',
+        'tuples_mul_homogeneous_2d',
+        'tuples_mul_mixed_homogeneous_2d',
+        'tuples_mul_inhomogeneous_2d',
+        'tuples_add_homogeneous',
+        'tuples_add_homogeneous_variables',
+        'tuples_add_homogeneous_with_variables',
+        'tuples_add_inhomogeneous',
+        'tuples_add_inhomogeneous_variables',
+        'tuples_add_inhomogeneous_with_variables',
+        'tuples_add_mixed_homogeneous',
+        'tuples_add_mixed_homogeneous_variables',
+        'tuples_add_mixed_homogeneous_with_variables',
+        'tuples_2d_sum',
         ]
 
 def homogenous_tuple_int():
@@ -65,8 +80,8 @@ def inhomogenous_tuple_3():
     return ai[0], ai[1], ai[2]
 
 def inhomogenous_tuple_2_levels_1():
-    ai = ((1,2), (4,False))
-    return ai[0][0], ai[0][1], ai[1][0], ai[1][1]
+    ai = ((1,2), (4,False), (3.0, 'boo'))
+    return ai[0][0], ai[0][1], ai[1][0], ai[1][1], ai[2][0]
 
 def inhomogenous_tuple_2_levels_2():
     ai = ((0,1,2), (True,False,True))
@@ -210,3 +225,81 @@ def tuples_inhomogeneous_copies_have_pointers():
     d = c
     a[1] = 4
     return d[0][0], d[0][1], d[1][0], d[1][1], d[1][2]
+
+def tuples_mul_homogeneous():
+    a = (1,2,3)
+    b = a*2
+    return b[0], b[1], b[2], b[3], b[4], b[5]
+
+def tuples_mul_inhomogeneous():
+    a = (1,False)
+    b = a*3
+    return b[0], b[1], b[2], b[3], b[4], b[5]
+
+def tuples_mul_homogeneous_2d():
+    a= ((1,2), (3,4), (5,6))
+    b = a*2
+    return b[0][0], b[0][1], b[1][0], b[1][1], b[2][0], b[2][1], \
+            b[3][0], b[3][1], b[4][0], b[4][1], b[5][0], b[5][1]
+
+def tuples_mul_mixed_homogeneous_2d():
+    a= ((1,2), (True,False), (5,6))
+    b = a*2
+    return b[0][0], b[0][1], b[1][0], b[1][1], b[2][0], b[2][1], \
+            b[3][0], b[3][1], b[4][0], b[4][1], b[5][0], b[5][1]
+
+def tuples_mul_inhomogeneous_2d():
+    a= ((1,False), (3.0,False), (True,6))
+    b = a*2
+    return b[0][0], b[0][1], b[1][0], b[1][1], b[2][0], b[2][1], \
+            b[3][0], b[3][1], b[4][0], b[4][1], b[5][0], b[5][1]
+
+def tuples_add_homogeneous():
+    a = (1,2,3) + (4,5,6)
+    return a[0], a[1], a[2], a[3], a[4], a[5]
+
+def tuples_add_homogeneous_variables():
+    a = (1,2,3)
+    b = (4,5,6)
+    c = a + b
+    return c[0], c[1], c[2], c[3], c[4], c[5]
+
+def tuples_add_homogeneous_with_variables():
+    a = (1,2,3)
+    c = a + (4,5,6)
+    return c[0], c[1], c[2], c[3], c[4], c[5]
+
+def tuples_add_inhomogeneous():
+    a = (1,2,True) + (False,5,6)
+    return a[0], a[1], a[2], a[3], a[4], a[5]
+
+def tuples_add_inhomogeneous_variables():
+    a = (1,2,False)
+    b = (4,5,True)
+    c = a + b
+    return c[0], c[1], c[2], c[3], c[4], c[5]
+
+def tuples_add_inhomogeneous_with_variables():
+    a = (1,2,True)
+    c = a + (4,False,6)
+    return c[0], c[1], c[2], c[3], c[4], c[5]
+
+def tuples_add_mixed_homogeneous():
+    a = (1,2,3) + (False,5,6)
+    return a[0], a[1], a[2], a[3], a[4], a[5]
+
+def tuples_add_mixed_homogeneous_variables():
+    a = (1,2,3)
+    b = (4,5,True)
+    c = a + b
+    return c[0], c[1], c[2], c[3], c[4], c[5]
+
+def tuples_add_mixed_homogeneous_with_variables():
+    a = (1,2,3)
+    c = a + (4,False,6)
+    return c[0], c[1], c[2], c[3], c[4], c[5]
+
+def tuples_2d_sum():
+    a = ((1,2), (3,4))
+    b = a + ((5,6),)
+    return b[0][0], b[0][1], b[1][0], b[1][1], b[2][0], b[2][1]

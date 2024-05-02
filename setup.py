@@ -38,14 +38,9 @@ packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
 # Dependencies
 install_requires = [
     'numpy',
-    'scipy',
     'sympy>=1.2',
-    'textx>=1.6',
-    'pylint>=1.8',
-    'parse>=1.8',
-    'tabulate',
     'termcolor',
-    'fastcache',
+    'textx>=1.6',
 ]
 
 def setup_package():

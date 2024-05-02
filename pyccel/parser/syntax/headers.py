@@ -391,7 +391,7 @@ class FunctionMacroStmt(BasicStmt):
             master function name
         """
 
-        self.name = tuple(kwargs.pop('name'))
+        self.dotted_name = tuple(kwargs.pop('dotted_name'))
         self.results = kwargs.pop('results',None)
         self.args = kwargs.pop('args')
         self.master_name = tuple(kwargs.pop('master_name'))
@@ -402,10 +402,10 @@ class FunctionMacroStmt(BasicStmt):
     @property
     def expr(self):
 
-        if len(self.name)>1:
-            name = DottedName(*self.name)
+        if len(self.dotted_name)>1:
+            name = DottedName(*self.dotted_name)
         else:
-            name = str(self.name[0])
+            name = str(self.dotted_name[0])
 
         args = []
         for i in self.args:
