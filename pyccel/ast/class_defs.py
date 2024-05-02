@@ -5,12 +5,17 @@
 """
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
+
+from pyccel.ast.builtin_methods.set_methods import SetAdd
+from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop, ListClear
+
+
 from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
 from .c_concepts import CStackArray
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
-                        NativeComplex, NativeString, NativeNumeric,
-                        NativeTuple, CustomDataType)
+                        NativeComplex, NativeString, NativeNumericTypes,
+                        NativeTuple, CustomDataType, NativeHomogeneousList, NativeHomogeneousSet)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpySize, NumpyResultType,
@@ -20,9 +25,11 @@ __all__ = ('BooleanClass',
         'IntegerClass',
         'FloatClass',
         'ComplexClass',
+        'SetClass',
         'StringClass',
         'NumpyArrayClass',
         'TupleClass',
+        'ListClass',
         'literal_classes',
         'get_cls_base')
 
@@ -130,6 +137,28 @@ StringClass = ClassDef('string', class_type = NativeString(),
 
 #=======================================================================================
 
+ListClass = ClassDef('list', class_type = NativeHomogeneousList(),
+        methods=[
+            PyccelFunctionDef('append', func_class = ListAppend,
+                decorators = {}),
+            PyccelFunctionDef('clear', func_class = ListClear,
+                decorators = {}),
+            PyccelFunctionDef('insert', func_class = ListInsert,
+                decorators = {}),
+            PyccelFunctionDef('pop', func_class = ListPop,
+                decorators = {}),
+        ])
+
+#=======================================================================================
+
+SetClass = ClassDef('set', class_type=NativeHomogeneousSet(),
+        methods=[
+            PyccelFunctionDef('add', func_class = SetAdd,
+                decorators = {}),
+        ])
+
+#=======================================================================================
+
 TupleClass = ClassDef('tuple', class_type = NativeTuple(),
         methods=[
             #index
@@ -215,12 +244,16 @@ def get_cls_base(dtype, precision, container_type):
     """
     if isinstance(dtype, CustomDataType) and container_type is dtype:
         return None
-    if precision in (-1, 0, None) and container_type is dtype:
+    elif precision in (-1, 0, None) and container_type is dtype:
         return literal_classes[dtype]
-    elif dtype in NativeNumeric or isinstance(container_type, NumpyNDArrayType):
+    elif isinstance(container_type, (*NativeNumericTypes, NumpyNDArrayType)):
         return NumpyArrayClass
     elif isinstance(container_type, NativeTuple):
         return TupleClass
+    elif isinstance(container_type, NativeHomogeneousList):
+        return ListClass
+    elif isinstance(container_type, NativeHomogeneousSet):
+        return SetClass
     else:
         if container_type:
             type_name = str(container_type)

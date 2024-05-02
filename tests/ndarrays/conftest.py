@@ -1,5 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-# pylint: disable=arguments-differ, inconsistent-return-statements, protected-access, abstract-method
 import subprocess
 import os
 import pathlib
@@ -7,45 +6,34 @@ import sys
 import shutil
 import pytest
 
-NEEDS_FROM_PARENT = hasattr(pytest.Item, "from_parent")
-
-def pytest_collect_file(parent, path):
+def pytest_collect_file(parent, file_path):
     """
     A hook to collect test_*.c test files.
 
+    Parameters
+    ----------
+    parent : Collector
+        The node where the file will be collected.
+    file_path : pathlib.PosixPath
+        The path to the file which may or may not be collected.
     """
-    if path.ext == ".c" and path.basename.startswith("test_"):
-        if NEEDS_FROM_PARENT:
-            return CTestFile.from_parent(path=pathlib.Path(path), parent=parent)
-        return CTestFile(parent=parent, path=pathlib.Path(path))
-
-def pytest_collection_modifyitems(items):
-    """
-    a hook to modify the items before the tests for C unit test files.
-
-    """
-    for item in items:
-        if item.fspath.ext == ".c":
-            item._nodeid = item.nodeid + " < " + item.test_result["DSCR"] + " >"
+    if file_path.suffix == ".c" and file_path.name.startswith("test"):
+        return CTestFile.from_parent(path=pathlib.Path(file_path), parent=parent)
+    return None
 
 class CTestFile(pytest.File):
     """
     A custom file handler class for C unit test files.
-
     """
-
-    @classmethod
-    def from_parent(cls, **kwargs):
-        return super().from_parent(**kwargs)
-
     def collect(self):
         """
+        The method which collects the test result.
+
         Overridden collect method to collect the results from each
         C unit test executable.
-
         """
         # Run the exe that corresponds to the .c file and capture the output.
-        test_exe = os.path.splitext(str(self.fspath))[0]
+        test_exe = os.path.splitext(str(self.path))[0]
         rootdir = str(self.config.rootdir)
         test_exe = os.path.relpath(test_exe)
         ndarray_path =  os.path.join(rootdir , "pyccel", "stdlib", "ndarrays")
@@ -77,13 +65,9 @@ class CTestFile(pytest.File):
                                      })
             elif token in ("INFO", "DSCR"):
                 test_results[-1][token] = data
-        for test_result in test_results:
-            if NEEDS_FROM_PARENT:
-                yield CTestItem.from_parent(name = test_result["function_name"],
-                        parent = self, test_result = test_result)
-            else:
-                yield CTestItem(name = test_result["function_name"], parent = self,
-                        test_result = test_result)
+        for test_results in test_results:
+            yield CTestItem.from_parent(name = test_results["function_name"],
+                    parent = self, **test_results)
 
 
 class CTestItem(pytest.Item):
@@ -91,35 +75,72 @@ class CTestItem(pytest.Item):
     Pytest.Item subclass to handle each test result item. There may be
     more than one test result from a test function.
 
+    Parameters
+    ----------
+    file_name : str
+        The file where the test was located.
+
+    line_number : int
+        The line where the test is found.
+
+    function_name : str
+        The name of the function which was run.
+
+    condition : str
+        The condition of the test [PASS/FAIL].
+
+    DSCR : str, optional
+        A textual description of the test.
+
+    INFO : str, optional
+        Information about the assertion.
+
+    **kwargs : dict
+        See pytest.Item for details.
     """
 
-    def __init__(self, *, test_result, **kwargs):
-        """Overridden constructor to pass test results dict."""
+    def __init__(self, *, file_name, line_number, function_name, condition,
+            DSCR, INFO, **kwargs):
         super().__init__(**kwargs)
-        self.test_result = test_result
-
-    @classmethod
-    def from_parent(cls, *, test_result, **kwargs):
-        return super().from_parent(test_result=test_result, **kwargs)
+        self._file_name = file_name
+        self._line_number = line_number
+        self._function_name = function_name
+        self._description = DSCR
+        self._info = INFO
+        self._condition = condition
+        self._nodeid = self._nodeid + " < " + self._description + " >"
 
     def runtest(self):
         """The test has already been run. We just evaluate the result."""
-        if self.test_result["condition"] == "FAIL":
+        if self._condition == "FAIL":
             raise CTestException(self, self.name)
 
     def reportinfo(self):
         """"Called to display header information about the test case."""
-        return self.fspath, self.test_result["line_number"], self.name
+        return self.path, self._line_number, self.name
 
-    def repr_failure(self, exception):
+    @property
+    def description(self):
+        return self._description
+
+    def repr_failure(self, excinfo, style=None):
         """
+        Get the error description.
+
         Called when runtest() raises an exception. The method is used
         to format the output of the failed test result.
 
+        Parameters
+        ----------
+        excinfo : Exception
+            The exception that was raised by the test.
+        style : None
+            The style of the traceback.
         """
-        if isinstance(exception.value, CTestException):
-            return ("Test failed : {file_name}:{line_number} {function_name} < {DSCR} >\n"
-                        "INFO : {INFO}".format(**self.test_result))
+        if isinstance(excinfo.value, CTestException):
+            return (f"Test failed : {self._file_name}:{self._line_number} {self._function_name} < {self._description} >\n"
+                    f"INFO : {self._info}")
+        return super().repr_failure(excinfo, style=style)
 
 
 

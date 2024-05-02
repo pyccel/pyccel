@@ -560,6 +560,10 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
     `sqrt`, `abs`, `sin`, `cos`, `exp`, `log`, `tan`, `arcsin`, `arccos`, `arctan`, `arctan2`, `sinh`, `cosh`, `tanh`, `arcsinh`, `arccosh` and
     `arctanh`.
 
+-   Supported [logic functions](https://numpy.org/doc/stable/reference/routines.logic.html) (optional parameters are not supported):
+
+    `isfinite`, `isinf`, `isnan`
+
 -   Supported [array creation routines](https://numpy.org/doc/stable/reference/routines.array-creation.html) (fully supported):
 
     -   `empty`, `full`, `ones`, `zeros`, `array`, `arange` (`like` parameter is not supported).

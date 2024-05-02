@@ -23,7 +23,7 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 
 from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
-from .datatypes      import (dtype_and_precision_registry as dtype_registry, NativeHomogeneousTuple,
+from .datatypes      import (dtype_and_precision_registry as dtype_registry, NativeHomogeneousTuple, NativeInhomogeneousTuple,
                              default_precision, NativeInteger, DataType, NativeNumericTypes,
                              NativeFloat, NativeComplex, NativeBool, NativeNumeric)
 
@@ -35,7 +35,7 @@ from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
-from .variable       import Variable, Constant
+from .variable       import Variable, Constant, IndexedElement
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -116,6 +116,9 @@ __all__ = (
     'NumpyZeros',
     'NumpyZerosLike',
     'NumpyShape',
+    'NumpyIsInf',
+    'NumpyIsFinite',
+    'NumpyIsNan',
 )
 
 class NumpyNDArrayType(DataType, metaclass=Singleton):
@@ -647,15 +650,22 @@ class NumpyArray(NumpyNewArray):
 
     def __init__(self, arg, dtype=None, order='K', ndmin=None):
 
-        if not isinstance(arg, (PythonTuple, PythonList, Variable)):
+        if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
         is_homogeneous_tuple = isinstance(arg.class_type, NativeHomogeneousTuple)
-        is_array = isinstance(arg, Variable) and arg.is_ndarray
+        # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
+        if isinstance(arg.class_type, NativeInhomogeneousTuple):
+            if not isinstance(arg, PythonTuple):
+                arg = PythonTuple(*arg)
+            is_homogeneous_tuple = arg.is_homogeneous
+
+        is_array = (isinstance(arg, Variable) and arg.is_ndarray) or \
+                   (isinstance(arg, IndexedElement) and arg.base.is_ndarray)
 
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
         if not (is_homogeneous_tuple or is_array or isinstance(arg, PythonList)):
-            raise TypeError('we only accept homogeneous arguments')
+            errors.report("The argument passed to numpy.array must contain homogeneous data", symbol=arg, severity="fatal")
 
         if not isinstance(order, (LiteralString, str)):
             raise TypeError("The order must be specified explicitly with a string.")
@@ -670,14 +680,25 @@ class NumpyArray(NumpyNewArray):
 
         init_dtype = dtype
 
-        # Verify dtype and get precision
-        if dtype is None:
-            dtype = arg.dtype
-            prec = get_final_precision(arg)
-        else:
-            dtype, prec = process_dtype(dtype)
+        if isinstance(arg.dtype, NativeInhomogeneousTuple):
+            # If pseudo-inhomogeneous due to pointers, extract underlying dtype
+            if dtype is None:
+                dtype = arg[0].dtype
+                prec = get_final_precision(arg[0])
+            else:
+                dtype, prec = process_dtype(dtype)
 
-        shape = process_shape(False, arg.shape)
+            shape = (LiteralInteger(len(arg)), *process_shape(False, arg[0].shape))
+        else:
+            # Verify dtype and get precision
+            if dtype is None:
+                dtype = arg.dtype
+                prec = get_final_precision(arg)
+            else:
+                dtype, prec = process_dtype(dtype)
+
+            shape = process_shape(False, arg.shape)
+
         rank  = len(shape)
 
         if ndmin and ndmin>rank:
@@ -1661,7 +1682,10 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._set_dtype_precision(x)
         self._set_shape_rank(x)
         self._set_order(x)
-        self._class_type = NumpyNDArrayType()
+        if self.rank:
+            self._class_type = NumpyNDArrayType()
+        else:
+            self._class_type = self.dtype
         super().__init__(x)
 
     def _set_shape_rank(self, x):
@@ -1684,6 +1708,15 @@ class NumpyUfuncUnary(NumpyUfuncBase):
 
     def _set_order(self, x):
         self._order      = x.order
+
+    @property
+    def arg(self):
+        """
+        The argument passed to the NumPy unary function.
+
+        The argument passed to the NumPy unary function.
+        """
+        return self._args[0]
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -2292,6 +2325,113 @@ class NumpySize(PyccelInternalFunction):
 
         return PyccelArrayShapeElement(a, axis)
 
+class NumpyIsNan(NumpyUfuncUnary):
+    """ 
+    Represents a call to numpy.isnan() function.
+
+    This class encapsulates a call to the Numpy 'isnan' function. It is used to
+    check whether the elements of a given array or expression are NaN (Not-a-Number).
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        A Pyccel expression or array to be checked for NaN values.
+
+    See Also
+    --------
+    numpy.isnan :
+        See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isnan.html>.
+    """
+    __slots__ = ()
+    name = 'isnan'
+    _dtype = NativeBool()
+    _precision = -1
+
+    def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
+
+        Use the argument to calculate the dtype and precision of the result.
+        For this class the dtype and precision is a class property.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
+
+class NumpyIsInf(NumpyUfuncUnary):
+    """ 
+    Represents a call to numpy.isinf() function.
+
+    This class represents a call to the Numpy 'isinf' function, which is used
+    to determine whether elements in a given array or expression are positive or
+    negative infinity.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        A Pyccel expression or array to be checked for infinity values.
+
+    See Also
+    --------
+    numpy.isinf :
+        See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isinf.html>.
+    """
+    __slots__ = ()
+    name = 'isinf'
+    _dtype = NativeBool()
+    _precision = -1
+
+    def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
+
+        Use the argument to calculate the dtype and precision of the result.
+        For this class the dtype and precision is a class property.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
+
+class NumpyIsFinite(NumpyUfuncUnary):
+    """ 
+    Represents a call to numpy.isfinite() function.
+
+    This class corresponds to a call to the Numpy 'isfinite' function, which is
+    used to determine whether elements in a given array or expression are finite
+    (neither NaN nor infinity).
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        A Pyccel expression or array to be checked for finiteness.
+
+    See Also
+    --------
+    numpy.isfinite :
+        See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isfinite.html>.
+    """
+    __slots__ = ()
+    name = 'isfinite'
+    _dtype = NativeBool()
+    _precision = -1
+
+    def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
+
+        Use the argument to calculate the dtype and precision of the result.
+        For this class the dtype and precision is a class property.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
+
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
@@ -2354,6 +2494,9 @@ numpy_funcs = {
     'linspace'  : PyccelFunctionDef('linspace'  , NumpyLinspace),
     'where'     : PyccelFunctionDef('where'     , NumpyWhere),
     # ---
+    'isnan'     : PyccelFunctionDef('isnan'     , NumpyIsNan),
+    'isinf'     : PyccelFunctionDef('isinf'     , NumpyIsInf),
+    'isfinite'  : PyccelFunctionDef('isfinite'  , NumpyIsFinite),
     'sign'      : PyccelFunctionDef('sign'      , NumpySign),
     'abs'       : PyccelFunctionDef('abs'       , NumpyAbs),
     'floor'     : PyccelFunctionDef('floor'     , NumpyFloor),

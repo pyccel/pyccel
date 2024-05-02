@@ -57,10 +57,11 @@ from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
+from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
-from pyccel.ast.operators import PyccelMod
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd
+from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
@@ -100,6 +101,8 @@ numpy_ufunc_to_fortran = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
+    'NumpyIsFinite':'ieee_is_finite',
+    'NumpyIsNan'  :'ieee_is_nan',
 }
 
 math_function_to_fortran = {
@@ -413,29 +416,25 @@ class FCodePrinter(CodePrinter):
         self.set_scope(scope)
         return code
 
-    def _get_external_declarations(self):
+    def _get_external_declarations(self, decs):
         """
         Find external functions and declare their result type.
 
         Look for any external functions in the local imports from
         the scope and use their definitions to create declarations
-        from the results. These declarations are stored in a
-        dictionary whose keys are the result variable which will
-        be declared.
+        from the results. These declarations are stored in the list
+        passed as argument.
 
-        Returns
-        -------
-        dict
-            The declarations necessary to use the external function.
+        Parameters
+        ----------
+        decs : list
+            The list where the declarations necessary to use the external
+            functions will be stored.
         """
-        decs = {}
         for key,f in self.scope.imports['functions'].items():
             if isinstance(f, FunctionDef) and f.is_external:
-                i = Variable(f.results[0].var.dtype, name=str(key))
-                dec = Declare(i.dtype, i, external=True)
-                decs[i] = dec
-
-        return decs
+                v = f.results[0].var.clone(str(key))
+                decs.append(Declare(v, external=True))
 
     def _calculate_class_names(self, expr):
         """
@@ -494,10 +493,10 @@ class FCodePrinter(CodePrinter):
         decs += '\n'.join(c[0] for c in class_decs_and_methods)
         # ...
 
-        decs += ''.join(self._print(i) for i in expr.declarations)
+        declarations = list(expr.declarations)
         # look for external functions and declare their result type
-        external_decs = self._get_external_declarations()
-        decs += ''.join(self._print(i) for i in external_decs.values())
+        self._get_external_declarations(declarations)
+        decs += ''.join(self._print(d) for d in declarations)
 
         # ... TODO add other elements
         private_funcs = [f.name for f in expr.funcs if f.is_private]
@@ -553,7 +552,7 @@ class FCodePrinter(CodePrinter):
         #  - user-defined variables (available in Program.variables)
         #  - pyccel-generated variables added to Scope when printing 'expr.body'
         variables = self.scope.variables.values()
-        decs = ''.join(self._print_Declare(Declare(v.dtype, v)) for v in variables)
+        decs = ''.join(self._print(Declare(v)) for v in variables)
 
         # Detect if we are using mpi4py
         # TODO should we find a better way to do this?
@@ -920,19 +919,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
-
-    def _print_PythonLen(self, expr):
-        var = expr.arg
-        idx = 1 if var.order == 'F' else var.rank
-        prec = self.print_kind(expr)
-
-        dtype = var.dtype
-        if dtype is NativeString():
-            return 'len({})'.format(self._print(var))
-        elif var.rank == 1:
-            return 'size({}, kind={})'.format(self._print(var), prec)
-        else:
-            return 'size({},{},{})'.format(self._print(var), self._print(idx), prec)
 
     def _print_PythonSum(self, expr):
         args = [self._print(arg) for arg in expr.args]
@@ -1411,7 +1397,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Declare(self, expr):
         # ... ignored declarations
-        if isinstance(expr.dtype, NativeSymbol):
+        var = expr.variable
+        expr_dtype      = var.dtype
+        if isinstance(expr_dtype, NativeSymbol):
             return ''
 
         # meta-variables
@@ -1421,12 +1409,10 @@ class FCodePrinter(CodePrinter):
         # ...
 
         if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         # ... TODO improve
         # Group the variables by intent
-        var = expr.variable
-        expr_dtype = expr.dtype
         rank            = var.rank
         shape           = var.alloc_shape
         is_const        = var.is_const
@@ -1446,7 +1432,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ... print datatype
-        if isinstance(expr.dtype, CustomDataType):
+        if isinstance(expr_dtype, CustomDataType):
             name   = expr_dtype.__class__.__name__
             prefix = expr_dtype.prefix
             alias  = expr_dtype.alias
@@ -1866,29 +1852,6 @@ class FCodePrinter(CodePrinter):
   #      self.exit_scope()
   #      return ''
 
-    def _print_Block(self, expr):
-        self.set_scope(expr.scope)
-
-        decs=[]
-        for i in expr.variables:
-            dec = Declare(i.dtype, i)
-            decs += [dec]
-        body = expr.body
-
-        body_code = self._print(body)
-        prelude   = ''.join(self._print(i) for i in decs)
-
-        self.exit_scope()
-
-        #case of no local variables
-        if len(decs) == 0:
-            return body_code
-
-        return ('{name} : Block\n'
-                '{prelude}\n'
-                 '{body}\n'
-                'end Block {name}\n').format(name=expr.name, prelude=prelude, body=body_code)
-
     def _print_FunctionAddress(self, expr):
         return expr.name
 
@@ -1929,7 +1892,7 @@ class FCodePrinter(CodePrinter):
         if len(out_args) != 1 or out_args[0].rank > 0:
             func_type = 'subroutine'
             for result in out_args:
-                args_decs[result] = Declare(result.dtype, result, intent='out')
+                args_decs[result] = Declare(result, intent='out')
 
             functions = expr.functions
 
@@ -1941,7 +1904,7 @@ class FCodePrinter(CodePrinter):
 
             func_end = 'result({0})'.format(result.name)
 
-            args_decs[result] = Declare(result.dtype, result)
+            args_decs[result] = Declare(result)
             out_args = []
         # ...
 
@@ -1949,20 +1912,17 @@ class FCodePrinter(CodePrinter):
             arg_var = arg.var
             if isinstance(arg_var, Variable):
                 if isinstance(arg, BindCFunctionDefArgument) and arg.original_function_argument_variable.rank!=0:
-                    for b_arg,inout in zip(arg.get_all_function_def_arguments(), arg.inout):
+                    for b_arg in arg.get_all_function_def_arguments():
                         v = b_arg.var
-                        if inout:
-                            dec = Declare(v.dtype, v, intent='inout')
-                        else:
-                            dec = Declare(v.dtype, v, intent='in')
+                        dec = Declare(v, intent='in')
                         args_decs[v] = dec
                 else:
                     if i == 0 and expr.cls_name:
-                        dec = Declare(arg_var.dtype, arg_var, intent='inout', passed_from_dotted = True)
+                        dec = Declare(arg_var, intent='inout')
                     elif arg.inout:
-                        dec = Declare(arg_var.dtype, arg_var, intent='inout')
+                        dec = Declare(arg_var, intent='inout')
                     else:
-                        dec = Declare(arg_var.dtype, arg_var, intent='in')
+                        dec = Declare(arg_var, intent='in')
                     args_decs[arg_var] = dec
 
         # treat case of pure function
@@ -1998,25 +1958,15 @@ class FCodePrinter(CodePrinter):
         sig_parts = self.function_signature(expr, name)
         bind_c = ' bind(c)' if isinstance(expr, BindCFunctionDef) else ''
         prelude = sig_parts.pop('arg_decs')
-        decs = OrderedDict()
         functions = [f for f in expr.functions if not f.is_inline]
         func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
         docstring = self._print(expr.docstring) if expr.docstring else ''
 
-        for i in expr.local_vars:
-            dec = Declare(i.dtype, i)
-            decs[i] = dec
+        decs = [Declare(v) for v in expr.local_vars]
+        self._get_external_declarations(decs)
 
-        decs.update(self._get_external_declarations())
-
-        arguments = [a.var for a in expr.arguments]
-        results = [a.var for a in expr.results]
-        vars_to_print = self.scope.variables.values()
-        for v in vars_to_print:
-            if (v not in expr.local_vars) and (v not in results) and (v not in arguments):
-                decs[v] = Declare(v.dtype,v)
-        prelude += ''.join(self._print(i) for i in decs.values())
+        prelude += ''.join(self._print(i) for i in decs)
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
             body_code = body_code +'\ncontains\n' + functions_code
@@ -2068,7 +2018,7 @@ class FCodePrinter(CodePrinter):
         self.set_current_class(name)
         base = None # TODO: add base in ClassDef
 
-        decs = ''.join(self._print(Declare(i.dtype, i)) for i in expr.attributes)
+        decs = ''.join(self._print(Declare(i)) for i in expr.attributes)
 
         aliases = []
         names   = []
@@ -2694,11 +2644,19 @@ class FCodePrinter(CodePrinter):
             func_name = numpy_ufunc_to_fortran[type_name]
         except KeyError:
             self._print_not_supported(expr)
+        if func_name.startswith('ieee_'):
+            self._constantImports.setdefault('ieee_arithmetic', set()).add(func_name)
         args = [self._print(NumpyFloat(a) if a.dtype is NativeInteger() else a)\
 				for a in expr.args]
         code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
+
+    def _print_NumpyIsInf(self, expr):
+        code = PyccelAssociativeParenthesis(PyccelAnd(
+                    PyccelNot(NumpyIsFinite(expr.arg)),
+                    PyccelNot(NumpyIsNan(expr.arg))))
+        return self._print(code)
 
     def _print_NumpySign(self, expr):
         """ Print the corresponding Fortran function for a call to Numpy.sign
