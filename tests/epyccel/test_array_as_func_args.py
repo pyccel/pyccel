@@ -6,7 +6,7 @@ in the function arguments.
 import numpy as np
 from numpy.random import randint, uniform
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from pyccel.decorators import template
 
 int_types = ['int8', 'int16', 'int32', 'int64']

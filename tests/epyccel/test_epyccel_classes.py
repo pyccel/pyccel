@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 import modules.expose_classes as mod
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 RTOL = 2e-14
 ATOL = 1e-15

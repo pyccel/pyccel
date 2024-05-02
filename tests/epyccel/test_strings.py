@@ -2,7 +2,7 @@
 import inspect
 import pytest
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from modules import strings as strings_module
 
 string_funcs = [(f, getattr(strings_module,f)) for f in strings_module.__all__ if inspect.isfunction(getattr(strings_module,f))]

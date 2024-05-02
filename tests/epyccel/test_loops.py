@@ -2,8 +2,9 @@
 import pytest
 import numpy as np
 
-from pyccel.epyccel import epyccel
-from modules        import loops
+from modules import loops
+
+from pyccel import epyccel
 
 #==============================================================================
 
