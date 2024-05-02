@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 -   #1740 : Add Python support for set method `copy()`.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1743 : Add Python support for set method `discard()`.
+-   #1754 : Add Python support for set method `update()`.
 -   #1787 : Ensure `STC` is installed with Pyccel.
 -   #1656 : Ensure `gFTL` is installed with Pyccel.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
