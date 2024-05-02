@@ -4836,7 +4836,7 @@ class SemanticParser(BasicParser):
             return CodeBlock(store)
         else:
             pyccel_stage.set_stage('syntactic')
-            for_target = self.scope.get_new_name('index')
+            for_target = self.scope.get_new_name()
             arg = FunctionCallArgument(for_target)
             func_call = FunctionCall('add', [arg])
             dotted = DottedName(expr.name[0], func_call)
