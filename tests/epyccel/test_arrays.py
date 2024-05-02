@@ -1698,13 +1698,6 @@ def test_array_real_2d_2d_matmul_mixorder(language):
     f2(A2, B2, C2)
     assert np.array_equal(C1, C2)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_real_loopdiff(language):
     f1 = arrays.array_real_loopdiff
     f2 = epyccel( f1 , language = language)

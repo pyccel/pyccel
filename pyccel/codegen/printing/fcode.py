@@ -44,11 +44,11 @@ from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
                                   PythonMap, PythonPrint, PythonRange,
                                   PythonZip, PythonFloat, PythonTuple)
-from pyccel.ast.builtins  import PythonComplex, PythonBool
+from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
@@ -657,13 +657,18 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyNorm(self, expr):
         """Fortran print."""
-
-        if expr.dim:
-            rhs = 'Norm2({},{})'.format(self._print(expr.arg),self._print(expr.dim))
+        arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype, NativeComplex) else expr.arg
+        if expr.axis:
+            axis = expr.axis
+            if expr.order != 'F':
+                axis = PyccelMinus(LiteralInteger(arg.rank), expr.axis)
+            else:
+                axis = LiteralInteger(expr.axis.python_value + 1)
+            code = 'Norm2({},{})'.format(self._print(arg), self._print(axis))
         else:
-            rhs = 'Norm2({})'.format(self._print(expr.arg))
+            code = 'Norm2({})'.format(self._print(arg))
 
-        return rhs
+        return code
 
     def _print_NumpyLinspace(self, expr):
 
@@ -1182,8 +1187,11 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code) + '\n'
 
     def _print_CodeBlock(self, expr):
-        body_exprs, new_vars = expand_to_loops(expr, self.parser.get_new_variable, language_has_vectors = True)
-        self.add_vars_to_namespace(*new_vars)
+        if not expr.unravelled:
+            body_exprs, new_vars = expand_to_loops(expr, self.parser.get_new_variable, language_has_vectors = True)
+            self.add_vars_to_namespace(*new_vars)
+        else:
+            body_exprs = expr.body
         body_stmts = []
         for b in body_exprs :
             line = self._print(b)
@@ -2331,7 +2339,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelDiv(self, expr):
         if all(a.dtype is NativeInteger() for a in expr.args):
-            args = [PythonFloat(a) for a in expr.args]
+            args = [NumpyFloat(a) for a in expr.args]
         else:
             args = expr.args
         return ' / '.join(self._print(a) for a in args)
@@ -2341,7 +2349,7 @@ class FCodePrinter(CodePrinter):
 
         def correct_type_arg(a):
             if is_real and a.dtype is NativeInteger():
-                return PythonFloat(a)
+                return NumpyFloat(a)
             else:
                 return a
 
@@ -2360,7 +2368,7 @@ class FCodePrinter(CodePrinter):
         for b in expr.args[1:]:
             bdtype    = b.dtype
             if adtype is NativeInteger() and bdtype is NativeInteger():
-                b = PythonFloat(b)
+                b = NumpyFloat(b)
             c = self._print(b)
             adtype = bdtype
             code = 'FLOOR({}/{},{})'.format(code, c, self.print_kind(expr))
@@ -2526,7 +2534,7 @@ class FCodePrinter(CodePrinter):
         # add necessary include
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "ceiling({})".format(code_arg)
@@ -2537,7 +2545,7 @@ class FCodePrinter(CodePrinter):
         # add necessary include
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "isnan({})".format(code_arg)
@@ -2548,7 +2556,7 @@ class FCodePrinter(CodePrinter):
         # add necessary include
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "dint({})".format(code_arg)
@@ -2564,7 +2572,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpySqrt(self, expr):
         arg = expr.args[0]
         if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
-            arg = PythonFloat(arg)
+            arg = NumpyFloat(arg)
         code_args = self._print(arg)
         code = 'sqrt({})'.format(code_args)
         return self._get_statement(code)

@@ -9,6 +9,7 @@ import subprocess
 import os
 import glob
 import warnings
+from filelock import FileLock
 
 from pyccel.ast.bind_c                      import as_static_module
 from pyccel.ast.core                        import SeparatorComment
@@ -129,8 +130,15 @@ def create_shared_library(codegen,
 
         if verbose:
             print(' '.join(cmd))
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        out, err = p.communicate()
+        locks = [FileLock(d+'.lock') for d in dep_mods]
+        for l in locks:
+            l.acquire()
+        try:
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            out, err = p.communicate()
+        finally:
+            for l in locks:
+                l.release()
         if verbose:
             print(out)
         if p.returncode != 0:

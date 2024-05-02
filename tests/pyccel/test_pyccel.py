@@ -235,33 +235,6 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
     lang_out = get_lang_output(get_exe(test_file))
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
 
-
-#==============================================================================
-# PYTEST MODULE SETUP AND TEARDOWN
-#==============================================================================
-def setup():
-    teardown()
-
-#------------------------------------------------------------------------------
-def teardown(path_dir = None):
-    if path_dir is None:
-        path_dir = os.path.dirname(os.path.realpath(__file__))
-
-    for root, _, files in os.walk(path_dir):
-        for name in files:
-            if name.startswith(".coverage"):
-                shutil.copyfile(os.path.join(root,name),os.path.join(os.getcwd(),name))
-
-    files = os.listdir(path_dir)
-    for f in files:
-        file_name = os.path.join(path_dir,f)
-        if f == "__pyccel__":
-            shutil.rmtree( file_name )
-        elif not os.path.isfile(file_name):
-            teardown(file_name)
-        elif not f.endswith(".py") and not f.endswith(".pyh") and not f.endswith(".pyccel"):
-            os.remove(file_name)
-
 #==============================================================================
 # UNIT TESTS
 #==============================================================================
@@ -316,21 +289,25 @@ def test_rel_imports_python_accessible_folder(language):
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_imports_compile(language):
     pyccel_test("scripts/runtest_imports.py","scripts/funcs.py",
             compile_with_pyccel = False, language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_imports_in_folder(language):
     pyccel_test("scripts/runtest_folder_imports.py","scripts/folder1/folder1_funcs.py",
             compile_with_pyccel = False, language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_imports(language):
     pyccel_test("scripts/runtest_imports.py","scripts/funcs.py",
             language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_folder_imports_python_accessible_folder(language):
     # pyccel is called on scripts/folder2/runtest_imports2.py from the scripts folder
     # From this folder python understands relative imports
@@ -354,6 +331,7 @@ def test_folder_imports_python_accessible_folder(language):
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_folder_imports(language):
     # pyccel is called on scripts/folder2/runtest_imports2.py from the scripts/folder2 folder
     # which is where the final .so file should be
@@ -378,6 +356,7 @@ def test_folder_imports(language):
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_funcs(language):
     pyccel_test("scripts/runtest_funcs.py", language = language)
 
@@ -418,6 +397,7 @@ def test_default_arguments():
                 float,float,float,float])
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_pyccel_calling_directory(language):
     cwd = get_abs_path(".")
 
@@ -502,6 +482,7 @@ def test_import_syntax( test_file ):
                                         "scripts/import_syntax/from_mod_import_as_user.py",
                                         "scripts/import_syntax/collisions2.py"
                                         ] )
+@pytest.mark.xdist_incompatible
 def test_import_syntax_user_as( test_file ):
     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py")
 
@@ -513,10 +494,12 @@ def test_import_syntax_user_as( test_file ):
                                         "scripts/import_syntax/import_mod_user_func.py",
                                         "scripts/import_syntax/import_mod_as_user_func.py",
                                         ] )
+@pytest.mark.xdist_incompatible
 def test_import_syntax_user( test_file, language ):
     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py", language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_import_collisions():
     pyccel_test("scripts/import_syntax/collisions4.py",
             dependencies = ["scripts/import_syntax/user_mod.py", "scripts/import_syntax/user_mod2.py"])
@@ -573,7 +556,7 @@ def test_arrays_view(language):
 
 #------------------------------------------------------------------------------
 def test_headers(language):
-    test_file = "scripts/test_headers.py"
+    test_file = "scripts/runtest_headers.py"
     test_file = os.path.normpath(test_file)
     test_file = get_abs_path(test_file)
 

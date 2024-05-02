@@ -16,7 +16,7 @@ from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
-                            Allocate, Dlist, Assign, For)
+                            Allocate, Dlist, Assign, For, CodeBlock)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
@@ -264,7 +264,9 @@ def insert_index(expr, pos, index_var):
     elif isinstance(expr, IndexedElement):
         base = expr.base
         indices = list(expr.indices)
-        if -pos>expr.base.rank or not isinstance(indices[pos], Slice):
+        while -pos<=expr.base.rank and not isinstance(indices[pos], Slice):
+            pos -= 1
+        if -pos>expr.base.rank:
             return expr
 
         # Add index at the required position
@@ -501,6 +503,7 @@ def insert_fors(blocks, indices, level = 0):
     if blocks.length == 1:
         return body
     else:
+        body = CodeBlock(body, unravelled = True)
         return [For(indices[level], PythonRange(0,blocks.length), body)]
 
 #==============================================================================

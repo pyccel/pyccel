@@ -8,7 +8,7 @@
 import functools
 import operator
 
-from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
+from pyccel.ast.builtins  import PythonRange, PythonComplex
 
 from pyccel.ast.core      import Declare
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
@@ -404,8 +404,28 @@ class CCodePrinter(CodePrinter):
             self._additional_imports.add("complex")
             func = "cabs"
         else:
-            func = "abs"
+            func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
+
+    def _print_PythonMin(self, expr):
+        arg = expr.args[0]
+        if arg.dtype is NativeReal() and len(arg) == 2:
+            self._additional_imports.add("math")
+            return "fmin({}, {})".format(self._print(arg[0]),
+                                         self._print(arg[1]))
+        else:
+            return errors.report("min in C is only supported for 2 float arguments", symbol=expr,
+                    severity='fatal')
+
+    def _print_PythonMax(self, expr):
+        arg = expr.args[0]
+        if arg.dtype is NativeReal() and len(arg) == 2:
+            self._additional_imports.add("math")
+            return "fmax({}, {})".format(self._print(arg[0]),
+                                         self._print(arg[1]))
+        else:
+            return errors.report("max in C is only supported for 2 float arguments", symbol=expr,
+                    severity='fatal')
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
@@ -444,6 +464,15 @@ class CCodePrinter(CodePrinter):
     def _print_LiteralImaginaryUnit(self, expr):
         self._additional_imports.add("complex")
         return '_Complex_I'
+
+    def _print_PythonLen(self, expr):
+        var = expr.arg
+        if var.rank > 0:
+            return self._print(var.shape[0])
+        else:
+            return errors.report("PythonLen not implemented for type {}\n".format(type(expr.arg)) +
+                    PYCCEL_RESTRICTION_TODO,
+                    symbol = expr, severity='fatal')
 
     def _print_ModuleHeader(self, expr):
         name = expr.module.name
@@ -564,9 +593,9 @@ class CCodePrinter(CodePrinter):
             return "{} % {}".format(first, second)
 
         if expr.args[0].dtype is NativeInteger():
-            first = self._print(PythonFloat(expr.args[0]))
+            first = self._print(NumpyFloat(expr.args[0]))
         if expr.args[1].dtype is NativeInteger():
-            second = self._print(PythonFloat(expr.args[1]))
+            second = self._print(NumpyFloat(expr.args[1]))
         return "fmod({}, {})".format(first, second)
 
     def _print_PyccelPow(self, expr):
@@ -580,8 +609,8 @@ class CCodePrinter(CodePrinter):
             return 'cpow({}, {})'.format(b, e)
 
         self._additional_imports.add("math")
-        b = self._print(b if b.dtype is NativeReal() else PythonFloat(b))
-        e = self._print(e if e.dtype is NativeReal() else PythonFloat(e))
+        b = self._print(b if b.dtype is NativeReal() else NumpyFloat(b))
+        e = self._print(e if e.dtype is NativeReal() else NumpyFloat(e))
         code = 'pow({}, {})'.format(b, e)
         if expr.dtype is NativeInteger():
             dtype = self._print(expr.dtype)
@@ -1021,7 +1050,7 @@ class CCodePrinter(CodePrinter):
         args = []
         for arg in expr.args:
             if arg.dtype != NativeReal() and not func_name.startswith("pyc"):
-                args.append(self._print(PythonFloat(arg)))
+                args.append(self._print(NumpyFloat(arg)))
             else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
@@ -1037,7 +1066,7 @@ class CCodePrinter(CodePrinter):
         self._additional_imports.add('math')
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "isfinite({})".format(code_arg)
@@ -1049,7 +1078,7 @@ class CCodePrinter(CodePrinter):
         self._additional_imports.add('math')
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "isinf({})".format(code_arg)
@@ -1061,7 +1090,7 @@ class CCodePrinter(CodePrinter):
         self._additional_imports.add('math')
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "isnan({})".format(code_arg)
@@ -1073,7 +1102,7 @@ class CCodePrinter(CodePrinter):
         self._additional_imports.add('math')
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "trunc({})".format(code_arg)
@@ -1189,8 +1218,10 @@ class CCodePrinter(CodePrinter):
             return 'return 0;'
 
         if expr.stmt:
-            # get Assign nodes form the CodeBlock object expr.stmt.
-            last_assign = expr.stmt.get_attribute_nodes(Assign)
+            # get Assign nodes from the CodeBlock object expr.stmt.
+            last_assign = expr.stmt.get_attribute_nodes(Assign, excluded_nodes=FunctionCall)
+            deallocate_nodes = expr.stmt.get_attribute_nodes(Deallocate, excluded_nodes=(Assign,))
+            vars_in_deallocate_nodes = [i.variable for i in deallocate_nodes]
 
             # Check the Assign objects list in case of
             # the user assigns a variable to an object contains IndexedElement object.
@@ -1200,14 +1231,14 @@ class CCodePrinter(CodePrinter):
             # make sure that stmt contains one assign node.
             assert(len(last_assign)==1)
             variables = last_assign[0].rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
-            unneeded_var = not any(b.allocatable and not b.is_argument for b in variables)
+            unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
             if unneeded_var:
                 code = '\n'.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
                 return code + '\nreturn {};'.format(self._print(last_assign[0].rhs))
             else:
                 code = '\n'+self._print(expr.stmt)
                 self._additional_declare.append(last_assign[0].lhs)
-        return code + 'return {0};'.format(self._print(args[0]))
+        return code + '\nreturn {0};'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):
         return '// pass'
@@ -1229,7 +1260,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelDiv(self, expr):
         if all(a.dtype is NativeInteger() for a in expr.args):
-            args = [PythonFloat(a) for a in expr.args]
+            args = [NumpyFloat(a) for a in expr.args]
         else:
             args = expr.args
         return  ' / '.join(self._print(a) for a in args)
@@ -1240,7 +1271,7 @@ class CCodePrinter(CodePrinter):
         # type, if all arguments are integers the result is integer otherwise
         # the result type is float
         need_to_cast = all(a.dtype is NativeInteger() for a in expr.args)
-        code = ' / '.join(self._print(a if a.dtype is NativeReal() else PythonFloat(a)) for a in expr.args)
+        code = ' / '.join(self._print(a if a.dtype is NativeReal() else NumpyFloat(a)) for a in expr.args)
         if (need_to_cast):
             cast_type = self.find_in_dtype_registry('int', expr.precision)
             return "({})floor({})".format(cast_type, code)
@@ -1343,8 +1374,11 @@ class CCodePrinter(CodePrinter):
                                                   stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
-        body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
-        self._additional_declare.extend(new_vars)
+        if not expr.unravelled:
+            body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
+            self._additional_declare.extend(new_vars)
+        else:
+            body_exprs = expr.body
         body_stmts = []
         for b in body_exprs :
             code = self._print(b)
