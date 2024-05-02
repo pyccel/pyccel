@@ -8,7 +8,6 @@ In this module we implement some of them in alphabetical order.
 """
 
 from sympy import Symbol, Function, Tuple
-from sympy import Integer
 from sympy import Float
 from sympy import sympify
 from sympy.core.assumptions import StdFactKB
@@ -16,7 +15,8 @@ from sympy.tensor import Indexed, IndexedBase
 from sympy.utilities.iterables          import iterable
 
 from .basic import Basic
-from .datatypes import default_precision, NativeTuple
+from .datatypes import default_precision
+from .numbers import Integer
 
 __all__ = (
     'Bool',
@@ -92,12 +92,13 @@ class Complex(Function):
     is_zero = False
 
     def __new__(cls, arg0, arg1=Float(0)):
-        obj = Basic.__new__(cls, arg0, arg1)
+        return Basic.__new__(cls, arg0, arg1)
+
+    def __init__(self, arg0, arg1=Float(0)):
         assumptions = {'complex': True}
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def real_part(self):
@@ -160,12 +161,13 @@ class PythonFloat(Function):
     """
     is_zero = False
     def __new__(cls, arg):
-        obj = Basic.__new__(cls, arg)
+        return Basic.__new__(cls, arg)
+
+    def __init__(self, arg):
         assumptions = {'real': True}
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def arg(self):
@@ -207,12 +209,13 @@ class Int(Function):
     is_zero = False
 
     def __new__(cls, arg):
-        obj = Basic.__new__(cls, arg)
+        return Basic.__new__(cls, arg)
+
+    def __init__(self, arg):
         assumptions = {'integer': True}
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def arg(self):
@@ -254,9 +257,7 @@ class PythonTuple(Function):
             args = [args]
         args = tuple(args)
 
-        obj = Basic.__new__(cls, *args)
-
-        return obj
+        return Basic.__new__(cls, *args)
 
     @property
     def dtype(self):
@@ -269,12 +270,12 @@ class PythonTuple(Function):
 
     @property
     def shape(self):
-        if (self._arg_dtypes is None):
-            return [len(self._args)]
+        if(self._arg_dtypes is None):
+            return [Integer(len(self._args))]
         else:
-            shape = [len(self._args)]
-            if self.is_homogeneous and isinstance(self._arg_dtypes[0]['datatype'], NativeTuple):
-                shape = shape + list(self._args[0].shape)
+            shape = [Integer(len(self._args))]
+            if self.is_homogeneous and self._arg_dtypes[0]['rank'] > 0:
+                shape = shape + list(self._arg_dtypes[0]['shape'])
 
             return tuple(shape)
 
@@ -284,6 +285,9 @@ class PythonTuple(Function):
 
     def __getitem__(self,i):
         return self._args[i]
+
+    def __add__(self,other):
+        return PythonTuple(self._args+other._args)
 
     def __iter__(self):
         return self._args.__iter__()
@@ -346,12 +350,13 @@ class Len(Function):
     is_zero = False
 
     def __new__(cls, arg):
-        obj = Basic.__new__(cls, arg)
+        return Basic.__new__(cls, arg)
+
+    def __init__(self, arg):
         assumptions = {'integer': True}
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def arg(self):

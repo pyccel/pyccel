@@ -5,7 +5,6 @@
 
 from os.path import join, dirname
 
-from sympy.utilities.iterables import iterable
 from sympy.core import Symbol
 from sympy import sympify
 from sympy import Tuple

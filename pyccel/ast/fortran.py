@@ -2,11 +2,6 @@
 
 from sympy.core.function import Function
 from sympy.core.basic import Basic
-from sympy.utilities.iterables import iterable
-from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
-
-from .core import Variable, IndexedElement, IndexedVariable
-from .datatypes import DataType, datatype
 
 __all__ = (
     'Ceil',

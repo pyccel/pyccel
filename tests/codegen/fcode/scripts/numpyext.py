@@ -52,15 +52,13 @@ x19 = diag(x18)
 x20 = diag(x18)
 #x21 = cross(x19, x20)
 
-# TODO not working
-#from numpy.random import random
-#xr = random()
-#print(xr)
+from numpy.random import random
+xr = random()
+print(xr)
 
-# TODO not working
-#from numpy.random import rand
-#yr = rand()
-#print(yr)
+from numpy.random import rand
+yr = rand()
+print(yr)
 
 xa1 = zeros_like(x1)
 xa2 = zeros_like(x2)

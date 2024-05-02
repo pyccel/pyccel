@@ -16,7 +16,6 @@ from pyccel import __version__ as __display_version__
 from pyccel.codegen.utilities_old import build_file
 from pyccel.codegen.utilities_old import build_cmakelists
 from pyccel.codegen.utilities_old import build_cmakelists_dir
-from pyccel.codegen.utilities_old import generate_project_main
 
 
 EXTENSIONS = {

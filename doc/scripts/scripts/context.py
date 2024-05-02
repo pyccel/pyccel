@@ -36,7 +36,7 @@ class Parallel(object):
 x = 0.0
 para    = Parallel()
 
-with para:   
+with para:
     for i in range(10):
         x += 2 * i
 

@@ -3,14 +3,9 @@
 
 from sympy import count_ops as sympy_count_ops
 from sympy import Tuple
-from sympy.core.expr import Expr
-from sympy.utilities.iterables import iterable
 
-from pyccel.ast import (For, Assign, While,NewLine,
-                        FunctionDef, Import, Print,
-                        Comment, AnnotatedComment,
-                        If, Zeros, Ones, Array,
-                        Len, Dot, IndexedElement, PythonTuple)
+from pyccel.ast import (For, Assign, NewLine,
+                        Zeros, Ones, PythonTuple)
 
 from pyccel.complexity.basic import Complexity
 

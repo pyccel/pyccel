@@ -1,20 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from pyccel.parser import Parser
-import os
-
 from pyccel.codegen.printing import fcode, ccode, pycode
 
-from pyccel.ast import FunctionDef, ClassDef, Module, Program, Import, Interface
+from pyccel.ast import FunctionDef, Module, Program, Interface
 from pyccel.ast import Header, EmptyLine, NewLine, Comment, CommentBlock
-from pyccel.ast import Assign, AliasAssign, SymbolicAssign , CodeBlock
-from pyccel.ast import Variable, DottedName
-from pyccel.ast import For, If, While, FunctionalFor, ForIterator
-from pyccel.ast import Is
-from pyccel.ast import GeneratorComprehension as GC
-from pyccel.ast import collect_vars
-from pyccel.parser.errors import Errors, PyccelCodegenError
+from pyccel.parser.errors import Errors
 
 # TODO improve this import
 

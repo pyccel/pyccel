@@ -17,6 +17,10 @@ def array_int32_1d_scalar_mul( x, a ):
     x[:] *= a
 
 @types( 'int32[:]', 'int32' )
+def array_int32_1d_scalar_div( x, a ):
+    x[:] = x / a
+
+@types( 'int32[:]', 'int32' )
 def array_int32_1d_scalar_idiv( x, a ):
     x[:] = x // a
 
@@ -250,6 +254,10 @@ def array_real_1d_scalar_mul( x, a ):
 def array_real_1d_scalar_div( x, a ):
     x[:] /= a
 
+@types( 'real[:]', 'real' )
+def array_real_1d_scalar_idiv( x, a ):
+    x[:] = x // a
+
 @types( 'real[:]', 'real[:]' )
 def array_real_1d_add( x, y ):
     x[:] += y
@@ -265,6 +273,10 @@ def array_real_1d_mul( x, y ):
 @types( 'real[:]', 'real[:]' )
 def array_real_1d_div( x, y ):
     x[:] /= y
+
+@types( 'real[:]', 'real[:]' )
+def array_real_1d_idiv( x, y ):
+    x[:] = x // y
 
 #==============================================================================
 # 2D ARRAYS OF REAL WITH C ORDERING

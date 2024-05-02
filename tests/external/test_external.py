@@ -15,7 +15,7 @@ def run(test_dir , **settings):
 
     files = sorted(os.listdir(path_dir))
     files = [f for f in files if (f.endswith(".py") and 'mpi4py' not in f)]
-    
+
     os.chdir(path_dir)
     for f in files:
         print('> testing {0}'.format(str(f)))

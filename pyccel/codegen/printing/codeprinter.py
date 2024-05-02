@@ -1,19 +1,18 @@
 # coding: utf-8
+# pylint: disable=R0201
 
 
 
 from sympy.core.basic import Basic
-from sympy.core.function import Lambda
 from sympy.core.symbol import Symbol
-from sympy.core import Add, Mul, Pow, S
+from sympy.core import Mul, Pow, S
 from sympy.core.compatibility import default_sort_key
 from sympy.core.sympify import _sympify
 from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 
-from pyccel.ast.core import Assign,DottedVariable
-from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import Assign
 from pyccel.ast import Real
 
 

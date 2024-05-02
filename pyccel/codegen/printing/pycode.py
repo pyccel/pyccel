@@ -1,10 +1,9 @@
 # coding: utf-8
+# pylint: disable=R0201
 
 from itertools import chain
 
-from sympy.core import Symbol
 from sympy.core import Tuple
-from sympy.core.compatibility import iterable
 
 from sympy.printing.pycode import PythonCodePrinter as SympyPythonCodePrinter
 from sympy.printing.pycode import _known_functions
@@ -86,6 +85,10 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_Return(self, expr):
         return 'return {}'.format(self._print(expr.expr))
+
+    def _print_PythonTuple(self, expr):
+        args = ', '.join(self._print(i) for i in expr.args)
+        return '('+args+')'
 
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
@@ -181,7 +184,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Min(self, expr):
         args = ', '.join(self._print(e) for e in expr.args)
         return 'min({})'.format(args)
-        
+
     def _print_Slice(self, expr):
         return str(expr)
 

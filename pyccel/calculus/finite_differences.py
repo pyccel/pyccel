@@ -1,5 +1,5 @@
 # coding: utf-8
-from sympy import cos, symbols, pi, simplify, Symbol
+from sympy import cos, symbols, pi, simplify
 from sympy.calculus import finite_diff_weights
 
 import numpy as np

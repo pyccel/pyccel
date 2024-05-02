@@ -5,7 +5,7 @@ import shutil
 from collections import OrderedDict
 
 from pyccel.parser.errors     import Errors
-from pyccel.codegen.codegen   import Parser
+from pyccel.parser            import Parser
 from pyccel.codegen.codegen   import Codegen
 from pyccel.codegen.utilities import construct_flags
 from pyccel.codegen.utilities import compile_fortran

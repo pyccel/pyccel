@@ -4,25 +4,9 @@ from pyccel.stdlib.internal.dfftpack import dffti
 from pyccel.stdlib.internal.dfftpack import dfftf
 from pyccel.stdlib.internal.dfftpack import dfftb
 
-from pyccel.stdlib.internal.dfftpack import dzffti
-from pyccel.stdlib.internal.dfftpack import dzfftf
-from pyccel.stdlib.internal.dfftpack import dzfftb
-
-from pyccel.stdlib.internal.dfftpack import dcosqi
-from pyccel.stdlib.internal.dfftpack import dcosqf
-from pyccel.stdlib.internal.dfftpack import dcosqb
-from pyccel.stdlib.internal.dfftpack import dcosti
-from pyccel.stdlib.internal.dfftpack import dcost
-
-from pyccel.stdlib.internal.dfftpack import dsinqi
-from pyccel.stdlib.internal.dfftpack import dsinqf
-from pyccel.stdlib.internal.dfftpack import dsinqb
-from pyccel.stdlib.internal.dfftpack import dsinti
-from pyccel.stdlib.internal.dfftpack import dsint
-
 from pyccel.stdlib.internal.dfftpack import zffti
 from pyccel.stdlib.internal.dfftpack import zfftf
-from pyccel.stdlib.internal.dfftpack import zfftb	
+from pyccel.stdlib.internal.dfftpack import zfftb
 
 
 

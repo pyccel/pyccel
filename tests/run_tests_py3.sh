@@ -1,19 +1,21 @@
-# This file can be used by developers to run all tests localy before travis
-# It must be run from pyccel's root directory, which contains 'pyccel' and 'tests'
+#!/usr/bin/env bash
+# This file can be used by developers to run all tests locally before travis
 
-#python3 tests/parser/test_headers.py
-#python3 tests/parser/test_openmp.py
-#python3 tests/parser/test_openacc.py
-#python3 tests/syntax/test_syntax.py
-#python3 tests/semantic/test_semantic.py
-#python3 tests/codegen/test_codegen.py  
-#python3 tests/errors/test_errors.py  
-#python3 tests/warnings/test_warnings.py  
-#python3 tests/preprocess/test_preprocess.py
-#python3 tests/internal/test_internal.py 
-#python3 tests/external/test_external.py  
-#python3 tests/macro/test_macro.py  
+SCRIPT_DIR=$(dirname -- "$(realpath -- "$0")")
 
-python3 -m pytest tests/pyccel -v
-python3 -m pytest tests/epyccel -v -m "not parallel"
-mpirun -n 4 python3 -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v
+#python3 "$SCRIPT_DIR"/parser/test_headers.py
+#python3 "$SCRIPT_DIR"/parser/test_openmp.py
+#python3 "$SCRIPT_DIR"/parser/test_openacc.py
+#python3 "$SCRIPT_DIR"/syntax/test_syntax.py
+#python3 "$SCRIPT_DIR"/semantic/test_semantic.py
+#python3 "$SCRIPT_DIR"/codegen/test_codegen.py
+#python3 "$SCRIPT_DIR"/errors/test_errors.py
+#python3 "$SCRIPT_DIR"/warnings/test_warnings.py
+#python3 "$SCRIPT_DIR"/preprocess/test_preprocess.py
+#python3 "$SCRIPT_DIR"/internal/test_internal.py
+#python3 "$SCRIPT_DIR"/external/test_external.py
+#python3 "$SCRIPT_DIR"/macro/test_macro.py
+
+python3 -m pytest "$SCRIPT_DIR"/pyccel -v
+python3 -m pytest "$SCRIPT_DIR"/epyccel -v -m "not parallel"
+mpirun -n 4 python3 -m pytest "$SCRIPT_DIR"/epyccel/test_epyccel_mpi_modules.py -v

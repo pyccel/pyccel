@@ -5,11 +5,8 @@ from sympy import Poly, LT
 from sympy.core.expr import Expr
 
 
-from pyccel.ast import (For, Assign, While,NewLine,
-                        FunctionDef, Import, Print,
-                        Comment, AnnotatedComment,
-                        If, Zeros, Ones, Array,
-                        Len, Dot, IndexedElement)
+from pyccel.ast import (For, Assign, NewLine,
+                        Zeros, Ones)
 
 from pyccel.complexity.basic import Complexity
 

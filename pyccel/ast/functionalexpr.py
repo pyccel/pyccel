@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from .basic import Basic
-from sympy.core.expr  import Expr, AtomicExpr
+from sympy.core.expr  import AtomicExpr
 
 __all__ = (
     'FunctionalFor',

@@ -5,10 +5,9 @@ This module contains the syntax associated to the types.tx grammar
 """
 
 from os.path import join, dirname
-from sympy.utilities.iterables import iterable
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast import DataType, datatype
+from pyccel.ast import datatype
 from pyccel.ast import Variable
 from pyccel.ast import VariableType, FunctionType
 

@@ -10,7 +10,6 @@ from .core import Basic
 from .core import Variable
 from .core import ValuedArgument
 from .core import FunctionDef, Interface
-from .core import ClassDef
 from .core import DottedName, DottedVariable
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
@@ -416,13 +415,6 @@ class MacroFunction(Header):
         # master can be a string or FunctionDef
         if not isinstance(master, (str, FunctionDef, Interface)):
             raise ValueError('Expecting a master name of FunctionDef')
-
-        # we sympify everything since a macro is operating on symbols
-        if not(args is None):
-            args = [sympify(a, locals=local_sympify) for a in args]
-
-        if not(master_args is None):
-            master_args = [sympify(a, locals=local_sympify) for a in master_args]
 
         if not(results is None):
             results = [sympify(a, locals=local_sympify) for a in results]

@@ -27,7 +27,6 @@ def test_double_loop():
     f2 = epyccel( f1 )
     assert f1( 2 ) == f2( 2 )
 
-@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_double_loop_on_2d_array_C():
 
     f1 = loops.double_loop_on_2d_array_C
@@ -40,7 +39,6 @@ def test_double_loop_on_2d_array_C():
     f2( y )
     assert np.array_equal( x, y )
 
-@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_double_loop_on_2d_array_F():
 
     f1 = loops.double_loop_on_2d_array_F
@@ -53,7 +51,6 @@ def test_double_loop_on_2d_array_F():
     f2( y )
     assert np.array_equal( x, y )
 
-@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_product_loop_on_2d_array_C():
 
     f1 = loops.product_loop_on_2d_array_C
@@ -66,7 +63,6 @@ def test_product_loop_on_2d_array_C():
     f2( y )
     assert np.array_equal( x, y )
 
-@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_product_loop_on_2d_array_F():
 
     f1 = loops.product_loop_on_2d_array_F

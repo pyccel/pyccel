@@ -19,7 +19,6 @@ from pyccel.stdlib.parallel.mpi import mpi_type_commit
 from pyccel.stdlib.parallel.mpi import mpi_type_free
 from pyccel.stdlib.parallel.mpi import mpi_sendrecv
 from pyccel.stdlib.parallel.mpi import mpi_allreduce
-from pyccel.stdlib.parallel.mpi import MPI_INTEGER
 from pyccel.stdlib.parallel.mpi import MPI_DOUBLE
 from pyccel.stdlib.parallel.mpi import MPI_SUM
 
