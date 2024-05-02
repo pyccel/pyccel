@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from pyccel import epyccel
-from modules        import mpi_point_to_point as pmod
+from modules import mpi_point_to_point as pmod
 
 #==============================================================================
 # IMPORT MODULE TO BE TESTED, EPYCCELIZE IT, AND MAKE IT AVAILABLE TO ALL PROCS
