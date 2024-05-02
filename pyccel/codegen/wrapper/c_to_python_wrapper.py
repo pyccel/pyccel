@@ -317,7 +317,7 @@ class CToPythonWrapper(Wrapper):
 
             # If the tuple is an object check that the elements have the right type
             for_scope = self.scope.create_new_loop_scope()
-            size_var = self.scope.get_temporary_variable(PythonNativeInt(), f'size')
+            size_var = self.scope.get_temporary_variable(PythonNativeInt(), 'size')
             idx = self.scope.get_temporary_variable(CNativeInt())
             indexed_py_obj = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
 
