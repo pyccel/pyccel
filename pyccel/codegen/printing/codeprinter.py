@@ -14,6 +14,7 @@ from sympy.printing.str import StrPrinter
 from pyccel.ast.core import Assign
 
 from pyccel.errors.errors     import Errors
+from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
 
 # TODO: add examples
 

@@ -17,7 +17,10 @@ from .core  import (Variable, IndexedElement, Slice, Len,
                    ValuedArgument, Constant, process_shape)
 
 from .core           import PyccelPow, PyccelMinus, PyccelAssociativeParenthesis
+from .core           import PyccelMul, PyccelAdd
 from .core           import broadcast
+from .core           import create_variable
+from .core           import CodeBlock
 
 from .builtins       import Int as PythonInt, Bool as PythonBool
 from .builtins       import PythonFloat, PythonTuple, PythonComplex
@@ -25,6 +28,7 @@ from .datatypes      import dtype_and_precision_registry as dtype_registry
 from .datatypes      import default_precision
 from .datatypes      import datatype
 from .datatypes      import NativeInteger, NativeReal, NativeComplex, NativeBool
+from .mathext        import MathFloor
 from .numbers        import Integer, Float
 from .type_inference import str_dtype
 
@@ -76,8 +80,8 @@ __all__ = (
     'Ones',
     'OnesLike',
     'Product',
-    'PyccelArraySize',
     'Rand',
+    'NumpyRandint',
     'Real',
     'Shape',
     'Where',
@@ -90,8 +94,32 @@ numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
 }
 
+def process_dtype(dtype):
+    if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt, 
+                  Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
+                  Float64, Float32):
+        dtype = dtype.__name__.lower()
+    else:
+        dtype            = str(dtype).replace('\'', '').lower()
+    dtype, precision = dtype_registry[dtype]
+    dtype            = datatype(dtype)
+
+    return dtype, precision
+
+
 class NumpyNewArray(PyccelAstNode):
-    pass
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def _process_order(order):
+
+        if (order is None) or isinstance(order, Nil):
+            return None
+
+        order = str(order).strip('\'"')
+        if order not in ('C', 'F'):
+            raise ValueError('unrecognized order = {}'.format(order))
+        return order
 
 #==============================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
@@ -111,22 +139,10 @@ class Array(Application, NumpyNewArray):
         if not isinstance(arg, (Tuple, PythonTuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
-        # Determine dtype and (if possible) precision
-        if dtype is not None:
-            if isinstance(dtype, ValuedArgument):
-                dtype = dtype.value
-            dtype = str(dtype).replace('\'', '')
-            dtype, prec = dtype_registry[dtype]
-        else:
+        # Verify dtype and get precision
+        if dtype is None:
             dtype = arg.dtype
-            prec  = arg.precision
-
-        # If necessary, use default precision
-        if not prec:
-            prec = default_precision[dtype]
-
-        # Convert dtype from string to Singleton
-        dtype = datatype(dtype)
+        dtype, prec = process_dtype(dtype)
 
         # ... Determine ordering
         if isinstance(order, ValuedArgument):
@@ -346,63 +362,8 @@ class Matmul(Application, PyccelAstNode):
 
 #==============================================================================
 
-class PyccelArraySize(Function, PyccelAstNode):
-    def __new__(cls, arg, index):
-        if not isinstance(arg, (list,
-                                tuple,
-                                Tuple,
-                                PythonTuple,
-                                List,
-                                Array,
-                                Variable,
-                                IndexedElement,
-                                IndexedBase)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-
-        return Basic.__new__(cls, arg, index)
-
-    def __init__(self, arg, index):
-        self._dtype = NativeInteger()
-        self._rank  = 0
-        self._shape = ()
-        self._precision = default_precision['integer']
-
-    @property
-    def arg(self):
-        return self._args[0]
-
-    @property
-    def index(self):
-        return self._args[1]
-
-    def _sympystr(self, printer):
-        return 'Shape({},{})'.format(str(self.arg), str(self.index))
-
-    def fprint(self, printer, lhs = None):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        if isinstance(self.arg, Array):
-            init_value = printer(self.arg.arg)
-        else:
-            init_value = printer(self.arg)
-
-        if self.arg.order == 'C':
-            index = printer(self.arg.rank - self.index)
-        else:
-            index = printer(self.index + 1)
-
-        if lhs:
-            code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value, index)
-        else:
-            code_init = 'size({0}, {1})'.format(init_value, index)
-
-        return code_init
-
 def Shape(arg):
-    if arg.shape is None:
-        return PythonTuple(*(PyccelArraySize(arg,i) for i in range(arg.rank)))
-    elif isinstance(arg.shape, PythonTuple):
+    if isinstance(arg.shape, PythonTuple):
         return arg.shape
     else:
         return PythonTuple(*arg.shape)
@@ -870,6 +831,48 @@ class Rand(Function, NumpyNewArray):
 
         return '\n'.join(stmts)
 
+#==============================================================================
+class NumpyRandint(Function, NumpyNewArray):
+
+    """
+      Represents a call to  numpy.random.random or numpy.random.rand for code generation.
+
+    """
+    _dtype = NativeInteger()
+    _precision = default_precision['integer']
+
+    def __new__(cls, low, high = None, size = None):
+        return Function.__new__(cls)
+
+    def __init__(self, low, high = None, size = None):
+        if size is None:
+            size = ()
+        if not hasattr(size,'__iter__'):
+            size = (size,)
+
+        self._shape   = size
+        self._rank    = len(self.shape)
+        self._rand    = Rand(*size)
+        self._low     = low
+        self._high    = high
+
+    @property
+    def order(self):
+        return 'C'
+
+    @property
+    def rand_expr(self):
+        return self._rand
+
+    def fprint(self, printer):
+        assert(self._rank == 0)
+        if self._high is None:
+            randreal = printer(PyccelMul(self._low, Rand()))
+        else:
+            randreal = printer(PyccelAdd(PyccelMul(PyccelAssociativeParenthesis(PyccelMinus(self._high, self._low)), Rand()), self._low))
+
+        prec_code = printer(self.precision)
+        return 'floor({}, kind={})'.format(randreal, prec_code)
 
 #==============================================================================
 class Full(Application, NumpyNewArray):
@@ -904,10 +907,10 @@ class Full(Application, NumpyNewArray):
             dtype = fill_value.dtype
 
         # Verify dtype and get precision
-        dtype, precision = cls._process_dtype(dtype)
+        dtype, precision = process_dtype(dtype)
 
         # Verify array ordering
-        order = cls._process_order(order)
+        order = NumpyNewArray._process_order(order)
 
         return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
@@ -935,32 +938,6 @@ class Full(Application, NumpyNewArray):
     @property
     def rank(self):
         return len(self.shape)
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def _process_dtype(dtype):
-        if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt, 
-                      Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
-                      Float64, Float32):
-            dtype = dtype.__name__.lower()
-        else:
-            dtype            = str(dtype).replace('\'', '').lower()
-        dtype, precision = dtype_registry[dtype]
-        dtype            = datatype(dtype)
-
-        return dtype, precision
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def _process_order(order):
-
-        if (order is None) or isinstance(order, Nil):
-            return None
-
-        order = str(order).strip('\'"')
-        if order not in ('C', 'F'):
-            raise ValueError('unrecognized order = {}'.format(order))
-        return order
 
     #--------------------------------------------------------------------------
     def fprint(self, printer, lhs, stack_array=False):
@@ -997,7 +974,7 @@ class Empty(Full):
         shape = process_shape(shape)
 
         # Verify dtype and get precision
-        dtype, precision = cls._process_dtype(dtype)
+        dtype, precision = process_dtype(dtype)
 
         # Verify array ordering
         order = cls._process_order(order)
@@ -1162,10 +1139,10 @@ class NumpyUfuncUnary(NumpyUfuncBase):
     """Numpy's universal function with one argument.
     """
     def __init__(self, x):
-        self._shape     = x.shape
-        self._rank      = x.rank
-        self._dtype     = x.dtype if x.dtype is NativeComplex() else NativeReal()
-        self._precision = default_precision[str_dtype(self._dtype)]
+        self._shape      = x.shape
+        self._rank       = x.rank
+        self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
+        self._precision  = default_precision[str_dtype(self._dtype)]
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):

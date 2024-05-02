@@ -78,7 +78,8 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
         decorators = expr.decorators
         if decorators:
-            for n,args in decorators.items():
+            for n,func in decorators.items():
+                args = func.args
                 if args:
                     args = ','.join("{}".format(i) for i in args)
                     dec = '@{name}({args})'.format(name=n, args=args)

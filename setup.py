@@ -43,7 +43,6 @@ install_requires = [
     'textx>=1.6',
     'pylint>=1.8',
     'parse>=1.8',
-    'redbaron>=0.7',
     'tabulate',
     'termcolor',
     'fastcache',

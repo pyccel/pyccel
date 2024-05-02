@@ -39,11 +39,11 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              IndexedVariable, CodeBlock,
                              IndexedElement, Slice, Dlist,
                              DottedName, AsName, DottedVariable,
-                             If)
+                             If, PyccelArraySize)
 
 
 from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.core      import create_variable, FunctionCall
+from pyccel.ast.core      import create_random_string, create_variable, FunctionCall
 from pyccel.ast.builtins  import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
@@ -53,14 +53,15 @@ from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.numbers   import Integer, Float
+from pyccel.ast.numbers   import BooleanTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Real, Where, PyccelArraySize
+from pyccel.ast.numpyext import Real, Where
 from pyccel.ast.numpyext import NumpyComplex, NumpyMod
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
-from pyccel.ast.numpyext import Rand
+from pyccel.ast.numpyext import Rand, NumpyRandint
 from pyccel.ast.numpyext import NumpyNewArray
 
 from pyccel.errors.errors import Errors
@@ -229,7 +230,7 @@ class FCodePrinter(CodePrinter):
                 return container.functions[name]
             container = container.parent_scope
         errors.report(UNDEFINED_FUNCTION, symbol=name,
-            severity='fatal', blocker=self.blocking)
+            severity='fatal')
 
 
     def _get_statement(self, codestring):
@@ -335,7 +336,7 @@ class FCodePrinter(CodePrinter):
         # TODO should we find a better way to do this?
         imports = list(expr.imports)
         for i in expr.imports:
-            if 'mpi4py' == str(i.target[0]):
+            if 'mpi4py' == str(getattr(i.source,'name',i.source)):
                 mpi = True
 
         imports = '\n'.join(self._print(i) for i in imports)
@@ -439,26 +440,27 @@ class FCodePrinter(CodePrinter):
         if str(expr.source) in pyccel_builtin_import_registery:
             return ''
 
-        if expr.source is None:
-            prefix = 'use'
+        if isinstance(expr.source, DottedName):
+            source = expr.source.name[-1]
         else:
-            if isinstance(expr.source, DottedName):
-                source = expr.source.name[-1]
-            else:
-                source = self._print(expr.source)
-            prefix = 'use {}, only:'.format(source)
+            source = self._print(expr.source)
 
         # importing of pyccel extensions is not printed
         if source in pyccel_builtin_import_registery:
             return ''
-        if 'mpi4py' == str(expr.target[0]):
+        if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return '\n'.join(['use mpi', 'use mpiext'])
+
+        if len(expr.target) == 0:
+            return 'use {}'.format(source)
+
+        prefix = 'use {}, only:'.format(source)
 
         code = ''
         for i in expr.target:
             if isinstance(i, AsName):
-                target = '{name} => {target}'.format(name=self._print(i.name),
-                                                     target=self._print(i.target))
+                target = '{target} => {name}'.format(target=self._print(i.target),
+                                                     name=self._print(i.name))
                 line = '{prefix} {target}'.format(prefix=prefix,
                                                   target=target)
 
@@ -641,12 +643,8 @@ class FCodePrinter(CodePrinter):
         return ' % '.join(self._print(n) for n in expr.name)
 
     def _print_Concatenate(self, expr):
-         if expr.is_list:
-             code = ', '.join(self._print(a) for a in expr.args)
-             return '[' + code + ']'
-         else:
-             code = '//'.join('trim('+self._print(a)+')' for a in expr.args)
-             return code
+         code = ', '.join(self._print(a) for a in expr.args)
+         return '[' + code + ']'
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
@@ -746,7 +744,9 @@ class FCodePrinter(CodePrinter):
         return expr.fprint(self._print)
 
     def _print_Rand(self, expr):
-        assert(expr.rank==0)
+        if expr.rank != 0:
+            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+                          symbol=expr, severity='fatal')
 
         if (not self._additional_code):
             self._additional_code = ''
@@ -764,6 +764,12 @@ class FCodePrinter(CodePrinter):
 
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
         return self._print(var)
+
+    def _print_NumpyRandint(self, expr):
+        if expr.rank != 0:
+            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+                          symbol=expr, severity='fatal')
+        return expr.fprint(self._print)
 
     def _print_Min(self, expr):
         args = expr.args
@@ -844,7 +850,7 @@ class FCodePrinter(CodePrinter):
                 return 'MPI_INTEGER8'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal', blocker=self.blocking)
+                    severity='fatal')
 
         elif dtype == 'real':
             if prec==8:
@@ -853,11 +859,11 @@ class FCodePrinter(CodePrinter):
                 return 'MPI_FLOAT'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal', blocker=self.blocking)
+                    severity='fatal')
 
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
 
     def _print_MacroCount(self, expr):
 
@@ -899,7 +905,7 @@ class FCodePrinter(CodePrinter):
 
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
 
         if rank == 0:
                 return '1'
@@ -935,7 +941,7 @@ class FCodePrinter(CodePrinter):
         var = expr.variable
         rank        = var.rank
         allocatable = var.allocatable
-        shape       = var.shape
+        shape       = var.alloc_shape
         is_pointer = var.is_pointer
         is_target = var.is_target
         is_stack_array = var.is_stack_array
@@ -1038,7 +1044,7 @@ class FCodePrinter(CodePrinter):
             rankstr = '(' + rankstr + ')'
 #        else:
 #            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-#                severity='fatal', blocker=self.blocking)
+#                severity='fatal')
 
 
         if not is_static:
@@ -1153,7 +1159,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (Range, Product)):
             return ''
 
-        if isinstance(rhs, Len):
+        if isinstance(rhs, (Len, NumpyRandint)):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}'.format(lhs_code, rhs_code)
 
@@ -1302,7 +1308,8 @@ class FCodePrinter(CodePrinter):
         return '.False.'
 
     def _print_String(self, expr):
-        return expr.arg
+        formatted_str = expr.arg.replace("'","''")
+        return "'{}'".format(formatted_str)
 
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
@@ -1544,7 +1551,7 @@ class FCodePrinter(CodePrinter):
                     code = 'deallocate({0}){1}'.format(self._print(var), code)
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal', blocker=self.blocking)
+                    severity='fatal')
         return code
 
     def _print_ClassDef(self, expr):
@@ -1592,9 +1599,9 @@ class FCodePrinter(CodePrinter):
 
         sep = self._print(SeparatorComment(40))
         # we rename all methods because of the aliasing
-        cls_methods = [i.rename('{0}'.format(i.name)) for i in expr.methods]
+        cls_methods = [i.clone('{0}'.format(i.name)) for i in expr.methods]
         for i in expr.interfaces:
-            cls_methods +=  [j.rename('{0}'.format(j.name)) for j in i.functions]
+            cls_methods +=  [j.clone('{0}'.format(j.name)) for j in i.functions]
 
 
         methods = ''
@@ -1610,7 +1617,7 @@ class FCodePrinter(CodePrinter):
         return 'exit'
 
     def _print_Continue(self, expr):
-        return 'continue'
+        return 'cycle'
 
     def _print_AugAssign(self, expr):
         lhs    = expr.lhs
@@ -1661,12 +1668,8 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_FunctionalFor(self, expr):
-        allocate = ''
-        if expr.lhs and len(expr.lhs.shape)>0:
-            allocate = ','.join('0:{0}'.format(str(i)) for i in expr.lhs.shape)
-            allocate ='allocate({0}({1}))\n'.format(expr.lhs.name, allocate)
         loops = '\n'.join(self._print(i) for i in expr.loops)
-        return allocate + loops
+        return loops
 
     def _print_For(self, expr):
         prolog = ''
@@ -1678,7 +1681,7 @@ class FCodePrinter(CodePrinter):
             if not isinstance(iterable, Range):
                 # Only iterable currently supported is Range
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal', blocker=self.blocking)
+                    severity='fatal')
 
             tar        = self._print(target)
             range_code = self._print(iterable)
@@ -1692,7 +1695,7 @@ class FCodePrinter(CodePrinter):
         if not isinstance(expr.iterable, (Range, Product , Zip, Enumerate, Map)):
             # Only iterable currently supported are Range or Product
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
 
         if isinstance(expr.iterable, Range):
             prolog, epilog = _do_range(expr.target, expr.iterable, \
@@ -2109,7 +2112,7 @@ class FCodePrinter(CodePrinter):
             return '{} .eqv. {}'.format(lhs, rhs)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
-            severity='fatal', blocker=self.blocking)
+            severity='fatal')
 
     def _print_IsNot(self, expr):
         lhs = self._print(expr.lhs)
@@ -2124,7 +2127,7 @@ class FCodePrinter(CodePrinter):
             return '{} .neqv. {}'.format(lhs, rhs)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
-            severity='fatal', blocker=self.blocking)
+            severity='fatal')
 
     def _print_If(self, expr):
         # ...
@@ -2133,7 +2136,7 @@ class FCodePrinter(CodePrinter):
         for i, (c, e) in enumerate(expr.args):
             if i == 0:
                 lines.append("if (%s) then" % self._print(c))
-            elif i == len(expr.args) - 1 and c == True:
+            elif i == len(expr.args) - 1 and c is BooleanTrue():
                 lines.append("else")
             else:
                 lines.append("else if (%s) then" % self._print(c))
@@ -2157,7 +2160,10 @@ class FCodePrinter(CodePrinter):
         return '{} ** {}'.format(base_c, e_c)
 
     def _print_PyccelAdd(self, expr):
-        return ' + '.join(self._print(a) for a in expr.args)
+        if expr.dtype is NativeString():
+            return '//'.join('trim('+self._print(a)+')' for a in expr.args)
+        else:
+            return ' + '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelMinus(self, expr):
         args = [self._print(a) for a in expr.args]
@@ -2329,7 +2335,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = ''
             out_vars = []
             for r in func.results:
-                var_name = create_variable(r).name
+                var_name = 'Dummy_' + create_random_string(r)
                 var =  r.clone(name = var_name)
 
                 if self._current_function:
@@ -2515,7 +2521,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = ''
             out_vars = []
             for r in func.results:
-                var_name = create_variable(r).name
+                var_name = 'Dummy_' + create_random_string(r)
                 var =  r.clone(name = var_name)
 
                 if self._current_function:

@@ -1451,3 +1451,55 @@ def test_rand_expr_array():
     assert(all([yi >= 3   for yi in y]))
     assert(all([isinstance(yi,float) for yi in y]))
     assert(len(set(y))>1)
+
+def test_randint_basic():
+    @types('int')
+    def create_val(high):
+        from numpy.random import randint # pylint: disable=reimported
+        return randint(high)
+
+    @types('int','int')
+    def create_val_low(low, high):
+        from numpy.random import randint # pylint: disable=reimported
+        return randint(low, high)
+
+    f1 = epyccel(create_val)
+    y = [f1(100) for i in range(10)]
+    assert(all([yi <  100 for yi in y]))
+    assert(all([yi >= 0 for yi in y]))
+    assert(all([isinstance(yi,int) for yi in y]))
+    assert(len(set(y))>1)
+
+    f2 = epyccel(create_val_low)
+    y = [f2(25, 100) for i in range(10)]
+    assert(all([yi <  100 for yi in y]))
+    assert(all([yi >= 25 for yi in y]))
+    assert(all([isinstance(yi,int) for yi in y]))
+    assert(len(set(y))>1)
+
+def test_randint_expr():
+    @types('int')
+    def create_val(high):
+        from numpy.random import randint # pylint: disable=reimported
+        x = 2*randint(high)
+        return x
+
+    @types('int','int')
+    def create_val_low(low, high):
+        from numpy.random import randint # pylint: disable=reimported
+        x = 2*randint(low, high)
+        return x
+
+    f1 = epyccel(create_val)
+    y = [f1(27) for i in range(10)]
+    assert(all([yi <  54 for yi in y]))
+    assert(all([yi >= 0  for yi in y]))
+    assert(all([isinstance(yi,int) for yi in y]))
+    assert(len(set(y))>1)
+
+    f2 = epyccel(create_val_low)
+    y = [f2(21,46) for i in range(10)]
+    assert(all([yi <  92 for yi in y]))
+    assert(all([yi >= 42 for yi in y]))
+    assert(all([isinstance(yi,int) for yi in y]))
+    assert(len(set(y))>1)

@@ -1,23 +1,14 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=R0201
 
-import redbaron
 import os
 import re
 
+import ast
 #==============================================================================
-
-from redbaron import RedBaron
-from redbaron import AssignmentNode
-from redbaron import DefNode
-from redbaron import ClassNode
-from redbaron import TupleNode, ListNode
-from redbaron import ArgumentGeneratorComprehensionNode
-from redbaron import DictitemNode
-from redbaron import DotNode
-from redbaron import CallNode
-from redbaron import GetitemNode
-from redbaron import CommentNode
+from pyccel.parser.extend_tree import extend_tree
+from pyccel.parser.extend_tree import CommentLine, CommentMultiLine
+#==============================================================================
 
 from sympy.core.function import Function
 from sympy import Symbol
@@ -60,6 +51,7 @@ from pyccel.ast.core import List
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import create_variable
+from pyccel.ast.core import _atomic
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
@@ -72,8 +64,6 @@ from pyccel.ast.numbers  import Integer, Float, Complex, BooleanFalse, BooleanTr
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
 from pyccel.parser.base import BasicParser
-from pyccel.parser.utilities import fst_move_directives, preprocess_imports
-from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import read_file
 from pyccel.parser.utilities import get_default_path
 
@@ -93,8 +83,6 @@ errors = Errors()
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 
-redbaron.ipython_behavior = False
-
 # use this to delete ansi_escape characters from a string
 # Useful for very coarse version differentiation.
 
@@ -102,9 +90,8 @@ redbaron.ipython_behavior = False
 
 def change_priority( expr ):
     """
-       RedBaron parses an expression from right to left
-       this function makes sure that we evaluate our expression
-       from left to right based in the priority of the operator.
+       Python ast does not parse parentheses.
+       This function inserts parentheses if they are required
 
        Examples
        --------
@@ -120,15 +107,16 @@ def change_priority( expr ):
     """
     first  = expr.args[0]
     second = expr.args[1]
-    if isinstance(second, PyccelOperator) and second.p<=expr.p:
-            a    = first
-            b    = second.args[0]
-            c    = second.args[1]
-            a    = expr.func(a,b)
-            a    = change_priority(a)
-            return second.func(a,c)
-    else:
-        return expr
+
+    if isinstance(first,  PyccelOperator) and first.p  <= expr.p:
+        first = PyccelAssociativeParenthesis(first)
+
+    if isinstance(second, PyccelOperator) and second.p <= expr.p:
+        second = PyccelAssociativeParenthesis(second)
+
+    expr = expr.func(first, second)
+
+    return expr
 
 class SyntaxParser(BasicParser):
 
@@ -160,24 +148,17 @@ class SyntaxParser(BasicParser):
 
         self._code = code
 
-        try:
-            code = self.code
-            red = RedBaron(code)
-        except Exception:
-            errors = Errors()
-            errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
-                          severity='fatal')
+        self._scope = []
 
-        preprocess_imports(red)
+        tree = extend_tree(code)
 
-        red = fst_move_directives(red)
-        self._fst = red
+        self._fst = tree
         
 
         self.parse(verbose=True)
 
     def parse(self, verbose=False):
-        """converts redbaron fst to sympy ast."""
+        """converts python ast to sympy ast."""
 
         if self.syntax_done:
             print ('> syntax analysis already done')
@@ -191,7 +172,6 @@ class SyntaxParser(BasicParser):
             errors.set_target(self.filename, 'file')
         errors.set_parser_stage('syntax')
 
-        # we add the try/except to allow the parser to find all possible errors
         PyccelAstNode.stage = 'syntactic'
         ast = self._visit(self.fst)
 
@@ -203,21 +183,7 @@ class SyntaxParser(BasicParser):
 
     def _treat_iterable(self, stmt):
 
-        """
-        since redbaron puts the first comments after a block statement
-        inside the block, we need to remove them. this is in particular the
-        case when using openmp/openacc pragmas like #$ omp end loop
-        """
-
-        ls = [self._visit(i) for i in stmt]
-
-        if isinstance(stmt, (list, ListNode)):
-
-            return List(*ls, sympify=False)
-        elif isinstance(stmt, (tuple, TupleNode)):
-            return PythonTuple(*ls)
-        else:
-            return Tuple(*ls, sympify=False)
+        return [self._visit(i) for i in stmt]
 
     def _visit(self, stmt):
         """Creates AST from FST."""
@@ -229,24 +195,41 @@ class SyntaxParser(BasicParser):
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
-            return getattr(self, syntax_method)(stmt)
+            self._scope.append(stmt)
+            result = getattr(self, syntax_method)(stmt)
+            self._scope.pop()
+            return result
 
         # Unknown object, we raise an error.
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
-                      bounding_box=stmt.absolute_bounding_box,
+        if hasattr(stmt, 'lineno'):
+            bounding_box = (stmt.lineno, stmt.col_offset)
+        else:
+            bounding_box = None
+        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=ast.dump(stmt),
+                      bounding_box=bounding_box,
                       severity='fatal')
 
-    def _visit_RedBaron(self, stmt):
+    def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
-        prog = []
-        mod  = []
-        start = []
-        current_file = start
-        targets = []
+        prog          = []
+        mod           = []
+        start         = []
+        current_file  = start
+        targets       = []
         n_empty_lines = 0
-        is_prog = False
-        for i in stmt:
-            v = self._visit(i)
+        is_prog       = False
+        body          = [self._visit(v) for v in stmt.body]
+
+        new_body      = []
+        for i in body:
+            if isinstance(i, CodeBlock):
+                new_body += list(i.body)
+            else:
+                new_body.append(i)
+
+        body = new_body
+        for v in body:
+
             if n_empty_lines > 3:
                 current_file = start
             if isinstance(v,(FunctionDef, ClassDef)):
@@ -290,7 +273,7 @@ class SyntaxParser(BasicParser):
         mod_code = CodeBlock(mod) if len(targets)>0 else None
         if is_prog:
             if mod_code:
-                expr = Import(targets, source=current_mod_name)
+                expr = Import(source=current_mod_name, target = targets)
                 prog.insert(0,expr)
             prog_code = CodeBlock(prog)
             prog_code.set_fst(stmt)
@@ -305,75 +288,48 @@ class SyntaxParser(BasicParser):
                             prog_name = prog_name,
                             mod_name  = current_mod_name)
         code.set_fst(stmt)
+        code._fst.lineno=1
+        code._fst.col_offset=1
         return code
 
-    def _visit_LineProxyList(self, stmt):
-        return self._treat_iterable(stmt)
+    def _visit_Expr(self, stmt):
+        return self._visit(stmt.value)
 
-    def _visit_CommaProxyList(self, stmt):
-        return self._treat_iterable(stmt)
+    def _visit_Tuple(self, stmt):
+        return PythonTuple(*self._treat_iterable(stmt.elts))
 
-    def _visit_NodeList(self, stmt):
-        return self._treat_iterable(stmt)
-
-    def _visit_TupleNode(self, stmt):
-        return self._treat_iterable(stmt)
-
-    def _visit_ListNode(self, stmt):
-        return self._treat_iterable(stmt)
+    def _visit_List(self, stmt):
+        return List(*self._treat_iterable(stmt.elts), sympify=False)
 
     def _visit_tuple(self, stmt):
-        return self._treat_iterable(stmt)
+        return Tuple(*self._treat_iterable(stmt), sympify=False)
 
     def _visit_list(self, stmt):
         return self._treat_iterable(stmt)
 
-
-    def _visit_DottedAsNameNode(self, stmt):
-
-        names = []
-        for a in stmt.value:
-            names.append(strip_ansi_escape.sub('', a.value))
-
-        if len(names) == 1:
-            return names[0]
-        else:
-
-            return DottedName(*names)
-
-    def _visit_NameAsNameNode(self, stmt):
-
-        if not isinstance(stmt.value, str):
+    def _visit_alias(self, stmt):
+        if not isinstance(stmt.name, str):
             raise TypeError('Expecting a string')
 
-        value = strip_ansi_escape.sub('', stmt.value)
-        if not stmt.target:
-            return value
+        old = self._visit(stmt.name)
 
-        old = value
-        new = self._visit(stmt.target)
+        if stmt.asname:
+            new = self._visit(stmt.asname)
+            return AsName(old, new)
+        else:
+            return old
 
-        # TODO improve
-
-        if isinstance(old, str):
-            old = old.replace("'", '')
-        if isinstance(new, str):
-            new = new.replace("'", '')
-        return AsName(new, old)
-
-    def _visit_DictNode(self, stmt):
+    def _visit_Dict(self, stmt):
 
         d = {}
-        for i in stmt.value:
-            if not isinstance(i, DictitemNode):
-                raise TypeError('Expecting a DictitemNode')
+        for key, value in zip(stmt.keys, stmt.values):
 
-            key = self._visit(i.key)
-            value = self._visit(i.value)
+            key = self._visit(key)
+            value = self._visit(value)
 
             # sympy does not allow keys to be strings
 
-            if isinstance(key, str):
+            if isinstance(key, String):
                 errors.report(SYMPY_RESTRICTION_DICT_KEYS,
                               severity='error')
 
@@ -385,183 +341,248 @@ class SyntaxParser(BasicParser):
 
     def _visit_str(self, stmt):
 
-        return repr(stmt)
+        return stmt
 
-    def _visit_StringNode(self, stmt):
-        val =  stmt.value
-        if isinstance(stmt.parent,(RedBaron, DefNode)):
+    def _visit_Str(self, stmt):
+        val =  stmt.s
+        if isinstance(self._scope[-2], ast.Expr):
             return CommentBlock(val)
         return String(val)
 
-    def _visit_IntNode(self, stmt):
+    def _visit_Num(self, stmt):
+        val = stmt.n
 
-        val = strip_ansi_escape.sub('', stmt.value)
-        return Integer(val)
+        if isinstance(val, int):
+            return Integer(val)
+        elif isinstance(val, float):
+            return Float(val)
+        elif isinstance(val, complex):
+            return Complex(Float(val.real), Float(val.imag))
+        else:
+            raise NotImplementedError('Num type {} not recognised'.format(type(val)))
 
-    def _visit_FloatNode(self, stmt):
+    def _visit_Assign(self, stmt):
 
-        val = strip_ansi_escape.sub('', stmt.value)
+        lhs = self._visit(stmt.targets)
+        if len(lhs)==1:
+            lhs = lhs[0]
+        else:
+            lhs = PythonTuple(*lhs)
 
-        val = val[:20] if len(val)>20 else val
-        return Float(val)
+        rhs = self._visit(stmt.value)
+        expr = Assign(lhs, rhs)
 
-    def _visit_FloatExponantNode(self, stmt):
+        # we set the fst to keep track of needed information for errors
 
-        val = strip_ansi_escape.sub('', stmt.value)
-        val = val[:20] if len(val)>20 else val
-        return Float(val)
+        expr.set_fst(stmt)
+        return expr
 
-    def _visit_ComplexNode(self, stmt):
-
-        val = complex(strip_ansi_escape.sub('', stmt.value))
-        return Complex(Float(val.real), Float(val.imag))
-
-    def _visit_AssignmentNode(self, stmt):
+    def _visit_AugAssign(self, stmt):
 
         lhs = self._visit(stmt.target)
         rhs = self._visit(stmt.value)
-        if stmt.operator in ['+', '-', '*', '/']:
-            expr = AugAssign(lhs, stmt.operator, rhs)
+        if isinstance(stmt.op, ast.Add):
+            expr = AugAssign(lhs, '+', rhs)
+        elif isinstance(stmt.op, ast.Sub):
+            expr = AugAssign(lhs, '-', rhs)
+        elif isinstance(stmt.op, ast.Mult):
+            expr = AugAssign(lhs, '*', rhs)
+        elif isinstance(stmt.op, ast.Div):
+            expr = AugAssign(lhs, '/', rhs)
+        elif isinstance(stmt.op, ast.Mod):
+            expr = AugAssign(lhs, '%', rhs)
         else:
-            expr = Assign(lhs, rhs)
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
+                      severity='fatal')
 
-            # we set the fst to keep track of needed information for errors
+        # we set the fst to keep track of needed information for errors
 
         expr.set_fst(stmt)
         return expr
 
-    def _visit_NameNode(self, stmt):
-        if stmt.value == 'None':
+    def _visit_arguments(self, stmt):
+        arguments = []
+        if stmt.vararg or stmt.kwarg:
+            errors.report(VARARGS, symbol = stmt,
+                    bounding_box=(stmt.lineno, stmt.col_offset),
+                    severity='fatal')
+
+        if stmt.args:
+            n_expl = len(stmt.args)-len(stmt.defaults)
+            arguments += [Argument(a.arg) for a in stmt.args[:n_expl]]
+            arguments += [ValuedArgument(Argument(a.arg),self._visit(d)) for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
+        elif stmt.kwonlyargs:
+            arguments += [ValuedArgument(Argument(a.arg),self._visit(d)) for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults)]
+
+        return arguments
+
+    def _visit_Constant(self, stmt):
+        # New in python3.8 this class contains NameConstant, Num, and String types
+        if stmt.value is None:
             return Nil()
 
-        elif stmt.value == 'True':
+        elif stmt.value is True:
             return BooleanTrue()
 
-        elif stmt.value == 'False':
+        elif stmt.value is False:
+            return BooleanFalse()
+
+        elif isinstance(stmt.value, int):
+            return Integer(stmt.value)
+
+        elif isinstance(stmt.value, float):
+            return Float(stmt.value)
+
+        elif isinstance(stmt.value, complex):
+            return Complex(Float(stmt.value.real), Float(stmt.value.imag))
+
+        elif isinstance(stmt.value, str):
+            return self._visit_Str(stmt)
+
+        else:
+            raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
+
+    def _visit_NameConstant(self, stmt):
+        if stmt.value is None:
+            return Nil()
+
+        elif stmt.value is True:
+            return BooleanTrue()
+
+        elif stmt.value is False:
             return BooleanFalse()
 
         else:
-            val = strip_ansi_escape.sub('', stmt.value)
-            return Symbol(val)
+            raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
 
-    def _visit_ImportNode(self, stmt):
-        errors.report(PYCCEL_UNEXPECTED_IMPORT,
-                      bounding_box=stmt.absolute_bounding_box,
-                      severity='error')
 
-        ls = self._visit(stmt.value)
-        ls = get_default_path(ls)
-        expr = Import(ls)
-        expr.set_fst(stmt)
-        self.insert_import(expr)
-        return expr
+    def _visit_Name(self, stmt):
+        return Symbol(stmt.id)
 
-    def _visit_FromImportNode(self, stmt):
+    def _treat_import_source(self, source, level):
+        source = '.'*level + str(source)
+        if source.count('.') == 0:
+            source = Symbol(source)
+        else:
+            source = DottedName(*source.split('.'))
 
-        if not isinstance(stmt.parent, (RedBaron, DefNode)):
-            errors.report(PYCCEL_RESTRICTION_IMPORT,
-                          bounding_box=stmt.absolute_bounding_box,
-                          severity='error')
+        return get_default_path(source)
 
-        source = self._visit(stmt.value)
-
-        st     = stmt.value[0]
-        dots   = ''
-        while isinstance(st.previous, DotNode):
-            dots  = dots + '.'
-            st    = st.previous
-
-        if isinstance(source, DottedVariable):
-            source = DottedName(*source.names)
-
-        if len(dots)>1:
-            if isinstance(source, DottedName):
-                source = DottedName(dots[:-1], *source.name)
+    def _visit_Import(self, stmt):
+        expr = []
+        for name in stmt.names:
+            imp = self._visit(name)
+            if isinstance(imp, AsName):
+                source = AsName(self._treat_import_source(imp.name, 0), imp.target)
             else:
-                source = Symbol(dots + str(source.name))
+                source = self._treat_import_source(imp, 0)
+            import_line = Import(source)
+            import_line.set_fst(stmt)
+            self.insert_import(import_line)
+            expr.append(import_line)
 
-        source = get_default_path(source)
+        if len(expr)==1:
+            return expr[0]
+        else:
+            expr = CodeBlock(expr)
+            expr.set_fst(stmt)
+            return expr
+
+    def _visit_ImportFrom(self, stmt):
+
+        source = self._treat_import_source(stmt.module, stmt.level)
+
         targets = []
-        for i in stmt.targets:
+        for i in stmt.names:
             s = self._visit(i)
             if s == '*':
                 errors.report(PYCCEL_RESTRICTION_IMPORT_STAR,
-                              bounding_box=stmt.absolute_bounding_box,
+                              bounding_box=(stmt.lineno, stmt.col_offset),
                               severity='error')
 
             targets.append(s)
 
-        expr = Import(targets, source=source)
+        expr = Import(source, targets)
         expr.set_fst(stmt)
         self.insert_import(expr)
         return expr
 
-    def _visit_DelNode(self, stmt):
-        arg = self._visit(stmt.value)
+    def _visit_Delete(self, stmt):
+        arg = self._visit(stmt.targets)
         return Del(arg)
 
-    def _visit_UnitaryOperatorNode(self, stmt):
+    def _visit_UnaryOp(self, stmt):
 
-        target = self._visit(stmt.target)
-        if stmt.value == 'not':
-            return PyccelUnary(PyccelNot(target))
-        elif stmt.value == '+':
-            return PyccelUnary(target)
-        elif stmt.value == '-':
-            return PyccelUnary(PyccelMinus(target))
-        elif stmt.value == '~':
+        target = self._visit(stmt.operand)
+
+        if isinstance(stmt.op, ast.Not):
+            Func = PyccelNot
+
+        elif isinstance(stmt.op, ast.UAdd):
+            Func = PyccelUnary
+
+        elif isinstance(stmt.op, ast.USub):
+            Func = PyccelMinus
+
+        elif isinstance(stmt.op, ast.Invert):
 
             errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
-                          bounding_box=stmt.absolute_bounding_box,
-                          severity='error')
+                          bounding_box=(stmt.lineno, stmt.col_offset),
+                          severity='fatal')
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                          bounding_box=stmt.absolute_bounding_box,
+                          bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
-    def _visit_BinaryOperatorNode(self, stmt):
+        if isinstance(target,  PyccelOperator) and target.p  <= Func.p:
+            target = PyccelAssociativeParenthesis(target)
 
-        first  = self._visit(stmt.first)
-        second = self._visit(stmt.second)
+        return PyccelUnary(Func(target))
 
-        if stmt.value == '+':
+    def _visit_BinOp(self, stmt):
+
+        first  = self._visit(stmt.left)
+        second = self._visit(stmt.right)
+
+        if isinstance(stmt.op, ast.Add):
             expr = PyccelAdd(first, second)
             return change_priority(expr)
 
-        elif stmt.value == '*':
+        elif isinstance(stmt.op, ast.Mult):
             expr = PyccelMul(first, second)
             return change_priority(expr)
 
-        elif stmt.value == '-':
+        elif isinstance(stmt.op, ast.Sub):
             expr = PyccelMinus(first, second)
             return change_priority(expr)
 
-        elif stmt.value == '/':
+        elif isinstance(stmt.op, ast.Div):
             expr = PyccelDiv(first, second)
             return change_priority(expr)
 
-        elif stmt.value == '**':
+        elif isinstance(stmt.op, ast.Pow):
             expr = PyccelPow(first, second)
             return change_priority(expr)
 
-        elif stmt.value == '//':
+        elif isinstance(stmt.op, ast.FloorDiv):
             expr = PyccelFloorDiv(first, second)
             return change_priority(expr)
 
-        elif stmt.value == '%':
+        elif isinstance(stmt.op, ast.Mod):
             expr = PyccelMod(first, second)
             return change_priority(expr)
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                          bounding_box=stmt.absolute_bounding_box,
+                          bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
-    def _visit_BooleanOperatorNode(self, stmt):
+    def _visit_BoolOp(self, stmt):
 
-        first = self._visit(stmt.first)
-        second = self._visit(stmt.second)
+        first = self._visit(stmt.values[0])
+        second = self._visit(stmt.values[1])
 
-        if stmt.value == 'and':
+        if isinstance(stmt.op, ast.And):
             if isinstance(second, PyccelOr):
                 args  = second.args
                 first = PyccelAnd(first, args[0]  )
@@ -569,7 +590,7 @@ class SyntaxParser(BasicParser):
             else:
                 return PyccelAnd(first, second)
 
-        if stmt.value == 'or':
+        if isinstance(stmt.op, ast.Or):
             if isinstance(second, PyccelAnd):
                 args  = second.args
                 first = PyccelOr(first, args[0])
@@ -578,96 +599,61 @@ class SyntaxParser(BasicParser):
                 return PyccelOr(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                      bounding_box=stmt.absolute_bounding_box,
+                      symbol = ast.dump(stmt.op),
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='fatal')
 
-    def _visit_ComparisonNode(self, stmt):
+    def _visit_Compare(self, stmt):
+        if len(stmt.ops)>1:
+            errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
+                      severity='fatal')
 
-        first = self._visit(stmt.first)
-        second = self._visit(stmt.second)
-        op = stmt.value.first
-        if(stmt.value.second):
-            op = op + ' ' + stmt.value.second
+        first = self._visit(stmt.left)
+        second = self._visit(stmt.comparators[0])
+        op = stmt.ops[0]
 
-        if op == '==':
+        if isinstance(op, ast.Eq):
             return PyccelEq(first, second)
-        if op == '!=':
+        if isinstance(op, ast.NotEq):
             return PyccelNe(first, second)
-        if op == '<':
+        if isinstance(op, ast.Lt):
             return PyccelLt(first, second)
-        if op == '>':
+        if isinstance(op, ast.Gt):
             return PyccelGt(first, second)
-        if op == '<=':
+        if isinstance(op, ast.LtE):
             return PyccelLe(first, second)
-        if op == '>=':
+        if isinstance(op, ast.GtE):
             return PyccelGe(first, second)
-        if op == 'is':
+        if isinstance(op, ast.Is):
             return Is(first, second)
-        if op == 'is not':
+        if isinstance(op, ast.IsNot):
             return IsNot(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                      bounding_box=stmt.absolute_bounding_box,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='fatal')
 
-    def _visit_PrintNode(self, stmt):
-        expr = self._visit(stmt.value[0])
-        expr = PythonTuple(*expr.args)
-        return Print(expr)
-
-    def _visit_AssociativeParenthesisNode(self, stmt):
-        return PyccelAssociativeParenthesis(self._visit(stmt.value))
-
-    def _visit_DefArgumentNode(self, stmt):
-        name = str(self._visit(stmt.target))
-        name = strip_ansi_escape.sub('', name)
-        arg = Argument(name)
-        if stmt.value is None:
-            return arg
-        else:
-
-            value = self._visit(stmt.value)
-            return ValuedArgument(arg, value)
-
-    def _visit_ReturnNode(self, stmt):
+    def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
         if not isinstance(results, (list, PythonTuple, List)):
             results = [results]
-        assigns  = []
-        new_vars = []
-        for result in results:
-            if not isinstance(result, Symbol):
-                new_vars.append(create_variable(result))
-                new_stmt  = Assign(new_vars[-1], result)
-                new_stmt.set_fst(stmt)
-                assigns.append(new_stmt)
-            else:
-                new_vars.append(result)
-
-        if assigns:
-            expr = Return(new_vars, CodeBlock(assigns))
-        else:
-            expr = Return(new_vars)
+        expr = Return(results)
         expr.set_fst(stmt)
         return expr
 
-    def _visit_PassNode(self, stmt):
+    def _visit_Pass(self, stmt):
         return Pass()
 
-    def _visit_DefNode(self, stmt):
+    def _visit_FunctionDef(self, stmt):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
-        if isinstance(stmt.parent, ClassNode):
-            cls_name = stmt.parent.name
-        else:
-            cls_name = None
 
         name = self._visit(stmt.name)
         name = name.replace("'", '')
-        name = strip_ansi_escape.sub('', name)
 
-        arguments    = self._visit(stmt.arguments)
-        results      = []
+        arguments    = self._visit(stmt.args)
+
         local_vars   = []
         global_vars  = []
         header       = None
@@ -679,28 +665,24 @@ class SyntaxParser(BasicParser):
         imports      = []
 
         # TODO improve later
-        decorators = {}
-        for i in stmt.decorators:
-            if isinstance(i,CommentNode):
-                continue
-            decorators.update(self._visit(i))
+        decorators = {str(d) if isinstance(d,Symbol) else str(type(d)): d \
+                            for d in self._visit(stmt.decorator_list)}
 
         if 'bypass' in decorators:
             return EmptyLine()
 
         if 'stack_array' in decorators:
-            args = decorators['stack_array']
+            args = list(decorators['stack_array'].args)
             for i in range(len(args)):
                 args[i] = str(args[i]).replace("'", '')
-            decorators['stack_array'] = args
+            decorators['stack_array'] = tuple(args)
         # extract the types to construct a header
         if 'types' in decorators:
             types = []
             results = []
             container = types
             i = 0
-            n = len(decorators['types'])
-            ls = decorators['types']
+            ls = decorators['types'].args
             while i<len(ls) :
                 arg = ls[i]
 
@@ -718,7 +700,7 @@ class SyntaxParser(BasicParser):
                     if not arg_name == 'results':
                         msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
                         errors.report(msg,
-                                      bounding_box=stmt.absolute_bounding_box,
+                                      bounding_box=(stmt.lineno, stmt.col_offset),
                                       severity='error')
                     else:
                         ls = arg if isinstance(arg, PythonTuple) else [arg]
@@ -726,7 +708,7 @@ class SyntaxParser(BasicParser):
                 else:
                     msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
                     errors.report(msg,
-                                  bounding_box=stmt.absolute_bounding_box,
+                                  bounding_box=(stmt.lineno, stmt.col_offset),
                                   severity='error')
 
                 i = i+1
@@ -741,7 +723,7 @@ class SyntaxParser(BasicParser):
             if name in self.namespace.static_functions:
                 header = header.to_static()
 
-        body = stmt.value
+        body = stmt.body
 
         if 'sympy' in decorators.keys():
             # TODO maybe we should run pylint here
@@ -775,6 +757,17 @@ class SyntaxParser(BasicParser):
         if 'private' in decorators.keys():
             is_private = True
 
+        returns = [i.expr for i in _atomic(body, cls=Return)]
+        assert all(len(i) == len(returns[0]) for i in returns)
+        results = []
+        for i in zip(*returns):
+            if not all(i[0]==j for j in i) or not isinstance(i[0], Symbol):
+                results.append(create_variable(i[0]))
+            elif isinstance(i[0], Symbol) and any(i[0].name==x.name for x in arguments):
+                results.append(create_variable(i[0]))
+            else:
+                results.append(i[0])
+
         func = FunctionDef(
                name,
                arguments,
@@ -782,7 +775,6 @@ class SyntaxParser(BasicParser):
                body,
                local_vars=local_vars,
                global_vars=global_vars,
-               cls_name=cls_name,
                hide=hide,
                kind=kind,
                is_pure=is_pure,
@@ -795,13 +787,14 @@ class SyntaxParser(BasicParser):
         func.set_fst(stmt)
         return func
 
-    def _visit_ClassNode(self, stmt):
+    def _visit_ClassDef(self, stmt):
 
         name = stmt.name
-        methods = [i for i in stmt.value if isinstance(i, DefNode)]
-        methods = self._visit(methods)
+        methods = [self._visit(i) for i in stmt.body if isinstance(i, ast.FunctionDef)]
+        for i in methods:
+            i.set_cls_name(name)
         attributes = methods[0].arguments
-        parent = [i.value for i in stmt.inherit_from]
+        parent = [self._visit(i) for i in stmt.bases]
         expr = ClassDef(name=name, attributes=attributes,
                         methods=methods, parent=parent)
 
@@ -810,28 +803,33 @@ class SyntaxParser(BasicParser):
         expr.set_fst(stmt)
         return expr
 
-    def _visit_AtomtrailersNode(self, stmt):
-
-        return self._visit(stmt.value)
-
-    def _visit_GetitemNode(self, stmt):
+    def _visit_Subscript(self, stmt):
 
         ch = stmt
         args = []
-        while isinstance(ch, GetitemNode):
-            val = self._visit(ch.value)
+        while isinstance(ch, ast.Subscript):
+            val = self._visit(ch.slice)
             if isinstance(val, (Tuple, PythonTuple)):
                 args += val
             else:
                 args.insert(0, val)
-            ch = ch.previous
+            ch = ch.value
         args = tuple(args)
-        return args
+        var = self._visit(ch)
+        var = IndexedBase(var)[args]
+        return var
 
-    def _visit_SliceNode(self, stmt):
+    def _visit_ExtSlice(self, stmt):
+        return self._visit(tuple(stmt.dims))
+
+    def _visit_Slice(self, stmt):
 
         upper = self._visit(stmt.upper)
         lower = self._visit(stmt.lower)
+
+        if stmt.step is not None:
+            raise NotImplementedError("Steps in slices are not implemented")
+
         if not isinstance(upper, Nil) and not isinstance(lower, Nil):
 
             return Slice(lower, upper)
@@ -845,108 +843,130 @@ class SyntaxParser(BasicParser):
 
             return Slice(None, None)
 
-    def _visit_DotProxyList(self, stmt):
+    def _visit_Index(self, stmt):
+        return self._visit(stmt.value)
 
-        n = len(stmt) - 1
-        ls = []
-        while n > -1:
-            if isinstance(stmt[n], GetitemNode):
-                args = self._visit(stmt[n])
-                while isinstance(stmt[n].previous, GetitemNode):
-                    n = n - 1
-                var = self._visit(stmt[:n])
-                var = IndexedBase(var)[args]
-                n = 0
-            elif isinstance(stmt[n], CallNode):
-                var = self._visit(stmt[n])
-                n = n - 1
-            else:
-                while n > 0 and not isinstance(stmt[n].previous,
-                        DotNode) and not isinstance(stmt[n], (CallNode)):
-                    n = n - 1
-                var = self._visit(stmt[n])
-            ls.insert(0,var)
-            n = n - 1
+    def _visit_Attribute(self, stmt):
+        val  = self._visit(stmt.value)
+        attr = Symbol(stmt.attr)
+        return DottedVariable(val, attr)
 
-        if len(ls) == 1:
-            expr = ls[0]
-        else:
-            n = 0
-            var = DottedVariable(ls[0], ls[1])
-            n = 2
-            while n < len(ls):
-                var = DottedVariable(var, ls[n])
-                n = n + 1
 
-            expr = var
-        return expr
+    def _visit_Call(self, stmt):
 
-    def _visit_CallNode(self, stmt):
+        args = []
+        if stmt.args:
+            args += self._visit(stmt.args)
+        if stmt.keywords:
+            args += self._visit(stmt.keywords)
 
-        if len(stmt.value) > 0 and isinstance(stmt.value[0],
-                ArgumentGeneratorComprehensionNode):
-            return self._visit(stmt.value[0])
-
-        args = self._visit(stmt.value)
-        f_name = str(stmt.previous.value)
-        f_name = strip_ansi_escape.sub('', f_name)
         if len(args) == 0:
-            args = ( )
-        func = Function(f_name)(*args)
+            args = ()
+
+        func = self._visit(stmt.func)
+
+        if isinstance(func, Symbol):
+            f_name = func.name
+            if str(f_name) == "print":
+                func = Print(PythonTuple(*args))
+            else:
+                func = Function(f_name)(*args)
+        elif isinstance(func, DottedVariable):
+            f_name = func.rhs.name
+            func_attr = Function(f_name)(*args)
+            func = DottedVariable(func.lhs, func_attr)
+        else:
+            raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
+
         return func
 
-    def _visit_CallArgumentNode(self, stmt):
+    def _visit_keyword(self, stmt):
 
-        target = stmt.target
+        target = stmt.arg
         val = self._visit(stmt.value)
-        if target:
-            target = self._visit(target)
-            return ValuedArgument(target, val)
+        return ValuedArgument(target, val)
 
-        return val
+    def _visit_For(self, stmt):
 
-    def _visit_DecoratorNode(self, stmt):
-
-        name = strip_ansi_escape.sub('', stmt.value.dumps())
-        args = []
-        if stmt.call:
-            args = [self._visit(i) for i in stmt.call.value]
-        return {name: args}
-
-    def _visit_ForNode(self, stmt):
-
-        iterator = self._visit(stmt.iterator)
-        iterable = self._visit(stmt.target)
-        body = list(self._visit(stmt.value))
+        iterator = self._visit(stmt.target)
+        iterable = self._visit(stmt.iter)
+        body = self._visit(stmt.body)
         expr = For(iterator, iterable, body, strict=False)
         expr.set_fst(stmt)
         return expr
 
-    def _visit_ComprehensionLoopNode(self, stmt):
+    def _visit_comprehension(self, stmt):
 
-        iterator = self._visit(stmt.iterator)
-        iterable = self._visit(stmt.target)
+        iterator = self._visit(stmt.target)
+        iterable = self._visit(stmt.iter)
         ifs = stmt.ifs
         expr = For(iterator, iterable, [], strict=False)
         expr.set_fst(stmt)
         return expr
 
-    def _visit_ArgumentGeneratorComprehensionNode(self, stmt):
+    def _visit_ListComp(self, stmt):
 
-        result = self._visit(stmt.result)
+        import numpy as np
+        result = self._visit(stmt.elt)
+        generators = list(self._visit(stmt.generators))
+
+        if not isinstance(self._scope[-2],ast.Assign):
+            errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
+                          symbol = ast.dump(stmt),
+                          bounding_box=(stmt.lineno, stmt.col_offset),
+                          severity='error')
+            lhs = create_variable(result)
+        else:
+            lhs = self._visit(self._scope[-2].targets)
+            if len(lhs)==1:
+                lhs = lhs[0]
+            else:
+                raise NotImplementedError("A list comprehension cannot be unpacked")
+
+        index = create_variable(lhs)
+
+        args = [index]
+        target = IndexedBase(lhs)[args]
+        target = Assign(target, result)
+        assign1 = Assign(index, Integer(0))
+        assign1.set_fst(stmt)
+        target.set_fst(stmt)
+        generators[-1].insert2body(target)
+        assign2 = Assign(index, PyccelAdd(index, Integer(1)))
+        assign2.set_fst(stmt)
+        generators[-1].insert2body(assign2)
+
+        indices = [generators[-1].target]
+        while len(generators) > 1:
+            F = generators.pop()
+            generators[-1].insert2body(F)
+            indices.append(generators[-1].target)
+        indices = indices[::-1]
+        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
+                             indices, index)
+
+    def _visit_GeneratorExp(self, stmt):
+
+
+        result = self._visit(stmt.elt)
 
         generators = self._visit(stmt.generators)
-        parent = stmt.parent.parent.parent
+        parent = self._scope[-3]
+        if not isinstance(parent, ast.Call):
+            raise NotImplementedError("GeneratorExp is not the argument of a function call")
 
-        if isinstance(parent, AssignmentNode):
-            lhs = self._visit(parent.target)
-            name = strip_ansi_escape.sub('', parent.value[0].value)
+        name = str(self._visit(parent.func))
+
+        grandparent = self._scope[-4]
+        if isinstance(grandparent, ast.Assign):
+            if len(grandparent.targets) != 1:
+                raise NotImplementedError("Cannot unpack function with generator expression argument")
+            lhs = self._visit(grandparent.targets[0])
             cond = False
         else:
             lhs = create_variable(result)
-            name = stmt.parent.parent
-            name = strip_ansi_escape.sub('', name.value[0].value)
             cond = True
+
         body = result
         if name == 'sum':
             body = AugAssign(lhs, '+', body)
@@ -971,85 +991,103 @@ class SyntaxParser(BasicParser):
             expr = FunctionalMax(body, result, lhs, indices, None)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO,
-                          bounding_box=stmt.absolute_bounding_box,
+                          symbol = name,
+                          bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
         expr.set_fst(stmt)
         return expr
 
-    def _visit_IfelseblockNode(self, stmt):
-
-        args = self._visit(stmt.value)
-        return If(*args)
-
-    def _visit_IfNode(self, stmt):
+    def _visit_If(self, stmt):
 
         test = self._visit(stmt.test)
-        body = self._visit(stmt.value)
-        return Tuple(test, body, sympify=False)
+        body = self._visit(stmt.body)
+        orelse = self._visit(stmt.orelse)
 
-    def _visit_ElifNode(self, stmt):
-        test = self._visit(stmt.test)
-        body = self._visit(stmt.value)
-        return Tuple(test, body, sympify=False)
+        if len(orelse)==1 and isinstance(orelse[0],If):
+            orelse = orelse[0]._args
+            return If(Tuple(test, body, sympify=False), *orelse)
+        else:
+            orelse = Tuple(BooleanTrue(), orelse, sympify=False)
+            return If(Tuple(test, body, sympify=False), orelse)
 
-    def _visit_ElseNode(self, stmt):
+    def _visit_IfExp(self, stmt):
 
-        test = BooleanTrue()
-        body = self._visit(stmt.value)
-        return Tuple(test, body, sympify=False)
-
-    def _visit_TernaryOperatorNode(self, stmt):
-
-        test1 = self._visit(stmt.value)
-        first = self._visit(stmt.first)
-        second = self._visit(stmt.second)
+        test1 = self._visit(stmt.test)
+        first = self._visit(stmt.body)
+        second = self._visit(stmt.orelse)
         args = [Tuple(test1, [first], sympify=False),
                 Tuple(BooleanTrue(), [second], sympify=False)]
         expr = IfTernaryOperator(*args)
         expr.set_fst(stmt)
         return expr
 
-    def _visit_WhileNode(self, stmt):
+    def _visit_While(self, stmt):
 
         test = self._visit(stmt.test)
-        body = self._visit(stmt.value)
+        body = self._visit(stmt.body)
         return While(test, body)
 
-    def _visit_AssertNode(self, stmt):
-        expr = self._visit(stmt.value)
+    def _visit_Assert(self, stmt):
+        expr = self._visit(stmt.test)
         return Assert(expr)
 
-    def _visit_EndlNode(self, stmt):
+    def _visit_CommentMultiLine(self, stmt):
 
-        return NewLine()
+        exprs = []
+        # if annotated comment
+        for com in stmt.s.split('\n'):
+            if com.startswith('#$'):
+                env = com[2:].lstrip()
+                if env.startswith('omp'):
+                    exprs.append(omp_parse(stmts=com))
+                elif env.startswith('acc'):
+                    exprs.append(acc_parse(stmts=com))
+                elif env.startswith('header'):
+                    expr = hdr_parse(stmts=com)
+                    if isinstance(expr, MetaVariable):
 
-    def _visit_CommentNode(self, stmt):
+                        # a metavar will not appear in the semantic stage.
+                        # but can be used to modify the ast
+
+                        self._metavars[str(expr.name)] = str(expr.value)
+                        expr = EmptyLine()
+                    else:
+                        expr.set_fst(stmt)
+
+                    exprs.append(expr)
+                else:
+                    errors.report(PYCCEL_INVALID_HEADER,
+                                 bounding_box=(stmt.lineno, stmt.col_offset),
+                                  severity='error')
+            else:
+
+                txt = com[1:].lstrip()
+                exprs.append(Comment(txt))
+
+        if len(exprs) == 1:
+            return exprs[0]
+        else:
+            return CodeBlock(exprs)
+
+    def _visit_CommentLine(self, stmt):
 
         # if annotated comment
 
-        if stmt.value.startswith('#$'):
-            env = stmt.value[2:].lstrip()
+        if stmt.s.startswith('#$'):
+            env = stmt.s[2:].lstrip()
             if env.startswith('omp'):
-                txt = reconstruct_pragma_multilines(stmt)
-                return omp_parse(stmts=txt)
+                return omp_parse(stmts=stmt.s)
             elif env.startswith('acc'):
-
-                txt = reconstruct_pragma_multilines(stmt)
-                return acc_parse(stmts=txt)
+                return acc_parse(stmts=stmt.s)
             elif env.startswith('header'):
-
-                txt = reconstruct_pragma_multilines(stmt)
-                expr = hdr_parse(stmts=txt)
+                expr = hdr_parse(stmts=stmt.s)
                 if isinstance(expr, MetaVariable):
 
                     # a metavar will not appear in the semantic stage.
                     # but can be used to modify the ast
 
                     self._metavars[str(expr.name)] = str(expr.value)
-
-                    # return NewLine()
-
                     expr = EmptyLine()
                 else:
                     expr.set_fst(stmt)
@@ -1057,101 +1095,60 @@ class SyntaxParser(BasicParser):
                 return expr
             else:
 
-                # TODO an info should be reported saying that either we
-                # found a multiline pragma or an invalid pragma statement
+                errors.report(PYCCEL_INVALID_HEADER,
+                              bounding_box=(stmt.lineno, stmt.col_offset),
+                              severity='error')
 
-                return NewLine()
         else:
-
-#                    errors.report(PYCCEL_INVALID_HEADER,
-#                                  bounding_box=stmt.absolute_bounding_box,
-#                                  severity='error')
-
-            # TODO improve
-
-            txt = stmt.value[1:].lstrip()
+            txt = stmt.s[1:].lstrip()
             return Comment(txt)
 
-    def _visit_BreakNode(self, stmt):
+    def _visit_Break(self, stmt):
         return Break()
 
-    def _visit_ContinueNode(self, stmt):
+    def _visit_Continue(self, stmt):
         return Continue()
 
-    def _visit_StarNode(self, stmt):
-        return '*'
+    def _visit_Lambda(self, stmt):
 
-    def _visit_LambdaNode(self, stmt):
-
-        expr = self._visit(stmt.value)
-        args = []
-
-        for i in stmt.arguments:
-            var = self._visit(i.name)
-            args += [var]
+        expr = self._visit(stmt.body)
+        args = self._visit(stmt.args)
 
         return Lambda(tuple(args), expr)
 
-    def _visit_WithNode(self, stmt):
-        domain = self._visit(stmt.contexts[0].value)
-        body = self._visit(stmt.value)
+    def _visit_withitem(self, stmt):
+        # stmt.optional_vars
+        context = self._visit(stmt.context_expr)
+        if stmt.optional_vars:
+            return AsName(context, stmt.optional_vars)
+        else:
+            return context
+
+    def _visit_With(self, stmt):
+        domain = self._visit(stmt.items)
+        if len(domain) == 1:
+            domain = domain[0]
+        body = self._visit(stmt.body)
         settings = None
         return With(domain, body, settings)
 
-    def _visit_ListComprehensionNode(self, stmt):
-
-        import numpy as np
-        result = self._visit(stmt.result)
-        generators = list(self._visit(stmt.generators))
-        lhs = self._visit(stmt.parent.target)
-        index = create_variable(lhs)
-        if isinstance(result, (PythonTuple, Tuple, list, tuple)):
-            rank = len(np.shape(result))
-        else:
-            rank = 0
-        args = [Slice(None, None)] * rank
-        args.append(index)
-        target = IndexedBase(lhs)[args]
-        target = Assign(target, result)
-        assign1 = Assign(index, Integer(0))
-        assign1.set_fst(stmt)
-        target.set_fst(stmt)
-        generators[-1].insert2body(target)
-        assign2 = Assign(index, PyccelAdd(index, Integer(1)))
-        assign2.set_fst(stmt)
-        generators[-1].insert2body(assign2)
-
-        indices = [generators[-1].target]
-        while len(generators) > 1:
-            F = generators.pop()
-            generators[-1].insert2body(F)
-            indices.append(generators[-1].target)
-        indices = indices[::-1]
-        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
-                             indices, index)
-
-    def _visit_TryNode(self, stmt):
+    def _visit_Try(self, stmt):
         # this is a blocking error, since we don't want to convert the try body
         errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY,
-                      bounding_box=stmt.absolute_bounding_box,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='error')
 
-    def _visit_RaiseNode(self, stmt):
+    def _visit_Raise(self, stmt):
         errors.report(PYCCEL_RESTRICTION_RAISE,
-                      bounding_box=stmt.absolute_bounding_box,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='error')
 
-    def _visit_YieldAtomNode(self, stmt):
+    def _visit_Yield(self, stmt):
         errors.report(PYCCEL_RESTRICTION_YIELD,
-                      bounding_box=stmt.absolute_bounding_box,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='error')
 
-    def _visit_YieldNode(self, stmt):
-        errors.report(PYCCEL_RESTRICTION_YIELD,
-                      bounding_box=stmt.absolute_bounding_box,
-                      severity='error')
-
-    def _visit_ListArgumentNode(self, stmt):
+    def _visit_Starred(self, stmt):
         return StarredArguments(self._visit(stmt.value))
 
 #==============================================================================

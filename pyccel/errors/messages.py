@@ -63,6 +63,8 @@ UNDEFINED_INTERFACE_FUNCTION = 'Interface function(s) not found'
 
 UNDEFINED_WITH_ACCESS = 'The __enter__ or __exit__ method for the with construct cannot be found'
 
+VARARGS = 'An undefined number of input arguments is not covered by Pyccel'
+
 # sympy limitation
 SYMPY_RESTRICTION_DICT_KEYS = 'sympy does not allow dictionary keys to be strings'
 
@@ -78,9 +80,12 @@ PYCCEL_RESTRICTION_IMPORT_STAR = 'import * not allowed'
 PYCCEL_RESTRICTION_OPTIONAL_NONE = 'Variables cannot be equal to None unless they are optional arguments and None is the default value'
 PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX = 'Pyccel has encountered syntax that it does not recognise'
 PYCCEL_RESTRICTION_TODO = "Pyccel has encountered syntax that has not been implemented yet. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem. Do not forget to specify your target language"
+PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS = 'Uncovered multi operator comparison statement'
+PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN = "The result of a list comprehension expression must be saved in a variable"
 
 # Fortran limitation
 FORTRAN_ALLOCATABLE_IN_EXPRESSION = 'An allocatable function cannot be used in an expression'
+FORTRAN_RANDINT_ALLOCATABLE_IN_EXPRESSION = "Numpy's randint function does not have a fortran equivalent. It can be expressed as '(high-low)*rand(size)+low' using numpy's rand, however allocatable function cannot be used in an expression"
 
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header'
@@ -96,6 +101,7 @@ IMPORTING_EXISTING_IDENTIFIED = \
 UNDEFINED_FUNCTION = 'Undefined function'
 UNDEFINED_VARIABLE = 'Undefined variable'
 UNDEFINED_INDEXED_VARIABLE = 'Undefined indexed variable'
+UNDEFINED_IMPORT_OBJECT = 'Could not find {} in imported module {}'
 
 REDEFINING_VARIABLE = 'Variable already defined'
 

@@ -11,7 +11,7 @@ import pytest
 
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
-from pyccel.errors.errors   import Errors, PyccelSyntaxError, PyccelSemanticError
+from pyccel.errors.errors   import Errors, PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError, PyccelError
 
 
 def get_files_from_folder(foldername):
@@ -47,11 +47,7 @@ def test_syntax_errors(f):
 
     assert(errors.is_errors())
 
-semantic_blocking_xfails = {'ex6.py':'different shape not recognised as different type : issue 325'}
-semantic_blocking_errors_args = [f if os.path.basename(f) not in semantic_blocking_xfails \
-                          else pytest.param(f, marks = pytest.mark.xfail(reason=semantic_blocking_xfails[os.path.basename(f)])) \
-                          for f in get_files_from_folder("semantic/blocking")]
-@pytest.mark.parametrize("f", semantic_blocking_errors_args)
+@pytest.mark.parametrize("f",get_files_from_folder("semantic/blocking"))
 def test_semantic_blocking_errors(f):
     print('> testing {0}'.format(str(f)))
 
@@ -85,6 +81,48 @@ def test_semantic_non_blocking_errors(f):
 
     assert(errors.is_errors())
 
+
+@pytest.mark.parametrize("f",get_files_from_folder("codegen/fortran"))
+def test_codegen_errors(f):
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f)
+    ast = pyccel.parse()
+
+    settings = {}
+    ast = pyccel.annotate(**settings)
+
+    name = os.path.basename(f)
+    name = os.path.splitext(name)[0]
+
+    codegen = Codegen(ast, name)
+    with pytest.raises(PyccelCodegenError):
+        codegen.doprint()
+
+    assert(errors.is_errors())
+
+@pytest.mark.parametrize("f",get_files_from_folder("known_bugs"))
+def test_neat_errors_for_known_bugs(f):
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f)
+    with pytest.raises(PyccelError):
+        ast = pyccel.parse()
+
+        settings = {}
+        ast = pyccel.annotate(**settings)
+
+        name = os.path.basename(f)
+        name = os.path.splitext(name)[0]
+
+        codegen = Codegen(ast, name)
+        codegen.doprint()
+
+    assert(errors.is_errors())
 
 ######################
 if __name__ == '__main__':

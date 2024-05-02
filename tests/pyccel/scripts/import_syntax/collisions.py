@@ -9,9 +9,6 @@ def f():
 
 b = np.zeros(3)
 
-np = a[0]+b[0]
-
-print(np)
 
 f()
 
