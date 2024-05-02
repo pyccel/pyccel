@@ -5,7 +5,7 @@ SymPy expression into a Pyccel-accelerated function.
 import sympy as sp
 from packaging import version
 
-from pyccel.epyccel import epyccel
+from pyccel.commands.epyccel import epyccel
 from pyccel.utilities.strings import random_string
 
 if version.parse(sp.__version__) >= version.parse('1.8'):
