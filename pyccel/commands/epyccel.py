@@ -3,7 +3,8 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
-
+""" File containing functions for calling Pyccel interactively (epyccel and epyccel_seq)
+"""
 
 import inspect
 import importlib
@@ -24,23 +25,37 @@ __all__ = ['get_source_function', 'epyccel_seq', 'epyccel']
 
 #==============================================================================
 def get_source_function(func):
+    """
+    Get the source code from a function.
+
+    Get a string containing the source code of a function from a function
+    object. Excessive indenting is stripped away.
+
+    Parameters
+    ----------
+    func : Function
+        A Python function.
+
+    Returns
+    -------
+    str
+        A string containing the source code.
+
+    Raises
+    ------
+    TypeError
+        A type error is raised if the object passed to the function is not
+        callable.
+    """
     if not callable(func):
         raise TypeError('Expecting a callable function')
 
-    lines = inspect.getsourcelines(func)
-    lines = lines[0]
+    lines, _ = inspect.getsourcelines(func)
     # remove indentation if the first line is indented
     a = lines[0]
     leading_spaces = len(a) - len(a.lstrip())
-    code = ''
-    for a in lines:
-        if leading_spaces > 0:
-            line = a[leading_spaces:]
-        else:
-            line = a
-        code = '{code}{line}'.format(code=code, line=line)
 
-    return code
+    return ''.join(a[leading_spaces:] for a in lines)
 
 #==============================================================================
 def get_unique_name(prefix, path):

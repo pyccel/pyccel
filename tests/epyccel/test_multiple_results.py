@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import pure
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 #==============================================================================
 def compare_epyccel(f1, *args, language):

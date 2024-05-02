@@ -3,7 +3,7 @@
 import pytest
 from numpy import ones
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 #------------------------------------------------------------------------------
 @pytest.fixture(params=[

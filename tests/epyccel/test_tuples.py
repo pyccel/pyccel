@@ -3,7 +3,7 @@ import inspect
 import pytest
 import numpy as np
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from modules import tuples as tuples_module
 
 def is_func_with_0_args(f):

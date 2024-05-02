@@ -7,7 +7,7 @@ import pytest
 from numpy.random import rand, uniform
 from numpy import isclose
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from pyccel.decorators import template
 
 RTOL = sys.float_info.epsilon*1000

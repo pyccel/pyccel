@@ -3,7 +3,7 @@
 
 import pytest
 import numpy as np
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from pyccel.decorators import private, inline, template
 
 @pytest.mark.parametrize( 'lang', (

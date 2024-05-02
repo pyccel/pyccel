@@ -6,7 +6,7 @@ Once headers are deprecated this file can be removed.
 
 import pytest
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from pyccel.errors.errors import PyccelSemanticError, Errors
 from pyccel.decorators import allow_negative_index, stack_array
 

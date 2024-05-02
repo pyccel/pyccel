@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 def pad_docstrings(python_doc, pyccel_doc):
     # Remove empty lines as ast does not preserve them

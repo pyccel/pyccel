@@ -393,7 +393,7 @@ end module mod
 In addition to the `pyccel` command, the Pyccel library provides the `epyccel` Python function, whose name stands for "embedded Pyccel": given a pure Python function `f` with type annotations, `epyccel` returns a "pyccelised" function `f_fast` that can be used in the same Python session.
 For example:
 ```python
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from mod import f
 
 f_fast = epyccel(f)
@@ -434,7 +434,7 @@ Finally we compare the timings obtained on an Intel Core 3 architecture.
 ```bash
 In [1]: from numpy.random import random
 In [2]: from mod import quicksort
-In [3]: from pyccel.epyccel import epyccel
+In [3]: from pyccel import epyccel
 
 In [4]: quicksort_fast = epyccel(quicksort)
 In [5]: x = random(100)

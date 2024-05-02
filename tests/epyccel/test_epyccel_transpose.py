@@ -2,7 +2,7 @@
 from numpy import empty, array_equal
 from numpy.random import randint
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 
 def test_transpose_shape(language):

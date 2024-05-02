@@ -10,7 +10,7 @@ from test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_
 from test_numpy_funcs import matching_types, RTOL, ATOL, RTOL32, ATOL32
 
 from pyccel.decorators import template
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 numpy_basic_types_deprecated = tuple(int(v) for v in np.version.version.split('.'))>=(1,24,0)
 

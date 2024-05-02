@@ -2,7 +2,7 @@
 import numpy as np
 from numpy.random import randint
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from modules import python_annotations
 
 def test_array_int32_1d_scalar_add(language):

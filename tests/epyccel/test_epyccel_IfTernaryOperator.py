@@ -2,7 +2,7 @@
 
 import pytest
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 # wp suffix means With Parentheses
 #------------------------------------------------------------------------------
 def test_f1(language):

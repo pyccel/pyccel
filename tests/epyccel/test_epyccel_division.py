@@ -2,7 +2,7 @@
 from numpy.random import randint, uniform
 from numpy import isclose
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 RTOL = 2e-14
 ATOL = 1e-15

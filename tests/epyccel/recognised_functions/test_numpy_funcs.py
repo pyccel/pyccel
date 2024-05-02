@@ -7,7 +7,7 @@ from numpy import isclose, iinfo, finfo, complex64, complex128
 import numpy as np
 
 from pyccel.decorators import template, types
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 min_int8 = iinfo('int8').min
 max_int8 = iinfo('int8').max
