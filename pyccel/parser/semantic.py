@@ -4817,7 +4817,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : DottedName
-            The syntactic DottedName node that represent the call to `.update()`
+            The syntactic DottedName node that represent the call to `.update()`.
 
         Returns
         -------
