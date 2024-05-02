@@ -876,6 +876,9 @@ class SemanticParser(BasicParser):
                     'asec',
                     'atan',
                     'acot',
+                    'sinh',
+                    'cosh',
+                    'tanh',
                     'atan2',
                     ]:
                 d_var = self._infere_type(expr.args[0], **settings)
@@ -1604,7 +1607,9 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, Application):
             name = type(rhs).__name__
             macro = self.get_macro(name)
-            if not macro is None:
+            if macro is None:
+                rhs = self._visit_Application(rhs, **settings)
+            else:
 
                 # TODO check types from FunctionDef
 
@@ -1638,14 +1643,14 @@ class SemanticParser(BasicParser):
                 else:
                     msg = 'TODO treate interface case'
                     raise NotImplementedError(msg)
-            else:
-                rhs = self._visit_Application(rhs, **settings)
-                
+
         elif isinstance(rhs, DottedVariable):
             var = rhs.rhs
             name = _get_name(var)
             macro = self.get_macro(name)
-            if not macro is None:
+            if macro is None:
+                rhs = self._visit_DottedVariable(rhs, **settings)
+            else:
                 master = macro.master
                 if isinstance(macro, MacroVariable):
                     rhs = master
@@ -1679,8 +1684,6 @@ class SemanticParser(BasicParser):
                         return Subroutine(str(master.name))(*args)
                     else:
                         raise NotImplementedError('TODO')
-            else:
-                rhs = self._visit_DottedVariable(rhs, **settings)
         else:
             rhs = self._visit(rhs, **settings)
 
@@ -2844,7 +2847,6 @@ class SemanticParser(BasicParser):
                 elif __module_name__:
                     expr = Import(expr.target, __module_name__)
                     container['imports'][__module_name__] = expr
-                    return EmptyLine()
 
                 # ...
                 elif __print__ in p.metavars.keys():
@@ -2852,13 +2854,11 @@ class SemanticParser(BasicParser):
                     source = 'mod_' + source
                     expr   = Import(expr.target, source=source)
                     container['imports'][source] = expr
+                elif not __ignore_at_import__:
+                    container['imports'][source] = expr
 
-                
+        return EmptyLine()
 
-                    
-            return EmptyLine()
-        else:   
-            return EmptyLine()
 
 
     def _visit_With(self, expr, **settings):

@@ -1,0 +1,9 @@
+# Do not check for use of 'assert' statements (which are standard in unit tests)
+# See https://bandit.readthedocs.io/en/latest/plugins/b101_assert_used.html
+#
+# NOTE: ideally, we would like to only skip this check in our unit tests, but
+#       we do not know if this is possible.
+skips:
+  - B101  # Ignore assert statements
+  - B404  # Ignore warnings about importing subprocess
+  - B603  # Ignore warnings about calling subprocess.Popen without shell=True

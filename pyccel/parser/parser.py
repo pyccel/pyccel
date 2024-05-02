@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import os
 from collections import OrderedDict
 
 from pyccel.parser.base      import get_filename_from_import
@@ -26,6 +26,7 @@ class Parser(object):
         self._semantic_parser = None
 
         self._output_folder = kwargs.pop('output_folder', '')
+        self._input_folder = os.path.dirname(filename)
 
     @property
     def d_parsers(self):
@@ -127,7 +128,7 @@ class Parser(object):
 
             # get the absolute path corresponding to source
 
-            filename = get_filename_from_import(source,self._output_folder)
+            filename = get_filename_from_import(source,self._input_folder)
 
             q = Parser(filename)
             q.parse(d_parsers=d_parsers)

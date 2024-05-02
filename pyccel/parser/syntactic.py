@@ -467,8 +467,22 @@ class SyntaxParser(BasicParser):
                           severity='error')
 
         source = self._visit(stmt.value)
+
+        st     = stmt.value[0]
+        dots   = ''
+        while isinstance(st.previous, DotNode):
+            dots  = dots + '.'
+            st    = st.previous
+
         if isinstance(source, DottedVariable):
             source = DottedName(*source.names)
+
+        if len(dots)>1:
+            if isinstance(source, DottedName):
+                source = DottedName(dots[:-1], *source.name)
+            else:
+                source = Symbol(dots + str(source.name))
+
         source = get_default_path(source)
         targets = []
         for i in stmt.targets:

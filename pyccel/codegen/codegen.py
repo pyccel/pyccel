@@ -188,7 +188,7 @@ class Codegen(object):
         """Finds the source code kind."""
  
         
-        cls = (Header, EmptyLine, NewLine, Comment, CommentBlock)
+        cls = (Header, EmptyLine, NewLine, Comment, CommentBlock, Module)
         is_module = all(isinstance(i,cls) for i in self.ast)
         
 
@@ -203,7 +203,7 @@ class Codegen(object):
         #  ...
 
         expr = None
-        
+
         if self.is_module:
             expr = Module(
                 self.name,

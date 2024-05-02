@@ -1,6 +1,14 @@
+include AUTHORS
+include CHANGES
+include LICENSE
 include README.rst
+include TODO.rst
 
 recursive-include pyccel *.tx
 recursive-include pyccel *.txt
 recursive-include pyccel *.cmake
 recursive-include pyccel *.pyh
+
+graft doc
+graft samples
+graft tests

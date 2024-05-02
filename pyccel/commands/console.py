@@ -1,20 +1,27 @@
 # coding: utf-8
 #!/usr/bin/env python
 
+# TODO add version
+#  --version  show program's version number and exit
+
 import sys
 import os
 import argparse
 
-# TODO add version
-#  --version  show program's version number and exit
+from collections  import OrderedDict
 
-from pyccel.parser.errors import Errors
-from pyccel.parser.errors import ErrorsMode
-from pyccel.parser.messages import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
-from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
+from pyccel.parser.errors     import Errors
+from pyccel.parser.errors     import ErrorsMode
+from pyccel.parser.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
+from pyccel.parser.utilities  import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.codegen.utilities import construct_flags
 from pyccel.codegen.utilities import compile_fortran
 from pyccel.codegen.utilities import execute_pyccel
+from pyccel.ast.core          import Import
+from pyccel.ast.core          import Module
+from pyccel.ast.f2py          import as_static_function
+from pyccel.ast.f2py          import as_static_function_call
+from pyccel.ast.utilities     import get_external_function_from_ast
 
 class MyParser(argparse.ArgumentParser):
     """
@@ -63,6 +70,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        help='Using pyccel for Semantic Checking')
     group.add_argument('-t', '--convert-only', action='store_true',
                        help='Converts pyccel files only without build')
+    group.add_argument('-f', '--f2py-compatible', action='store_true',
+                        help='Converts pyccel files to be compiled by f2py')
 
     # ...
 
@@ -245,9 +254,56 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                 code = codegen.doprint()
                 codegen.export()
 
+    elif args.f2py_compatible:
+        pyccel   = Parser(filename)
+        ast      = pyccel.parse()
+        settings = {}
 
+        ast  = pyccel.annotate(**settings)
+        name = os.path.basename(filename)
+        name = os.path.splitext(name)[0]
 
+        funcs     = ast.namespace.functions.values()
+        namespace = ast.namespace.functions
 
+        funcs, others = get_external_function_from_ast(funcs)
+        static_funcs  = []
+        imports       = []
+        parents       = OrderedDict()
+
+        for f in funcs:
+            if f.is_external:
+                static_func = as_static_function(f, str(f.name))
+                namespace[str(f.name)] = static_func
+
+            elif f.is_external_call:
+                static_func = as_static_function_call(f, str(f.name))
+                namespace[str(f.name)] = static_func
+                imports += [Import(f.name, name)]
+
+            static_funcs.append(static_func)
+            parents[f.name] = f.name
+
+        for f in others:
+            imports += [Import(f.name, name)]
+
+        imports += list(ast.namespace.imports['functions'])
+
+        ast._ast = [Module( name,
+                      variables = [],
+                      funcs = static_funcs,
+                      interfaces = [],
+                      classes = [],
+                      imports = imports )]
+
+        codegen = Codegen(ast, name)
+
+        settings['prefix_module'] = prefix_module
+        codegen.doprint(**settings)
+        if prefix:
+            name = '{prefix}{name}'.format(prefix=prefix, name=name)
+
+        codegen.export(output_folder+name)
 
     elif args.analysis:
         # TODO move to another cmd line

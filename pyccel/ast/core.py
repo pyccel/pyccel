@@ -1,31 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-
-import collections
 import importlib
 
-from sympy.core.compatibility import with_metaclass
-from sympy.core.compatibility import is_sequence
-from sympy.core.compatibility import string_types
-from sympy.simplify.radsimp   import fraction
-from sympy.core.assumptions   import StdFactKB
-from sympy.core.operations    import LatticeOp
-from sympy.core.relational    import Equality, Relational
-from sympy.core.relational    import Eq, Ne, Lt, Gt, Le, Ge
-from sympy.core.singleton     import Singleton, S
-from sympy.logic.boolalg      import And, Boolean, Not, Or, true, false
-from sympy.logic.boolalg      import Boolean, BooleanTrue, BooleanFalse
-from sympy.logic.boolalg      import BooleanFunction
-from sympy.core.function      import Function, Application
-from sympy.core.function      import Derivative, UndefinedFunction
-from sympy.core.function      import _coeff_isneg
-from sympy.core.numbers       import ImaginaryUnit
-from sympy.core.basic         import Atom
-from sympy.core.expr          import Expr, AtomicExpr
-from sympy.tensor             import Idx, Indexed, IndexedBase
-
-
+from collections.abc import Iterable
 
 from sympy import cache
 from sympy import sympify
@@ -33,12 +11,34 @@ from sympy import Add, Mul, Pow as sp_Pow
 from sympy import Integral, Symbol, Tuple
 from sympy import Lambda, preorder_traversal
 from sympy import Integer as sp_Integer
-from sympy import Float as sp_Float ,Rational as sp_Rational
+from sympy import Float as sp_Float, Rational as sp_Rational
+from sympy import preorder_traversal
 
+from sympy.simplify.radsimp   import fraction
+from sympy.core.compatibility import with_metaclass
+from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import string_types
+from sympy.core.assumptions   import StdFactKB
+from sympy.core.operations    import LatticeOp
+from sympy.core.relational    import Equality, Relational
+from sympy.core.relational    import Eq, Ne, Lt, Gt, Le, Ge
+from sympy.core.singleton     import Singleton, S
+from sympy.core.function      import Function, Application
+from sympy.core.function      import Derivative, UndefinedFunction
+from sympy.core.function      import _coeff_isneg
+from sympy.core.numbers       import ImaginaryUnit
+from sympy.core.basic         import Atom
+from sympy.core.expr          import Expr, AtomicExpr
+from sympy.logic.boolalg      import And, Boolean, Not, Or, true, false
+from sympy.logic.boolalg      import Boolean, BooleanTrue, BooleanFalse
+from sympy.logic.boolalg      import BooleanFunction
+from sympy.tensor             import Idx, Indexed, IndexedBase
 
+from sympy.matrices.matrices            import MatrixBase
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
-from sympy.utilities.iterables import iterable
-
+from sympy.tensor.array.ndim_array      import NDimArray
+from sympy.utilities.iterables          import iterable
+from sympy.utilities.misc               import filldedent
 
 
 from .basic import Basic
@@ -47,14 +47,18 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric)
 
-
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-local_sympify = {'N': Symbol('N'), 'S': Symbol('S'),
-                'zeros':Symbol('zeros'),'ones':Symbol('ones')
-                ,'Point':Symbol('Point')}
+local_sympify = {
+    'N'    : Symbol('N'),
+    'S'    : Symbol('S'),
+    'zeros': Symbol('zeros'),
+    'ones' : Symbol('ones'),
+    'Point': Symbol('Point')
+}
 
+#==============================================================================
 class AstError(Exception):
     pass
 
@@ -211,8 +215,6 @@ def _atomic(e, cls=None,ignore=()):
     return atoms that are inside such quantities too
     """
 
-    from sympy import preorder_traversal
-    from collections import OrderedDict
     pot = preorder_traversal(e)
     seen = []
     atoms_ = []
@@ -784,7 +786,7 @@ def operator(op):
 
 class AugAssign(Assign):
 
-    """
+    r"""
     Represents augmented variable assignment for code generation.
 
     lhs : Expr
@@ -4221,9 +4223,6 @@ class IndexedElement(Indexed):
         *args,
         **kw_args
         ):
-        from sympy.utilities.misc import filldedent
-        from sympy.tensor.array.ndim_array import NDimArray
-        from sympy.matrices.matrices import MatrixBase
 
         if not args:
             raise IndexException('Indexed needs at least one index.')
@@ -4240,7 +4239,7 @@ class IndexedElement(Indexed):
             args_.append(sympify(arg, locals=local_sympify))
         args = args_
 
-        if isinstance(base, (NDimArray, collections.Iterable, Tuple,
+        if isinstance(base, (NDimArray, Iterable, Tuple,
                       MatrixBase)) and all([i.is_number for i in args]):
             if len(args) == 1:
                 return base[args[0]]
@@ -4670,28 +4669,25 @@ def get_assigned_symbols(expr):
 
         try:
             var = expr.lhs
-
+            symbols = []
             if isinstance(var, DottedVariable):
                 var = expr.lhs.lhs
                 while isinstance(var, DottedVariable):
                     var = var.lhs
+                symbols.append(var)
             elif isinstance(var, IndexedElement):
                 var = var.base
-            free_symbols = var.free_symbols
-            symbols = list(free_symbols)
+                symbols.append(var)
+            return symbols
         except:
+            #TODO should we keep the try/except clause ?
 
             # TODO must raise an Exception here
             #      this occurs only when parsing lapack.pyh
-
-            symbols = []
-
+            raise ValueError('Unable to extract assigned variable')
 #            print(type(expr.lhs), expr.lhs)
 #            print(expr)
 #            raise SystemExit('ERROR')
-
-        return symbols
-
 
     return []
 

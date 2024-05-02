@@ -30,6 +30,8 @@ from pyccel.ast.f2py                import as_static_function
 from pyccel.ast.f2py                import as_static_function_call
 from pyccel.codegen.printing.pycode import pycode
 from pyccel.codegen.printing.fcode  import fcode
+from pyccel.ast.utilities           import get_external_function_from_ast
+from pyccel.ast.utilities           import get_function_from_ast
 
 
 #==============================================================================
@@ -121,42 +123,6 @@ def construct_flags(compiler, extra_args = '', accelerator = None):
                 opt         = """ --opt='-xhost -0fast' """
 
     return extra_args, f90flags, opt
-
-
-#==============================================================================
-
-# TODO must be moved to pyccel/ast/utilities.py
-def get_function_from_ast(ast, func_name):
-    node = None
-    n_stmt = len(ast)
-    i_stmt = 0
-    while ( node is None ) and ( i_stmt < n_stmt ):
-        stmt = ast[i_stmt]
-        if isinstance(stmt, FunctionDef) and str(stmt.name) == func_name:
-            node = stmt
-
-        i_stmt += 1
-
-    if node is None:
-        print('> could not find {}'.format(func_name))
-
-    return node
-
-#==============================================================================
-
-# TODO must be moved to pyccel/ast/utilities.py
-def get_external_function_from_ast(ast):
-    nodes   = []
-    others  = []
-    for stmt in ast:
-        if isinstance(stmt, FunctionDef):
-            if stmt.is_external or stmt.is_external_call:
-                nodes += [stmt]
-
-            else:
-                others += [stmt]
-
-    return nodes, others
 
 #==============================================================================
 
@@ -794,13 +760,12 @@ def epyccel_function(func,
     funcs     = ast.routines + ast.interfaces
     func      = get_function_from_ast(funcs, func_name)
     namespace = ast.parser.namespace.sons_scopes
+    parent_sc = ast.parser.namespace.functions
     # ...
-
     f2py_module_name = 'f2py_{}'.format(module_name)
-
     static_func  = as_static_function(func)
     namespace['f2py_'+func_name.lower()] = namespace[func_name]
-    
+    parent_sc['f2py_'+func_name.lower()] = parent_sc[func_name]
     f2py_module = Module( f2py_module_name,
                           variables = [],
                           funcs = [static_func],

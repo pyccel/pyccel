@@ -18,31 +18,33 @@ from pyccel.symbolic import lambdify
 from sympy import Symbol, Lambda, floor
 from sympy import Not, Float
 from sympy import Function
-from sympy import (sin, cos, exp, csc, cos, sec, tan, cot)
+from sympy import (sin, cos, exp, csc, cos, sec, tan, cot, atan2)
 
 import scipy.constants as sc_constants
 
 math_functions = {
-    'abs'   : Abs,
-    'sqrt'  : Sqrt,
-    'sin'   : sin,
-    'cos'   : cos,
-    'exp'   : exp,
-    'log'   : Log,
-    'csc'   : csc,
-    'sec'   : sec,
-    'tan'   : tan,
-    'cot'   : cot,
-    'asin'  : Asin,
-    'acsc'  : Acsc,
-    'arccos': Acos,
-    'acos'  : Acos,
-    'asec'  : Asec,
-    'atan'  : Atan,
-    'acot'  : Acot,
-    'sinh'  : Sinh,
-    'cosh'  : Cosh,
-    'tanh'  : Tanh
+    'abs'    : Abs,
+    'sqrt'   : Sqrt,
+    'sin'    : sin,
+    'cos'    : cos,
+    'exp'    : exp,
+    'log'    : Log,
+    'csc'    : csc,
+    'sec'    : sec,
+    'tan'    : tan,
+    'cot'    : cot,
+    'asin'   : Asin,
+    'acsc'   : Acsc,
+    'arccos' : Acos,
+    'acos'   : Acos,
+    'asec'   : Asec,
+    'atan'   : Atan,
+    'acot'   : Acot,
+    'sinh'   : Sinh,
+    'cosh'   : Cosh,
+    'tanh'   : Tanh,
+    'atan2'  : atan2,
+    'arctan2': atan2
     }
 
 # TODO split numpy_functions into multiple dictionaries following
@@ -193,6 +195,31 @@ def builtin_import(expr):
 
 
     return imports
+
+def get_function_from_ast(ast, func_name):
+    node = None
+    for stmt in ast:
+        if isinstance(stmt, FunctionDef) and str(stmt.name) == func_name:
+            node = stmt
+            break
+
+    if node is None:
+        print('> could not find {}'.format(func_name))
+
+    return node
+
+def get_external_function_from_ast(ast):
+    nodes   = []
+    others  = []
+    for stmt in ast:
+        if isinstance(stmt, FunctionDef):
+            if stmt.is_external or stmt.is_external_call:
+                nodes += [stmt]
+
+            else:
+                others += [stmt]
+
+    return nodes, others
 
 # TODO: must add a Node Decorator in core
 def build_types_decorator(args, order=None):

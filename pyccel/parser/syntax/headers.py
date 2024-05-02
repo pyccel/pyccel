@@ -72,16 +72,16 @@ class Type(BasicStmt):
         dtype: str
             variable type
         """
-        self.dtype = kwargs.pop('dtype')
+        self.dtype   = kwargs.pop('dtype')
+        self.prec    = kwargs.pop('prec')
         self.trailer = kwargs.pop('trailer', [])
-        self.precision = kwargs.pop('prec')
 
         super(Type, self).__init__(**kwargs)
 
     @property
     def expr(self):
         dtype = self.dtype
-        precision = self.precision
+        precision = self.prec
         if dtype in dtype_registry.keys():
             dtype,precision = dtype_registry[dtype]
         trailer = self.trailer
@@ -126,14 +126,14 @@ class UnionTypeStmt(BasicStmt):
 
         dtype: list fo str
         """
-        self.dtypes = kwargs.pop('dtype')
+        self.dtype = kwargs.pop('dtype')
 
         super(UnionTypeStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
         l = []
-        for i in self.dtypes:
+        for i in self.dtype:
             l += [i.expr]
         if len(l)>1:
             return UnionType(l)

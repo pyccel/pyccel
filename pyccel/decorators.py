@@ -42,7 +42,10 @@ def external(f):
 def external_call(f):
     return f
 
-
+def stack_array(*args, **kw):
+    def id(f):
+        return f
+    return id
 
 # TODO documentation
 import numpy as np

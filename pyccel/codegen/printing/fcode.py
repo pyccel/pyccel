@@ -387,7 +387,7 @@ class FCodePrinter(CodePrinter):
             prefix = 'use'
         else:
             if isinstance(expr.source, DottedName):
-                source = '_'.join(self._print(j) for j in expr.source.name)
+                source = expr.source.name[-1]
             else:
                 source = self._print(expr.source)
             prefix = 'use {}, only:'.format(source)
@@ -1273,6 +1273,7 @@ class FCodePrinter(CodePrinter):
         is_static    = expr.is_static
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
+        is_procedure = expr.is_procedure or is_static
 
         if expr.cls_name:
             for k, m in list(_default_methods.items()):
@@ -1298,7 +1299,7 @@ class FCodePrinter(CodePrinter):
         # ...
         body = expr.body
         func_end  = ''
-        if not expr.is_procedure:
+        if not is_procedure:
             result = expr.results[0]
             # TODO uncomment and validate this
 #            expr = subs(expr, result, str(expr.name))
@@ -1306,7 +1307,6 @@ class FCodePrinter(CodePrinter):
             body = expr.body
             functions = expr.functions
           
-
             ret_type = self._print(result.dtype)
             ret_type += '(kind={0})'.format(str(result.precision))
 
@@ -1332,7 +1332,7 @@ class FCodePrinter(CodePrinter):
             #TODO improve for functions without return
 
             out_args = [result for result in expr.results]
-            for result in expr.results:
+            for result in out_args:
                 if result in expr.arguments:
                     dec = Declare(result.dtype, result, intent='inout', static=is_static)
                 else:
