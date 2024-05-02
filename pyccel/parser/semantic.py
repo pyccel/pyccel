@@ -4802,7 +4802,7 @@ class SemanticParser(BasicParser):
             self.insert_import('math', AsName(MathAtan2, 'atan2'))
             return MathAtan2(PythonImag(var), PythonReal(var))
 
-    def _visit_SetUpdate(self, expr):
+    def _build_SetUpdate(self, expr):
         """
         Method to navigate the syntactic DottedName node of an `update()` call.
 
