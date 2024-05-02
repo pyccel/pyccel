@@ -12,9 +12,9 @@ runs:
         if [[ ! -f "$GFORTRAN_HOME" ]]; then
           gfort=$(find ${PATH//:/\/ } -name 'gfortran-*' -exec basename {} \; | sort | tail -n 1 || true)
           echo "Found $gfort"
-          gfort_path=$(which ${gfort}
+          gfort_path=$(which ${gfort})
           folder=$(dirname ${gfort_path})
-          ln -s ${gfort} ${folder}/gfortran
+          ln -s ${gfort_path} ${folder}/gfortran
         fi
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
       shell: bash
