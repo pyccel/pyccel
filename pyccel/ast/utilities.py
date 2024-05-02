@@ -16,8 +16,9 @@ from .core import Product
 from .core import FunctionDef
 from .core import ValuedVariable
 from .core import Constant, Variable, IndexedVariable
+from .core import String
 
-from .builtins import Bool, Enumerate, Int, PythonFloat, PythonComplex, Len, Map, Range, Zip
+from .builtins import PythonBool, Enumerate, PythonInt, PythonFloat, PythonComplex, Len, Map, Range, Zip
 
 from .mathext  import math_functions, math_constants
 
@@ -131,10 +132,10 @@ builtin_functions_dict = {
     'range'    : Range,
     'zip'      : Zip,
     'enumerate': Enumerate,
-    'int'      : Int,
+    'int'      : PythonInt,
     'float'    : PythonFloat,
     'complex'  : PythonComplex,
-    'bool'     : Bool,
+    'bool'     : PythonBool,
     'sum'      : NumpySum,
     'len'      : Len,
     'max'      : NumpyMax,
@@ -264,9 +265,7 @@ def build_types_decorator(args, order=None):
             if order and a.rank > 1:
                 dtype = "{dtype}(order={ordering})".format(dtype=dtype, ordering=order)
 
-        if not ( dtype.startswith("'") and dtype.endswith("'") ):
-            dtype = "'{}'".format(dtype)
-
+        dtype = String(dtype)
         types.append(dtype)
 
     return types

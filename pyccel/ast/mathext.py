@@ -52,6 +52,7 @@ __all__ = (
     'MathSqrt',
     'MathTan',
     'MathTanh',
+    'MathRemainder',
     # ---
     'MathCeil',
     'MathFactorial',
@@ -136,6 +137,7 @@ class MathSinh    (MathFunctionFloat): pass
 class MathSqrt    (MathFunctionFloat): pass
 class MathTan     (MathFunctionFloat): pass
 class MathTanh    (MathFunctionFloat): pass
+class MathRemainder (MathFunctionFloat): pass
 
 # Integer result
 class MathCeil     (MathFunctionInt): pass
@@ -171,7 +173,7 @@ class MathModf(MathFunctionBase):
 
     Return the fractional and integer parts of x.  Both results carry the sign
     of x and are floats.
-    """    
+    """
 
 #==============================================================================
 # Dictionary to map math functions to classes above

@@ -1456,8 +1456,6 @@ def test_array_real_2d_2d_matmul_mixorder():
     f2(A2, B2, C2)
     assert np.array_equal(C1, C2)
 
-# TODO: Fix #245
-@pytest.mark.xfail(reason="Needs fixing, see #245")
 def test_array_real_loopdiff():
     f1 = arrays.array_real_loopdiff
     f2 = epyccel( f1 )

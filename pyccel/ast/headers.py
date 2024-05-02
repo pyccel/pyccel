@@ -199,7 +199,7 @@ class FunctionHeader(Header):
                 shape = None
                 if rank >1:
                     order = d['order']
-                
+
                 if isinstance(dtype, str):
                     try:
                         dtype = datatype(dtype)

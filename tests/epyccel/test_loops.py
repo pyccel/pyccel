@@ -33,6 +33,11 @@ def test_factorial_while(language):
     f2 = epyccel( f1, language = language, verbose = True )
     assert f1( 10 ) == f2( 10 )
 
+def test_while_not_0(language):
+    f1 = loops.while_not_0
+    f2 = epyccel( f1, language = language, verbose = True )
+    assert f1( 42 ) == f2( 42 )
+
 def test_double_while_sum(language):
     f1 = loops.double_while_sum
     f2 = epyccel( f1, language = language, verbose = True )

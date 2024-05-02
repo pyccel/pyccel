@@ -437,3 +437,7 @@ def test_multiple_results():
                 int,bool,float,float,float,float,float,float,
                 float,float,float,float,float,float,
                 float,float,float,float,float,float])
+
+#------------------------------------------------------------------------------
+def test_elemental():
+    pyccel_test("scripts/decorators_elemental.py")

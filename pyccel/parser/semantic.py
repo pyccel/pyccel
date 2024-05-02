@@ -5,7 +5,6 @@ from collections import OrderedDict
 import traceback
 
 from sympy.core.function       import Application, UndefinedFunction
-from sympy.core.numbers        import ImaginaryUnit
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
@@ -58,7 +57,7 @@ from pyccel.ast.core import _atomic
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
-from pyccel.ast.core import PyccelUnary
+from pyccel.ast.core import PyccelUnary, PyccelUnarySub
 from pyccel.ast.core import Product, FunctionCall
 from pyccel.ast.core import PyccelArraySize
 from pyccel.ast.core import PyccelOperator
@@ -69,7 +68,7 @@ from pyccel.ast.functionalexpr import GeneratorComprehension as GC
 from pyccel.ast.datatypes import NativeRange
 from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
 from pyccel.ast.datatypes import default_precision
 
 from pyccel.ast.type_inference  import str_dtype
@@ -86,7 +85,7 @@ from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_impo
 from pyccel.ast.utilities import split_positional_keyword_arguments
 
 from pyccel.ast.builtins import Print
-from pyccel.ast.builtins import Int as PythonInt, Bool as PythonBool, PythonFloat, PythonComplex
+from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import Range, Zip, Enumerate, Map, PythonTuple
 
@@ -952,7 +951,6 @@ class SemanticParser(BasicParser):
 
     def _visit_Symbol(self, expr, **settings):
         name = expr.name
-
         var = self.check_for_variable(name)
 
         if var is None:
@@ -1137,11 +1135,32 @@ class SemanticParser(BasicParser):
     def _visit_PyccelPow(self, expr, **settings):
         return self._handle_PyccelOperator(expr, **settings)
 
+    def _visit_PyccelRShift(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelLShift(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelBitXor(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelBitOr(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelBitAnd(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelInvert(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
     def _visit_PyccelAssociativeParenthesis(self, expr, **settings):
         return PyccelAssociativeParenthesis(self._visit(expr.args[0]))
 
     def _visit_PyccelUnary(self, expr, **settings):
         return PyccelUnary(self._visit(expr.args[0]))
+
+    def _visit_PyccelUnarySub(self, expr, **settings):
+        return PyccelUnarySub(self._visit(expr.args[0]))
 
     def _visit_PyccelAnd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
@@ -1420,7 +1439,7 @@ class SemanticParser(BasicParser):
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=self.blocking)
-                elif lhs.rank>0 and isinstance(rhs, PyccelOperator):
+                elif lhs.rank>0 and not isinstance(rhs, (NumpyNewArray, TupleVariable, PythonTuple)):
                     #TODO: Provide order once issue #335 is fixed
                     #new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, lhs.order)))
                     new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, 'C')))
@@ -1432,7 +1451,7 @@ class SemanticParser(BasicParser):
                             symbol = '|{name}| <module> -> {rhs}'.format(name=name, rhs=rhs),
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
-                elif str(dtype) != str(getattr(var, 'dtype', 'None')):
+                elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
                     txt = '|{name}| {old} <-> {new}'
                     txt = txt.format(name=name, old=var.dtype, new=dtype)
 
@@ -1685,8 +1704,12 @@ class SemanticParser(BasicParser):
                     c_ranks = [x.rank for x in call_args]
                     same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
                     if not all(same_ranks):
-                        _name = _get_name(lhs)
-                        var = self.get_variable(_name)
+                        assert(len(c_ranks) == 1)
+                        for d in d_var:
+                            d['shape'      ] = call_args[0].shape
+                            d['rank'       ] = call_args[0].rank
+                            d['allocatable'] = call_args[0].allocatable
+                            d['order'      ] = call_args[0].order
 
             elif isinstance(func, Interface):
                 d_var = [self._infere_type(i, **settings) for i in
@@ -1737,6 +1760,7 @@ class SemanticParser(BasicParser):
                     # case of rhs is a target variable the lhs must be a pointer
                     d['is_target' ] = False
                     d['is_pointer'] = True
+
 
         lhs = expr.lhs
         if isinstance(lhs, (Symbol, DottedVariable)):
@@ -2293,11 +2317,21 @@ class SemanticParser(BasicParser):
         is_private   = expr.is_private
 
         header = expr.header
+        args_number = len(expr.arguments)
         if header is None:
             if cls_name:
                 header = self.get_header(cls_name +'.'+ name)
+                args_number -= 1
             else:
                 header = self.get_header(name)
+
+        if header:
+            if (args_number != len(header.dtypes)):
+                msg = 'The number of arguments in the function {} ({}) does not match the number of types in decorator/header ({}).'.format(name ,args_number, len(header.dtypes))
+                if (args_number < len(header.dtypes)):
+                    errors.report(msg, symbol=expr.arguments, severity='warning')
+                else:
+                    errors.report(msg, symbol=expr.arguments, severity='fatal')
 
         if expr.arguments and not header:
 
@@ -2340,7 +2374,6 @@ class SemanticParser(BasicParser):
 #            header_vec = header.vectorize(index_arg)
 #            vec_func   = expr.vectorize(body_vec, header_vec)
 
-
         for m in interfaces:
             args           = []
             results        = []
@@ -2365,6 +2398,8 @@ class SemanticParser(BasicParser):
                 for (a, ah) in zip(arguments, m.arguments):
                     d_var = self._infere_type(ah, **settings)
                     d_var['shape'] = ah.alloc_shape
+                    d_var['is_argument'] = True
+                    d_var['is_kwonly'] = a.is_kwonly
                     dtype = d_var.pop('datatype')
                     if d_var['rank']>0:
                         d_var['cls_base'] = NumpyArrayClass
@@ -2685,53 +2720,57 @@ class SemanticParser(BasicParser):
         ls = [self._visit(i, **settings) for i in expr.variables]
         return Del(ls)
 
-    def _visit_Is(self, expr, **settings):
+    def _handle_is_operator(self, IsClass, expr, **settings):
 
         # TODO ERROR wrong position ??
 
         name = expr.lhs
-        var1 = self.get_variable(str(expr.lhs))
+        var1 = self._visit(expr.lhs)
+        var2 = self._visit(expr.rhs)
 
-        var2 = self.check_for_variable(str(expr.rhs))
-        if var2 is None:
-            if (isinstance(expr.rhs, Nil) and not var1.is_optional):
+        if (var1 is var2) or (isinstance(var2, Nil) and isinstance(var1, Nil)):
+            if IsClass == IsNot:
+                return BooleanFalse()
+            elif IsClass == Is:
+                return BooleanTrue()
+
+        if isinstance(var1, Nil):
+            var1, var2 = var2, var1
+
+        if isinstance(var2, Nil):
+            if not var1.is_optional:
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error', blocker=self.blocking)
-            return Is(var1, expr.rhs)
+            return IsClass(var1, expr.rhs)
+
+        if (var1.dtype != var2.dtype):
+            if IsClass == Is:
+                return BooleanFalse()
+            elif IsClass == IsNot:
+                return BooleanTrue()
 
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
             (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
-            return Is(var1, var2)
+            return IsClass(var1, var2)
 
-        errors.report(PYCCEL_RESTRICTION_IS_RHS,
+        lst = [NativeString(), NativeComplex(), NativeReal(), NativeInteger()]
+        if (var1.dtype in lst):
+            errors.report(PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, symbol=expr,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='error', blocker=self.blocking)
-        return Is(var1, expr.rhs)
+            return IsClass(var1, var2)
+
+        errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
+            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+            severity='error', blocker=self.blocking)
+        return IsClass(var1, var2)
+
+    def _visit_Is(self, expr, **settings):
+        return self._handle_is_operator(Is, expr, **settings)
 
     def _visit_IsNot(self, expr, **settings):
-
-        # TODO ERROR wrong position ??
-
-        name = expr.lhs
-        var1 = self.get_variable(str(expr.lhs))
-
-        var2 = self.check_for_variable(str(expr.rhs))
-        if var2 is None:
-            if (isinstance(expr.rhs, Nil) and not var1.is_optional):
-                errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='error', blocker=self.blocking)
-            return IsNot(var1, expr.rhs)
-
-        if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
-            (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
-            return IsNot(var1, var2)
-
-        errors.report(PYCCEL_RESTRICTION_IS_RHS,
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='error', blocker=self.blocking)
-        return IsNot(var1, expr.rhs)
+        return self._handle_is_operator(IsNot, expr, **settings)
 
     def _visit_Import(self, expr, **settings):
 

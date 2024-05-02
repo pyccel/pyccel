@@ -74,13 +74,13 @@ def test_func_no_args_f1():
     f = epyccel(f1)
     assert abs(f()-f1()) < 1e-13
 #------------------------------------------------------------------------------
-def test_decorator_f1():
+def test_decorator_f1(language):
     @types('int')
     def f1(x):
         y = x - 1
         return y
 
-    f = epyccel(f1)
+    f = epyccel(f1, language=language)
 
     # ...
     assert f(3) == f1(3)
@@ -200,13 +200,13 @@ def test_decorator_f7():
     # ...
 
 #------------------------------------------------------------------------------
-def test_decorator_f8():
+def test_decorator_f8(language):
     @types('int','bool')
     def f8(x,b):
         a = x if b else 2
         return a
 
-    f = epyccel(f8)
+    f = epyccel(f8, language=language)
 
     # ...
     assert f(3,True)  == f8(3,True)
@@ -242,7 +242,7 @@ def test_arguments_f10():
     f(x_expected)
     assert np.array_equal(x, x_expected)
 
-def test_multiple_returns_f11():
+def test_multiple_returns_f11(language):
     @types('int', 'int', results='int')
     def ackermann(m, n):
         if m == 0:
@@ -252,10 +252,10 @@ def test_multiple_returns_f11():
         else:
             return ackermann(m - 1, ackermann(m, n - 1))
 
-    f = epyccel(ackermann)
+    f = epyccel(ackermann, language=language)
     assert f(2,3) == ackermann(2,3)
 
-def test_multiple_returns_f12():
+def test_multiple_returns_f12(language):
     @types('int')
     def non_negative(i):
         if i < 0:
@@ -263,11 +263,11 @@ def test_multiple_returns_f12():
         else:
             return True
 
-    f = epyccel(non_negative)
+    f = epyccel(non_negative, language=language)
     assert f(2) == non_negative(2)
     assert f(-1) == non_negative(-1)
 
-def test_multiple_returns_f13():
+def test_multiple_returns_f13(language):
     @types('int', 'int')
     def get_min(a, b):
         if a<b:
@@ -275,7 +275,7 @@ def test_multiple_returns_f13():
         else:
            return b
 
-    f = epyccel(get_min)
+    f = epyccel(get_min, language=language)
     assert f(2,3) == get_min(2,3)
 
 def test_multiple_returns_f14():
@@ -286,10 +286,79 @@ def test_multiple_returns_f14():
     f = epyccel(g)
     assert f(2,1) == g(2,1)
 
+
+def test_decorator_f15(language):
+    @types('bool', 'int8', 'int16', 'int32', 'int64')
+    def f15(a,b,c,d,e):
+        if a:
+            return b + c
+        else:
+            return d + e
+
+    f = epyccel(f15, language=language)
+    assert f(True, 1, 2, 3, 4)  == f15(True, 1, 2, 3, 4)
+    assert f(False, 1, 2, 3, 4)  == f15(False, 1, 2, 3, 4)
+
+
+def test_decorator_f16(language):
+    @types('int16')
+    def f16(a):
+        b = a
+        return b
+    f = epyccel(f16, language=language)
+    assert f(np.int16(17)) == f16(np.int16(17))
+
+def test_decorator_f17(language):
+    @types('int8')
+    def f17(a):
+        b = a
+        return b
+    f = epyccel(f17, language=language)
+    assert f(np.int8(2)) == f17(np.int8(2))
+
+def test_decorator_f18(language):
+    @types('int32')
+    def f18(a):
+        b = a
+        return b
+    f = epyccel(f18, language=language)
+    assert f(np.int32(5)) == f18(np.int32(5))
+
+def test_decorator_f19(language):
+    @types('int64')
+    def f19(a):
+        b = a
+        return b
+    f = epyccel(f19, language=language)
+    assert f(np.int64(1)) == f19(np.int64(1))
+
+def test_decorator_f20(language):
+    @types('complex')
+    def f20(a):
+        b = a
+        return b
+    f = epyccel(f20, language=language)
+    assert f(complex(1, 2.2) == f20(complex(1, 2.2)))
+
+def test_decorator_f21(language):
+    @types('complex64')
+    def f21(a):
+        b = a
+        return b
+    f = epyccel(f21, language=language)
+    assert f(complex(1, 2.2) == f21(complex(1, 2.2)))
+
+def test_decorator_f22(language):
+    @types('complex128')
+    def f22(a):
+        b = a
+        return b
+    f = epyccel(f22, language=language)
+    assert f(complex(1, 2.2) == f22(complex(1, 2.2)))
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
 #
 #def teardown_module():
 #    clean_test()
-#

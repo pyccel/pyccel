@@ -6,7 +6,6 @@ from sympy import Basic, Function, Tuple
 from sympy import Integer as sp_Integer
 from sympy import Expr
 from sympy import Rational as sp_Rational
-from sympy import IndexedBase
 from sympy.core.function import Application
 from sympy.core.assumptions import StdFactKB
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
@@ -23,7 +22,7 @@ from .core           import create_variable
 from .core           import CodeBlock
 from .core           import ClassDef, FunctionDef
 
-from .builtins       import Int as PythonInt, Bool as PythonBool
+from .builtins       import PythonInt, PythonBool
 from .builtins       import PythonFloat, PythonTuple, PythonComplex
 from .datatypes      import dtype_and_precision_registry as dtype_registry
 from .datatypes      import default_precision
@@ -97,7 +96,7 @@ numpy_constants = {
 }
 
 def process_dtype(dtype):
-    if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt, 
+    if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt,
                   Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
                   Float64, Float32):
         dtype = dtype.__name__.lower()
@@ -607,16 +606,16 @@ class Diag(Application, NumpyNewArray):
         index = printer(self.index)
 
         if rank == 2:
-            lhs   = IndexedBase(lhs)[self.index]
-            rhs   = IndexedBase(self.array)[self.index,self.index]
+            lhs   = IndexedVariable(lhs)[self.index]
+            rhs   = IndexedVariable(self.array)[self.index,self.index]
             body  = [Assign(lhs, rhs)]
             body  = For(self.index, Range(Len(self.array)), body)
             code  = printer(body)
             alloc = 'allocate({0}(0: size({1},1)-1))'.format(lhs.base, array)
         elif rank == 1:
 
-            lhs   = IndexedBase(lhs)[self.index, self.index]
-            rhs   = IndexedBase(self.array)[self.index]
+            lhs   = IndexedVariable(lhs)[self.index, self.index]
+            rhs   = IndexedVariable(self.array)[self.index]
             body  = [Assign(lhs, rhs)]
             body  = For(self.index, Range(Len(self.array)), body)
             code  = printer(body)
@@ -683,8 +682,8 @@ class Cross(Application, NumpyNewArray):
     def fprint(self, printer, lhs=None):
         """Fortran print."""
 
-        a     = IndexedBase(self.first)
-        b     = IndexedBase(self.second)
+        a     = IndexedVariable(self.first)
+        b     = IndexedVariable(self.second)
         slc   = Slice(None, None)
         rank  = self.rank
 
@@ -830,7 +829,7 @@ class Rand(Function, NumpyNewArray):
         code_init = 'call random_number({0})'.format(lhs_code)
         stmts.append(code_init)
 
-        return '\n'.join(stmts)
+        return '\n'.join(stmts) + '\n'
 
 #==============================================================================
 class NumpyRandint(Function, NumpyNewArray):
@@ -963,7 +962,10 @@ class Full(Application, NumpyNewArray):
             code_init = '{0} = {1}'.format(lhs_code, init_value)
             stmts.append(code_init)
 
-        return '\n'.join(stmts)
+        if len(stmts) == 0:
+            return ''
+        else:
+            return '\n'.join(stmts) + '\n'
 
 #==============================================================================
 class Empty(Full):

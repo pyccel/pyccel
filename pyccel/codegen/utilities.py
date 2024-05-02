@@ -7,6 +7,7 @@ This file contains some useful functions to compile the generated fortran code
 import os
 import subprocess
 import sys
+import warnings
 
 __all__ = ['construct_flags', 'compile_files']
 
@@ -57,11 +58,11 @@ def construct_flags(compiler,
     flags = str(fflags)
     if compiler == "gfortran":
         if debug:
-            flags += " -fbounds-check"
+            flags += " -fcheck=bounds"
 
     if compiler == "mpif90":
         if debug:
-            flags += " -fbounds-check"
+            flags += " -fcheck=bounds"
         if sys.platform == "win32":
             mpiinc = os.environ["MSMPI_INC"].rstrip('\\')
             mpilib = os.environ["MSMPI_LIB64"].rstrip('\\')
@@ -131,10 +132,10 @@ def compile_files(filename, compiler, flags,
     if verbose:
         print(cmd)
 
-    output = subprocess.check_output(cmd, shell=True)
+    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
 
     if output:
-        print(output)
+        warnings.warn(UserWarning(output))
 
     # TODO shall we uncomment this?
 #    # write and save a log file in .pyccel/'filename'.log

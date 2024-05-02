@@ -64,3 +64,10 @@ class Complex(Expr, PyccelAstNode):
     @property
     def imag(self):
         return self.args[1]
+
+#------------------------------------------------------------------------------
+class ImaginaryUnit(Expr, PyccelAstNode):
+    _dtype     = NativeComplex()
+    _rank      = 0
+    _shape     = ()
+    _precision = default_precision['complex']

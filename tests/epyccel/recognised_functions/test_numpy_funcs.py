@@ -35,411 +35,412 @@ from conftest import *
 #    cross
 #    # ---
 
-def test_fabs_call():
+def test_fabs_call(language):
     @types('real')
     def fabs_call(x):
         from numpy import fabs
         return fabs(x)
 
-    f1 = epyccel(fabs_call)
+    f1 = epyccel(fabs_call, language = language)
     x = rand()
     assert(isclose(f1(x), fabs_call(x), rtol=1e-15, atol=1e-15))
 
-def test_fabs_phrase():
+def test_fabs_phrase(language):
     @types('real','real')
     def fabs_phrase(x,y):
         from numpy import fabs
         a = fabs(x)*fabs(y)
         return a
 
-    f2 = epyccel(fabs_phrase)
+    f2 = epyccel(fabs_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), fabs_phrase(x,y), rtol=1e-15, atol=1e-15))
 
 @pytest.mark.xfail(reason = "fabs should always return a float")
-def test_fabs_return_type():
+def test_fabs_return_type(language):
     @types('int')
     def fabs_return_type(x):
         from numpy import fabs
         a = fabs(x)
         return a
 
-    f1 = epyccel(fabs_return_type)
+    f1 = epyccel(fabs_return_type, language = language)
     x = randint(100)
     assert(isclose(f1(x), fabs_return_type(x), rtol=1e-15, atol=1e-15))
     assert(type(f1(x)) == type(fabs_return_type(x))) # pylint: disable=unidiomatic-typecheck
 
-def test_absolute_call():
+def test_absolute_call(language):
     @types('real')
     def absolute_call(x):
         from numpy import absolute
         return absolute(x)
 
-    f1 = epyccel(absolute_call)
+    f1 = epyccel(absolute_call, language = language)
     x = rand()
     assert(isclose(f1(x), absolute_call(x), rtol=1e-15, atol=1e-15))
 
-def test_absolute_phrase():
+def test_absolute_phrase(language):
     @types('real','real')
     def absolute_phrase(x,y):
         from numpy import absolute
         a = absolute(x)*absolute(y)
         return a
 
-    f2 = epyccel(absolute_phrase)
+    f2 = epyccel(absolute_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), absolute_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_absolute_return_type():
+def test_absolute_return_type(language):
     @types('int')
     def absolute_return_type(x):
         from numpy import absolute
         a = absolute(x)
         return a
 
-    f1 = epyccel(absolute_return_type)
+    f1 = epyccel(absolute_return_type, language = language)
     x = randint(100)
     assert(isclose(f1(x), absolute_return_type(x), rtol=1e-15, atol=1e-15))
     assert(type(f1(x)) == type(absolute_return_type(x).item())) # pylint: disable=unidiomatic-typecheck
 
-def test_sin_call():
+def test_sin_call(language):
     @types('real')
     def sin_call(x):
         from numpy import sin
         return sin(x)
 
-    f1 = epyccel(sin_call)
+    f1 = epyccel(sin_call, language = language)
     x = rand()
     assert(isclose(f1(x), sin_call(x), rtol=1e-15, atol=1e-15))
 
-def test_sin_phrase():
+def test_sin_phrase(language):
     @types('real','real')
     def sin_phrase(x,y):
         from numpy import sin
         a = sin(x)+sin(y)
         return a
 
-    f2 = epyccel(sin_phrase)
+    f2 = epyccel(sin_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), sin_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_cos_call():
+def test_cos_call(language):
     @types('real')
     def cos_call(x):
         from numpy import cos
         return cos(x)
 
-    f1 = epyccel(cos_call)
+    f1 = epyccel(cos_call, language = language)
     x = rand()
     assert(isclose(f1(x), cos_call(x), rtol=1e-15, atol=1e-15))
 
-def test_cos_phrase():
+def test_cos_phrase(language):
     @types('real','real')
     def cos_phrase(x,y):
         from numpy import cos
         a = cos(x)+cos(y)
         return a
 
-    f2 = epyccel(cos_phrase)
+    f2 = epyccel(cos_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), cos_phrase(x,y), rtol=1e-15, atol=1e-15))
 
 
-def test_tan_call():
+def test_tan_call(language):
     @types('real')
     def tan_call(x):
         from numpy import tan
         return tan(x)
 
-    f1 = epyccel(tan_call)
+    f1 = epyccel(tan_call, language = language)
     x = rand()
     assert(isclose(f1(x), tan_call(x), rtol=1e-15, atol=1e-15))
 
-def test_tan_phrase():
+def test_tan_phrase(language):
     @types('real','real')
     def tan_phrase(x,y):
         from numpy import tan
         a = tan(x)+tan(y)
         return a
 
-    f2 = epyccel(tan_phrase)
+    f2 = epyccel(tan_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), tan_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_exp_call():
+def test_exp_call(language):
     @types('real')
     def exp_call(x):
         from numpy import exp
         return exp(x)
 
-    f1 = epyccel(exp_call)
+    f1 = epyccel(exp_call, language = language)
     x = rand()
     assert(isclose(f1(x), exp_call(x), rtol=1e-15, atol=1e-15))
 
-def test_exp_phrase():
+def test_exp_phrase(language):
     @types('real','real')
     def exp_phrase(x,y):
         from numpy import exp
         a = exp(x)+exp(y)
         return a
 
-    f2 = epyccel(exp_phrase)
+    f2 = epyccel(exp_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), exp_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_log_call():
+def test_log_call(language):
     @types('real')
     def log_call(x):
         from numpy import log
         return log(x)
 
-    f1 = epyccel(log_call)
+    f1 = epyccel(log_call, language = language)
     x = rand()
     assert(isclose(f1(x), log_call(x), rtol=1e-15, atol=1e-15))
 
-def test_log_phrase():
+def test_log_phrase(language):
     @types('real','real')
     def log_phrase(x,y):
         from numpy import log
         a = log(x)+log(y)
         return a
 
-    f2 = epyccel(log_phrase)
+    f2 = epyccel(log_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), log_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_arcsin_call():
+def test_arcsin_call(language):
     @types('real')
     def arcsin_call(x):
         from numpy import arcsin
         return arcsin(x)
 
-    f1 = epyccel(arcsin_call)
+    f1 = epyccel(arcsin_call, language = language)
     x = rand()
     assert(isclose(f1(x), arcsin_call(x), rtol=1e-15, atol=1e-15))
 
-def test_arcsin_phrase():
+def test_arcsin_phrase(language):
     @types('real','real')
     def arcsin_phrase(x,y):
         from numpy import arcsin
         a = arcsin(x)+arcsin(y)
         return a
 
-    f2 = epyccel(arcsin_phrase)
+    f2 = epyccel(arcsin_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), arcsin_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_arccos_call():
+def test_arccos_call(language):
     @types('real')
     def arccos_call(x):
         from numpy import arccos
         return arccos(x)
 
-    f1 = epyccel(arccos_call)
+    f1 = epyccel(arccos_call, language = language)
     x = rand()
     assert(isclose(f1(x), arccos_call(x), rtol=1e-15, atol=1e-15))
 
-def test_arccos_phrase():
+def test_arccos_phrase(language):
     @types('real','real')
     def arccos_phrase(x,y):
         from numpy import arccos
         a = arccos(x)+arccos(y)
         return a
 
-    f2 = epyccel(arccos_phrase)
+    f2 = epyccel(arccos_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), arccos_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_arctan_call():
+def test_arctan_call(language):
     @types('real')
     def arctan_call(x):
         from numpy import arctan
         return arctan(x)
 
-    f1 = epyccel(arctan_call)
+    f1 = epyccel(arctan_call, language = language)
     x = rand()
     assert(isclose(f1(x), arctan_call(x), rtol=1e-15, atol=1e-15))
 
-def test_arctan_phrase():
+def test_arctan_phrase(language):
     @types('real','real')
     def arctan_phrase(x,y):
         from numpy import arctan
         a = arctan(x)+arctan(y)
         return a
 
-    f2 = epyccel(arctan_phrase)
+    f2 = epyccel(arctan_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), arctan_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_sinh_call():
+def test_sinh_call(language):
     @types('real')
     def sinh_call(x):
         from numpy import sinh
         return sinh(x)
 
-    f1 = epyccel(sinh_call)
+    f1 = epyccel(sinh_call, language = language)
     x = rand()
     assert(isclose(f1(x), sinh_call(x), rtol=1e-15, atol=1e-15))
 
-def test_sinh_phrase():
+def test_sinh_phrase(language):
     @types('real','real')
     def sinh_phrase(x,y):
         from numpy import sinh
         a = sinh(x)+sinh(y)
         return a
 
-    f2 = epyccel(sinh_phrase)
+    f2 = epyccel(sinh_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), sinh_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_cosh_call():
+def test_cosh_call(language):
     @types('real')
     def cosh_call(x):
         from numpy import cosh
         return cosh(x)
 
-    f1 = epyccel(cosh_call)
+    f1 = epyccel(cosh_call, language = language)
     x = rand()
     assert(isclose(f1(x), cosh_call(x), rtol=1e-15, atol=1e-15))
 
-def test_cosh_phrase():
+def test_cosh_phrase(language):
     @types('real','real')
     def cosh_phrase(x,y):
         from numpy import cosh
         a = cosh(x)+cosh(y)
         return a
 
-    f2 = epyccel(cosh_phrase)
+    f2 = epyccel(cosh_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), cosh_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_tanh_call():
+def test_tanh_call(language):
     @types('real')
     def tanh_call(x):
         from numpy import tanh
         return tanh(x)
 
-    f1 = epyccel(tanh_call)
+    f1 = epyccel(tanh_call, language = language)
     x = rand()
     assert(isclose(f1(x), tanh_call(x), rtol=1e-15, atol=1e-15))
 
-def test_tanh_phrase():
+def test_tanh_phrase(language):
     @types('real','real')
     def tanh_phrase(x,y):
         from numpy import tanh
         a = tanh(x)+tanh(y)
         return a
 
-    f2 = epyccel(tanh_phrase)
+    f2 = epyccel(tanh_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), tanh_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_arctan2_call():
+def test_arctan2_call(language):
     @types('real','real')
     def arctan2_call(x,y):
         from numpy import arctan2
         return arctan2(x,y)
 
-    f1 = epyccel(arctan2_call)
+    f1 = epyccel(arctan2_call, language = language)
     x = rand()
     y = rand()
     assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-15, atol=1e-15))
 
-def test_arctan2_phrase():
+def test_arctan2_phrase(language):
     @types('real','real','real')
     def arctan2_phrase(x,y,z):
         from numpy import arctan2
         a = arctan2(x,y)+arctan2(x,z)
         return a
 
-    f2 = epyccel(arctan2_phrase)
+    f2 = epyccel(arctan2_phrase, language = language)
     x = -rand()
     y = rand()
     z = rand()
     assert(isclose(f2(x,y,z), arctan2_phrase(x,y,z), rtol=1e-15, atol=1e-15))
 
-def test_sqrt_call():
+def test_sqrt_call(language):
     @types('real')
     def sqrt_call(x):
         from numpy import sqrt
         return sqrt(x)
 
-    f1 = epyccel(sqrt_call)
+    f1 = epyccel(sqrt_call, language = language)
     x = rand()
     assert(isclose(f1(x), sqrt_call(x), rtol=1e-15, atol=1e-15))
 
-def test_sqrt_phrase():
+def test_sqrt_phrase(language):
     @types('real','real')
     def sqrt_phrase(x,y):
         from numpy import sqrt
         a = sqrt(x)*sqrt(y)
         return a
 
-    f2 = epyccel(sqrt_phrase)
+    f2 = epyccel(sqrt_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), sqrt_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-
-def test_sqrt_return_type():
+def test_sqrt_return_type_r(language):
     @types('real')
     def sqrt_return_type_real(x):
         from numpy import sqrt
         a = sqrt(x)
         return a
+
+    f1 = epyccel(sqrt_return_type_real, language = language)
+    x = rand()
+    assert(isclose(f1(x), sqrt_return_type_real(x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(sqrt_return_type_real(x).item())) # pylint: disable=unidiomatic-typecheck
+
+def test_sqrt_return_type_c(language):
     @types('complex')
     def sqrt_return_type_comp(x):
         from numpy import sqrt
         a = sqrt(x)
         return a
 
-    f1 = epyccel(sqrt_return_type_real)
-    x = rand()
-    assert(isclose(f1(x), sqrt_return_type_real(x), rtol=1e-15, atol=1e-15))
-    assert(type(f1(x)) == type(sqrt_return_type_real(x).item())) # pylint: disable=unidiomatic-typecheck
-
-    f1 = epyccel(sqrt_return_type_comp)
+    f1 = epyccel(sqrt_return_type_comp, language = language)
     x = rand() + 1j * rand()
     assert(isclose(f1(x), sqrt_return_type_comp(x), rtol=1e-15, atol=1e-15))
     assert(type(f1(x)) == type(sqrt_return_type_comp(x).item())) # pylint: disable=unidiomatic-typecheck
 
 
-def test_floor_call():
+def test_floor_call(language):
     @types('real')
     def floor_call(x):
         from numpy import floor
         return floor(x)
 
-    f1 = epyccel(floor_call)
+    f1 = epyccel(floor_call, language = language)
     x = rand()
     assert(isclose(f1(x), floor_call(x), rtol=1e-15, atol=1e-15))
 
-def test_floor_phrase():
+def test_floor_phrase(language):
     @types('real','real')
     def floor_phrase(x,y):
         from numpy import floor
         a = floor(x)*floor(y)
         return a
 
-    f2 = epyccel(floor_phrase)
+    f2 = epyccel(floor_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), floor_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_floor_return_type():
+def test_floor_return_type(language):
     @types('int')
     def floor_return_type_int(x):
         from numpy import floor
@@ -452,17 +453,25 @@ def test_floor_return_type():
         a = floor(x)
         return a
 
-    f1 = epyccel(floor_return_type_int)
+    f1 = epyccel(floor_return_type_int, language = language)
     x = randint(100)
     assert(isclose(f1(x), floor_return_type_int(x), rtol=1e-15, atol=1e-15))
     assert(type(f1(x)) == type(floor_return_type_int(x).item())) # pylint: disable=unidiomatic-typecheck
 
-    f1 = epyccel(floor_return_type_real)
+    f1 = epyccel(floor_return_type_real, language = language)
     x = randint(100)
     assert(isclose(f1(x), floor_return_type_real(x), rtol=1e-15, atol=1e-15))
     assert(type(f1(x)) == type(floor_return_type_real(x).item())) # pylint: disable=unidiomatic-typecheck
 
-def test_shape_indexed():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_shape_indexed(language):
     @types('int[:]')
     def test_shape_1d(f):
         from numpy import shape
@@ -475,8 +484,8 @@ def test_shape_indexed():
         return a[0], a[1]
 
     from numpy import empty
-    f1 = epyccel(test_shape_1d)
-    f2 = epyccel(test_shape_2d)
+    f1 = epyccel(test_shape_1d, language = language)
+    f2 = epyccel(test_shape_2d, language = language)
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
@@ -485,7 +494,15 @@ def test_shape_indexed():
     assert(f1(x1) == test_shape_1d(x1))
     assert(f2(x2) == test_shape_2d(x2))
 
-def test_shape_property():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_shape_property(language):
     @types('int[:]')
     def test_shape_1d(f):
         return f.shape[0]
@@ -496,8 +513,8 @@ def test_shape_property():
         return a[0], a[1]
 
     from numpy import empty
-    f1 = epyccel(test_shape_1d)
-    f2 = epyccel(test_shape_2d)
+    f1 = epyccel(test_shape_1d, language = language)
+    f2 = epyccel(test_shape_2d, language = language)
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
@@ -506,7 +523,15 @@ def test_shape_property():
     assert(f1(x1) == test_shape_1d(x1))
     assert(all(isclose(f2(x2), test_shape_2d(x2))))
 
-def test_shape_tuple_output():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_shape_tuple_output(language):
     @types('int[:]')
     def test_shape_1d(f):
         from numpy import shape
@@ -531,14 +556,22 @@ def test_shape_tuple_output():
     n3 = randint(20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
-    f1 = epyccel(test_shape_1d)
+    f1 = epyccel(test_shape_1d, language = language)
     assert(f1(x1)   == test_shape_1d(x1))
-    f1_t = epyccel(test_shape_1d_tuple)
+    f1_t = epyccel(test_shape_1d_tuple, language = language)
     assert(f1_t(x1) == test_shape_1d_tuple(x1))
-    f2 = epyccel(test_shape_2d)
+    f2 = epyccel(test_shape_2d, language = language)
     assert(f2(x2)   == test_shape_2d(x2))
 
-def test_shape_real():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_shape_real(language):
     @types('real[:]')
     def test_shape_1d(f):
         from numpy import shape
@@ -552,8 +585,8 @@ def test_shape_real():
         return a[0], a[1]
 
     from numpy import empty
-    f1 = epyccel(test_shape_1d)
-    f2 = epyccel(test_shape_2d)
+    f1 = epyccel(test_shape_1d, language = language)
+    f2 = epyccel(test_shape_2d, language = language)
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
@@ -562,7 +595,15 @@ def test_shape_real():
     assert(f1(x1) == test_shape_1d(x1))
     assert(f2(x2) == test_shape_2d(x2))
 
-def test_shape_int():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_shape_int(language):
     @types('int[:]')
     def test_shape_1d(f):
         from numpy import shape
@@ -575,8 +616,8 @@ def test_shape_int():
         a = shape(f)
         return a[0], a[1]
 
-    f1 = epyccel(test_shape_1d)
-    f2 = epyccel(test_shape_2d)
+    f1 = epyccel(test_shape_1d, language = language)
+    f2 = epyccel(test_shape_2d, language = language)
 
     from numpy import empty
     n1 = randint(20)
@@ -587,7 +628,15 @@ def test_shape_int():
     assert(f1(x1) == test_shape_1d(x1))
     assert(f2(x2) == test_shape_2d(x2))
 
-def test_shape_bool():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_shape_bool(language):
     @types('bool[:]')
     def test_shape_1d(f):
         from numpy import shape
@@ -601,8 +650,8 @@ def test_shape_bool():
         return a[0], a[1]
 
     from numpy import empty
-    f1 = epyccel(test_shape_1d)
-    f2 = epyccel(test_shape_2d)
+    f1 = epyccel(test_shape_1d, language = language)
+    f2 = epyccel(test_shape_2d, language = language)
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
@@ -611,7 +660,15 @@ def test_shape_bool():
     assert(f1(x1) == test_shape_1d(x1))
     assert(f2(x2) == test_shape_2d(x2))
 
-def test_full_basic_int():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_full_basic_int(language):
     @types('int')
     def create_full_shape_1d(n):
         from numpy import full, shape
@@ -637,21 +694,29 @@ def test_full_basic_int():
 
     size = randint(10)
 
-    f_shape_1d  = epyccel(create_full_shape_1d)
+    f_shape_1d  = epyccel(create_full_shape_1d, language = language)
     assert(f_shape_1d(size) == create_full_shape_1d(size))
 
-    f_shape_2d  = epyccel(create_full_shape_2d)
+    f_shape_2d  = epyccel(create_full_shape_2d, language = language)
     assert(f_shape_2d(size) == create_full_shape_2d(size))
 
-    f_val       = epyccel(create_full_val)
+    f_val       = epyccel(create_full_val, language = language)
     assert(f_val(size)      == create_full_val(size))
     assert(type(f_val(size)[0])       == type(create_full_val(size)[0].item())) # pylint: disable=unidiomatic-typecheck
 
-    f_arg_names = epyccel(create_full_arg_names)
+    f_arg_names = epyccel(create_full_arg_names, language = language)
     assert(f_arg_names(size) == create_full_arg_names(size))
     assert(type(f_arg_names(size)[0]) == type(create_full_arg_names(size)[0].item())) # pylint: disable=unidiomatic-typecheck
 
-def test_full_basic_real():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_full_basic_real(language):
     @types('int')
     def create_full_shape_1d(n):
         from numpy import full, shape
@@ -678,22 +743,22 @@ def test_full_basic_real():
     size = randint(10)
     val  = rand()*5
 
-    f_shape_1d  = epyccel(create_full_shape_1d)
+    f_shape_1d  = epyccel(create_full_shape_1d, language = language)
     assert(f_shape_1d(size)     == create_full_shape_1d(size))
 
-    f_shape_2d  = epyccel(create_full_shape_2d)
+    f_shape_2d  = epyccel(create_full_shape_2d, language = language)
     assert(f_shape_2d(size)     == create_full_shape_2d(size))
 
-    f_val       = epyccel(create_full_val)
+    f_val       = epyccel(create_full_val, language = language)
     assert(f_val(val)           == create_full_val(val))
     assert(type(f_val(val)[0])       == type(create_full_val(val)[0].item())) # pylint: disable=unidiomatic-typecheck
 
-    f_arg_names = epyccel(create_full_arg_names)
+    f_arg_names = epyccel(create_full_arg_names, language = language)
     assert(f_arg_names(val)     == create_full_arg_names(val))
     assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0].item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.xfail(reason = "f2py converts bools to int")
-def test_full_basic_bool():
+def test_full_basic_bool(language):
     @types('int')
     def create_full_shape_1d(n):
         from numpy import full, shape
@@ -720,21 +785,29 @@ def test_full_basic_bool():
     size = randint(10)
     val  = bool(randint(2))
 
-    f_shape_1d  = epyccel(create_full_shape_1d)
+    f_shape_1d  = epyccel(create_full_shape_1d, language = language)
     assert(f_shape_1d(size)     == create_full_shape_1d(size))
 
-    f_shape_2d  = epyccel(create_full_shape_2d)
+    f_shape_2d  = epyccel(create_full_shape_2d, language = language)
     assert(f_shape_2d(size)     == create_full_shape_2d(size))
 
-    f_val       = epyccel(create_full_val)
+    f_val       = epyccel(create_full_val, language = language)
     assert(f_val(val)           == create_full_val(val))
     assert(type(f_val(val)[0])       == type(create_full_val(val)[0])) # pylint: disable=unidiomatic-typecheck
 
-    f_arg_names = epyccel(create_full_arg_names)
+    f_arg_names = epyccel(create_full_arg_names, language = language)
     assert(f_arg_names(val)     == create_full_arg_names(val))
     assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0])) # pylint: disable=unidiomatic-typecheck
 
-def test_full_order():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_full_order(language):
     @types('int','int')
     def create_full_shape_C(n,m):
         from numpy import full, shape
@@ -751,13 +824,21 @@ def test_full_order():
     size_1 = randint(10)
     size_2 = randint(10)
 
-    f_shape_C  = epyccel(create_full_shape_C)
+    f_shape_C  = epyccel(create_full_shape_C, language = language)
     assert(f_shape_C(size_1,size_2) == create_full_shape_C(size_1,size_2))
 
-    f_shape_F  = epyccel(create_full_shape_F)
+    f_shape_F  = epyccel(create_full_shape_F, language = language)
     assert(f_shape_F(size_1,size_2) == create_full_shape_F(size_1,size_2))
 
-def test_full_dtype():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_full_dtype(language):
     @types('int')
     def create_full_val_int_int(val):
         from numpy import full
@@ -802,39 +883,47 @@ def test_full_dtype():
     val_int   = randint(100)
     val_float = rand()*100
 
-    f_int_int   = epyccel(create_full_val_int_int)
+    f_int_int   = epyccel(create_full_val_int_int, language = language)
     assert(     f_int_int(val_int)        ==      create_full_val_int_int(val_int))
     assert(type(f_int_int(val_int))       == type(create_full_val_int_int(val_int).item())) # pylint: disable=unidiomatic-typecheck
 
-    f_int_float = epyccel(create_full_val_int_float)
+    f_int_float = epyccel(create_full_val_int_float, language = language)
     assert(isclose(     f_int_float(val_int)     ,      create_full_val_int_float(val_int), rtol=1e-15, atol=1e-15))
     assert(type(f_int_float(val_int))     == type(create_full_val_int_float(val_int).item())) # pylint: disable=unidiomatic-typecheck
 
-    f_int_complex = epyccel(create_full_val_int_complex)
+    f_int_complex = epyccel(create_full_val_int_complex, language = language)
     assert(isclose(     f_int_complex(val_int)     ,      create_full_val_int_complex(val_int), rtol=1e-15, atol=1e-15))
     assert(type(f_int_complex(val_int))     == type(create_full_val_int_complex(val_int).item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_int32   = epyccel(create_full_val_real_int32)
+    f_real_int32   = epyccel(create_full_val_real_int32, language = language)
     assert(     f_real_int32(val_float)        ==      create_full_val_real_int32(val_float))
     assert(type(f_real_int32(val_float))       == type(create_full_val_real_int32(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_float32   = epyccel(create_full_val_real_float32)
+    f_real_float32   = epyccel(create_full_val_real_float32, language = language)
     assert(isclose(     f_real_float32(val_float)       ,      create_full_val_real_float32(val_float), rtol=1e-15, atol=1e-15))
     assert(type(f_real_float32(val_float))       == type(create_full_val_real_float32(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_float64   = epyccel(create_full_val_real_float64)
+    f_real_float64   = epyccel(create_full_val_real_float64, language = language)
     assert(isclose(     f_real_float64(val_float)       ,      create_full_val_real_float64(val_float), rtol=1e-15, atol=1e-15))
     assert(type(f_real_float64(val_float))       == type(create_full_val_real_float64(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_complex64   = epyccel(create_full_val_real_complex64)
+    f_real_complex64   = epyccel(create_full_val_real_complex64, language = language)
     assert(isclose(     f_real_complex64(val_float)       ,      create_full_val_real_complex64(val_float), rtol=1e-15, atol=1e-15))
     assert(type(f_real_complex64(val_float))       == type(create_full_val_real_complex64(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_complex128   = epyccel(create_full_val_real_complex128)
+    f_real_complex128   = epyccel(create_full_val_real_complex128, language = language)
     assert(isclose(     f_real_complex128(val_float)       ,      create_full_val_real_complex128(val_float), rtol=1e-15, atol=1e-15))
     assert(type(f_real_complex128(val_float))       == type(create_full_val_real_complex128(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
-def test_full_combined_args():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_full_combined_args(language):
     def create_full_1_shape():
         from numpy import full, shape
         a = full((2,1),4.0,int,'F')
@@ -863,25 +952,33 @@ def test_full_combined_args():
         a = full(order = 'F', shape = (4,2),dtype=complex,fill_value=1)
         return a[0,0]
 
-    f1_shape = epyccel(create_full_1_shape)
-    f1_val   = epyccel(create_full_1_val)
+    f1_shape = epyccel(create_full_1_shape, language = language)
+    f1_val   = epyccel(create_full_1_val, language = language)
     assert(f1_shape() == create_full_1_shape())
     assert(f1_val()   == create_full_1_val()  )
     assert(type(f1_val())  == type(create_full_1_val().item())) # pylint: disable=unidiomatic-typecheck
 
-    f2_shape = epyccel(create_full_2_shape)
-    f2_val   = epyccel(create_full_2_val)
+    f2_shape = epyccel(create_full_2_shape, language = language)
+    f2_val   = epyccel(create_full_2_val, language = language)
     assert(f2_shape() == create_full_2_shape()    )
     assert(isclose(f2_val()  , create_full_2_val()      , rtol=1e-15, atol=1e-15))
     assert(type(f2_val())  == type(create_full_2_val().item())) # pylint: disable=unidiomatic-typecheck
 
-    f3_shape = epyccel(create_full_3_shape)
-    f3_val   = epyccel(create_full_3_val)
+    f3_shape = epyccel(create_full_3_shape, language = language)
+    f3_val   = epyccel(create_full_3_val, language = language)
     assert(             f3_shape() ==    create_full_3_shape()      )
     assert(isclose(     f3_val()  ,      create_full_3_val()        , rtol=1e-15, atol=1e-15))
     assert(type(f3_val())  == type(create_full_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
-def test_empty_basic():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_empty_basic(language):
     @types('int')
     def create_empty_shape_1d(n):
         from numpy import empty, shape
@@ -897,13 +994,21 @@ def test_empty_basic():
 
     size = randint(10)
 
-    f_shape_1d  = epyccel(create_empty_shape_1d)
+    f_shape_1d  = epyccel(create_empty_shape_1d, language = language)
     assert(     f_shape_1d(size)      ==      create_empty_shape_1d(size))
 
-    f_shape_2d  = epyccel(create_empty_shape_2d)
+    f_shape_2d  = epyccel(create_empty_shape_2d, language = language)
     assert(     f_shape_2d(size)      ==      create_empty_shape_2d(size))
 
-def test_empty_order():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_empty_order(language):
     @types('int','int')
     def create_empty_shape_C(n,m):
         from numpy import empty, shape
@@ -920,13 +1025,21 @@ def test_empty_order():
     size_1 = randint(10)
     size_2 = randint(10)
 
-    f_shape_C  = epyccel(create_empty_shape_C)
+    f_shape_C  = epyccel(create_empty_shape_C, language = language)
     assert(     f_shape_C(size_1,size_2) == create_empty_shape_C(size_1,size_2))
 
-    f_shape_F  = epyccel(create_empty_shape_F)
+    f_shape_F  = epyccel(create_empty_shape_F, language = language)
     assert(     f_shape_F(size_1,size_2) == create_empty_shape_F(size_1,size_2))
 
-def test_empty_dtype():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_empty_dtype(language):
     def create_empty_val_int():
         from numpy import empty
         a = empty(3,int)
@@ -960,31 +1073,39 @@ def test_empty_dtype():
         a = empty(3,complex128)
         return a[0]
 
-    f_int_int   = epyccel(create_empty_val_int)
+    f_int_int   = epyccel(create_empty_val_int, language = language)
     assert(type(f_int_int())         == type(create_empty_val_int().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_int_float = epyccel(create_empty_val_float)
+    f_int_float = epyccel(create_empty_val_float, language = language)
     assert(type(f_int_float())       == type(create_empty_val_float().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_int_complex = epyccel(create_empty_val_complex)
+    f_int_complex = epyccel(create_empty_val_complex, language = language)
     assert(type(f_int_complex())     == type(create_empty_val_complex().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_int32   = epyccel(create_empty_val_int32)
+    f_real_int32   = epyccel(create_empty_val_int32, language = language)
     assert(type(f_real_int32())      == type(create_empty_val_int32().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_float32   = epyccel(create_empty_val_float32)
+    f_real_float32   = epyccel(create_empty_val_float32, language = language)
     assert(type(f_real_float32())    == type(create_empty_val_float32().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_float64   = epyccel(create_empty_val_float64)
+    f_real_float64   = epyccel(create_empty_val_float64, language = language)
     assert(type(f_real_float64())    == type(create_empty_val_float64().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_complex64   = epyccel(create_empty_val_complex64)
+    f_real_complex64   = epyccel(create_empty_val_complex64, language = language)
     assert(type(f_real_complex64())  == type(create_empty_val_complex64().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_complex128   = epyccel(create_empty_val_complex128)
+    f_real_complex128   = epyccel(create_empty_val_complex128, language = language)
     assert(type(f_real_complex128()) == type(create_empty_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
-def test_empty_combined_args():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_empty_combined_args(language):
     def create_empty_1_shape():
         from numpy import empty, shape
         a = empty((2,1),int,'F')
@@ -1013,22 +1134,30 @@ def test_empty_combined_args():
         a = empty(order = 'F', shape = (4,2),dtype=complex)
         return a[0,0]
 
-    f1_shape = epyccel(create_empty_1_shape)
-    f1_val   = epyccel(create_empty_1_val)
+    f1_shape = epyccel(create_empty_1_shape, language = language)
+    f1_val   = epyccel(create_empty_1_val, language = language)
     assert(     f1_shape() ==      create_empty_1_shape()      )
     assert(type(f1_val())  == type(create_empty_1_val().item())) # pylint: disable=unidiomatic-typecheck
 
-    f2_shape = epyccel(create_empty_2_shape)
-    f2_val   = epyccel(create_empty_2_val)
+    f2_shape = epyccel(create_empty_2_shape, language = language)
+    f2_val   = epyccel(create_empty_2_val, language = language)
     assert(all(isclose(     f2_shape(),      create_empty_2_shape()      )))
     assert(type(f2_val())  == type(create_empty_2_val().item())) # pylint: disable=unidiomatic-typecheck
 
-    f3_shape = epyccel(create_empty_3_shape)
-    f3_val   = epyccel(create_empty_3_val)
+    f3_shape = epyccel(create_empty_3_shape, language = language)
+    f3_val   = epyccel(create_empty_3_val, language = language)
     assert(all(isclose(     f3_shape(),      create_empty_3_shape()      )))
     assert(type(f3_val())  == type(create_empty_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
-def test_ones_basic():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_ones_basic(language):
     @types('int')
     def create_ones_shape_1d(n):
         from numpy import ones, shape
@@ -1044,13 +1173,21 @@ def test_ones_basic():
 
     size = randint(10)
 
-    f_shape_1d  = epyccel(create_ones_shape_1d)
+    f_shape_1d  = epyccel(create_ones_shape_1d, language = language)
     assert(     f_shape_1d(size)      ==      create_ones_shape_1d(size))
 
-    f_shape_2d  = epyccel(create_ones_shape_2d)
+    f_shape_2d  = epyccel(create_ones_shape_2d, language = language)
     assert(     f_shape_2d(size)      ==      create_ones_shape_2d(size))
 
-def test_ones_order():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_ones_order(language):
     @types('int','int')
     def create_ones_shape_C(n,m):
         from numpy import ones, shape
@@ -1067,13 +1204,21 @@ def test_ones_order():
     size_1 = randint(10)
     size_2 = randint(10)
 
-    f_shape_C  = epyccel(create_ones_shape_C)
+    f_shape_C  = epyccel(create_ones_shape_C, language = language)
     assert(     f_shape_C(size_1,size_2) == create_ones_shape_C(size_1,size_2))
 
-    f_shape_F  = epyccel(create_ones_shape_F)
+    f_shape_F  = epyccel(create_ones_shape_F, language = language)
     assert(     f_shape_F(size_1,size_2) == create_ones_shape_F(size_1,size_2))
 
-def test_ones_dtype():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Array not implemented yet in c"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_ones_dtype(language):
     def create_ones_val_int():
         from numpy import ones
         a = ones(3,int)
@@ -1107,39 +1252,47 @@ def test_ones_dtype():
         a = ones(3,complex128)
         return a[0]
 
-    f_int_int   = epyccel(create_ones_val_int)
+    f_int_int   = epyccel(create_ones_val_int, language = language)
     assert(     f_int_int()          ==      create_ones_val_int())
     assert(type(f_int_int())         == type(create_ones_val_int().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_int_float = epyccel(create_ones_val_float)
+    f_int_float = epyccel(create_ones_val_float, language = language)
     assert(isclose(     f_int_float()       ,      create_ones_val_float(), rtol=1e-15, atol=1e-15))
     assert(type(f_int_float())       == type(create_ones_val_float().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_int_complex = epyccel(create_ones_val_complex)
+    f_int_complex = epyccel(create_ones_val_complex, language = language)
     assert(isclose(     f_int_complex()     ,      create_ones_val_complex(), rtol=1e-15, atol=1e-15))
     assert(type(f_int_complex())     == type(create_ones_val_complex().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_int32   = epyccel(create_ones_val_int32)
+    f_real_int32   = epyccel(create_ones_val_int32, language = language)
     assert(     f_real_int32()       ==      create_ones_val_int32())
     assert(type(f_real_int32())      == type(create_ones_val_int32().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_float32   = epyccel(create_ones_val_float32)
+    f_real_float32   = epyccel(create_ones_val_float32, language = language)
     assert(isclose(     f_real_float32()    ,      create_ones_val_float32(), rtol=1e-15, atol=1e-15))
     assert(type(f_real_float32())    == type(create_ones_val_float32().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_float64   = epyccel(create_ones_val_float64)
+    f_real_float64   = epyccel(create_ones_val_float64, language = language)
     assert(isclose(     f_real_float64()    ,      create_ones_val_float64(), rtol=1e-15, atol=1e-15))
     assert(type(f_real_float64())    == type(create_ones_val_float64().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_complex64   = epyccel(create_ones_val_complex64)
+    f_real_complex64   = epyccel(create_ones_val_complex64, language = language)
     assert(isclose(     f_real_complex64()  ,      create_ones_val_complex64(), rtol=1e-15, atol=1e-15))
     assert(type(f_real_complex64())  == type(create_ones_val_complex64().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_complex128   = epyccel(create_ones_val_complex128)
+    f_real_complex128   = epyccel(create_ones_val_complex128, language = language)
     assert(isclose(     f_real_complex128() ,      create_ones_val_complex128(), rtol=1e-15, atol=1e-15))
     assert(type(f_real_complex128()) == type(create_ones_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
-def test_ones_combined_args():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_ones_combined_args(language):
     def create_ones_1_shape():
         from numpy import ones, shape
         a = ones((2,1),int,'F')
@@ -1168,25 +1321,33 @@ def test_ones_combined_args():
         a = ones(order = 'F', shape = (4,2),dtype=complex)
         return a[0,0]
 
-    f1_shape = epyccel(create_ones_1_shape)
-    f1_val   = epyccel(create_ones_1_val)
+    f1_shape = epyccel(create_ones_1_shape, language = language)
+    f1_val   = epyccel(create_ones_1_val, language = language)
     assert(     f1_shape() ==      create_ones_1_shape()      )
     assert(     f1_val()   ==      create_ones_1_val()        )
     assert(type(f1_val())  == type(create_ones_1_val().item())) # pylint: disable=unidiomatic-typecheck
 
-    f2_shape = epyccel(create_ones_2_shape)
-    f2_val   = epyccel(create_ones_2_val)
+    f2_shape = epyccel(create_ones_2_shape, language = language)
+    f2_val   = epyccel(create_ones_2_val, language = language)
     assert(     f2_shape() ==      create_ones_2_shape()      )
     assert(isclose(     f2_val()  ,      create_ones_2_val()        , rtol=1e-15, atol=1e-15))
     assert(type(f2_val())  == type(create_ones_2_val().item())) # pylint: disable=unidiomatic-typecheck
 
-    f3_shape = epyccel(create_ones_3_shape)
-    f3_val   = epyccel(create_ones_3_val)
+    f3_shape = epyccel(create_ones_3_shape, language = language)
+    f3_val   = epyccel(create_ones_3_val, language = language)
     assert(     f3_shape() ==      create_ones_3_shape()      )
     assert(isclose(     f3_val()  ,      create_ones_3_val()        , rtol=1e-15, atol=1e-15))
     assert(type(f3_val())  == type(create_ones_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
-def test_zeros_basic():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_zeros_basic(language):
     @types('int')
     def create_zeros_shape_1d(n):
         from numpy import zeros, shape
@@ -1202,13 +1363,21 @@ def test_zeros_basic():
 
     size = randint(10)
 
-    f_shape_1d  = epyccel(create_zeros_shape_1d)
+    f_shape_1d  = epyccel(create_zeros_shape_1d, language = language)
     assert(     f_shape_1d(size)      ==      create_zeros_shape_1d(size))
 
-    f_shape_2d  = epyccel(create_zeros_shape_2d)
+    f_shape_2d  = epyccel(create_zeros_shape_2d, language = language)
     assert(     f_shape_2d(size)      ==      create_zeros_shape_2d(size))
 
-def test_zeros_order():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_zeros_order(language):
     @types('int','int')
     def create_zeros_shape_C(n,m):
         from numpy import zeros, shape
@@ -1225,13 +1394,21 @@ def test_zeros_order():
     size_1 = randint(10)
     size_2 = randint(10)
 
-    f_shape_C  = epyccel(create_zeros_shape_C)
+    f_shape_C  = epyccel(create_zeros_shape_C, language = language)
     assert(     f_shape_C(size_1,size_2) == create_zeros_shape_C(size_1,size_2))
 
-    f_shape_F  = epyccel(create_zeros_shape_F)
+    f_shape_F  = epyccel(create_zeros_shape_F, language = language)
     assert(     f_shape_F(size_1,size_2) == create_zeros_shape_F(size_1,size_2))
 
-def test_zeros_dtype():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_zeros_dtype(language):
     def create_zeros_val_int():
         from numpy import zeros
         a = zeros(3,int)
@@ -1265,39 +1442,47 @@ def test_zeros_dtype():
         a = zeros(3,complex128)
         return a[0]
 
-    f_int_int   = epyccel(create_zeros_val_int)
+    f_int_int   = epyccel(create_zeros_val_int, language = language)
     assert(     f_int_int()          ==      create_zeros_val_int())
     assert(type(f_int_int())         == type(create_zeros_val_int().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_int_float = epyccel(create_zeros_val_float)
+    f_int_float = epyccel(create_zeros_val_float, language = language)
     assert(isclose(     f_int_float()       ,      create_zeros_val_float(), rtol=1e-15, atol=1e-15))
     assert(type(f_int_float())       == type(create_zeros_val_float().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_int_complex = epyccel(create_zeros_val_complex)
+    f_int_complex = epyccel(create_zeros_val_complex, language = language)
     assert(isclose(     f_int_complex()     ,      create_zeros_val_complex(), rtol=1e-15, atol=1e-15))
     assert(type(f_int_complex())     == type(create_zeros_val_complex().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_int32   = epyccel(create_zeros_val_int32)
+    f_real_int32   = epyccel(create_zeros_val_int32, language = language)
     assert(     f_real_int32()       ==      create_zeros_val_int32())
     assert(type(f_real_int32())      == type(create_zeros_val_int32().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_float32   = epyccel(create_zeros_val_float32)
+    f_real_float32   = epyccel(create_zeros_val_float32, language = language)
     assert(isclose(     f_real_float32()    ,      create_zeros_val_float32(), rtol=1e-15, atol=1e-15))
     assert(type(f_real_float32())    == type(create_zeros_val_float32().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_float64   = epyccel(create_zeros_val_float64)
+    f_real_float64   = epyccel(create_zeros_val_float64, language = language)
     assert(isclose(     f_real_float64()    ,      create_zeros_val_float64(), rtol=1e-15, atol=1e-15))
     assert(type(f_real_float64())    == type(create_zeros_val_float64().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_complex64   = epyccel(create_zeros_val_complex64)
+    f_real_complex64   = epyccel(create_zeros_val_complex64, language = language)
     assert(isclose(     f_real_complex64()  ,      create_zeros_val_complex64(), rtol=1e-15, atol=1e-15))
     assert(type(f_real_complex64())  == type(create_zeros_val_complex64().item())) # pylint: disable=unidiomatic-typecheck
 
-    f_real_complex128   = epyccel(create_zeros_val_complex128)
+    f_real_complex128   = epyccel(create_zeros_val_complex128, language = language)
     assert(isclose(     f_real_complex128() ,      create_zeros_val_complex128(), rtol=1e-15, atol=1e-15))
     assert(type(f_real_complex128()) == type(create_zeros_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
-def test_zeros_combined_args():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_zeros_combined_args(language):
     def create_zeros_1_shape():
         from numpy import zeros, shape
         a = zeros((2,1),int,'F')
@@ -1326,25 +1511,33 @@ def test_zeros_combined_args():
         a = zeros(order = 'F', shape = (4,2),dtype=complex)
         return a[0,0]
 
-    f1_shape = epyccel(create_zeros_1_shape)
-    f1_val   = epyccel(create_zeros_1_val)
+    f1_shape = epyccel(create_zeros_1_shape, language = language)
+    f1_val   = epyccel(create_zeros_1_val, language = language)
     assert(     f1_shape() ==      create_zeros_1_shape()      )
     assert(     f1_val()   ==      create_zeros_1_val()        )
     assert(type(f1_val())  == type(create_zeros_1_val().item())) # pylint: disable=unidiomatic-typecheck
 
-    f2_shape = epyccel(create_zeros_2_shape)
-    f2_val   = epyccel(create_zeros_2_val)
+    f2_shape = epyccel(create_zeros_2_shape, language = language)
+    f2_val   = epyccel(create_zeros_2_val, language = language)
     assert(     f2_shape() ==      create_zeros_2_shape()      )
     assert(isclose(     f2_val()  ,      create_zeros_2_val()        , rtol=1e-15, atol=1e-15))
     assert(type(f2_val())  == type(create_zeros_2_val().item())) # pylint: disable=unidiomatic-typecheck
 
-    f3_shape = epyccel(create_zeros_3_shape)
-    f3_val   = epyccel(create_zeros_3_val)
+    f3_shape = epyccel(create_zeros_3_shape, language = language)
+    f3_val   = epyccel(create_zeros_3_val, language = language)
     assert(     f3_shape() ==      create_zeros_3_shape()      )
     assert(isclose(     f3_val()  ,      create_zeros_3_val()        , rtol=1e-15, atol=1e-15))
     assert(type(f3_val())  == type(create_zeros_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
-def test_array():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_array(language):
     def create_array_list_val():
         from numpy import array
         a = array([[1,2,3],[4,5,6]])
@@ -1363,31 +1556,46 @@ def test_array():
         a = array(((1,2,3),(4,5,6)))
         s = shape(a)
         return len(s), s[0], s[1]
-    f1_shape = epyccel(create_array_list_shape)
-    f1_val   = epyccel(create_array_list_val)
+    f1_shape = epyccel(create_array_list_shape, language = language)
+    f1_val   = epyccel(create_array_list_val, language = language)
     assert(f1_shape() == create_array_list_shape())
     assert(f1_val()   == create_array_list_val())
     assert(type(f1_val()) == type(create_array_list_val().item())) # pylint: disable=unidiomatic-typecheck
-    f2_shape = epyccel(create_array_tuple_shape)
-    f2_val   = epyccel(create_array_tuple_val)
+    f2_shape = epyccel(create_array_tuple_shape, language = language)
+    f2_val   = epyccel(create_array_tuple_val, language = language)
     assert(f2_shape() == create_array_tuple_shape())
     assert(f2_val()   == create_array_tuple_val())
     assert(type(f2_val()) == type(create_array_tuple_val().item())) # pylint: disable=unidiomatic-typecheck
 
-def test_rand_basic():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_rand_basic(language):
     def create_val():
         from numpy.random import rand # pylint: disable=reimported
         return rand()
 
-    f1 = epyccel(create_val)
+    f1 = epyccel(create_val, language = language)
     y = [f1() for i in range(10)]
     assert(all([yi <  1 for yi in y]))
     assert(all([yi >= 0 for yi in y]))
     assert(all([isinstance(yi,float) for yi in y]))
     assert(len(set(y))>1)
 
-def test_rand_args():
-
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_rand_args(language):
     @types('int')
     def create_array_size_1d(n):
         from numpy.random import rand # pylint: disable=reimported
@@ -1422,36 +1630,44 @@ def test_rand_args():
     n = randint(10)
     m = randint(10)
     p = randint(5)
-    f_1d = epyccel(create_array_size_1d)
+    f_1d = epyccel(create_array_size_1d, language = language)
     assert( f_1d(n)       == create_array_size_1d(n)      )
 
-    f_2d = epyccel(create_array_size_2d)
+    f_2d = epyccel(create_array_size_2d, language = language)
     assert( f_2d(n, m)    == create_array_size_2d(n, m)   )
 
-    f_3d = epyccel(create_array_size_3d)
+    f_3d = epyccel(create_array_size_3d, language = language)
     assert( f_3d(n, m, p) == create_array_size_3d(n, m, p))
 
-    g_1d = epyccel(create_array_vals_1d)
+    g_1d = epyccel(create_array_vals_1d, language = language)
     y = g_1d()
     assert(all([yi <  1 for yi in y]))
     assert(all([yi >= 0 for yi in y]))
     assert(all([isinstance(yi,float) for yi in y]))
     assert(len(set(y))>1)
 
-    g_2d = epyccel(create_array_vals_2d)
+    g_2d = epyccel(create_array_vals_2d, language = language)
     y = g_2d()
     assert(all([yi <  1 for yi in y]))
     assert(all([yi >= 0 for yi in y]))
     assert(all([isinstance(yi,float) for yi in y]))
     assert(len(set(y))>1)
 
-def test_rand_expr():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_rand_expr(language):
     def create_val():
         from numpy.random import rand # pylint: disable=reimported
         x = 2*rand()
         return x
 
-    f1 = epyccel(create_val)
+    f1 = epyccel(create_val, language = language)
     y = [f1() for i in range(10)]
     assert(all([yi <  2 for yi in y]))
     assert(all([yi >= 0 for yi in y]))
@@ -1459,20 +1675,28 @@ def test_rand_expr():
     assert(len(set(y))>1)
 
 @pytest.mark.xfail(reason="a is not allocated")
-def test_rand_expr_array():
+def test_rand_expr_array(language):
     def create_array_vals_2d():
         from numpy.random import rand # pylint: disable=reimported
         a = rand(2,2)*0.5 + 3
         return a[0,0], a[0,1], a[1,0], a[1,1]
 
-    f2 = epyccel(create_array_vals_2d)
+    f2 = epyccel(create_array_vals_2d, language = language)
     y = f2()
     assert(all([yi <  3.5 for yi in y]))
     assert(all([yi >= 3   for yi in y]))
     assert(all([isinstance(yi,float) for yi in y]))
     assert(len(set(y))>1)
 
-def test_randint_basic():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_randint_basic(language):
     @types('int')
     def create_val(high):
         from numpy.random import randint # pylint: disable=reimported
@@ -1483,21 +1707,29 @@ def test_randint_basic():
         from numpy.random import randint # pylint: disable=reimported
         return randint(low, high)
 
-    f1 = epyccel(create_val)
+    f1 = epyccel(create_val, language = language)
     y = [f1(100) for i in range(10)]
     assert(all([yi <  100 for yi in y]))
     assert(all([yi >= 0 for yi in y]))
     assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
 
-    f2 = epyccel(create_val_low)
+    f2 = epyccel(create_val_low, language = language)
     y = [f2(25, 100) for i in range(10)]
     assert(all([yi <  100 for yi in y]))
     assert(all([yi >= 25 for yi in y]))
     assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
 
-def test_randint_expr():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_randint_expr(language):
     @types('int')
     def create_val(high):
         from numpy.random import randint # pylint: disable=reimported
@@ -1510,140 +1742,236 @@ def test_randint_expr():
         x = 2*randint(low, high)
         return x
 
-    f1 = epyccel(create_val)
+    f1 = epyccel(create_val, language = language)
     y = [f1(27) for i in range(10)]
     assert(all([yi <  54 for yi in y]))
     assert(all([yi >= 0  for yi in y]))
     assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
 
-    f2 = epyccel(create_val_low)
+    f2 = epyccel(create_val_low, language = language)
     y = [f2(21,46) for i in range(10)]
     assert(all([yi <  92 for yi in y]))
     assert(all([yi >= 42 for yi in y]))
     assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
 
-def test_sum_int():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_sum_int(language):
     @types('int[:]')
     def sum_call(x):
         from numpy import sum as np_sum
         return np_sum(x)
 
-    f1 = epyccel(sum_call)
+    f1 = epyccel(sum_call, language = language)
     x = randint(99,size=10)
     assert(f1(x) == sum_call(x))
 
-def test_sum_real():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_sum_real(language):
     @types('real[:]')
     def sum_call(x):
         from numpy import sum as np_sum
         return np_sum(x)
 
-    f1 = epyccel(sum_call)
+    f1 = epyccel(sum_call, language = language)
     x = rand(10)
     assert(isclose(f1(x), sum_call(x), rtol=1e-15, atol=1e-15))
 
-def test_sum_phrase():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_sum_phrase(language):
     @types('real[:]','real[:]')
     def sum_phrase(x,y):
         from numpy import sum as np_sum
         a = np_sum(x)*np_sum(y)
         return a
 
-    f2 = epyccel(sum_phrase)
+    f2 = epyccel(sum_phrase, language = language)
     x = rand(10)
     y = rand(15)
     assert(isclose(f2(x,y), sum_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_sum_property():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_sum_property(language):
     @types('int[:]')
     def sum_call(x):
         return x.sum()
 
-    f1 = epyccel(sum_call)
+    f1 = epyccel(sum_call, language = language)
     x = randint(99,size=10)
     assert(f1(x) == sum_call(x))
 
-def test_min_int():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_min_int(language):
     @types('int[:]')
     def min_call(x):
         from numpy import min as np_min
         return np_min(x)
 
-    f1 = epyccel(min_call)
+    f1 = epyccel(min_call, language = language)
     x = randint(99,size=10)
     assert(f1(x) == min_call(x))
 
-def test_min_real():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_min_real(language):
     @types('real[:]')
     def min_call(x):
         from numpy import min as np_min
         return np_min(x)
 
-    f1 = epyccel(min_call)
+    f1 = epyccel(min_call, language = language)
     x = rand(10)
     assert(isclose(f1(x), min_call(x), rtol=1e-15, atol=1e-15))
 
-def test_min_phrase():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_min_phrase(language):
     @types('real[:]','real[:]')
     def min_phrase(x,y):
         from numpy import min as np_min
         a = np_min(x)*np_min(y)
         return a
 
-    f2 = epyccel(min_phrase)
+    f2 = epyccel(min_phrase, language = language)
     x = rand(10)
     y = rand(15)
     assert(isclose(f2(x,y), min_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_min_property():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_min_property(language):
     @types('int[:]')
     def min_call(x):
         return x.min()
 
-    f1 = epyccel(min_call)
+    f1 = epyccel(min_call, language = language)
     x = randint(99,size=10)
     assert(f1(x) == min_call(x))
 
-def test_max_int():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_max_int(language):
     @types('int[:]')
     def max_call(x):
         from numpy import max as np_max
         return np_max(x)
 
-    f1 = epyccel(max_call)
+    f1 = epyccel(max_call, language = language)
     x = randint(99,size=10)
     assert(f1(x) == max_call(x))
 
-def test_max_real():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_max_real(language):
     @types('real[:]')
     def max_call(x):
         from numpy import max as np_max
         return np_max(x)
 
-    f1 = epyccel(max_call)
+    f1 = epyccel(max_call, language = language)
     x = rand(10)
     assert(isclose(f1(x), max_call(x), rtol=1e-15, atol=1e-15))
 
-def test_max_phrase():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_max_phrase(language):
     @types('real[:]','real[:]')
     def max_phrase(x,y):
         from numpy import max as np_max
         a = np_max(x)*np_max(y)
         return a
 
-    f2 = epyccel(max_phrase)
+    f2 = epyccel(max_phrase, language = language)
     x = rand(10)
     y = rand(15)
     assert(isclose(f2(x,y), max_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_max_property():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_max_property(language):
     @types('int[:]')
     def max_call(x):
         return x.max()
 
-    f1 = epyccel(max_call)
+    f1 = epyccel(max_call, language = language)
     x = randint(99,size=10)
     assert(f1(x) == max_call(x))
 
