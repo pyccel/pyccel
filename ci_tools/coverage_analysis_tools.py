@@ -104,8 +104,8 @@ def allow_untested_error_calls(untested):
     for f,line_nums in untested.items():
         with open(f, encoding="utf-8") as filename:
             f_lines = filename.readlines()
-        untested_lines = [f_lines[i-1].strip() for i in line_nums]
-        lines = [l for l in untested_lines if not (l.startswith('raise ') or l.startswith('errors.report(') or l.startswith('return errors.report('))]
+        untested_lines = [(i, f_lines[i-1].strip()) for i in line_nums]
+        lines = [i for i,l in untested_lines if not (l.startswith('raise ') or l.startswith('errors.report(') or l.startswith('return errors.report('))]
         if len(lines):
             reduced_untested[f] = lines
 
@@ -151,7 +151,7 @@ def print_markdown_summary(untested, content_lines, commit, output):
                     end_line = line_indices[j]-1
                 else:
                     end_line = line_indices[j]
-                md_string += "https://github.com/pyccel/pyccel/blob/"+commit+"/"+f+f"#L{start_line}-L{end_line}"
+                md_string += "https://github.com/pyccel/pyccel/blob/"+commit+"/"+f+f"#L{start_line}-L{end_line}\n"
 
     with open(output, "a", encoding="utf-8") as out_file:
         print(md_string, file=out_file)

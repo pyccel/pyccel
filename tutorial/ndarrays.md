@@ -9,7 +9,7 @@ Different ndarrays can share the same data, so that changes made in one ndarray 
 
 ## Pyccel ndarrays ##
 
-Pyccel uses the same implementation as Numpy ndarrays with some rules due to the difference between the host language (Python) "dynamically typed / internal garbage collector" and the target languages such as C and Fortran which are statically typed languages and don't have a garbage collector.
+Pyccel uses the same implementation as NumPy ndarrays with some rules due to the difference between the host language (Python) "dynamically typed / internal garbage collector" and the target languages such as C and Fortran which are statically typed languages and don't have a garbage collector.
 
 Below we will show some rules that Pyccel has set to handles those differences.
 
@@ -311,18 +311,18 @@ Some examples:
         end program prog_ex
         ```
 
-## Numpy [ndarray](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html) functions/properties progress in Pyccel ##
+## NumPy [ndarray](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html) functions/properties progress in Pyccel ##
 
 -   Supported [types](https://numpy.org/devdocs/user/basics.types.html):
 
-    bool, int, int8, int16, int32, int64, float, float32, float64, complex64 and complex128. They can be used as cast functions too.
+    `bool`, `int`, `int8`, `int16`, `int32`, `int64`, `float`, `float32`, `float64`, `complex`, `complex64` and `complex128`. They can be used as cast functions too.
 
-    Note: np.bool, np.int and np.float are just aliases to the Python native types, and are considered as a deprecated way to work with Python built-in types in NumPy.
+    Note: `np.bool`, `np.int`, `np.float` and `np.complex` are just aliases to the Python native types, and are considered as a deprecated way to work with Python built-in types in NumPy.
 
 -   Properties:
 
-    -   real, imag, shape, amax, amin
+    -   `real`, `imag`, `shape`, `amax`, `amin`
 
 -   Methods:
 
-    -   sum
+    -   `sum`

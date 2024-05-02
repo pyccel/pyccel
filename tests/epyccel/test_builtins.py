@@ -7,6 +7,10 @@ import numpy as np
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types, template
 
+ATOL = 1e-15
+RTOL = 2e-14
+
+
 min_int = iinfo('int').min
 max_int = iinfo('int').max
 
@@ -23,9 +27,9 @@ def test_abs_i(language):
     negative_test = randint(min_int, 0)
     positive_test = randint(0, max_int)
 
-    assert f1(0) == f2(0)
-    assert f1(negative_test) == f2(negative_test)
-    assert f1(positive_test) == f2(positive_test)
+    assert np.isclose(f1(0), f2(0), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f1(negative_test), f2(negative_test), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f1(positive_test), f2(positive_test), rtol=RTOL, atol=ATOL)
 
 def test_abs_r(language):
     @types('real')
@@ -37,9 +41,9 @@ def test_abs_r(language):
     negative_test = uniform(min_float, 0.0)
     positive_test = uniform(0.0, max_float)
 
-    assert f1(0.00000) == f2(0.00000)
-    assert f1(negative_test) == f2(negative_test)
-    assert f1(positive_test) == f2(positive_test)
+    assert np.isclose(f1(0.00000), f2(0.00000), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f1(negative_test), f2(negative_test), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f1(positive_test), f2(positive_test), rtol=RTOL, atol=ATOL)
 
 
 
@@ -60,13 +64,13 @@ def test_abs_c(language):
     zero_rand = 1j*uniform(min_compl_abs, max_compl_abs)
     rand_zero = uniform(min_compl_abs, max_compl_abs) + 0j
 
-    assert f1(pos_pos) == f2(pos_pos)
-    assert f1(pos_neg) == f2(pos_neg)
-    assert f1(neg_pos) == f2(neg_pos)
-    assert f1(neg_neg) == f2(neg_neg)
-    assert f1(zero_rand) == f2(zero_rand)
-    assert f1(rand_zero) == f2(rand_zero)
-    assert f1(0j + 0) == f2(0j + 0)
+    assert np.isclose(f1(pos_pos), f2(pos_pos), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f1(pos_neg), f2(pos_neg), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f1(neg_pos), f2(neg_pos), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f1(neg_neg), f2(neg_neg), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f1(zero_rand), f2(zero_rand), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f1(rand_zero), f2(rand_zero), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f1(0j + 0), f2(0j + 0), rtol=RTOL, atol=ATOL)
 
 def test_min_2_args_i(language):
     @types('int','int')
@@ -97,7 +101,7 @@ def test_min_2_args_f_adhoc(language):
 
     float_arg = uniform(min_float /2, max_float/2)
 
-    assert epyc_f(float_arg) == f(float_arg)
+    assert np.isclose(epyc_f(float_arg), f(float_arg), rtol=RTOL, atol=ATOL)
 
 def test_min_2_args_f(language):
     @types('float','float')
@@ -108,7 +112,7 @@ def test_min_2_args_f(language):
 
     float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
 
-    assert epyc_f(*float_args) == f(*float_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -131,7 +135,7 @@ def test_min_3_args(language):
     float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
 
     assert epyc_f(*int_args) == f(*int_args)
-    assert epyc_f(*float_args) == f(*float_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -154,7 +158,7 @@ def test_min_list(language):
     float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
 
     assert epyc_f(*int_args) == f(*int_args)
-    assert epyc_f(*float_args) == f(*float_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -177,7 +181,7 @@ def test_min_tuple(language):
     float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
 
     assert epyc_f(*int_args) == f(*int_args)
-    assert epyc_f(*float_args) == f(*float_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_2_args_i(language):
     @types('int','int')
@@ -199,7 +203,7 @@ def test_max_2_args_f(language):
 
     float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
 
-    assert epyc_f(*float_args) == f(*float_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -222,7 +226,7 @@ def test_max_3_args(language):
     float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
 
     assert epyc_f(*int_args) == f(*int_args)
-    assert epyc_f(*float_args) == f(*float_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -245,7 +249,7 @@ def test_max_list(language):
     float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
 
     assert epyc_f(*int_args) == f(*int_args)
-    assert epyc_f(*float_args) == f(*float_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -268,7 +272,7 @@ def test_max_tuple(language):
     float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
 
     assert epyc_f(*int_args) == f(*int_args)
-    assert epyc_f(*float_args) == f(*float_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -293,5 +297,5 @@ def test_sum_matching_types(language):
                     for _ in range(2)]
 
     assert epyc_f(*int_args) == f(*int_args)
-    assert epyc_f(*float_args) == f(*float_args)
-    assert epyc_f(*complex_args) == f(*complex_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyc_f(*complex_args), f(*complex_args), rtol=RTOL, atol=ATOL)

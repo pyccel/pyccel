@@ -1461,6 +1461,7 @@ def test_full_dtype_auto(language):
     fl32 = np.float32(fl)
     fl64 = np.float64(fl)
 
+    cmplx = complex(integer)
     cmplx64 = np.complex64(fl32)
     cmplx128 = np.complex128(fl64)
 
@@ -1473,8 +1474,8 @@ def test_full_dtype_auto(language):
     assert matching_types(f_float(fl), create_full_val_auto(fl))
 
     f_complex = epyccel(create_full_val_auto, language = language)
-    assert(isclose(f_complex(np.complex(integer)), create_full_val_auto(np.complex(integer)), rtol=RTOL, atol=ATOL))
-    assert matching_types(f_complex(np.complex(integer)), create_full_val_auto(np.complex(integer)))
+    assert(isclose(f_complex(cmplx), create_full_val_auto(cmplx), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_complex(cmplx), create_full_val_auto(cmplx))
 
     f_int32 = epyccel(create_full_val_auto, language = language)
     assert(f_int32(integer32) == create_full_val_auto(integer32))
@@ -4522,25 +4523,33 @@ def test_numpy_prod_array_like_1d(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
-    integer = randint(min_int, max_int, size = size, dtype=int)
-    integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
+    max_ok_int = int(max_int64 ** (1/5))
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    integer8  = randint(max(min_int8, -max_ok_int), min(max_ok_int, max_int8), size = size, dtype=np.int8)
+    integer16 = randint(max(min_int16, -max_ok_int), min(max_ok_int, max_int16), size = size, dtype=np.int16)
+    integer   = randint(max(min_int, -max_ok_int), min(max_ok_int, max_int), size = size, dtype=int)
+    integer32 = randint(max(min_int32, -max_ok_int), min(max_ok_int, max_int32), size = size, dtype=np.int32)
+    integer64 = randint(-max_ok_int, max_ok_int, size = size, dtype=np.int64)
+
+    fl = uniform(-((-min_float) ** (1/5)), max_float ** (1/5), size = size)
+
+    min_ok_float32 = -((-min_float32) ** (1/5))
+    min_ok_float64 = -((-min_float64) ** (1/5))
+    max_ok_float32 = max_float32 ** (1/5)
+    max_ok_float64 = max_float64 ** (1/5)
+
+    fl32 = uniform(min_ok_float32, max_ok_float32, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=size)
+    fl64 = uniform(min_ok_float64, max_ok_float64, size=size)
 
-    cmplx128_from_float32 = uniform(low=-((-min_float32) ** (1/5)),
-                                    high=(max_float32 ** (1/5)), size = size) + \
-                            uniform(low=-((-min_float32) ** (1/5)),
-                                    high=(max_float32 ** (1/5)), size = size) * 1j
-    cmplx128_from_float64 = uniform(low=-((-min_float64) ** (1/5)),
-                                    high=(max_float64 ** (1/5)), size = size) + \
-                            uniform(low=-((-min_float64) ** (1/5)),
-                                    high=(max_float64 ** (1/5)), size = size) * 1j
+    cmplx128_from_float32 = uniform(low=min_ok_float32/2,
+                                    high=max_ok_float32/2, size = size) + \
+                            uniform(low=min_ok_float32/2,
+                                    high=max_ok_float32/2, size = size) * 1j
+    cmplx128_from_float64 = uniform(low=min_ok_float64/2,
+                                    high=max_ok_float64/2, size = size) + \
+                            uniform(low=min_ok_float64/2,
+                                    high=max_ok_float64/2, size = size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
@@ -4559,6 +4568,17 @@ def test_numpy_prod_array_like_1d(language):
     assert np.isclose(epyccel_func(fl64), get_prod(fl64), rtol=RTOL, atol=ATOL)
     assert np.isclose(epyccel_func(cmplx64), get_prod(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.isclose(epyccel_func(cmplx128), get_prod(cmplx128), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(bl), get_prod(bl))
+    assert matching_types(epyccel_func(integer8), get_prod(integer8))
+    assert matching_types(epyccel_func(integer16), get_prod(integer16))
+    assert matching_types(epyccel_func(integer), get_prod(integer))
+    assert matching_types(epyccel_func(integer32), get_prod(integer32))
+    assert matching_types(epyccel_func(integer64), get_prod(integer64))
+    assert matching_types(epyccel_func(fl), get_prod(fl))
+    assert matching_types(epyccel_func(fl32), get_prod(fl32))
+    assert matching_types(epyccel_func(fl64), get_prod(fl64))
+    assert matching_types(epyccel_func(cmplx64), get_prod(cmplx64))
+    assert matching_types(epyccel_func(cmplx128), get_prod(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -4596,25 +4616,33 @@ def test_numpy_prod_array_like_2d(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
-    integer = randint(min_int, max_int, size = size, dtype=int)
-    integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
+    max_ok_int = int(max_int64 ** (1/10))
 
-    fl = uniform(min_float / 10, max_float / 10, size = size)
-    fl32 = uniform(min_float32 / 10, max_float32 / 10, size = size)
+    integer8  = randint(max(min_int8, -max_ok_int), min(max_ok_int, max_int8), size = size, dtype=np.int8)
+    integer16 = randint(max(min_int16, -max_ok_int), min(max_ok_int, max_int16), size = size, dtype=np.int16)
+    integer   = randint(max(min_int, -max_ok_int), min(max_ok_int, max_int), size = size, dtype=int)
+    integer32 = randint(max(min_int32, -max_ok_int), min(max_ok_int, max_int32), size = size, dtype=np.int32)
+    integer64 = randint(-max_ok_int, max_ok_int, size = size, dtype=np.int64)
+
+    fl = uniform(-((-min_float) ** (1/10)), max_float ** (1/10), size = size)
+
+    min_ok_float32 = -((-min_float32) ** (1/10))
+    min_ok_float64 = -((-min_float64) ** (1/10))
+    max_ok_float32 = max_float32 ** (1/10)
+    max_ok_float64 = max_float64 ** (1/10)
+
+    fl32 = uniform(min_ok_float32, max_ok_float32, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 10, max_float64 / 10, size=size)
+    fl64 = uniform(min_ok_float64, max_ok_float64, size=size)
 
-    cmplx128_from_float32 = uniform(low=-((-min_float32) ** (1/10)),
-                                    high=(max_float32 ** (1/10)), size = size) + \
-                            uniform(low=-((-min_float32) ** (1/10)),
-                                    high=(max_float32 ** (1/10)), size = size) * 1j
-    cmplx128_from_float64 = uniform(low=-((-min_float64) ** (1/10)),
-                                    high=(max_float64 ** (1/10)), size = size) + \
-                            uniform(low=-((-min_float64) ** (1/10)),
-                                    high=(max_float64 ** (1/10)), size = size) * 1j
+    cmplx128_from_float32 = uniform(low=min_ok_float32/2,
+                                    high=max_ok_float32/2, size = size) + \
+                            uniform(low=min_ok_float32/2,
+                                    high=max_ok_float32/2, size = size) * 1j
+    cmplx128_from_float64 = uniform(low=min_ok_float64/2,
+                                    high=max_ok_float64/2, size = size) + \
+                            uniform(low=min_ok_float64/2,
+                                    high=max_ok_float64/2, size = size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)

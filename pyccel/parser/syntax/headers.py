@@ -13,7 +13,7 @@ from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, VariableHeader, Template
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
-from pyccel.ast.core      import FunctionDefArgument
+from pyccel.ast.core      import FunctionDefArgument, EmptyNode
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
@@ -72,7 +72,8 @@ class TemplateStmt(BasicStmt):
         if any(isinstance(d_type, FuncType) for d_type in self.dtypes):
             msg = 'Functions in a template are not supported yet'
             errors.report(msg,
-                        severity='fatal')
+                        severity='error')
+            return EmptyNode()
 
         possible_dtypes = {tuple(t.expr.items())  for t in self.dtypes}
         dtypes = tuple(dict(d_type) for d_type in possible_dtypes)
@@ -217,7 +218,8 @@ class UnionTypeStmt(BasicStmt):
         if any(isinstance(d_type, FuncType) for d_type in self.dtypes):
             msg = 'Functions in a uniontype are not supported yet'
             errors.report(msg,
-                        severity='fatal')
+                        severity='error')
+            return EmptyNode()
 
         possible_dtypes = {tuple(t.items())  for t in dtypes}
         dtypes = [dict(d_type) for d_type in possible_dtypes]

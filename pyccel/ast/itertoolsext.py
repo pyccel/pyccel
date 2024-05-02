@@ -10,8 +10,8 @@ from .core      import PyccelFunctionDef, Module
 from .internals import PyccelInternalFunction
 
 __all__ = (
-    'itertools_mod',
     'Product',
+    'itertools_mod',
 )
 
 class Product(PyccelInternalFunction):

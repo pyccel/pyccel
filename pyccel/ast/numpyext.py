@@ -43,11 +43,16 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
-    'NumpySign',
     'process_shape',
+    # ---
+    'NumpyAutoFill',
+    'NumpyUfuncBase',
+    'NumpyUfuncBinary',
+    'NumpyUfuncUnary',
     # ---
     'NumpyAbs',
     'NumpyFloor',
+    'NumpySign',
     # ---
     'NumpySqrt',
     'NumpySin',
@@ -66,18 +71,27 @@ __all__ = (
     'NumpyArccosh',
     'NumpyArctanh',
     # ---
-    'NumpyEmpty',
-    'NumpyEmptyLike',
-    'NumpyFloat',
+    'NumpyAmax',
+    'NumpyAmin',
+    'NumpyArange',
+    'NumpyArray',
+    'NumpyArraySize',
+    'NumpyBool',
+    'NumpyCountNonZero',
     'NumpyComplex',
     'NumpyComplex64',
     'NumpyComplex128',
+    'NumpyConjugate',
+    'NumpyEmpty',
+    'NumpyEmptyLike',
+    'NumpyFabs',
+    'NumpyFloat',
     'NumpyFloat32',
     'NumpyFloat64',
     'NumpyFull',
     'NumpyFullLike',
     'NumpyImag',
-    'NumpyBool',
+    'NumpyHypot',
     'NumpyInt',
     'NumpyInt8',
     'NumpyInt16',
@@ -85,11 +99,7 @@ __all__ = (
     'NumpyInt64',
     'NumpyLinspace',
     'NumpyMatmul',
-    'NumpyAmax',
-    'NumpyAmin',
-    'NumpyArange',
-    'NumpyArraySize',
-    'NumpyCountNonZero',
+    'NumpyNewArray',
     'NumpyMod',
     'NumpyNonZero',
     'NumpyNonZeroElement',
@@ -101,10 +111,11 @@ __all__ = (
     'NumpyRand',
     'NumpyRandint',
     'NumpyReal',
-    'Shape',
+    'NumpyTranspose',
     'NumpyWhere',
     'NumpyZeros',
     'NumpyZerosLike',
+    'Shape',
 )
 
 #=======================================================================================
@@ -189,12 +200,14 @@ class NumpyInt(PythonInt):
 class NumpyInt8(NumpyInt):
     """ Represents a call to numpy.int8() function.
     """
+    __slots__ = ()
     _precision = dtype_registry['int8'][1]
     name = 'int8'
 
 class NumpyInt16(NumpyInt):
     """ Represents a call to numpy.int16() function.
     """
+    __slots__ = ()
     _precision = dtype_registry['int16'][1]
     name = 'int16'
 
@@ -550,8 +563,11 @@ class NumpySum(PyccelInternalFunction):
         if not isinstance(arg, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
-        self._dtype = arg.dtype
-        self._precision = get_final_precision(arg)
+        if isinstance(arg.dtype, NativeBool):
+            self._dtype = NativeInteger()
+        else:
+            self._dtype = arg.dtype
+        self._precision = max(arg.precision, default_precision[str(self._dtype)])
 
     @property
     def arg(self):

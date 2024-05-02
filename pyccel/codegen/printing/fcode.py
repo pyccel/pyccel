@@ -870,6 +870,8 @@ class FCodePrinter(CodePrinter):
         """Fortran print."""
 
         rhs_code = self._print(expr.arg)
+        if isinstance(expr.arg.dtype, NativeBool):
+            return 'count({0})'.format(rhs_code)
         return 'sum({0})'.format(rhs_code)
 
     def _print_NumpyProduct(self, expr):

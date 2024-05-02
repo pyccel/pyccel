@@ -25,9 +25,12 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'Constant',
     'DottedName',
     'DottedVariable',
+    'HomogeneousTupleVariable',
     'IndexedElement',
+    'InhomogeneousTupleVariable',
     'TupleVariable',
     'Variable'
 )

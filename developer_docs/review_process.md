@@ -7,13 +7,13 @@ When you believe your branch is ready to merge you should create a pull request.
 Once the pull request is opened 4 tests should be triggered they are: 
 
 -   **Linux** : Runs the suite of tests on a linux machine
--   **MacOS** : Runs the suite of tests on a mac os machine
+-   **MacOS** : Runs the suite of tests on a macOS machine
 -   **Windows** : Runs the suite of tests on a windows machine
 -   **Codacy** : Runs a static compiler via the [codacy](https://app.codacy.com/gh/pyccel/pyccel/dashboard) platform
 
-Once the pull request is open the tests will be triggered every time you push new changes to the branch. Please be mindful of this and try to avoid pushing multiple times in a row to save compute resources. If you do find you need to push repeatedly, don't hesitate to cancel concurrent jobs using the github "Actions" tab.
+Once the pull request is open the tests will be triggered every time you push new changes to the branch. Please be mindful of this and try to avoid pushing multiple times in a row to save compute resources. If you do find you need to push repeatedly, don't hesitate to cancel concurrent jobs using the GitHub "Actions" tab.
 
-When the pull request is ready for review (ie. you are happy with it, and it is passing all tests) it can be marked as such and the review process can begin. This process is split into 3 stages which each have an associated label. The labels are described in the next sections. When a reviewer marks a PR as accepted, they should change the label to indicate the next stage of the review process. If they request changes they should remove the label so the pull request owner can react.
+When the pull request is ready for review (i.e. you are happy with it, and it is passing all tests) it can be marked as such and the review process can begin. This process is split into 3 stages which each have an associated label. The labels are described in the next sections. When a reviewer marks a PR as accepted, they should change the label to indicate the next stage of the review process. If they request changes they should remove the label so the pull request owner can react.
 
 Once your pull request has been reviewed please react to the open conversations. If you disagree you can say this, if not please leave a reference to the commit which fixes the mentioned issue. This makes the review process faster and more streamlined. Please only resolve conversations that you opened. You may think you fixed the problem, but the reviewer may disagree and leaving the discussion open makes it easier for them to verify that they agree with you. If you are reviewing then please close all conversations that you open once the problem is resolved. If you don't this can block the merge.
 
