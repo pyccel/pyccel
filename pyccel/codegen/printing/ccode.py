@@ -954,9 +954,9 @@ class CCodePrinter(CodePrinter):
            if source.startswith('stc/'):
              dtype_macro = dtype.upper()
              _,container_type = source.split("/")
+             import_file,_ = source.split('_')
              if container_type in import_stc:
                 class_type_macro = import_stc[container_type]
-             import_file,_ = source.split('_')
              additional_defines = '#define i_use_cmp\n' if class_type_macro == 'VEC' else ''
              return '\n'.join((f'#ifndef _{class_type_macro}_{dtype_macro}',
                                f'#define _{class_type_macro}_{dtype_macro}',
