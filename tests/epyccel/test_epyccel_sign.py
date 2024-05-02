@@ -3,7 +3,7 @@
 import numpy as np
 import modules.numpy_sign as mod
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 def test_sign_complex(language):
     f_nul = mod.complex_nul

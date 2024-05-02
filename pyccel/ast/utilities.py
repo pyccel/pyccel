@@ -333,7 +333,7 @@ def insert_index(expr, pos, index_var):
         # Add index at the required position
         if base.shape[pos]==1:
             # If there is no dimension in this axis, reduce the rank
-            assert(indices[pos].start is None)
+            assert indices[pos].start is None
             index_var = LiteralInteger(0)
 
         else:

@@ -2,7 +2,7 @@
 from numpy.random import randint
 from numpy import equal
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from modules import functionals
 
 def compare_epyccel(f, language, *args):

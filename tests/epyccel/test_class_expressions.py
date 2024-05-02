@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 from numpy.random import randint
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 def test_complex_imag(language):
     def f():
