@@ -19,6 +19,7 @@ def get_files_from_folder(foldername):
 
 @pytest.mark.xfail(reason="Broken mpi4py support, see issue #251")
 @pytest.mark.parametrize("f", get_files_from_folder('mpi4py'))
+@pytest.mark.external
 def test_mpi4py(f):
 
     execute_pyccel(f, compiler='mpif90')
@@ -26,6 +27,7 @@ def test_mpi4py(f):
     print('\n')
 
 @pytest.mark.parametrize("f", get_files_from_folder('lapack'))
+@pytest.mark.external
 def test_lapack(f):
 
     execute_pyccel(f)

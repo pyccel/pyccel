@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import numpy as np
-import pytest
 from pyccel.epyccel import epyccel
 
 RTOL = 2e-14
@@ -119,14 +118,6 @@ def test_module_6(language):
         assert mod_att == modnew_att
         assert type(mod_att) is type(modnew_att)
 
-@pytest.mark.parametrize( 'language', (
-    pytest.param('fortran', marks = [
-        pytest.mark.skip(reason="Module arrays cannot be exposed in fortran"),
-        pytest.mark.fortran]),
-    pytest.param('c'      , marks = pytest.mark.c),
-    pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_module_7(language):
     import modules.array_consts as mod
 
@@ -147,15 +138,32 @@ def test_module_7(language):
     assert np.array_equal(mod_att, modnew_att)
     assert mod_att.dtype == modnew_att.dtype
 
+    mod.a[3] = 10
+    modnew.a[3] = 10
+    assert np.array_equal(mod_att, modnew_att)
+    assert mod.get_elem_a(3) == modnew.get_elem_a(3)
+
+    mod.c[1,0] = 10
+    modnew.c[1,0] = 10
+    assert np.array_equal(mod.c, modnew.c)
+    assert mod.get_elem_c(1,0) == modnew.get_elem_c(1,0)
+
+    mod.e[1,0,2] = 50
+    modnew.e[1,0,2] = 50
+    assert np.array_equal(mod.e, modnew.e)
+    assert mod.get_elem_e(1,0,2) == modnew.get_elem_e(1,0,2)
+
     # Necessary as python does not reload modules
     mod.reset_a()
+    mod.reset_c()
+    mod.reset_e()
 
 def test_awkward_names(language):
     import modules.awkward_names as mod
 
     modnew = epyccel(mod, language=language)
 
-    assert mod.awkwards_names == modnew.awkwards_names
+    assert mod.awkward_names == modnew.awkward_names
     assert mod.a == modnew.a
     assert mod.A == modnew.A
     assert mod.function() == modnew.function()

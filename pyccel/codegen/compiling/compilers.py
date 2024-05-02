@@ -28,6 +28,21 @@ if platform.system() == 'Darwin':
     mac_target = '{}.{}'.format(*mac_version_tuple[:2])
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
+def get_condaless_search_path():
+    """ Get the value of the PATH variable to be set when searching for the compiler.
+    This is the same as the environment PATH variable but without any conda paths
+    """
+    path_sep = ';' if platform.system() == 'Windows' else ':'
+    current_path = os.environ['PATH']
+    folders = {f: f.split(os.sep) for f in current_path.split(path_sep)}
+    conda_folder_names = ('conda', 'anaconda', 'miniconda',
+                          'Conda', 'Anaconda', 'Miniconda')
+    conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
+    if conda_folders:
+        warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(conda_folders)))
+    acceptable_search_paths = path_sep.join(p for p in folders.keys() if p not in conda_folders and os.path.exists(p))
+    return acceptable_search_paths
+
 #------------------------------------------------------------
 class Compiler:
     """
@@ -43,6 +58,7 @@ class Compiler:
             Indicates whether we are compiling in debug mode
     """
     __slots__ = ('_debug','_info')
+    _acceptable_bin_paths = get_condaless_search_path()
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return
@@ -65,11 +81,21 @@ class Compiler:
         # Get executable
         exec_cmd = self._info['mpi_exec'] if 'mpi' in accelerators else self._info['exec']
 
-        if shutil.which(exec_cmd) is None:
+        # Clean conda paths out of the PATH variable
+        current_path = os.environ['PATH']
+        os.environ['PATH'] = self._acceptable_bin_paths
+
+        # Find the exact path of the executable
+        exec_loc = shutil.which(exec_cmd)
+
+        # Reset PATH variable
+        os.environ['PATH'] = current_path
+
+        if exec_loc is None:
             errors.report("Could not find compiler ({})".format(exec_cmd),
                     severity='fatal')
 
-        return exec_cmd
+        return exec_loc
 
     def _get_flags(self, flags = (), accelerators = ()):
         """
@@ -363,7 +389,7 @@ class Compiler:
         file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
 
         cmd = [exec_cmd, *flags, *includes, *libdirs_flags, *linker_libdirs_flags,
-                *m_code, compile_obj.module_target,
+                compile_obj.module_target, *m_code,
                 '-o', file_out, *libs_flags]
 
         with FileLock('.lock_acquisition.lock'):

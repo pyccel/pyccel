@@ -15,6 +15,7 @@ from pyccel.epyccel import epyccel
 
 #==============================================================================
 
+@pytest.mark.external
 def test_directive_in_else(language):
     f1 = epyccel(openmp.directive_in_else, fflags = '-Wall', accelerators=['openmp'], language=language)
     assert f1(0)  == 0
@@ -30,6 +31,7 @@ def test_directive_in_else(language):
         pytest.mark.python])
     )
 )
+@pytest.mark.external
 def test_module_1(language):
     f1 = epyccel(openmp.f1, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
@@ -57,6 +59,7 @@ def test_module_1(language):
         pytest.mark.python])
     )
 )
+@pytest.mark.external
 def test_modules_10(language):
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(1)
@@ -73,6 +76,7 @@ def test_modules_10(language):
         pytest.mark.python])
     )
 )
+@pytest.mark.external
 def test_module_2(language):
     f1 = epyccel(openmp.test_omp_number_of_procs, fflags = '-Wall', accelerators=['openmp'], language=language)
     assert f1() == multiprocessing.cpu_count()
@@ -85,6 +89,7 @@ def test_module_2(language):
         pytest.mark.python])
     )
 )
+@pytest.mark.external
 def test_module_3(language):
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(4)
@@ -102,6 +107,7 @@ def test_module_3(language):
         )
     )
 )
+@pytest.mark.external
 def test_modules_4(lang):
     f1 = epyccel(openmp.test_omp_set_get_dynamic, fflags = '-Wall', accelerators=['openmp'], language=lang)
 
@@ -116,12 +122,14 @@ def test_modules_4(lang):
         )
     )
 )
+@pytest.mark.external
 def test_modules_4_1(lang):
     f1 = epyccel(openmp.test_omp_set_get_nested, fflags = '-Wall', accelerators=['openmp'], language=lang)
 
     assert f1(True) == 1
     assert f1(False) == 0
 
+@pytest.mark.external
 def test_modules_5(language):
     f1 = epyccel(openmp.test_omp_get_cancellation, fflags = '-Wall', accelerators=['openmp'], language=language)
 
@@ -134,6 +142,7 @@ def test_modules_5(language):
     else:
         assert f1() == 0
 
+@pytest.mark.external
 def test_modules_6(language):
     f1 = epyccel(openmp.test_omp_get_thread_limit, fflags = '-Wall', accelerators=['openmp'], language=language)
     #In order to test this function properly we must set the OMP_THREAD_LIMIT env var with the number of threads limit of the program
@@ -148,6 +157,7 @@ def test_modules_6(language):
         pytest.mark.python])
     )
 )
+@pytest.mark.external
 def test_modules_9(language):
     f1 = epyccel(openmp.test_omp_get_active_level, fflags = '-Wall', accelerators=['openmp'], language=language)
 
@@ -161,6 +171,7 @@ def test_modules_9(language):
         pytest.mark.python])
     )
 )
+@pytest.mark.external
 def test_modules_7(language):
     f1 = epyccel(openmp.test_omp_get_set_max_active_levels, fflags = '-Wall', accelerators=['openmp'], language=language)
 
@@ -176,6 +187,7 @@ def test_modules_7(language):
         pytest.mark.python])
     )
 )
+@pytest.mark.external
 def test_modules_8(language):
     f1 = epyccel(openmp.test_omp_get_level, fflags = '-Wall', accelerators=['openmp'], language=language)
 
@@ -189,6 +201,7 @@ def test_modules_8(language):
         pytest.mark.python])
     )
 )
+@pytest.mark.external
 def test_modules_11(language):
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(4)
@@ -199,11 +212,13 @@ def test_modules_11(language):
     assert f1() == 8
 
 @pytest.mark.xfail(reason = "arithmetic expression not managed yet inside a clause !")
+@pytest.mark.external
 def test_modules_12(language):
     f1 = epyccel(openmp.test_omp_in_final, fflags = '-Wall', accelerators=['openmp'], language=language)
 
     assert f1() == 1
 
+@pytest.mark.external
 def test_modules_13(language):
     f1 = epyccel(openmp.test_omp_get_proc_bind, fflags = '-Wall', accelerators=['openmp'], language=language)
 
@@ -217,6 +232,7 @@ def test_modules_13(language):
 #    ]
 #)
 @pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
+@pytest.mark.external
 def test_modules_14_0(language):
     f1 = epyccel(openmp.test_omp_set_get_default_device, fflags = '-Wall', accelerators=['openmp'], language=language)
     f2 = epyccel(openmp.test_omp_get_num_devices, fflags = '-Wall', accelerators=['openmp'], language=language)
@@ -226,6 +242,7 @@ def test_modules_14_0(language):
     assert f2() >= 0
 
 @pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
+@pytest.mark.external
 def test_modules_14_1(language):
     f3 = epyccel(openmp.test_omp_is_initial_device, fflags = '-Wall', accelerators=['openmp'], language=language)
     f4 = epyccel(openmp.test_omp_get_initial_device, fflags = '-Wall', accelerators=['openmp'], language=language) #Needs a non-host device to test the function properly
@@ -244,6 +261,7 @@ def test_modules_14_1(language):
 #    ]
 #)
 @pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
+@pytest.mark.external
 def test_modules_15(language):
     f1 = epyccel(openmp.test_omp_get_team_num, fflags = '-Wall', accelerators=['openmp'], language=language)
 
@@ -260,16 +278,19 @@ def test_modules_15(language):
 #    ]
 #)
 @pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
+@pytest.mark.external
 def test_modules_15_1(language):
     f1 = epyccel(openmp.test_omp_get_num_teams, fflags = '-Wall', accelerators=['openmp'], language=language)
 
     assert f1() == 2
 
+@pytest.mark.external
 def test_modules_16(language):
     f1 = epyccel(openmp.test_omp_get_max_task_priority, fflags = '-Wall', accelerators=['openmp'], language=language)
 
     assert f1() == 0 # omp_get_max_task_priority() return always 0
 
+@pytest.mark.external
 def test_omp_matmul(language):
     f1 = epyccel(openmp.omp_matmul, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
@@ -293,6 +314,7 @@ def test_omp_matmul(language):
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
+@pytest.mark.external
 def test_omp_matmul_single(language):
     f1 = epyccel(openmp.omp_matmul_single, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
@@ -309,6 +331,7 @@ def test_omp_matmul_single(language):
 
     assert np.array_equal(y1, y2)
 
+@pytest.mark.external
 def test_omp_matmul_2d_2d(language):
     f1 = epyccel(openmp.omp_matmul, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
@@ -326,6 +349,7 @@ def test_omp_matmul_2d_2d(language):
     assert np.array_equal(y1, y2)
 
 
+@pytest.mark.external
 def test_omp_nowait(language):
     f1 = epyccel(openmp.omp_nowait, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
@@ -338,6 +362,7 @@ def test_omp_nowait(language):
     assert np.array_equal(y, x*2)
     assert np.array_equal(z, x/2)
 
+@pytest.mark.external
 def test_omp_arraysum(language):
     f1 = epyccel(openmp.omp_arraysum, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
@@ -346,6 +371,7 @@ def test_omp_arraysum(language):
 
     assert f1(x) == np.sum(x)
 
+@pytest.mark.external
 def test_omp_arraysum_combined(language):
     f1 = epyccel(openmp.omp_arraysum_combined, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
@@ -354,6 +380,7 @@ def test_omp_arraysum_combined(language):
 
     assert f1(x) == np.sum(x)
 
+@pytest.mark.external
 def test_omp_range_sum_critical(language):
     f1 = epyccel(openmp.omp_range_sum_critical, fflags = '-Wall', accelerators=['openmp'], language=language)
 
@@ -361,6 +388,7 @@ def test_omp_range_sum_critical(language):
         x = random.randint(10, 1000)
         assert f1(x) == openmp.omp_range_sum_critical(x)
 
+@pytest.mark.external
 def test_omp_arraysum_single(language):
     f1 = epyccel(openmp.omp_arraysum_single, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
@@ -369,6 +397,7 @@ def test_omp_arraysum_single(language):
 
     assert f1(x) == np.sum(x)
 
+@pytest.mark.external
 def test_omp_master(language):
     f1 = epyccel(openmp.omp_master, fflags = '-Wall', accelerators=['openmp'], language=language)
     assert f1() == openmp.omp_master()
@@ -381,6 +410,7 @@ def test_omp_master(language):
             pytest.param("c", marks = pytest.mark.c)
     ]
 )
+@pytest.mark.external
 def test_omp_taskloop(language):
     f1 = epyccel(openmp.omp_taskloop, fflags = '-Wall', accelerators=['openmp'], language=language)
 
@@ -398,6 +428,7 @@ def test_omp_taskloop(language):
             pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
+@pytest.mark.external
 def test_omp_tasks(language):
     f1 = epyccel(openmp.omp_tasks, fflags = '-Wall', accelerators=['openmp'], language=language)
 
@@ -405,10 +436,12 @@ def test_omp_tasks(language):
         x = random.randint(10, 20)
         assert openmp.omp_tasks(x) == f1(x)
 
+@pytest.mark.external
 def test_omp_simd(language):
     f1 = epyccel(openmp.omp_simd, fflags = '-Wall', accelerators=['openmp'], language=language)
     assert openmp.omp_simd(1337) == f1(1337)
 
+@pytest.mark.external
 def test_omp_long_line(language):
     f1 = epyccel(openmp.omp_long_line, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
@@ -429,25 +462,30 @@ def test_omp_long_line(language):
         pytest.mark.python])
     )
 )
+@pytest.mark.external
 def test_omp_flush(language):
     f1 = epyccel(openmp.omp_flush, fflags = '-Wall', accelerators=['openmp'], language=language)
     assert 2 == f1()
 
+@pytest.mark.external
 def test_omp_barrier(language):
     f1 = epyccel(openmp.omp_barrier, fflags = '-Wall', accelerators=['openmp'], language=language)
     f2 = openmp.omp_barrier
     assert f1() == f2()
 
+@pytest.mark.external
 def test_combined_for_simd(language):
     f1 = epyccel(openmp.combined_for_simd, fflags = '-Wall', accelerators=['openmp'], language=language)
     f2 = openmp.combined_for_simd
     assert f1() == f2()
 
+@pytest.mark.external
 def test_omp_sections(language):
     f1 = epyccel(openmp.omp_sections, fflags = '-Wall', accelerators=['openmp'], language=language)
     f2 = openmp.omp_sections
     assert f1() == f2()
 
+@pytest.mark.external
 def test_omp_get_set_schedule(language):
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(4)
@@ -468,6 +506,7 @@ def test_omp_get_set_schedule(language):
     pytest.param("python", marks = pytest.mark.python)
     )
 )
+@pytest.mark.external
 def test_nowait_schedule(language):
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     get_num_threads = epyccel(openmp.get_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)

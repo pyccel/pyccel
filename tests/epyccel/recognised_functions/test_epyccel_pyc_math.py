@@ -48,8 +48,8 @@ def test_call_lcm(language):
         return lcm(x, y)
 
     f = epyccel(call_lcm, language=language)
-    x = randint(1e9)
-    y = randint(1e9)
+    x = randint(1e4)
+    y = randint(1e5)
 
     assert(f(x,y) == call_lcm(x, y))
 

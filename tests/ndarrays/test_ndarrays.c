@@ -163,7 +163,7 @@ int32_t test_indexing_int64(void)
     int64_t value;
     int64_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int64);
+    x = array_create(2, m_1_shape, nd_int64, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     // testing the index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
@@ -192,7 +192,7 @@ int32_t test_indexing_int32(void)
     int32_t value;
     int32_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int32);
+    x = array_create(2, m_1_shape, nd_int32, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     // testing the index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
@@ -221,7 +221,7 @@ int32_t test_indexing_int16(void)
     int16_t value;
     int16_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int16);
+    x = array_create(2, m_1_shape, nd_int16, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     // testing the index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
@@ -250,7 +250,7 @@ int32_t test_indexing_int8(void)
     int8_t value;
     int8_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int8);
+    x = array_create(2, m_1_shape, nd_int8, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     // testing the index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
@@ -279,7 +279,7 @@ int32_t test_indexing_double(void)
     double value;
     double c_value;
 
-    x = array_create(2, m_1_shape, nd_double);
+    x = array_create(2, m_1_shape, nd_double, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     // testing the index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
@@ -308,7 +308,7 @@ int32_t test_indexing_cdouble(void)
     double complex value;
     double complex c_value;
 
-    x = array_create(2, m_1_shape, nd_cdouble);
+    x = array_create(2, m_1_shape, nd_cdouble, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
@@ -337,7 +337,7 @@ int32_t test_indexing_cfloat(void)
     float complex value;
     float complex c_value;
 
-    x = array_create(2, m_1_shape, nd_cfloat);
+    x = array_create(2, m_1_shape, nd_cfloat, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
@@ -373,7 +373,7 @@ int32_t test_slicing_int64(void)
     int64_t value;
     int64_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int64);
+    x = array_create(2, m_1_shape, nd_int64, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
@@ -414,7 +414,7 @@ int32_t test_slicing_int32(void)
     int32_t value;
     int32_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int32);
+    x = array_create(2, m_1_shape, nd_int32, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
@@ -454,7 +454,7 @@ int32_t test_slicing_int16(void)
     int16_t value;
     int16_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int16);
+    x = array_create(2, m_1_shape, nd_int16, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
@@ -495,7 +495,7 @@ int32_t test_slicing_int8(void)
     int8_t value;
     int8_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int8);
+    x = array_create(2, m_1_shape, nd_int8, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
@@ -536,7 +536,7 @@ int32_t test_slicing_double(void)
     double value;
     double c_value;
 
-    x = array_create(2, m_1_shape, nd_double);
+    x = array_create(2, m_1_shape, nd_double, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
@@ -573,7 +573,7 @@ int32_t test_slicing_cdouble(void)
     double complex value;
     double complex c_value;
 
-    x = array_create(2, m_1_shape, nd_cdouble);
+    x = array_create(2, m_1_shape, nd_cdouble, false);
     memcpy(x.raw_data, m_1, x.buffer_size);
     xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
@@ -608,7 +608,7 @@ int32_t test_array_fill_int64(void)
     int64_t value;
     int64_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int64);
+    x = array_create(2, m_1_shape, nd_int64, false);
     array_fill((int64_t)32, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
@@ -632,7 +632,7 @@ int32_t test_array_fill_int32(void)
     int32_t value;
     int32_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int32);
+    x = array_create(2, m_1_shape, nd_int32, false);
     array_fill((int32_t)32, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
@@ -656,7 +656,7 @@ int32_t test_array_fill_int16(void)
     int16_t value;
     int16_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int16);
+    x = array_create(2, m_1_shape, nd_int16, false);
     array_fill((int16_t)32, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
@@ -680,7 +680,7 @@ int32_t test_array_fill_int8(void)
     int8_t value;
     int8_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int8);
+    x = array_create(2, m_1_shape, nd_int8, false);
     array_fill((int8_t)32, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
@@ -704,7 +704,7 @@ int32_t test_array_fill_double(void)
     double value;
     double c_value;
 
-    x = array_create(2, m_1_shape, nd_double);
+    x = array_create(2, m_1_shape, nd_double, false);
     array_fill(2., x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
@@ -728,7 +728,7 @@ int32_t test_array_fill_cdouble(void)
     double complex value;
     double complex c_value;
 
-    x = array_create(2, m_1_shape, nd_cdouble);
+    x = array_create(2, m_1_shape, nd_cdouble, false);
     array_fill(0.3+0.54*I, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
@@ -754,7 +754,7 @@ int32_t test_array_zeros_double(void)
     double value;
     double c_value;
 
-    x = array_create(2, m_1_shape, nd_double);
+    x = array_create(2, m_1_shape, nd_double, false);
     array_fill(0, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
@@ -778,7 +778,7 @@ int32_t test_array_zeros_int32(void)
     int32_t value;
     int32_t c_value;
 
-    x = array_create(2, m_1_shape, nd_int32);
+    x = array_create(2, m_1_shape, nd_int32, false);
     array_fill(0, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
@@ -802,7 +802,7 @@ int32_t test_array_zeros_cdouble(void)
     double complex value;
     double complex c_value;
 
-    x = array_create(2, m_1_shape, nd_cdouble);
+    x = array_create(2, m_1_shape, nd_cdouble, false);
     array_fill(0, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
