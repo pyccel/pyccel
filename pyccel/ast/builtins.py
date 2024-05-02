@@ -128,14 +128,22 @@ class PythonImag(PythonComplexProperty):
 
 #==============================================================================
 class PythonConjugate(PyccelInternalFunction):
-    """Represents a call to the .conjugate() function
+    """
+    Represents a call to the .conjugate() function.
 
-    e.g:
+    Represents a call to the conjugate function which is a member of
+    the builtin types int, float, complex. The conjugate function is
+    called from Python as follows:
+
     > a = 1+2j
     > a.conjugate()
     1-2j
 
-    arg : Variable, Literal
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The variable/expression which was passed to the
+        conjugate function.
     """
     __slots__ = ()
     _dtype = NativeComplex()
@@ -144,6 +152,14 @@ class PythonConjugate(PyccelInternalFunction):
     _shape = None
     _order = None
     name = 'conjugate'
+
+    def __new__(cls, arg):
+        if arg.dtype is NativeBool():
+            return PythonInt(arg)
+        elif arg.dtype is not NativeComplex():
+            return arg
+        else:
+            return super().__new__(cls)
 
     def __init__(self, arg):
         super().__init__(arg)

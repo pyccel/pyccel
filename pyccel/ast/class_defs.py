@@ -43,7 +43,8 @@ FloatClass = ClassDef('float',
                 decorators={'property':'property', 'numpy_wrapper':PythonImag}),
             FunctionDef('real',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonReal}),
-            #conjugate
+            FunctionDef('conjugate',[],[],body=[],
+                decorators={'numpy_wrapper':PythonConjugate}),
             #as_integer_ratio
             #fromhex
             #hex
@@ -58,9 +59,10 @@ IntegerClass = ClassDef('integer',
                 decorators={'property':'property', 'numpy_wrapper':PythonImag}),
             FunctionDef('real',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonReal}),
+            FunctionDef('conjugate',[],[],body=[],
+                decorators={'numpy_wrapper':PythonConjugate}),
             #as_integer_ratio
             #bit_length
-            #conjugate
             #denominator
             #from_bytes
             #numerator
