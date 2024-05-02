@@ -209,19 +209,18 @@ class SetUpdate(SetMethod):
 
     Represents a call to the .update() method of an object with a set type,
     Which adds items from another set (or any other iterable).
-    This method is handled through the call to `_visit_SetUpdate` in
+    This method is handled through the call to `_build_SetUpdate` in
     the semantic stage. It then attempts to construct a `For` loop node with
     a body that calls `add()`, or direct `add()` nodes depending on
     the type of the iterable passed to `update()`.
     This class should never be instantiated; it's only purpose is to help
-    construct the annotation_method `_visit_SetUpdate`. 
+    construct the annotation_method `_build_SetUpdate`. 
     The update method is called as follows:
 
     Parameters
     ----------
     set_obj : TypedAstNode
         The set object which the method is called from.
-
         The argument passed to update() method.
     iterable : TypedAstNode
         The item to search for, and remove.

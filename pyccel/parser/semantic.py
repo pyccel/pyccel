@@ -4575,7 +4575,7 @@ class SemanticParser(BasicParser):
         """
         Method to navigate the syntactic DottedName node of an `extend()` call.
 
-        The purpose of this `_visit` method is to construct new nodes from a syntactic 
+        The purpose of this `_build` method is to construct new nodes from a syntactic 
         DottedName node. It checks the type of the iterable passed to `extend()`.
         If the iterable is an instance of `PythonList` or `PythonTuple`, it constructs 
         a CodeBlock node where its body consists of `ListAppend` objects with the 
@@ -4806,7 +4806,7 @@ class SemanticParser(BasicParser):
         """
         Method to navigate the syntactic DottedName node of an `update()` call.
 
-        The purpose of this `_visit` method is to construct new nodes from a syntactic 
+        The purpose of this `_build` method is to construct new nodes from a syntactic 
         DottedName node. It checks the type of the iterable passed to `update()`.
         If the iterable is an instance of `PythonList`, `PythonSet` or `PythonTuple`, it constructs 
         a CodeBlock node where its body consists of `SetAdd` objects with the 
