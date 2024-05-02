@@ -9,7 +9,7 @@ import math
 
 from pyccel.ast.core      import PyccelFunctionDef, Module
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
-from pyccel.ast.internals import PyccelInternalFunction
+from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.variable  import Constant
 
 __all__ = (
@@ -75,7 +75,7 @@ __all__ = (
 #==============================================================================
 # Base classes
 #==============================================================================
-class MathFunctionBase(PyccelInternalFunction):
+class MathFunctionBase(PyccelFunction):
     """
     Abstract base class for the Math Functions.
 

@@ -19,8 +19,8 @@ from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from .datatypes import GenericType, PythonNativeComplex, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
-from .datatypes import FixedSizeNumericType, HomogeneousSetType
-from .internals import PyccelInternalFunction, Slice, PyccelArrayShapeElement
+from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
+from .internals import PyccelFunction, Slice, PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
@@ -59,7 +59,7 @@ __all__ = (
 )
 
 #==============================================================================
-class PythonComplexProperty(PyccelInternalFunction):
+class PythonComplexProperty(PyccelFunction):
     """
     Represents a call to the .real or .imag property.
 
@@ -144,7 +144,7 @@ class PythonImag(PythonComplexProperty):
         return f'Imag({self.internal_var})'
 
 #==============================================================================
-class PythonConjugate(PyccelInternalFunction):
+class PythonConjugate(PyccelFunction):
     """
     Represents a call to the .conjugate() function.
 
@@ -187,7 +187,7 @@ class PythonConjugate(PyccelInternalFunction):
         return f'Conjugate({self.internal_var})'
 
 #==============================================================================
-class PythonBool(PyccelInternalFunction):
+class PythonBool(PyccelFunction):
     """
     Represents a call to Python's native `bool()` function.
 
@@ -226,7 +226,7 @@ class PythonBool(PyccelInternalFunction):
         return f'Bool({self.arg})'
 
 #==============================================================================
-class PythonComplex(PyccelInternalFunction):
+class PythonComplex(PyccelFunction):
     """
     Represents a call to Python's native `complex()` function.
 
@@ -330,15 +330,20 @@ class PythonComplex(PyccelInternalFunction):
 
     @property
     def internal_var(self):
-        """ When the complex call is a cast, returns the variable being cast """
-        assert(self._is_cast)
+        """
+        When the complex call is a cast, returns the variable being cast.
+
+        When the complex call is a cast, returns the variable being cast.
+        This property should only be used when handling a cast.
+        """
+        assert self._is_cast
         return self._internal_var
 
     def __str__(self):
         return f"complex({self.real}, {self.imag})"
 
 #==============================================================================
-class PythonEnumerate(PyccelAstNode):
+class PythonEnumerate(PyccelFunction):
     """
     Represents a call to Python's native `enumerate()` function.
 
@@ -355,6 +360,8 @@ class PythonEnumerate(PyccelAstNode):
     __slots__ = ('_element','_start')
     _attribute_nodes = ('_element','_start')
     name = 'enumerate'
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, arg, start = None):
         if pyccel_stage != "syntactic" and \
@@ -390,7 +397,7 @@ class PythonEnumerate(PyccelAstNode):
         return PythonLen(self.element)
 
 #==============================================================================
-class PythonFloat(PyccelInternalFunction):
+class PythonFloat(PyccelFunction):
     """
     Represents a call to Python's native `float()` function.
 
@@ -431,7 +438,7 @@ class PythonFloat(PyccelInternalFunction):
         return f'float({self.arg})'
 
 #==============================================================================
-class PythonInt(PyccelInternalFunction):
+class PythonInt(PyccelFunction):
     """
     Represents a call to Python's native `int()` function.
 
@@ -613,7 +620,7 @@ class PythonTupleFunction(TypedAstNode):
             raise TypeError(f"Can't unpack {arg} into a tuple")
 
 #==============================================================================
-class PythonLen(PyccelInternalFunction):
+class PythonLen(PyccelFunction):
     """
     Represents a `len` expression in the code.
 
@@ -768,12 +775,25 @@ class PythonSet(TypedAstNode):
         return True
 
 #==============================================================================
-class PythonMap(PyccelAstNode):
-    """ Represents the map stmt
+class PythonMap(PyccelFunction):
+    """
+    Class representing a call to Python's builtin map function.
+
+    Class representing a call to Python's builtin map function.
+
+    Parameters
+    ----------
+    func : FunctionDef
+        The function to be applied to the elements.
+
+    func_args : TypedAstNode
+        The arguments to which the function will be applied.
     """
     __slots__ = ('_func','_func_args')
     _attribute_nodes = ('_func','_func_args')
     name = 'map'
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, func, func_args):
         self._func = func
@@ -842,7 +862,7 @@ class PythonPrint(PyccelAstNode):
         return self._file
 
 #==============================================================================
-class PythonRange(PyccelAstNode):
+class PythonRange(PyccelFunction):
     """
     Class representing a range.
 
@@ -862,6 +882,8 @@ class PythonRange(PyccelAstNode):
     __slots__ = ('_start','_stop','_step')
     _attribute_nodes = ('_start', '_stop', '_step')
     name = 'range'
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, *args):
         # Define default values
@@ -917,7 +939,7 @@ class PythonRange(PyccelAstNode):
 
 
 #==============================================================================
-class PythonZip(PyccelInternalFunction):
+class PythonZip(PyccelFunction):
     """
     Represents a call to Python `zip` for code generation.
 
@@ -957,7 +979,7 @@ class PythonZip(PyccelInternalFunction):
         return [a[index] for a in self.args]
 
 #==============================================================================
-class PythonAbs(PyccelInternalFunction):
+class PythonAbs(PyccelFunction):
     """
     Represents a call to Python `abs` for code generation.
 
@@ -985,7 +1007,7 @@ class PythonAbs(PyccelInternalFunction):
         return self._args[0]
 
 #==============================================================================
-class PythonSum(PyccelInternalFunction):
+class PythonSum(PyccelFunction):
     """
     Represents a call to Python `sum` for code generation.
 
@@ -1019,7 +1041,7 @@ class PythonSum(PyccelInternalFunction):
         return self._args[0]
 
 #==============================================================================
-class PythonMax(PyccelInternalFunction):
+class PythonMax(PyccelFunction):
     """
     Represents a call to Python's built-in `max` function.
 
@@ -1045,7 +1067,7 @@ class PythonMax(PyccelInternalFunction):
 
         if not x.is_homogeneous:
             types = ', '.join(str(xi.dtype) for xi in x)
-            raise PyccelError("Cannot determine final dtype of 'max' call with arguments of different "
+            raise TypeError("Cannot determine final dtype of 'max' call with arguments of different "
                              f"types ({types}). Please cast arguments to the desired dtype")
         if isinstance(x.class_type, HomogeneousContainerType):
             self._class_type = x.class_type.element_type
@@ -1055,11 +1077,11 @@ class PythonMax(PyccelInternalFunction):
 
 
 #==============================================================================
-class PythonMin(PyccelInternalFunction):
+class PythonMin(PyccelFunction):
     """
-    Represents a call to Python's built-in `max` function.
+    Represents a call to Python's built-in `min` function.
 
-    Represents a call to Python's built-in `max` function.
+    Represents a call to Python's built-in `min` function.
 
     Parameters
     ----------
@@ -1081,7 +1103,7 @@ class PythonMin(PyccelInternalFunction):
 
         if not x.is_homogeneous:
             types = ', '.join(str(xi.dtype) for xi in x)
-            raise PyccelError("Cannot determine final dtype of 'min' call with arguments of different "
+            raise TypeError("Cannot determine final dtype of 'min' call with arguments of different "
                               f"types ({types}). Please cast arguments to the desired dtype")
         if isinstance(x.class_type, HomogeneousContainerType):
             self._class_type = x.class_type.element_type
@@ -1128,14 +1150,14 @@ class Lambda(PyccelAstNode):
         """ Returns the expression with the arguments replaced with
         the calling arguments
         """
-        assert(len(args) == len(self.variables))
+        assert len(args) == len(self.variables)
         return self.expr.subs(self.variables, args)
 
     def __str__(self):
         return f"{self.variables} -> {self.expr}"
 
 #==============================================================================
-class PythonType(PyccelAstNode):
+class PythonType(PyccelFunction):
     """
     Represents a call to the Python builtin `type` function.
 
@@ -1153,10 +1175,12 @@ class PythonType(PyccelAstNode):
     """
     __slots__ = ('_type','_obj')
     _attribute_nodes = ('_obj',)
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, obj):
         if not isinstance (obj, TypedAstNode):
-            raise PyccelError(f"Python's type function is not implemented for {type(obj)} object")
+            raise TypeError(f"Python's type function is not implemented for {type(obj)} object")
         self._type = obj.class_type
         self._obj = obj
 
