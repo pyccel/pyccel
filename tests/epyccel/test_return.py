@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, reimported
 import numpy as np
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 def test_single_return_var_assign(language):
     def single_return_var_assign():

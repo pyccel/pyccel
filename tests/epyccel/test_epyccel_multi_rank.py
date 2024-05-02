@@ -4,7 +4,7 @@ import numpy as np
 from numpy.random import rand, randint
 
 from modules        import multi_rank
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 @pytest.mark.parametrize('f1',[multi_rank.add_mixed_order,
     multi_rank.mul_mixed_order,
