@@ -88,3 +88,16 @@ def test_module_4(language):
     assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
     assert np.allclose( x, x_pyc, rtol=1e-14, atol=1e-14 )
     assert np.allclose( y, y_pyc, rtol=1e-14, atol=1e-14 )
+
+def test_module_5(language):
+    import modules.Module_7 as mod
+
+    modnew = epyccel(mod, language=language)
+
+    max_pyt = mod.get_sum()
+    max_pyc = modnew.get_sum()
+    assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
+
+    max_pyt = mod.get_sum2()
+    max_pyc = modnew.get_sum2()
+    assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )

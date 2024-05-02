@@ -52,6 +52,7 @@ from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.operators import IfTernaryOperator
+from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList
 from pyccel.ast.builtins import PythonPrint, Lambda
@@ -259,7 +260,13 @@ class SyntaxParser(BasicParser):
         return code
 
     def _visit_Expr(self, stmt):
-        return self._visit(stmt.value)
+        val = self._visit(stmt.value)
+        if not isinstance(val, (CommentBlock, PythonPrint)):
+            # Collect any results of standalone expressions
+            # into a variable to avoid errors in C/Fortran
+            tmp_var,_ = create_variable(self._used_names)
+            val = Assign(tmp_var, val)
+        return val
 
     def _visit_Tuple(self, stmt):
         return PythonTuple(*self._treat_iterable(stmt.elts))
@@ -534,6 +541,9 @@ class SyntaxParser(BasicParser):
         elif isinstance(stmt.op, ast.BitAnd):
             return PyccelBitAnd(first, second)
 
+        elif isinstance(stmt.op, ast.MatMult):
+            return NumpyMatmul(first, second)
+
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           symbol = stmt,
@@ -586,10 +596,11 @@ class SyntaxParser(BasicParser):
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
-        if not isinstance(results, (list, PythonTuple, PythonList)):
+        if results is Nil():
+            results = []
+        elif not isinstance(results, (list, PythonTuple, PythonList)):
             results = [results]
-        expr = Return(results)
-        return expr
+        return Return(results)
 
     def _visit_Pass(self, stmt):
         return Pass()

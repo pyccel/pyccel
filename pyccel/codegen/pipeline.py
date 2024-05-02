@@ -138,6 +138,10 @@ def execute_pyccel(fname, *,
                     Name of the generated module
                     Default : Same name as the file which was translated
     """
+    if fname.endswith('.pyh'):
+        syntax_only = True
+        if verbose:
+            print("Header file recognised, stopping after syntactic stage")
 
     # Reset Errors singleton before parsing a new file
     errors = Errors()
@@ -182,7 +186,8 @@ def execute_pyccel(fname, *,
 
     # Create new directories if not existing
     os.makedirs(folder, exist_ok=True)
-    os.makedirs(pyccel_dirpath, exist_ok=True)
+    if not (syntax_only or semantic_only):
+        os.makedirs(pyccel_dirpath, exist_ok=True)
 
     # Change working directory to 'folder'
     os.chdir(folder)
@@ -219,9 +224,13 @@ def execute_pyccel(fname, *,
                                  debug=debug,
                                  accelerator=accelerator,
                                  includes=())
+    elif fflags is not None:
+        fflags = fflags.split()
+    else:
+        fflags = [] # Used for python
 
     # Build position-independent code, suited for use in shared library
-    fflags = ' {} -fPIC '.format(fflags)
+    fflags.append('-fPIC')
     # ...
 
     # Parse Python file

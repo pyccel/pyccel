@@ -1565,7 +1565,8 @@ def test_multiple_2d_stack_array_2(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="prod not implemented in c"),
             pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python)
     ]
 )
 def test_array_real_1d_1d_prod(language):
@@ -1583,7 +1584,8 @@ def test_array_real_1d_1d_prod(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="matmul not implemented in c"),
             pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python)
     ]
 )
 def test_array_real_2d_1d_matmul(language):
@@ -1604,7 +1606,8 @@ def test_array_real_2d_1d_matmul(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="matmul not implemented in c"),
             pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python)
     ]
 )
 def test_array_real_2d_1d_matmul_order_F_F(language):
@@ -1625,7 +1628,8 @@ def test_array_real_2d_1d_matmul_order_F_F(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="matmul not implemented in c"),
             pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python)
     ]
 )
 def test_array_real_2d_2d_matmul(language):
@@ -1646,7 +1650,8 @@ def test_array_real_2d_2d_matmul(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="matmul not implemented in c"),
             pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python)
     ]
 )
 def test_array_real_2d_2d_matmul_F_F_F_F(language):
@@ -1681,6 +1686,28 @@ def test_array_real_2d_2d_matmul_mixorder(language):
     A1[1, 0] = 2
     A2 = np.copy(A1)
     B1 = np.ones([2, 3], order = 'F')
+    B2 = np.copy(B1)
+    C1 = np.empty([3,3])
+    C2 = np.empty([3,3])
+    f1(A1, B1, C1)
+    f2(A2, B2, C2)
+    assert np.array_equal(C1, C2)
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="matmul not implemented in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python)
+    ]
+)
+def test_array_real_2d_2d_matmul_operator(language):
+    f1 = arrays.array_real_2d_2d_matmul_operator
+    f2 = epyccel( f1 , language = language)
+    A1 = np.ones([3, 2])
+    A1[1, 0] = 2
+    A2 = np.copy(A1)
+    B1 = np.ones([2, 3])
     B2 = np.copy(B1)
     C1 = np.empty([3,3])
     C2 = np.empty([3,3])

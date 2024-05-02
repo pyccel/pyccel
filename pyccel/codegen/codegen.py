@@ -9,6 +9,7 @@ from pyccel.codegen.printing.fcode  import FCodePrinter
 from pyccel.codegen.printing.ccode  import CCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
 
+from pyccel.ast.basic     import PyccelAstNode
 from pyccel.ast.core      import FunctionDef, Module, Program, Interface, ModuleHeader
 from pyccel.ast.core      import EmptyNode, Comment, CommentBlock
 from pyccel.ast.headers   import Header
@@ -36,6 +37,7 @@ class Codegen(object):
         name: str
             name of the generated module or program.
         """
+        PyccelAstNode.stage = 'codegen'
         self._parser   = parser
         self._ast      = parser.ast
         self._name     = name

@@ -5,13 +5,13 @@
 """
 This module represent a call to the itertools functions for code generation.
 """
-from .basic     import Basic
+from .internals import PyccelInternalFunction
 
 __all__ = (
     'Product',
 )
 
-class Product(Basic):
+class Product(PyccelInternalFunction):
     """
     Represents a call to itertools.product for code generation.
 
@@ -30,7 +30,7 @@ class Product(Basic):
 
     def __init__(self, *args):
         self._elements = args
-        super().__init__()
+        super().__init__(args)
 
     @property
     def elements(self):

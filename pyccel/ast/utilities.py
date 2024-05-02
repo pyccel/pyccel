@@ -6,6 +6,7 @@
 #------------------------------------------------------------------------------------------#
 
 import inspect
+import sys
 from itertools import chain
 from collections import namedtuple
 
@@ -13,10 +14,11 @@ from numpy import pi
 
 import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors import Errors, PyccelError
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
-                            Allocate, Dlist, Assign, For, CodeBlock)
+                            Allocate, Duplicate, Assign, For, CodeBlock,
+                            Concatenate)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
@@ -29,12 +31,11 @@ from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs
 from .variable      import (Constant, Variable, ValuedVariable,
-                            IndexedElement, TupleVariable, VariableAddress)
+                            IndexedElement, InhomogeneousTupleVariable, VariableAddress)
 
 errors = Errors()
 
 __all__ = (
-    'build_types_decorator',
     'builtin_function',
     'builtin_import',
     'builtin_import_registery',
@@ -59,7 +60,12 @@ def builtin_function(expr, args=None):
     dic = builtin_functions_dict
 
     if name in dic.keys() :
-        return dic[name](*args)
+        try:
+            return dic[name](*args)
+        except PyccelError as e:
+            errors.report(e,
+                    symbol=expr,
+                    severity='fatal')
 
     if name == 'map':
         return PythonMap(expr.args[0], *args[1:])
@@ -82,7 +88,13 @@ builtin_import_registery = {'numpy': {
                             'scipy.constants': scipy_constants,
                             'itertools': {'product': Product},
                             'math': {**math_functions, ** math_constants},
-                            'pyccel.decorators': None}
+                            'pyccel.decorators': pyccel_decorators.__all__}
+if sys.version_info < (3, 10):
+    from .builtin_imports import python_builtin_libs
+else:
+    python_builtin_libs = set(sys.stdlib_module_names) # pylint: disable=no-member
+
+recognised_libs = python_builtin_libs.union(builtin_import_registery.keys())
 
 #==============================================================================
 def collect_relevant_imports(func_dictionary, targets):
@@ -118,7 +130,6 @@ def builtin_import(expr):
         for target in expr.target:
             search_target = target.name if isinstance(target, AsName) else target
             if search_target not in funcs:
-                errors = Errors()
                 errors.report("{} does not exist in pyccel.decorators".format(target),
                         symbol = expr, severity='error')
 
@@ -139,32 +150,6 @@ def get_function_from_ast(ast, func_name):
         print('> could not find {}'.format(func_name))
 
     return node
-
-#==============================================================================
-# TODO: must add a Node Decorator in core
-def build_types_decorator(args, order=None):
-    """
-    builds a types decorator from a list of arguments (of FunctionDef)
-    """
-    types = []
-    for a in args:
-        if isinstance(a, Variable):
-            dtype = a.dtype.name.lower()
-
-        else:
-            raise TypeError('unepected type for {}'.format(a))
-
-        if a.rank > 0:
-            shape = [':' for i in range(0, a.rank)]
-            shape = ','.join(i for i in shape)
-            dtype = '{dtype}[{shape}]'.format(dtype=dtype, shape=shape)
-            if order and a.rank > 1:
-                dtype = "{dtype}(order={ordering})".format(dtype=dtype, ordering=order)
-
-        dtype = LiteralString(dtype)
-        types.append(dtype)
-
-    return types
 
 #==============================================================================
 def split_positional_keyword_arguments(*args):
@@ -278,9 +263,9 @@ def insert_index(expr, pos, index_var):
         else:
             # Calculate new index to preserve slice behaviour
             if indices[pos].step is not None:
-                index_var = PyccelMul(index_var, indices[pos].step)
+                index_var = PyccelMul(index_var, indices[pos].step, simplify=True)
             if indices[pos].start is not None:
-                index_var = PyccelAdd(index_var, indices[pos].start)
+                index_var = PyccelAdd(index_var, indices[pos].start, simplify=True)
 
         indices[pos] = index_var
         return IndexedElement(base, *indices)
@@ -293,7 +278,7 @@ def insert_index(expr, pos, index_var):
 LoopCollection = namedtuple('LoopCollection', ['body', 'length', 'modified_vars'])
 
 #==============================================================================
-def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors = False):
+def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors = False, result = None):
     """
     Run through a code block and split it into lists of tuples of lists where
     each inner list represents a code block and the tuples contain the lists
@@ -329,12 +314,14 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
     block : list of tuples of lists
             The modified expression
     """
-    result = []
+    if result is None:
+        result = []
     current_level = 0
-    array_creator_types = (Allocate, PythonList, PythonTuple, Dlist)
+    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
                                 or (isinstance(f, PyccelInternalFunction) and not f.is_elemental))
     for line in block:
+
         if (isinstance(line, Assign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
                 not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (ValuedVariable)) and # not creating array
@@ -468,10 +455,51 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             # Save results
             save_spot.append(line)
             current_level = new_level
+
+        elif isinstance(line, Assign) and isinstance(line.rhs, Concatenate):
+            lhs = line.lhs
+            rhs = line.rhs
+            arg1, arg2 = rhs.args
+            assign1 = Assign(lhs[Slice(LiteralInteger(0), arg1.shape[0])], arg1)
+            assign2 = Assign(lhs[Slice(arg1.shape[0], PyccelAdd(arg1.shape[0], arg2.shape[0], simplify=True))], arg2)
+            collect_loops([assign1, assign2], indices, new_index_name, tmp_vars, language_has_vectors, result = result)
+
+        elif isinstance(line, Assign) and isinstance(line.rhs, Duplicate):
+            lhs = line.lhs
+            rhs = line.rhs
+
+            if not isinstance(rhs.length, LiteralInteger):
+                if len(indices) == 0:
+                    indices.append(Variable('int',new_index_name('i')))
+                idx = indices[0]
+
+                assign = Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], idx, simplify=True),
+                                          PyccelMul(rhs.val.shape[0],
+                                                    PyccelAdd(idx, LiteralInteger(1), simplify=True),
+                                                    simplify=True))],
+                                rhs.val)
+
+                tmp_indices = indices[1:]
+
+                block = collect_loops([assign], tmp_indices, new_index_name, tmp_vars, language_has_vectors)
+                if len(tmp_indices)>len(indices)-1:
+                    indices.extend(tmp_indices[len(indices)-1:])
+
+                result.append(LoopCollection([block[-1]],  rhs.val.shape[0], set([lhs])))
+
+            else:
+                assigns = [Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], LiteralInteger(idx), simplify=True),
+                                          PyccelMul(rhs.val.shape[0],
+                                              PyccelAdd(LiteralInteger(idx), LiteralInteger(1), simplify=True),
+                                              simplify=True))],
+                                rhs.val) for idx in range(rhs.length)]
+                collect_loops(assigns, indices, new_index_name, tmp_vars, language_has_vectors, result = result)
+
         else:
             # Save line in top level (no for loop)
             result.append(line)
             current_level = 0
+
     return result
 
 #==============================================================================
@@ -535,8 +563,8 @@ def expand_tuple_assignments(block):
     [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
     """
     assigns = [a for a in block.get_attribute_nodes(Assign) \
-                if isinstance(a.lhs, TupleVariable) and not a.lhs.is_homogeneous \
-                and isinstance(a.rhs, (PythonTuple,TupleVariable))]
+                if isinstance(a.lhs, InhomogeneousTupleVariable) \
+                and isinstance(a.rhs, (PythonTuple, InhomogeneousTupleVariable))]
     if len(assigns) == 0:
         return
     else:

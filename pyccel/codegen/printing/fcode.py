@@ -11,6 +11,7 @@ www.fortran90.org as much as possible."""
 
 
 import string
+import re
 from itertools import chain
 from collections import OrderedDict
 
@@ -20,6 +21,7 @@ import operator
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
+from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
@@ -27,11 +29,12 @@ from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
-                             CodeBlock, Dlist, AsName,
-                             If, IfSection)
+                             CodeBlock, AsName,
+                             If, IfSection, FunctionDef)
 
 from pyccel.ast.variable  import (Variable, TupleVariable,
-                             IndexedElement,
+                             IndexedElement, HomogeneousTupleVariable,
+                             InhomogeneousTupleVariable,
                              DottedName, PyccelArraySize)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot
@@ -82,7 +85,8 @@ numpy_ufunc_to_fortran = {
     'NumpyAbs'  : 'abs',
     'NumpyFabs'  : 'abs',
     'NumpyMin'  : 'minval',
-    'NumpyMax'  : 'maxval',
+    'NumpyAmin'  : 'minval',
+    'NumpyAmax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',
@@ -161,6 +165,17 @@ python_builtin_datatypes = {
     'bool'    : PythonBool,
     'complex' : PythonComplex
 }
+
+inc_keyword = (r'do\b', r'if\b',
+               r'else\b', r'type\b\s*[^\(]',
+               r'(recursive )?(pure )?(elemental )?((subroutine)|(function))\b',
+               r'interface\b',r'module\b',r'program\b')
+inc_regex = re.compile('|'.join('({})'.format(i) for i in inc_keyword))
+
+end_keyword = ('do', 'if', 'type', 'function',
+               'subroutine', 'interface','module','program')
+end_regex_str = '(end ?({}))|(else)'.format('|'.join('({})'.format(k) for k in end_keyword))
+dec_regex = re.compile(end_regex_str)
 
 errors = Errors()
 
@@ -273,10 +288,40 @@ class FCodePrinter(CodePrinter):
         return ((i, j) for j in range(cols) for i in range(rows))
 
     def _handle_fortran_specific_a_prioris(self, var_list):
+        """
+        Translate HomogeneousTupleVariables to InhomogeneousTupleVariables
+        if they cannot be handled in an array type. This is the case for:
+        - a tuple of pointers
+
+        Parameters
+        ----------
+        var_list : list of Variables
+                    The list of variables which exist in the current context
+
+        Results
+        -------
+        var_changes : dict
+                      A dictionary mapping the changed Variables to the new
+                      Variables
+        """
+        var_changes = {}
         for v in var_list:
-            if isinstance(v, TupleVariable):
-                if v.is_pointer or v.inconsistent_shape:
-                    v.is_homogeneous = False
+            if isinstance(v, HomogeneousTupleVariable) and v.is_pointer:
+                n_vars = len(v)
+                if not isinstance(n_vars, (LiteralInteger, int)):
+                    errors.report("Cannot create tuple of pointers with unknown length",
+                            symbol = v, severity='fatal')
+
+                name = v.name+'_'
+                shape = v.shape[1:]
+                rank  = v.rank-1
+
+                elem_vars = [v.clone(self.parser.get_new_name(name+str(i)),
+                                     new_class=Variable,
+                                     rank=rank,
+                                     shape=shape) for i in range(n_vars)]
+                var_changes[v] = v.clone(v.name, InhomogeneousTupleVariable, arg_vars = elem_vars)
+        return var_changes
 
     def print_kind(self, expr):
         """
@@ -289,7 +334,7 @@ class FCodePrinter(CodePrinter):
         return expr
 
     def _print_Module(self, expr):
-        self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
+        #var_changes = self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
         name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_') and self.prefix_module:
@@ -345,7 +390,7 @@ class FCodePrinter(CodePrinter):
         return '\n'.join([a for a in parts if a])
 
     def _print_Program(self, expr):
-        self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
+        var_changes = self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
         imports += 'use, intrinsic :: ISO_C_BINDING\n'
@@ -355,6 +400,8 @@ class FCodePrinter(CodePrinter):
         #  - user-defined variables (available in Program.variables)
         #  - pyccel-generated variables added to Scope when printing 'expr.body'
         variables = self.parser.get_variables(self._namespace)
+        if var_changes:
+            variables = [var_changes.get(v, v) for v in variables]
         decs = ''.join(self._print_Declare(Declare(v.dtype, v)) for v in variables)
 
         # Detect if we are using mpi4py
@@ -440,7 +487,7 @@ class FCodePrinter(CodePrinter):
             elif isinstance(f, PythonTuple):
                 for i in f:
                     args.append("{}".format(self._print(i)))
-            elif isinstance(f, TupleVariable) and not f.is_homogeneous:
+            elif isinstance(f, InhomogeneousTupleVariable):
                 for i in f:
                     args.append("{}".format(self._print(i)))
             elif f.dtype is NativeString() and f != expr.expr[-1]:
@@ -522,12 +569,9 @@ class FCodePrinter(CodePrinter):
     def _print_PythonList(self, expr):
         return self._print_PythonTuple(expr)
 
-    def _print_TupleVariable(self, expr):
-        if expr.is_homogeneous:
-            return self._print_Variable(expr)
-        else:
-            fs = ', '.join(self._print(f) for f in expr)
-            return '[{0}]'.format(fs)
+    def _print_InhomogeneousTupleVariable(self, expr):
+        fs = ', '.join(self._print(f) for f in expr)
+        return '[{0}]'.format(fs)
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
@@ -641,6 +685,12 @@ class FCodePrinter(CodePrinter):
         a_code = self._print(expr.a)
         b_code = self._print(expr.b)
 
+        if expr.rank == 0:
+            if isinstance(expr.a.dtype, NativeBool):
+                a_code = self._print(PythonInt(expr.a))
+            if isinstance(expr.b.dtype, NativeBool):
+                b_code = self._print(PythonInt(expr.b))
+            return 'sum({}*{})'.format(a_code, b_code)
         if expr.a.order and expr.b.order:
             if expr.a.order != expr.b.order:
                 raise NotImplementedError("Mixed order matmul not supported.")
@@ -661,7 +711,7 @@ class FCodePrinter(CodePrinter):
         if expr.axis:
             axis = expr.axis
             if expr.order != 'F':
-                axis = PyccelMinus(LiteralInteger(arg.rank), expr.axis)
+                axis = PyccelMinus(LiteralInteger(arg.rank), expr.axis, simplify=True)
             else:
                 axis = LiteralInteger(expr.axis.python_value + 1)
             code = 'Norm2({},{})'.format(self._print(arg), self._print(axis))
@@ -812,7 +862,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
-            code = 'cmplx({0}, kind={1})'.format(expr.internal_var,
+            var = self._print(expr.internal_var)
+            code = 'cmplx({0}, kind={1})'.format(var,
                                 self.print_kind(expr))
         else:
             real = self._print(expr.real)
@@ -1024,7 +1075,7 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        if isinstance(expr.variable, TupleVariable) and not expr.variable.is_homogeneous:
+        if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         # ... TODO improve
@@ -1064,16 +1115,7 @@ class FCodePrinter(CodePrinter):
                 name = alias
             dtype = '{0}({1})'.format(sig, name)
         else:
-            if isinstance(expr.dtype, NativeTuple):
-                # Non-homogenous NativeTuples must be stored in TupleVariable
-                if not expr.variable.is_homogeneous:
-                    errors.report(LIST_OF_TUPLES,
-                                  symbol=expr.variable, severity='error')
-                    expr_dtype = NativeInteger()
-                else:
-                    expr_dtype = expr.variable.homogeneous_dtype
-            else:
-                expr_dtype = expr.dtype
+            expr_dtype = expr.dtype
             dtype = self._print(expr_dtype)
 
         # ...
@@ -1129,7 +1171,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, LiteralInteger, Variable, PyccelAdd))) and
+        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
@@ -1165,15 +1207,8 @@ class FCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
-        if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
+        if isinstance(lhs, InhomogeneousTupleVariable):
             return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
-
-        if isinstance(rhs, Dlist):
-            pattern = 'allocate({lhs}(0:{length}-1))\n{lhs} = {init_value}\n'
-            code = pattern.format(lhs=self._print(lhs),
-                                  length=self._print(rhs.length),
-                                  init_value=self._print(rhs.val))
-            return code
 
         # TODO improve
         op = '=>'
@@ -1266,7 +1301,8 @@ class FCodePrinter(CodePrinter):
 
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
-            if isinstance(expr.lhs, (tuple, list, PythonTuple)):
+            if isinstance(expr.lhs, (tuple, list, PythonTuple, InhomogeneousTupleVariable)) \
+                    or (isinstance(expr.lhs, HomogeneousTupleVariable) and expr.lhs.is_stack_array):
 
                 rhs_code = rhs.funcdef.name
                 args = rhs.args
@@ -1523,7 +1559,7 @@ class FCodePrinter(CodePrinter):
         args_decs = OrderedDict()
 
         func_end  = ''
-        rec = 'recursive' if expr.is_recursive else ''
+        rec = 'recursive ' if expr.is_recursive else ''
         if len(expr.results) != 1:
             func_type = 'subroutine'
             out_args = list(expr.results)
@@ -1564,7 +1600,7 @@ class FCodePrinter(CodePrinter):
                 out_args.remove(i)
 
         # treate case of pure function
-        sig = '{0} {1} {2}'.format(rec, func_type, name)
+        sig = '{0}{1} {2}'.format(rec, func_type, name)
         if is_pure:
             sig = 'pure {}'.format(sig)
 
@@ -1586,9 +1622,13 @@ class FCodePrinter(CodePrinter):
         return parts
 
     def _print_FunctionDef(self, expr):
-        self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
+        var_changes = self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
                                                 list(expr.arguments)  +
                                                 list(expr.results))
+        if var_changes:
+            expr.substitute(original = list(var_changes.keys()),
+                    replacement = list(var_changes.values()),
+                    excluded_nodes=FunctionDef)
 
         name = self._print(expr.name)
         self.set_current_function(name)
@@ -1619,6 +1659,8 @@ class FCodePrinter(CodePrinter):
             decs[i] = dec
 
         vars_to_print = self.parser.get_variables(self._namespace)
+        if var_changes:
+            vars_to_print = [var_changes.get(v, v) for v in vars_to_print]
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
                 decs[v] = Declare(v.dtype,v)
@@ -2596,7 +2638,7 @@ class FCodePrinter(CodePrinter):
 
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
                 return self._print(var[expr.indices])
-        elif isinstance(base, TupleVariable) and not base.is_homogeneous:
+        elif isinstance(base, InhomogeneousTupleVariable):
             if len(expr.indices)==1:
                 return self._print(base[expr.indices[0]])
             else:
@@ -2628,10 +2670,6 @@ class FCodePrinter(CodePrinter):
         inds = [self._print(i) for i in inds]
 
         return "%s(%s)" % (base_code, ", ".join(inds))
-
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
@@ -2845,18 +2883,9 @@ class FCodePrinter(CodePrinter):
 
         code = [line.lstrip(' \t') for line in code]
 
-        inc_keyword = ('do ', 'if(', 'if ', 'do\n',
-                       'else', 'type', 'subroutine', 'function',
-                       'interface')
-        dec_keyword = ('end do', 'enddo', 'end if', 'endif',
-                       'else', 'endtype', 'end type',
-                       'endfunction', 'end function',
-                       'endsubroutine', 'end subroutine',
-                       'endinterface', 'end interface')
-
-        increase = [int(any(map(line.startswith, inc_keyword)))
+        increase = [int(inc_regex.match(line) is not None)
                      for line in code]
-        decrease = [int(any(map(line.startswith, dec_keyword)))
+        decrease = [int(dec_regex.match(line) is not None)
                      for line in code]
         continuation = [int(any(map(line.endswith, ['&', '&\n'])))
                          for line in code]
