@@ -16,7 +16,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
-from .internals import PyccelInternalFunction
+from .internals import PyccelInternalFunction, max_precision, Slice
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .literals  import LiteralString
@@ -122,7 +122,7 @@ class PythonBool(PyccelAstNode):
     __slots__ = ('_arg',)
     name = 'bool'
     _dtype = NativeBool()
-    _precision = default_precision['bool']
+    _precision = -1
     _rank = 0
     _shape = ()
     _order = None
@@ -155,7 +155,7 @@ class PythonComplex(PyccelAstNode):
     name = 'complex'
 
     _dtype = NativeComplex()
-    _precision = default_precision['complex']
+    _precision = -1
     _rank = 0
     _shape = ()
     _order = None
@@ -295,7 +295,7 @@ class PythonFloat(PyccelAstNode):
     __slots__ = ('_arg')
     name = 'float'
     _dtype = NativeFloat()
-    _precision = default_precision['float']
+    _precision = -1
     _rank = 0
     _shape = ()
     _order = None
@@ -327,7 +327,7 @@ class PythonInt(PyccelAstNode):
     __slots__ = ('_arg')
     name = 'int'
     _dtype = NativeInteger()
-    _precision = default_precision['integer']
+    _precision = -1
     _rank = 0
     _shape = ()
     _order = None
@@ -390,16 +390,16 @@ class PythonTuple(PyccelAstNode):
             else:
                 if complexes:
                     self._dtype     = NativeComplex()
-                    self._precision = max(a.precision for a in complexes)
+                    self._precision = max_precision(complexes)
                 elif floats:
                     self._dtype     = NativeFloat()
-                    self._precision = max(a.precision for a in floats)
+                    self._precision = max_precision(floats)
                 elif integers:
                     self._dtype     = NativeInteger()
-                    self._precision = max(a.precision for a in integers)
+                    self._precision = max_precision(integers)
                 elif bools:
                     self._dtype     = NativeBool()
-                    self._precision  = max(a.precision for a in bools)
+                    self._precision  = max_precision(bools)
                 else:
                     raise TypeError('cannot determine the type of {}'.format(self))
 
@@ -417,7 +417,28 @@ class PythonTuple(PyccelAstNode):
             self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
 
     def __getitem__(self,i):
-        return self._args[i]
+        def is_int(a):
+            return isinstance(a, (int, LiteralInteger)) or \
+                    (isinstance(a, PyccelUnarySub) and \
+                     isinstance(a.args[0], (int, LiteralInteger)))
+
+        def to_int(a):
+            if a is None:
+                return None
+            elif isinstance(a, PyccelUnarySub):
+                return -a.args[0].python_value
+            else:
+                return a
+
+        if is_int(i):
+            return self._args[to_int(i)]
+        elif isinstance(i, Slice) and \
+                all(is_int(s) or s is None for s in (i.start, i.step, i.stop)):
+            return PythonTuple(*self._args[to_int(i.start):to_int(i.stop):to_int(i.step)])
+        elif self.is_homogeneous:
+            return IndexedElement(self, i)
+        else:
+            raise NotImplementedError("Can't index PythonTuple with type {}".format(type(i)))
 
     def __add__(self,other):
         return PythonTuple(*(self._args + other._args))
@@ -448,6 +469,13 @@ class PythonTuple(PyccelAstNode):
         """
         return self._args
 
+    @property
+    def allows_negative_indexes(self):
+        """ Indicates whether variables used to
+        index this Variable can be negative
+        """
+        return False
+
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
 
@@ -458,7 +486,7 @@ class PythonLen(PyccelInternalFunction):
     __slots__ = ()
     name      = 'len'
     _dtype     = NativeInteger()
-    _precision = default_precision['int']
+    _precision = -1
     _rank      = 0
     _shape     = ()
     _order     = None
@@ -646,7 +674,7 @@ class PythonAbs(PyccelInternalFunction):
         self._shape     = x.shape
         self._rank      = x.rank
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeFloat()
-        self._precision = default_precision[str_dtype(self._dtype)]
+        self._precision = -1
         self._order     = x.order
         super().__init__(x)
 
@@ -670,7 +698,7 @@ class PythonSum(PyccelInternalFunction):
         if not isinstance(arg, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         self._dtype = arg.dtype
-        self._precision = default_precision[str_dtype(self._dtype)]
+        self._precision = -1
         super().__init__(arg)
 
     @property
@@ -817,9 +845,10 @@ class PythonType(Basic):
         """ Return a literal string representing the type that
         can be used in a print  statement
         """
+        prec = self.precision
         return LiteralString("<class '{dtype}{precision}'>".format(
             dtype = str(self.dtype),
-            precision = self.precision*8 if self.precision else ''))
+            precision = '' if prec in (None, -1) else prec*8))
 
 #==============================================================================
 python_builtin_datatypes_dict = {

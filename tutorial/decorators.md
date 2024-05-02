@@ -359,6 +359,243 @@ module boo
 end module boo
 ```
 
+## Inline
+
+The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation.
+
+### Basic Example
+
+Here is a simple usage example:
+```python
+def f():
+    @inline
+    def cube(s : int):
+        return s * s * s
+    a = cube(3) + 2
+    return a
+```
+
+The generated Fortran code:
+```fortran
+module boo
+
+
+  use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
+  implicit none
+
+  contains
+
+  !........................................
+  function f() result(a)
+
+    implicit none
+
+    integer(i64) :: a
+
+    a = 3_i64 * 3_i64 * 3_i64 + 2_i64
+    return
+
+  end function f
+  !........................................
+
+end module boo
+```
+
+The generated C code:
+```c
+#include "boo.h"
+#include <stdlib.h>
+#include <stdint.h>
+
+
+/*........................................*/
+int64_t f(void)
+{
+    int64_t a;
+
+    a = 3 * 3 * 3 + 2;
+    return a;
+}
+/*........................................*/
+```
+
+### Example with Local Variables
+
+The following complicated example shows the handling of arrays and local variables
+
+```python
+import numpy as np
+from pyccel.decorators import inline
+
+@inline
+def fill_pi(a : 'float[:]'):
+    pi = 3.14159
+    for i in range(a.shape[0]):
+        a[i] = pi
+
+def f():
+    a = np.empty(4)
+    fill_pi(a)
+    pi = 3.14
+    print(a,pi)
+```
+
+The generated Fortran code:
+```fortran
+module boo
+
+
+  use, intrinsic :: ISO_C_Binding, only : f64 => C_DOUBLE , i64 => &
+      C_INT64_T
+  implicit none
+
+  contains
+
+  !........................................
+  !........................................
+
+  !........................................
+  subroutine f()
+
+    implicit none
+
+    real(f64), allocatable :: a(:)
+    real(f64) :: pi
+    real(f64) :: pi_0001
+    integer(i64) :: i_0002
+
+    allocate(a(0:3_i64))
+    pi_0001 = 3.14159_f64
+    do i_0002 = 0_i64, size(a, kind=i64) - 1_i64, 1_i64
+      a(i_0002) = pi_0001
+    end do
+    pi = 3.14_f64
+    print *, a, pi
+    if (allocated(a)) then
+      deallocate(a)
+    end if
+
+  end subroutine f
+  !........................................
+
+end module boo
+```
+
+The generated C code:
+```c
+#include "boo.h"
+#include "ndarrays.h"
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+
+/*........................................*/
+void f(void)
+{
+    t_ndarray a = {.shape = NULL};
+    double pi;
+    double pi_0001;
+    int64_t i_0002;
+    int64_t i_0003;
+    a = array_create(1, (int64_t[]){4}, nd_double);
+    pi_0001 = 3.14159;
+    for (i_0002 = 0; i_0002 < a.shape[0]; i_0002 += 1)
+    {
+        GET_ELEMENT(a, nd_double, i_0002) = pi_0001;
+    }
+    pi = 3.14;
+    printf("%s", "[");
+    for (i_0003 = 0; i_0003 < 3; i_0003 += 1)
+    {
+        printf("%.12lf ", GET_ELEMENT(a, nd_double, i_0003));
+    }
+    printf("%.12lf]", GET_ELEMENT(a, nd_double, 3));
+    printf("%.12lf\n", pi);
+    free_array(a);
+}
+/*........................................*/
+```
+
+### Example with Optional Variables
+
+Finally we present an example with optional variables:
+```python
+@inline
+def get_val(x : int = None , y : int = None):
+    if x is None :
+        a = 3
+    else:
+        a = x
+    if y is not None :
+        b = 4
+    else:
+        b = 5
+    return a + b
+
+def f():
+    a = get_val(2,7)
+    b = get_val()
+    c = get_val(6)
+    d = get_val(y=0)
+    return a,b,c,d
+```
+
+The generated Fortran code:
+```fortran
+module boo
+
+
+  use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
+  implicit none
+
+  contains
+
+  !........................................
+  !........................................
+
+  !........................................
+  subroutine f(a, b, c, d)
+
+    implicit none
+
+    integer(i64), intent(out) :: a
+    integer(i64), intent(out) :: b
+    integer(i64), intent(out) :: c
+    integer(i64), intent(out) :: d
+    integer(i64) :: a_0001
+    integer(i64) :: b_0002
+    integer(i64) :: a_0003
+    integer(i64) :: b_0004
+    integer(i64) :: a_0005
+    integer(i64) :: b_0006
+    integer(i64) :: a_0007
+    integer(i64) :: b_0008
+
+    a_0001 = 2_i64
+    b_0002 = 4_i64
+    a = a_0001 + b_0002
+    a_0003 = 3_i64
+    b_0004 = 5_i64
+    b = a_0003 + b_0004
+    a_0005 = 6_i64
+    b_0006 = 4_i64
+    c = a_0005 + b_0006
+    a_0007 = 3_i64
+    b_0008 = 5_i64
+    d = a_0007 + b_0008
+    return
+
+  end subroutine f
+  !........................................
+
+end module boo
+```
+
+The generated C code:
+```c
+```
+
 ## Getting Help
 
 If you face problems with pyccel, please take the following steps:

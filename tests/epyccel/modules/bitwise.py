@@ -80,3 +80,9 @@ def invert_b(a):
 @types('int')
 def invert_i(a):
    return ~a
+
+def or_ints(n : int):
+    if n & 1 or n < 128:
+        return 1
+    else:
+        return 0

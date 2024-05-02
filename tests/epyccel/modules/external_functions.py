@@ -43,7 +43,7 @@ def blas_idamax(x: 'float64[:]',
 
     i = idamax (n, x, incx)
     # we must substruct 1 because of the fortran indexing
-    i = i-1
+    i = i-np.int32(1)
     return i
 
 # ==============================================================================
