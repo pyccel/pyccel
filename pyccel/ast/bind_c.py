@@ -15,7 +15,10 @@ from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt
 from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.variable import Variable
+from pyccel.errors.errors     import Errors
 from pyccel.utilities.metaclasses import Singleton
+
+errors = Errors()
 
 __all__ = (
     'BindCArrayVariable',
@@ -209,6 +212,9 @@ class BindCFunctionDefArgument(FunctionDefArgument):
                                 name=f'{name}_stride_{i+1}')
                        for i in range(self._rank)]
         else:
+            if original_arg_var.rank > 1:
+                errors.report("Wrapping multi-level tuples is not yet supported",
+                        severity='fatal', symbol=original_arg_var)
             strides = []
         self._shape = shape
         self._strides = strides
