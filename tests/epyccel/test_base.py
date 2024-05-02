@@ -96,7 +96,6 @@ def test_not(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="f2py does not support optional arguments"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     ]
@@ -107,7 +106,6 @@ def test_compare_is_nil(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="f2py does not support optional arguments"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     ]

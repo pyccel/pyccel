@@ -80,7 +80,7 @@ def execute_pyccel(fname, *,
     else:
         folder = os.path.abspath(folder)
 
-    # Define directory name and path for pyccel & f2py build
+    # Define directory name and path for pyccel & cpython build
     pyccel_dirname = '__pyccel__'
     pyccel_dirpath = os.path.join(folder, pyccel_dirname)
 
@@ -105,11 +105,15 @@ def execute_pyccel(fname, *,
 
     if (language == "c"):
         libs = libs + ['m']
-        if accelerator == 'openmp':
-            if sys.platform.startswith('win'):
-                libs = libs + ['gomp']
-            else:
+    if accelerator == 'openmp':
+        if compiler in ["gcc","gfortran"]:
+            if sys.platform == "darwin" and compiler == "gcc":
                 libs = libs + ['omp']
+            else:
+                libs = libs + ['gomp']
+
+        elif compiler == 'ifort':
+            libs.append('iomp5')
 
     # ...
     # Construct flags for the Fortran compiler
@@ -285,9 +289,22 @@ def execute_pyccel(fname, *,
                                                        extra_args,
                                                        output_name,
                                                        verbose)
+        except NotImplementedError as error:
+            msg = str(error)
+            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+                severity='error')
+            handle_error('code generation (wrapping)')
+            raise PyccelCodegenError(msg) from None
+        except PyccelError:
+            handle_error('code generation (wrapping)')
+            raise
         except Exception:
             handle_error('shared library generation')
             raise
+
+        if errors.has_errors():
+            handle_error('code generation (wrapping)')
+            raise PyccelCodegenError('Code generation failed')
 
         # Move shared library to folder directory
         # (First construct absolute path of target location)

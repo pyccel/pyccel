@@ -208,17 +208,17 @@ class CCodePrinter(CodePrinter):
         'dereference': set()
     }
 
-    def __init__(self, parser, settings={}):
+    def __init__(self, parser, settings=None):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
 
-        prefix_module = settings.pop('prefix_module', None)
+        prefix_module = None if settings is None else settings.pop('prefix_module', None)
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
-        userfuncs = settings.get('user_functions', {})
+        userfuncs = {} if settings is None else settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
-        self._dereference = set(settings.get('dereference', []))
+        self._dereference = set([] if settings is None else settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib'])
         self._parser = parser
@@ -503,7 +503,9 @@ class CCodePrinter(CodePrinter):
         try :
             return dtype_registry[(dtype, prec)]
         except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = "{}[kind = {}]".format(dtype, prec),
+                    severity='fatal')
 
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
@@ -539,8 +541,6 @@ class CCodePrinter(CodePrinter):
         return '{}(*{})({});'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):
-        if expr.variable.rank > 0:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
 
