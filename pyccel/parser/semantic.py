@@ -2312,7 +2312,6 @@ class SemanticParser(BasicParser):
                 if len(line) != 1:
                     errors.report(f"Variable {line[0]} cannot have multiple types",
                             severity='error', symbol=line[0])
-                ls.extend(line)
             # ---------------------------- End of if block ------------------------------------------
             else:
                 ls.append(line)
