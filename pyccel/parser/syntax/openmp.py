@@ -16,7 +16,8 @@ from pyccel.ast.omp import (OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Cons
                             OMP_Single_Construct, Omp_End_Clause, OMP_Critical_Construct,
                             OMP_Master_Construct, OMP_Masked_Construct, OMP_Task_Construct,
                             OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct,
-                            OMP_Sections_Construct, OMP_Section_Construct)
+                            OMP_Sections_Construct, OMP_Section_Construct, OMP_Simd_Construct,
+                            OMP_Distribute_Construct, OMP_TaskLoop_Construct)
 
 DEBUG = False
 
@@ -26,6 +27,7 @@ class OmpConstruct(BasicStmt):
         name     = kwargs.pop('name', None)
         clauses  = kwargs.pop('clauses', None)
         combined = kwargs.pop('combined', None)
+        simd     = kwargs.pop('combinedsimd', None)
 
         _valid_clauses = vclauses
 
@@ -49,16 +51,21 @@ class OmpConstruct(BasicStmt):
                 _valid_clauses += _valid_teams_clauses
             com = combined.expr
 
+        has_nowait = False
         txt = ''
         if name:
             txt += name
+        if simd:
+            _valid_clauses += _valid_simd_clauses
+            txt += ' ' + simd
         if clauses:
-            txt += check_get_clauses(self, _valid_clauses, clauses, combined)
+            clause_expr, has_nowait = check_get_clauses(self, _valid_clauses, clauses, combined)
+            txt += clause_expr
 
         if combined:
-            self._expr = omp_type(txt, com)
+            self._expr = omp_type(txt, has_nowait, com)
         else:
-            self._expr = omp_type(txt)
+            self._expr = omp_type(txt, has_nowait)
 
         super().__init__(**kwargs)
 
@@ -82,16 +89,24 @@ class OmpClauses(BasicStmt):
 def check_get_clauses(name, valid_clauses, clauses, combined = None):
     """
     Function to check if the clauses are correct for a given construct.
+    And set the has_nowait variable to True if there is a nowait clause, to finally add the nowait clause at the end of the construct.
     """
+    has_nowait = False
     txt = ''
     for clause in clauses:
         if isinstance(clause, valid_clauses) and \
            not (isinstance(clause, OmpCopyin) and isinstance(combined, OmpTargetParallel)):
-            txt = '{0} {1}'.format(txt, clause.expr)
+            if isinstance(clause, OmpNowait):
+                if isinstance(name, (OmpLoopConstruct, OmpSectionsConstruct, OmpSingleConstruct)):
+                    has_nowait = True
+                else:
+                    raise TypeError("Wrong clause nowait")
+            else:
+                txt = '{0} {1}'.format(txt, clause.expr)
         else:
             msg = "Wrong clause " + type(clause).__name__
             raise TypeError(msg)
-    return txt
+    return txt, has_nowait
 
 
 class Openmp(object):
@@ -130,7 +145,7 @@ class OmpLoopConstruct(OmpConstruct):
 class OmpTaskLoopConstruct(OmpConstruct):
     """Class representing the Taskloop construct."""
     def __init__(self, **kwargs):
-        super().__init__(OmpAnnotatedComment, (_valid_taskloop_clauses + (OmpinReduction,)), **kwargs)
+        super().__init__(OMP_TaskLoop_Construct, (_valid_taskloop_clauses + (OmpinReduction,)), **kwargs)
 
 class OmpTaskConstruct(OmpConstruct):
     """Class representing the Task construct """
@@ -150,7 +165,7 @@ class OmpCriticalConstruct(OmpConstruct):
 class OmpSimdConstruct(OmpConstruct):
     """Class representing the Simd construct."""
     def __init__(self, **kwargs):
-        super().__init__(OmpAnnotatedComment, _valid_simd_clauses, **kwargs)
+        super().__init__(OMP_Simd_Construct, _valid_simd_clauses, **kwargs)
 
 class OmpMasterConstruct(OmpConstruct):
     """Class representing the master construct."""
@@ -175,7 +190,7 @@ class OmpSectionConstruct(OmpConstruct):
 class OmpDistributeConstruct(OmpConstruct):
     """Class representing the Distribute construct."""
     def __init__(self, **kwargs):
-        super().__init__(OmpAnnotatedComment, _valid_Distribute_clauses, **kwargs)
+        super().__init__(OMP_Distribute_Construct, _valid_Distribute_clauses, **kwargs)
 
 class OmpBarrierConstruct(OmpConstruct):
     """Class representing the Barrier construct."""
@@ -220,14 +235,12 @@ class OmpAtomicConstruct(OmpConstruct):
 class OmpEndClause(BasicStmt):
     """Class representing the End construct."""
     def __init__(self, **kwargs):
-        self.construct = kwargs.pop('construct')
-        self.simd      = kwargs.pop('simd', '')
-        self.nowait    = kwargs.pop('nowait', '')
+        lst_construct = kwargs.pop('construct')
 
-        construct = ' '.join(self.construct)
-        txt = 'end {0} {1} {2}'.format(construct, self.simd, self.nowait)
+        construct = ' '.join(lst_construct)
+        txt = 'end {0}'.format(construct)
 
-        self._expr = Omp_End_Clause(txt)
+        self._expr = Omp_End_Clause(txt, False)
 
         super().__init__(**kwargs)
 
@@ -543,6 +556,15 @@ class AtomicMemoryClause(OmpClauses):
 
         super().__init__(**kwargs)
 
+class OmpNowait(OmpClauses):
+    """Class representing the nowait clause."""
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name')
+
+        self._expr = name
+
+        super().__init__(**kwargs)
+
 class OmpForSimd(OmpClauses):
     """Class representing the combined For Simd construct."""
     def __init__(self, **kwargs):
@@ -660,7 +682,8 @@ class OmpTargetTeams(OmpClauses):
 # whenever a new rule (construct/clause) is added in the grammar, we must update the following tuples.
 
 _valid_single_clauses = (OmpPrivate,
-                         OmpFirstPrivate)
+                         OmpFirstPrivate,
+                         OmpNowait)
 
 _valid_atomic_clauses = (OmpAtomicClause,
                          AtomicMemoryClause)
@@ -692,7 +715,8 @@ _valid_teams_clauses = (OmpPrivate,
 _valid_sections_clauses = (OmpPrivate,
                            OmpFirstPrivate,
                            OmpLastPrivate,
-                           OmpReduction)
+                           OmpReduction,
+                           OmpNowait)
 
 _valid_Distribute_clauses = (OmpPrivate,
                              OmpFirstPrivate,
@@ -725,7 +749,8 @@ _valid_loop_clauses = (OmpPrivate,
                        OmpSchedule,
                        OmpCollapse,
                        OmpLinear,
-                       OmpOrdered)
+                       OmpOrdered,
+                       OmpNowait)
 
 _valid_parallel_clauses = (OmpNumThread,
                            OmpDefault,
@@ -796,7 +821,8 @@ omp_clauses = (OmpCollapse,
                OmpTaskloopSimd,
                OmpDistributeCombined,
                OmpTargetParallel,
-               OmpTargetTeams)
+               OmpTargetTeams,
+               OmpNowait)
 
 omp_classes = (Openmp, OpenmpStmt) + omp_directives + omp_clauses
 

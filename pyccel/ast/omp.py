@@ -31,19 +31,30 @@ class OmpAnnotatedComment(Basic):
     >>> OmpAnnotatedComment('parallel')
     OmpAnnotatedComment(parallel)
     """
-    __slots__ = ('_txt', '_combined')
+    __slots__ = ('_txt', '_combined', '_has_nowait')
     _attribute_nodes = ()
     _is_multiline = False
 
-    def __init__(self, txt, combined=None):
+    def __init__(self, txt, has_nowait=False, combined=None):
         self._txt = txt
         self._combined = combined
+        self._has_nowait = has_nowait
         super().__init__()
 
     @property
     def is_multiline(self):
         """Used to check if the construct needs brackets."""
         return self._is_multiline
+
+    @property
+    def has_nowait(self):
+        """Used to check if the construct has a nowait clause."""
+        return self._has_nowait
+
+    @has_nowait.setter
+    def has_nowait(self, value):
+        """Used to set the _has_nowait var."""
+        self._has_nowait = value
 
     @property
     def name(self):
@@ -62,20 +73,42 @@ class OmpAnnotatedComment(Basic):
 
     def __getnewargs__(self):
         """Used for Pickling self."""
-
         args = (self.txt, self.combined)
         return args
 
 class OMP_For_Loop(OmpAnnotatedComment):
     """ Represents an OpenMP Loop construct. """
     __slots__ = ()
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
     @property
     def name(self):
         """Name of the construct."""
         return 'for'
+
+class OMP_Simd_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Simd construct"""
+    __slots__ = ()
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
+
+class OMP_TaskLoop_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Taskloop construct"""
+    __slots__ = ()
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
+
+class OMP_Distribute_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Distribute construct"""
+    __slots__ = ()
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
+
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'distribute'
 
 class OMP_Parallel_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Parallel construct. """
@@ -90,29 +123,34 @@ class OMP_Task_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Task construct. """
     __slots__ = ()
     _is_multiline = True
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
 class OMP_Single_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Single construct. """
     __slots__ = ()
     _is_multiline = True
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
+
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'single'
 
 class OMP_Critical_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Critical construct. """
     __slots__ = ()
     _is_multiline = True
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
 class OMP_Master_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Master construct. """
     __slots__ = ()
     _is_multiline = True
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
 class OMP_Masked_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Masked construct. """
@@ -126,8 +164,8 @@ class OMP_Masked_Construct(OmpAnnotatedComment):
 class OMP_Cancel_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Cancel construct. """
     __slots__ = ()
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
 class OMP_Target_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Target construct. """
@@ -137,7 +175,6 @@ class OMP_Target_Construct(OmpAnnotatedComment):
     def name(self):
         """Name of the construct."""
         return 'target'
-
 
 class OMP_Teams_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Teams construct. """
@@ -152,18 +189,23 @@ class OMP_Sections_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Sections construct. """
     __slots__ = ()
     _is_multiline = True
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
+
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'sections'
 
 class OMP_Section_Construct(OmpAnnotatedComment):
     """ Represent OpenMP Section construct. """
     __slots__ = ()
     _is_multiline = True
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
 class Omp_End_Clause(OmpAnnotatedComment):
     """ Represents the End of an OpenMP block. """
     __slots__ = ()
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)

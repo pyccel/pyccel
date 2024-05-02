@@ -5172,6 +5172,16 @@ def test_numpy_double_scalar(language):
     assert f_fl64_output == test_float64_output
     assert matching_types(f_fl64_output, test_float64_output)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("complex handles bool types in __new__ so it "
+                "cannot be used in a translated interface in python. See #802")),
+            pytest.mark.python]
+        )
+    )
+)
 def test_numpy_complex64_scalar(language):
 
     @types('bool')
