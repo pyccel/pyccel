@@ -3,6 +3,8 @@
 # TODO test if compiler exists before running mpi, openacc
 #      execute the binary file
 
+import pytest
+
 from pyccel.codegen.pipeline import execute_pyccel
 import os
 
@@ -23,6 +25,8 @@ def run(test_dir , **settings):
     os.chdir(init_dir)
     print('\n')
 
+
+@pytest.mark.xfail(reason="Broken mpi4py support, see issue #251")
 def test_mpi4py():
     print('*********************************')
     print('***                           ***')

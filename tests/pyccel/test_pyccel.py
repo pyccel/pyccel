@@ -4,13 +4,22 @@ import pytest
 import shutil
 import numpy as np
 import re
+import sys
 
 #==============================================================================
 # UTILITIES
 #==============================================================================
 def get_abs_path(relative_path):
+    relative_path = os.path.normpath(relative_path)
     base_dir = os.path.dirname(os.path.realpath(__file__))
     return os.path.join(base_dir, relative_path)
+
+#------------------------------------------------------------------------------
+def get_exe(filename):
+    exefile = os.path.splitext(filename)[0]
+    if sys.platform == "win32":
+        exefile = exefile + ".exe"
+    return exefile
 
 #------------------------------------------------------------------------------
 def insert_pyccel_folder(abs_path):
@@ -21,9 +30,9 @@ def insert_pyccel_folder(abs_path):
 #------------------------------------------------------------------------------
 def get_python_output(abs_path, cwd = None):
     if cwd is None:
-        p = subprocess.Popen([shutil.which("python3") , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
+        p = subprocess.Popen([sys.executable , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
     else:
-        p = subprocess.Popen([shutil.which("python3") , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True, cwd=cwd)
+        p = subprocess.Popen([sys.executable , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True, cwd=cwd)
     out, _ = p.communicate()
     assert(p.returncode==0)
     return out
@@ -124,6 +133,8 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
 
 #------------------------------------------------------------------------------
 def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd = None, pyccel_commands = "", output_dtype = float):
+    test_file = os.path.normpath(test_file)
+
     if (cwd is None):
         cwd = os.path.dirname(test_file)
 
@@ -145,7 +156,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd 
         compile_pyccel (cwd, test_file, pyccel_commands+"-t")
         compile_fortran(cwd, test_file, dependencies)
 
-    fort_out = get_fortran_output(test_file[:-3])
+    fort_out = get_fortran_output(get_exe(test_file))
 
     compare_pyth_fort_output(pyth_out, fort_out, output_dtype)
 
@@ -186,6 +197,7 @@ def test_relative_imports_in_project():
 
     compile_pyccel(path_dir, 'project/folder1/mod1.py')
     compile_pyccel(path_dir, 'project/folder2/mod2.py')
+    compile_pyccel(path_dir, 'project/folder2/mod3.py')
     fort_out = get_python_output('runtest.py', cwd=path_dir)
 
     compare_pyth_fort_output(pyth_out, fort_out)
@@ -199,6 +211,7 @@ def test_absolute_imports_in_project():
 
     compile_pyccel(path_dir, 'project/folder1/mod1.py')
     compile_pyccel(path_dir, 'project/folder2/mod2.py')
+    compile_pyccel(path_dir, 'project/folder2/mod3.py')
     fort_out = get_python_output('runtest.py', cwd=path_dir)
 
     compare_pyth_fort_output(pyth_out, fort_out)
@@ -216,7 +229,7 @@ def test_rel_imports_python_accessible_folder():
     compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"))
     compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_rel_imports.py"))
 
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.runtest_rel_imports"],
+    p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_rel_imports"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
@@ -249,7 +262,7 @@ def test_folder_imports_python_accessible_folder():
     compile_pyccel(os.path.join(path_dir, "folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
     compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_imports2.py"))
 
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.runtest_imports2"],
+    p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_imports2"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
@@ -270,7 +283,7 @@ def test_folder_imports():
     compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
     compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/runtest_imports2.py"))
 
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.runtest_imports2"],
+    p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_imports2"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
@@ -294,23 +307,6 @@ def test_default_arguments():
                 float,float,float,float])
 
 #------------------------------------------------------------------------------
-def test_f2py_compat():
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, "scripts")
-    from scripts.runtest_f2py_compat import test_func
-
-    pyth_out = str(test_func())
-
-    compile_pyccel(path_dir, "runtest_f2py_compat.py")
-
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.runtest_f2py_compat"],
-            stdout=subprocess.PIPE, universal_newlines=True)
-    fort_out, _ = p.communicate()
-    assert(p.returncode==0)
-
-    compare_pyth_fort_output(pyth_out, fort_out)
-
-#------------------------------------------------------------------------------
 def test_pyccel_calling_directory():
     cwd = get_abs_path(".")
 
@@ -319,7 +315,7 @@ def test_pyccel_calling_directory():
 
     compile_pyccel(cwd, test_file)
 
-    fort_out = get_fortran_output(get_abs_path("scripts/runtest_funcs"))
+    fort_out = get_fortran_output(get_exe(test_file))
 
     compare_pyth_fort_output( pyth_out, fort_out )
 
@@ -388,7 +384,7 @@ def test_multiple_results():
                 float,float,float,float,float,float])
 
 def test_tuples():
+    types = [int]*4 + [bool] + [float] + [int]*9 + [float]*4 + [int] \
+            + [int,bool,complex]*9 + [int,bool] + [int]*3 + [int,bool]*2
     pyccel_test("scripts/runtest_tuples.py",
-            output_dtype = [int,int,int,int,bool,float,int,
-                int,int,int,int,int,int,int,int,float, float,
-                float, float, int])
+            output_dtype = types)

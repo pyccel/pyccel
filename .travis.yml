@@ -1,72 +1,122 @@
 # After changing this file, check it on:
 #   http://lint.travis-ci.org/
 
-# to test different versions of python, check the numpy travis file on:
-#   https://github.com/numpy/numpy/blob/master/.travis.yml
+#==============================================================================
+# Defaults for Linux
+#==============================================================================
 
-language: python
 os: linux
 dist: xenial
-python:
-  - 3.5
-  - 3.6
-  - 3.7
+language: python
+env: PYTHON=python
 
-# command before installation
 before_install:
   - sudo apt-get install gfortran
   - sudo apt-get install libblas-dev liblapack-dev
-#  - sudo apt-get install libcr-dev mpich2
-#  - sudo apt-get install mpich libmpich-dev # libhdf5-mpich-dev
-  - sudo apt-get install libopenmpi-dev openmpi-bin # libhdf5-openmpi-dev
-  - sudo apt-get install default-jre
+  - sudo apt-get install libopenmpi-dev openmpi-bin
 
-# command to install Python library and dependencies
 install:
-  - pip install .
+  - ${PYTHON} -m pip install .
+  - ${PYTHON} -m pip install mpi4py
+  - ${PYTHON} -m pip install "pytest>=4.5"
 
-before_script:
-  - pip install mpi4py
-  - pip install pytest
-  - pip install coverage
-  - mkdir __pytest__
-
-# command to run tests
-script:
-  - cd __pytest__
-  - INSTALL_DIR=$(python -c "import pyccel; print(pyccel.__path__[0])")
-  - SITE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
-  - printf "import coverage; coverage.process_startup()" > ${SITE_DIR}/pyccel_cov.pth
-  - printf "[run]\nparallel = True\nsource = ${INSTALL_DIR}\n[report]\ninclude = ${INSTALL_DIR}/*\n[xml]\noutput = cobertura.xml" > .coveragerc
+before_script:  # Coverage instructions - setup
+  - ${PYTHON} -m pip install coverage
+  - sudo apt-get install default-jre
+  - INSTALL_DIR=$(${PYTHON} -c "import pyccel; print(pyccel.__path__[0])")
+  - SITE_DIR=$(${PYTHON} -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
+  - echo -e "import coverage; coverage.process_startup()" > ${SITE_DIR}/pyccel_cov.pth
+  - echo -e "[run]\nparallel = True\nsource = ${INSTALL_DIR}\n[report]\ninclude = ${INSTALL_DIR}/*\n[xml]\noutput = cobertura.xml" > .coveragerc
   - export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
-  - python -m pytest ../tests/preprocess/test_preprocess.py
-  - python -m pytest ../tests/parser/test_headers.py
-  - python -m pytest ../tests/parser/test_openmp.py
-  - python -m pytest ../tests/parser/test_openacc.py
-  - python -m pytest ../tests/syntax/test_syntax.py
-  - python -m pytest ../tests/errors/test_errors.py
-  - python -m pytest ../tests/warnings/test_warnings.py
-  - python -m pytest ../tests/semantic/test_semantic.py
-  - python -m pytest ../tests/codegen/fcode/test_fcode_codegen.py
-  - python -m pytest ../tests/codegen/pycode/test_pycode_codegen.py
-  - python -m pytest ../tests/complexity/test_complexity.py
-  - python -m pytest ../tests/epyccel -v -m "not parallel"
-  - python -m pytest ../tests/pyccel -v
-  - mpirun -n 4 python -m pytest ../tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel
-#  - mpirun -n 4 python -m pytest ../tests/epyccel -v -m parallel
-# this test must be executed with python, since we are calling mpif90 inside it
-  - python ../tests/internal/test_internal.py
-#  - python ../tests/external/test_external.py
-  - python ../tests/macro/test_macro.py
-#  - python ../tests/test_pyccel.py --execute
-#  - python ../tests/test_pyccel_openmp.py --openmp --execute
-#  - python ../tests/test_pyccel_lapack.py --libs='blas lapack' --execute
-#  - python ../tests/test_pyccel_mpi.py --compiler=mpif90
+
+script:
+  - ${PYTHON} -m pytest -m "not parallel" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
+  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel
+#  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel -v -m parallel
+
+after_script:  # Coverage instructions - collections
   - coverage combine
   - coverage xml
   - rm ${SITE_DIR}/pyccel_cov.pth
-
-after_script:
   - bash <(wget -q -O - https://coverage.codacy.com/get.sh)
-  - cd -
-  - rm -rf __pytest__
+
+#==============================================================================
+# Job matrix (including Windows build)
+#==============================================================================
+
+jobs:
+  include:
+
+  - os: linux
+    python: 3.5
+
+  - os: linux
+    python: 3.6
+
+  - os: linux
+    python: 3.7
+
+  - os: linux
+    python: 3.8
+
+  - os: osx
+    language: c  #'language: python' is an error on Travis CI macOS
+    env: PYTHON=python3 MPI_OPTS="--oversubscribe"
+    before_install:
+#      - brew install gcc
+      - brew install openblas lapack
+      - brew install open-mpi
+    before_script: null
+    after_script : null
+
+  - os: windows
+    language: c  # Python not supported, "language: generic" doesn't start VM
+    before_install:
+      - choco install anaconda3
+      - source /c/tools/Anaconda3/etc/profile.d/conda.sh
+#      - source .travis/RefreshEnv.sh
+      - conda activate
+      #
+      # Change default C compiler from M$ to mingw in distutils.cfg
+      - echo -e "[build]\ncompiler = mingw32" >> /c/tools/Anaconda3/Lib/distutils/distutils.cfg
+      #
+      # Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/
+      - WEB_ADDRESS=https://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64
+      - LIBRARY_DIR=/c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib
+      - curl $WEB_ADDRESS/libblas.dll -o $LIBRARY_DIR/libblas.dll
+      - curl $WEB_ADDRESS/liblapack.dll -o $LIBRARY_DIR/liblapack.dll
+      #
+      # Download MS MPI runtime and SDK
+      - curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe -o msmpisetup.exe
+      - curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi -o msmpisdk.msi
+      #
+      # Install MS MPI
+      - ./msmpisetup.exe -unattend
+      - sleep 5
+      - msiexec //quiet //i msmpisdk.msi
+#      - refreshenv
+      - export MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\\"
+      - export MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
+      - export PATH=$PATH:"C:\\Program Files\\Microsoft MPI\\Bin"
+      #
+      # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
+      - cd "$MSMPI_INC"
+      - sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpi.f90
+      - sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpif.h
+      - gfortran -c -D_WIN64 -D INT_PTR_KIND\(\)=8 -fno-range-check mpi.f90
+      - cd -
+      #
+      # Generate static libmsmpi.a from msmpi.dll
+      - cd "$MSMPI_LIB64"
+      - cp $SYSTEMROOT/SysWOW64/msmpi.dll .
+      - gendef msmpi.dll
+      - dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
+      - cd -
+
+    before_script:
+      # Call f2py once (it will fail) to clear some cache
+      - echo -e "subroutine foo()\nend subroutine\n" > faily.f90
+      - ${PYTHON} -m numpy.f2py -c -m faily faily.f90
+      - rm faily.f90
+
+    after_script : null

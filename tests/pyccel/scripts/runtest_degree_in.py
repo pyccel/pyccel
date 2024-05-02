@@ -1,7 +1,6 @@
-from pyccel.decorators import types, external, stack_array, pure
+from pyccel.decorators import types, stack_array, pure
 
 @pure
-@external
 @types('int')
 @stack_array('tmp')
 def test_degree(degree):

@@ -6,6 +6,7 @@ This file contains some useful functions to compile the generated fortran code
 
 import os
 import subprocess
+import sys
 
 __all__ = ['construct_flags', 'compile_fortran']
 
@@ -59,6 +60,10 @@ def construct_flags(compiler,
     if compiler == "mpif90":
         if debug:
             flags += " -fbounds-check"
+        if sys.platform == "win32":
+            mpiinc = os.environ["MSMPI_INC"].rstrip('\\')
+            mpilib = os.environ["MSMPI_LIB64"].rstrip('\\')
+            flags += ' -D USE_MPI_MODULE -I"{}" -L"{}"'.format(mpiinc, mpilib)
 
     if accelerator is not None:
         if accelerator == "openmp":
@@ -69,8 +74,8 @@ def construct_flags(compiler,
             raise ValueError("Only openmp and openacc are available")
 
     # Construct flags
-    flags += ''.join(' -I{0}'.format(i) for i in includes)
-    flags += ''.join(' -L{0}'.format(i) for i in libdirs)
+    flags += ''.join(' -I"{0}"'.format(i) for i in includes)
+    flags += ''.join(' -L"{0}"'.format(i) for i in libdirs)
 
     return flags
 
@@ -98,7 +103,7 @@ def compile_fortran(filename, compiler, flags,
             binary = '{}.o'.format(f)
 #            binary = "{folder}{binary}.o".format(folder=output,
 #                                binary=os.path.splitext(os.path.basename(filename))[0])
-            mod_file = "{folder}".format(folder=output)
+            mod_file = '"{folder}"'.format(folder=output)
 
     o_code = '-o'
     j_code = ''
@@ -109,6 +114,13 @@ def compile_fortran(filename, compiler, flags,
 
     m_code = ' '.join('{}.o'.format(m) for m in modules)
     libs_flags = ' '.join('-l{}'.format(i) for i in libs)
+
+    filename = '"{}"'.format(filename)  # in case of spaces in path
+    binary = '"{}"'.format(binary)
+
+    if sys.platform == "win32" and compiler == "mpif90":
+        compiler = "gfortran"
+        filename += ' "{}"'.format(os.path.join(os.environ["MSMPI_LIB64"], 'libmsmpi.a'))
 
     cmd = '{0} {1} {2} {3} {4} {5} {6} {7} {8}'.format( \
         compiler, flags, m_code, filename, o_code, binary, libs_flags, j_code, mod_file)

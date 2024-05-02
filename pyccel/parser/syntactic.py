@@ -175,7 +175,7 @@ from sympy import Atom
 from sympy import Expr
 from sympy import Dict
 from sympy import Not
-from sympy import cache
+from sympy.core import cache
 
 errors = Errors()
 #==============================================================================
@@ -534,8 +534,8 @@ class SyntaxParser(BasicParser):
             return Add(first, second, evaluate=False)
         elif stmt.value == '*':
 
-            if isinstance(first, (Tuple, List)):
-                return Dlist(first[0], second)
+            if isinstance(first, (PythonTuple, Tuple, List)):
+                return Dlist(first, second)
             return Mul(first, second, evaluate=False)
         elif stmt.value == '-':
 
@@ -675,8 +675,6 @@ class SyntaxParser(BasicParser):
         is_pure      = False
         is_elemental = False
         is_private   = False
-        is_external  = False
-        is_external_call  = False
         imports      = []
 
         # TODO improve later
@@ -717,7 +715,7 @@ class SyntaxParser(BasicParser):
                     if not arg_name == 'results':
                         msg = '> Wrong argument, given {}'.format(arg_name)
                         raise NotImplementedError(msg)
-                    ls = arg if isinstance(arg, Tuple) else [arg]
+                    ls = arg if isinstance(arg, PythonTuple) else [arg]
                     i = -1
                 else:
                     msg = '> Wrong type, given {}'.format(type(arg))
@@ -767,12 +765,6 @@ class SyntaxParser(BasicParser):
         if 'private' in decorators.keys():
             is_private = True
 
-        if 'external' in decorators.keys():
-            is_external = True
-
-        if 'external_call' in decorators.keys():
-            is_external_call = True
-
         func = FunctionDef(
                name,
                arguments,
@@ -786,8 +778,6 @@ class SyntaxParser(BasicParser):
                is_pure=is_pure,
                is_elemental=is_elemental,
                is_private=is_private,
-               is_external=is_external,
-               is_external_call=is_external_call,
                imports=imports,
                decorators=decorators,
                header=header)
@@ -1085,7 +1075,7 @@ class SyntaxParser(BasicParser):
             var = self._visit(i.name)
             args += [var]
 
-        return Lambda(args, expr)
+        return Lambda(tuple(args), expr)
 
     def _visit_WithNode(self, stmt):
         domain = self._visit(stmt.contexts[0].value)

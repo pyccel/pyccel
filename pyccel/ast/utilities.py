@@ -224,20 +224,6 @@ def get_function_from_ast(ast, func_name):
     return node
 
 #==============================================================================
-def get_external_function_from_ast(ast):
-    nodes   = []
-    others  = []
-    for stmt in ast:
-        if isinstance(stmt, FunctionDef):
-            if stmt.is_external or stmt.is_external_call:
-                nodes += [stmt]
-
-            else:
-                others += [stmt]
-
-    return nodes, others
-
-#==============================================================================
 # TODO: must add a Node Decorator in core
 def build_types_decorator(args, order=None):
     """

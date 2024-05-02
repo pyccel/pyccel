@@ -127,7 +127,7 @@ def as_static_function(func, name=None):
             transpose_stmts = [Comment(f2py_template.format(kind    = int_kind,
                                                             index   = i,
                                                             name    = a.name,
-                                                            index_t = str(a.rank - i - 1)))
+                                                            index_t = str(i)))
                                for i in range(a.rank)]
 
             # Tell f2py that array has C ordering

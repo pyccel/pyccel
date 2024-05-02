@@ -1,3 +1,3 @@
-from project.folder2.mod2 import sum_to_n_squared
+from project.folder2.mod3 import one_hundred_plus_sum_to_n_squared
 
-print(sum_to_n_squared(4))
+print(one_hundred_plus_sum_to_n_squared(4))
