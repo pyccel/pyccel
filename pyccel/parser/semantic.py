@@ -4803,9 +4803,10 @@ class SemanticParser(BasicParser):
             self.insert_import('math', AsName(MathAtan2, 'atan2'))
             return MathAtan2(PythonImag(var), PythonReal(var))
 
-    def _build_SetUpdate(self, expr):
+    def _visit_SetUpdate(self, expr):
         """
         Method to navigate the syntactic DottedName node of an `update()` call.
+
         The purpose of this `_visit` method is to construct new nodes from a syntactic 
         DottedName node. It checks the type of the iterable passed to `update()`.
         If the iterable is an instance of `PythonList`, `PythonSet` or `PythonTuple`, it constructs 
@@ -4813,10 +4814,12 @@ class SemanticParser(BasicParser):
         elements of the iterable. If not, it attempts to construct a syntactic `For` 
         loop to iterate over the iterable object and added its elements to the set 
         object. Finally, it passes to a `_visit()` call for semantic parsing.
+    
         Parameters
         ----------
         expr : DottedName
             The syntactic DottedName node that represent the call to `.update()`
+
         Returns
         -------
         PyccelAstNode
