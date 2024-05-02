@@ -222,6 +222,25 @@ def test_Assign_Between_Allocatables():
     assert error_info.message == ASSIGN_ARRAYS_ONE_ANOTHER
 
 #==============================================================================
+
+def test_stack_array_if(language):
+
+    @stack_array('x')
+    def f(b : bool):
+        import numpy as np
+        if b:
+            x = np.array([1,2,3])
+        else:
+            x = np.array([4,5,6])
+        return x[0]
+
+    # Initialize singleton that stores Pyccel errors
+    f2 = epyccel(f, language=language)
+
+    assert f(True) == f2(True)
+    assert f(False) == f2(False)
+
+#==============================================================================
 if __name__ == '__main__':
 
     for l in ['fortran']:

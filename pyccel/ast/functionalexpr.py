@@ -5,7 +5,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from .basic import Basic
+from .basic import PyccelAstNode
 
 __all__ = (
     'FunctionalFor',
@@ -16,11 +16,41 @@ __all__ = (
 )
 
 #==============================================================================
-class FunctionalFor(Basic):
+class FunctionalFor(PyccelAstNode):
 
-    """."""
-    __slots__ = ('_loops','_expr', '_lhs', '_indices', '_index')
-    _attribute_nodes = ('_loops','_expr', '_lhs', '_indices', '_index')
+    """
+    Represents any generator expression e.g:
+    a = [i for i in range(10)]
+
+    Parameters
+    ----------
+    loops   : CodeBlock/For
+              The loops contained in the expression
+    expr    : Basic
+              The expression at the origin of the expression
+              E.g. 'i' for '[i for i in range(10)]'
+    lhs     : Variable
+              The variable to which the result is assigned
+    indices : list of Variable
+              All iterator targets for the for loops
+    index   : Variable
+              Index of result in rhs
+              E.g.:
+              ```
+              a = [i in range(1,10,2)]
+              ```
+              is translated to:
+              ```
+              Dummy_0 = 0
+              for i in range(1,10,2):
+                  a[Dummy_0]=i
+                  Dummy_0 += 1
+              ```
+              Index is `Dummy_0`
+    """
+    __slots__ = ('_loops','_expr', '_lhs', '_indices','_index',
+            '_dtype','_precision','_rank','_shape','_order')
+    _attribute_nodes = ('_loops','_expr', '_lhs', '_indices','_index')
 
     def __init__(
         self,
@@ -28,7 +58,7 @@ class FunctionalFor(Basic):
         expr=None,
         lhs=None,
         indices=None,
-        index=None,
+        index=None
         ):
         self._loops   = loops
         self._expr    = expr
@@ -36,6 +66,13 @@ class FunctionalFor(Basic):
         self._indices = indices
         self._index   = index
         super().__init__()
+
+        if PyccelAstNode.stage != 'syntactic':
+            self._dtype     = lhs.dtype
+            self._precision = lhs.precision
+            self._rank      = lhs.rank
+            self._shape     = lhs.shape
+            self._order     = lhs.order
 
     @property
     def loops(self):

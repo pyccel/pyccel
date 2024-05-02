@@ -3,7 +3,7 @@
 /* or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. */
 /* --------------------------------------------------------------------------------------- */
 
-#include "pyc_math.h"
+#include "pyc_math_c.h"
 #include <math.h>
 
 /*---------------------------------------------------------------------------*/

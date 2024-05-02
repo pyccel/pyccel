@@ -37,6 +37,8 @@ doc/source
 
 *.swp
 
+pyccel/compilers/*.json
+
 tests/*.pyccel
 tests/*.f90
 tests/*.mod

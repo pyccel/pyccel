@@ -36,6 +36,7 @@ class Parser(object):
         self._syntax_parser   = None
         self._semantic_parser = None
         self._module_parser   = None
+        self._compile_obj     = None
 
         self._input_folder = os.path.dirname(filename)
 
@@ -49,6 +50,11 @@ class Parser(object):
         """ Syntax parser """
         return self._syntax_parser
 
+    @property
+    def compile_obj(self):
+        """ Compile object """
+        return self._compile_obj
+
     @semantic_parser.setter
     def semantic_parser(self, parser):
         assert isinstance(parser, SemanticParser)
@@ -58,6 +64,10 @@ class Parser(object):
     def syntax_parser(self, parser):
         assert isinstance(parser, SyntaxParser)
         self._syntax_parser = parser
+
+    @compile_obj.setter
+    def compile_obj(self, compile_obj):
+        self._compile_obj = compile_obj
 
     @property
     def filename(self):

@@ -6,9 +6,6 @@ import modules.generic_functions as mod
 import modules.generic_functions_2 as mod2
 from pyccel.epyccel import epyccel
 
-def language(request):
-    return request.param
-
 def test_gen_1(language):
     modnew = epyccel(mod, language = language)
     x_expected = mod.tst_gen_1()

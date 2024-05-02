@@ -213,6 +213,8 @@ class Variable(PyccelAstNode):
         self._rank  = rank
         self._shape = self.process_shape(shape)
         self._precision = precision
+        if self._rank < 2:
+            self._order = None
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -617,6 +619,10 @@ class HomogeneousTupleVariable(TupleVariable):
     def __len__(self):
         return self.shape[0]
 
+    def __iter__(self):
+        assert isinstance(self.shape[0], LiteralInteger)
+        return (self[i] for i in range(self.shape[0]))
+
 class InhomogeneousTupleVariable(TupleVariable):
 
     """Represents a tuple variable in the code.
@@ -871,8 +877,8 @@ class VariableAddress(PyccelAstNode):
     _attribute_nodes = ('_variable',)
 
     def __init__(self, variable):
-        if not isinstance(variable, Variable):
-            raise TypeError('variable must be a variable')
+        if not isinstance(variable, (Variable, IndexedElement)):
+            raise TypeError('variable must be a variable or indexed element')
         self._variable = variable
 
         self._shape     = variable.shape

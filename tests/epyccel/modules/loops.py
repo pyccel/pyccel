@@ -120,6 +120,16 @@ def enumerate_on_1d_array( z ):
     return res
 
 # ...
+@types( 'int[:]', 'int' )
+def enumerate_on_1d_array_with_start( z, k ):
+
+    res = 0
+    for i,v in enumerate( z, k ):
+        res += v*i
+
+    return res
+
+# ...
 @types( int )
 def zip_prod( m ):
 

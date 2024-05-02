@@ -13,7 +13,7 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .core      import create_incremented_string
+from .core      import create_incremented_string, Iterable
 
 from .builtins  import PythonRange, PythonTuple
 
@@ -182,6 +182,9 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         sym = sp.Symbol(sym_name)
         symbol_map[sym] = expr
         return sym
+
+    elif isinstance(expr, Iterable):
+        return pyccel_to_sympy(expr.iterable, symbol_map, used_names)
 
     elif isinstance(expr, PythonRange):
         start = pyccel_to_sympy(expr.start, symbol_map, used_names)

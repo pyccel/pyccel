@@ -36,3 +36,6 @@ class Product(PyccelInternalFunction):
     def elements(self):
         """get expression's elements"""
         return self._elements
+
+    def __getitem__(self, indices):
+        return [elem[idx] for idx, elem in zip(indices, self.elements)]

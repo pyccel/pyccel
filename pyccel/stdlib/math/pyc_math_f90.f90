@@ -3,7 +3,7 @@
 ! or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. !
 ! --------------------------------------------------------------------------------------- !
 
-module pyc_math
+module pyc_math_f90
 
 use ISO_C_BINDING
 
@@ -156,4 +156,4 @@ pure function pyc_degrees(rad) result(deg)
 
 end function pyc_degrees
 
-end module pyc_math
+end module pyc_math_f90

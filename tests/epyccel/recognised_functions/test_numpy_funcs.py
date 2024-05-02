@@ -1002,15 +1002,6 @@ def test_floor_phrase(language):
     assert(isclose(f2(-x,y), floor_phrase(-x,y), rtol=RTOL, atol=ATOL))
     assert(isclose(f2(x,-y), floor_phrase(x,-y), rtol=RTOL, atol=ATOL))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_shape_indexed(language):
     @types('int[:]')
     def test_shape_1d(f):
@@ -1034,15 +1025,6 @@ def test_shape_indexed(language):
     assert(f1(x1) == test_shape_1d(x1))
     assert(f2(x2) == test_shape_2d(x2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_shape_property(language):
     @types('int[:]')
     def test_shape_1d(f):
@@ -1064,15 +1046,6 @@ def test_shape_property(language):
     assert(f1(x1) == test_shape_1d(x1))
     assert(all(isclose(f2(x2), test_shape_2d(x2))))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_shape_tuple_output(language):
     @types('int[:]')
     def test_shape_1d(f):
@@ -1105,15 +1078,6 @@ def test_shape_tuple_output(language):
     f2 = epyccel(test_shape_2d, language = language)
     assert(f2(x2)   == test_shape_2d(x2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_shape_real(language):
     @types('real[:]')
     def test_shape_1d(f):
@@ -1138,15 +1102,6 @@ def test_shape_real(language):
     assert(f1(x1) == test_shape_1d(x1))
     assert(f2(x2) == test_shape_2d(x2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_shape_int(language):
     @types('int[:]')
     def test_shape_1d(f):
@@ -1172,15 +1127,6 @@ def test_shape_int(language):
     assert(f1(x1) == test_shape_1d(x1))
     assert(f2(x2) == test_shape_2d(x2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_shape_bool(language):
     @types('bool[:]')
     def test_shape_1d(f):
@@ -1205,15 +1151,6 @@ def test_shape_bool(language):
     assert(f1(x1) == test_shape_1d(x1))
     assert(f2(x2) == test_shape_2d(x2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_full_basic_int(language):
     @types('int')
     def create_full_shape_1d(n):
@@ -1254,15 +1191,6 @@ def test_full_basic_int(language):
     assert(f_arg_names(size) == create_full_arg_names(size))
     assert matching_types(f_arg_names(size)[0], create_full_arg_names(size)[0])
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_full_basic_real(language):
     @types('int')
     def create_full_shape_1d(n):
@@ -1304,15 +1232,6 @@ def test_full_basic_real(language):
     assert(f_arg_names(val)     == create_full_arg_names(val))
     assert matching_types(f_arg_names(val)[0], create_full_arg_names(val)[0])
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_full_basic_bool(language):
     @types('int')
     def create_full_shape_1d(n):
@@ -1354,15 +1273,6 @@ def test_full_basic_bool(language):
     assert(f_arg_names(val)     == create_full_arg_names(val))
     assert matching_types(f_arg_names(val)[0], create_full_arg_names(val)[0])
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_full_order(language):
     @types('int','int')
     def create_full_shape_C(n,m):
@@ -1471,15 +1381,6 @@ def test_full_dtype(language):
     assert(isclose(     f_real_complex128(val_float)       ,      create_full_val_real_complex128(val_float), rtol=RTOL, atol=ATOL))
     assert matching_types(f_real_complex128(val_float), create_full_val_real_complex128(val_float))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_full_combined_args(language):
     def create_full_1_shape():
         from numpy import full, shape
@@ -1527,15 +1428,6 @@ def test_full_combined_args(language):
     assert(isclose(     f3_val()  ,      create_full_3_val()        , rtol=RTOL, atol=ATOL))
     assert matching_types(f3_val(), create_full_3_val())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_empty_basic(language):
     @types('int')
     def create_empty_shape_1d(n):
@@ -1558,15 +1450,6 @@ def test_empty_basic(language):
     f_shape_2d  = epyccel(create_empty_shape_2d, language = language)
     assert(     f_shape_2d(size)      ==      create_empty_shape_2d(size))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_empty_order(language):
     @types('int','int')
     def create_empty_shape_C(n,m):
@@ -1648,15 +1531,6 @@ def test_empty_dtype(language):
     f_real_complex128   = epyccel(create_empty_val_complex128, language = language)
     assert matching_types(f_real_complex128(), create_empty_val_complex128())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_empty_combined_args(language):
     def create_empty_1_shape():
         from numpy import empty, shape
@@ -1701,15 +1575,6 @@ def test_empty_combined_args(language):
     assert(all(isclose(     f3_shape(),      create_empty_3_shape()      )))
     assert matching_types(f3_val(), create_empty_3_val())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_ones_basic(language):
     @types('int')
     def create_ones_shape_1d(n):
@@ -1732,15 +1597,6 @@ def test_ones_basic(language):
     f_shape_2d  = epyccel(create_ones_shape_2d, language = language)
     assert(     f_shape_2d(size)      ==      create_ones_shape_2d(size))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_ones_order(language):
     @types('int','int')
     def create_ones_shape_C(n,m):
@@ -1830,15 +1686,6 @@ def test_ones_dtype(language):
     assert(isclose(     f_real_complex128() ,      create_ones_val_complex128(), rtol=RTOL, atol=ATOL))
     assert matching_types(f_real_complex128(), create_ones_val_complex128())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_ones_combined_args(language):
     def create_ones_1_shape():
         from numpy import ones, shape
@@ -1886,15 +1733,6 @@ def test_ones_combined_args(language):
     assert(isclose(     f3_val()  ,      create_ones_3_val()        , rtol=RTOL, atol=ATOL))
     assert matching_types(f3_val(), create_ones_3_val())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_zeros_basic(language):
     @types('int')
     def create_zeros_shape_1d(n):
@@ -1917,15 +1755,6 @@ def test_zeros_basic(language):
     f_shape_2d  = epyccel(create_zeros_shape_2d, language = language)
     assert(     f_shape_2d(size)      ==      create_zeros_shape_2d(size))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_zeros_order(language):
     @types('int','int')
     def create_zeros_shape_C(n,m):
@@ -2015,15 +1844,6 @@ def test_zeros_dtype(language):
     assert(isclose(     f_real_complex128() ,      create_zeros_val_complex128(), rtol=RTOL, atol=ATOL))
     assert matching_types(f_real_complex128(), create_zeros_val_complex128())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_zeros_combined_args(language):
     def create_zeros_1_shape():
         from numpy import zeros, shape
@@ -2071,15 +1891,6 @@ def test_zeros_combined_args(language):
     assert(isclose(     f3_val()  ,      create_zeros_3_val()        , rtol=RTOL, atol=ATOL))
     assert matching_types(f3_val(), create_zeros_3_val())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_array(language):
     def create_array_list_val():
         from numpy import array
@@ -2113,7 +1924,7 @@ def test_array(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="rand not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2134,7 +1945,7 @@ def test_rand_basic(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="rand not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2201,7 +2012,7 @@ def test_rand_args(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="rand not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2318,7 +2129,7 @@ def test_randint_expr(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="sum not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2337,7 +2148,7 @@ def test_sum_int(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="sum not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2356,7 +2167,7 @@ def test_sum_real(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="sum not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2377,7 +2188,7 @@ def test_sum_phrase(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="sum not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2395,7 +2206,7 @@ def test_sum_property(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="amin not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2414,7 +2225,7 @@ def test_min_int(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="amin not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2433,7 +2244,7 @@ def test_min_real(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="amin not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2454,7 +2265,7 @@ def test_min_phrase(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="amin not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2472,7 +2283,7 @@ def test_min_property(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="amax not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2491,7 +2302,7 @@ def test_max_int(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="amax not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2510,7 +2321,7 @@ def test_max_real(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="amax not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2532,7 +2343,7 @@ def test_max_phrase(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="amax not implemented"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -2547,15 +2358,6 @@ def test_max_property(language):
     x = randint(99,size=10)
     assert(f1(x) == max_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 
 def test_full_like_basic_int(language):
     @types('int')
@@ -2601,15 +2403,6 @@ def test_full_like_basic_int(language):
     assert(f_arg_names(size) == create_full_like_arg_names(size))
     assert matching_types(f_arg_names(size)[0], create_full_like_arg_names(size)[0])
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_full_like_basic_real(language):
     @types('real')
     def create_full_like_shape_1d(n):
@@ -2709,15 +2502,6 @@ def test_full_like_basic_bool(language):
     assert(f_arg_names(val)     == create_full_like_arg_names(val))
     assert matching_types(f_arg_names(val)[0], create_full_like_arg_names(val)[0])
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_full_like_order(language):
     @types('int')
     def create_full_like_shape_C(n):
@@ -2835,15 +2619,6 @@ def test_full_like_dtype(language):
     assert(isclose(     f_real_complex128(val_float)       ,      create_full_like_val_real_complex128(val_float), rtol=RTOL, atol=ATOL))
     assert matching_types(f_real_complex128(val_float), create_full_like_val_real_complex128(val_float))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_full_like_combined_args(language):
     def create_full_like_1_shape():
         from numpy import full_like, shape, array
@@ -2898,15 +2673,6 @@ def test_full_like_combined_args(language):
     assert(isclose(     f3_val()  ,      create_full_like_3_val()        , rtol=RTOL, atol=ATOL))
     assert matching_types(f3_val(), create_full_like_3_val())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_empty_like_basic(language):
     @types('int')
     def create_empty_like_shape_1d(n):
@@ -2931,15 +2697,6 @@ def test_empty_like_basic(language):
     f_shape_2d  = epyccel(create_empty_like_shape_2d, language = language)
     assert(     f_shape_2d(size)      ==      create_empty_like_shape_2d(size))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_empty_like_order(language):
     @types('int','int')
     def create_empty_like_shape_C(n,m):
@@ -3040,15 +2797,6 @@ def test_empty_like_dtype(language):
     f_real_complex128   = epyccel(create_empty_like_val_complex128, language = language)
     assert matching_types(f_real_complex128(), create_empty_like_val_complex128())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_empty_like_combined_args(language):
 
     def create_empty_like_1_shape():
@@ -3105,15 +2853,6 @@ def test_empty_like_combined_args(language):
     assert(all(isclose(     f3_shape(),      create_empty_like_3_shape()      )))
     assert matching_types(f3_val(), create_empty_like_3_val())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_ones_like_basic(language):
     @types('int')
     def create_ones_like_shape_1d(n):
@@ -3138,15 +2877,6 @@ def test_ones_like_basic(language):
     f_shape_2d  = epyccel(create_ones_like_shape_2d, language = language)
     assert(     f_shape_2d(size)      ==      create_ones_like_shape_2d(size))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_ones_like_order(language):
     @types('int','int')
     def create_ones_like_shape_C(n,m):
@@ -3255,15 +2985,6 @@ def test_ones_like_dtype(language):
     assert(isclose(     f_real_complex128() ,      create_ones_like_val_complex128(), rtol=RTOL, atol=ATOL))
     assert matching_types(f_real_complex128(), create_ones_like_val_complex128())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_ones_like_combined_args(language):
 
     def create_ones_like_1_shape():
@@ -3323,15 +3044,6 @@ def test_ones_like_combined_args(language):
     assert(isclose(     f3_val()  ,      create_ones_like_3_val()        , rtol=RTOL, atol=ATOL))
     assert matching_types(f3_val(), create_ones_like_3_val())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_zeros_like_basic(language):
     @types('int')
     def create_zeros_like_shape_1d(n):
@@ -3356,15 +3068,6 @@ def test_zeros_like_basic(language):
     f_shape_2d  = epyccel(create_zeros_like_shape_2d, language = language)
     assert(     f_shape_2d(size)      ==      create_zeros_like_shape_2d(size))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_zeros_like_order(language):
     @types('int','int')
     def create_zeros_like_shape_C(n,m):
@@ -3472,15 +3175,6 @@ def test_zeros_like_dtype(language):
     assert(isclose(     f_real_complex128() ,      create_zeros_like_val_complex128(), rtol=RTOL, atol=ATOL))
     assert matching_types(f_real_complex128(), create_zeros_like_val_complex128())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_zeros_like_combined_args(language):
 
     def create_zeros_like_1_shape():
@@ -3691,10 +3385,8 @@ def test_numpy_real_array_like_1d(language):
     def get_real(arr):
         from numpy import real, shape
         a = real(arr)
-        return shape(a)[0], a[0]
-        # Tuples not implemented yet, once be implemented we can use:
-        # s = shape(a)
-        # return len(s), s[0], a[0]
+        s = shape(a)
+        return len(s), s[0], a[0]
 
     size = 5
 
@@ -3763,10 +3455,8 @@ def test_numpy_real_array_like_2d(language):
     def get_real(arr):
         from numpy import real, shape
         a = real(arr)
-        return shape(a)[0], shape(a)[1], a[0,1], a[1,0]
-        # Tuples not implemented yet, once be implemented we can use:
-        # s = shape(a)
-        # return len(s), s[0], s[1], a[0,1], a[1,0]
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     size = (2, 5)
 
@@ -3929,10 +3619,7 @@ def test_numpy_imag_scalar(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("imag handles types in __new__ so it "
                 "cannot be used in a translated interface in python")),
@@ -3957,10 +3644,8 @@ def test_numpy_imag_array_like_1d(language):
     def get_imag(arr):
         from numpy import imag, shape
         a = imag(arr)
-        return shape(a)[0], a[0]
-        # Tuples not implemented yet, once be implemented we can use:
-        # s = shape(a)
-        # return len(s), s[0], a[0]
+        s = shape(a)
+        return len(s), s[0], a[0]
 
     size = 5
 
@@ -4001,10 +3686,7 @@ def test_numpy_imag_array_like_1d(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        ),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("imag handles types in __new__ so it "
                 "cannot be used in a translated interface in python")),
@@ -4029,10 +3711,8 @@ def test_numpy_imag_array_like_2d(language):
     def get_imag(arr):
         from numpy import imag, shape
         a = imag(arr)
-        return shape(a)[0], shape(a)[1], a[0,1], a[1,0]
-        # Tuples not implemented yet, once be implemented we can use:
-        # s = shape(a)
-        # return len(s), s[0], s[1], a[0,1], a[1,0]
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     size = (2, 5)
 
@@ -4173,10 +3853,8 @@ def test_numpy_mod_array_like_1d(language):
     def get_mod(arr):
         from numpy import mod, shape
         a = mod(arr, arr)
-        return shape(a)[0], a[0], a[1]
-        # Tuples not implemented yet, once be implemented we can use:
-        # s = shape(a)
-        # return len(s), s[0], a[0]
+        s = shape(a)
+        return len(s), s[0], a[0]
 
     size = 5
 
@@ -4232,10 +3910,8 @@ def test_numpy_mod_array_like_2d(language):
     def get_mod(arr):
         from numpy import mod, shape
         a = mod(arr, arr)
-        return shape(a)[0], shape(a)[1], a[0,1], a[1,0]
-        # Tuples not implemented yet, once be implemented we can use:
-        # s = shape(a)
-        # return len(s), s[0], s[1], a[0,1], a[1,0]
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     size = (2, 5)
 

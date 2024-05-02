@@ -21,6 +21,7 @@ from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
+from .variable  import IndexedElement
 
 __all__ = (
     'PythonReal',
@@ -253,20 +254,37 @@ class PythonEnumerate(Basic):
     Represents the enumerate stmt
 
     """
-    __slots__ = ('_element',)
-    _attribute_nodes = ('_element',)
+    __slots__ = ('_element','_start')
+    _attribute_nodes = ('_element','_start')
     name = 'enumerate'
 
-    def __init__(self, arg):
+    def __init__(self, arg, start = None):
         if PyccelAstNode.stage != "syntactic" and \
                 not isinstance(arg, PyccelAstNode):
             raise TypeError('Expecting an arg of valid type')
         self._element = arg
+        self._start   = start or LiteralInteger(0)
         super().__init__()
 
     @property
     def element(self):
         return self._element
+
+    @property
+    def start(self):
+        """ Returns the value from which the indexing starts
+        """
+        return self._start
+
+    def __getitem__(self, index):
+        return [PyccelAdd(index, self.start, simplify=True),
+                self.element[index]]
+
+    @property
+    def length(self):
+        """ Return the length of the enumerated object
+        """
+        return PythonLen(self.element)
 
 #==============================================================================
 class PythonFloat(PyccelAstNode):
@@ -463,21 +481,35 @@ class PythonList(PythonTuple):
 class PythonMap(Basic):
     """ Represents the map stmt
     """
-    __slots__ = ('_args',)
-    _attribute_nodes = ('_args',)
+    __slots__ = ('_func','_func_args')
+    _attribute_nodes = ('_func','_func_args')
     name = 'map'
 
-    def __init__(self, *args):
-        if len(args)<2:
-            raise TypeError('wrong number of arguments')
-        self._args = args
+    def __init__(self, func, func_args):
+        self._func = func
+        self._func_args = func_args
         super().__init__()
 
     @property
-    def args(self):
+    def func(self):
         """ Arguments of the map
         """
-        return self._args
+        return self._func
+
+    @property
+    def func_args(self):
+        """ Arguments of the function
+        """
+        return self._func_args
+
+    def __getitem__(self, index):
+        return self.func, IndexedElement(self.func_args, index)
+
+    @property
+    def length(self):
+        """ Return the length of the resulting object
+        """
+        return PythonLen(self.func_args)
 
 #==============================================================================
 class PythonPrint(Basic):
@@ -560,6 +592,9 @@ class PythonRange(Basic):
     def step(self):
         return self._step
 
+    def __getitem__(self, index):
+        return index
+
 
 #==============================================================================
 class PythonZip(PyccelInternalFunction):
@@ -593,6 +628,9 @@ class PythonZip(PyccelInternalFunction):
         """ Length of the shortest zip argument
         """
         return self._length
+
+    def __getitem__(self, index):
+        return [a[index] for a in self.args]
 
 #==============================================================================
 class PythonAbs(PyccelInternalFunction):
@@ -774,4 +812,5 @@ builtin_functions_dict = {
     'max'      : PythonMax,
     'min'      : PythonMin,
     'not'      : PyccelNot,
+    'map'      : PythonMap
 }
