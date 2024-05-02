@@ -18,19 +18,19 @@ def test_int_int_1(modnew):
     x = modnew.test_int_int_1()
     assert x == x_expected
 
-def test_real_1(modnew):
-    x_expected = mod.test_real_1()
-    x = modnew.test_real_1()
+def test_float_1(modnew):
+    x_expected = mod.test_float_1()
+    x = modnew.test_float_1()
     assert x == x_expected
 
-def test_real_2(modnew):
-    x_expected = mod.test_real_2()
-    x = modnew.test_real_2()
+def test_float_2(modnew):
+    x_expected = mod.test_float_2()
+    x = modnew.test_float_2()
     assert x == x_expected
 
-def test_real_3(modnew):
-    x_expected = mod.test_real_3()
-    x = modnew.test_real_3()
+def test_float_3(modnew):
+    x_expected = mod.test_float_3()
+    x = modnew.test_float_3()
     assert x == x_expected
 
 def test_valuedarg_1(modnew):
@@ -38,14 +38,19 @@ def test_valuedarg_1(modnew):
     x = modnew.test_valuedarg_1()
     assert x == x_expected
 
-def test_real_real_int_1(modnew):
-    x_expected = mod.test_real_real_int_1()
-    x = modnew.test_real_real_int_1()
+def test_float_float_int_1(modnew):
+    x_expected = mod.test_float_float_int_1()
+    x = modnew.test_float_float_int_1()
     assert x == x_expected
 
-def test_real_4(modnew):
-    x_expected = mod.test_real_4()
-    x = modnew.test_real_4()
+def test_float_4(modnew):
+    x_expected = mod.test_float_4()
+    x = modnew.test_float_4()
+    assert x == x_expected
+
+def test_float_5(modnew):
+    x_expected = mod.test_float_5()
+    x = modnew.test_float_5()
     assert x == x_expected
 
 def test_valuedarg_2(modnew):
@@ -53,9 +58,9 @@ def test_valuedarg_2(modnew):
     x = modnew.test_valuedarg_2()
     assert x == x_expected
 
-def test_real_real_int_2(modnew):
-    x_expected = mod.test_real_real_int_2()
-    x = modnew.test_real_real_int_2()
+def test_float_float_int_2(modnew):
+    x_expected = mod.test_float_float_int_2()
+    x = modnew.test_float_float_int_2()
     assert x == x_expected
 
 def test_euler(modnew):

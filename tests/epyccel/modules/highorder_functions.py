@@ -17,11 +17,11 @@ def f2(a):
 def f3(a):
     return a * 5
 
-#$ header function f4(int, real)
+#$ header function f4(int, float)
 def f4(a, b):
     return a + b
 
-#$ header function f5(real, real, real)
+#$ header function f5(float, float, float)
 def f5(a, b, c):
     return a * b + c
 
@@ -29,13 +29,17 @@ def f5(a, b, c):
 def f6(a, b):
     return a * 5 + b
 
-#$ header function f7(real, real)
+#$ header function f7(float, float)
 def f7(a, b):
     return a * 5 + b
 
 #$ header function f8()
 def f8():
     return 0.5
+
+#$ header function f9()
+def f9():
+    return 0.5, 0.3
 
 #$ header function high_int_1((int)(int), int)
 def high_int_1(function, a):
@@ -48,18 +52,18 @@ def high_int_int_1(function1, function2, a):
     y = function2(a)
     return x + y
 
-#$ header function high_real_1((real)(int, real), int, real)
-def high_real_1(function, a, b):
+#$ header function high_float_1((float)(int, float), int, float)
+def high_float_1(function, a, b):
     x = function(a, b)
     return x
 
-#$ header function high_real_2((real)(real, real), real, real)
-def high_real_2(function, a, b):
+#$ header function high_float_2((float)(float, float), float, float)
+def high_float_2(function, a, b):
     x = function(a, b)
     return x
 
-#$ header function high_real_3((real)())
-def high_real_3(function):
+#$ header function high_float_3((float)())
+def high_float_3(function):
     x = function()
     return x
 
@@ -68,23 +72,28 @@ def high_valuedarg_1(a, function=f1):
     x = function(a)
     return x
 
-#$ header function high_real_real_int_1((real)(real, real), (real)(int, real), (int)(int))
-def high_real_real_int_1(func1, func2, func3):
+#$ header function high_float_float_int_1((float)(float, float), (float)(int, float), (int)(int))
+def high_float_float_int_1(func1, func2, func3):
     x = func1(1.1, 11.2) + func2(11, 10.2) + func3(10)
     return x
 
-@types('(real)()')
-def high_real_4(function):
+@types('(float)()')
+def high_float_4(function):
     x = function()
     return x
+
+#$ header function high_float_5((float,float)())
+def high_float_5(function):
+    x,y = function()
+    return x+y
 
 @types('int', '(int)(int)')
 def high_valuedarg_2(a, function=f1):
     x = function(a)
     return x
 
-@types('(real)(real, real)', '(real)(int, real)', '(int)(int)')
-def high_real_real_int_2(func1, func2, func3):
+@types('(float)(float, float)', '(float)(int, float)', '(int)(int)')
+def high_float_float_int_2(func1, func2, func3):
     x = func1(1.1, 11.2) + func2(11, 10.2) + func3(10)
     return x
 
@@ -98,19 +107,19 @@ def test_int_int_1():
     x = high_int_int_1(f1, f2, 10)
     return x
 
-#$ header function test_real_1()
-def test_real_1():
-    x = high_real_1(f4, 10, 10.5)
+#$ header function test_float_1()
+def test_float_1():
+    x = high_float_1(f4, 10, 10.5)
     return x
 
-#$ header function test_real_2()
-def test_real_2():
-    x = high_real_2(f7, 999.11, 10.5)
+#$ header function test_float_2()
+def test_float_2():
+    x = high_float_2(f7, 999.11, 10.5)
     return x
 
-#$ header function test_real_3()
-def test_real_3():
-    x = high_real_3(f8)
+#$ header function test_float_3()
+def test_float_3():
+    x = high_float_3(f8)
     return x
 
 #$ header function test_valuedarg_1()
@@ -118,14 +127,19 @@ def test_valuedarg_1():
     x = high_valuedarg_1(2)
     return x
 
-#$ header function test_real_real_int_1()
-def test_real_real_int_1():
-    x = high_real_real_int_1(f7, f4, f3)
+#$ header function test_float_float_int_1()
+def test_float_float_int_1():
+    x = high_float_float_int_1(f7, f4, f3)
     return x
 
 @types()
-def test_real_4():
-    x = high_real_4(f8)
+def test_float_4():
+    x = high_float_4(f8)
+    return x
+
+#$ header function test_float_5()
+def test_float_5():
+    x = high_float_5(f9)
     return x
 
 @types()
@@ -134,8 +148,8 @@ def test_valuedarg_2():
     return x
 
 @types()
-def test_real_real_int_2():
-    x = high_real_real_int_2(f7, f4, f3)
+def test_float_float_int_2():
+    x = high_float_float_int_2(f7, f4, f3)
     return x
 
 def euler (dydt: '()(float, const float[:], float[:])',

@@ -15,7 +15,7 @@ from .basic     import Basic, PyccelAstNode
 
 from .datatypes import DataType, default_precision
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
-from .datatypes import NativeBool, NativeString, NativeGeneric
+from .datatypes import NativeBool, NativeString
 
 from .core      import FunctionDefArgument
 from .core      import FunctionCall, FunctionDef, FunctionAddress
@@ -34,7 +34,6 @@ __all__ = (
 # --------- CLASSES -----------
 #
     'PyccelPyObject',
-    'PyccelPyArrayObject',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',
@@ -60,14 +59,6 @@ class PyccelPyObject(DataType):
     class used to hold python objects"""
     __slots__ = ()
     _name = 'pyobject'
-
-class PyccelPyArrayObject(DataType):
-    """ Datatype representing a PyArrayObject which is the
-    class used to hold numpy objects"""
-    __slots__ = ()
-    _name = 'pyarrayobject'
-
-PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
 
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes
@@ -120,7 +111,6 @@ pytype_parse_registry = {
     (NativeBool(), 4)          : 'p',
     (NativeString(), 0)        : 's',
     (PyccelPyObject(), 0)      : 'O',
-    (PyccelPyArrayObject(), 0) : 'O!',
     }
 
 class PyArg_ParseTupleNode(Basic):
@@ -178,10 +168,6 @@ class PyArg_ParseTupleNode(Basic):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
                           symbol=c_func_args, severity='warning')
 
-        parse_args = [[PyArray_Type, a] if isinstance(a, Variable) and a.dtype is PyccelPyArrayObject()
-                else [a] for a in parse_args]
-        parse_args = [a for arg in parse_args for a in arg]
-
         self._pyarg      = python_func_args
         self._pykwarg    = python_func_kwargs
         self._parse_args = parse_args
@@ -237,12 +223,17 @@ class PyArg_ParseTupleNode(Basic):
 
 class PyBuildValueNode(PyccelAstNode):
     """
-    Represents a call to the function from Python.h which create a new value based on a format string
+    Represents a call to the function PyBuildValueNode.
+
+    The function PyBuildValueNode can be found in Python.h.
+    It describes the creation of a new Python object based
+    on a format string. More details can be found in Python's
+    docs.
 
     Parameters
-    ---------
-    parse_args: list of Variable
-        List of arguments which the result will be buit from
+    ----------
+    result_args : list of Variable
+        List of arguments which the result will be built from.
     """
     __slots__ = ('_flags','_result_args')
     _attribute_nodes = ('_result_args',)
@@ -270,17 +261,20 @@ class PyBuildValueNode(PyccelAstNode):
 #-------------------------------------------------------------------
 class PyModule_AddObject(PyccelAstNode):
     """
-    Represents a call to the function from Python.h which adds a
-    PythonObject to a module
+    Represents a call to the PyModule_AddObject function.
+
+    The PyModule_AddObject function can be found in Python.h.
+    It adds a PythonObject to a module. More information about
+    this function can be found in Python's documentation.
 
     Parameters
-    ---------
+    ----------
     mod_name : str
-                The name of the variable containing the module
+                The name of the variable containing the module.
     name : str
-                The name of the variable being added to the module
+                The name of the variable being added to the module.
     variable : Variable
-                The variable containing the PythonObject
+                The variable containing the PythonObject.
     """
     __slots__ = ('_mod_name','_name','_var')
     _attribute_nodes = ('_name','_var')
@@ -293,7 +287,7 @@ class PyModule_AddObject(PyccelAstNode):
         if not isinstance(name, str):
             raise TypeError("Name must be a string")
         if not isinstance(variable, Variable) or \
-                variable.dtype not in (PyccelPyObject(), PyccelPyArrayObject()):
+                variable.dtype is not PyccelPyObject():
             raise TypeError("Variable must be a PyObject Variable")
         self._mod_name = mod_name
         self._name = name
@@ -531,23 +525,3 @@ def scalar_object_check(py_object, c_object):
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
 
     return FunctionCall(check_func, [py_object])
-
-# This registry is used for interface management,
-# mapping each data type to a given flag
-# Those flags are used in a bitset #TODO
-flags_registry = {
-    (NativeInteger(), 4)       : 1,
-    (NativeInteger(), 8)       : 2,
-    (NativeInteger(), 2)       : 3,
-    (NativeInteger(), 1)       : 4,
-    (NativeInteger(), -1)      : 5,
-    (NativeFloat(), 8)         : 6,
-    (NativeFloat(), 4)         : 7,
-    (NativeFloat(), -1)        : 8,
-    (NativeComplex(), 4)       : 9,
-    (NativeComplex(), 8)       : 10,
-    (NativeComplex(), -1)      : 11,
-    (NativeBool(), 4)          : 12,
-    (NativeBool(), -1)         : 12,
-    (NativeString(), 0)        : 13
-}
