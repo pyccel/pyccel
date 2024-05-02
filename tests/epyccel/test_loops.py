@@ -35,7 +35,7 @@ def test_double_loop_on_2d_array_C():
     y = np.ones ( (11,4), dtype='i' )
 
     f1( x )
-    f2( y.transpose() )
+    f2( y )
     assert np.array_equal( x, y )
 
 def test_double_loop_on_2d_array_F():
@@ -59,7 +59,7 @@ def test_product_loop_on_2d_array_C():
     y = np.ones ( (11,4), dtype='i' )
 
     f1( x )
-    f2( y.transpose() )
+    f2( y )
     assert np.array_equal( x, y )
 
 def test_product_loop_on_2d_array_F():

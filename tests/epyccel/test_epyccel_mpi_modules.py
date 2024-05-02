@@ -1,17 +1,19 @@
-from pyccel.epyccel import epyccel
 from mpi4py import MPI
+import pytest
 import numpy as np
 
+from pyccel.epyccel import epyccel
+
+#==============================================================================
+@pytest.mark.parallel
 def test_module_1():
     import modules.Module_1 as mod
 
     modnew = epyccel(mod, comm=MPI.COMM_WORLD)
 
-    from numpy import zeros
-
     # ...
-    x_expected = zeros(5)
-    x          = zeros(5)
+    x_expected = np.zeros(5)
+    x          = np.zeros(5)
 
     mod.f(x_expected)
     mod.g(x_expected)
@@ -22,6 +24,8 @@ def test_module_1():
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
 
+#==============================================================================
+@pytest.mark.parallel
 def test_module_2():
     import modules.Module_2 as mod
 
@@ -38,6 +42,3 @@ def test_module_2():
 
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
-
-test_module_1()
-test_module_2()

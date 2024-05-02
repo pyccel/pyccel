@@ -71,6 +71,7 @@ from pyccel.ast import inline, subs, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
 
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
+from pyccel.ast.core      import AstFunctionResultError
 from pyccel.ast.datatypes import sp_dtype, str_dtype
 
 
@@ -223,6 +224,9 @@ class SemanticParser(BasicParser):
 
         try:
             ast = self._visit(ast, **settings)
+        except AstFunctionResultError:
+            print("Array return arguments are currently not supported")
+            raise
         except Exception as e:
             errors.check()
 #            if self.show_traceback:
@@ -2598,7 +2602,15 @@ class SemanticParser(BasicParser):
 
                         i_fa += 1
             # ...
-           
+
+            # Raise an error if one of the return arguments is either:
+            #   a) a pointer
+            #   b) array which is not among arguments, hence intent(out)
+            for r in results:
+                if r.is_pointer:
+                    raise AstFunctionResultError(r)
+                elif (r not in args) and r.rank > 0:
+                    raise AstFunctionResultError(r)
 
             func = FunctionDef(name,
                     args,

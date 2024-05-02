@@ -201,6 +201,16 @@ class Shape(Array):
     def order(self):
         return 'C'
 
+    def __str__(self):
+        return self._sympystr(str)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        if self.index:
+            return 'Shape({},{})'.format(sstr(self.arg),sstr(self.index))
+        else:
+            return 'Shape({})'.format(sstr(self.arg))
+
     def fprint(self, printer, lhs = None):
         """Fortran print."""
 

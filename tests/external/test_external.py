@@ -3,7 +3,7 @@
 # TODO test if compiler exists before running mpi, openacc
 #      execute the binary file
 
-from pyccel.codegen.utilities import execute_pyccel
+from pyccel.codegen.pipeline import execute_pyccel
 import os
 
 def run(test_dir , **settings):

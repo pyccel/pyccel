@@ -21,6 +21,26 @@ def test_module_1():
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
 
+def test_local_module_1():
+    import Module_1 as mod
+
+    modnew = epyccel(mod)
+
+    from numpy import zeros
+
+    # ...
+    x_expected = zeros(5)
+    x          = zeros(5)
+
+    mod.f(x_expected)
+    mod.g(x_expected)
+
+    modnew.f(x)
+    modnew.g(x)
+
+    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
+    # ...
+
 def test_module_2():
     import modules.Module_2 as mod
 

@@ -54,7 +54,7 @@ from redbaron import YieldNode
 from redbaron import YieldAtomNode
 from redbaron import BreakNode, ContinueNode
 from redbaron import GetitemNode, SliceNode
-from redbaron import ImportNode, FromImportNode
+from redbaron import FromImportNode
 from redbaron import DottedAsNameNode, DecoratorNode
 from redbaron import NameAsNameNode
 from redbaron import LambdaNode

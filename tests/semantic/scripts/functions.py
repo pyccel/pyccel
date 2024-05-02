@@ -13,14 +13,24 @@ def decr(x):
     y = x - 1
     return y
 
+# TODO [YG, 30.01.2020] function behavior in Python not correct:
+#      must change to x += 1
+#
 #$ header function incr_array(int [:])
 def incr_array(x):
     x = x + 1
 
-#$ header function decr_array(int [:]) results(int [:])
+##$ header function decr_array(int [:]) results(int [:])
+#def decr_array(x):
+#    y = x - 1
+#    return y
+
+# TODO [YG, 30.01.2020] function behavior in Python not correct:
+#      must change to x -= 1
+#
+#$ header function decr_array(int [:])
 def decr_array(x):
-    y = x - 1
-    return y
+    x = x - 1
 
 #$ header function f1(int, int, int) results(int)
 def f1(x, n=2, m=None):

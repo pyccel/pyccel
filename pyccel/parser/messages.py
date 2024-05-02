@@ -73,6 +73,7 @@ PYCCEL_MISSING_HEADER = 'Cannot find associated header'
 MACRO_MISSING_HEADER_OR_FUNC = 'Cannot find associated header/FunctionDef to macro'
 PYCCEL_UNFOUND_IMPORTED_MODULE = 'Unable to import'
 FOUND_DUPLICATED_IMPORT = 'Duplicated import '
+PYCCEL_UNEXPECTED_IMPORT = 'Pyccel has not correctly handled "import module" statement. Try again with "from module import function" syntax'
 
 IMPORTING_EXISTING_IDENTIFIED = \
         'Trying to import an identifier that already exists in the namespace. Hint: use import as'
