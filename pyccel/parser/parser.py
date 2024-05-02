@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import copy
 from collections import OrderedDict
 
 from pyccel.parser.base      import get_filename_from_import
@@ -28,6 +29,10 @@ class Parser(object):
 
         self._output_folder = kwargs.pop('output_folder', '')
         self._input_folder = os.path.dirname(filename)
+
+    @property
+    def semantic_parser(self):
+        return self._semantic_parser
 
     @property
     def filename(self):
@@ -69,7 +74,7 @@ class Parser(object):
     @property
     def imports(self):
         if self._semantic_parser:
-            raise NotImplementedError('TODO')
+            return self._semantic_parser.namespace.imports['imports']
         else:
             return self._syntax_parser.namespace.imports['imports']
 
@@ -78,12 +83,39 @@ class Parser(object):
         return self._syntax_parser.fst
 
     def parse(self, d_parsers=None, verbose=False):
+        if self._syntax_parser:
+            return self._syntax_parser.ast
         parser = SyntaxParser(self._filename, **self._kwargs)
         self._syntax_parser = parser
 
+        parse_result = parser.ast
+
         if d_parsers is None:
-            d_parsers = OrderedDict()
+            d_parsers = self._d_parsers
+
         self._d_parsers = self._parse_sons(d_parsers, verbose=verbose)
+
+        if parse_result.has_additional_module():
+            new_mod_filename = os.path.join(os.path.dirname(self._filename),parse_result.mod_name+'.py')
+            new_prog_filename = os.path.join(os.path.dirname(self._filename),parse_result.prog_name+'.py')
+            self._filename = new_prog_filename
+
+            q = Parser(new_mod_filename)
+            q._syntax_parser = copy.copy(parser)
+            q._syntax_parser._namespace = copy.deepcopy(parser.namespace)
+            q._d_parsers = q._parse_sons(self._d_parsers)
+            q._syntax_parser._ast = parse_result.module
+            d_parsers[parse_result.mod_name] = q
+
+            q.append_parent(self)
+            self.append_son(q)
+
+            parser._ast = parse_result.program
+
+            self.module_parser = q
+        else:
+            parser._ast = parse_result.get_focus()
+            self.module_parser = None
 
         return parser.ast
 
@@ -142,7 +174,10 @@ class Parser(object):
 
             q = Parser(filename)
             q.parse(d_parsers=d_parsers)
-            d_parsers[source] = q
+            if q.module_parser:
+                d_parsers[source] = q.module_parser
+            else:
+                d_parsers[source] = q
 
         # link self to its sons
         for source in imports:
@@ -178,7 +213,7 @@ if __name__ == '__main__':
 
     try:
         filename = sys.argv[1]
-    except:
+    except IndexError:
         raise ValueError('Expecting an argument for filename')
 
     pyccel = Parser(filename)

@@ -42,10 +42,9 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              If)
 
 
-from pyccel.ast.core import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-
-from pyccel.ast.core import create_variable, FunctionCall
-from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
+from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
+from pyccel.ast.core      import create_variable, FunctionCall
+from pyccel.ast.builtins  import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString
@@ -53,18 +52,19 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.datatypes import default_precision
-from pyccel.ast.numbers import Integer, Float
+from pyccel.ast.numbers   import Integer, Float
 
-from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Real, Where, Mod, PyccelArraySize
-from pyccel.ast.numpyext import NumpyComplex
+from pyccel.ast.numpyext import Real, Where, PyccelArraySize
+from pyccel.ast.numpyext import NumpyComplex, NumpyMod
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from pyccel.ast.numpyext import Rand
+from pyccel.ast.numpyext import NumpyNewArray
 
-from pyccel.parser.errors import Errors
-from pyccel.parser.messages import *
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import *
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 
@@ -80,6 +80,8 @@ known_functions = {
 
 numpy_ufunc_to_fortran = {
     'NumpyAbs'  : 'abs',
+    'NumpyMin'  : 'minval',
+    'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',
@@ -226,7 +228,8 @@ class FCodePrinter(CodePrinter):
             if name in container.functions:
                 return container.functions[name]
             container = container.parent_scope
-        raise ValueError('function {} not found'.format(name))
+        errors.report(UNDEFINED_FUNCTION, symbol=name,
+            severity='fatal', blocker=self.blocking)
 
 
     def _get_statement(self, codestring):
@@ -840,7 +843,8 @@ class FCodePrinter(CodePrinter):
             elif prec==8:
                 return 'MPI_INTEGER8'
             else:
-                raise NotImplementedError('TODO')
+                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                    severity='fatal', blocker=self.blocking)
 
         elif dtype == 'real':
             if prec==8:
@@ -848,10 +852,12 @@ class FCodePrinter(CodePrinter):
             if prec==4:
                 return 'MPI_FLOAT'
             else:
-                raise NotImplementedError('TODO')
+                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                    severity='fatal', blocker=self.blocking)
 
         else:
-            raise NotImplementedError('TODO')
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal', blocker=self.blocking)
 
     def _print_MacroCount(self, expr):
 
@@ -892,7 +898,8 @@ class FCodePrinter(CodePrinter):
             rank = len(shape)
 
         else:
-            raise NotImplementedError('TODO')
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal', blocker=self.blocking)
 
         if rank == 0:
                 return '1'
@@ -1030,7 +1037,8 @@ class FCodePrinter(CodePrinter):
 
             rankstr = '(' + rankstr + ')'
 #        else:
-#            raise NotImplementedError('Not treated yet')
+#            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+#                severity='fatal', blocker=self.blocking)
 
 
         if not is_static:
@@ -1170,7 +1178,7 @@ class FCodePrinter(CodePrinter):
 
             return rhs.fprint(self._print, expr.lhs, stack_array)
 
-        if isinstance(rhs, Mod):
+        if isinstance(rhs, NumpyMod):
             lhs = self._print(expr.lhs)
             args = ','.join(self._print(i) for i in rhs.args)
             rhs  = 'modulo({})'.format(args)
@@ -1535,9 +1543,8 @@ class FCodePrinter(CodePrinter):
                 else:
                     code = 'deallocate({0}){1}'.format(self._print(var), code)
             else:
-                msg  = 'Only Variable is treated.'
-                msg += ' Given {0}'.format(type(var))
-                raise NotImplementedError(msg)
+                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                    severity='fatal', blocker=self.blocking)
         return code
 
     def _print_ClassDef(self, expr):
@@ -1669,8 +1676,9 @@ class FCodePrinter(CodePrinter):
 
         def _do_range(target, iterable, prolog, epilog):
             if not isinstance(iterable, Range):
-                msg = "Only iterable currently supported is Range"
-                raise NotImplementedError(msg)
+                # Only iterable currently supported is Range
+                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                    severity='fatal', blocker=self.blocking)
 
             tar        = self._print(target)
             range_code = self._print(iterable)
@@ -1682,8 +1690,9 @@ class FCodePrinter(CodePrinter):
         # ...
 
         if not isinstance(expr.iterable, (Range, Product , Zip, Enumerate, Map)):
-            msg  = "Only iterable currently supported are Range or Product "
-            raise NotImplementedError(msg)
+            # Only iterable currently supported are Range or Product
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal', blocker=self.blocking)
 
         if isinstance(expr.iterable, Range):
             prolog, epilog = _do_range(expr.target, expr.iterable, \
@@ -2099,7 +2108,8 @@ class FCodePrinter(CodePrinter):
         if a.dtype is NativeBool() and b.dtype is NativeBool():
             return '{} .eqv. {}'.format(lhs, rhs)
 
-        raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
+        errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
+            severity='fatal', blocker=self.blocking)
 
     def _print_IsNot(self, expr):
         lhs = self._print(expr.lhs)
@@ -2113,7 +2123,8 @@ class FCodePrinter(CodePrinter):
         if a.dtype is NativeBool() and b.dtype is NativeBool():
             return '{} .neqv. {}'.format(lhs, rhs)
 
-        raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
+        errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
+            severity='fatal', blocker=self.blocking)
 
     def _print_If(self, expr):
         # ...
@@ -2476,7 +2487,7 @@ class FCodePrinter(CodePrinter):
         if (expr.end is None) or isinstance(expr.end, Nil):
             end = ''
         else:
-            end = PyccelAdd(expr.end, Integer(-1))
+            end = PyccelMinus(expr.end, Integer(1))
             end = self._print(end)
         return '{0}:{1}'.format(start, end)
 
@@ -2535,6 +2546,14 @@ class FCodePrinter(CodePrinter):
 
 #=======================================================================================
 
+    def _print_Application(self, expr):
+        if isinstance(expr, NumpyNewArray):
+            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+                          symbol=expr, severity='fatal')
+        else:
+            return self._print_not_supported(expr)
+
+#=======================================================================================
 
     def _pad_leading_columns(self, lines):
         result = []

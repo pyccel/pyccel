@@ -6,11 +6,11 @@ from sympy import Symbol
 from sympy import Tuple, Lambda
 
 from sympy.core.function  import Function
-from pyccel.ast import Import
-from pyccel.ast import Return, FunctionDef
-from pyccel.ast import Assign, create_variable
-from pyccel.ast import AugAssign
-from pyccel.ast import For
+from pyccel.ast.core import Import
+from pyccel.ast.core import Return, FunctionDef
+from pyccel.ast.core import Assign, create_variable
+from pyccel.ast.core import AugAssign
+from pyccel.ast.core import For
 from pyccel.ast.functionalexpr import GeneratorComprehension as GC
 from pyccel.ast.functionalexpr import FunctionalSum
 

@@ -30,6 +30,7 @@ from sympy.sets.fancysets import Range
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
+from pyccel.errors.errors import Errors
 
 __all__ = ["LuaCodePrinter", "lua_code"]
 
@@ -191,6 +192,7 @@ reserved_words = ['local',
                   'while',
                   'yield']
 
+errors = Errors()
 
 class LuaCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of Lua code"""
@@ -381,7 +383,9 @@ class LuaCodePrinter(CodePrinter):
         if A.cols == 1:
             return "[%s]" % ", ".join(self._print(a) for a in A)
         else:
-            raise ValueError("Full Matrix Support in Lua need Crates (https://crates.io/keywords/matrix).")
+            msg = "Full Matrix Support in Lua need Crates (https://crates.io/keywords/matrix)."
+            errors.report(msg, symbol=expr,
+                severity='fatal', blocker=self.blocking)
 
     def _print_MatrixElement(self, expr):
         return "%s[%s]" % (expr.parent,
@@ -435,7 +439,10 @@ class LuaCodePrinter(CodePrinter):
         if len(expr.results) == 1:
             ret_type = self._print(expr.results[0].dtype)
         elif len(expr.results) > 1:
-            raise ValueError("C doesn't support multiple return values.")
+            # TODO: Use fortran example to add pointer arguments for multiple output
+            msg = 'Multiple output arguments is not yet supported in c'
+            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal', blocker=self.blocking)
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name

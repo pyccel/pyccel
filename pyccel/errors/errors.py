@@ -22,7 +22,7 @@ try:
 
     def make_symbol(s):
         return colored(str(s), attrs=['bold'])
-except:
+except ImportError:
     ERROR = 'error'
     INTERNAL = 'internal'
     WARNING = 'warning'
@@ -38,10 +38,6 @@ _severity_registry = {'error': ERROR,
                       'internal': INTERNAL,
                       'fatal': FATAL,
                       'warning': WARNING}
-
-
-def make_symbol(s):
-    return str(s)
 
 
 class PyccelError(Exception):
@@ -304,9 +300,9 @@ class Errors:
         return text
 
 if __name__ == '__main__':
-    from pyccel.parser.messages import NO_RETURN_VALUE_EXPECTED
-    from pyccel.parser.messages import INCOMPATIBLE_RETURN_VALUE_TYPE
-    from pyccel.parser.messages import UNDEFINED_VARIABLE
+    from pyccel.errors.messages import NO_RETURN_VALUE_EXPECTED
+    from pyccel.errors.messages import INCOMPATIBLE_RETURN_VALUE_TYPE
+    from pyccel.errors.messages import UNDEFINED_VARIABLE
 
     errors = Errors()
     errors.set_parser_stage('semantic')

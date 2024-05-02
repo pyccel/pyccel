@@ -17,6 +17,7 @@ from .core  import (Variable, IndexedElement, Slice, Len,
                    ValuedArgument, Constant, process_shape)
 
 from .core           import PyccelPow, PyccelMinus, PyccelAssociativeParenthesis
+from .core           import broadcast
 
 from .builtins       import Int as PythonInt, Bool as PythonBool
 from .builtins       import PythonFloat, PythonTuple, PythonComplex
@@ -67,9 +68,9 @@ __all__ = (
     'Int64',
     'Linspace',
     'Matmul',
-    'Max',
-    'Min',
-    'Mod',
+    'NumpyMax',
+    'NumpyMin',
+    'NumpyMod',
     'Norm',
     'NumpySum',
     'Ones',
@@ -89,12 +90,15 @@ numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
 }
 
+class NumpyNewArray(PyccelAstNode):
+    pass
+
 #==============================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
 # TODO [YG, 22.05.2020]: move dtype & prec processing to __init__
 # TODO [YG, 22.05.2020]: change properties to read _dtype, _prec, _rank, etc...
-class Array(Application, PyccelAstNode):
+class Array(Application, NumpyNewArray):
     """
     Represents a call to  numpy.array for code generation.
 
@@ -279,6 +283,36 @@ class Matmul(Application, PyccelAstNode):
             raise TypeError('Uknown type of  %s.' % type(a))
         return Basic.__new__(cls, a, b)
 
+    def __init__(self, a ,b):
+
+        args      = (a, b)
+        integers  = [e for e in args if e.dtype is NativeInteger() or a.dtype is NativeBool()]
+        reals     = [e for e in args if e.dtype is NativeReal()]
+        complexs  = [e for e in args if e.dtype is NativeComplex()]
+
+        if complexs:
+            self._dtype     = NativeComplex()
+            self._precision = max(e.precision for e in complexs)
+        if reals:
+            self._dtype     = NativeReal()
+            self._precision = max(e.precision for e in reals)
+        elif integers:
+            self._dtype     = NativeInteger()
+            self._precision = max(e.precision for e in integers)
+        else:
+            raise TypeError('cannot determine the type of {}'.format(self))
+
+        if a.rank == 1 or b.rank == 1:
+           self._rank = 1
+        else:
+           self._rank = 2
+
+        if not (a.shape is None or b.shape is None):
+
+            m = 1 if a.rank < 2 else a.shape[0]
+            n = 1 if b.rank < 2 else b.shape[1]
+            self._shape = (m, n)
+
     @property
     def a(self):
         return self._args[0]
@@ -286,14 +320,6 @@ class Matmul(Application, PyccelAstNode):
     @property
     def b(self):
         return self._args[1]
-
-    @property
-    def dtype(self):
-        return self._args[0].dtype
-
-    @property
-    def rank(self):
-        return 1 # TODO: make this general
 
     def fprint(self, printer, lhs=None):
         """Fortran print."""
@@ -445,7 +471,7 @@ class Imag(Real):
         return 'imag({0})'.format(str(self.arg))
 
 #==============================================================================
-class Linspace(Application, PyccelAstNode):
+class Linspace(Application, NumpyNewArray):
 
     """
     Represents numpy.linspace.
@@ -548,7 +574,7 @@ class Linspace(Application, PyccelAstNode):
         return code
 
 #==============================================================================
-class Diag(Application, PyccelAstNode):
+class Diag(Application, NumpyNewArray):
 
     """
     Represents numpy.diag.
@@ -611,7 +637,6 @@ class Diag(Application, PyccelAstNode):
         rank = 1 if self.array.rank == 2 else 2
         return rank
 
-
     def fprint(self, printer, lhs):
         """Fortran print."""
 
@@ -638,7 +663,7 @@ class Diag(Application, PyccelAstNode):
         return alloc + '\n' + code
 
 #==============================================================================
-class Cross(Application, PyccelAstNode):
+class Cross(Application, NumpyNewArray):
 
     """
     Represents numpy.cross.
@@ -758,7 +783,7 @@ class Cross(Application, PyccelAstNode):
         return code
 
 #==============================================================================
-class Where(Application, PyccelAstNode):
+class Where(Application, NumpyNewArray):
     """ Represents a call to  numpy.where """
 
     def __new__(cls, mask):
@@ -805,7 +830,7 @@ class Where(Application, PyccelAstNode):
         return alloc +'\n' + stmt
 
 #==============================================================================
-class Rand(Function, PyccelAstNode):
+class Rand(Function, NumpyNewArray):
 
     """
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
@@ -847,7 +872,7 @@ class Rand(Function, PyccelAstNode):
 
 
 #==============================================================================
-class Full(Application, PyccelAstNode):
+class Full(Application, NumpyNewArray):
     """
     Represents a call to numpy.full for code generation.
 
@@ -1121,15 +1146,6 @@ class Sqrt(PyccelPow):
 
 #====================================================
 
-class Mod(Function, PyccelAstNode):
-    def __new__(cls,*args):
-        return Basic.__new__(cls, *args)
-
-    def __init__(self,*args):
-        assumptions={'integer':True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
 
 #==============================================================================
 # Numpy universal functions
@@ -1199,6 +1215,7 @@ class NumpyAbs(NumpyUfuncUnary):
         self._rank      = x.rank
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
+        self._order     = x.order
 
 
 class NumpyFloor(NumpyUfuncUnary):
@@ -1208,14 +1225,54 @@ class NumpyFloor(NumpyUfuncUnary):
         self._dtype     = NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
 
+class NumpyMod(NumpyUfuncBinary):
+    def __init__(self, x1, x2):
+        args      = (x1, x2)
+        integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
+        reals     = [a for a in args if a.dtype is NativeReal()]
+        others    = [a for a in args if a not in integers+reals]
 
-class Min(Function, PyccelAstNode):
-    def _eval_is_integer(self):
-        return all(i.is_integer for i in self.args)
+        if others:
+            raise TypeError('{} not supported'.format(others[0].dtype))
 
-class Max(Function, PyccelAstNode):
-    def _eval_is_integer(self):
-        return all(i.is_integer for i in self.args)
+        if reals:
+            self._dtype     = NativeReal()
+            self._precision = max(a.precision for a in reals)
+        elif integers:
+            self._dtype     = NativeInteger()
+            self._precision = max(a.precision for a in integers)
+        else:
+            raise TypeError('cannot determine the type of {}'.format(self))
+
+        shapes = [a.shape for a in args]
+
+        if all(sh is not None for sh in shapes):
+            if len(args) == 1:
+                shape = args[0].shape
+            else:
+                shape = broadcast(args[0].shape, args[1].shape)
+
+                for a in args[2:]:
+                    shape = broadcast(shape, a.shape)
+
+            self._shape = shape
+            self._rank  = len(shape)
+        else:
+            self._rank = max(a.rank for a in args)
+
+class NumpyMin(NumpyUfuncUnary):
+    def __init__(self, x):
+        self._shape     = ()
+        self._rank      = 0
+        self._dtype     = x.dtype
+        self._precision = x.precision
+
+class NumpyMax(NumpyUfuncUnary):
+    def __init__(self, x):
+        self._shape     = ()
+        self._rank      = 0
+        self._dtype     = x.dtype
+        self._precision = x.precision
 
 
 #=======================================================================================

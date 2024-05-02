@@ -17,49 +17,61 @@ from redbaron import DictitemNode
 from redbaron import DotNode
 from redbaron import CallNode
 from redbaron import GetitemNode
+from redbaron import CommentNode
+
+from sympy.core.function import Function
+from sympy import Symbol
+from sympy import IndexedBase
+from sympy import Tuple
+from sympy import Lambda
+from sympy import Dict
 
 #==============================================================================
 
-from pyccel.ast import String, Integer, Float, BooleanFalse, BooleanTrue
-from pyccel.ast import Nil
-from pyccel.ast import DottedName, DottedVariable
-from pyccel.ast import Assign
-from pyccel.ast import AugAssign
-from pyccel.ast import Return
-from pyccel.ast import Pass
-from pyccel.ast import FunctionDef
-from pyccel.ast import PythonFunction, SympyFunction
-from pyccel.ast import ClassDef
-from pyccel.ast import For, FunctionalFor
-from pyccel.ast import FunctionalSum, FunctionalMax, FunctionalMin
-from pyccel.ast import If, IfTernaryOperator
-from pyccel.ast import While
-from pyccel.ast import Print
-from pyccel.ast import Del
-from pyccel.ast import Assert
-from pyccel.ast import PythonTuple
-from pyccel.ast import Comment, EmptyLine, NewLine
-from pyccel.ast import Break, Continue
-from pyccel.ast import Slice
-from pyccel.ast import MetaVariable
-from pyccel.ast import Argument, ValuedArgument
-from pyccel.ast import Is, IsNot
-from pyccel.ast import Import
-from pyccel.ast import AsName
-from pyccel.ast import CommentBlock
-from pyccel.ast import With
-from pyccel.ast import List
-from pyccel.ast import StarredArguments
-from pyccel.ast import CodeBlock
-from pyccel.ast import create_variable
+from pyccel.ast.basic import PyccelAstNode
+
+from pyccel.ast.core import ParserResult
+from pyccel.ast.core import String
+from pyccel.ast.core import Nil
+from pyccel.ast.core import DottedName, DottedVariable
+from pyccel.ast.core import Assign
+from pyccel.ast.core import AugAssign
+from pyccel.ast.core import Return
+from pyccel.ast.core import Pass
+from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import PythonFunction, SympyFunction
+from pyccel.ast.core import ClassDef
+from pyccel.ast.core import For, FunctionalFor
+from pyccel.ast.core import If, IfTernaryOperator
+from pyccel.ast.core import While
+from pyccel.ast.core import Del
+from pyccel.ast.core import Assert
+from pyccel.ast.core import PythonTuple
+from pyccel.ast.core import Comment, EmptyLine, NewLine
+from pyccel.ast.core import Break, Continue
+from pyccel.ast.core import Slice
+from pyccel.ast.core import Argument, ValuedArgument
+from pyccel.ast.core import Is, IsNot
+from pyccel.ast.core import Import
+from pyccel.ast.core import AsName
+from pyccel.ast.core import CommentBlock
+from pyccel.ast.core import With
+from pyccel.ast.core import List
+from pyccel.ast.core import StarredArguments
+from pyccel.ast.core import CodeBlock
+from pyccel.ast.core import create_variable
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelOperator, PyccelUnary
 
-from pyccel.ast.numbers import Complex
+from pyccel.ast.builtins import Print
+from pyccel.ast.headers  import Header, MetaVariable
+from pyccel.ast.numbers  import Integer, Float, Complex, BooleanFalse, BooleanTrue
+from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
+from pyccel.parser.base import BasicParser
 from pyccel.parser.utilities import fst_move_directives, preprocess_imports
 from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import read_file
@@ -69,23 +81,13 @@ from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
-from pyccel.parser.errors import Errors, PyccelSyntaxError
+from pyccel.errors.errors import Errors, PyccelSyntaxError
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
+from pyccel.errors.messages import *
 
-from pyccel.parser.messages import *
-from pyccel.ast.basic       import PyccelAstNode
 #==============================================================================
-
-from sympy.core.function       import Function
-
-from sympy import Symbol
-from sympy import IndexedBase
-from sympy import Tuple
-from sympy import Lambda
-from sympy import Dict
-
 errors = Errors()
 #==============================================================================
 
@@ -97,9 +99,6 @@ redbaron.ipython_behavior = False
 # Useful for very coarse version differentiation.
 
 #==============================================================================
-
-from pyccel.parser.base import BasicParser
-from pyccel.parser.base import is_ignored_module
 
 def change_priority( expr ):
     """
@@ -155,7 +154,6 @@ class SyntaxParser(BasicParser):
                 errors.report(INVALID_FILE_EXTENSION, symbol=ext,
                               severity='fatal')
                 errors.check()
-                raise SystemExit(0)
 
             code = read_file(inputs)
             self._filename = inputs
@@ -165,7 +163,7 @@ class SyntaxParser(BasicParser):
         try:
             code = self.code
             red = RedBaron(code)
-        except Exception as e:
+        except Exception:
             errors = Errors()
             errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
                           severity='fatal')
@@ -234,11 +232,78 @@ class SyntaxParser(BasicParser):
             return getattr(self, syntax_method)(stmt)
 
         # Unknown object, we raise an error.
-        raise PyccelSyntaxError('{node} not yet available'.format(node=type(stmt)))
-
+        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
+                      bounding_box=stmt.absolute_bounding_box,
+                      severity='fatal')
 
     def _visit_RedBaron(self, stmt):
-        code = CodeBlock([self._visit(i) for i in stmt])
+        """ Visits the ast and splits the result into elements relevant for the module or the program"""
+        prog = []
+        mod  = []
+        start = []
+        current_file = start
+        targets = []
+        n_empty_lines = 0
+        is_prog = False
+        for i in stmt:
+            v = self._visit(i)
+            if n_empty_lines > 3:
+                current_file = start
+            if isinstance(v,(FunctionDef, ClassDef)):
+                # Functions and classes are always defined in a module
+                n_empty_lines = 0
+                mod.append(v)
+                targets.append(v.name)
+                current_file = mod
+            elif isinstance(v,(Header, Comment, CommentBlock)):
+                # Headers and Comments are defined in the same block as the following object
+                n_empty_lines = 0
+                current_file = start
+                current_file.append(v)
+            elif isinstance(v, (NewLine, EmptyLine)):
+                # EmptyLines are defined in the same block as the previous line
+                current_file.append(v)
+                n_empty_lines += 1
+            elif isinstance(v, Import):
+                # Imports are defined in both the module and the program
+                n_empty_lines = 0
+                mod.append(v)
+                prog.append(v)
+            else:
+                # Everything else is defined in a module
+                is_prog = True
+                n_empty_lines = 0
+                prog.append(v)
+                current_file = prog
+
+            # If the current file is now a program or a module. Add headers and comments before the line we just read
+            if len(start)>0 and current_file is not start:
+                current_file[-1:-1] = start
+                start = []
+        if len(start)>0:
+            mod.extend(start)
+
+        # Define the names of the module and program
+        # The module name allows it to be correctly referenced from an import command
+        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
+        prog_name = 'prog_' + current_mod_name
+        mod_code = CodeBlock(mod) if len(targets)>0 else None
+        if is_prog:
+            if mod_code:
+                expr = Import(targets, source=current_mod_name)
+                prog.insert(0,expr)
+            prog_code = CodeBlock(prog)
+            prog_code.set_fst(stmt)
+        else:
+            prog_code = None
+            # If the file only contains headers
+            if mod_code is None:
+                mod_code = CodeBlock(mod)
+        assert( mod_code is not None or prog_code is not None)
+        code = ParserResult(program   = prog_code,
+                            module    = mod_code,
+                            prog_name = prog_name,
+                            mod_name  = current_mod_name)
         code.set_fst(stmt)
         return code
 
@@ -301,7 +366,7 @@ class SyntaxParser(BasicParser):
         d = {}
         for i in stmt.value:
             if not isinstance(i, DictitemNode):
-                raise PyccelSyntaxError('Expecting a DictitemNode')
+                raise TypeError('Expecting a DictitemNode')
 
             key = self._visit(i.key)
             value = self._visit(i.value)
@@ -426,9 +491,6 @@ class SyntaxParser(BasicParser):
 
             targets.append(s)
 
-        if is_ignored_module(source):
-            return EmptyLine()
-
         expr = Import(targets, source=source)
         expr.set_fst(stmt)
         self.insert_import(expr)
@@ -453,9 +515,9 @@ class SyntaxParser(BasicParser):
                           bounding_box=stmt.absolute_bounding_box,
                           severity='error')
         else:
-            msg = 'unknown/unavailable unary operator {node}'
-            msg = msg.format(node=type(stmt.value))
-            raise PyccelSyntaxError(msg)
+            errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                          bounding_box=stmt.absolute_bounding_box,
+                          severity='fatal')
 
     def _visit_BinaryOperatorNode(self, stmt):
 
@@ -490,9 +552,9 @@ class SyntaxParser(BasicParser):
             expr = PyccelMod(first, second)
             return change_priority(expr)
         else:
-            msg = 'unknown/unavailable BinaryOperatorNode {node}'
-            msg = msg.format(node=type(stmt.value))
-            raise PyccelSyntaxError(msg)
+            errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                          bounding_box=stmt.absolute_bounding_box,
+                          severity='fatal')
 
     def _visit_BooleanOperatorNode(self, stmt):
 
@@ -515,9 +577,9 @@ class SyntaxParser(BasicParser):
             else:
                 return PyccelOr(first, second)
 
-        msg = 'unknown/unavailable BooleanOperatorNode {node}'
-        msg = msg.format(node=type(stmt.value))
-        raise PyccelSyntaxError(msg)
+        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                      bounding_box=stmt.absolute_bounding_box,
+                      severity='fatal')
 
     def _visit_ComparisonNode(self, stmt):
 
@@ -544,9 +606,9 @@ class SyntaxParser(BasicParser):
         if op == 'is not':
             return IsNot(first, second)
 
-        msg = 'unknown/unavailable binary operator {node}'
-        msg = msg.format(node=op)
-        raise PyccelSyntaxError(msg)
+        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                      bounding_box=stmt.absolute_bounding_box,
+                      severity='fatal')
 
     def _visit_PrintNode(self, stmt):
         expr = self._visit(stmt.value[0])
@@ -619,6 +681,8 @@ class SyntaxParser(BasicParser):
         # TODO improve later
         decorators = {}
         for i in stmt.decorators:
+            if isinstance(i,CommentNode):
+                continue
             decorators.update(self._visit(i))
 
         if 'bypass' in decorators:
@@ -652,13 +716,18 @@ class SyntaxParser(BasicParser):
                     arg  = arg.value
                     container = results
                     if not arg_name == 'results':
-                        msg = '> Wrong argument, given {}'.format(arg_name)
-                        raise NotImplementedError(msg)
-                    ls = arg if isinstance(arg, PythonTuple) else [arg]
-                    i = -1
+                        msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
+                        errors.report(msg,
+                                      bounding_box=stmt.absolute_bounding_box,
+                                      severity='error')
+                    else:
+                        ls = arg if isinstance(arg, PythonTuple) else [arg]
+                        i = -1
                 else:
-                    msg = '> Wrong type, given {}'.format(type(arg))
-                    raise NotImplementedError(msg)
+                    msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
+                    errors.report(msg,
+                                  bounding_box=stmt.absolute_bounding_box,
+                                  severity='error')
 
                 i = i+1
 
@@ -728,7 +797,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_ClassNode(self, stmt):
 
-        name = self._visit(stmt.name)
+        name = stmt.name
         methods = [i for i in stmt.value if isinstance(i, DefNode)]
         methods = self._visit(methods)
         attributes = methods[0].arguments
@@ -901,7 +970,9 @@ class SyntaxParser(BasicParser):
         elif name == 'max':
             expr = FunctionalMax(body, result, lhs, indices, None)
         else:
-            raise NotImplementedError('TODO')
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                          bounding_box=stmt.absolute_bounding_box,
+                          severity='fatal')
 
         expr.set_fst(stmt)
         return expr
@@ -1091,7 +1162,7 @@ if __name__ == '__main__':
 
     try:
         filename = sys.argv[1]
-    except:
+    except IndexError:
         raise ValueError('Expecting an argument for filename')
 
     parser = SyntaxParser(filename)

@@ -238,22 +238,14 @@ def DataTypeFactory(name, argnames=["_name"],
 
 def is_pyccel_datatype(expr):
     return isinstance(expr, CustomDataType)
-#    if not isinstance(expr, DataType):
-#        raise TypeError('Expecting a DataType instance')
-#    name = expr.__class__.__name__
-#    return name.startswith('Pyccel')
 
-# TODO improve and remove try/except
 def is_iterable_datatype(dtype):
     """Returns True if dtype is an iterable class."""
-    try:
-        if is_pyccel_datatype(dtype):
-            return dtype.is_iterable
-        elif isinstance(dtype, (NativeRange, NativeTensor)):
-            return True
-        else:
-            return False
-    except:
+    if is_pyccel_datatype(dtype):
+        return dtype.is_iterable
+    elif isinstance(dtype, (NativeRange, NativeTensor)):
+        return True
+    else:
         return False
 
 
@@ -272,15 +264,12 @@ def get_default_value(dtype):
     return value
 
 
-# TODO improve and remove try/except
+# TODO improve
 def is_with_construct_datatype(dtype):
     """Returns True if dtype is an with_construct class."""
-    try:
-        if is_pyccel_datatype(dtype):
-            return dtype.is_with_construct
-        else:
-            return False
-    except:
+    if is_pyccel_datatype(dtype):
+        return dtype.is_with_construct
+    else:
         return False
 
 # TODO check the use of Reals

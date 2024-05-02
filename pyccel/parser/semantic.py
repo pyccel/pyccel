@@ -4,83 +4,6 @@
 from collections import OrderedDict
 import traceback
 
-#==============================================================================
-
-from pyccel.ast import NativeRange
-from pyccel.ast import NativeSymbol
-from pyccel.ast import String
-from pyccel.ast import DataTypeFactory
-from pyccel.ast import Nil
-from pyccel.ast import Variable
-from pyccel.ast import TupleVariable
-from pyccel.ast import DottedName, DottedVariable
-from pyccel.ast import Assign, AliasAssign, SymbolicAssign
-from pyccel.ast import AugAssign, CodeBlock
-from pyccel.ast import Return
-from pyccel.ast import ConstructorCall
-from pyccel.ast import FunctionDef, Interface
-from pyccel.ast import ClassDef
-from pyccel.ast import For, FunctionalFor, ForIterator
-from pyccel.ast import GeneratorComprehension as GC
-from pyccel.ast import FunctionalSum, FunctionalMax, FunctionalMin
-from pyccel.ast import If, IfTernaryOperator
-from pyccel.ast import While
-from pyccel.ast import Print
-from pyccel.ast import SymbolicPrint
-from pyccel.ast import Del
-from pyccel.ast import EmptyLine
-from pyccel.ast import Slice, IndexedVariable, IndexedElement
-from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
-from pyccel.ast import MacroFunction, MacroVariable
-from pyccel.ast import Concatenate
-from pyccel.ast import ValuedVariable
-from pyccel.ast import ValuedArgument
-from pyccel.ast import Is, IsNot
-from pyccel.ast import Import
-from pyccel.ast import AsName
-from pyccel.ast import With, Block
-from pyccel.ast import List, Dlist, Len
-from pyccel.ast import builtin_function as pyccel_builtin_function
-from pyccel.ast import builtin_import as pyccel_builtin_import
-from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
-from pyccel.ast import Zeros, Where, Linspace, Diag, EmptyLike
-from pyccel.ast import StarredArguments
-from pyccel.ast import inline, subs, create_variable, extract_subexpressions
-from pyccel.ast.core import get_assigned_symbols
-
-from pyccel.ast.core      import _atomic
-
-from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
-from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
-from pyccel.ast.core import PyccelUnary
-
-from pyccel.ast.core      import Product, FunctionCall
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString
-from pyccel.ast.datatypes import default_precision
-from pyccel.ast.builtins  import python_builtin_datatype
-from pyccel.ast.builtins  import Range, Zip, Enumerate, Map, PythonTuple
-from pyccel.ast.numbers   import BooleanTrue, BooleanFalse
-from pyccel.ast.numbers   import Integer, Float, Complex
-from pyccel.ast.numpyext  import PyccelArraySize
-from pyccel.ast.numpyext  import NumpyUfuncBase
-from pyccel.ast.utilities import split_positional_keyword_arguments
-from pyccel.ast.type_inference  import str_dtype
-from pyccel.parser.errors import Errors
-from pyccel.parser.errors import PyccelSemanticError
-from pyccel.ast.numpyext  import NumpyInt, Int32, Int64, NumpyComplex, Complex64
-from pyccel.ast.numpyext  import Complex128, NumpyFloat, Float64, Float32
-from pyccel.ast.builtins  import Int as PythonInt, PythonFloat, PythonComplex, Bool as PythonBool
-from pyccel.ast.mathext   import MathFunctionBase
-
-# TODO - remove import * and only import what we need
-#      - use OrderedDict whenever it is possible
-# TODO move or delet extract_subexpressions when we introduce 
-#   Functional programming
-from pyccel.parser.messages import *
-
-#==============================================================================
-
 from sympy.core.function       import Application, UndefinedFunction
 from sympy.core.numbers        import ImaginaryUnit
 from sympy.utilities.iterables import iterable as sympy_iterable
@@ -91,20 +14,108 @@ from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float
 from sympy import Indexed, IndexedBase
 from sympy import ceiling
-
 from sympy import oo  as INF
 from sympy import Tuple
 from sympy import Lambda
 from sympy import Expr
 from sympy.core import cache
 
-errors = Errors()
+#==============================================================================
+
+from pyccel.ast.basic import PyccelAstNode
+
+from pyccel.ast.core import String
+from pyccel.ast.core import Nil
+from pyccel.ast.core import Variable
+from pyccel.ast.core import TupleVariable
+from pyccel.ast.core import DottedName, DottedVariable
+from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
+from pyccel.ast.core import AugAssign, CodeBlock
+from pyccel.ast.core import Return
+from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import FunctionDef, Interface
+from pyccel.ast.core import ClassDef
+from pyccel.ast.core import For, FunctionalFor, ForIterator
+from pyccel.ast.core import If, IfTernaryOperator
+from pyccel.ast.core import While
+from pyccel.ast.core import SymbolicPrint
+from pyccel.ast.core import Del
+from pyccel.ast.core import EmptyLine
+from pyccel.ast.core import Slice, IndexedVariable, IndexedElement
+from pyccel.ast.core import Concatenate
+from pyccel.ast.core import ValuedVariable
+from pyccel.ast.core import ValuedArgument
+from pyccel.ast.core import Is, IsNot
+from pyccel.ast.core import Import
+from pyccel.ast.core import AsName
+from pyccel.ast.core import With, Block
+from pyccel.ast.core import List, Dlist, Len
+from pyccel.ast.core import StarredArguments
+from pyccel.ast.core import inline, subs, create_variable, extract_subexpressions
+from pyccel.ast.core import get_assigned_symbols
+from pyccel.ast.core import _atomic
+from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
+from pyccel.ast.core import PyccelUnary
+from pyccel.ast.core import Product, FunctionCall
+
+from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
+from pyccel.ast.functionalexpr import GeneratorComprehension as GC
+
+from pyccel.ast.datatypes import NativeRange
+from pyccel.ast.datatypes import NativeSymbol
+from pyccel.ast.datatypes import DataTypeFactory
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString
+from pyccel.ast.datatypes import default_precision
+
+from pyccel.ast.type_inference  import str_dtype
+
+from pyccel.ast.numbers import BooleanTrue, BooleanFalse
+from pyccel.ast.numbers import Integer, Float, Complex
+
+from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
+from pyccel.ast.headers import MacroFunction, MacroVariable
+
+from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
+from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
+from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities import split_positional_keyword_arguments
+
+from pyccel.ast.builtins import Print
+from pyccel.ast.builtins import Int as PythonInt, Bool as PythonBool, PythonFloat, PythonComplex
+from pyccel.ast.builtins import python_builtin_datatype
+from pyccel.ast.builtins import Range, Zip, Enumerate, Map, PythonTuple
+
+from pyccel.ast.numpyext import Full, Array, Rand
+from pyccel.ast.numpyext import EmptyLike, FullLike, OnesLike, ZerosLike
+from pyccel.ast.numpyext import NumpySum, NumpyMin, NumpyMax, NumpyMod
+from pyccel.ast.numpyext import Matmul, Norm
+from pyccel.ast.numpyext import NumpyInt, Int32, Int64
+from pyccel.ast.numpyext import NumpyFloat, Float32, Float64
+from pyccel.ast.numpyext import NumpyComplex, Complex64, Complex128
+from pyccel.ast.numpyext import Real, Imag, Where, Diag, Linspace
+from pyccel.ast.numpyext import PyccelArraySize
+from pyccel.ast.numpyext import NumpyUfuncBase
+
+from pyccel.ast.mathext  import MathFunctionBase
+
+from pyccel.errors.errors import Errors
+from pyccel.errors.errors import PyccelSemanticError
+
+# TODO - remove import * and only import what we need
+#      - use OrderedDict whenever it is possible
+# TODO move or delet extract_subexpressions when we introduce 
+#   Functional programming
+from pyccel.errors.messages import *
 
 from pyccel.parser.base      import BasicParser, Scope
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 
-from pyccel.ast.basic import PyccelAstNode
+#==============================================================================
+
+errors = Errors()
 
 #==============================================================================
 
@@ -119,8 +130,10 @@ def _get_name(var):
         return type(var).__name__
     if isinstance(var, AsName):
         return var.name
-    msg = 'Uncovered type {dtype}'.format(dtype=type(var))
-    raise NotImplementedError(msg)
+    msg = 'Name of Object : {} cannot be determined'.format(type(var).__name__)
+    errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
+        bounding_box=self._current_fst_node.absolute_bounding_box,
+        severity='fatal', blocker=self.blocking)
 
 #==============================================================================
 
@@ -234,7 +247,6 @@ class SemanticParser(BasicParser):
                                 symbol=name, blocker=True,
                                 severity='fatal')
 
-        errors.check()
         self._semantic_done = True
 
         return ast
@@ -506,7 +518,10 @@ class SemanticParser(BasicParser):
                 return container.cls_constructs[name]
             container = container.parent_scope
 
-        raise PyccelSemanticError('class construct {} not found'.format(name))
+        msg = 'class construct {} not found'.format(name)
+        errors.report(msg,
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='fatal', blocker=self.blocking)
 
 
     def set_class_construct(self, name, value):
@@ -562,7 +577,7 @@ class SemanticParser(BasicParser):
                 vars_ += [stmt]
         return vars_
 
-######################################"
+#==============================================================================
 
     def _infere_type(self, expr, **settings):
         """
@@ -580,28 +595,9 @@ class SemanticParser(BasicParser):
             print ('*** type inference for : ', type(expr))
 
         d_var = {}
-        d_var['datatype'      ] = NativeSymbol()
-        d_var['precision'     ] = 0
-        d_var['shape'         ] = ()
-        d_var['rank'          ] = 0
-
         # TODO improve => put settings as attribut of Parser
 
-        if isinstance(expr, type(None)):
-
-            return d_var
-
-        elif isinstance(expr, (Integer, Float, Complex, String,
-                               BooleanTrue, BooleanFalse,
-                               PyccelArraySize, Is, IndexedElement)):
-
-            d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
-            d_var['rank'       ] = expr.rank
-            d_var['precision'  ] = expr.precision
-            d_var['shape']       = expr.shape
-            return d_var
-        elif expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt, 
+        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt,
                       Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
                       Float64, Float32):
 
@@ -609,7 +605,7 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = 0
             d_var['precision'  ] = 0
             return d_var
-            
+
         elif isinstance(expr, Variable):
 
             d_var['datatype'      ] = expr.dtype
@@ -635,9 +631,31 @@ class SemanticParser(BasicParser):
 
             return d_var
 
-        elif isinstance(expr, IndexedVariable):
+        elif isinstance(expr, Dlist):
+            import numpy
+            d = self._infere_type(expr.val, **settings)
 
-            return self._infere_type(expr.internal_variable)
+            # TODO must check that it is consistent with pyccel's rules
+            # TODO improve
+            d_var['datatype'   ] = d['datatype']
+            d_var['rank'       ] = d['rank'] + 1
+            d_var['shape'      ] = (expr.length, )
+            d_var['allocatable'] = False
+            d_var['is_pointer' ] = True
+            return d_var
+
+        elif isinstance(expr, PyccelAstNode):
+
+            d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            return d_var
+
+        elif isinstance(expr, IfTernaryOperator):
+            return self._infere_type(expr.args[0][1].body[0])
 
         elif isinstance(expr, Range):
 
@@ -647,17 +665,6 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = 0
             d_var['cls_base'   ] = expr  # TODO: shall we keep it?
             return d_var
-
-        elif isinstance(expr, DottedVariable):
-
-            if isinstance(expr.lhs, DottedVariable):
-                self._current_class = expr.lhs.rhs.cls_base
-            else:
-                self._current_class = expr.lhs.cls_base
-            d_var = self._infere_type(expr.rhs)
-            self._current_class = None
-            return d_var
-
 
         elif isinstance(expr, Lambda):
 
@@ -683,224 +690,18 @@ class SemanticParser(BasicParser):
 
             d_var['is_polymorphic'] = False
             d_var['cls_base'      ] = cls
-            d_var['is_pointer'    ] = False
-            return d_var
-
-        elif isinstance(expr, Application):
-
-            name = type(expr).__name__
-            func = self.get_function(name)
-            if isinstance(func, FunctionDef):
-                d_var = self._infere_type(func.results[0], **settings)
-
-            elif name in ['Full', 'Empty', 'Zeros', 'Ones', 'Diag',
-                          'Cross', 'Linspace', 'Where']:
-                d_var['datatype'   ] = expr.dtype
-                d_var['allocatable'] = True
-                d_var['shape'      ] = expr.shape
-                d_var['rank'       ] = expr.rank
-                d_var['is_pointer' ] = False
-                d_var['order'      ] = expr.order
-                d_var['precision'  ] = expr.precision
-
-            elif name in ['Array']:
-                d_var['datatype'      ] = expr.dtype
-                d_var['precision'     ] = expr.precision
-                d_var['rank'          ] = expr.rank
-                d_var['shape'         ] = expr.shape
-                d_var['order'         ] = expr.order
-                d_var['allocatable'   ] = expr.rank>0
-                d_var['is_stack_array'] = False
-                d_var['is_pointer'    ] = False
-                d_var['is_target'     ] = True # ISSUE 177: TODO this should be done using setter
-
-            elif name in ['Len']:
-                d_var['datatype'   ] = expr.dtype
-                d_var['rank'       ] = 0
-                d_var['allocatable'] = False
-                d_var['is_pointer' ] = False
-
-            elif name in ['Rand']:
-                d_var['datatype'   ] = expr.dtype
-                d_var['rank'       ] = expr.rank
-                d_var['is_pointer' ] = False
-                d_var['precision'  ] = expr.precision
-
-                if expr.rank == 0:
-                    d_var['allocatable'] = False
-                else:
-                    d_var['shape'      ] = expr.shape
-                    d_var['allocatable'] = True
-                    d_var['order'      ] = expr.order
-
-            elif name in ['NumpySum', 'Product', 'Min', 'Max']:
-                d_var['datatype'   ] = expr.args[0].dtype
-                d_var['rank'       ] = 0
-                d_var['allocatable'] = False
-                d_var['is_pointer' ] = False
-
-            elif name in ['Matmul']:
-
-                d_vars = [self._infere_type(arg,**settings) for arg in expr.args]
-
-                var0_is_vector = d_vars[0]['rank'] < 2
-                var1_is_vector = d_vars[1]['rank'] < 2
-
-                if(d_vars[0]['shape'] is None or d_vars[1]['shape'] is None):
-                    d_var['shape'] = None
-                else:
-
-                    m = 1 if var0_is_vector else d_vars[0]['shape'][0]
-                    n = 1 if var1_is_vector else d_vars[1]['shape'][1]
-                    d_var['shape'] = [m, n]
-
-                d_var['datatype'   ] = d_vars[0]['datatype']
-                if var0_is_vector or var1_is_vector:
-                    d_var['rank'   ] = 1
-                else:
-                    d_var['rank'   ] = 2
-                d_var['allocatable'] = False
-                d_var['is_pointer' ] = False
-                d_var['precision'  ] = max(d_vars[0]['precision'],
-                                           d_vars[1]['precision'])
-
-            elif name in ['Int',
-                          'PythonFloat','PythonComplex',
-                          'NumpyInt','Int32','Int64',
-                          'NumpyFloat','Float32','Float64',
-                          'NumpyComplex', 'Complex64','Complex128',
-                          'Real','Imag','Bool']:
-
-                d_var['datatype'   ] = expr.dtype
-                d_var['rank'       ] = 0
-                d_var['allocatable'] = False
-                d_var['is_pointer' ] = False
-                d_var['precision'  ] = expr.precision
-
-            elif name in ['Mod']:
-
-                # Determine output type/rank/shape
-                # TODO [YG, 10.10.2018]: use Numpy broadcasting rules
-                d_vars = [self._infere_type(arg,**settings) for arg in expr.args]
-                i = 0 if (d_vars[0]['rank'] >= d_vars[1]['rank']) else 1
-
-                d_var['datatype'   ] = d_vars[i]['datatype']
-                d_var['rank'       ] = d_vars[i]['rank']
-                d_var['shape'      ] = d_vars[i]['shape']
-                d_var['allocatable'] = d_vars[i]['allocatable']
-                d_var['is_pointer' ] = False
-                d_var['precision'  ] = d_vars[i].pop('precision',4)
-
-            elif name in ['Norm']:
-                d_var = self._infere_type(expr.arg,**settings)
-
-                d_var['shape'] = expr.shape(d_var['shape'])
-                d_var['rank' ] = len(d_var['shape'])
-                d_var['allocatable'] = d_var['rank']>0
-                d_var['is_pointer' ] = False
-
-            elif isinstance(expr, NumpyUfuncBase):
-                d_var = self._infere_type(expr.args[0], **settings)
-                d_var['datatype'   ] = expr.dtype
-                d_var['is_pointer' ] = False
-                d_var['precision'  ] = expr.precision
-
-            elif isinstance(expr, MathFunctionBase):
-                d_var['datatype' ] = expr.dtype
-                d_var['precision'] = expr.precision
-                d_var['rank'     ] = expr.rank
-                d_var['shape'    ] = expr.shape
-
-            elif name in ['EmptyLike', 'ZerosLike', 'OnesLike', 'FullLike']:
-                d_var = self._infere_type(expr.rhs, **settings)
-            else:
-                raise NotImplementedError('Type of Application : '+type(expr).__name__+' cannot be infered')
-
-            return d_var
-
-        elif isinstance(expr, GC):
-            return self._infere_type(expr.lhs, **settings)
-        elif isinstance(expr, (Expr, FunctionCall)):
-            # ...
-            d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0 if expr.rank else None
-            d_var['is_pointer' ] = False
-            d_var['shape'      ] = expr.shape
-            d_var['rank'       ] = expr.rank
-            d_var['precision'  ] = expr.precision
-
-            return d_var
-        elif isinstance(expr, (list, List)):
-
-            import numpy
-            d = self._infere_type(expr[0], **settings)
-
-            # TODO must check that it is consistent with pyccel's rules
-
-            d_var['datatype'] = d['datatype']
-            d_var['rank'] = d['rank'] + 1
-            d_var['shape'] = numpy.asarray(expr).shape  # TODO improve
-            d_var['allocatable'] = d['allocatable']
-            if isinstance(expr, List):
-                d_var['is_target'] = True
-                dtype              = str_dtype(d['datatype'])
-                d_var['datatype']  = dtype
-
-            return d_var
-        elif isinstance(expr, Concatenate):
-            import operator
-            d_vars = [self._infere_type(a, **settings) for a in expr.args]
-            ls = any(d['is_pointer'] or d['is_target'] for d in d_vars)
-
-            if ls:
-                shapes = [d['shape'] for d in d_vars if d['shape']]
-                shapes = zip(*shapes)
-                shape = tuple(sum(s) for s in shapes)
-                if not shape:
-                    shape = (sum(map(Len,expr.args)),)
-                d_vars[0]['shape'     ] = shape
-                d_vars[0]['rank'      ] = 1
-                d_vars[0]['is_target' ] = True
-                d_vars[0]['is_pointer'] = False
-
-            else:
-                d_vars[0]['datatype'] = 'str'
-            return d_vars[0]
-
-
-            if not (d_var_left['datatype'] == 'str'
-                    or d_var_right['datatype'] == 'str'):
-                d_var_left['shape'] = tuple(map(operator.add,
-                        d_var_right['shape'], d_var_left['shape']))
-            return d_var_left
-        elif isinstance(expr, ValuedArgument):
-            return self._infere_type(expr.value)
-
-        elif isinstance(expr, IfTernaryOperator):
-            return self._infere_type(expr.args[0][1].body[0])
-        elif isinstance(expr, Dlist):
-
-            import numpy
-            d = self._infere_type(expr.val, **settings)
-
-            # TODO must check that it is consistent with pyccel's rules
-            # TODO improve
-            d_var['datatype'   ] = d['datatype']
-            d_var['rank'       ] = d['rank'] + 1
-            d_var['shape'      ] = (expr.length, )
-            d_var['allocatable'] = False
-            d_var['is_pointer' ] = True
             return d_var
 
         else:
-            msg = '{expr} not yet available'.format(expr=type(expr))
-            raise NotImplementedError(msg)
+            msg = 'Type of Object : {} cannot be infered'.format(type(expr).__name__)
+            errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
+                bounding_box=self._current_fst_node.absolute_bounding_box,
+                severity='fatal', blocker=self.blocking)
 
 
 #==============================================================================
 #==============================================================================
 #==============================================================================
-
 
 
     def _visit(self, expr, **settings):
@@ -927,7 +728,9 @@ class SemanticParser(BasicParser):
 
         # Unknown object, we raise an error.
 
-        raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='fatal', blocker=self.blocking)
 
     def _visit_list(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
@@ -1232,71 +1035,49 @@ class SemanticParser(BasicParser):
                             return DottedVariable(first, second)
 
         # did something go wrong?
-        raise ValueError('attribute {} not found'.format(rhs_name))
+        errors.report('Attribute {} not found'.format(rhs_name),
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='fatal', blocker=True)
 
-    def _visit_PyccelAdd(self, expr, **settings):
+    def _handle_PyccelOperator(self, expr, **settings):
         #stmts, expr = extract_subexpressions(expr)
         #stmts = []
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args     = [self._visit(a, **settings) for a in expr.args]
-        expr_new = expr.func(*args)
+        try:
+            expr_new = expr.func(*args)
+        except PyccelSemanticError as err:
+            msg = str(err)
+            errors.report(msg, symbol=expr,
+                bounding_box=self._current_fst_node.absolute_bounding_box,
+                severity='fatal', blocker=True)
         #if stmts:
         #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
+    def _visit_PyccelAdd(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
     def _visit_PyccelMul(self, expr, **settings):
-        #stmts, expr = extract_subexpressions(expr)
-        #if stmts:
-        #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
         if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
             expr_new = self._visit(Dlist(expr.args[0], expr.args[1]))
         else:
-            expr_new = PyccelMul(*args)
-        #if stmts:
-        #    expr_new = CodeBlock(stmts + [expr_new])
+            expr_new = self._handle_PyccelOperator(expr, **settings)
         return expr_new
 
     def _visit_PyccelDiv(self, expr, **settings):
-        #stmts, expr = extract_subexpressions(expr)
-        #if stmts:
-        #    stmts = [self._visit(i, **settings) for i in stmts]
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelDiv(*args)
-        #if stmts:
-        #    expr_new = CodeBlock(stmts + [expr_new])
-        return expr_new
+        return self._handle_PyccelOperator(expr, **settings)
 
     def _visit_PyccelMod(self, expr, **settings):
-        #stmts, expr = extract_subexpressions(expr)
-        #if stmts:
-        #    stmts = [self._visit(i, **settings) for i in stmts]
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelMod(*args)
-        #if stmts:
-        #    expr_new = CodeBlock(stmts + [expr_new])
-        return expr_new
+        return self._handle_PyccelOperator(expr, **settings)
 
     def _visit_PyccelFloorDiv(self, expr, **settings):
-        #stmts, expr = extract_subexpressions(expr)
-        #if stmts:
-        #    stmts = [self._visit(i, **settings) for i in stmts]
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelFloorDiv(*args)
-        #if stmts:
-        #    expr_new = CodeBlock(stmts + [expr_new])
-        return expr_new
+        return self._handle_PyccelOperator(expr, **settings)
 
     def _visit_PyccelPow(self, expr, **settings):
-        #stmts, expr = extract_subexpressions(expr)
-        #if stmts:
-        #    stmts = [self._visit(i, **settings) for i in stmts]
-        args     = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelPow(*args)
-        #if stmts:
-        #    expr_new = CodeBlock(stmts + [expr_new])
-        return expr_new
+        return self._handle_PyccelOperator(expr, **settings)
 
     def _visit_PyccelAssociativeParenthesis(self, expr, **settings):
         return PyccelAssociativeParenthesis(self._visit(expr.args[0]))
@@ -1356,15 +1137,17 @@ class SemanticParser(BasicParser):
         expr_names = set(map(str, expr.expr.atoms(Symbol)))
         var_names = map(str, expr.variables)
         if len(expr_names.difference(var_names)) > 0:
-            msg = 'Unknown variables in lambda definition'
-            raise ValueError(msg)
+            errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = expr_names.difference(var_names),
+                bounding_box=self._current_fst_node.absolute_bounding_box,
+                severity='fatal', blocker=True)
         funcs = expr.expr.atoms(Application)
         for func in funcs:
             name = _get_name(func)
             f = self.get_symbolic_function(name)
             if f is None:
-                msg = 'Unknown function in lambda definition'
-                raise ValueError(msg)
+                errors.report(UNDEFINED_LAMBDA_FUNCTION, symbol=name,
+                    bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='fatal', blocker=True)
             else:
 
                 f = f(*func.args)
@@ -1441,7 +1224,7 @@ class SemanticParser(BasicParser):
                 # TODO [SH, 25.02.2020] Report error
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                 bounding_box=self._current_fst_node.absolute_bounding_box,
-                severity='error', blocker=self.blocking)
+                severity='fatal', blocker=self.blocking)
             else:
                 if not isinstance(func, (FunctionDef, Interface)):
 
@@ -1485,7 +1268,10 @@ class SemanticParser(BasicParser):
                     #        f_args = func.functions[j].arguments
                     #    else:
                     #        msg = 'function not found in the interface'
-                    #        raise SystemExit(msg)
+                    #        # TODO: Add message to parser/messages.py
+                    #        errors.report(msg,
+                    #            bounding_box=self._current_fst_node.absolute_bounding_box,
+                    #            severity='fatal', blocker=self.blocking)
 
                     expr = FunctionCall(func, args)
 
@@ -1495,9 +1281,9 @@ class SemanticParser(BasicParser):
                     return expr
 
     def _visit_Expr(self, expr, **settings):
-        msg = '{expr} not yet available'
-        msg = msg.format(expr=type(expr))
-        raise NotImplementedError(msg)
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='fatal', blocker=self.blocking)
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
 
@@ -1565,7 +1351,9 @@ class SemanticParser(BasicParser):
                         or isinstance(rhs, (Variable, EmptyLike, DottedVariable))
                 if not know_lhs_shape:
                     msg = "Cannot infer shape of right-hand side for expression {} = {}".format(lhs, rhs)
-                    raise NotImplementedError(msg)
+                    errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
+                        bounding_box=self._current_fst_node.absolute_bounding_box,
+                        severity='fatal', blocker=self.blocking)
 
             else:
 
@@ -1632,12 +1420,9 @@ class SemanticParser(BasicParser):
     def _visit_Assign(self, expr, **settings):
         # TODO unset position at the end of this part
         fst = expr.fst
+        assert(fst)
         if fst:
             self._current_fst_node = fst
-        else:
-            msg = 'Found a node without fst member ({})'
-            msg = msg.format(type(expr))
-            raise PyccelSemanticError(msg)
 
         rhs = expr.rhs
         lhs = expr.lhs
@@ -1676,8 +1461,10 @@ class SemanticParser(BasicParser):
                 if isinstance(master, FunctionDef):
                     return FunctionCall(master, args)
                 else:
-                    msg = 'TODO treate interface case'
-                    raise NotImplementedError(msg)
+                    # TODO treate interface case
+                    errors.report(PYCCEL_RESTRICTION_TODO,
+                                  bounding_box=self._current_fst_node.absolute_bounding_box,
+                                  severity='fatal')
 
         elif isinstance(rhs, DottedVariable):
             var = rhs.rhs
@@ -1729,9 +1516,6 @@ class SemanticParser(BasicParser):
             args = rhs.args
             new_args = []
             for arg in args:
-                if len(arg[1].body) != 1:
-                    msg = 'IfTernary body must be of length 1'
-                    raise ValueError(msg)
                 result = arg[1].body[0]
                 if isinstance(expr, Assign):
                     body = Assign(lhs, result)
@@ -2009,7 +1793,9 @@ class SemanticParser(BasicParser):
                 if F is None:
                     self.insert_symbolic_function(new_expr)
                 else:
-                    raise NotImplementedError('TODO')
+                    errors.report(PYCCEL_RESTRICTION_TODO,
+                                  bounding_box=self._current_fst_node.absolute_bounding_box,
+                                  severity='fatal')
             new_expressions.append(new_expr)
         if (len(new_expressions)==1):
             new_expressions = new_expressions[0]
@@ -2202,7 +1988,9 @@ class SemanticParser(BasicParser):
                 var  = Variable(dtype, var.name, **dvar)
                 stop = a.shape[0]
             else:
-                raise NotImplementedError('TODO')
+                errors.report(PYCCEL_RESTRICTION_TODO,
+                              bounding_box=self._current_fst_node.absolute_bounding_box,
+                              severity='fatal')
             self.insert_variable(var)
 
             size = (stop - start) / step
@@ -2227,7 +2015,9 @@ class SemanticParser(BasicParser):
             dim   = Summation(dim, (indices[i-1], 0, size-1))
             dim   = dim.doit()
         if isinstance(dim, Summation):
-            raise NotImplementedError('TODO')
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                          bounding_box=self._current_fst_node.absolute_bounding_box,
+                          severity='fatal')
 
         # TODO find a faster way to calculate dim
         # when step>1 and not isinstance(dim, Sum)
@@ -2313,7 +2103,9 @@ class SemanticParser(BasicParser):
                     funcs += [container[i]]
 
         if name is None:
-            raise ValueError('inteface functions {} not found'.format(expr.funcs))
+            errors.report(UNDEFINED_INTERFACE_FUNCTION, symbol=expr.funcs,
+                   bounding_box=self._current_fst_node.absolute_bounding_box,
+                   severity='fatal', blocker=self.blocking)
         expr            = Interface(name, funcs, hide=True)
         container[name] = expr
         return expr
@@ -2454,8 +2246,9 @@ class SemanticParser(BasicParser):
             if not all(i == results[0] for i in results):
                 #case of multiple return
                 # with different variable name
-                msg = 'TODO not available yet'
-                raise PyccelSemanticError(msg)
+                errors.report(PYCCEL_RESTRICTION_TODO,
+                              bounding_box=self._current_fst_node.absolute_bounding_box,
+                              severity='fatal')
 
             if len(results) > 0:
                 results = list(results[0])
@@ -2665,7 +2458,10 @@ class SemanticParser(BasicParser):
 
         # TODO fix: not yet working because of mpi examples
 #        if not test:
-#            raise ValueError('all arguments must be either symbolic or none of them')
+#            # TODO: Add description to parser/messages.py
+#            errors.report('Either all arguments must be symbolic or none of them can be',
+#                   bounding_box=self._current_fst_node.absolute_bounding_box,
+#                   severity='fatal', blocker=self.blocking)
 
         if is_symbolic(args[0]):
             _args = []
@@ -2725,8 +2521,9 @@ class SemanticParser(BasicParser):
         header = self.get_header(name)
 
         if not header:
-            msg = 'Expecting a header class for {classe} but could not find it.'
-            raise ValueError(msg.format(classe=name))
+            errors.report(PYCCEL_MISSING_HEADER, symbol=name,
+                   bounding_box=self._current_fst_node.absolute_bounding_box,
+                   severity='fatal', blocker=self.blocking)
 
         options    = header.options
         attributes = self.get_class(name).attributes
@@ -2791,8 +2588,8 @@ class SemanticParser(BasicParser):
             return IsNot(var1, var2)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS,
-        bounding_box=self._current_fst_node.absolute_bounding_box,
-        severity='error', blocker=self.blocking)
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='error', blocker=self.blocking)
         return IsNot(var1, expr.rhs)
 
     def _visit_Import(self, expr, **settings):
@@ -2817,7 +2614,9 @@ class SemanticParser(BasicParser):
                             errors.report(FOUND_DUPLICATED_IMPORT,
                                         symbol=name, severity='warning')
                         else:
-                            raise NotImplementedError('must report error')
+                            errors.report(PYCCEL_RESTRICTION_TODO,
+                                          bounding_box=self._current_fst_node.absolute_bounding_box,
+                                          severity='fatal')
             else:
 
                 # in some cases (blas, lapack, openmp and openacc level-0)
@@ -2890,8 +2689,9 @@ class SemanticParser(BasicParser):
         domaine = self._visit(expr.test, **settings)
         parent  = domaine.cls_base
         if not parent.is_with_construct:
-            msg = '__enter__ or __exit__ methods not found'
-            raise ValueError(msg)
+            errors.report(UNDEFINED_WITH_ACCESS,
+                   bounding_box=self._current_fst_node.absolute_bounding_box,
+                   severity='fatal', blocker=self.blocking)
 
         body = self._visit(expr.body, **settings)
         return With(domaine, body, None).block
@@ -2936,7 +2736,9 @@ class SemanticParser(BasicParser):
 
         master = expr.master
         if isinstance(master, DottedName):
-            raise NotImplementedError('TODO')
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                          bounding_box=self._current_fst_node.absolute_bounding_box,
+                          severity='fatal')
         header = self.get_header(master)
         if header is None:
             var = self.get_variable(master)
@@ -2974,7 +2776,7 @@ if __name__ == '__main__':
 
     try:
         filename = sys.argv[1]
-    except:
+    except IndexError:
         raise ValueError('Expecting an argument for filename')
 
     parser = SyntaxParser(filename)

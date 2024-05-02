@@ -5,11 +5,12 @@
 
 # TODO warnings for syntax and semantic stages
 
-from pyccel.parser import Parser
-from pyccel.codegen import Codegen
-from pyccel.parser.errors import Errors
 import os
 import pytest
+
+from pyccel.parser.parser   import Parser
+from pyccel.codegen.codegen import Codegen
+from pyccel.errors.errors   import Errors
 
 def get_files_from_folder(foldername):
     base_dir = os.path.dirname(os.path.realpath(__file__))

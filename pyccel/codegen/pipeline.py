@@ -4,12 +4,14 @@ import sys
 import shutil
 from collections import OrderedDict
 
-from pyccel.parser.errors               import Errors, PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
-from pyccel.parser                      import Parser
-from pyccel.codegen.codegen             import Codegen
-from pyccel.codegen.utilities           import construct_flags
-from pyccel.codegen.utilities           import compile_files
-from pyccel.codegen.python_wrapper      import create_shared_library
+from pyccel.errors.errors          import Errors, PyccelError
+from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
+from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
+from pyccel.parser.parser          import Parser
+from pyccel.codegen.codegen        import Codegen
+from pyccel.codegen.utilities      import construct_flags
+from pyccel.codegen.utilities      import compile_files
+from pyccel.codegen.python_wrapper import create_shared_library
 
 __all__ = ['execute_pyccel']
 
@@ -118,8 +120,12 @@ def execute_pyccel(fname, *,
     # Parse Python file
     try:
         parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'), show_traceback=verbose)
-        ast = parser.parse()
-    except PyccelSyntaxError:
+        parser.parse(verbose=verbose)
+    except NotImplementedError as error:
+        msg = str(error)
+        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error')
+    except PyccelError:
         handle_error('parsing (syntax)')
         raise
     if errors.is_errors():
@@ -131,9 +137,13 @@ def execute_pyccel(fname, *,
 
     # Annotate abstract syntax Tree
     try:
-        settings = {}
-        ast = parser.annotate(**settings)
-    except PyccelSemanticError:
+        settings = {'verbose':verbose}
+        parser.annotate(**settings)
+    except NotImplementedError as error:
+        msg = str(error)
+        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error')
+    except PyccelError:
         handle_error('annotation (semantic)')
         raise
     if errors.is_errors():
@@ -143,123 +153,139 @@ def execute_pyccel(fname, *,
     if semantic_only:
         return
 
-    # Generate .f90 file
-    try:
-        codegen = Codegen(ast, module_name)
-        fname = os.path.join(pyccel_dirpath, module_name)
-        fname = codegen.export(fname, language=language)
-    except PyccelCodegenError:
-        handle_error('code generation')
-        raise
-    if errors.is_errors():
-        handle_error('code generation')
-        raise PyccelCodegenError('Code generation failed')
+    if parser.module_parser:
+        parsers = [parser.module_parser, parser]
+        program_name = os.path.basename(os.path.splitext(parser.filename)[0])
+        module_names = [module_name, program_name]
+    else:
+        parsers = [parser]
+        module_names = [module_name]
 
-    #------------------------------------------------------
-    # TODO: collect dependencies and proceed recursively
-#    if recursive:
-#        for dep in parser.sons:
-#            # Call same function on 'dep'
-#            pass
-    #------------------------------------------------------
+    for parser, module_name in zip(parsers, module_names):
+        semantic_parser = parser.semantic_parser
+        # Generate .f90 file
+        try:
+            codegen = Codegen(semantic_parser, module_name)
+            fname = os.path.join(pyccel_dirpath, module_name)
+            fname = codegen.export(fname, language=language)
+        except NotImplementedError as error:
+            msg = str(error)
+            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+                severity='error')
+        except PyccelError:
+            handle_error('code generation')
+            raise
+        if errors.is_errors():
+            handle_error('code generation')
+            raise PyccelCodegenError('Code generation failed')
 
-    if convert_only:
-        return
+        #------------------------------------------------------
+        # TODO: collect dependencies and proceed recursively
+    #    if recursive:
+    #        for dep in parser.sons:
+    #            # Call same function on 'dep'
+    #            pass
+        #------------------------------------------------------
 
-    # ...
-    # Determine all .o files and all folders needed by executable
-    def get_module_dependencies(parser, mods=(), folders=()):
-        mod_folder = os.path.join(os.path.dirname(parser.filename), "__pyccel__")
-        mod_base = os.path.splitext(os.path.basename(parser.filename))[0]
+        if convert_only:
+            continue
 
-        # Stop conditions
-        if parser.metavars.get('ignore_at_import', False) or \
-           parser.metavars.get('module_name', None) == 'omp_lib':
+        # ...
+        # Determine all .o files and all folders needed by executable
+        def get_module_dependencies(parser, mods=(), folders=()):
+            mod_folder = os.path.join(os.path.dirname(parser.filename), "__pyccel__")
+            mod_base = os.path.splitext(os.path.basename(parser.filename))[0]
+
+            # Stop conditions
+            if parser.metavars.get('ignore_at_import', False) or \
+               parser.metavars.get('module_name', None) == 'omp_lib':
+                return mods, folders
+
+            # Update lists
+            mods = [*mods, os.path.join(mod_folder, mod_base)]
+            folders = [*folders, mod_folder]
+
+            # Proceed recursively
+            for son in parser.sons:
+                mods, folders = get_module_dependencies(son, mods, folders)
+
             return mods, folders
 
-        # Update lists
-        mods = [*mods, os.path.join(mod_folder, mod_base)]
-        folders = [*folders, mod_folder]
+        dep_mods, inc_dirs = get_module_dependencies(parser)
 
-        # Proceed recursively
-        for son in parser.sons:
-            mods, folders = get_module_dependencies(son, mods, folders)
+        # Remove duplicates without changing order
+        dep_mods = tuple(OrderedDict.fromkeys(dep_mods))
+        inc_dirs = tuple(OrderedDict.fromkeys(inc_dirs))
+        # ...
 
-        return mods, folders
+        includes += inc_dirs
 
-    dep_mods, inc_dirs = get_module_dependencies(parser)
-
-    # Remove duplicates without changing order
-    dep_mods = tuple(OrderedDict.fromkeys(dep_mods))
-    inc_dirs = tuple(OrderedDict.fromkeys(inc_dirs))
-    # ...
-
-    includes += inc_dirs
-
-    if codegen.is_program:
-        modules += [os.path.join(pyccel_dirpath, m) for m in dep_mods[1:]]
+        if codegen.is_program:
+            modules += [os.path.join(pyccel_dirpath, m) for m in dep_mods[1:]]
 
 
-    # Construct compiler flags
-    flags = construct_flags(f90exec,
-                            fflags=fflags,
-                            debug=debug,
-                            accelerator=accelerator,
-                            includes=includes,
-                            libdirs=libdirs)
+        # Construct compiler flags
+        flags = construct_flags(f90exec,
+                                fflags=fflags,
+                                debug=debug,
+                                accelerator=accelerator,
+                                includes=includes,
+                                libdirs=libdirs)
 
-    # Compile Fortran code
-    #
-    # TODO: stop at object files, do not compile executable
-    #       This allows for properly linking program to modules
-    #
-    if not (language == "c" and codegen.is_module):
+        # Compile Fortran code
+        #
+        # TODO: stop at object files, do not compile executable
+        #       This allows for properly linking program to modules
+        #
+        if not (language == "c" and codegen.is_module):
+            try:
+                compile_files(fname, f90exec, flags,
+                                binary=None,
+                                verbose=verbose,
+                                modules=modules,
+                                is_module=codegen.is_module,
+                                output=pyccel_dirpath,
+                                libs=libs)
+            except Exception:
+                handle_error('Fortran compilation')
+                raise
+
+        # For a program stop here
+        if codegen.is_program:
+            if verbose:
+                exec_filepath = os.path.join(folder, module_name)
+                print( '> Executable has been created: {}'.format(exec_filepath))
+            os.chdir(base_dirpath)
+            continue
+
+        # Create shared library
         try:
-            compile_files(fname, f90exec, flags,
-                            binary=None,
-                            verbose=verbose,
-                            modules=modules,
-                            is_module=codegen.is_module,
-                            output=pyccel_dirpath,
-                            libs=libs)
+            sharedlib_filepath = create_shared_library(codegen,
+                                                       language,
+                                                       pyccel_dirpath,
+                                                       compiler,
+                                                       mpi_compiler,
+                                                       accelerator,
+                                                       dep_mods,
+                                                       libs,
+                                                       libdirs,
+                                                       flags,
+                                                       extra_args,
+                                                       output_name,
+                                                       verbose)
         except Exception:
-            handle_error('Fortran compilation')
+            handle_error('shared library generation')
             raise
 
-    # For a program stop here
-    if codegen.is_program:
+        # Move shared library to folder directory
+        # (First construct absolute path of target location)
+        sharedlib_filename = os.path.basename(sharedlib_filepath)
+        target = os.path.join(folder, sharedlib_filename)
+        shutil.move(sharedlib_filepath, target)
+        sharedlib_filepath = target
+
         if verbose:
-            exec_filepath = os.path.join(folder, module_name)
-            print( '> Executable has been created: {}'.format(exec_filepath))
-        os.chdir(base_dirpath)
-        return
-
-    # Create shared library
-    try:
-        sharedlib_filepath = create_shared_library(codegen,
-                                                   language,
-                                                   pyccel_dirpath,
-                                                   compiler,
-                                                   mpi_compiler,
-                                                   accelerator,
-                                                   dep_mods,
-                                                   flags,
-                                                   extra_args,
-                                                   output_name,
-                                                   verbose)
-    except Exception:
-        handle_error('shared library generation')
-        raise
-
-    # Move shared library to folder directory
-    # (First construct absolute path of target location)
-    sharedlib_filename = os.path.basename(sharedlib_filepath)
-    target = os.path.join(folder, sharedlib_filename)
-    shutil.move(sharedlib_filepath, target)
-    sharedlib_filepath = target
+            print( '> Shared library has been created: {}'.format(sharedlib_filepath))
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)
-
-    if verbose:
-        print( '> Shared library has been created: {}'.format(sharedlib_filepath))

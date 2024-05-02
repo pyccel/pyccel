@@ -21,6 +21,7 @@ class PyccelAstNode:
     _rank      = None
     _dtype     = None
     _precision = None
+    _order     = None
 
     @property
     def shape(self):
@@ -37,3 +38,15 @@ class PyccelAstNode:
     @property
     def precision(self):
         return self._precision
+
+    @property
+    def order(self):
+        return self._order
+
+    def copy_attributes(self, x):
+        self._shape     = x.shape
+        self._rank      = x.rank
+        self._dtype     = x.dtype
+        self._precision = x.precision
+        self._order     = x.order
+

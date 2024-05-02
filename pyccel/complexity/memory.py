@@ -5,9 +5,8 @@ from sympy import Poly, LT
 from sympy.core.expr import Expr
 
 
-from pyccel.ast import (For, Assign, NewLine,
-                        Zeros, Ones, CodeBlock)
-
+from pyccel.ast.core     import For, Assign, NewLine, CodeBlock
+from pyccel.ast.numpyext import Zeros, Ones
 from pyccel.complexity.basic import Complexity
 
 

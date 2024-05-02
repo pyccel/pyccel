@@ -8,21 +8,21 @@ import re
 
 #==============================================================================
 
-from pyccel.ast import DottedName
-from pyccel.ast import SymbolicAssign
-from pyccel.ast import FunctionDef, Interface
-from pyccel.ast import PythonFunction, SympyFunction
-from pyccel.ast import Import
-from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.core import DottedName
+from pyccel.ast.core import SymbolicAssign
+from pyccel.ast.core import FunctionDef, Interface
+from pyccel.ast.core import PythonFunction, SympyFunction
+from pyccel.ast.core import Import
+from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
-from pyccel.parser.errors import Errors
+from pyccel.errors.errors import Errors
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
 
-from pyccel.parser.messages import *
+from pyccel.errors.messages import *
 
 #==============================================================================
 
@@ -39,13 +39,6 @@ redbaron.ipython_behavior = False
 # Useful for very coarse version differentiation.
 
 #==============================================================================
-
-def is_ignored_module(name):
-    if isinstance(name, DottedName):
-        if str(name) in ['pyccel.decorators']:
-            return True
-
-    return False
 
 
 def get_filename_from_import(module,input_folder=''):
@@ -96,7 +89,7 @@ def get_filename_from_import(module,input_folder=''):
     try:
         package = importlib.import_module(source)
         package_dir = str(package.__path__[0])
-    except:
+    except ImportError:
         errors = Errors()
         errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=source,
                       severity='fatal')
@@ -440,7 +433,7 @@ class BasicParser(object):
 
             txt = tabulate(table, tablefmt='rst')
             print (txt)
-        except:
+        except NotImplementedError:
 
             print ('------- namespace.{} -------'.format(entry))
             for (k, v) in self.namespace[entry].items():
@@ -458,7 +451,7 @@ if __name__ == '__main__':
 
     try:
         filename = sys.argv[1]
-    except:
+    except IndexError:
         raise ValueError('Expecting an argument for filename')
 
     parser = BasicParser(filename)

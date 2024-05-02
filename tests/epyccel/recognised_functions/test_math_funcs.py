@@ -1,9 +1,10 @@
-from pyccel.decorators import types
-from pyccel import epyccel
 import pytest
 from numpy.random import rand, randint
 from numpy import isclose
-from conftest       import *
+
+from pyccel.decorators import types
+from pyccel.epyccel import epyccel
+from conftest import *
 
 def test_fabs_call():
     @types('real')

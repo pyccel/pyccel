@@ -54,6 +54,15 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
     parser.add_argument('files', metavar='N', type=str, nargs='+',
                         help='a Pyccel file')
 
+    #... Version
+    import pyccel
+    version = pyccel.__version__
+    libpath = pyccel.__path__[0]
+    python  = 'python {}.{}'.format(*sys.version_info)
+    message = "pyccel {} from {} ({})".format(version, libpath, python)
+    parser.add_argument('-V', '--version', action='version', version=message)
+    # ...
+
     # ... compiler syntax, semantic and codegen
     group = parser.add_argument_group('Pyccel compiling stages')
     group.add_argument('-x', '--syntax-only', action='store_true',
@@ -134,9 +143,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
     # ...
 
     # Imports
-    from pyccel.parser.errors     import Errors, PyccelError
-    from pyccel.parser.errors     import ErrorsMode
-    from pyccel.parser.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
+    from pyccel.errors.errors     import Errors, PyccelError
+    from pyccel.errors.errors     import ErrorsMode
+    from pyccel.errors.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
     from pyccel.codegen.pipeline  import execute_pyccel
 
     # ...
@@ -157,11 +166,14 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
     # ...
 
     # ...
-    if not files:
-        raise ValueError("a python filename must be provided.")
 
     if len(files) > 1:
-        raise ValueError('Expecting one single file for the moment.')
+        errors = Errors()
+        # severity is error to avoid needing to catch exception
+        errors.report('Pyccel can currently only handle 1 file at a time',
+                      severity='error')
+        errors.check()
+        sys.exit(1)
     # ...
 
     filename = files[0]
@@ -173,24 +185,32 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
         ext = filename.split('.')[-1]
         if not(ext in ['py', 'pyh']):
             errors = Errors()
+            # severity is error to avoid needing to catch exception
             errors.report(INVALID_FILE_EXTENSION,
                           symbol=ext,
-                          severity='fatal')
+                          severity='error')
             errors.check()
-            raise SystemExit(0)
+            sys.exit(1)
     else:
         # we use Pyccel error manager, although we can do it in other ways
         errors = Errors()
+        # severity is error to avoid needing to catch exception
         errors.report(INVALID_FILE_DIRECTORY,
                       symbol=filename,
-                      severity='fatal')
+                      severity='error')
         errors.check()
-        raise SystemExit(0)
+        sys.exit(1)
     # ...
 
     if compiler:
         if _which(compiler) is None:
-            raise ValueError('Could not find {0}'.format(compiler))
+            errors = Errors()
+            # severity is error to avoid needing to catch exception
+            errors.report('Could not find compiler',
+                          symbol=compiler,
+                          severity='error')
+            errors.check()
+            sys.exit(1)
 
     accelerator = None
     if openmp:

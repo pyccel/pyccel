@@ -5,7 +5,7 @@ from sympy import Function
 
 from pyccel.ast.basic     import PyccelAstNode
 from pyccel.ast.core      import Constant
-from pyccel.ast.datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
+from pyccel.ast.datatypes import (datatype, DataType, NativeSymbol,
                                   NativeInteger, NativeBool, NativeReal,
                                   NativeComplex, NativeRange, NativeTensor, NativeString,
                                   NativeGeneric, NativeTuple, default_precision)

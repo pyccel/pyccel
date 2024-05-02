@@ -6,11 +6,13 @@
 # TODO - syntax errors tests
 #      - expected errors in log files for every script
 
-from pyccel.parser import Parser
-from pyccel.codegen import Codegen
-from pyccel.parser.errors import Errors, PyccelSemanticError, PyccelSyntaxError
 import os
 import pytest
+
+from pyccel.parser.parser   import Parser
+from pyccel.codegen.codegen import Codegen
+from pyccel.errors.errors   import Errors, PyccelSyntaxError, PyccelSemanticError
+
 
 def get_files_from_folder(foldername):
     base_dir = os.path.dirname(os.path.realpath(__file__))

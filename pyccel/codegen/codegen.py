@@ -1,15 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from pyccel.codegen.printing import fcode, ccode, pycode
+from pyccel.codegen.printing.fcode  import fcode
+from pyccel.codegen.printing.ccode  import ccode
+from pyccel.codegen.printing.pycode import pycode
 
-from pyccel.ast import FunctionDef, Module, Program, Interface
-from pyccel.ast import Header, EmptyLine, NewLine, Comment, CommentBlock
-from pyccel.parser.errors import Errors
+from pyccel.ast.core      import FunctionDef, Module, Program, Interface
+from pyccel.ast.core      import EmptyLine, NewLine, Comment, CommentBlock
+from pyccel.ast.headers   import Header
+from pyccel.errors.errors import Errors
 
 # TODO improve this import
-
-from pyccel.parser.messages import *
+from pyccel.errors.messages import *
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
 printer_registry    = {'fortran':fcode, 'c':ccode, 'python':pycode}

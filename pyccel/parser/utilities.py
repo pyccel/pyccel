@@ -8,7 +8,7 @@ from redbaron import (CommentNode, ForNode, DefNode, WithNode,
                       CallNode, RedBaron, AtomtrailersNode)
 
 from sympy import srepr
-from pyccel.ast import DottedName
+from pyccel.ast.core import DottedName
 from pyccel.ast.core import create_variable
 from sympy import Symbol
 import os
@@ -349,7 +349,7 @@ def reconstruct_pragma_multilines(header):
         # we use tr/except to avoid treating nodes without .value
         try:
             return x.value.rstrip().endswith('&')
-        except:
+        except AttributeError:
             return False
 
     condition = lambda x: (_is_multiline(x.parent) and (_is_pragma(x) or _ignore_stmt(x)))

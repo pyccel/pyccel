@@ -45,6 +45,8 @@ from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
+from pyccel.errors.errors import PyccelSemanticError
+
 # TODO [YG, 12.03.2020]: Move non-Python constructs to other modules
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
 # NOTE: commented-out symbols are never used in Pyccel
@@ -120,6 +122,7 @@ __all__ = (
     'Nil',
     'ParallelBlock',
     'ParallelRange',
+    'ParserResult',
     'Pass',
     'Product',
     'Program',
@@ -181,7 +184,7 @@ def broadcast(shape_1, shape_2):
     b = len(shape_2)
     if a>b:
         new_shape_2 = (1,)*(a-b) + tuple(shape_2)
-        new_shape_1 = shape_2
+        new_shape_1 = shape_1
     elif b>a:
         new_shape_1 = (1,)*(b-a) + tuple(shape_1)
         new_shape_2 = shape_2
@@ -195,12 +198,12 @@ def broadcast(shape_1, shape_2):
             new_shape.append(e1)
         elif e1 == 1:
             new_shape.append(e2)
-        elif e2 == 2:
+        elif e2 == 1:
             new_shape.append(e1)
         else:
             msg = 'operands could not be broadcast together with shapes {} {}'
             msg = msg.format(shape_1, shape_2)
-            raise ValueError(msg)
+            raise PyccelSemanticError(msg)
     return tuple(new_shape)
 
 class PyccelOperator(Expr, PyccelAstNode):
@@ -712,11 +715,8 @@ def create_variable(expr):
     """."""
 
     import numpy as np
-    try:
-        name = 'Dummy_' + str(abs(hash(expr)
-                                  + np.random.randint(500)))[-4:]
-    except:
-        name = 'Dymmy_' + str(abs(np.random.randint(500)))[-4:]
+    name = 'Dummy_' + str(abs(hash(expr)
+                              + np.random.randint(500)))[-4:]
 
     return Symbol(name)
 
@@ -1462,7 +1462,7 @@ class Tensor(Basic):
 
         try:
             name = kwargs['name']
-        except:
+        except KeyError:
             name = 'tensor'
 
         args = list(args) + [name]
@@ -3944,16 +3944,13 @@ class Load(Basic):
 
     def execute(self):
         module = str(self.module)
-        try:
-            package = importlib.import_module(module)
-        except:
-            raise ImportError('could not import {0}'.format(module))
+        package = importlib.import_module(module)
 
         ls = []
         for f in self.funcs:
             try:
                 m = getattr(package, '{0}'.format(str(f)))
-            except:
+            except AttributeError:
                 raise ImportError('could not import {0}'.format(f))
 
             # TODO improve
@@ -4818,6 +4815,10 @@ class If(Basic):
 class IfTernaryOperator(If):
 
     """class for the Ternery operator"""
+    def __init__(self, *args):
+        for arg in self.args:
+            if len(arg[1].body)!=1:
+                raise TypeError('IfTernary body must be of length 1')
 
     pass
 
@@ -4969,30 +4970,27 @@ def get_assigned_symbols(expr):
         if expr.lhs is None:
             raise TypeError('Found None lhs')
 
-        try:
-            var = expr.lhs
-            symbols = []
-            if isinstance(var, DottedVariable):
-                var = expr.lhs.lhs
-                while isinstance(var, DottedVariable):
-                    var = var.lhs
+        var = expr.lhs
+        symbols = []
+        if isinstance(var, DottedVariable):
+            var = expr.lhs.lhs
+            while isinstance(var, DottedVariable):
+                var = var.lhs
+            symbols.append(var)
+        elif isinstance(var, IndexedElement):
+            var = var.base
+            symbols.append(var)
+        elif isinstance(var, Variable):
+            if var.rank:
                 symbols.append(var)
-            elif isinstance(var, IndexedElement):
-                var = var.base
-                symbols.append(var)
-            elif isinstance(var, Variable):
-                if var.rank:
-                    symbols.append(var)
-            return symbols
-        except:
-            #TODO should we keep the try/except clause ?
-
-            # TODO must raise an Exception here
-            #      this occurs only when parsing lapack.pyh
-            raise ValueError('Unable to extract assigned variable')
-#            print(type(expr.lhs), expr.lhs)
-#            print(expr)
-#            raise SystemExit('ERROR')
+        return symbols
+    elif isinstance(expr, FunctionCall):
+        f = expr.funcdef
+        symbols = []
+        for func_arg, inout in zip(expr.arguments,f.arguments_inout):
+            if inout:
+                symbols.append(func_arg)
+        return symbols
 
     return []
 
@@ -5232,6 +5230,74 @@ def get_iterable_ranges(it, var_name=None):
     # ...
 
     return [Range(s, e, 1) for (s, e) in zip(starts, ends)]
+
+class ParserResult(Basic):
+    def __new__(
+        self,
+        program=None,
+        module=None,
+        mod_name = None,
+        prog_name = None,
+        ):
+        return Basic.__new__(self)
+
+    def __init__(
+        self,
+        program=None,
+        module=None,
+        mod_name = None,
+        prog_name = None,
+        ):
+
+        if program is not None  and not isinstance(program, CodeBlock):
+            raise TypeError('Program must be a CodeBlock')
+
+        if module is not None  and not isinstance(module, CodeBlock):
+            raise TypeError('Module must be a CodeBlock')
+
+        if program is not None and module is not None:
+            if mod_name is None:
+                raise TypeError('Please provide module name')
+            elif not isinstance(mod_name, str):
+                raise TypeError('Module name must be a string')
+            if prog_name is None:
+                raise TypeError('Please provide program name')
+            elif not isinstance(prog_name, str):
+                raise TypeError('Program name must be a string')
+
+        self._program   = program
+        self._module    = module
+        self._prog_name = prog_name
+        self._mod_name  = mod_name
+
+
+    @property
+    def program(self):
+        return self._program
+
+    @property
+    def module(self):
+        return self._module
+
+    @property
+    def prog_name(self):
+        return self._prog_name
+
+    @property
+    def mod_name(self):
+        return self._mod_name
+
+    def has_additional_module(self):
+        return self.program is not None and self.module is not None
+
+    def is_program(self):
+        return self.program is not None
+
+    def get_focus(self):
+        if self.is_program():
+            return self.program
+        else:
+            return self.module
 
 
 #==============================================================================

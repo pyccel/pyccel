@@ -1,9 +1,8 @@
 from sympy.core.function       import UndefinedFunction
 
-from pyccel.codegen.printing import CCodePrinter
-from pyccel.codegen.printing.ccode import dtype_registry
-from pyccel.ast import Module, Declare, Assign
-from pyccel.ast import str_dtype
+from pyccel.codegen.printing.ccode import CCodePrinter, dtype_registry
+from pyccel.ast.core import Module, Declare, Assign
+from pyccel.ast.type_inference import str_dtype
 
 pytype_registry = {
         'integer': 'l',

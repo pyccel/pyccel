@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import inspect
+
 from sympy.core.function import Application
 from sympy import Not, Float
 from sympy import Function
@@ -22,8 +24,8 @@ from .mathext  import math_functions
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from .numpyext import Diag, Cross
-from .numpyext import Min, Max, NumpyAbs, NumpyFloor, Norm, Where
-from .numpyext import Array, Shape, Rand, NumpySum, Matmul, Real, NumpyComplex, Imag, Mod
+from .numpyext import NumpyMin, NumpyMax, NumpyAbs, NumpyFloor, Norm, Where
+from .numpyext import Array, Shape, Rand, NumpySum, Matmul, Real, NumpyComplex, Imag, NumpyMod
 from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
 from .numpyext import NumpyExp, NumpyLog, NumpySqrt
 from .numpyext import NumpySin, NumpyCos, NumpyTan
@@ -32,6 +34,10 @@ from .numpyext import NumpySinh, NumpyCosh, NumpyTanh
 from .numpyext import NumpyArcsinh, NumpyArccosh, NumpyArctanh
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
+
+import pyccel.decorators as pyccel_decorators
+
+from pyccel.errors.errors import Errors
 
 
 __all__ = (
@@ -65,7 +71,7 @@ numpy_functions = {
     'imag'      : Imag,
     'float'     : NumpyFloat,
     'double'    : Float64,
-    'mod'       : Mod,
+    'mod'       : NumpyMod,
     'float32'   : Float32,
     'float64'   : Float64,
     'int32'     : Int32,
@@ -128,11 +134,8 @@ builtin_functions_dict = {
     'bool'     : Bool,
     'sum'      : NumpySum,
     'len'      : Len,
-    'Mod'      : Mod,
-    'max'      : Max,
-#    'Max'      : Max,
-    'min'      : Min,
-#    'Min'      : Min,
+    'max'      : NumpyMax,
+    'min'      : NumpyMin,
     'not'      : Not,   # TODO [YG, 20.05.2020]: do not use Sympy's Not
 }
 
@@ -170,7 +173,7 @@ def builtin_function(expr, args=None):
     return None
 
 # TODO add documentation
-builtin_import_registery = ('numpy', 'numpy.linalg', 'numpy.random', 'scipy.constants', 'itertools', 'math')
+builtin_import_registery = ('numpy', 'numpy.linalg', 'numpy.random', 'scipy.constants', 'itertools', 'math', 'pyccel.decorators')
 
 #==============================================================================
 def builtin_import(expr):
@@ -223,6 +226,13 @@ def builtin_import(expr):
 
             if import_name == 'product':
                 imports.append((code_name, Product))
+
+        elif source == 'pyccel.decorators':
+            funcs = [f[0] for f in inspect.getmembers(pyccel_decorators, inspect.isfunction)]
+            if str(target) not in funcs:
+                errors = Errors()
+                errors.report("{} does not exist in pyccel.decorators".format(target),
+                        symbol = expr, severity='error')
 
     return imports
 

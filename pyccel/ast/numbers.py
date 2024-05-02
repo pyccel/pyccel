@@ -4,7 +4,7 @@ from sympy import Float as sp_Float
 from sympy.logic.boolalg      import BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
 from sympy.core.expr          import Expr
 from sympy.core.numbers       import NegativeOne as sp_NegativeOne
-from pyccel.ast.datatypes     import (datatype, DataType, CustomDataType, NativeSymbol,
+from pyccel.ast.datatypes     import (datatype, DataType, NativeSymbol,
                                   NativeInteger, NativeBool, NativeReal,
                                   NativeComplex, NativeRange, NativeTensor, NativeString,
                                   NativeGeneric, NativeTuple, default_precision)
