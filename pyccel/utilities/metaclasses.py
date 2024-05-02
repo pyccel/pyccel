@@ -12,12 +12,17 @@ __all__ = (
 )
 
 class Singleton(type):
-    """ Indicates that there is only one instance of the class
+    """
+    Metaclass indicating that there is only one instance of the class.
+
+    A metaclass which ensures that only one instance of the class is ever
+    created. Trying to create a second instance will result in accessing
+    the first.
     """
     _instances = {}
-    def __call__(cls, *args, **kwargs):
+    def __call__(cls):
         if cls not in cls._instances:
-            cls._instances[cls] = super().__call__(*args, **kwargs)
+            cls._instances[cls] = super().__call__()
         return cls._instances[cls]
 
 class ArgumentSingleton(type):

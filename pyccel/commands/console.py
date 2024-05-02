@@ -28,7 +28,27 @@ class MyParser(argparse.ArgumentParser):
 #      but quickstart and build are still calling it for the moment
 def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, compiler=None):
     """
-    pyccel console command.
+    Pyccel console command.
+
+    The Pyccel console command allows translating Python files using Pyccel in a command-line environment. It provides
+    options to specify the files to be translated, enable support for MPI, OpenMP, and OpenACC, specify the output
+    directory for the translated files, and choose the compiler to be used for translation. By default, all parameters
+    are set to None, and the command will use the default behavior defined by Pyccel.
+
+    Parameters
+    ----------
+    files : str or list of str, optional
+        File(s) to be translated. It can be a single file or a list of files (currently pyccel support single), by default None.
+    mpi : bool, optional
+        Enable MPI support, by default None.
+    openmp : bool, optional
+        Enable OpenMP support, by default None.
+    openacc : bool, optional
+        Enable OpenACC support, by default None.
+    output_dir : str, optional
+        Directory to store the translated file(s), by default None.
+    compiler : str, optional
+        Compiler to be used for translation, by default None.
     """
     parser = MyParser(description='pyccel command line')
 
@@ -115,6 +135,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                         help='shows internal messages')
     group.add_argument('--export-compile-info', type=str, default = None, \
                         help='file to which the compiler json file is exported')
+    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), help='Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is basic.')
+
     # ...
 
     # TODO move to another cmd line
@@ -147,6 +169,9 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
 
     if not openacc:
         openacc = args.openacc
+
+    if not args.conda_warnings:
+        args.conda_warnings = 'basic'
 
     if args.convert_only or args.syntax_only or args.semantic_only:
         compiler = None
@@ -252,7 +277,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                        debug         = args.debug,
                        accelerators  = accelerators,
                        folder        = args.output,
-                       compiler_export_file = compiler_export_file)
+                       compiler_export_file = compiler_export_file,
+                       conda_warnings = args.conda_warnings)
     except PyccelError:
         sys.exit(1)
     finally:

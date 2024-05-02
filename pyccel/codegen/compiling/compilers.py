@@ -28,9 +28,23 @@ if platform.system() == 'Darwin':
     mac_target = '{}.{}'.format(*mac_version_tuple[:2])
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
-def get_condaless_search_path():
-    """ Get the value of the PATH variable to be set when searching for the compiler.
-    This is the same as the environment PATH variable but without any conda paths
+
+def get_condaless_search_path(conda_warnings = 'basic'):
+    """
+    Get a list of paths excluding the conda paths.
+
+    Get the value of the PATH variable to be set when searching for the compiler
+    This is the same as the environment PATH variable but without any conda paths.
+
+    Parameters
+    ----------
+    conda_warnings : str, optional
+        Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+
+    Returns
+    -------
+    str
+        A list of paths excluding the conda paths.
     """
     path_sep = ';' if platform.system() == 'Windows' else ':'
     current_path = os.environ['PATH']
@@ -39,7 +53,12 @@ def get_condaless_search_path():
                           'Conda', 'Anaconda', 'Miniconda')
     conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
     if conda_folders:
-        warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(conda_folders)))
+        if conda_warnings in ('basic', 'verbose'):
+            message_warning = "Conda paths are ignored. See https://github.com/pyccel/pyccel/blob/devel/tutorial/compiler.md#utilising-pyccel-within-anaconda-environment for details"
+            if conda_warnings == 'verbose':
+                message_warning = message_warning + "\nConda ignored PATH:\n"
+                message_warning = message_warning + ":".join(conda_folders)
+            warnings.warn(UserWarning(message_warning))
     acceptable_search_paths = path_sep.join(p for p in folders.keys() if p not in conda_folders and os.path.exists(p))
     return acceptable_search_paths
 
@@ -63,7 +82,7 @@ class Compiler:
                Indicates whether we are compiling in debug mode.
     """
     __slots__ = ('_debug','_info')
-    _acceptable_bin_paths = get_condaless_search_path()
+    acceptable_bin_paths = None
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return
@@ -84,12 +103,33 @@ class Compiler:
         self._debug = debug
 
     def _get_exec(self, accelerators):
+        """
+        Obtain the path of the executable based on the specified accelerators.
+
+        The `_get_exec` method is responsible for retrieving the path of the executable based on the specified accelerators.
+        It is used internally in the Pyccel module.
+
+        Parameters
+        ----------
+        accelerators : str
+            Specifies the accelerators to be used.
+
+        Returns
+        -------
+        str
+            The path of the executable corresponding to the specified accelerators.
+
+        Raises
+        ------
+        PyccelError
+            If the compiler executable cannot be found.
+        """
         # Get executable
         exec_cmd = self._info['mpi_exec'] if 'mpi' in accelerators else self._info['exec']
 
         # Clean conda paths out of the PATH variable
         current_path = os.environ['PATH']
-        os.environ['PATH'] = self._acceptable_bin_paths
+        os.environ['PATH'] = self.acceptable_bin_paths
 
         # Find the exact path of the executable
         exec_loc = shutil.which(exec_cmd)

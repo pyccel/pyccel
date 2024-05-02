@@ -145,11 +145,21 @@ class SyntaxParser(BasicParser):
         self._fst           = tree
         self._in_lhs_assign = False
 
-        self.parse(verbose=True)
+        self.parse()
         self.dump()
 
-    def parse(self, verbose=False):
-        """converts python ast to sympy ast."""
+    def parse(self):
+        """
+        Convert Python's AST to Pyccel's AST object.
+
+        Convert Python's AST to Pyccel's AST object and raise errors
+        for any unsupported objects.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            The Pyccel AST object.
+        """
 
         if self.syntax_done:
             return self.ast
@@ -831,7 +841,12 @@ class SyntaxParser(BasicParser):
 
         name = stmt.name
         scope = self.create_new_class_scope(name)
-        methods = [self._visit(i) for i in stmt.body if isinstance(i, ast.FunctionDef)]
+        methods = []
+        for i in stmt.body:
+            if isinstance(i, ast.FunctionDef):
+                methods.append(self._visit(i))
+            elif isinstance(i, ast.Pass):
+                return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
         for i in methods:
             i.cls_name = name
         attributes = [a.var for a in methods[0].arguments]

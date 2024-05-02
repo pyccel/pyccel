@@ -463,7 +463,6 @@ int     nd_ndim(t_ndarray *a, int n)
  *
  * 	Parameters	:
  *		a 	  : python array object
- *      index : dimension index
  * 	Returns		:
  *		return NULL if object is NULL or the data of the array
  * reference of the used c/numpy api function
@@ -476,4 +475,49 @@ void    *nd_data(t_ndarray *a)
 		return NULL;
 
 	return a->raw_data;
+}
+
+/*
+ * Function: nd_step_C
+ * --------------------
+ * Return the step in the nth dimension for a C-ordered array (decreasing strides)
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ * 		index	  : dimension index
+ * 	Returns		:
+ *		return 1 if object is NULL or the step along the indexed dimension
+ */
+int     nd_nstep_C(t_ndarray *a, int n)
+{
+	if (a == NULL || a->length == 0)
+		return 1;
+
+	int step = a->strides[n];
+	for (int i = n+1; i<a->nd; ++i) {
+		step /= a->shape[i];
+	}
+	return step > 0 ? step : 1;
+}
+/*
+ * Function: nd_step_F
+ * --------------------
+ * Return the step in the nth dimension for a F-ordered array (increasing strides)
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ * 		index	  : dimension index
+ * 	Returns		:
+ *		return 1 if object is NULL or the step along the indexed dimension
+ */
+int     nd_nstep_F(t_ndarray *a, int n)
+{
+	if (a == NULL || a->length == 0)
+		return 1;
+
+	int step = a->strides[n];
+	for (int i = 0; i<n; ++i) {
+		step /= a->shape[i];
+	}
+	return step > 0 ? step : 1;
 }

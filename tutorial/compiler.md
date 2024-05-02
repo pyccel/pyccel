@@ -51,3 +51,17 @@ E.g.
 ```shell
 pyccel --compiler=PGI --language=c --export-compile-info=icc.json
 ```
+## Utilising Pyccel within Anaconda Environment
+While Anaconda is a popular way to install Python as it simplifies package management, it can introduce challenges when working with compilers.
+
+Upon installation Anaconda modifies your shell's environment variables.
+
+This can lead to packages installed in conda/anaconda usurping the packages manually installed by the user.
+
+This in turn easily leads to nasty surprises (e.g. using libraries compiled for serial execution instead of optimised parallel implementations).
+
+To avoid these problems, Pyccel ignores Conda paths when searching for compilers in the system's PATH.
+
+By using the expected compiler, the expected libraries are correctly linked.
+
+Pyccel offers ``--conda-warnings`` flag with options ``off``, ``basic``, and ``verbose`` to control the visibility of Conda-related warnings.

@@ -16,6 +16,8 @@ ignore=CVS
 # regex matches against base names, not paths.
 ignore-patterns=
 
+ignore-paths=obsolete/*
+
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
 #init-hook=
@@ -405,7 +407,7 @@ name-group=
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
-no-docstring-rgx=^(_visit_)|(_print_)
+no-docstring-rgx=^(_visit_)|(_print_)|(__.*__)
 
 # List of decorators that produce properties, such as abc.abstractproperty. Add
 # to this list to register other decorators that produce valid properties.

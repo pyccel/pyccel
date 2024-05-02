@@ -2,8 +2,8 @@ name: Pull Request
 
 on:
   pull_request:
-    branches: [ master ]
-    types: [ opened, ready_for_review, synchronize, converted_to_draft ]
+    branches: [ devel ]
+    types: [ opened, reopened, ready_for_review, synchronize, converted_to_draft ]
   issue_comment:
     types: [ created ]
 

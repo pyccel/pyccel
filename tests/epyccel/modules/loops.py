@@ -96,6 +96,19 @@ def product_loop_on_2d_array_F( z ):
         z[i,j] = i-j
 
 # ...
+def product_loop( z : 'float[:]', m : int, n : int ):
+
+    from itertools import product
+
+    x = [i*3+2 for i in range(m)]
+    y = [j*7+6 for j in range(n)]
+
+    k = 0
+    for i,j in product( x, y ):
+        z[k] = i-j
+        k += 1
+
+# ...
 @types( 'int[:]' )
 def map_on_1d_array( z ):
 

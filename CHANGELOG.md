@@ -9,6 +9,26 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+## \[1.8.0\] - 2023-06-20
+
+### Added
+-   #1400 : Added flags to Pyccel for managing conda PATH warnings.
+
+### Fixed
+
+-   #1404 : Bug preventing printing of some functions in a `print()` call.
+-   #1302 : Raise error message in case of empty class.
+-   #1407 : Raise an error if file name matches a Python built-in module.
+-   #929 : Allow optional variables when compiling with intel or nvidia.
+-   #1117 : Allow non-contiguous arrays to be passed to Fortran code.
+-   #1415 : Fix incorrect handling of assignments augmented by function calls.
+-   #1418 : Fix `itertools.product` implementation.
+
+### Changed
+
+-   #1355 : Remove unused `BasicParser` arguments.
+-   \[INTERNALS\] Re-write bind-c wrapping stage (#1388)
+
 ## \[1.7.4\] - 2023-05-02
 
 ### Added
@@ -88,5 +108,6 @@ All notable changes to this project will be documented in this file.
 -   #1245 : Reduce false negative test results by using a tolerance to compare floats.
 -   #1272 : Remove use of deprecated NumPy syntax in tests.
 -   #1253 : Provide minimum requirements.
+-   \[INTERNALS\]  #1385 : Remove unused settings keyword arguments from `_visit` function.
 
 ### Deprecated
