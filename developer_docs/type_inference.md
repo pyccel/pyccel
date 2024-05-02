@@ -1,7 +1,5 @@
 # Type inference
 
-:warning: Some of this documentation describes developments that are being added to Pyccel at the moment. For information about the previous state see the description in issue #1487 or contact Emily on the discord.
-
 Type inference, in other words deducing the type of an object is one of the keystones of Pyccel. It is what allows us to correctly declare our variables in the generated code and thereby obtain the expected results. The majority of the type inference is found in the semantic stage, however there are a few objects whose type cannot be deduced. The type of these objects is inferred from type annotations. As such there are a few steps of the type inference which occur in the syntactic stage.
 
 ## Syntactic Stage

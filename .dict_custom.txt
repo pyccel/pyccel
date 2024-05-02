@@ -97,4 +97,5 @@ Hadjout
 Ratnani
 unhandled
 unallocated
+mypy
 destructor

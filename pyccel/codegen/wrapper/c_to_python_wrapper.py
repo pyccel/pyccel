@@ -128,7 +128,7 @@ class CToPythonWrapper(Wrapper):
         func_args : list of Variable
             The arguments of the FunctionDef.
 
-        body : list of pyccel.ast.basic.Basic
+        body : list of pyccel.ast.basic.PyccelAstNode
             The code which unpacks the arguments.
 
         Examples
@@ -217,7 +217,7 @@ class CToPythonWrapper(Wrapper):
         func_call : FunctionCall
             The function call which checks if the argument has the expected type.
 
-        error_code : tuple of pyccel.ast.basic.Basic
+        error_code : tuple of pyccel.ast.basic.PyccelAstNode
             The code which raises any necessary errors.
         """
         rank = arg.rank
@@ -805,7 +805,7 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.Basic
+        list of pyccel.ast.basic.PyccelAstNode
             The code which translates the `PyccelPyObject` to a C-compatible variable.
         """
 
@@ -883,7 +883,7 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.Basic
+        list of pyccel.ast.basic.PyccelAstNode
             The code which translates the `PyccelPyObject` to a C-compatible variable.
         """
         body = self._wrap_FunctionDefArgument(expr)
@@ -938,7 +938,7 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.Basic
+        list of pyccel.ast.basic.PyccelAstNode
             The code which translates the variable to a `PyccelPyObject`.
         """
 
@@ -988,7 +988,7 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.Basic
+        list of pyccel.ast.basic.PyccelAstNode
             The code which translates the variable to a `PyccelPyObject`.
         """
 
@@ -1039,7 +1039,7 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.Basic
+        list of pyccel.ast.basic.PyccelAstNode
             The code which translates the Variable to a Python-compatible variable.
         """
 
@@ -1079,7 +1079,7 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.Basic
+        list of pyccel.ast.basic.PyccelAstNode
             The code which translates the Variable to a Python-compatible variable.
         """
         v = expr.original_variable

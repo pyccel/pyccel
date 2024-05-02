@@ -111,6 +111,14 @@ For scalar variables and arrays Pyccel supports the following data types:
 -   NumPy real types: `float32`, `float64`, `double`
 -   NumPy complex types: `complex64`, `complex128`
 
+Scalar variables can also be specified without using string type annotations:
+```python
+def fun(arg1: type1, arg2: type2, ..., argN: typeN) -> return_type:
+```
+Such type annotations are compatible with mypy and as such are recommended for use where this is possible. NumPy does not yet provide mypy compatible type annotations which provide sufficient information for Pyccel so string annotations are still necessary for arrays.
+
+:warning: When running Pyccel in interactive mode with `epyccel` anything imported before the function being translated is not copied into the file which will be translated. Using non-string types here is therefore likely to generate errors as the necessary imports for these objects will be missing.
+
 ## How to use Pyccel
 
 ### Installation

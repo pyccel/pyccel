@@ -9,7 +9,7 @@ This module contains all classes and functions used for handling macros.
 """
 from pyccel.utilities.stage import PyccelStage
 
-from .basic          import PyccelAstNode
+from .basic          import TypedAstNode
 from .datatypes      import NativeInteger, NativeGeneric
 from .internals      import PyccelSymbol
 from .variable       import Variable
@@ -25,7 +25,7 @@ __all__ = (
 )
 
 #==============================================================================
-class Macro(PyccelAstNode):
+class Macro(TypedAstNode):
     """."""
     __slots__ = ('_argument',)
     _name = '__UNDEFINED__'

@@ -8,7 +8,7 @@ Module describing all elements of the AST needed to represent elements which app
 file.
 """
 
-from pyccel.ast.basic import Basic
+from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import Module
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
@@ -543,7 +543,7 @@ class BindCArrayVariable(Variable):
 #                                   Utility functions
 # =======================================================================================
 
-class CLocFunc(Basic):
+class CLocFunc(PyccelAstNode):
     """
     Creates a C-compatible pointer to the argument.
 
@@ -588,7 +588,7 @@ class CLocFunc(Basic):
 
 # =======================================================================================
 
-class C_F_Pointer(Basic):
+class C_F_Pointer(PyccelAstNode):
     """
     Creates a Fortran array pointer from a C pointer and size information.
 

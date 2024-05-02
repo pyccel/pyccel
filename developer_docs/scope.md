@@ -6,9 +6,9 @@ In Pyccel, a `Scope` is an object defined in [parser/scope.py](../pyccel/parser/
 
 Each of these objects must be inserted into the scope using and insert function.
 
-## `ScopedNode`
+## `ScopedAstNode`
 
-Each scope is associated with a class, e.g. `FunctionDef`, `For`, `Module`. These classes inherit from the `ScopedNode` class. The scope associated with the class instance, is saved within the class. This makes the scope available when the class instance is available. This is important so as to correctly set the `scope` variable in the `SemanticParser` and the different `CodePrinter`s.
+Each scope is associated with a class, e.g. `FunctionDef`, `For`, `Module`. These classes inherit from the `ScopedAstNode` class. The scope associated with the class instance, is saved within the class. This makes the scope available when the class instance is available. This is important so as to correctly set the `scope` variable in the `SemanticParser` and the different `CodePrinter`s.
 
 ## Name collisions
 

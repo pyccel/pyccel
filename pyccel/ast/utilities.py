@@ -232,7 +232,7 @@ def compatible_operation(*args, language_has_vectors = True):
 
     Parameters
     ==========
-    args      : list of PyccelAstNode
+    args      : list of TypedAstNode
                 The operator arguments
     language_has_vectors : bool
                 Indicates if the language has support for vector
@@ -635,7 +635,7 @@ def insert_fors(blocks, indices, scope, level = 0):
             The index of the index variable used in the outermost loop
     Results
     =======
-    block : list of PyccelAstNodes
+    block : list of TypedAstNodes
             The modified expression
     """
     if all(not isinstance(b, LoopCollection) for b in blocks.body):

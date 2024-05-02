@@ -4,11 +4,10 @@
 Once headers are deprecated this file can be removed.
 """
 
-import warnings
 import pytest
 
 from pyccel.epyccel import epyccel
-from pyccel.errors.errors import PyccelSemanticError
+from pyccel.errors.errors import PyccelSemanticError, Errors
 from pyccel.decorators import allow_negative_index, stack_array
 
 
@@ -40,10 +39,11 @@ def test_allow_negative_index_annotation(language):
         j = -3
         return array[j]
 
-    with warnings.catch_warnings(record=True) as record1:
-        warnings.simplefilter("always")
-        epyc_allow_negative_index_annotation = epyccel(allow_negative_index_annotation, language=language)
-    assert len(record1) == 1
+    errors = Errors()
+    errors.reset()
+    epyc_allow_negative_index_annotation = epyccel(allow_negative_index_annotation, language=language)
+    assert errors.num_messages() == 1
+    errors.reset()
 
     assert epyc_allow_negative_index_annotation() == allow_negative_index_annotation()
     assert isinstance(epyc_allow_negative_index_annotation(), type(allow_negative_index_annotation()))
@@ -61,15 +61,3 @@ def test_stack_array_annotation(language):
 
     assert epyc_stack_array_annotation() == stack_array_annotation()
     assert isinstance(epyc_stack_array_annotation(), type(stack_array_annotation()))
-
-@pytest.mark.skip(reason="Failing due to #1527")
-def test_class_annoation(language):
-    def class_annotation():
-        class A:
-            def __init__(self : 'A'):
-                pass
-
-        #$ header variable myA A
-        myA = A() #pylint: disable=unused-variable
-
-    epyccel(class_annotation, language=language)
