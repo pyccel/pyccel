@@ -33,3 +33,12 @@ def circle_volume(radius):
     volume = my_mult(my_mult(my_div(3. , 4.), my_pi()), my_cub(radius))
     not_change(volume)
     return volume
+
+def arr_mult_scalar(T: 'int[:]', t: int = 13):
+    x = T * t
+    return x
+
+def alias(T: 'int[:]', t: int):
+    x = arr_mult_scalar(T, t=t)
+    y = arr_mult_scalar(t=t, T=T)
+    return x, y

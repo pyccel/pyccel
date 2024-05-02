@@ -68,15 +68,6 @@ def test_abs_c(language):
     assert f1(rand_zero) == f2(rand_zero)
     assert f1(0j + 0) == f2(0j + 0)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="min not implemented in C for integers"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_2_args_i(language):
     @types('int','int')
     def f(x, y):
@@ -88,15 +79,6 @@ def test_min_2_args_i(language):
 
     assert epyc_f(*int_args) == f(*int_args)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="min not implemented in C for integers"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_2_args_i_adhoc(language):
     def f(x:int):
         return min(x, 0)
@@ -197,15 +179,6 @@ def test_min_tuple(language):
     assert epyc_f(*int_args) == f(*int_args)
     assert epyc_f(*float_args) == f(*float_args)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="max not implemented in C for integers"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_max_2_args_i(language):
     @types('int','int')
     def f(x, y):
