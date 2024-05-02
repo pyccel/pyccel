@@ -1,0 +1,4 @@
+itertools
+=========
+
+* product(A,B)

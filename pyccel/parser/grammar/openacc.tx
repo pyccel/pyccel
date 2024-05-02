@@ -1,0 +1,249 @@
+// The following grammar is compatible with OpenACC 2.5
+
+// TODO: - int-expr when needed (see specs)
+//       - use boolean condition for If
+
+Openacc:
+  statements*=OpenaccStmt
+;
+
+OpenaccStmt: '#$' 'acc' stmt=AccConstructOrDirective;
+
+////////////////////////////////////////////////////
+//         Constructs and Directives
+////////////////////////////////////////////////////
+AccConstructOrDirective:
+    AccParallelConstruct 
+  | AccKernelsConstruct
+  | AccDataConstruct
+  | AccEnterDataDirective
+  | AccExitDataDirective
+  | AccHostDataDirective
+  | AccLoopConstruct
+  | AccAtomicConstruct
+  | AccDeclareDirective
+  | AccInitDirective
+  | AccShutDownDirective
+  | AccSetDirective
+  | AccUpdateDirective
+  | AccRoutineDirective
+  | AccWaitDirective
+  | AccEndClause
+;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//     Constructs and Directives definitions
+////////////////////////////////////////////////////
+AccAtomicConstruct:    'atomic'       clauses*=AccAtomicClause;
+AccDataConstruct:      'data'         clauses*=AccDataClause;
+AccDeclareDirective:   'declare'      clauses*=AccDeclareClause;
+AccEnterDataDirective: 'enter' 'data' clauses*=AccEnterDataClause;
+AccExitDataDirective:  'exit'  'data' clauses*=AccExitDataClause;
+AccHostDataDirective:  'host_data'    clauses*=AccHostDataClause;
+AccInitDirective:      'init'         clauses*=AccInitClause;
+AccKernelsConstruct:   'kernels'      clauses*=AccKernelsClause;
+AccLoopConstruct:      'loop'         clauses*=AccLoopClause;
+AccParallelConstruct:  'parallel'     clauses*=AccParallelClause;
+AccRoutineDirective:   'routine'      clauses*=AccRoutineClause;
+AccShutDownDirective:  'shutdown'     clauses*=AccShutDownClause;
+AccSetDirective:       'set'          clauses*=AccSetClause;
+AccUpdateDirective:    'update'       clauses*=AccUpdateClause;
+AccWaitDirective:      'wait'         clauses*=AccWaitClause;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//      Clauses for Constructs and Directives
+////////////////////////////////////////////////////
+AccParallelClause:
+    AccAsync
+  | AccWait 
+  | AccNumGangs 
+  | AccNumWorkers 
+  | AccVectorLength 
+  | AccDeviceType 
+  | AccIf 
+  | AccReduction 
+  | AccCopy 
+  | AccCopyin 
+  | AccCopyout 
+  | AccCreate 
+  | AccPresent 
+  | AccDevicePtr 
+  | AccPrivate 
+  | AccFirstPrivate 
+  | AccDefault 
+;
+
+AccKernelsClause:
+    AccAsync 
+  | AccWait 
+  | AccNumGangs 
+  | AccNumWorkers 
+  | AccVectorLength 
+  | AccDeviceType 
+  | AccIf 
+  | AccCopy 
+  | AccCopyin 
+  | AccCopyout 
+  | AccCreate 
+  | AccPresent 
+  | AccDevicePtr 
+  | AccDefault 
+;
+
+AccDataClause:
+    AccIf 
+  | AccCopy 
+  | AccCopyin 
+  | AccCopyout 
+  | AccCreate 
+  | AccPresent 
+  | AccDevicePtr 
+; 
+
+AccEnterDataClause:
+    AccIf 
+  | AccAsync 
+  | AccWait 
+  | AccCopyin 
+  | AccCreate 
+;
+
+AccExitDataClause:
+    AccIf 
+  | AccAsync 
+  | AccWait 
+  | AccCopyout 
+  | AccDelete 
+  | AccFinalize 
+;
+
+AccHostDataClause: AccUseDevice;
+
+AccLoopClause:
+    AccCollapse 
+  | AccGang 
+  | AccWorker 
+  | AccVector 
+  | AccSeq 
+  | AccAuto 
+  | AccTile 
+  | AccDeviceType 
+  | AccIndependent 
+  | AccPrivate 
+  | AccReduction 
+;
+
+AccAtomicClause: AccAtomicStatus;
+
+AccDeclareClause: 
+    AccCopy 
+  | AccCopyin 
+  | AccCopyout 
+  | AccCreate 
+  | AccPresent 
+  | AccDevicePtr 
+  | AccDeviceResident 
+  | AccLink 
+;
+
+AccInitClause: 
+    AccDeviceType 
+  | AccDeviceNum
+;
+
+AccShutDownClause: 
+    AccDeviceType 
+  | AccDeviceNum
+;
+
+AccSetClause: 
+    AccDefaultAsync
+  | AccDeviceNum
+  | AccDeviceType 
+;
+
+AccUpdateClause:
+    AccAsync 
+  | AccWait 
+  | AccDeviceType 
+  | AccIf 
+  | AccIfPresent 
+  | AccSelf 
+  | AccHost 
+  | AccDevice
+;
+
+AccRoutineClause:
+    AccGang 
+  | AccWorker 
+  | AccVector 
+  | AccSeq 
+  | AccBind
+  | AccDeviceType 
+  | AccNoHost 
+;
+
+AccWaitClause: AccAsync;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//              Clauses definitions
+////////////////////////////////////////////////////
+AccAsync: 'async' '(' args+=ID[','] ')';
+AccAuto: 'auto';
+AccBind: 'bind' '(' arg=STRING ')';
+AccCache: 'cache' '(' args+=ID[','] ')';
+AccCollapse: 'collapse' '(' n=INT ')'; 
+AccCopy: 'copy' '(' args+=ID[','] ')'; 
+AccCopyin: 'copyin' '(' args+=ID[','] ')'; 
+AccCopyout: 'copyout' '(' args+=ID[','] ')'; 
+AccCreate: 'create' '(' args+=ID[','] ')'; 
+AccDefault: 'default' '(' status=AccDefaultStatus ')';
+AccDefaultAsync: 'default_async' '(' args+=ID[','] ')';
+AccDelete: 'delete' '(' args+=ID[','] ')';
+AccDevice: 'device' '(' args+=ID[','] ')';
+AccDeviceNum: 'device_num' '(' n=INT ')';
+AccDevicePtr: 'deviceptr' '(' args+=ID[','] ')'; 
+AccDeviceResident: 'device_resident' '(' args+=ID[','] ')';
+AccDeviceType: 'device_type' '(' args+=ID[','] ')'; 
+AccFirstPrivate: 'firstprivate' '(' args+=ID[','] ')'; 
+AccFinalize: 'finalize'; 
+AccGang: 'gang' '(' args+=AccGangArg[','] ')'; 
+AccHost: 'host' '(' args+=ID[','] ')';
+AccIf: 'if' cond=ID; 
+AccIfPresent: 'if_present';
+AccIndependent: 'independent'; 
+AccLink: 'link' '(' args+=ID[','] ')';
+AccNoHost: 'nohost';
+AccNumGangs: 'num_gangs' '(' n=INT ')'; 
+AccNumWorkers: 'num_workers' '(' n=INT ')'; 
+AccPresent: 'present' '(' args+=ID[','] ')'; 
+AccPrivate: 'private' '(' args+=ID[','] ')'; 
+AccReduction: 'reduction' '('op=AccReductionOperator ':' args+=ID[','] ')'; 
+AccSeq: 'seq';
+AccSelf: 'self' '(' args+=ID[','] ')';
+AccTile: 'tile' '(' args+=ID[','] ')'; 
+AccUseDevice: 'use_device' '(' args+=ID[','] ')';
+AccVector: 'vector' ('(' args+=AccVectorArg ')')?;
+AccVectorLength: 'vector_length' '(' n=INT ')'; 
+AccWait: 'wait' '(' args+=ID[','] ')'; 
+AccWorker: 'worker' ('(' args+=AccWorkerArg ')')?;
+AccEndClause: 'end' construct=AccConstructs;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+AccReductionOperator: ('+' | '-' | '*' | '/');
+AccDefaultStatus: ('none' | 'present');
+AccAtomicStatus: ('read' | 'write' | 'update' | 'capture');
+AccWorkerArg: ('num' ':')? arg=INT ;
+AccVectorArg: ('length' ':')? arg=INT ;
+AccConstructs: ('parallel' | 'loop' | 'kernels');
+
+AccGangArg: AccGangStaticArg | AccGangNumArg; 
+AccGangNumArg: ('num' ':')? arg=INT ;
+AccGangStaticArg: 'static' ':' arg=INT ;
+
+NotaStmt: /.*$/;
+////////////////////////////////////////////////////

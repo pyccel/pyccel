@@ -1,0 +1,62 @@
+# After changing this file, check it on:
+#   http://lint.travis-ci.org/
+
+# to test different versions of python, check the numpy travis file on:
+#   https://github.com/numpy/numpy/blob/master/.travis.yml
+
+sudo: required
+language: python
+
+# Existing Python versions
+python:
+  - "3.5"
+  - "3.6"
+
+# Enable 3.7 without globally enabling 'dist: xenial' for other build jobs
+matrix:
+  include:
+    - python: 3.7
+      dist: xenial
+
+# command before installation
+before_install:
+  - sudo apt-get install gfortran
+  - sudo apt-get install libblas-dev liblapack-dev
+#  - sudo apt-get install libcr-dev mpich2
+#  - sudo apt-get install mpich libmpich-dev # libhdf5-mpich-dev
+  - sudo apt-get install libopenmpi-dev openmpi-bin # libhdf5-openmpi-dev
+
+# command to install Python library and dependencies
+install:
+  - pip install .
+
+before_script:
+  - mkdir __pytest__
+
+# command to run tests
+script:
+  - cd __pytest__
+  - python -m pytest ../tests/parser/test_headers.py
+  - python -m pytest ../tests/parser/test_openmp.py
+  - python -m pytest ../tests/parser/test_openacc.py
+  - python -m pytest ../tests/syntax/test_syntax.py
+  - python -m pytest ../tests/semantic/test_semantic.py
+  - python -m pytest ../tests/codegen/test_codegen.py
+  - python -m pytest ../tests/complexity/test_complexity.py
+  - python -m pytest ../tests/errors/test_errors.py
+  - python -m pytest ../tests/warnings/test_warnings.py
+  - python -m pytest ../tests/preprocess/test_preprocess.py
+  - python -m pytest ../tests/epyccel -v -m "not parallel"
+#  - mpirun -n 4 python -m pytest ../tests/epyccel -v -m parallel
+# this test must be executed with python, since we are calling mpif90 inside it
+  - python ../tests/internal/test_internal.py
+  - python ../tests/external/test_external.py
+  - python ../tests/macro/test_macro.py
+#  - python ../tests/test_pyccel.py --execute
+#  - python ../tests/test_pyccel_openmp.py --openmp --execute
+#  - python ../tests/test_pyccel_lapack.py --libs='blas lapack' --execute
+#  - python ../tests/test_pyccel_mpi.py --compiler=mpif90
+  - cd -
+
+after_script:
+  - rm -rf __pytest__

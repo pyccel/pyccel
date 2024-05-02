@@ -1,0 +1,90 @@
+// TODO: - linear:   improve using lists. see specs
+//       - parallel: add if parallel
+
+Openmp:
+  statements*=OpenmpStmt
+;
+
+OpenmpStmt: 
+  '#$' 'omp' stmt=OmpConstructOrDirective
+;
+
+////////////////////////////////////////////////////
+//         Constructs and Directives
+////////////////////////////////////////////////////
+OmpConstructOrDirective:
+    OmpParallelConstruct 
+  | OmpLoopConstruct
+  | OmpSingleConstruct
+  | OmpEndClause
+;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//     Constructs and Directives definitions
+////////////////////////////////////////////////////
+OmpParallelConstruct: 'parallel' clauses*=OmpParallelClause;
+OmpLoopConstruct:     'do'       clauses*=OmpLoopClause;
+OmpSingleConstruct:   'single'   clauses*=OmpSingleClause;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//      Clauses for Constructs and Directives
+////////////////////////////////////////////////////
+OmpParallelClause:
+    OmpNumThread
+  | OmpDefault
+  | OmpPrivate
+  | OmpShared
+  | OmpFirstPrivate
+  | OmpCopyin
+  | OmpReduction
+  | OmpProcBind
+;
+
+OmpLoopClause:
+    OmpPrivate
+  | OmpFirstPrivate
+  | OmpLastPrivate
+  | OmpLinear
+  | OmpReduction
+  | OmpSchedule
+  | OmpCollapse
+  | OmpOrdered
+;
+
+OmpSingleClause:
+    OmpPrivate
+  | OmpFirstPrivate
+;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//              Clauses definitions
+////////////////////////////////////////////////////
+OmpNumThread: 'num_threads' '(' thread=ThreadIndex ')';
+OmpDefault: 'default' '(' status=OmpDefaultStatus ')';
+OmpProcBind: 'proc_bind' '(' status=OmpProcBindStatus ')';
+OmpPrivate: 'private' '(' args+=ID[','] ')';
+OmpShared: 'shared' '(' args+=ID[','] ')';
+OmpFirstPrivate: 'firstprivate' '(' args+=ID[','] ')';
+OmpLastPrivate: 'lastprivate' '(' args+=ID[','] ')';
+OmpCopyin: 'copyin' '(' args+=ID[','] ')';
+OmpReduction: 'reduction' '('op=OmpReductionOperator ':' args+=ID[','] ')';
+OmpCollapse: 'collapse' '(' n=INT ')';
+OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
+OmpOrdered: 'ordered' ('(' n=INT ')')?;
+OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
+OmpEndClause: 'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+OmpScheduleKind: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
+OmpProcBindStatus: ('master' | 'close' | 'spread');
+OmpReductionOperator: ('+' | '-' | '*' | '/');
+OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
+OpenmpConstructs: ('single' | 'parallel' | 'do');
+
+ThreadIndex: (ID | INT);
+NotaStmt: /.*$/;
+////////////////////////////////////////////////////

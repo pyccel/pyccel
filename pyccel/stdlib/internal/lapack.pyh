@@ -1,0 +1,723 @@
+# pyccel header for LAPACK.
+
+#$ header metavar module_version='3.8'
+#$ header metavar ignore_at_import=True
+#$ header metavar libraries='${LAPACK_LIBRARIES}'
+#$ header metavar save=True
+
+# .......................................
+# change subroutines str dtype to char
+# .......................................
+#             
+# .......................................
+
+#$ header function dgetrf(int, int, double [:,:], int, int [:], int)
+#$ header function dgetri(int, double [:,:], int, int [:], double [:], int, int)
+
+#$ header function dgetrs(str, int, int, double [:,:], int, int [:], double [:,:], int, int)
+#$ header function dgecon(str, int, double [:,:], int, double, double, double [:], int [:], int)
+
+#$ header function dgesv(int, int, double [:,:], int, int [:], double [:,:], int, int)
+
+
+#...............................................................
+
+
+#$ header function sgesv(int, int, float [:,:], int, int [:], float [:,:], int, int)
+#$ header function dgesv(int, int, double [:,:], int, int [:], double [:,:], int, int)
+
+#$ header function sgesvx(str, str, str, int, int, float [:,:], int, float, float, int, int, int, float [:], float [:,:], int, float [:,:], int, float [:], int, int [:], int)
+#$ header function dgesvx(str, str, str, int, int, double [:,:], int, double, double, int, int, int, double [:], double [:,:], int, double [:,:], int, double [:], int, int [:], int)
+
+#$ header function sgbsv(int, int, int, int, float [:,:], int, int [:], float [:,:], int, int)
+#$ header function dgbsv(int, int, int, int, double [:,:], int, int [:], double [:,:], int, int)
+
+#$ header function sgbsvx(str, str, int, int, int, int, float [:,:], int, float [:,:], int, int [:], str, float [:], float [:], float [:,:])
+#$ header function dgbsvx(str, str, int, int, int, int, double [:,:], int, double [:,:], int, int [:], str, double [:], double [:], double [:,:])
+
+#$ header function sgtsv(int, int, float [:], float [:], float [:], float [:,:], int, int)
+#$ header function dgtsv(int, int, double [:], double [:], double [:], double [:,:], int, int)
+
+#$ header function sgtsvx(str, str, int, int, float [:], float [:], float [:], float [:], float [:], float [:], float [:], int [:], float [:,:], int, float [:,:], int, float, float [:], float [:], float [:], int [:], int)
+#$ header function dgtsvx(str, str, int, int, double [:], double [:], double [:], double [:], double [:], double [:], double [:], int [:], double [:,:], int, double [:,:], int, double, double [:], double [:], double [:], int [:], int)
+
+
+#$ header function sposv(str, int, int, float [:,:], int, float [:,:], int, int)
+#$ header function dposv(str, int, int, double [:,:], int, double [:,:], int, int)
+
+#$ header function sposvx(str, str, int, int, float [:,:], int, float [:,:], int, str, float [:], float [:,:], int, float [:,:], int, float, float [:], float [:], float [:], int [:], int)
+#$ header function dposvx(str, str, int, int, double [:,:], int, double [:,:], int, str, double [:], double [:,:], int, double [:,:], int, double, double [:], double [:], double [:], int [:], int)
+
+#$ header function sppsv(str, int, int, float [:], float [:,:], int, int)
+#$ header function dppsv(str, int, int, double [:], double [:,:], int, int)
+
+#$ header function sppsvx(str, str, int, int, float [:], float [:], str, float [:], float [:,:], int, float [:,:], int, float [:], float [:], float [:], int [:], int)
+#$ header function dppsvx(str, str, int, int, double [:], double [:], str, double [:], double [:,:], int, double [:,:], int, double [:], double [:], double [:], int [:], int)
+
+#$ header function spbsv(str, int, int, int, float [:,:], int, float [:,:], int, int)
+#$ header function dpbsv(str, int, int, int, double [:,:], int, double [:,:], int, int)
+
+#$ header function spbsvx(str, str, int, int, int, float [:,:], int, float [:,:], int, str, float [:], float [:,:], int, float [:,:], int, float, float [:], float [:], float [:], int [:], int)
+#$ header function dpbsvx(str, str, int, int, int, double [:,:], int, double [:,:], int, str, double [:], double [:,:], int, double [:,:], int, double, double [:], double [:], double [:], int [:], int)
+
+#$ header function sptsv(int, int, float [:], float [:], float [:,:], int, int)
+#$ header function dptsv(int, int, double [:], double [:], double [:,:], int, int)
+
+#$ header function sptsvx(str, int, int, float [:], float [:], float [:], float [:], float [:,:], int, float [:,:], int, float, float [:], float [:], float [:], int)
+#$ header function dptsvx(str, int, int, double [:], double [:], double [:], double [:], double [:,:], int, double [:,:], int, double, double [:], double [:], double [:], int)
+
+#$ header function ssysv(str, int, int, float [:,:], int, int [:], float [:,:], int, float [:], int, int)
+#$ header function dsysv(str, int, int, double [:,:], int, int [:], double [:,:], int, double [:], int, int)
+
+#$ header function ssysvx(str, str, int, int, float [:,:], int, float [:,:], int, int [:], float [:,:], int, float, float [:], float [:], float [:], int, int [:], int)
+#$ header function dsysvx(str, str, int, int, double [:,:], int, double [:,:], int, int [:], double [:,:], int, double, double [:], double [:], double [:], int, int [:], int)
+
+#$ header function sspsv(str, int, int, float [:], int [:], float [:,:], int, int)
+#$ header function dspsv(str, int, int, double [:], int [:], double [:,:], int, int)
+
+#$ header function sspsvx(str, str, int, int, float [:], float [:], int [:], float [:,:], int, float [:,:], int, float, float [:], float [:], float [:], float [:], int)
+#$ header function dspsvx(str, str, int, int, double [:], double [:], int [:], double [:,:], int, double [:,:], int, double, double [:], double [:], double [:], double [:], int)
+
+
+
+#....................................................................
+
+
+
+#$ header function sgels(str, int, int, int, float [:,:], int, float [:,:], int, float [:], int, int)
+#$ header function dgels(str, int, int, int, double [:,:], int, double [:,:], int, double [:], int, int)
+
+#$ header function sgelsy(int, int, int, float [:,:], int, float [:,:], int, int [:], float, int, float [:], int, int)
+#$ header function dgelsy(int, int, int, double [:,:], int, double [:,:], int, int [:], double, int, double [:], int, int)
+
+#$ header function sgelss(int, int, int, float [:,:], int, float [:,:], int, float [:], float, int, float [:], int, int)
+#$ header function dgelss(int, int, int, double [:,:], int, double [:,:], int, double [:], double, int, double [:], int, int)
+
+#$ header function sgelsd(int, int, float [:,:], int, float [:,:], int, float [:], float, int, float [:], int, int [:], int)
+#$ header function dgelsd(int, int, double [:,:], int, double [:,:], int, double [:], double, int, double [:], int, int [:], int)
+
+#...........................................................
+
+#$ header function sgglse(int, int, int, float [:,:], int, float [:,:], int, float [:], float [:], float [:], float [:], int, int)
+#$ header function dgglse(int, int, int, double [:,:], int, double [:,:], int, double [:], double [:], double [:], double [:], int, int)
+
+#$ header function sggglm(int, int, int, float [:,:], int, float [:,:], int, float [:], float [:], float [:], float [:], int, int)
+#$ header function dggglm(int, int, int, double [:,:], int, double [:,:], int, double [:], double [:], double [:], double [:], int, int)
+
+#....................................................
+
+
+
+#$ header function ssyev(str, str, int, float [:,:], int, float [:], float [:], int, int)
+#$ header function dsyev(str, str, int, double [:,:], int, double [:], double [:], int, int)
+
+#$ header function ssyevd(str, str, int, float [:,:], int, float [:], float [:], int, float [:], int, int)
+#$ header function dsyevd(str, str, int, double [:,:], int, double [:], double [:], int, double [:], int, int)
+
+
+#$ header function ssyevx(str, str, str, int, float [:,:], int, float, float, int, int, float, int, float [:], float [:,:], int, float [:], int, int [:], int [:], int)
+#$ header function dsyevx(str, str, str, int, double [:,:], int, double, double, int, int, double, int, double [:], double [:,:], int, double [:], int, int [:], int [:], int)
+
+
+#$ header function ssyevr(str, str, str, int, float [:,:], int, float, float, int, int, float, int, float [:], float [:,:], int, int [:], float [:], int, int [:], int, int)
+#$ header function dsyevr(str, str, str, int, double [:,:], int, double, double, int, int, double, int, double [:], double [:,:], int, int [:], double [:], int, int [:], int, int)
+
+
+#$ header function sspev(str, str, int, float [:], float [:], float [:,:], int, float [:], int)
+#$ header function dspev(str, str, int, double [:], double [:], double [:,:], int, double [:], int)
+
+#$ header function sspevd(str, str, int, float [:], float [:], float [:,:], int, float [:], int, int [:], int, int)
+#$ header function dspevd(str, str, int, double [:], double [:], double [:,:], int, double [:], int, int [:], int, int)
+
+#$ header function sspevx(str, str, str, int, float [:], float, float, int, int, float, int, float [:], float [:,:], int, float [:], int [:], int [:], int)
+#$ header function dspevx(str, str, str, int, double [:], double, double, int, int, double, int, double [:], double [:,:], int, double [:], int [:], int [:], int)
+
+
+#$ header function ssbev(str, str, int, int, float [:,:], int, float [:], float [:,:], int, float [:], int)
+#$ header function dsbev(str, str, int, int, double [:,:], int, double [:], double [:,:], int, double [:], int)
+
+#$ header function ssbevd(str, str, int, int, float [:,:], int, float [:], float [:,:], int, float [:], int, int [:], int, int)
+#$ header function dsbevd(str, str, int, int, double [:,:], int, double [:], double [:,:], int, double [:], int, int [:], int, int)
+
+
+#$ header function ssbevx(str, str, str, int, int, float [:,:], int, float [:,:], int, float, float, int, int, float, int, float [:], float [:,:], int, float [:], int [:], int [:], int)
+#$ header function dsbevx(str, str, str, int, int, double [:,:], int, double [:,:], int, double, double, int, int, double, int, double [:], double [:,:], int, double [:], int [:], int [:], int)
+
+
+#$ header function sstrev(str, int, float [:], float [:], float [:,:], int, float [:], int)
+#$ header function dstrev(str, int, double [:], double [:], double [:,:], int, double [:], int)
+
+#$ header function sstrevd(str, int, float [:], float [:], float [:,:], int, float [:], int, int [:], int, int)
+#$ header function dstrevd(str, int, double [:], double [:], double [:,:], int, double [:], int, int [:], int, int)
+
+
+#$ header function sstrevx(str, str, int, float [:], float [:], float, float, int, int, float, int, float [:], float [:,:], int, float [:], int [:], int [:], int)
+#$ header function dstrevx(str, str, int, double [:], double [:], double, double, int, int, double, int, double [:], double [:,:], int, double [:], int [:], int [:], int)
+
+
+#$ header function sstrevr(str, str, int, float [:], float [:], float, float, int, int, float, int, float [:], float [:,:], int, int [:], float [:], int, int [:], int, int)
+#$ header function dstrevr(str, str, int, double [:], double [:], double, double, int, int, double, int, double [:], double [:,:], int, int [:], double [:], int, int [:], int, int)
+
+# header function sgees(str, str,exter, int, float [:,:], int, int, float [:], float [:], float [:,:], int, float [:], int,bool[:], int)
+# header function dgees(str, str,exter, int, double [:,:], int, int, double [:], double [:], double [:,:], int, double [:], int,bool[:], int)
+
+# header function sgeesx(str, str,exter, str, int, float [:,:], int, int, float [:], float [:], float [:,:], int, float, float, float [:], int, int [:], int,bool[:], int)
+# header function dgeesx(str, str,exter, str, int, double [:,:], int, int, double [:], double [:], double [:,:], int, double, double, double [:], int, int [:], int,bool[:], int)
+
+
+#$ header function sgeev(str, str, int, float [:,:], int, float [:], float [:], float [:,:], int, float [:,:], int, float [:], int, int)
+#$ header function dgeev(str, str, int, double [:,:], int, double [:], double [:], double [:,:], int, double [:,:], int, double [:], int, int)
+
+
+#$ header function sgeevx(str, str, str, str, int, float [:,:], int, float [:], float [:], float [:,:], int, int, int, float [:], float, float [:], float [:], float [:], int, int [:], int)
+#$ header function dgeevx(str, str, str, str, int, double [:,:], int, double [:], double [:], double [:,:], int, int, int, double [:], double, double [:], double [:], double [:], int, int [:], int)
+
+
+#$ header function sgesvd(str, str, int, int, float [:,:], int, float [:], float [:,:], int, float [:,:], int, float [:], int, int)
+#$ header function dgesvd(str, str, int, int, double [:,:], int, double [:], double [:,:], int, double [:,:], int, double [:], int, int)
+
+#$ header function sgesdd(str, int, int, float [:,:], int, float [:], float [:,:], int, float [:,:], int, float [:], int, int [:], int)
+#$ header function dgesdd(str, int, int, double [:,:], int, double [:], double [:,:], int, double [:,:], int, double [:], int, int [:], int)
+
+#$ header function sstev(str, int, float [:], float [:], float [:,:], int, float [:], int)
+#$ header function dstev(str, int, double [:], double [:], double [:,:], int, double [:], int)
+
+#$ header function sstevd(str, int, float [:], float [:], float [:,:], int, float [:], int, int [:], int, int)
+#$ header function dstevd(str, int, double [:], double [:], double [:,:], int, double [:], int, int [:], int, int)
+
+#$ header function sstevx(str, str, int, float [:], float [:], float, float, int, int, float, int, float [:], float [:,:], int, float [:], int [:], int [:], int)
+#$ header function dstevx(str, str, int, double [:], double [:], double, double, int, int, double, int, double [:], double [:,:], int, double [:], int [:], int [:], int)
+
+
+#$ header function sstevr(str, str, int, float [:], float [:], float, float, int, int, float, int, float [:], float [:,:], int, int [:], float [:], int, int [:], int, int)
+#$ header function dstevr(str, str, int, double [:], double [:], double, double, int, int, double, int, double [:], double [:,:], int, int [:], double [:], int, int [:], int, int)
+
+#$ header function ssytrd(str, int, float [:,:], int, float [:], float [:], float [:], float [:], int, int)
+#$ header function dsytrd(str, int, double [:,:], int, double [:], double [:], double [:], double [:], int, int)
+
+#$ header function ssptrd(str, int, float [:], float [:], float [:], float [:], int)
+#$ header function dsptrd(str, int, double [:], double [:], double [:], double [:], int)
+
+#$ header function ssbtrd(str, str, int, int, float [:,:], int, float [:], float [:], float [:,:], int, float [:], int)
+#$ header function dsbtrd(str, str, int, int, double [:,:], int, double [:], double [:], double [:,:], int, double [:], int)
+
+#$ header function sorgtr(str, int, float [:,:], int, float [:], float [:], int, int)
+#$ header function dorgtr(str, int, double [:,:], int, double [:], double [:], int, int)
+
+#$ header function sormtr(str, str, str, int, int, float [:,:], int, float [:], float [:,:], int, float [:], int, int)
+#$ header function dormtr(str, str, str, int, int, double [:,:], int, double [:], double [:,:], int, double [:], int, int)
+
+#$ header function sopgtr(str, int, float [:], float [:], float [:,:], int, float [:], int)
+#$ header function dopgtr(str, int, double [:], double [:], double [:,:], int, double [:], int)
+
+#$ header function sopmtr(str, str, str, int, int, float [:], float [:], float [:,:], int, float [:], int)
+#$ header function dopmtr(str, str, str, int, int, double [:], double [:], double [:,:], int, double [:], int)
+
+#$ header function ssteqr(str, int, float [:], float [:], float [:,:], int, float [:], int)
+#$ header function dsteqr(str, int, double [:], double [:], double [:,:], int, double [:], int)
+
+#$ header function ssterf(int, float [:], float [:], int)
+#$ header function dsterf(int, double [:], double [:], int)
+
+#$ header function sstedc(str, int, float [:], float [:], float [:,:], int, float [:], int, int [:], int, int)
+#$ header function dstedc(str, int, double [:], double [:], double [:,:], int, double [:], int, int [:], int, int)
+
+
+#$ header function sstegr(str, str, int, float [:], float [:], float, float, int, int, float, int, float [:], float [:,:], int, int [:], float [:], int, int [:], int, int)
+#$ header function dstegr(str, str, int, double [:], double [:], double, double, int, int, double, int, double [:], double [:,:], int, int [:], double [:], int, int [:], int, int)
+
+
+#$ header function sstebz(str, str, int, float, float, int, int, float, float [:], float [:], int, int, float [:], int [:], int [:], float [:], int [:], int)
+#$ header function dstebz(str, str, int, double, double, int, int, double, double [:], double [:], int, int, double [:], int [:], int [:], double [:], int [:], int)
+
+#$ header function sstein(int, float [:], float [:], int, float [:], float [:], float [:], float [:,:], int, float [:], int [:], int [:], int)
+#$ header function dstein(int, double [:], double [:], int, double [:], double [:], double [:], double [:,:], int, double [:], int [:], int [:], int)
+
+#$ header function spteqr(str, int, float [:], float [:], float [:,:], int, float [:], int)
+#$ header function dpteqr(str, int, double [:], double [:], double [:,:], int, double [:], int)
+
+
+
+
+
+#......................................................
+
+
+
+#$ header function dsygv(int, str, str, int, double [:,:], int, double [:,:], int, double [:], double [:], int, int)
+#$ header function ssygv(int, str, str, int, float [:,:], int, float [:,:], int, float [:], float [:], int, int)
+
+#$ header function dsygvd(int, str, str, int, double [:,:], int, double [:,:], int, double [:], double [:], int, int [:], int, int)
+#$ header function ssygvd(int, str, str, int, float [:,:], int, float [:,:], int, float [:], float [:], int, int [:], int, int)
+
+#$ header function dsygvx(int, str, str, str, int, double [:,:], int, double [:,:], int, double, double, int, int, double, int, double [:], double [:,:], int, double [:], int, int [:], int [:], int)
+#$ header function ssygvx(int, str, str, str, int, float [:,:], int, float [:,:], int, float, float, int, int, float, int, float [:], float [:,:], int, float [:], int, int [:], int [:], int)
+
+#$ header function dspgv(int, str, str, int, double [:], double [:], double [:], double [:,:], int, double [:], int)
+#$ header function sspgv(int, str, str, int, float [:], float [:], float [:], float [:,:], int, float [:], int)
+
+#$ header function dspgvd(int, str, str, int, double [:], double [:], double [:], double [:,:], int, double [:], int, int [:], int, int)
+#$ header function sspgvd(int, str, str, int, float [:], float [:], float [:], float [:,:], int, float [:], int, int [:], int, int)
+
+#$ header function dspgvx(int, str, str, str, int, double [:], double [:], double, double, int, int, double, int, double [:], double [:,:], int, double [:], int [:], int [:], int)
+#$ header function sspgvx(int, str, str, str, int, float [:], float [:], float, float, int, int, float, int, float [:], float [:,:], int, float [:], int [:], int [:], int)
+
+#$ header function dsbgv(str, str, int, int, int, double [:,:], int, double [:,:], int, double [:], double [:,:], int, double [:], int)
+#$ header function ssbgv(str, str, int, int, int, float [:,:], int, float [:,:], int, float [:], float [:,:], int, float [:], int)
+
+#$ header function dsbgvd(str, str, int, int, int, double [:,:], int, double [:,:], int, double [:], double [:,:], int, double [:], int, int [:], int, int)
+#$ header function ssbgvd(str, str, int, int, int, float [:,:], int, float [:,:], int, float [:], float [:,:], int, float [:], int, int [:], int, int)
+
+#$ header function dsbgvx(str, str, str, int, int, int, double [:,:], int, double [:,:], int, double [:,:], int, double, double, int, int, double, int, double [:], double [:,:], int, double [:], int [:], int [:], int)
+#$ header function ssbgvx(str, str, str, int, int, int, float [:,:], int, float [:,:], int, float [:,:], int, float, float, int, int, float, int, float [:], float [:,:], int, float [:], int [:], int [:], int)
+
+# header function dgges(str, str, str,exter, int, double [:,:], int, double [:,:], int, int, double [:], double [:], double [:], double [:,:], int, double [:,:], int, double [:], int,bool[:], int)
+# header function sgges(str, str, str,exter, int, float [:,:], int, float [:,:], int, int, float [:], float [:], float [:], float [:,:], int, float [:,:], int, float [:], int,bool[:], int)
+
+# header function dggesx(str, str, str,exter, str, int, double [:,:], int, double [:,:], int, int, double [:], double [:], double [:], double [:,:], int, double [:,:], int, double [2], double [2], double [:], int, int [:], int,bool[:], int)
+# header function sggesx(str, str, str,exter, str, int, float [:,:], int, float [:,:], int, int, float [:], float [:], float [:], float [:,:], int, float [:,:], int, float [2], float [2], float [:], int, int [:], int,bool[:], int)
+
+
+#$ header function dggev(str, str, int, double [:,:], int, double [:,:], int, double [:], double [:], double [:], double [:,:], int, double [:,:], int, double [:], int, int)
+#$ header function sggev(str, str, int, float [:,:], int, float [:,:], int, float [:], float [:], float [:], float [:,:], int, float [:,:], int, float [:], int, int)
+
+
+#$ header function dggevx(str, str, str, str, int, double [:,:], int, double [:,:], int, double [:], double [:], double [:], double [:,:], int, double [:,:], int, int, int, double [:], double [:], double, double, double [:], double [:], double [:], int, int [:],bool[:], int)
+#$ header function sggevx(str, str, str, str, int, float [:,:], int, float [:,:], int, float [:], float [:], float [:], float [:,:], int, float [:,:], int, int, int, float [:], float [:], float, float, float [:], float [:], float [:], int, int [:],bool[:], int)
+
+
+#$ header function dggsvd(str, str, str, int, int, int, int, int, double [:,:], int, double [:,:], int, double [:], double [:], double [:,:], int, double [:,:], int, double [:,:], int, double [:], int [:], int)
+#$ header function sggsvd(str, str, str, int, int, int, int, int, float [:,:], int, float [:,:], int, float [:], float [:], float [:,:], int, float [:,:], int, float [:,:], int, float [:], int [:], int)
+
+
+
+#............................................................
+#Lineaire equation
+#............................................................
+#$ header function sgetrf(int, int, float [:,:], int, float [:], int)
+#$ header function dgetrf(int, int, double [:,:], int, double [:], int)
+
+#$ header function sgetrs(str, int, int, float [:,:], int, float [:], float [:,:], int, int)
+#$ header function dgetrs(str, int, int, double [:,:], int, double [:], double [:,:], int, int)
+
+
+#$ header function sgecon(str, int, float [:,:], int, float, float, float [:], int [:], int)
+#$ header function dgecon(str, int, double [:,:], int, double, double, double [:], int [:], int)
+
+#$ header function sgerfs(str, int, int, float [:,:], int, float [:,:], int, int [:], float [:,:], int, float [:,:], int, float [:], float [:], float [:], int [:], int)
+#$ header function dgerfs(str, int, int, double [:,:], int, double [:,:], int, int [:], double [:,:], int, double [:,:], int, double [:], double [:], double [:], int [:], int)
+
+
+#$ header function sgetri(int, float [:,:], int, int [:], float [:], int, int)
+#$ header function dgetri(int, double [:,:], int, int [:], double [:], int, int)
+
+
+#$ header function sgeequ(int, int, float [:,:], int, float [:], float [:], float, float, float, int)
+#$ header function dgeequ(int, int, double [:,:], int, double [:], double [:], double, double, double, int)
+
+
+#$ header function sgbtrf(int, int, int, int, float [:,:], int, int [:], int)
+#$ header function dgbtrf(int, int, int, int, double [:,:], int, int [:], int)
+
+
+#$ header function sgbtrs(str, int, int, int, int, float [:,:], int, int [:], float [:,:], int, int)
+#$ header function dgbtrs(str, int, int, int, int, double [:,:], int, int [:], double [:,:], int, int)
+
+#$ header function sgbcon(str, int, int, int, float [:,:], int, int [:], float, float, float [:], int [:], int)
+#$ header function dgbcon(str, int, int, int, double [:,:], int, int [:], double, double, double [:], int [:], int)
+
+#$ header function sgbrfs(str, int, int, int, int, float [:,:], int, float [:,:], int, int [:], float [:,:], int, float [:,:], int, float [:], float [:], float [:], int [:], int)
+#$ header function dgbrfs(str, int, int, int, int, double [:,:], int, double [:,:], int, int [:], double [:,:], int, double [:,:], int, double [:], double [:], double [:], int [:], int)
+
+#$ header function sgbequ(int, int, int, int, float [:,:], int, float [:], float [:], float, float, float, int)
+#$ header function dgbequ(int, int, int, int, double [:,:], int, double [:], double [:], double, double, double, int)
+
+
+#$ header function sgttrf(int, float [:], float [:], float [:], float [:], int [:], int)
+#$ header function dgttrf(int, double [:], double [:], double [:], double [:], int [:], int)
+
+#$ header function sgttrs(str, int, int, float [:], float [:], float [:], float [:], int [:], float [:,:], int, int)
+#$ header function dgttrs(str, int, int, double [:], double [:], double [:], double [:], int [:], double [:,:], int, int)
+
+
+#$ header function sgtcon(str, float [:], float [:], float [:], float [:], int [:], float, float, float [:], int [:], int)
+#$ header function dgtcon(str, double [:], double [:], double [:], double [:], int [:], double, double, double [:], int [:], int)
+
+
+#$ header function sgtrfs(str, int, int, float [:], float [:], float [:], float [:], float [:], float [:], float [:], int [:], float [:,:], int, float [:,:], int, float [:], float [:], float [:], int [:], int)
+#$ header function dgtrfs(str, int, int, double [:], double [:], double [:], double [:], double [:], double [:], double [:], int [:], double [:,:], int, double [:,:], int, double [:], double [:], double [:], int [:], int)
+
+
+
+
+
+
+#$ header function spotrf(str, int, float [:,:], int, int)
+#$ header function dpotrf(str, int, double [:,:], int, int)
+
+#$ header function spotrs(str, int, int, float [:,:], int, float [:,:], int, int)
+#$ header function dpotrs(str, int, int, double [:,:], int, double [:,:], int, int)
+
+
+#$ header function spocon(str, int, float [:,:], int, float, float, float [:], int [:], int)
+#$ header function dpocon(str, int, double [:,:], int, double, double, double [:], int [:], int)
+
+
+#$ header function sporfs(str, int, int, float [:,:], int, float [:,:], int, float [:,:], int, float [:,:], int, float [:], float [:], float [:], int [:], int)
+#$ header function dporfs(str, int, int, double [:,:], int, double [:,:], int, double [:,:], int, double [:,:], int, double [:], double [:], double [:], int [:], int)
+
+#$ header function spotri(str, int, float [:,:], int, int)
+#$ header function dpotri(str, int, double [:,:], int, int)
+
+
+#$ header function spoequ(int, float [:,:], int, float [:], float, float, int)
+#$ header function dpoequ(int, double [:,:], int, double [:], double, double, int)
+
+
+
+#$ header function spptrf(str, int, float [:], int)
+#$ header function dpptrf(str, int, double [:], int)
+
+
+#$ header function spptrs(str, int, int, float [:], float [:,:], int, int)
+#$ header function dpptrs(str, int, int, double [:], double [:,:], int, int)
+
+#$ header function sppcon(str, int, float [:], float, float, float [:], int [:], int)
+#$ header function dppcon(str, int, double [:], double, double, double [:], int [:], int)
+
+
+
+#$ header function spprfs(str, int, int, float [:], float [:], float [:,:], int, float [:,:], int, float [:], float [:], float [:], int [:], int)
+#$ header function dpprfs(str, int, int, double [:], double [:], double [:,:], int, double [:,:], int, double [:], double [:], double [:], int [:], int)
+
+
+#$ header function spptri(str, int, float [:], int)
+#$ header function dpptri(str, int, double [:], int)
+
+
+#$ header function sppequ(str, int, float [:], float [:], float, float, int)
+#$ header function dppequ(str, int, double [:], double [:], double, double, int)
+
+
+#$ header function spbtrf(str, int, int, float [:,:], int, int)
+#$ header function dpbtrf(str, int, int, double [:,:], int, int)
+
+
+#$ header function spbtrs(str, int, int, int, float [:,:], int, float [:,:], int, int)
+#$ header function dpbtrs(str, int, int, int, double [:,:], int, double [:,:], int, int)
+
+#$ header function spbcon(str, int, int, float [:,:], int, float, float, float [:], int [:], int)
+#$ header function dpbcon(str, int, int, double [:,:], int, double, double, double [:], int [:], int)
+
+#$ header function spbrfs(str, int, int, int, float [:,:], int, float [:,:], int, float [:,:], int, float [:,:], int, float [:], float [:], float [:], int [:], int)
+#$ header function dpbrfs(str, int, int, int, double [:,:], int, double [:,:], int, double [:,:], int, double [:,:], int, double [:], double [:], double [:], int [:], int)
+
+#$ header function spbequ(str, int, int, float [:,:], int, float [:], float, float, int)
+#$ header function dpbequ(str, int, int, double [:,:], int, double [:], double, double, int)
+
+
+#$ header function spttrf(int, float [:], float [:], int)
+#$ header function dpttrf(int, double [:], double [:], int)
+
+#$ header function spttrs(int, int, float [:], float [:], float [:,:], int, int)
+#$ header function dpttrs(int, int, double [:], double [:], double [:,:], int, int)
+
+#$ header function sptcon(int, float [:], float [:], float, float, float [:], int)
+#$ header function dptcon(int, double [:], double [:], double, double, double [:], int)
+
+
+#$ header function sptrfs(int, int, float [:], float [:], float [:], float [:], float [:,:], int, float [:,:], int, float [:], float [:], float [:], int)
+#$ header function dptrfs(int, int, double [:], double [:], double [:], double [:], double [:,:], int, double [:,:], int, double [:], double [:], double [:], int)
+
+#$ header function ssytrf(str, int, float [:,:], int, int [:], float [:], int, int)
+#$ header function dsytrf(str, int, double [:,:], int, int [:], double [:], int, int)
+
+#$ header function ssytrs(str, int, int, float [:,:], int, int [:], float [:,:], int, int)
+#$ header function dsytrs(str, int, int, double [:,:], int, int [:], double [:,:], int, int)
+
+
+#$ header function ssycon(str, int, float [:,:], int, int [:], float, float, float [:], int [:], int)
+#$ header function dsycon(str, int, double [:,:], int, int [:], double, double, double [:], int [:], int)
+
+#$ header function ssyrfs(str, int, int, float [:,:], int, float [:,:], int, float [:], float [:,:], int, float [:,:], int, float [:], float [:], float [:], int [:], int)
+#$ header function dsyrfs(str, int, int, double [:,:], int, double [:,:], int, double [:], double [:,:], int, double [:,:], int, double [:], double [:], double [:], int [:], int)
+
+#$ header function ssytri(str, int, float [:,:], int, int [:], float [:], int)
+#$ header function dsytri(str, int, double [:,:], int, int [:], double [:], int)
+
+
+#$ header function ssptrf(str, int, float [:], int [:], int)
+#$ header function dsptrf(str, int, double [:], int [:], int)
+
+
+#$ header function ssptrs(str, int, int, float [:], int [:], float [:,:], int, int)
+#$ header function dsptrs(str, int, int, double [:], int [:], double [:,:], int, int)
+
+
+#$ header function sspcon(str, int, float [:], int [:], float, float, float [:], int [:], int)
+#$ header function dspcon(str, int, double [:], int [:], double, double, double [:], int [:], int)
+
+#$ header function ssprfs(str, int, int, float [:], float [:], int [:], float [:,:], int, float [:,:], int, float [:], float [:], float [:], int [:], int)
+#$ header function dsprfs(str, int, int, double [:], double [:], int [:], double [:,:], int, double [:,:], int, double [:], double [:], double [:], int [:], int)
+
+
+#$ header function ssptri(str, int, float [:], int [:], float [:], int)
+#$ header function dsptri(str, int, double [:], int [:], double [:], int)
+
+#$ header function strtrs(str, str, str, int, int, float [:,:], int, float [:,:], int, int)
+#$ header function dtrtrs(str, str, str, int, int, double [:,:], int, double [:,:], int, int)
+
+#$ header function strcon(str, str, str, int, float [:,:], int, float, float [:], int [:], int)
+#$ header function dtrcon(str, str, str, int, double [:,:], int, double, double [:], int [:], int)
+
+#$ header function strrfs(str, str, str, int, int, float [:,:], int, float [:,:], int, float [:,:], int, float [:], float [:], float [:], int [:], int)
+#$ header function dtrrfs(str, str, str, int, int, double [:,:], int, double [:,:], int, double [:,:], int, double [:], double [:], double [:], int [:], int)
+
+#$ header function strtri(str, str, int, float [:,:], int, int)
+#$ header function dtrtri(str, str, int, double [:,:], int, int)
+
+#$ header function stptrs(str, str, str, int, int, float [:], float [:,:], int, int)
+#$ header function dtptrs(str, str, str, int, int, double [:], double [:,:], int, int)
+
+#$ header function stpcon(str, str, str, int, float [:], float, float [:], int [:], int)
+#$ header function dtpcon(str, str, str, int, double [:], double, double [:], int [:], int)
+
+
+#$ header function stprfs(str, str, str, int, int, float [:], float [:,:], int, float [:,:], int, float [:], float [:], float [:], int [:], int)
+#$ header function dtprfs(str, str, str, int, int, double [:], double [:,:], int, double [:,:], int, double [:], double [:], double [:], int [:], int)
+
+#$ header function stptri(str, str, int, float [:], int)
+#$ header function dtptri(str, str, int, double [:], int)
+
+#$ header function stbtrs(str, str, str, int, int, int, float [:,:], int, float [:,:], int)
+#$ header function dtbtrs(str, str, str, int, int, int, double [:,:], int, double [:,:], int)
+
+#$ header function stbcon(str, str, str, int, int, float [:,:], int, float, float [:], int [:], int)
+#$ header function dtbcon(str, str, str, int, int, double [:,:], int, double, double [:], int [:], int)
+
+#$ header function stbrfs(str, str, str, int, int, int, float [:,:], int, float [:,:], int, float [:,:], int, float [:], float [:], float [:], int [:], int)
+#$ header function dtbrfs(str, str, str, int, int, int, double [:,:], int, double [:,:], int, double [:,:], int, double [:], double [:], double [:], int [:], int)
+
+
+#..............................................
+#Orthogonal Factorizations and Linear Least Squares Problems
+
+#$ header function dgebrd(int, int, double [:,:], int, double [:], double [:], double [:], double [:], double [:], int, int)
+#$ header function sgebrd(int, int, float [:,:], int, float [:], float [:], float [:], float [:], float [:], int, int)
+
+
+#$ header function dgeqp3(int, int, double [:,:], int, int [:], double [:], double [:], int, int)
+#$ header function sgeqp3(int, int, float [:,:], int, int [:], float [:], float [:], int, int)
+
+
+#$ header function dgeqrf(int, int, double [:,:], int, double [:], double [:], int, int)
+#$ header function sgeqrf(int, int, float [:,:], int, float [:], float [:], int, int)
+
+
+#$ header function dgelqf(int, int, double [:,:], int, double [:], double [:], int, int)
+#$ header function sgelqf(int, int, float [:,:], int, float [:], float [:], int, int)
+
+
+#$ header function dgeqlf(int, int, double [:,:], int, double [:], double [:], int, int)
+#$ header function sgeqlf(int, int, float [:,:], int, float [:], float [:], int, int)
+
+#$ header function dgerqf(int, int, double [:,:], int, double [:], double [:], int, int)
+#$ header function sgerqf(int, int, float [:,:], int, float [:], float [:], int, int)
+
+#$ header function dorgbr(str, int, int, int, double [:,:], int, double [:], double [:], int, int)
+#$ header function sorgbr(str, int, int, int, float [:,:], int, float [:], float [:], int, int)
+
+#$ header function dormbr(str, str, str, int, int, int, double [:,:], int, double [:], double [:,:], int, double [:], int, int)
+#$ header function sormbr(str, str, str, int, int, int, float [:,:], int, float [:], float [:,:], int, float [:], int, int)
+
+#$ header function dorgqr(int, int, int, double [:,:], int, double [:], double [:], int, int)
+#$ header function sorgqr(int, int, int, float [:,:], int, float [:], float [:], int, int)
+
+#$ header function dormqr(str, str, int, int, int, double [:,:], int, double [:], double [:,:], int, double [:], int, int)
+#$ header function sormqr(str, str, int, int, int, float [:,:], int, float [:], float [:,:], int, float [:], int, int)
+
+#$ header function dormlq(str, str, int, int, int, double [:,:], int, double [:], double [:,:], int, double [:], int, int)
+#$ header function sormlq(str, str, int, int, int, float [:,:], int, float [:], float [:,:], int, float [:], int, int)
+
+#$ header function dorgql(int, int, int, double [:,:], int, double [:], double [:], int, int)
+#$ header function sorgql(int, int, int, float [:,:], int, float [:], float [:], int, int)
+
+#$ header function dormql(str, str, int, int, int, double [:,:], int, double [:], double [:,:], int, double [:], int, int)
+#$ header function sormql(str, str, int, int, int, float [:,:], int, float [:], float [:,:], int, float [:], int, int)
+
+#$ header function dormrq(str, str, int, int, int, double [:,:], int, double [:], double [:,:], int, double [:], int, int)
+#$ header function sormrq(str, str, int, int, int, float [:,:], int, float [:], float [:,:], int, float [:], int, int)
+
+#$ header function dormrz(str, str, int, int, int, int, double [:,:], int, double [:], double [:,:], int, double [:], int, int)
+#$ header function sormrz(str, str, int, int, int, int, float [:,:], int, float [:], float [:,:], int, float [:], int, int)
+
+#$ header function dorgrq(int, int, int, double [:,:], int, double [:], double [:], int, int)
+#$ header function sorgrq(int, int, int, float [:,:], int, float [:], float [:], int, int)
+
+#$ header function dorglq(int, int, int, double [:,:], int, double [:], double [:], int, int)
+#$ header function sorglq(int, int, int, float [:,:], int, float [:], float [:], int, int)
+
+#$ header function dbdsqr(str, int, int, int, int, double [:], double [:], double [:,:], int, double [:,:], int, double [:,:], int, double [:], int)
+#$ header function sbdsqr(str, int, int, int, int, float [:], float [:], float [:,:], int, float [:,:], int, float [:,:], int, float [:], int)
+
+#$ header function dbdsdc(str, str, int, double [:], double [:], double [:,:], int, double [:,:], int, double [:], int [:], double [:], int [:], int)
+#$ header function sbdsdc(str, str, int, float [:], float [:], float [:,:], int, float [:,:], int, float [:], int [:], float [:], int [:], int)
+
+#$ header function dgbbrd(str, int, int, int, int, int, double [:,:], int, double [:], double [:], double [:,:], int, double [:,:], int, double [:,:], int, double [:], int)
+#$ header function sgbbrd(str, int, int, int, int, int, float [:,:], int, float [:], float [:], float [:,:], int, float [:,:], int, float [:,:], int, float [:], int)
+
+#$ header function dtzrzf(int, int, double [:,:], int, double [:], double [:], int, int)
+#$ header function stzrzf(int, int, float [:,:], int, float [:], float [:], int, int)
+
+
+#...................................................................
+
+#Invariant Subspaces and Condition Numbers
+
+#$ header function dgehrd(int, int, int, double [:,:], int, double [:], double [:], int, int)
+#$ header function sgehrd(int, int, int, float [:,:], int, float [:], float [:], int, int)
+
+
+
+
+#$ header function dgebal(str, int, double [:,:], int, int, int, double [:], int)
+#$ header function sgebal(str, int, float [:,:], int, int, int, float [:], int)
+
+
+
+
+#$ header function dgebak(str, str, int, int, int, double [:], int, double [:,:], int, int)
+#$ header function sgebak(str, str, int, int, int, float [:], int, float [:,:], int, int)
+
+
+
+
+#$ header function dorghr(int, int, int, double [:,:], int, double [:], double [:], int, int)
+#$ header function sorghr(int, int, int, float [:,:], int, float [:], float [:], int, int)
+
+
+
+
+#$ header function dormhr(str, str, int, int, int, int, double [:,:], int, double [:], double [:,:], int, double [:], int, int)
+#$ header function sormhr(str, str, int, int, int, int, float [:,:], int, float [:], float [:,:], int, float [:], int, int)
+
+
+
+
+#$ header function dhseqr(str, str, int, int, int, double [:,:], int, double [:], double [:], double [:,:], int, double [:], int, int)
+#$ header function shseqr(str, str, int, int, int, float [:,:], int, float [:], float [:], float [:,:], int, float [:], int, int)
+
+
+
+
+#$ header function dhsein(str, str, str,bool[:], int, double [:,:], int, double [:], double [:], double [:,:], int, double [:,:], int, int, int, double [:], int [:], int [:], int)
+#$ header function shsein(str, str, str,bool[:], int, float [:,:], int, float [:], float [:], float [:,:], int, float [:,:], int, int, int, float [:], int [:], int [:], int)
+
+
+
+
+#$ header function dtrevc(str, str,bool[:], int, double [:,:], int, double [:,:], int, double [:,:], int, int, int, double [:], int)
+#$ header function strevc(str, str,bool[:], int, float [:,:], int, float [:,:], int, float [:,:], int, int, int, float [:], int)
+
+
+
+
+#$ header function dtrexc(str, int, double [:,:], int, double [:,:], int, int, int, double [:], int)
+#$ header function strexc(str, int, float [:,:], int, float [:,:], int, int, int, float [:], int)
+
+
+
+
+#$ header function dtrsyl(str, str, int, int, int, double [:,:], int, double [:,:], int, double [:,:], int, double, int)
+#$ header function strsyl(str, str, int, int, int, float [:,:], int, float [:,:], int, float [:,:], int, float, int)
+
+
+
+
+#$ header function dtrsna(str, str,bool[:], int, double [:,:], int, double [:,:], int, double [:,:], int, double [:], double [:], int, int, double [:,:], int, int [:], int)
+#$ header function strsna(str, str,bool[:], int, float [:,:], int, float [:,:], int, float [:,:], int, float [:], float [:], int, int, float [:,:], int, int [:], int)
+
+
+
+
+#$ header function dtrsen(str, str,bool[:], int, double [:,:], int, double [:,:], int, double [:], double [:], int, double, double, double [:], int, int [:], int, int)
+#$ header function strsen(str, str,bool[:], int, float [:,:], int, float [:,:], int, float [:], float [:], int, float, float, float [:], int, int [:], int, int)
+
+#.................................
+#Generalized Eigenvalue and Singular Value Problems
+
+
+#$ header function ssygst(int, str, int, float [:,:], int, float [:,:], int, int)
+#$ header function dsygst(int, str, int, double [:,:], int, double [:,:], int, int)
+
+
+
+
+#$ header function sspgst(int, str, int, float [:], float [:], int)
+#$ header function dspgst(int, str, int, double [:], double [:], int)
+
+
+
+
+#$ header function spbstf(str, int, int, float [:,:], int, int)
+#$ header function dpbstf(str, int, int, double [:,:], int, int)
+
+
+
+
+#$ header function ssbgst(str, str, int, int, int, float [:,:], int, float [:,:], int, float [:,:], int, float [:], int)
+#$ header function dsbgst(str, str, int, int, int, double [:,:], int, double [:,:], int, double [:,:], int, double [:], int)
+
+
+
+
+#$ header function sgghrd(str, str, int, int, int, float [:,:], int, float [:,:], int, float [:,:], int, float [:,:], int, int)
+#$ header function dgghrd(str, str, int, int, int, double [:,:], int, double [:,:], int, double [:,:], int, double [:,:], int, int)
+
+
+
+
+#$ header function sggbal(str, int, float [:,:], int, float [:,:], int, int, int, float [:], float [:], float [:], int)
+#$ header function dggbal(str, int, double [:,:], int, double [:,:], int, int, int, double [:], double [:], double [:], int)
+
+
+
+
+#$ header function sggbak(str, str, int, int, int, float [:], float [:], int, float [:,:], int, int)
+#$ header function dggbak(str, str, int, int, int, double [:], double [:], int, double [:,:], int, int)
+
+
+
+
+#$ header function shgeqz(str, str, str, int, int, int, float [:,:], int, float [:,:], int, float [:], float [:], float [:], float [:,:], int, float [:,:], int, float [:], int, int)
+#$ header function dhgeqz(str, str, str, int, int, int, double [:,:], int, double [:,:], int, double [:], double [:], double [:], double [:,:], int, double [:,:], int, double [:], int, int)
+
+
+
+
+#$ header function stgevc(str, str,bool[:], int, float [:,:], int, float [:,:], int, float [:,:], int, float [:,:], int, int, int, float [:], int)
+#$ header function dtgevc(str, str,bool[:], int, double [:,:], int, double [:,:], int, double [:,:], int, double [:,:], int, int, int, double [:], int)
+
+
+
+
+#$ header function stgexc(bool,bool, int, float [:,:], int, float [:,:], int, float [:,:], int, float [:,:], int, int, int, float [:], int, int)
+#$ header function dtgexc(bool,bool, int, double [:,:], int, double [:,:], int, double [:,:], int, double [:,:], int, int, int, double [:], int, int)
+
+
+
+
+#$ header function stgsyl(str, int, int, int, float [:,:], int, float [:,:], int, float [:,:], int, float [:,:], int, float [:,:], int, float [:,:], int, float, float, float [:], int, int [:], int)
+#$ header function dtgsyl(str, int, int, int, double [:,:], int, double [:,:], int, double [:,:], int, double [:,:], int, double [:,:], int, double [:,:], int, double, double, double [:], int, int [:], int)
+
+
+
+
+#$ header function stgsna(str, str,bool[:], int, float [:,:], int, float [:,:], int, float [:,:], int, float [:,:], int, float [:], float [:], int, int, float [:], int, float [:], int)
+#$ header function dtgsna(str, str,bool[:], int, double [:,:], int, double [:,:], int, double [:,:], int, double [:,:], int, double [:], double [:], int, int, double [:], int, double [:], int)
+
+
+
+
+#$ header function stgsen(int,bool,bool,bool[:], int, float [:,:], int, float [:,:], int, float [:,:], int, float [:], float [:], float [:], float [:,:], int, float [:,:], int, int, float, float, float [:], float [:], int, int [:], int, int)
+#$ header function dtgsen(int,bool,bool,bool[:], int, double [:,:], int, double [:,:], int, double [:,:], int, double [:], double [:], double [:], double [:,:], int, double [:,:], int, int, double, double, double [:], double [:], int, int [:], int, int)

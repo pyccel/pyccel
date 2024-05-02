@@ -1,0 +1,307 @@
+// TODO: - decorators
+//       - continuation line
+//       - augassign 
+//       - dotted names 
+//       - boolean expr in factor
+//       - class 
+//       - io files  
+//       - command line args 
+//       - OpFactor: add '//'
+//       - OpFactorSigned: add '~'
+//       - Atom: add dictorsetmaker 
+//       - Atom: add  '...'
+//       - Atom: add yield expr 
+//       - AtomExpr: allow multiple trailers 
+//       - FunctionHeaderStmt: add HeaderResults  
+//       - MethodHeaderStmt: add HeaderResults  
+//       - AugAssign: to be similar to Assign
+//       -  
+//       -  
+//       -  
+
+import openacc
+import openmp
+import imports
+
+Pyccel:
+  (statements*=Statement)
+;
+
+Statement:
+    SimpleStmt 
+  | CompoundStmt
+;
+
+SimpleStmt:
+  SmallStmt (';' SmallStmt)* (';')?
+;
+
+SmallStmt:
+    DocstringsCommentStmt
+  | AnnotatedStmt 
+  | PassStmt 
+  | FlowStmt 
+  | DelStmt 
+  | ImportStmt 
+  | ConstructorStmt 
+  | ExprStmt 
+  | AssertStmt
+;
+
+FlowStmt:
+    BreakStmt 
+  | ContinueStmt 
+  | ReturnStmt 
+  | RaiseStmt 
+  | YieldStmt
+;
+
+CompoundStmt:
+    IfStmt 
+  | ForStmt 
+  | DecoratedStmt
+  | WhileStmt
+  | WithStmt
+;
+
+AnnotatedStmt:
+    FunctionHeaderStmt 
+  | ClassHeaderStmt
+  | MethodHeaderStmt
+  | VariableHeaderStmt
+  | OpenmpStmt
+  | CommentStmt 
+;
+
+ExprStmt: 
+    AssignStmt 
+  | AugAssignStmt 
+  | CallStmt 
+;
+
+SuiteStmt: 
+//  SimpleStmt 
+//  | 
+  INDENT
+  stmts+=Statement
+  DEDENT
+;
+
+AssertStmt: 'assert' '(' test=Test ')';
+
+//DecoratorStmt: 
+//  '@' dotted_name ( '(' (arglist)? ')' )? NEWLINE
+//;
+
+CallStmt: name=ID trailer+=Trailer;
+
+
+PassStmt: label='pass';
+BreakStmt: label='break';
+ContinueStmt: label='continue';
+RaiseStmt: label='raise' exception=Expression;
+YieldStmt: label='yield';
+
+ReturnStmt: label='return' (variables*=Expression[',']);
+DelStmt: 'del' variables*=AtomExpr[','];
+
+CommentStmt: '#' (text=/.*$/)?;
+DocstringsCommentStmt: '"""' text=/.*$/ '"""';
+
+VariableHeaderStmt: '#$' 'header' 'variable'  name=ID dec=DeclareAtom;
+ClassHeaderStmt: '#$' 'header' 'class'  name=ID '(' options+=ClassOptions[','] ')';
+
+MethodHeaderStmt: 
+  '#$' 'header' 'method' name=ID '(' decs*=DeclareAtom[','] ')'
+  (results=HeaderResults)?
+;
+
+FunctionHeaderStmt: 
+  '#$' 'header' (kind=FunctionKind)? name=ID '(' decs*=DeclareAtom[','] ')'
+  (results=HeaderResults)?
+;
+
+FunctionKind: 'function' | 'procedure';
+
+ClassOptions: 
+    'abstract' 
+  | 'private' 
+  | 'public' 
+  | 'iterable' 
+  | 'with' 
+  | 'hide' 
+  | 'openmp'
+  | 'openacc'
+;
+
+DeclareAtom: (star='*')? dtype=ID (trailer=TrailerSubscriptList)?;
+HeaderResults: 'results' '(' decs*=DeclareAtom[','] ')'; 
+
+DataType:
+    'double' 
+  | 'float' 
+  | 'int' 
+  | 'complex'
+  | 'str'
+;
+
+ParameterTest: ID | STRING;
+Variable: ID;
+
+ConstructorStmt: lhs=ID '=' constructor=Constructor '(' ')' ;
+Constructor: DataType ;
+
+IdentifierOrNumber: Number | ID;
+
+ArgList: '(' args+=Args[','] ')';
+Args: ArgList | DictElement | IdentifierOrNumber;
+
+AssignRHS: ExpressionLambda | Expression | ExpressionDict | ExpressionTuple | ExpressionList;
+
+AssignStmt:    lhs=Expression '=' rhs=AssignRHS;
+AugAssignStmt: lhs=ID (trailer=Trailer)? op=OpAug rhs=Expression;
+//AugAssignStmt: lhs=Expression op=OpAug rhs=Expression;
+
+ExpressionLambda: 'lambda' args*=ID[','] ':' rhs=Expression;
+
+RangeStmt: 'range' '(' start=Expression ',' end=Expression (',' step=Expression)? ')';
+
+//////////////////////////////////// 
+//     Compound Stmts
+//////////////////////////////////// 
+IterableRange: RangeStmt | Expression;
+ForStmt: 'for' iterable+=ID[','] 'in' range=IterableRange ':' 
+               body=SuiteStmt
+;
+
+WithDomain: Expression;
+WithStmt:
+  'with' domain=Expression ':'
+  body=SuiteStmt
+;
+
+WhileStmt:
+  'while' test=OrTest ':'
+  body=SuiteStmt
+;
+
+IfStmt: 
+  'if' test=Test ':' body_true=SuiteStmt
+  (body_elif*=ElifStmt)? 
+  ('else' ':' body_false=SuiteStmt)? 
+;
+
+ElifStmt: ('elif' test=Test ':' body=SuiteStmt);
+
+DecoratedStmt: FunctionDefStmt | ClassDefStmt;
+
+FunctionDefStmt: 
+  'def' name=ID trailer=TrailerArgList ':'
+  body=SuiteStmt
+;
+
+ClassDefStmt:
+  'class' name=ID '(' base=ID ')' ':'
+  body=SuiteStmt
+;
+//////////////////////////////////// 
+
+
+Test: op=OrTest ('if' OrTest 'else' Test)?;
+OrTest: op=AndTest ('or' op=AndTest)*;
+AndTest: op=Comparison ('and' op=Comparison)*;
+Comparison: op=Expression (op=OpComp op=Expression)*;
+
+//////////////////////////////////// 
+//        Expressions
+//////////////////////////////////// 
+Expression: ArithmeticExpression;
+ArithmeticExpression: op=Term (op=OpPlusOrMinus op=Term)*;
+Term: op=Factor (op=OpFactor op=Factor)*;
+Factor: Power | FactorSigned;
+FactorSigned: (sign=OpFactorSigned)?  op=AtomExpr;
+Power: op=AtomExpr '**' exponent=Factor;
+AtomExpr: op=Atom (trailers*=Trailer)?;
+
+Number: Float | INT;
+Atom: 
+    (op=ExpressionTuple)
+  | (op=ExpressionList)
+  | (op=Number) 
+  | (op=ID) 
+  | (op=NONE)
+  | (op=TRUE)
+  | (op=FALSE)
+  | (op=String) 
+  | '(' op=Test ')'
+;
+
+ExpressionTuple: '(' args+=Expression[',']  ')';
+ExpressionList:  '[' args+=Expression[',']  ']';
+ExpressionDict:  '{' args+=DictElement[','] '}';
+//////////////////////////////////// 
+
+IDorSTRING: ID | STRING; 
+ArgValued: (key=IDorSTRING '=')? value=AssignRHS ;
+DictElement: key=IDorSTRING ':' value=Atom;
+
+OpPlusOrMinus: '+' | '-';
+OpFactor: '*' | '@' | '/' | '%' ;
+OpFactorSigned: '+' | '-';
+OpAug: '+=' | '*=' | '-=' | '/=';
+// <> isn't actually a valid comparison operator in Python. It's here for the
+// sake of a __future__ import described in PEP 401 (which really works :-)
+OpComp: 
+    '>='
+  | '<='
+  | '<>'
+  | '<'
+  | '>'
+  | '=='
+  | '!='
+  | 'in'
+  | 'not' 'in'
+  | 'is'
+  | 'is' 'not'
+;
+
+//////////////////////////////////// 
+//         Trailers
+//////////////////////////////////// 
+Trailer: 
+    (args=TrailerArgList)?
+  | (args=TrailerSubscriptList)?
+  | (args=TrailerDots)?
+;
+
+TrailerArgList: '(' args*=TrailerArg[','] ')';
+TrailerSubscriptList: '[' args*=TrailerSubscript[','] ']';
+TrailerDots: '.' args=ID;
+
+TrailerArg: TrailerArgList | ArgValued;
+TrailerSubscript: 
+    TrailerSlice 
+  | TrailerSliceLeft 
+  | TrailerSliceRight 
+  | TrailerSliceEmpty 
+  | Expression
+;
+
+TrailerSliceLeft: (start=Expression ':');
+TrailerSliceRight: (':' end=Expression);
+TrailerSlice: (start=Expression ':' end=Expression);
+TrailerSliceEmpty: (dots=':');
+//////////////////////////////////// 
+
+Float: /[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?\b/;
+String: /"(?:[^"\\]|\\.)*"/ | /'(?:[^'\\]|\\.)*'/;
+
+BOOLEAN: TRUE | FALSE;
+
+// indent/dedent are here since textX does not handle indentation yet
+INDENT: 'indent';
+DEDENT: 'dedent';
+
+FALSE : 'False';
+NONE : 'None';
+TRUE : 'True';

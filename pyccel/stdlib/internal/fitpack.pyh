@@ -1,0 +1,10 @@
+# pyccel header for FITPACK.
+
+
+#$ header metavar ignore_at_import=True
+#$ header metavar libraries='${FITPACK_LIBRARIES}'
+#$ header metavar save=True
+
+
+#$ header function bispev(double[:] , int, double[:], int, double[:], int, int, double[:], int, double[:], int, double[:], double[:], int, int[:], int , int)
+

@@ -1,0 +1,89 @@
+Header:
+  statements*=HeaderStmt
+;
+
+HeaderStmt: '#$' 'header' stmt=Statement;
+
+Statement:
+    FunctionMacroStmt 
+  | VariableHeaderStmt
+  | FunctionHeaderStmt 
+  | ClassHeaderStmt
+  | MetavarHeaderStmt
+  | InterfaceStmt
+;
+
+TrailerSubscriptList: '[' args*=':' [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
+
+DataType: ID|STAR;
+
+Type: dtype=DataType ('*' prec=INT)? (trailer=TrailerSubscriptList)?;
+ListType : '[' dtype+=Type[','] ']';
+TypeHeader: Type|ListType ;
+UnionTypeStmt:  dtype+=TypeHeader['|'] ;
+
+
+VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
+
+FunctionHeaderStmt: 
+  (kind=FunctionKind)? (static=Static)? name=ID '(' decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
+;
+
+FunctionKind: 'function' | 'procedure' | 'method';
+Static: 'static';
+HeaderResults: 'results' '(' decs+=TypeHeader[','] ')'; 
+
+ClassHeaderStmt: 'class'  name=ID '(' options+=ClassOptions[','] ')';
+
+ClassOptions: 
+    'abstract' 
+  | 'private' 
+  | 'public' 
+  | 'iterable' 
+  | 'with' 
+  | 'hide' 
+  | 'openmp'
+  | 'openacc'
+;
+
+MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
+MetavarValues: BOOL|STRING;
+
+InterfaceStmt: 'interface' name=ID '=' args+=ID['|'];
+
+// **** macros ****
+
+StringStmt: arg=STRING;
+MacroArg: arg=Args ('=' value=MacroValue)?;
+MacroValue: MacroStmt | INT | NUMBER | ID| StringStmt;
+Args: ID|MacroList;
+//TODO INT|NUMBER error
+MacroList : Leftopen ls+=MacroArg[','] Rightclose ;
+Leftopen : '['|'(' ;
+Rightclose : ']'|')';
+
+MacroStmt: arg=ID '.' macro=AvailableMacro ('[' parameter=MacroParameter ']')?;
+MacroParameter: INT|ID ;
+
+AvailableMacro: 
+    'shape'
+  | 'dtype'
+  | 'count'
+  
+;
+
+
+// TODO shall we add also results to the master call?
+
+FunctionMacroStmt: 
+  'macro' ('(' results*=ID[','] ')' ',')?
+  name+=ID['.'] ('(' args*=MacroArg[','] ')')? 
+  ':='
+  master_name+=ID['.'] ('(' master_args*=MacroValue[','] ')')?
+;
+
+// ****************
+
+STAR: '*';
+OPTIONAL: '!';
+

@@ -1,0 +1,126 @@
+# pyccel header for MPI.
+#
+
+# On travis, 'use mpi, only: mpi_allgather' is not working
+# for this reason, we will ignore all imports 
+# and tell pyccel to add 'use mpi' using import_all
+
+#$ header metavar module_name='mpi'
+#$ header metavar module_version='3.1'
+#$ header metavar ignore_at_import=True
+#$ header metavar import_all=True
+#$ header metavar save=True
+#
+
+# ............................................................
+#            MPI Constants
+# ............................................................
+
+#$ header variable mpi_comm_world  int 
+#$ header variable mpi_status_size int 
+#$ header variable mpi_proc_null   int 
+
+#$ header variable MPI_LOGICAL     int 
+#$ header variable MPI_INTEGER     int 
+#$ header variable MPI_REAL        int 
+#$ header variable MPI_DOUBLE      int 
+#$ header variable MPI_COMPLEX     int 
+#$ header variable MPI_CHARACTER   int 
+                                 
+#$ header variable MPI_SUM         int 
+#$ header variable MPI_PROD        int 
+#$ header variable MPI_MAX         int 
+#$ header variable MPI_MIN         int 
+#$ header variable MPI_MAXLOC      int 
+#$ header variable MPI_MINLOC      int 
+#$ header variable MPI_LAND        int 
+#$ header variable MPI_LOR         int 
+#$ header variable MPI_LXOR        int 
+
+# ............................................................
+
+# ............................................................
+#            
+# ............................................................
+
+#$ header function mpi_init (int)
+#$ header function mpi_finalize (int)
+#$ header function mpi_abort (int, int, int)
+
+# ............................................................
+
+# ............................................................
+#          Communicator Accessors
+# ............................................................
+
+#$ header function mpi_comm_size (int, int, int)
+#$ header function mpi_comm_rank (int, int, int)
+
+# ............................................................
+ 
+# ............................................................
+#          Point-to-Point Communication
+# ............................................................
+
+#$ header function mpi_recv (*, int, int, int, int, int, int [:], int)
+#$ header function mpi_send (*, int, int, int, int, int, int)
+#$ header function mpi_ssend (*, int, int, int, int, int, int)
+#$ header function mpi_bsend (*, int, int, int, int, int, int)
+#$ header function mpi_buffer_attach(*, int, int)
+#$ header function mpi_buffer_dettach(*, int, int)
+
+#$ header function mpi_irecv (*, int, int, int, int, int, int, int)
+#$ header function mpi_isend (*, int, int, int, int, int, int, int)
+#$ header function mpi_issend (*, int, int, int, int, int, int, int)
+#$ header function mpi_ibsend (*, int, int, int, int, int, int, int)
+
+#$ header function mpi_sendrecv (*, int, int, int, int, *, int,int, int, int, int, int [:], int)
+#$ header function mpi_sendrecv_replace (*, int, int, int, int, int, int, int, int [:], int)
+
+#$ header function mpi_barrier (int, int)
+#$ header function mpi_bcast (*, int, int, int, int, int)
+#$ header function mpi_scatter (*, int, int, *, int, int, int, int, int)
+#$ header function mpi_gather (*, int, int, *, int, int, int, int, int)
+#$ header function mpi_allgather (*, int, int, *, int, int, int, int)
+#$ header function mpi_allgatherv (*, int, int, *, int[:], int[:], int, int)
+#$ header function mpi_gatherv(*, int, int, *, int [:], int [:], int, int, int, int)
+#$ header function mpi_alltoall (*, int, int, *, int, int, int, int)
+
+#$ header function mpi_reduce (*, *, int, int, int, int, int, int)
+#$ header function mpi_allreduce (*, *, int, int, int, int, int)
+
+#$ header function mpi_wait (int, int [:], int)
+#$ header function mpi_waitall (int, int [:], int [:,:], int)
+#$ header function mpi_waitany (int, int [:], int, int [:], int)
+#$ header function mpi_waitsome (int, int [:], int, int [:], int [:,:], int)
+
+#$ header function mpi_test (int, bool, int [:], int)
+#$ header function mpi_testall (int, bool, int [:], int [:,:], int)
+#$ header function mpi_testany (int, int [:], int, bool, int [:], int)
+#$ header function mpi_testsome (int, int [:], int, int [:], int [:,:], int)
+
+#$ header function mpi_comm_split (int, int, int, int, int)
+#$ header function mpi_comm_free (int, int)
+
+#$ header function mpi_cart_create (int, int, int [:], int [:], bool, int, int)
+#$ header function mpi_cart_coords (int, int, int, int [:], int) 
+#$ header function mpi_cart_shift (int, int, int, int, int, int)  
+#$ header function mpi_cart_sub (int, int [:], int, int)
+
+#$ header function mpi_dims_create (int, int, int [:], int)
+
+# ............................................................
+
+# ............................................................
+#          Derived datatypes
+# ............................................................
+
+#$ header function mpi_type_contiguous (int, int, int, int)
+#$ header function mpi_type_vector (int, int, int, int, int, int)
+#$ header function mpi_type_commit (int, int)
+#$ header function mpi_type_free (int, int)
+
+#$ header function mpi_type_indexed (int, int [:], int [:], int, int, int)
+#$ header function mpi_type_create_subarray (int, int [:], int [:], int [:], int, int, int, int)
+
+# ............................................................

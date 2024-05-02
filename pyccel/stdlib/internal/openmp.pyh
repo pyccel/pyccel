@@ -1,0 +1,64 @@
+# pyccel header for OpenMP.
+# OpenMP directives and Constructs are handled by the parser (see openmp.tx) and are parts of the Pyccel language.
+# We only list here what can not be described in the openmp grammar.
+
+#$ header metavar module_name = 'omp_lib'
+#$ header metavar module_version = '4.5'
+#$ header metavar import_all = True
+#$ header metavar save=True
+
+# ............................................................
+#            Runtime Library Routines for Fortran
+# ............................................................
+
+#$ header function omp_set_num_threads(int)
+#$ header function omp_get_num_threads() results(int)
+
+#$ header function omp_get_max_threads() results(int)
+#$ header function omp_get_thread_num() results(int)
+#$ header function omp_get_num_procs() results(int)
+#$ header function omp_in_parallel() results(bool)
+
+#$ header function omp_set_dynamic(bool)
+#$ header function omp_get_dynamic()     results(bool)
+
+#$ header function omp_get_cancellation() results(bool)
+
+#$ header function omp_set_nested(bool)
+#$ header function omp_get_nested() results(bool)
+
+#$ header function omp_set_schedule(int, int)
+#$ header function omp_get_schedule() results(int, int)
+
+#$ header function omp_get_thread_limit() results(int)
+#$ header function omp_set_max_active_levels(int)
+#$ header function omp_get_max_active_levels() results(int)
+#$ header function omp_get_level() results(int)
+
+#$ header function omp_get_ancestor_thread_num(int) results(int)
+
+#$ header function omp_get_team_size(int) results(int) 
+#$ header function omp_get_active_level() results(int) 
+#$ header function omp_in_final() results(bool)
+#$ header function omp_get_proc_bind() results(int) 
+
+#$ header function omp_get_num_places() results(int) 
+#$ header function omp_get_place_num_procs(int)  results(int) 
+#$ header function omp_get_place_proc_ids() results(int, int [:])
+#$ header function omp_get_place_num() results(int) 
+#$ header function omp_get_partition_num_places() results(int) 
+#$ header function omp_get_partition_place_nums() results(int [:])
+
+#$ header function omp_set_default_device(int)
+#$ header function omp_get_default_device() results(int) 
+#$ header function omp_get_num_devices() results(int) 
+
+#$ header function omp_get_num_teams() results(int) 
+#$ header function omp_get_team_num() results(int) 
+
+#$ header function omp_is_initial_device() results(bool) 
+#$ header function omp_get_initial_device() results(int) 
+
+#$ header function omp_get_max_task_priority() results(int) 
+
+# ............................................................

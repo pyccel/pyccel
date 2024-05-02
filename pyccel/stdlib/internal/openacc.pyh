@@ -1,0 +1,75 @@
+# pyccel header for OpenACC.
+# OpenACC directives and Constructs are handled by the parser (see openacc.tx) and are parts of the Pyccel language.
+# We only list here what can not be described in the openacc grammar.
+#
+# TODO - devicetype is for the moment an integer. => need to add precision
+#      - change * to h_void* and d_void* in 
+#         + acc_map_data
+#         + acc_unmap_data  
+#         + acc_deviceptr
+#         + acc_hostptr
+#         + acc_memcpy_to_device
+#         + acc_memcpy_to_device_async
+#         + acc_memcpy_from_device
+#         + acc_memcpy_from_device_async
+#         + acc_memcpy_device
+#         + acc_memcpy_device_async
+#         + 
+#      - data movement routines (do we really need them?)
+
+
+#$ header metavar module_name='openacc'
+#$ header metavar module_version='2.5'
+#$ header metavar save=True
+
+# ............................................................
+#            Runtime Library Routines for Fortran
+# ............................................................
+
+#$ header function acc_get_num_devices(int) results(int)
+
+#$ header function acc_set_device_type(int)
+#$ header function acc_get_device_type() results(int)
+
+#$ header function acc_set_device_num(int, int)
+#$ header function acc_get_device_num(int) results(int)
+
+#$ header function acc_init(int)
+#$ header function acc_shutdown(int)
+
+#$ header function acc_async_test(bool) results(bool)
+#$ header function acc_async_test_all() results(bool)
+
+#$ header function acc_wait(bool)
+#$ header function acc_wait_all(bool)
+#$ header function acc_wait_async(bool, bool)
+#$ header function acc_wait_all_async()
+
+#$ header function acc_get_default_async() results(int)
+#$ header function acc_set_default_async()
+
+#$ header function acc_on_device(int)
+#
+#$ header function acc_malloc(int) results(int)
+#$ header function acc_free(int)
+
+#$ header function acc_map_data(*, *, int)
+#$ header function acc_unmap_data(*)
+
+#$ header function acc_deviceptr(*) results(int)
+#$ header function acc_hostptr(*) results(int)
+
+#$ header function acc_memcpy_to_device(*, *, int)
+#$ header function acc_memcpy_to_device_async(*, *, int, int)
+#$ header function acc_memcpy_from_device(*, *, int)
+#$ header function acc_memcpy_from_device_async(*, *, int, int)
+#$ header function acc_memcpy_device(*, *, int)
+#$ header function acc_memcpy_device_async(*, *, int, int)
+
+# ............................................................
+
+# ............................................................
+#           Data Movement routines
+# ............................................................
+
+# ............................................................

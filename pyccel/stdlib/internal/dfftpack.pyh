@@ -1,0 +1,33 @@
+# pyccel header for DFTTPACK.
+
+#$ header metavar ignore_at_import=True
+#$ header metavar module_version='1.0'
+#$ header metavar save=True
+
+
+
+#$ header function dffti(int, double [:])
+#$ header function dfftf(int, double [:], double [:])
+#$ header function dfftb(int, double [:], double [:])
+
+#$ header function dzffti(int, double [:])
+#$ header function dzfftf(int, double [:], double [:])
+#$ header function dzfftb(int, double [:], double [:])
+
+#$ header function dcosqi(int , double [:])
+#$ header function dcosqf(int , double [:], double [:])
+#$ header function dcosqb(int , double [:], double [:])
+
+#$ header function dcosti(int , double [:])
+#$ header function dcost (int , double [:], double [:])
+
+#$ header function dsinqi(int , double [:])
+#$ header function dsinqf(int , double [:], double [:])
+#$ header function dsinqb(int , double [:], double [:])
+
+#$ header function dsinti(int, double [:])
+#$ header function dsint (int, double [:], double [:])
+
+#$ header function zffti(int, double [:])
+#$ header function zfftf(int, complex [:], double [:])
+#$ header function zfftb(int, complex [:], double [:])

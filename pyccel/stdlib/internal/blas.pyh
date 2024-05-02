@@ -1,0 +1,125 @@
+# pyccel header for BLAS.
+#
+# TODO functions snrm2, etc must have results
+
+#$ header metavar module_version='3.8'
+#$ header metavar ignore_at_import=True
+#$ header metavar save=True
+#$ header metavar libraries='${BLAS_LIBRARIES}'
+
+# .......................................
+#             LEVEL-1
+# .......................................
+#$ header function srotg(float, float, float, float)
+#$ header function drotg(double, double, double, double)
+
+#$ header function srotmg(float, float, float, float, float[:])
+#$ header function drotmg(double, double, double, double, double)
+
+#$ header function srot(int, float [:], int, float [:], int, float, float)
+#$ header function drot(int, double [:], int, double [:], int, double, double)
+
+#$ header function srotm(int, float [:], int, float [:], int, float [:])
+#$ header function drotm(int, double [:], int, double [:], int, double [:])
+
+#$ header function sswap(int, float [:], int, float [:], int)
+#$ header function dswap(int, double [:], int, double [:], int)
+
+#$ header function sscal(int, float, float [:], int)
+#$ header function dscal(int, double, double [:], int)
+
+#$ header function sasum(int, float [:], int, float)
+#$ header function dasum(int, double [:], int, double)
+
+#$ header function isamax(int, float [:], int, int)
+#$ header function idamax(int, double [:], int, int)
+
+#$ header function saxpy(int, float, float [:], int, float [:], int)
+#$ header function daxpy(int, double, double [:], int, double [:], int)
+
+#$ header function scopy(int, float [:], int, float [:], int)
+#$ header function dcopy(int, double [:], int, double [:], int)
+
+#$ header function sdot(int, float [:], int, float [:], int)
+#$ header function ddot(int, double [:], int, double [:], int)
+
+#$ header function sdsdot(int, float, float [:], int, float [:], int)
+#$ header function dsdot(int, double [:], int, double [:], int)
+
+#$ header function snrm2(int, float [:], int)
+#$ header function dnrm2(int, double [:], int) results(double)
+# .......................................
+
+# .......................................
+#             LEVEL-2
+# .......................................
+#$ header function sgemv (str, int, int, float, float[:,:], int, float[:], int, float, float[:], int)
+#$ header function dgemv (str, int, int, double, double[:,:], int, double[:], int, double, double[:], int)
+
+#$ header function sgbmv (str, int, int, int, int, float, float[:,:], int, float[:], int, float, float[:], int)
+#$ header function dgbmv (str, int, int, int, int, double, double[:,:], int, double[:], int, double, double[:], int)
+
+#$ header function ssymv (str, int, float, float[:,:], int, float[:], int, float, float[:], int)
+#$ header function dsymv (str, int, double, double[:,:], int, double[:], int, double, double[:], int)
+
+#$ header function ssbmv (str, int, int, float, float[:,:], int, float[:], int, float, float[:], int)
+#$ header function dsbmv (str, int, int, double, double[:,:], int, double[:], int, double, double[:], int)
+
+#$ header function sspmv (str, int, float, float[:,:], float[:], int, float, float[:], int)
+#$ header function dspmv (str, int, double, double[:,:], double[:], int, double, double[:], int)
+ 
+#$ header function strmv (str,str,str, int, float[:,:], int, float[:], int)
+#$ header function dtrmv (str,str,str, int, double[:,:], int, double[:], int)
+
+#$ header function stbmv (str,str,str, int, int, float[:,:], int, float[:], int)
+#$ header function dtbmv (str,str,str, int, int, double[:,:], int, double[:], int)
+
+#$ header function stpmv (str,str,str, int, float[:,:], float[:], int)
+#$ header function dtpmv (str,str,str, int, double[:,:], double[:], int)
+
+#$ header function strsv (str,str,str, int, float[:,:], int, float[:], int)
+#$ header function dtrsv (str,str,str, int, double[:,:], int, double[:], int)
+
+#$ header function stbsv (str,str,str, int, int, float[:,:], int, float[:], int)
+#$ header function dtbsv (str,str,str, int, int, double[:,:], int, double[:], int)
+
+#$ header function stpsv (str,str,str, int, float[:,:], float[:], int)
+#$ header function dtpsv (str,str,str, int, double[:,:], double[:], int)
+
+#$ header function sger (int, int, float, float[:], int, float[:], int, float[:,:], int)
+#$ header function dger (int, int, double, double[:], int, double[:], int, double[:,:], int)
+
+#$ header function ssyr (str, int, float, float[:], int, float[:,:], int)
+#$ header function dsyr (str, int, double, double[:], int, double[:,:], int)
+
+#$ header function sspr (str, int, float, float[:], int, float[:,:])
+#$ header function dspr (str, int, double, double[:], int, double[:,:])
+
+#$ header function ssyr2 (str, int, float, float[:], int, float[:], int, float[:], int)
+#$ header function dsyr2 (str, int, double, double[:], int, double[:], int, double[:], int)
+
+#$ header function sspr2 (str, int, float, float[:], int, float[:], int, float[:], int)
+#$ header function dspr2 (str, int, double, double[:], int, double[:], int, double[:], int)
+# .......................................
+
+# .......................................
+#             LEVEL-3
+# .......................................
+#$ header function sgemm (str,str, int, int, int, float, float[:,:], int, float[:,:], int, float, float[:,:], int)
+#$ header function dgemm (str,str, int, int, int, double, double[:,:], int, double[:,:], int, double, double[:,:], int)
+
+#$ header function ssymm (str,str, int, int, float, float[:,:], int, float[:,:], int, float, float[:,:], int)
+#$ header function dsymm (str,str, int, int, double, double[:,:], int, double[:,:], int, double, double[:,:], int)
+
+#$ header function ssyrk (str,str, int, int, float, float[:,:], int, float, float[:,:], int)
+#$ header function dsyrk (str,str, int, int, double, double[:,:], int, double, double[:,:], int)
+
+#$ header function ssyr2k (str,str, int, int, float, float[:,:], int, float[:,:], int, float, float[:,:], int)
+#$ header function dsyr2k (str,str, int, int, double, double[:,:], int, double[:,:], int, double, double[:,:], int)
+
+#$ header function strmm  (str,str,str,str, int, int, float, float[:,:], int, float[:,:], int)
+#$ header function dtrmm  (str,str,str,str, int, int, double, double[:,:], int, double[:,:], int)
+
+#$ header function strsm  (str,str,str,str, int, int, float, float[:,:], int, float[:,:], int)
+#$ header function dtrsm  (str,str,str,str, int, int, double, double[:,:], int, double[:,:], int)
+# .......................................

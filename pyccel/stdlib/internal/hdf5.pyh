@@ -1,0 +1,295 @@
+# pyccel header for HDF5.
+#
+
+#$ header metavar module_version='1.8.8'
+#$ header metavar ignore_at_import=True
+#$ header metavar libraries='${HDF5_LIBRARIES}'
+#$ header metavar save=True
+
+# .......................................
+#        H5: General Library Functions   
+# .......................................
+#$ header procedure h5check_version_f(int, int, int, int)
+#$ header procedure h5close_f(int) 
+#$ header procedure h5dont_atexit_f(int)   
+#$ header procedure h5garbage_collect_f(int)   
+#$ header procedure h5get_libversion_f(int, int, int, int)   
+#$ header procedure h5open_f(int)  
+# .......................................
+
+# .......................................
+#        H5A: Attribute Interface     
+# .......................................
+#$ header procedure h5aclose_f(attr_id, hdferr)   
+#$ header procedure h5acreate_f(loc_id, name, type_id, space_id, attr_id, hdferr, acpl_id, aapl_id )   
+#$ header procedure h5acreate_by_name_f(loc_id, obj_name, attr_name, type_id, space_id, attr, hdferr, acpl_id, aapl_id, lapl_id)   
+#$ header procedure h5adelete_f(obj_id, name, hdferr)   
+#$ header procedure h5adelete_by_idx_f(loc_id, obj_name, idx_type, order, n, hdferr, lapl_id)   
+#$ header procedure h5adelete_by_name_f(loc_id, obj_name, attr_name, hdferr, lapl_id)   
+#$ header procedure h5aexists_f(obj_id, attr_name, attr_exists, hdferr)   
+#$ header procedure h5aexists_by_name_f(loc_id, obj_name, attr_name, attr_exists, hdferr,lapl_id)   
+#$ header procedure h5aget_create_plist_f(attr_id, creation_prop_id, hdferr)   
+#$ header procedure h5aget_info_f(attr_id, f_corder_valid, corder, cset, data_size,hdferr)   
+#$ header procedure h5aget_info_by_idx_f(loc_id, obj_name, idx_type, order, n, f_corder_valid, corder, cset, data_size, hdferr, lapl_id)   
+#$ header procedure h5aget_info_by_name_f(loc_id, obj_name, attr_name, f_corder_valid, corder, cset, data_size, hdferr, lapl_id)   
+#$ header procedure h5aget_name_f(attr_id, size, buf, hdferr)   
+#$ header procedure h5aget_name_by_idx_f(loc_id, obj_name, idx_type, order, n, name, hdferr, size, lapl_id)   
+#$ header procedure h5aget_num_attrs_f(obj_id, attr_num, hdferr)    
+#$ header procedure h5aget_space_f(attr_id, space_id, hdferr)   
+#$ header procedure h5aget_storage_size_f(attr_id, size, hdferr)   
+#$ header procedure h5aget_type_f(attr_id, type_id, hdferr)    
+#$ header procedure h5aopen_f(obj_id, attr_name, attr_id, hdferr, aapl_id)   
+#$ header procedure h5aopen_by_idx_f(loc_id, obj_name, idx_type, order, n, attr_id, hdferr, aapl_id, lapl_id)   
+#$ header procedure h5aopen_by_name_f(loc_id, obj_name, attr_name, attr_id, hdferr, aapl_id, lapl_id)   
+#$ header procedure h5aopen_idx_f(obj_id, index, attr_id, hdferr)   
+#$ header procedure h5aopen_name_f(obj_id, name, attr_id, hdferr)   
+#$ header procedure h5aread_f(attr_id, memtype_id, buf, dims, hdferr)   
+#$ header procedure h5aread_f(attr_id, memtype_id, buf, hdferr)   
+#$ header procedure h5arename_f(loc_id, old_attr_name, new_attr_name, hdferr)   
+#$ header procedure h5arename_by_name_f(loc_id, obj_name, old_attr_name, new_attr_name, hdferr, lapl_id)   
+#$ header procedure h5awrite_f(attr_id, memtype_id, buf, dims, hdferr)   
+#$ header procedure h5awrite_f(attr_id, memtype_id, buf, hdferr)
+# .......................................
+
+# .......................................
+#        H5D: Datasets Interface       
+# ....................................... 
+#$ header procedure h5dclose_f(dset_id, hdferr)   
+#$ header procedure h5dcreate_f(loc_id, name, type_id, space_id, dset_id, hdferr, dcpl_id, lcpl_id, dapl_id)   
+#$ header procedure h5dcreate_anon_f(loc_id, type_id, space_id, dset_id, hdferr, dcpl_id, dapl_id)   
+#$ header procedure h5dextend_f(dataset_id, size, hdferr)   
+#$ header procedure h5dfill_f(fill_value, space_id, buf, hdferr)   
+#$ header procedure h5dget_create_plist_f(dataset_id, creation_id, hdferr)   
+#$ header procedure h5dget_space_f(dataset_id, dataspace_id, hdferr)   
+#$ header procedure h5dget_space_status_f(dset_id, flag, hdferr)   
+#$ header procedure h5dget_storage_size_f(dset_id, size, hdferr)   
+#$ header procedure h5dget_type_f(dataset_id, datatype_id, hdferr)   
+#$ header procedure h5dopen_f(loc_id, name, dset_id, hdferr, dapl_id)   
+#$ header procedure h5dread_f(dset_id, mem_type_id, buf, dims, hdferr, mem_space_id, file_space_id, xfer_prp)   
+#$ header procedure h5dread_vl_f(dset_id, mem_type_id, buf, dims, len, hdferr, mem_space_id, file_space_id, xfer_prp)   
+#$ header procedure h5dread_f(dset_id, mem_type_id, buf, hdferr, mem_space_id, file_space_id, xfer_prp)   
+#$ header procedure h5dset_extent_f(dataset_id, size, hdferr)   
+#$ header procedure h5dvlen_get_max_len_f(dset_id, size, hdferr)   
+#$ header procedure h5dvlen_reclaim_f(type_id, space_id, plist_id, buf, hdferr)   
+#$ header procedure h5dwrite_f(dset_id, mem_type_id, buf, dims, hdferr, mem_space_id, file_space_id, xfer_prp)   
+#$ header procedure h5dwrite_vl_f(dset_id, mem_type_id, buf, dims, len, hdferr, mem_space_id, file_space_id, xfer_prp)   
+# .......................................
+
+# .......................................
+#        H5E: Error Interface       
+# ....................................... 
+#$ header procedure h5eclear_f(hdferr)  
+#$ header procedure h5eget_major_f(error_no, name, hdferr)  
+#$ header procedure h5eget_minor_f(error_no, name, hdferr)   
+#$ header procedure h5eprint_f(hdferr, name)   
+#$ header procedure h5eset_auto_f(printflag, hdferr)   
+# .......................................
+
+# .......................................
+#        H5F: File Interface       
+# ....................................... 
+#$ header procedure h5fclose_f(file_id, hdferr)   
+#$ header procedure h5fcreate_f(name, access_flags, file_id, hdferr, creation_prp, access_prp)   
+#$ header procedure h5fflush_f(obj_id, scope, hdferr)   
+#$ header procedure h5fget_access_plist_f(file_id, fcpl_id, hdferr)   
+#$ header procedure h5fget_create_plist_f(file_id, fcpl_id, hdferr)   
+#$ header procedure h5fget_filesize_f(file_id, size, hdferr)   
+#$ header procedure h5fget_freespace_f(file_id, free_space, hdferr)   
+#$ header procedure h5fget_name_f(obj_id, buf, size, hdferr)   
+#$ header procedure h5fget_obj_count_f(file_id, obj_type, obj_count, hdferr)   
+#$ header procedure h5fis_hdf5_f(name, status, hdferr)   
+#$ header procedure h5fmount_f(loc_id, name, child_id, hdferr)   
+#$ header procedure h5fopen_f(name, access_flags, file_id, hdferr, access_prp)   
+#$ header procedure h5freopen_f(file_id, new_file_id, hdferr) 
+#$ header procedure h5funmount_f(loc_id, name, child_id, hdferr)
+# .......................................
+
+# .......................................
+#        H5G: Group Interface       
+# .......................................   
+#$ header procedure h5gclose_f( gr_id, hdferr)   
+#$ header procedure h5gcreate_f(loc_id, name, grp_id, hdferr, size_hint, lcpl_id, gcpl_id, gapl_id)   
+#$ header procedure h5gcreate_anon_f(loc_id, grp_id, hdferr, gcpl_id, gapl_id   
+#$ header procedure h5gget_comment_f(loc_id, name, size, buffer, hdferr)   
+#$ header procedure h5gget_create_plist_f(grp_id, gcpl_id, hdferr)   
+#$ header procedure h5gget_info_f(group_id, storage_type, nlinks, max_corder, hdferr, mounted)   
+#$ header procedure h5gget_info_by_idx_f(loc_id, group_name, index_type, order, n, storage_type, nlinks, max_corder, hdferr, lapl_id, mounted)   
+#$ header procedure h5gget_info_by_name_f(loc_id, group_name, storage_type, nlinks, max_corder, hdferr, lapl_id, mounted)   
+#$ header procedure h5gget_linkval_f(loc_id, name, size, buffer, hdferr)   
+#$ header procedure h5gn_members_f(loc_id, name, nmembers, hdferr)   
+#$ header procedure h5gget_obj_info_idx_f(loc_id, name, idx, obj_name, obj_type, hdferr)   
+#$ header procedure h5glink_f(loc_id, link_type, current_name, new_name, hdferr)   
+#$ header procedure h5glink2_f(cur_loc_id, cur_name, link_type, new_loc_id, new_name, hdferr)   
+#$ header procedure h5gmove_f(loc_id, name, new_name, hdferr)   
+#$ header procedure h5gmove2_f(src_loc_id, src_name, dst_loc_id, dst_name, hdferr)   
+#$ header procedure h5gopen_f(loc_id, name, grp_id, hdferr, gapl_id)   
+#$ header procedure h5gset_comment_f(loc_id, name, comment, hdferr)   
+#$ header procedure h5gunlink_f(loc_id, name, hdferr)
+# .......................................
+
+# .......................................
+#        H5I: Identifier Interface       
+# .......................................    
+#$ header procedure h5idec_ref_f(obj_id, ref_count, hdferr)   
+#$ header procedure h5iget_file_id_f(obj_id, file_id, hdferr)   
+#$ header procedure h5iget_name_f(obj_id, buf, buf_size, name_size, hdferr)   
+#$ header procedure h5iget_ref_f(obj_id, ref_count, hdferr)   
+#$ header procedure h5iget_type_f(obj_id, type, hdferr)   
+#$ header procedure h5iinc_ref_f(obj_id, ref_count, hdferr)   
+#$ header procedure h5iis_valid_f(id, valid, hdferr)  
+# .......................................
+
+# .......................................
+#        H5L: Link Interface       
+# .......................................   
+#$ header procedure h5lcopy_f(src_loc_id, src_name, dest_loc_id, dest_name, hdferr, lcpl_id, lapl_id)   
+#$ header procedure h5lcreate_external_f(file_name, obj_name, link_loc_id, link_name, hdferr, lcpl_id, lapl_id)   
+#$ header procedure h5lcreate_hard_f(obj_loc_id, obj_name, link_loc_id, link_name, hdferr, lcpl_id, lapl_id)   
+#$ header procedure h5lcreate_soft_f(target_path, link_loc_id, link_name, hdferr, lcpl_id, lapl_id)   
+#$ header procedure h5ldelete_f(loc_id, name, hdferr, lapl_id)   
+#$ header procedure h5ldelete_by_idx_f(loc_id, group_name, index_field, order, n, hdferr, lapl_id)   
+#$ header procedure h5lexists_f(loc_id, name, link_exists, hdferr, lapl_id)  
+#$ header procedure h5lget_info_f(link_loc_id, link_name, cset, corder, f_corder_valid, link_type, address, val_size, hdferr, lapl_id)   
+#$ header procedure h5lget_info_by_idx_f(loc_id, group_name, index_field, order, n, link_type, f_corder_valid, corder, cset, address, val_size, hdferr, lapl_id)   
+#$ header procedure h5lget_name_by_idx_f(loc_id, group_name, index_field, order, n, name, hdferr, lapl_id, size)   
+#$ header procedure H5Lis_registered_f(link_cls_id, registered, hdferr)   
+#$ header procedure h5literate_f(group_id, index_type, order, idx, op, op_data, return_value, hdferr)   
+#$ header procedure h5literate_by_name_f(loc_id, group_name, index_type, order, idx, op, op_data, return_value, hdferr, lapl_id)   
+#$ header procedure h5lmove_f(src_loc_id, src_name, dest_loc_id, dest_name, hdferr, lcpl_id, lapl_id)  
+# .......................................
+
+# .......................................
+#        H5O: Object Interface       
+# .......................................    
+# TODO: NOT HANDLED YET
+# .......................................
+
+# .......................................
+#        H5P: Property List Interface       
+# .......................................    
+# TODO: NOT HANDLED YET
+# .......................................    
+
+# .......................................
+#        H5R: Reference Interface       
+# .......................................    
+#$ header procedure h5rcreate_f(loc_id, name, ref, hdferr) 
+#$ header procedure h5rcreate_f(loc_id, name, space_id, ref, hdferr)   
+#$ header procedure h5rcreate_f(loc_id, name, ref_type, ref, hdferr, space_id)   
+#$ header procedure h5rdereference_f(obj_id, ref, ref_obj_id, hdferr)   
+#$ header procedure h5rdereference_f(obj_id, ref_type, ref, ref_obj_id, hdferr)
+#$ header procedure h5rget_name_object_f(loc_id, ref, name, hdferr, size)   
+#$ header procedure h5rget_name_region_f(loc_id, ref, name, hdferr, size)   
+#$ header procedure h5rget_name_f(loc_id, ref_type, ref, name, hdferr, size)   
+#$ header procedure h5rget_object_type_f(loc_id, ref, obj_type, hdferr)   
+#$ header procedure h5rget_object_type_f(loc_id, ref_type, ref, obj_type, hdferr)   
+#$ header procedure h5rget_region_f(obj_id, ref, space_id, hdferr)  
+# .......................................
+
+# .......................................
+#        H5S: Dataspace Interface       
+# .......................................    
+#$ header procedure h5sclose_f(space_id, hdferr)   
+#$ header procedure h5scopy_f(space_id, new_space_id, hdferr)   
+#$ header procedure h5screate_f(classtype, space_id, hdferr)   
+#$ header procedure h5screate_simple_f(rank, dims, space_id, hdferr, maxdims)   
+#$ header procedure h5sdecode_f(buf, obj_id, hdferr)   
+#$ header procedure h5sencode_f(obj_id, buf, nalloc, hdferr)
+#$ header procedure h5sextent_copy_f(dest_space_id, source_space_id, hdferr)   
+#$ header procedure h5sextent_equal_f(space1_id, space2_id, equal, hdferr)   
+#$ header procedure h5sget_select_bounds_f(space_id, start, end, hdferr)   
+#$ header procedure h5sget_select_elem_npoints_f(space_id, num_points, hdferr)   
+#$ header procedure h5sget_select_elem_pointlist_f(space_id, startpoint, num_points, buf, hdferr)   
+#$ header procedure h5sget_select_hyper_blocklist_f(space_id, startblock, num_blocks, buf, hdferr)   
+#$ header procedure h5sget_select_hyper_nblocks_f(space_id, num_blocks, hdferr)   
+#$ header procedure h5sget_select_npoints_f(space_id, npoints, hdferr)   
+#$ header procedure h5sget_select_type_f(space_id, type, hdferr)   
+#$ header procedure h5sget_simple_extent_dims_f(space_id, dims, maxdims, hdferr)   
+#$ header procedure h5sget_simple_extent_ndims_f(space_id, rank, hdferr)   
+#$ header procedure h5sget_simple_extent_npoints_f(space_id, npoints, hdferr)   
+#$ header procedure h5sget_simple_extent_type_f(space_id, classtype, hdferr)   
+#$ header procedure h5sis_simple_f(space_id, flag, hdferr)  
+#$ header procedure h5soffset_simple_f(space_id, offset, hdferr)   
+#$ header procedure h5sselect_all_f(dspace_id, hdferr)   
+#$ header procedure h5sselect_elements_f(space_id, operator, rank, num_elements, coord, hdferr)   
+#$ header procedure h5sselect_hyperslab_f(space_id, operator, start, count, hdferr, stride, block)   
+#$ header procedure h5sselect_none_f(space_id, hdferr)   
+#$ header procedure h5sselect_valid_f(space_id, flag, hdferr)   
+#$ header procedure h5sset_extent_none_f(space_id, hdferr)   
+#$ header procedure h5sset_extent_simple_f(space_id, rank, current_size, maximum_size, hdferr)   
+# .......................................
+
+# .......................................
+#        H5T: Datatype Interface       
+# .......................................    
+#$ header procedure h5tarray_create_f(base_id, rank, dims, type_id, hdferr)   
+#$ header procedure h5tarray_create_f(base_id, rank, dims, type_id, hdferr)   
+#$ header procedure h5tclose_f(type_id, hdferr)   
+#$ header procedure h5tcommit_f(loc_id, name, type_id, hdferr, lcpl_id, tcpl_id, tapl_id )   
+#$ header procedure h5tcommit_anon_f(loc_id, dtype_id, hdferr, tcpl_id, tapl_id)   
+#$ header procedure h5tcommitted_f(dtype_id, committed, hdferr)   
+#$ header procedure h5tcompiler_conv_f( src_id, dst_id, flag, hdferr)   
+#$ header procedure h5tconvert_f(src_id, dst_id, nelmts, buf, hdferr, background, plist_id)   
+#$ header procedure h5tcopy_f(type_id, new_type_id, hdferr)   
+#$ header procedure h5tcreate_f(class, size, type_id, hdferr)   
+#$ header procedure h5tdecode_f(buf, obj_id, hdferr)   
+#$ header procedure h5tencode_f(obj_id, buf, nalloc, hdferr)   
+#$ header procedure h5tenum_create_f(parent_id, new_type_id, hdferr)   
+#$ header procedure h5tenum_insert_f(type_id, name, value, hdferr)   
+#$ header procedure h5tenum_nameof_f(type_id, value, namelen, name, hdferr)  
+#$ header procedure h5tenum_valueof_f(type_id, name, value, hdferr)   
+#$ header procedure h5tequal_f(type1_id, type2_id, flag, hdferr)   
+#$ header procedure h5tarray_create_f(base_id, rank, dims, type_id, hdferr)   
+#$ header procedure h5tget_array_dims_f(type_id, dims, hdferr)   
+#$ header procedure h5tget_array_ndims_f(type_id, ndims, hdferr)   
+#$ header procedure h5tget_class_f(type_id, class, hdferr)   
+#$ header procedure h5tget_create_plist_f(dtype_id, dtpl_id, hdferr)   
+#$ header procedure h5tget_cset_f(type_id, cset, hdferr)   
+#$ header procedure h5tget_ebias_f(type_id, ebias, hdferr)   
+#$ header procedure h5tget_fields_f(type_id, spos, epos, esize, mpos, msize, hdferr)   
+#$ header procedure h5tget_inpad_f(type_id, padtype, hdferr)   
+#$ header procedure h5tget_member_class_f(type_id, member_no, class, hdferr)   
+#$ header procedure h5tget_member_index_f(type_id, name, index, hdferr)   
+#$ header procedure h5tget_member_name_f(type_id,index, member_name, namelen, hdferr)   
+#$ header procedure h5tget_member_offset_f(type_id, member_no, offset, hdferr)   
+#$ header procedure h5tget_member_type_f(type_id, field_idx, datatype, hdferr)   
+#$ header procedure h5tget_member_value_f(type_id,  member_no, value, hdferr) 
+#$ header procedure h5tget_native_type_f(dtype_id, direction, native_dtype_id, hdferr)   
+#$ header procedure h5tget_nmembers_f(type_id, num_members, hdferr)   
+#$ header procedure h5tget_norm_f(type_id, norm, hdferr)   
+#$ header procedure h5tget_offset_f(type_id, offset, hdferr) 
+#$ header procedure h5tget_order_f(type_id, order, hdferr)   
+#$ header procedure h5tget_pad_f(type_id, lsbpad, msbpad, hdferr)  
+#$ header procedure h5tget_precision_f(type_id, precision, hdferr)   
+#$ header procedure h5tget_sign_f(type_id, sign, hdferr)   
+#$ header procedure h5tget_size_f(type_id, size, hdferr)   
+#$ header procedure h5tget_strpad_f(type_id, strpad, hdferr)   
+#$ header procedure h5tget_super_f(type_id, base_type_id, hdferr)   
+#$ header procedure h5tget_tag_f(type_id, tag,taglen, hdferr)   
+#$ header procedure h5tinsert_f(type_id, name, offset, field_id, hdferr)   
+#$ header procedure h5tis_variable_str_f(type_id, status, hdferr)   
+#$ header procedure h5topen_f(loc_id, name, type_id, hdferr, tapl_id)   
+#$ header procedure h5tpack_f(type_id, hdferr)   
+#$ header procedure h5tset_cset_f(type_id, cset, hdferr)   
+#$ header procedure h5tset_ebias_f(type_id, ebias, hdferr)  
+#$ header procedure h5tset_fields_f(type_id, spos, epos, esize, mpos, msize, hdferr)  
+#$ header procedure h5tset_inpad_f(type_id, padtype, hdferr)   
+#$ header procedure h5tset_norm_f(type_id, norm, hdferr)   
+#$ header procedure h5tset_offset_f(type_id, offset, hdferr)   
+#$ header procedure h5tset_order_f(type_id, order, hdferr)   
+#$ header procedure h5tset_pad_f(type_id, lsbpad, msbpad, hdferr)   
+#$ header procedure h5tset_precision_f(type_id, precision, hdferr)   
+#$ header procedure h5tset_sign_f(type_id, sign, hdferr)   
+#$ header procedure h5tset_size_f(type_id, size, hdferr)   
+#$ header procedure h5tset_strpad_f(type_id, strpad, hdferr)   
+#$ header procedure h5tset_tag_f(type_id, tag, hdferr)   
+#$ header procedure h5tvlen_create_f(type_id, vltype_id, hdferr)  
+# .......................................
+
+# .......................................
+#        H5Z: Filter and Compression Interface       
+# .......................................    
+#$ header procedure h5zfilter_avail_f(filter, status, hdferr)   
+#$ header procedure h5zget_filter_info_f(filter, config_flags, hdferr)   
+#$ header procedure h5zunregister_f(filter, hdferr)   
+# .......................................    
