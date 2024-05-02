@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.decorators import types
 
 @types('double[:,:]','int','int','double','double','double[:,:]','double','double','double')

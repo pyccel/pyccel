@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 
 #$ header function ln_python(double)
 def ln_python (X) :

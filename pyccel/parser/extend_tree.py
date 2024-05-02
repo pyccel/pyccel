@@ -148,17 +148,19 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
                 elif_orelse = len(previous_stmt.orelse) == 1 and isinstance(previous_stmt.orelse[0], IfNode)
             else:
                 previous_stmt_body_last_lineno  = get_last_lineno(previous_stmt.body[-1])
+
             #TODO accelerate this part with pyccel
             k = -1
             for k, comment_line_no_k in enumerate(comment_lines_no):
                 if previous_stmt_body_last_lineno<comment_line_no_k:
                     if orelse and elif_orelse:
                         break
-                    elif col_offset >= comments[k].col_offset and not orelse:
+                    elif col_offset >= comments[k].col_offset and not orelse or next_node_lineno<comment_line_no_k:
                         break
             else:
                 k = k+1
 
+            # case of else stmt
             if orelse and not elif_orelse and k>0 :
                 expr = logical_and(logical_and(else_no >= comment_lines_no[0], else_no <= comment_lines_no[k-1]), else_no<=previous_stmt_body_last_lineno)
                 if expr.any():
@@ -196,7 +198,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
 
     last_stmt = body[-1]
     if hasattr( last_stmt, 'body'):
-        orelse            = hasattr(last_stmt, 'orelse') and last_stmt.orelse
+        orelse   = hasattr(last_stmt, 'orelse') and last_stmt.orelse
 
         if orelse:
             body_last_lineno  = last_stmt.orelse[0].lineno

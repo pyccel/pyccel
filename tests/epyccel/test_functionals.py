@@ -1,10 +1,9 @@
-import pytest
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from numpy.random import randint
 from numpy import equal
 
 from pyccel.epyccel import epyccel
 from modules import functionals
-from conftest       import *
 
 def compare_epyccel(f, *args):
     f2 = epyccel(f)

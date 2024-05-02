@@ -1,10 +1,10 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
+import sys
 from numpy.random import rand, randint, uniform
 from numpy import isclose
 
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
-from conftest import *
-import sys
 
 # this smallest positive float number
 min_float = sys.float_info.min

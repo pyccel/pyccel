@@ -1,5 +1,6 @@
 # coding: utf-8
 # pylint: disable=R0201
+# pylint: disable=missing-function-docstring
 
 """
 Lua code printer
@@ -31,6 +32,7 @@ from sympy.sets.fancysets import Range
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
 __all__ = ["LuaCodePrinter", "lua_code"]
 
@@ -344,7 +346,7 @@ class LuaCodePrinter(CodePrinter):
         return "NAN"
 
     def _print_Piecewise(self, expr):
-        if expr.args[-1].cond != True:
+        if not expr.args[-1].cond:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
             raise ValueError("All Piecewise expressions must contain an "
@@ -354,13 +356,13 @@ class LuaCodePrinter(CodePrinter):
                              "some condition.")
         lines = []
 
-        for i, (e, c) in enumerate(expr.args):
+        for i, (e, cond) in enumerate(expr.args):
             if i == 0:
-                lines.append("if (%s) {" % self._print(c))
-            elif i == len(expr.args) - 1 and c == True:
+                lines.append("if (%s) {" % self._print(cond))
+            elif i == len(expr.args) - 1 and cond:
                 lines[-1] += " else {"
             else:
-                lines[-1] += " else if (%s) {" % self._print(c)
+                lines[-1] += " else if (%s) {" % self._print(cond)
             code0 = self._print(e)
             lines.append(code0)
             lines.append("}")
@@ -384,8 +386,8 @@ class LuaCodePrinter(CodePrinter):
             return "[%s]" % ", ".join(self._print(a) for a in A)
         else:
             msg = "Full Matrix Support in Lua need Crates (https://crates.io/keywords/matrix)."
-            errors.report(msg, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+            errors.report(msg, symbol=A,
+                severity='fatal')
 
     def _print_MatrixElement(self, expr):
         return "%s[%s]" % (expr.parent,
@@ -442,7 +444,7 @@ class LuaCodePrinter(CodePrinter):
             # TODO: Use fortran example to add pointer arguments for multiple output
             msg = 'Multiple output arguments is not yet supported in c'
             errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
@@ -475,7 +477,7 @@ class LuaCodePrinter(CodePrinter):
         # TODO add step
         target = self._print(expr.target)
         if isinstance(expr.iterable, Range):
-            start, stop, step = expr.iterable.args
+            start, stop, _ = expr.iterable.args
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
         body = '\n'.join(self._print(i) for i in expr.body)

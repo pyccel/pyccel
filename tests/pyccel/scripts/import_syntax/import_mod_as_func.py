@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 
 #$ header function matmat(double [:, :], double [:, :], double [:, :])
 def matmat(a, b, c):

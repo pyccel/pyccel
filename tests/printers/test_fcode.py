@@ -1,16 +1,16 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
         factorial, Piecewise,  symbols, S, Float)
 from sympy import Catalan, EulerGamma, GoldenRatio, I
 from sympy import Function, Rational, Integer, Lambda
 
-from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.sets.fancysets import Range
 from sympy.utilities.pytest import raises
 
-from pyccel.types.ast import Assign, For, Import, Declare, Variable, InArgument, InOutArgument, OutArgument
+from pyccel.types.ast import Assign, For, Import, Declare, InArgument, InOutArgument, OutArgument
 from pyccel.printers import fcode, FCodePrinter
 
 x, y, z = symbols('x, y, z')

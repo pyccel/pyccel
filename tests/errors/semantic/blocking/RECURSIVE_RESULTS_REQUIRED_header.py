@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 
 #$ header function fib(int)
 def fib(n) :

@@ -5,8 +5,8 @@ from sympy import Poly, LT
 from sympy.core.expr import Expr
 
 
-from pyccel.ast.core     import For, Assign, NewLine, CodeBlock
-from pyccel.ast.numpyext import Zeros, Ones
+from pyccel.ast.core     import For, Assign, NewLine, CodeBlock, Comment
+from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
 from pyccel.complexity.basic import Complexity
 
 
@@ -51,11 +51,11 @@ def count_access(expr, visual=True):
         ops = sum(count_access(i, visual) for i in expr.body.body)
         return ops*s
 
-    elif isinstance(expr, (Zeros, Ones)):
+    elif isinstance(expr, (NumpyZeros, NumpyOnes)):
         import numpy as np
         return WRITE*np.prod(expr.shape)
 
-    elif isinstance(expr, NewLine):
+    elif isinstance(expr, (NewLine, Comment)):
         return 0
     else:
         raise NotImplementedError('TODO count_access for {}'.format(type(expr)))

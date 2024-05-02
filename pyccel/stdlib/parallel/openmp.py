@@ -39,7 +39,7 @@ class Parallel(object):
     def __enter__(self):
         pass
 
-    def __exit__(self, type, value, tb):
+    def __exit__(self, dtype, value, tb):
         pass
 
 

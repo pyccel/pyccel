@@ -1,13 +1,9 @@
-import pytest
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 import inspect
-import contextlib
-import io
-import re
-import numpy as np
+import pytest
 
 from pyccel.epyccel import epyccel
 from modules import strings as strings_module
-from conftest       import *
 
 string_funcs = [(f, getattr(strings_module,f)) for f in strings_module.__all__ if inspect.isfunction(getattr(strings_module,f))]
 

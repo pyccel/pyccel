@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # pylint: disable=reimported
 import numpy as np
 a = np.ones(3)

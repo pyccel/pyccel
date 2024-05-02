@@ -19,9 +19,12 @@ DataType: ID|STAR;
 
 Type: dtype=DataType ('*' prec=INT)? (trailer=TrailerSubscriptList)?;
 ListType : '[' dtype+=Type[','] ']';
-TypeHeader: Type|ListType ;
-UnionTypeStmt:  dtype+=TypeHeader['|'] ;
 
+FuncType: '('(results*=TypeHeader[','])?')' '('decs*=TypeHeader[',']')';
+
+TypeHeader: FuncType|Type|ListType;
+UnionTypeStmt: (const=Const)? dtype+=TypeHeader['|'] ;
+Const: 'const';
 
 VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
 

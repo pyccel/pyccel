@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 #$ header class MPI_(public)
 #$ header method __init__(MPI_)
 

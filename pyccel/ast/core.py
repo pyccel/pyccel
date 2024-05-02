@@ -7,6 +7,7 @@ from collections     import OrderedDict
 
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
+from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
 from sympy import Integral, Symbol, Tuple
 from sympy import Lambda
 from sympy import Integer as sp_Integer
@@ -15,13 +16,12 @@ from sympy import preorder_traversal
 
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
-from sympy.core.assumptions   import StdFactKB
 from sympy.core.singleton     import Singleton, S
 from sympy.core.function      import Function, Application
 from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
 from sympy.core.function      import _coeff_isneg
 from sympy.core.expr          import Expr, AtomicExpr
-from sympy.logic.boolalg      import And as sp_And, Not as sp_Not, Or as sp_Or
+from sympy.logic.boolalg      import And as sp_And, Or as sp_Or
 from sympy.logic.boolalg      import Boolean as sp_Boolean
 from sympy.tensor             import Idx, Indexed, IndexedBase
 
@@ -33,13 +33,16 @@ from sympy.utilities.misc               import filldedent
 
 
 from .basic     import Basic, PyccelAstNode
-from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple, PythonBool, PythonInt
+from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
+                        PythonRange, PythonZip, PythonTuple, PythonBool,
+                        PythonInt)
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeGeneric, NativeTuple, default_precision)
+                        NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 
 from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer, ImaginaryUnit
+from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
@@ -79,6 +82,7 @@ __all__ = (
     'PyccelUnary',
     'AddOp',
     'AliasAssign',
+    'Allocate',
     'AnnotatedComment',
     'Argument',
     'AsName',
@@ -123,6 +127,7 @@ __all__ = (
     'Load',
     'ModOp',
     'Module',
+    'ModuleHeader',
     'MulOp',
     'NativeOp',
     'NewLine',
@@ -131,7 +136,6 @@ __all__ = (
     'ParallelRange',
     'ParserResult',
     'Pass',
-    'Product',
     'Program',
     'PyccelArraySize',
     'PythonFunction',
@@ -175,7 +179,11 @@ __all__ = (
 #    'operator',
 #    'op_registry',
     'process_shape',
-    'subs'
+    'subs',
+    'OMP_For_Loop',
+    'OMP_Parallel_Construct',
+    'OMP_Single_Construct',
+    'Omp_End_Clause'
 )
 
 #==============================================================================
@@ -743,7 +751,7 @@ def allocatable_like(expr, verbose=False):
             elif a.is_Add:
                 aargs = list(a.args)
                 negs = 0
-                for (i, ai) in enumerate(aargs):
+                for ai in aargs:
                     if _coeff_isneg(ai):
                         negs += 1
                         args.append(-ai)
@@ -753,8 +761,8 @@ def allocatable_like(expr, verbose=False):
             if a.is_Pow and a.exp is S.NegativeOne:
                 args.append(a.base)  # won't be -Mul but could be Add
                 continue
-            if a.is_Mul or a.is_Pow or a.is_Function or isinstance(a,
-                    Derivative) or isinstance(a, Integral):
+            if a.is_Mul or a.is_Pow or a.is_Function or \
+                    isinstance(a, (Derivative, Integral)):
 
                 o = Symbol(a.func.__name__.upper())
             if not a.is_Symbol and not isinstance(a, (IndexedElement,
@@ -822,7 +830,7 @@ def extract_subexpressions(expr):
               DottedVariable, sp_Float, sp_Integer,
               sp_Rational, ImaginaryUnit,sp_Boolean,
               BooleanTrue, BooleanFalse, String,
-              ValuedArgument, Nil, List, PythonTuple,
+              ValuedArgument, Nil, PythonList, PythonTuple,
               StarredArguments)
 
     func_names = ('diag', 'empty', 'zip', 'enumerate')
@@ -856,12 +864,12 @@ def extract_subexpressions(expr):
             new.set_fst(expr.fst)
             stmts.append(new)
             return var
-        elif isinstance(expr, List):
+        elif isinstance(expr, PythonList):
             args = []
             for i in expr:
                 args.append(substitute(i))
 
-            return List(*args, sympify=False)
+            return PythonList(*args, sympify=False)
 
         elif isinstance(expr, (Tuple, tuple, list)):
             args = []
@@ -911,10 +919,10 @@ def extract_subexpressions(expr):
 #    return variables.values()
 
 def inline(func, args):
-        local_vars = func.local_vars
-        body = func.body
-        body = subs(body, zip(func.arguments, args))
-        return Block(str(func.name), local_vars, body)
+    local_vars = func.local_vars
+    body = func.body
+    body = subs(body, zip(func.arguments, args))
+    return Block(str(func.name), local_vars, body)
 
 
 def int2float(expr):
@@ -1238,7 +1246,7 @@ class Assign(Basic):
         if isinstance(lhs, Variable):
             return isinstance(lhs.dtype, NativeSymbol)
         elif isinstance(lhs, Symbol):
-            if isinstance(rhs, Range):
+            if isinstance(rhs, PythonRange):
                 return True
             elif isinstance(rhs, Variable):
                 return isinstance(rhs.dtype, NativeSymbol)
@@ -1247,7 +1255,99 @@ class Assign(Basic):
 
         return False
 
+#------------------------------------------------------------------------------
+class Allocate(Basic):
+    """
+    Represents memory allocation (usually of an array) for code generation.
+    This is relevant to low-level target languages, such as C or Fortran,
+    where the programmer must take care of heap memory allocation.
 
+    Parameters
+    ----------
+    variable : pyccel.ast.core.Variable
+        The typed variable (usually an array) that needs memory allocation.
+
+    shape : int or iterable or None
+        Shape of the array after allocation (None for scalars).
+
+    order : str {'C'|'F'}
+        Ordering of multi-dimensional array after allocation
+        ('C' = row-major, 'F' = column-major).
+
+    status : str {'allocated'|'unallocated'|'unknown'}
+        Variable allocation status at object creation.
+
+    Notes
+    -----
+    An object of this class is immutable, although it contains a reference to a
+    mutable Variable object.
+
+    """
+    def __new__(cls, *args, **kwargs):
+
+        return Basic.__new__(cls)
+
+    # ...
+    def __init__(self, variable, *, shape, order, status):
+
+        if not isinstance(variable, Variable):
+            raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
+
+        if not variable.allocatable:
+            raise ValueError("Variable must be allocatable")
+
+        if shape and not isinstance(shape, (int, tuple, list)):
+            raise TypeError("Cannot understand 'shape' parameter of type '{}'".format(type(shape)))
+
+        if variable.rank != len(shape):
+            raise ValueError("Incompatible rank in variable allocation")
+
+        if variable.rank > 1 and variable.order != order:
+            raise ValueError("Incompatible order in variable allocation")
+
+        if not isinstance(status, str):
+            raise TypeError("Cannot understand 'status' parameter of type '{}'".format(type(status)))
+
+        if status not in ('allocated', 'unallocated', 'unknown'):
+            raise ValueError("Value of 'status' not allowed: '{}'".format(status))
+
+        self._variable = variable
+        self._shape    = shape
+        self._order    = order
+        self._status   = status
+    # ...
+
+    @property
+    def variable(self):
+        return self._variable
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def order(self):
+        return self._order
+
+    @property
+    def status(self):
+        return self._status
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'Allocate({}, shape={}, order={}, status={})'.format(
+                sstr(self.variable), sstr(self.shape), sstr(self.order), sstr(self.status))
+
+    def __eq__(self, other):
+        return (self.variable is other.variable) and \
+               (self.shape    == other.shape   ) and \
+               (self.order    == other.order   ) and \
+               (self.status   == other.status  )
+
+    def __hash__(self):
+        return hash((id(self.variable), self.shape, self.order, self.status))
+
+#------------------------------------------------------------------------------
 class CodeBlock(Basic):
 
     """Represents a list of stmt for code generation.
@@ -1267,7 +1367,7 @@ class CodeBlock(Basic):
 
     def __init__(self, body):
         if len(self._args)>0 and isinstance(self._args[-1], (Assign, AugAssign)):
-            self.set_fst(ls[-1].fst)
+            self.set_fst(self._args[-1].fst)
 
     @property
     def body(self):
@@ -1312,9 +1412,6 @@ class AliasAssign(Basic):
 
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
-
-        if isinstance(rhs, Variable):
-            rhs = VariableAddress(rhs)
 
         return Basic.__new__(cls, lhs, rhs)
 
@@ -1654,40 +1751,20 @@ class With(Basic):
         methods = self.test.cls_base.methods
         for i in methods:
             if str(i.name) == '__enter__':
-                enter = i
+                start = i
             elif str(i.name) == '__exit__':
-                exit = i
-        enter = inline(enter,[])
-        exit =  inline(exit, [])
+                end   = i
+        start = inline(start,[])
+        end   = inline(end  ,[])
 
         # TODO check if enter is empty or not first
 
-        body = enter.body.body
+        body = start.body.body
         body += self.body.body
-        body += exit.body.body
+        body +=  end.body.body
         return Block('with', [], body)
 
-
-class Product(Basic):
-
-    """
-    Represents a Product stmt.
-
-    """
-
-    def __new__(cls, *args):
-        if not isinstance(args, (tuple, list, Tuple)):
-            raise TypeError('args must be an iterable')
-        elif len(args) < 2:
-            return args[0]
-        return Basic.__new__(cls, *args)
-
-    @property
-    def elements(self):
-        return self._args
-
-
-class Tile(Range):
+class Tile(PythonRange):
 
     """
     Representes a tile.
@@ -1705,7 +1782,7 @@ class Tile(Range):
 
     def __new__(cls, start, stop):
         step = 1
-        return Range.__new__(cls, start, stop, step)
+        return PythonRange.__new__(cls, start, stop, step)
 
     @property
     def start(self):
@@ -1720,7 +1797,7 @@ class Tile(Range):
         return self.stop - self.start
 
 
-class ParallelRange(Range):
+class ParallelRange(PythonRange):
 
     """
     Representes a parallel range using OpenMP/OpenACC.
@@ -1759,7 +1836,7 @@ class Tensor(Basic):
         for r in args:
             cond = isinstance(r, Variable) and isinstance(r.dtype,
                     (NativeRange, NativeTensor))
-            cond = cond or isinstance(r, (Range, Tensor))
+            cond = cond or isinstance(r, (PythonRange, Tensor))
 
             if not cond:
                 raise TypeError('non valid argument, given {0}'.format(type(r)))
@@ -2049,6 +2126,47 @@ class Module(Basic):
     def set_name(self, new_name):
         self._name = new_name
 
+class ModuleHeader(Basic):
+
+    """Represents the header file for a module
+
+    Parameters
+    ----------
+    module: Module
+        the module
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> z = Variable('real', 'z')
+    >>> t = Variable('real', 't')
+    >>> a = Variable('real', 'a')
+    >>> b = Variable('real', 'b')
+    >>> body = [Assign(y,x+a)]
+    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
+    >>> attributes   = [x,y]
+    >>> methods     = [translate]
+    >>> Point = ClassDef('Point', attributes, methods)
+    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
+    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
+    >>> mod = Module('my_module', [], [incr, decr], classes = [Point])
+    >>> ModuleHeader(mod)
+    Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
+    """
+
+    def __init__(self, module):
+        if not isinstance(module, Module):
+            raise TypeError('module must be a Module')
+
+        self._module = module
+
+    @property
+    def module(self):
+        return self._module
+
 class Program(Basic):
 
     """Represents a Program in the code. A block consists of the following inputs
@@ -2156,7 +2274,7 @@ class For(Basic):
     def __new__(
         cls,
         target,
-        iter,
+        iter_obj,
         body,
         local_vars = [],
         strict=True,
@@ -2164,15 +2282,15 @@ class For(Basic):
         if strict:
             target = sympify(target, locals=local_sympify)
 
-            cond_iter = iterable(iter)
-            cond_iter = cond_iter or isinstance(iter, (Range, Product,
-                    Enumerate, Zip, Map))
-            cond_iter = cond_iter or isinstance(iter, Variable) \
-                and is_iterable_datatype(iter.dtype)
-          #  cond_iter = cond_iter or isinstance(iter, ConstructorCall) \
-          #      and is_iterable_datatype(iter.arguments[0].dtype)
+            cond_iter = iterable(iter_obj)
+            cond_iter = cond_iter or isinstance(iter_obj, (PythonRange, Product,
+                    PythonEnumerate, PythonZip, PythonMap))
+            cond_iter = cond_iter or isinstance(iter_obj, Variable) \
+                and is_iterable_datatype(iter_obj.dtype)
+          #  cond_iter = cond_iter or isinstance(iter_obj, ConstructorCall) \
+          #      and is_iterable_datatype(iter_obj.arguments[0].dtype)
             if not cond_iter:
-                raise TypeError('iter must be an iterable')
+                raise TypeError('iter_obj must be an iterable')
 
             if iterable(body):
                 body = CodeBlock((sympify(i, locals=local_sympify) for i in
@@ -2180,7 +2298,7 @@ class For(Basic):
             elif not isinstance(body,CodeBlock):
                 raise TypeError('body must be an iterable or a Codeblock')
 
-        return Basic.__new__(cls, target, iter, body, local_vars)
+        return Basic.__new__(cls, target, iter_obj, body, local_vars)
 
     @property
     def target(self):
@@ -2209,12 +2327,12 @@ class DoConcurrent(For):
 
 class ForAll(Basic):
     """ class that represents the forall statement in fortran"""
-    def __new__(cls, iter, target, mask, body):
+    def __new__(cls, iter_obj, target, mask, body):
 
-        if not isinstance(iter, Range):
-            raise TypeError('iter must be of type Range')
+        if not isinstance(iter_obj, PythonRange):
+            raise TypeError('iterable must be of type Range')
 
-        return Basic.__new__(cls, iter, target, mask, body)
+        return Basic.__new__(cls, iter_obj, target, mask, body)
 
 
     @property
@@ -2240,14 +2358,14 @@ class ForIterator(For):
     def __new__(
         cls,
         target,
-        iter,
+        iterable,
         body,
         strict=True,
         ):
 
-        if isinstance(iter, Symbol):
-            iter = Range(Len(iter))
-        return For.__new__(cls, target, iter, body, strict)
+        if isinstance(iterable, Symbol):
+            iterable = PythonRange(PythonLen(iterable))
+        return For.__new__(cls, target, iterable, body, strict)
 
     # TODO uncomment later when we intriduce iterators
     # @property
@@ -2283,7 +2401,7 @@ class ForIterator(For):
                 if isinstance(stmt, Assign):
                     it_vars.append(stmt.lhs)
 
-            n = len(set([str(var.name) for var in it_vars]))
+            n = len(set(str(var.name) for var in it_vars))
             return n
         else:
 
@@ -2454,6 +2572,9 @@ class Variable(Symbol, PyccelAstNode):
     is_kwonly: bool
         if object is an argument which can only be specified using its keyword
 
+    is_const: bool
+        if object is a const argument of a function [Default value: False]
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable
@@ -2478,6 +2599,7 @@ class Variable(Symbol, PyccelAstNode):
         allocatable=False,
         is_stack_array = False,
         is_pointer=False,
+        is_const=False,
         is_target=False,
         is_polymorphic=None,
         is_optional=False,
@@ -2486,7 +2608,8 @@ class Variable(Symbol, PyccelAstNode):
         order='C',
         precision=0,
         is_argument=False,
-        is_kwonly=False
+        is_kwonly=False,
+        allows_negative_indexes=False
         ):
 
         # ------------ PyccelAstNode Properties ---------------
@@ -2536,22 +2659,24 @@ class Variable(Symbol, PyccelAstNode):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
 
-        if allocatable is None:
-            allocatable = False
+        if not isinstance(allocatable, bool):
+            raise TypeError('allocatable must be a boolean.')
         self.allocatable = allocatable
 
-        if is_stack_array is None:
-            is_stack_array = False
-        elif not isinstance(is_stack_array, bool):
+        if not isinstance(is_const, bool):
+            raise TypeError('is_const must be a boolean.')
+        self.is_const = is_const
+
+        if not isinstance(is_stack_array, bool):
             raise TypeError('is_stack_array must be a boolean.')
         self._is_stack_array = is_stack_array
 
-        if is_pointer is None:
-            is_pointer = False
+        if not isinstance(is_pointer, bool):
+            raise TypeError('is_pointer must be a boolean.')
         self.is_pointer = is_pointer
 
-        if is_target is None:
-            is_target = False
+        if not isinstance(is_target, bool):
+            raise TypeError('is_target must be a boolean.')
         self.is_target = is_target
 
         if is_polymorphic is None:
@@ -2563,11 +2688,13 @@ class Variable(Symbol, PyccelAstNode):
             raise TypeError('is_polymorphic must be a boolean.')
         self._is_polymorphic = is_polymorphic
 
-        if is_optional is None:
-            is_optional = False
-        elif not isinstance(is_optional, bool):
+        if not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
+
+        if not isinstance(allows_negative_indexes, bool):
+            raise TypeError('allows_negative_indexes must be a boolean.')
+        self._allows_negative_indexes = allows_negative_indexes
 
         self._cls_base       = cls_base
         self._order          = order
@@ -2655,6 +2782,14 @@ class Variable(Symbol, PyccelAstNode):
         self._is_stack_array = is_stack_array
 
     @property
+    def allows_negative_indexes(self):
+        return self._allows_negative_indexes
+
+    @allows_negative_indexes.setter
+    def allows_negative_indexes(self, allows_negative_indexes):
+        self._allows_negative_indexes = allows_negative_indexes
+
+    @property
     def is_argument(self):
         return self._is_argument
 
@@ -2693,7 +2828,9 @@ class Variable(Symbol, PyccelAstNode):
         print('>>> Variable')
         print( '  name           = {}'.format(self.name))
         print( '  dtype          = {}'.format(self.dtype))
+        print( '  precision      = {}'.format(self.precision))
         print( '  rank           = {}'.format(self.rank))
+        print( '  order          = {}'.format(self.order))
         print( '  allocatable    = {}'.format(self.allocatable))
         print( '  shape          = {}'.format(self.shape))
         print( '  cls_base       = {}'.format(self.cls_base))
@@ -2724,6 +2861,10 @@ class Variable(Symbol, PyccelAstNode):
             is_optional=kwargs.pop('is_optional',self.is_optional),
             cls_base=kwargs.pop('cls_base',self.cls_base),
             )
+    def rename(self, newname):
+        """Change variable name."""
+
+        self._name = newname
 
     def __getnewargs__(self):
         """used for Pickling self."""
@@ -2866,8 +3007,6 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
     def inspect(self):
         self._args[1].inspect()
-
-
 
 class ValuedVariable(Variable):
 
@@ -3140,10 +3279,10 @@ class FunctionCall(Basic, PyccelAstNode):
         # add the messing argument in the case of optional arguments
         f_args = func.arguments
         if not len(args) == len(f_args):
-            f_args_dict = OrderedDict((a.name,a) if isinstance(a, ValuedVariable) else (a.name, None) for a in f_args)
+            f_args_dict = OrderedDict((a.name,a) if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else (a.name, None) for a in f_args)
             keyword_args = []
             for i,a in enumerate(args):
-                if not isinstance(a, ValuedVariable):
+                if not isinstance(a, (ValuedVariable, ValuedFunctionAddress)):
                     f_args_dict[f_args[i].name] = a
                 else:
                     keyword_args = args[i:]
@@ -3152,10 +3291,9 @@ class FunctionCall(Basic, PyccelAstNode):
             for a in keyword_args:
                 f_args_dict[a.name] = a.value
 
-            args = [a.value if isinstance(a, ValuedVariable) else a for a in f_args_dict.values()]
+            args = [a.value if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else a for a in f_args_dict.values()]
 
-        # Ensure the correct syntax is used for pointers
-        args = [VariableAddress(a) if isinstance(a, Variable) and f.is_pointer else a for a, f in zip(args, f_args)]
+        args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
 
         args = Tuple(*args, sympify=False)
         # ...
@@ -3203,13 +3341,6 @@ class Return(Basic):
         if stmt and not isinstance(stmt, (Assign, CodeBlock)):
             raise TypeError('stmt should only be of type Assign')
 
-        if PyccelAstNode.stage == 'semantic':
-            if isinstance(expr, list):
-                expr = [VariableAddress(e) if isinstance(e, Variable) and e.is_pointer else e for e in expr]
-            else:
-                if isinstance(expr, Variable) and expr.is_pointer:
-                    expr = VariableAddress(expr)
-
         return Basic.__new__(cls, expr, stmt)
 
     @property
@@ -3230,58 +3361,68 @@ class Return(Basic):
 class Interface(Basic):
 
     """Represent an Interface"""
+    def __new__( cls, *args, **kwargs ):
+        return Basic.__new__(cls)
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         name,
         functions,
         hide=False,
+        is_argument = False,
         ):
+
         if not isinstance(name, str):
             raise TypeError('Expecting an str')
         if not isinstance(functions, list):
             raise TypeError('Expecting a list')
-        return Basic.__new__(cls, name, functions, hide)
+        self._name = name
+        self._functions = functions
+        self._hide = hide
+        self._is_argument = is_argument
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def functions(self):
-        return self._args[1]
+        return self._functions
 
     @property
     def hide(self):
-        return self.functions[0].hide or self._args[2]
+        return self._functions[0].hide or self._hide
+
+    @property
+    def is_argument(self):
+        return self._is_argument
 
     @property
     def global_vars(self):
-        return self.functions[0].global_vars
+        return self._functions[0].global_vars
 
     @property
     def cls_name(self):
-        return self.functions[0].cls_name
+        return self._functions[0].cls_name
 
     @property
     def kind(self):
-        return self.functions[0].kind
+        return self._functions[0].kind
 
     @property
     def imports(self):
-        return self.functions[0].imports
+        return self._functions[0].imports
 
     @property
     def decorators(self):
-        return self.functions[0].decorators
+        return self._functions[0].decorators
 
     @property
     def is_procedure(self):
-        return self.functions[0].is_procedure
+        return self._functions[0].is_procedure
 
     def rename(self, newname):
         return Interface(newname, self.functions)
-
 
 class FunctionDef(Basic):
 
@@ -3394,7 +3535,8 @@ class FunctionDef(Basic):
         is_private=False,
         is_header=False,
         arguments_inout=[],
-        functions = []):
+        functions=[],
+        interfaces=[]):
 
         if isinstance(name, str):
             name = Symbol(name)
@@ -3512,6 +3654,7 @@ class FunctionDef(Basic):
         self._is_header       = is_header
         self._arguments_inout = arguments_inout
         self._functions       = functions
+        self._interfaces      = interfaces
 
     @property
     def name(self):
@@ -3592,6 +3735,10 @@ class FunctionDef(Basic):
     @property
     def functions(self):
         return self._functions
+
+    @property
+    def interfaces(self):
+        return self._interfaces
 
     @property
     def doc_string(self):
@@ -3714,6 +3861,127 @@ class FunctionDef(Basic):
                 args   = ', '.join(self.args),
                 result = result)
 
+class FunctionAddress(FunctionDef):
+
+    """Represents a function address.
+
+    Parameters
+    ----------
+    name : str
+        The name of the function address.
+
+    arguments : iterable
+        The arguments to the function address.
+
+    results : iterable
+        The direct outputs of the function address.
+
+    is_argument: bool
+        if object is the argument of a function [Default value: False]
+
+    is_kwonly: bool
+        if object is an argument which can only be specified using its keyword
+
+    is_pointer: bool
+        if object is a pointer [Default value: False]
+
+    is_optional: bool
+        if object is an optional argument of a function [Default value: False]
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+
+    a function definition can have a FunctionAddress as an argument
+
+    >>> FunctionDef('g', [FunctionAddress('f', [x], [y], [])], [], [])
+
+    we can also Declare a FunctionAddress
+
+    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
+    """
+
+    def __init__(
+        self,
+        name,
+        arguments,
+        results,
+        body,
+        is_optional=False,
+        is_pointer=False,
+        is_kwonly=False,
+        is_argument=False,
+        **kwargs
+        ):
+        FunctionDef.__init__(self, name, arguments, results, body, **kwargs)
+        if not isinstance(is_argument, bool):
+            raise TypeError('Expecting a boolean for is_argument')
+
+        if not isinstance(is_pointer, bool):
+            raise TypeError('Expecting a boolean for is_pointer')
+
+        if not isinstance(is_kwonly, bool):
+            raise TypeError('Expecting a boolean for kwonly')
+
+        elif not isinstance(is_optional, bool):
+            raise TypeError('is_optional must be a boolean.')
+
+        self._is_optional   = is_optional
+        self._name          = name
+        self._is_pointer    = is_pointer
+        self._is_kwonly     = is_kwonly
+        self._is_argument   = is_argument
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def is_pointer(self):
+        return self._is_pointer
+
+    @property
+    def is_argument(self):
+        return self._is_argument
+
+    @property
+    def is_kwonly(self):
+        return self._is_kwonly
+
+    @property
+    def is_optional(self):
+        return self._is_optional
+
+class ValuedFunctionAddress(FunctionAddress):
+
+    """Represents a valued function address in the code.
+
+    Parameters
+    ----------
+    value: instance of FunctionDef or FunctionAddress
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, ValuedFunctionAddress, FunctionDef
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> f = FunctionDef('f', [], [], [])
+    >>> n  = ValuedFunctionAddress('g', [x], [y], [], value=f)
+    """
+
+    def __new__(cls, *args, **kwargs):
+        kwargs.pop('value', Nil())
+        return FunctionAddress.__new__(cls, *args, **kwargs)
+
+    def __init__(self, *args, **kwargs):
+        self._value = kwargs.pop('value', Nil())
+        FunctionAddress.__init__(self, *args, **kwargs)
+
+    @property
+    def value(self):
+        return self._value
 
 class SympyFunction(FunctionDef):
 
@@ -4298,6 +4566,83 @@ class Load(Basic):
 
 # TODO: Should Declare have an optional init value for each var?
 
+class FuncAddressDeclare(Basic):
+
+    """Represents a FunctionAddress declaration in the code.
+
+    Parameters
+    ----------
+    variable:
+        An instance of FunctionAddress.
+    intent: None, str
+        one among {'in', 'out', 'inout'}
+    value: Expr
+        variable value
+    static: bool
+        True for a static declaration of an array.
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
+    """
+
+    def __new__( cls, *args, **kwargs ):
+        return Basic.__new__(cls)
+
+    def __init__(
+        self,
+        variable,
+        intent=None,
+        value=None,
+        static=False,
+        ):
+
+        if not isinstance(variable, FunctionAddress):
+            raise TypeError('variable must be of type FunctionAddress, given {0}'.format(variable))
+
+        if intent:
+            if not intent in ['in', 'out', 'inout']:
+                raise ValueError("intent must be one among {'in', 'out', 'inout'}")
+
+        if not isinstance(static, bool):
+            raise TypeError('Expecting a boolean for static attribute')
+
+        self._variable  = variable
+        self._intent    = intent
+        self._value     = value
+        self._static    = static
+
+    @property
+    def results(self):
+        return self._variable.results
+
+    @property
+    def arguments(self):
+        return self._variable.arguments
+
+    @property
+    def name(self):
+        return self._variable.name
+
+    @property
+    def variable(self):
+        return self._variable
+
+    @property
+    def intent(self):
+        return self._intent
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def static(self):
+        return self._static
+
 class Declare(Basic):
 
     """Represents a variable declaration in the code.
@@ -4628,7 +4973,6 @@ class SeparatorComment(Comment):
         text = """.""" * n
         return Comment.__new__(cls, text)
 
-
 class AnnotatedComment(Basic):
 
     """Represents a Annotated Comment in the code.
@@ -4664,6 +5008,26 @@ class AnnotatedComment(Basic):
 
         args = (self.accel, self.txt)
         return args
+
+class OMP_For_Loop(AnnotatedComment):
+    """ Represents an OpenMP Loop construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class OMP_Parallel_Construct(AnnotatedComment):
+    """ Represents an OpenMP Parallel construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class OMP_Single_Construct(AnnotatedComment):
+    """ Represents an OpenMP Single construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class Omp_End_Clause(AnnotatedComment):
+    """ Represents the End of an OpenMP block. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
 
 class CommentBlock(Basic):
 
@@ -4841,7 +5205,7 @@ class IndexedElement(Expr, PyccelAstNode):
         ):
 
         if not args:
-            raise IndexException('Indexed needs at least one index.')
+            raise IndexError('Indexed needs at least one index.')
         if isinstance(base, (str, Symbol)):
             base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base,
@@ -5148,15 +5512,62 @@ class If(Basic):
         return b
 
 
-class IfTernaryOperator(If):
+class IfTernaryOperator(Basic, PyccelAstNode):
+    """Represent a ternary conditional operator in the code, of the form (a if cond else b)
 
-    """class for the Ternery operator"""
-    def __init__(self, *args):
-        for arg in self.args:
-            if len(arg[1].body)!=1:
-                raise TypeError('IfTernary body must be of length 1')
+    Parameters
+    ----------
+    args :
+        args : type list
+        format : condition , value_if_true, value_if_false
 
-    pass
+    Examples
+    --------
+    >>> from sympy import Symbol
+    >>> from pyccel.ast.core import Assign, IfTernaryOperator
+    >>> n = Symbol('n')
+    >>> x = 5 if n > 1 else 2
+    >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
+    IfTernaryOperator(PyccelGt(n > 1),  5,  2)
+    """
+    def __init__(self, cond, value_true, value_false):
+        self._cond = cond
+        self._value_true = value_true
+        self._value_false = value_false
+
+        if self.stage == 'syntactic':
+            return
+        if isinstance(value_true , Nil) or isinstance(value_false, Nil):
+            errors.report('None is not implemented for Ternary Operator', severity='fatal')
+        if isinstance(value_true.dtype, NativeString) or isinstance(value_false.dtype, NativeString):
+            errors.report('Strings are not supported by Ternary Operator', severity='fatal')
+        _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
+        if value_true.dtype not in _tmp_list :
+            raise NotImplementedError('cannot determine the type of {}'.format(value_true.dtype))
+        if value_false.dtype not in _tmp_list :
+            raise NotImplementedError('cannot determine the type of {}'.format(value_false.dtype))
+        if value_false.rank != value_true.rank :
+            errors.report('Ternary Operator results should have the same rank', severity='fatal')
+        if value_false.shape != value_true.shape :
+            errors.report('Ternary Operator results should have the same shape', severity='fatal')
+        self._dtype = max([value_true.dtype, value_false.dtype], key = lambda x : _tmp_list.index(x))
+        self._precision = max([value_true.precision, value_false.precision])
+        self._shape = value_true.shape
+        self._rank = value_true.rank
+
+
+    @property
+    def cond(self):
+        return self._cond
+
+    @property
+    def value_true(self):
+        return self._value_true
+
+    @property
+    def value_false(self):
+        return self._value_false
+
 
 class StarredArguments(Basic):
     def __new__(cls, args):
@@ -5317,8 +5728,7 @@ def get_assigned_symbols(expr):
             var = var.base
             symbols.append(var)
         elif isinstance(var, Variable):
-            if var.rank:
-                symbols.append(var)
+            symbols.append(var)
         return symbols
     elif isinstance(expr, FunctionCall):
         f = expr.funcdef
@@ -5358,7 +5768,7 @@ def get_iterable_ranges(it, var_name=None):
 
         cls_base = it.cls_base
 
-        if isinstance(cls_base, Range):
+        if isinstance(cls_base, PythonRange):
             if not isinstance(it.name, DottedName):
                 raise TypeError('Expecting a DottedName, given  {0}'.format(type(it.name)))
 
@@ -5376,7 +5786,7 @@ def get_iterable_ranges(it, var_name=None):
                     raise TypeError('Wrong type, given {0}'.format(type(i)))
                 args += [arg]
 
-            return [Range(*args)]
+            return [PythonRange(*args)]
         elif isinstance(cls_base, Tensor):
 
             if not isinstance(it.name, DottedName):
@@ -5501,7 +5911,7 @@ def get_iterable_ranges(it, var_name=None):
                 return expr.lhs
             else:
                 return None
-        elif isinstance(expr, And):
+        elif isinstance(expr, sp_And):
             return [doit(a, targets) for a in expr.args]
         else:
             raise TypeError('Expecting And logical expression.')
@@ -5564,17 +5974,17 @@ def get_iterable_ranges(it, var_name=None):
 
     # ...
 
-    return [Range(s, e, 1) for (s, e) in zip(starts, ends)]
+    return [PythonRange(s, e, 1) for (s, e) in zip(starts, ends)]
 
 class ParserResult(Basic):
     def __new__(
-        self,
+        cls,
         program=None,
         module=None,
         mod_name = None,
         prog_name = None,
         ):
-        return Basic.__new__(self)
+        return Basic.__new__(cls)
 
     def __init__(
         self,
@@ -5659,7 +6069,7 @@ class PyccelArraySize(Function, PyccelAstNode):
                                 tuple,
                                 Tuple,
                                 PythonTuple,
-                                List,
+                                PythonList,
                                 Variable,
                                 IndexedElement,
                                 IndexedBase)):

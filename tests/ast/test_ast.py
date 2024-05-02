@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from sympy import symbols, MatrixSymbol, Matrix, Idx, Range
 from sympy.utilities.pytest import raises
 

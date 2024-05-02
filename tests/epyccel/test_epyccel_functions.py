@@ -1,17 +1,12 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # coding: utf-8
 
 import pytest
 import numpy as np
-import shutil
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
-from conftest       import *
-
-
-def clean_test():
-    shutil.rmtree('__pycache__', ignore_errors=True)
-    shutil.rmtree('__epyccel__', ignore_errors=True)
+from pyccel.errors.errors import PyccelError
 
 def test_func_no_args_1(language):
     '''test function with return value but no args'''
@@ -114,7 +109,7 @@ def test_decorator_f3():
         y[:] = x - 1
         return y
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(PyccelError):
         epyccel(f3)
 
 #------------------------------------------------------------------------------
@@ -126,7 +121,7 @@ def test_decorator_f4():
         y[:] = x - 1.0
         return y
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(PyccelError):
         epyccel(f4)
 
 #------------------------------------------------------------------------------
@@ -273,7 +268,7 @@ def test_multiple_returns_f13(language):
         if a<b:
             return a
         else:
-           return b
+            return b
 
     f = epyccel(get_min, language=language)
     assert f(2,3) == get_min(2,3)

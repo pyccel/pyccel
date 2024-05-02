@@ -190,6 +190,7 @@ In order to run the unit tests and to get a coverage report, four additional Pyt
 
   pip3 install --user scipy
   pip3 install --user mpi4py
+  pip3 install --user tblib
   pip3 install --user pytest
   pip3 install --user coverage
 

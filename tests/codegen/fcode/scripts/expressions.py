@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 ai = 1
 bi = ai
 ci = ai + 1

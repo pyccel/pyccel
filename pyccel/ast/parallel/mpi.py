@@ -8,7 +8,7 @@ from pyccel.ast.core import Tensor
 from pyccel.ast.core import Import
 from pyccel.ast.core import For, ForIterator, While, If, Del
 from pyccel.ast.core import FunctionDef, ClassDef
-from pyccel.ast.numpyext import Zeros, Ones
+from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
 
 from pyccel.ast.parallel.basic        import Basic
 
@@ -110,19 +110,18 @@ def mpify(stmt, **options):
         variables = [mpify(a, **options) for a in stmt.variables]
         return Del(variables)
 
-    if isinstance(stmt, Ones):
+    if isinstance(stmt, NumpyOnes):
         if stmt.grid:
             lhs   = stmt.lhs
-            shape = stmt.shape
             grid  = mpify(stmt.grid, **options)
-            return Ones(lhs, grid=grid)
+            return NumpyOnes(lhs, grid=grid)
 
-    if isinstance(stmt, Zeros):
+    if isinstance(stmt, NumpyZeros):
         if stmt.grid:
             lhs   = stmt.lhs
             shape = stmt.shape
             grid  = mpify(stmt.grid, **options)
-            return Zeros(lhs, grid=grid)
+            return NumpyZeros(lhs, grid=grid)
 
     if isinstance(stmt, Module):
         name        = mpify(stmt.name,        **options)

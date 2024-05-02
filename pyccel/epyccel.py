@@ -44,7 +44,7 @@ def get_source_function(func):
     return code
 
 #==============================================================================
-def epyccel_seq(function_or_module,
+def epyccel_seq(function_or_module, *,
                 language     = None,
                 compiler     = None,
                 mpi_compiler = None,
@@ -132,9 +132,6 @@ def epyccel_seq(function_or_module,
                        extra_args  = extra_args,
                        accelerator = accelerator,
                        output_name = module_name)
-    except PyccelError:
-        # Raise a new error to avoid a large traceback
-        raise RuntimeError("Pyccel translation failed")
     finally:
         # Change working directory back to starting point
         os.chdir(base_dirpath)
@@ -155,24 +152,80 @@ def epyccel_seq(function_or_module,
     if not isinstance(loader, ExtensionFileLoader):
         raise ImportError('Could not load shared library')
 
-    # Function case:
+    # If Python object was function, extract it from module
     if isinstance(function_or_module, FunctionType):
-        return getattr(package, pyfunc.__name__.lower())
+        func = getattr(package, pyfunc.__name__.lower())
+    else:
+        func = None
 
-    # Module case:
-    return package
+    # Return accelerated Python module and function
+    return package, func
 
 #==============================================================================
-def epyccel( inputs, **kwargs ):
+def epyccel( python_function_or_module, **kwargs ):
+    """
+    Accelerate Python function or module using Pyccel in "embedded" mode.
 
-    comm = kwargs.pop('comm', None)
-    root = kwargs.pop('root', 0)
+    Parameters
+    ----------
+    python_function_or_module : function | module
+        Python function or module to be accelerated.
+
+    verbose : bool
+        Print additional information (default: False).
+
+    language : {'fortran', 'c', 'python'}
+        Language of generated code (default: 'fortran').
+
+    accelerator : str, optional
+        Parallel multi-threading acceleration strategy
+        (currently supported: 'openmp', 'openacc').
+
+    Options for parallel mode
+    -------------------------
+    comm : mpi4py.MPI.Comm, optional
+        MPI communicator for calling Pyccel in parallel mode (default: None).
+
+    root : int, optional
+        MPI rank of process in charge of accelerating code (default: 0).
+
+    bcast : {True, False}
+        If False, only root process loads accelerated function/module (default: True).
+
+    Other options
+    -------------
+    compiler : str, optional
+        User-defined command for compiling generated source code.
+
+    mpi_compiler : str, optional
+        Compiler for MPI parallel code.
+
+    Returns
+    -------
+    res : object
+        Accelerated function or module.
+
+    Examples
+    --------
+    >>> def one(): return 1
+    >>> from pyccel.epyccel import epyccel
+    >>> one_f = epyccel(one, language='fortran')
+    >>> one_c = epyccel(one, language='c')
+
+    """
+    assert isinstance( python_function_or_module, (FunctionType, ModuleType) )
+
+    comm  = kwargs.pop('comm', None)
+    root  = kwargs.pop('root', 0)
     bcast = kwargs.pop('bcast', True)
 
+    # Parallel version
     if comm is not None:
-        # TODO not tested for a function
-        from mpi4py import MPI
 
+        from mpi4py import MPI
+        from tblib  import pickling_support   # [YG, 27.10.2020] We use tblib to
+        pickling_support.install()            # pickle tracebacks, which allows
+                                              # mpi4py to broadcast exceptions
         assert isinstance( comm, MPI.Comm )
         assert isinstance( root, int      )
 
@@ -181,28 +234,48 @@ def epyccel( inputs, **kwargs ):
 
         # Master process calls epyccel
         if comm.rank == root:
-            fmod      = epyccel_seq( inputs, **kwargs )
-            fmod_path = os.path.abspath(fmod.__file__)
-            fmod_name = fmod.__name__
+            try:
+                mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+                mod_path = os.path.abspath(mod.__file__)
+                mod_name = mod.__name__
+                fun_name = python_function_or_module.__name__ if fun else None
+                success  = True
+            # error handling carried out after broadcast to prevent deadlocks
+            except: # pylint: disable=bare-except
+                exc_info = sys.exc_info()
+                success  = False
+
+        # Non-master processes initialize empty variables
         else:
-            fmod      = None
-            fmod_path = None
-            fmod_name = None
+            mod, fun = None, None
+            mod_path = None
+            mod_name = None
+            fun_name = None
+            exc_info = None
+            success  = None
+
+        # Broadcast success state, and raise exception if neeeded
+        if not comm.bcast(success, root=root):
+            raise comm.bcast(exc_info, root=root)
 
         if bcast:
-            # Broadcast Fortran module path/name to all processes
-            fmod_path = comm.bcast( fmod_path, root=root )
-            fmod_name = comm.bcast( fmod_name, root=root )
+            # Broadcast Fortran module path/name and function name to all processes
+            mod_path = comm.bcast( mod_path, root=root )
+            mod_name = comm.bcast( mod_name, root=root )
+            fun_name = comm.bcast( fun_name, root=root )
 
             # Non-master processes import Fortran module directly from its path
+            # and extract function if its name is given
             if comm.rank != root:
-                folder = os.path.split(fmod_path)[0]
+                folder = os.path.split(mod_path)[0]
                 sys.path.insert(0, folder)
-                fmod = importlib.import_module(fmod_name)
+                mod = importlib.import_module(mod_name)
                 sys.path.remove(folder)
+                fun = getattr(mod, fun_name) if fun_name else None
 
-        # Return Fortran module
-        return fmod
-
+    # Serial version
     else:
-        return epyccel_seq( inputs, **kwargs )
+        mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+
+    # Return Fortran function (if any), otherwise module
+    return fun or mod
