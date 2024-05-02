@@ -6,36 +6,28 @@
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.bind_c   import BindCPointer
-from pyccel.ast.bind_c   import BindCModule, BindCFunctionDef
-
-from pyccel.ast.core import FunctionAddress, SeparatorComment
-from pyccel.ast.core import Import, Module
-
-from pyccel.ast.cwrapper    import PyBuildValueNode
-from pyccel.ast.cwrapper    import Py_None
-from pyccel.ast.cwrapper    import PyccelPyObject
-
-from pyccel.ast.literals  import LiteralString, Nil
-
+from pyccel.ast.bind_c     import BindCPointer
+from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
+from pyccel.ast.core       import FunctionAddress, SeparatorComment
+from pyccel.ast.core       import Import, Module
+from pyccel.ast.cwrapper   import PyBuildValueNode
+from pyccel.ast.cwrapper   import Py_None
+from pyccel.ast.cwrapper   import PyccelPyObject
+from pyccel.ast.literals   import LiteralString, Nil
 from pyccel.ast.c_concepts import ObjectAddress
 
-from pyccel.errors.errors   import Errors
+from pyccel.errors.errors  import Errors
+
+__all__ = ("CWrapperCodePrinter", "cwrappercode")
 
 errors = Errors()
 
-__all__ = ["CWrapperCodePrinter", "cwrappercode"]
-
-dtype_registry = {('pyobject'     , 0) : 'PyObject',
-                  ('pyarrayobject', 0) : 'PyArrayObject',
-                  ('void'         , 0) : 'void',
-                  ('bind_c_ptr'   , 0) : 'void'}
-
-module_imports  = [Import('numpy_version', Module('numpy_version',(),())),
+module_imports = [Import('numpy_version', Module('numpy_version',(),())),
             Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
             Import('cwrapper', Module('cwrapper',(),()))]
 
 cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))
+
 
 class CWrapperCodePrinter(CCodePrinter):
     """
@@ -56,13 +48,16 @@ class CWrapperCodePrinter(CCodePrinter):
     **settings : dict
             Any additional arguments which are necessary for CCodePrinter.
     """
+    dtype_registry = {**CCodePrinter.dtype_registry,
+                      (PyccelPyObject() , 0) : 'PyObject',
+                      (BindCPointer()   , 0) : 'void'}
+
     def __init__(self, filename, target_language, **settings):
         CCodePrinter.__init__(self, filename, **settings)
         self._target_language = target_language
         self._to_free_PyObject_list = []
         self._function_wrapper_names = dict()
         self._module_name = None
-
 
     # --------------------------------------------------------------------
     #                       Helper functions
@@ -161,39 +156,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if expr.dtype is BindCPointer():
             return 'void*'
-        dtype = self._print(expr.dtype)
-        prec  = expr.precision
-        if dtype != "pyarrayobject":
-            return CCodePrinter.get_declare_type(self, expr)
-        else :
-            dtype = self.find_in_dtype_registry(dtype, prec)
-
-        if self.is_c_pointer(expr):
-            return f'{dtype}*'
-        else:
-            return dtype
-
-    def find_in_dtype_registry(self, dtype, prec):
-        """
-        Find the corresponding C dtype in the dtype_registry
-        raise PYCCEL_RESTRICTION_TODO if not found
-
-        Parameters
-        -----------
-        dtype : String
-            expression data type
-
-        prec  : Integer
-            expression precision
-
-        Returns
-        -------
-        dtype : String
-        """
-        try :
-            return dtype_registry[(dtype, prec)]
-        except KeyError:
-            return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
+        return CCodePrinter.get_declare_type(self, expr)
 
     def _handle_is_operator(self, Op, expr):
         """
@@ -230,13 +193,6 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             return super()._handle_is_operator(Op, expr)
 
-    # -------------------------------------------------------------------
-    # Functions managing the creation of wrapper body
-    # -------------------------------------------------------------------
-
-    def _print_BindCPointer(self, expr):
-        return 'bind_c_ptr'
-
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
@@ -248,9 +204,6 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyInterface(self, expr):
         funcs_to_print = (*expr.functions, expr.type_check_func, expr.interface_func)
         return '\n'.join(self._print(f) for f in funcs_to_print)
-
-    def _print_PyccelPyObject(self, expr):
-        return 'pyobject'
 
     def _print_PyArg_ParseTupleNode(self, expr):
         name    = 'PyArg_ParseTupleAndKeywords'

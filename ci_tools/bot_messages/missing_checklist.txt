@@ -1,0 +1,1 @@
+I can't seem to find your checklist to confirm that you have completed all necessary tasks. Please request one using `/bot checklist`.

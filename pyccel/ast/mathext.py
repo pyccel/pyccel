@@ -82,17 +82,20 @@ class MathFunctionBase(PyccelInternalFunction):
     _rank  = 0
     _order = None
 
+
 class MathFunctionFloat(MathFunctionBase):
     __slots__ = ()
     name = 'float'
     _dtype = NativeFloat()
     _precision = -1
 
+
 class MathFunctionInt(MathFunctionBase):
     __slots__ = ()
     name = 'int'
     _dtype = NativeInteger()
     _precision = -1
+
 
 class MathFunctionBool(MathFunctionBase):
     __slots__ = ()
@@ -105,186 +108,653 @@ class MathFunctionBool(MathFunctionBase):
 #==============================================================================
 
 # Floating-point result
-class MathAcos    (MathFunctionFloat):
-    """Represent a call to the acos function in the Math library"""
+class MathAcos(MathFunctionFloat):
+    """
+    Class representing a call to the `math.acos` function.
+
+    A class which represents a call to the `acos` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'acos'
-class MathAcosh   (MathFunctionFloat):
-    """Represent a call to the acosh function in the Math library"""
+
+
+class MathAcosh(MathFunctionFloat):
+    """
+    Class representing a call to the `math.acosh` function.
+
+    A class which represents a call to the `acosh` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'acosh'
-class MathAsin    (MathFunctionFloat):
-    """Represent a call to the asin function in the Math library"""
+
+
+class MathAsin(MathFunctionFloat):
+    """
+    Class representing a call to the `math.asin` function.
+
+    A class which represents a call to the `asin` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'asin'
-class MathAsinh   (MathFunctionFloat):
-    """Represent a call to the asinh function in the Math library"""
+
+
+class MathAsinh(MathFunctionFloat):
+    """
+    Class representing a call to the `math.asinh` function.
+
+    A class which represents a call to the `asinh` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'asinh'
-class MathAtan    (MathFunctionFloat):
-    """Represent a call to the atan function in the Math library"""
+
+
+class MathAtan(MathFunctionFloat):
+    """
+    Class representing a call to the `math.atan` function.
+
+    A class which represents a call to the `atan` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'atan'
+
+
 class MathAtan2   (MathFunctionFloat):
-    """Represent a call to the atan2 function in the Math library"""
+    """
+    Class representing a call to the `math.atan2` function.
+
+    A class which represents a call to the `atan2` function from the `math` library.
+
+    Parameters
+    ----------
+    y : PyccelAstNode
+        The first expression passed as argument to the function.
+    x : PyccelAstNode
+        The second expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'atan2'
-class MathAtanh   (MathFunctionFloat):
-    """Represent a call to the atanh function in the Math library"""
+
+
+class MathAtanh(MathFunctionFloat):
+    """
+    Class representing a call to the `math.atanh` function.
+
+    A class which represents a call to the `atanh` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'atanh'
+
+
 class MathCopysign(MathFunctionFloat):
-    """Represent a call to the copysign function in the Math library"""
+    """
+    Class representing a call to the `math.copysign` function.
+
+    A class which represents a call to the `copysign` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'copysign'
-class MathCos     (MathFunctionFloat):
-    """Represent a call to the cos function in the Math library"""
+
+
+class MathCos(MathFunctionFloat):
+    """
+    Class representing a call to the `math.cos` function.
+
+    A class which represents a call to the `cos` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'cos'
-class MathCosh    (MathFunctionFloat):
-    """Represent a call to the cosh function in the Math library"""
+
+
+class MathCosh(MathFunctionFloat):
+    """
+    Class representing a call to the `math.cosh` function.
+
+    A class which represents a call to the `cosh` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'cosh'
-class MathErf     (MathFunctionFloat):
-    """Represent a call to the erf function in the Math library"""
+
+
+class MathErf(MathFunctionFloat):
+    """
+    Class representing a call to the `math.erf` function.
+
+    A class which represents a call to the `erf` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'erf'
-class MathErfc    (MathFunctionFloat):
-    """Represent a call to the erfc function in the Math library"""
+
+
+class MathErfc(MathFunctionFloat):
+    """
+    Class representing a call to the `math.erfc` function.
+
+    A class which represents a call to the `erfc` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'erfc'
-class MathExp     (MathFunctionFloat):
-    """Represent a call to the exp function in the Math library"""
+
+
+class MathExp(MathFunctionFloat):
+    """
+    Class representing a call to the `math.exp` function.
+
+    A class which represents a call to the `exp` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'exp'
+
+
 class MathExpm1   (MathFunctionFloat):
     """Represent a call to the expm1 function in the Math library"""
     __slots__ = ()
     name = 'expm1'
-class MathFabs    (MathFunctionFloat):
-    """Represent a call to the fabs function in the Math library"""
+
+
+class MathFabs(MathFunctionFloat):
+    """
+    Class representing a call to the `math.fabs` function.
+
+    A class which represents a call to the `fabs` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'fabs'
-class MathFmod    (MathFunctionFloat):
-    """Represent a call to the fmod function in the Math library"""
+
+
+class MathFmod(MathFunctionFloat):
+    """
+    Class representing a call to the `math.fmod` function.
+
+    A class which represents a call to the `fmod` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'fmod'
-class MathFsum    (MathFunctionFloat):
-    """Represent a call to the fsum function in the Math library"""
+
+
+class MathFsum(MathFunctionFloat):
+    """
+    Class representing a call to the `math.fsum` function.
+
+    A class which represents a call to the `fsum` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'fsum'
-class MathGamma   (MathFunctionFloat):
-    """Represent a call to the gamma function in the Math library"""
+
+
+class MathGamma(MathFunctionFloat):
+    """
+    Class representing a call to the `math.gamma` function.
+
+    A class which represents a call to the `gamma` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'gamma'
-class MathHypot   (MathFunctionFloat):
-    """Represent a call to the hypot function in the Math library"""
+
+
+class MathHypot(MathFunctionFloat):
+    """
+    Class representing a call to the `math.hypot` function.
+
+    A class which represents a call to the `hypot` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'hypot'
-class MathLdexp   (MathFunctionFloat):
-    """Represent a call to the ldexp function in the Math library"""
+
+
+class MathLdexp(MathFunctionFloat):
+    """
+    Class representing a call to the `math.ldexp` function.
+
+    A class which represents a call to the `ldexp` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'ldexp'
-class MathLgamma  (MathFunctionFloat):
-    """Represent a call to the lgamma function in the Math library"""
+
+
+class MathLgamma(MathFunctionFloat):
+    """
+    Class representing a call to the `math.lgamma` function.
+
+    A class which represents a call to the `lgamma` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'lgamma'
-class MathLog     (MathFunctionFloat):
-    """Represent a call to the log function in the Math library"""
+
+
+class MathLog(MathFunctionFloat):
+    """
+    Class representing a call to the `math.log` function.
+
+    A class which represents a call to the `log` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'log'
+
+
 class MathLog10   (MathFunctionFloat):
-    """Represent a call to the log10 function in the Math library"""
+    """
+    Class representing a call to the `math.log10` function.
+
+    A class which represents a call to the `log10` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'log10'
+
+
 class MathLog1p   (MathFunctionFloat):
-    """Represent a call to the log1p function in the Math library"""
+    """
+    Class representing a call to the `math.log1p` function.
+
+    A class which represents a call to the `log1p` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'log1p'
+
+
 class MathLog2    (MathFunctionFloat):
-    """Represent a call to the log2 function in the Math library"""
+    """
+    Class representing a call to the `math.log2` function.
+
+    A class which represents a call to the `log2` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'log2'
-class MathPow     (MathFunctionFloat):
-    """Represent a call to the pow function in the Math library"""
+
+
+class MathPow(MathFunctionFloat):
+    """
+    Class representing a call to the `math.pow` function.
+
+    A class which represents a call to the `pow` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'pow'
-class MathSin     (MathFunctionFloat):
-    """Represent a call to the sin function in the Math library"""
+
+
+class MathSin(MathFunctionFloat):
+    """
+    Class representing a call to the `math.sin` function.
+
+    A class which represents a call to the `sin` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'sin'
-class MathSinh    (MathFunctionFloat):
-    """Represent a call to the sinh function in the Math library"""
+
+
+class MathSinh(MathFunctionFloat):
+    """
+    Class representing a call to the `math.sinh` function.
+
+    A class which represents a call to the `sinh` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'sinh'
-class MathSqrt    (MathFunctionFloat):
-    """Represent a call to the sqrt function in the Math library"""
+
+
+class MathSqrt(MathFunctionFloat):
+    """
+    Class representing a call to the `math.sqrt` function.
+
+    A class which represents a call to the `sqrt` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'sqrt'
-class MathTan     (MathFunctionFloat):
-    """Represent a call to the tan function in the Math library"""
+
+
+class MathTan(MathFunctionFloat):
+    """
+    Class representing a call to the `math.tan` function.
+
+    A class which represents a call to the `tan` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'tan'
-class MathTanh    (MathFunctionFloat):
-    """Represent a call to the tanh function in the Math library"""
+
+
+class MathTanh(MathFunctionFloat):
+    """
+    Class representing a call to the `math.tanh` function.
+
+    A class which represents a call to the `tanh` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'tanh'
-class MathRemainder (MathFunctionFloat):
-    """Represent a call to the remainder function in the Math library"""
+
+
+class MathRemainder(MathFunctionFloat):
+    """
+    Class representing a call to the `math.remainder` function.
+
+    A class which represents a call to the `remainder` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'remainder'
 
-class MathRadians (MathFunctionFloat):
-    """Represent a call to the radians function in the Math library"""
+class MathRadians(MathFunctionFloat):
+    """
+    Class representing a call to the `math.radians` function.
+
+    A class which represents a call to the `radians` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'radians'
-class MathDegrees (MathFunctionFloat):
-    """Represent a call to the degrees function in the Math library"""
+
+
+class MathDegrees(MathFunctionFloat):
+    """
+    Class representing a call to the `math.degrees` function.
+
+    A class which represents a call to the `degrees` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'degrees'
 
 # Integer result
 class MathFactorial(MathFunctionInt):
-    """Represent a call to the factorial function in the Math library"""
+    """
+    Class representing a call to the `math.factorial` function.
+
+    A class which represents a call to the `factorial` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'factorial'
-class MathGcd      (MathFunctionInt):
-    """Represent a call to the gcd function in the Math library"""
+
+
+class MathGcd(MathFunctionInt):
+    """
+    Class representing a call to the `math.gcd` function.
+
+    A class which represents a call to the `gcd` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'gcd'
-class MathLcm      (MathFunctionInt):
-    """Represent a call to the lcm function in the Math library"""
+
+
+class MathLcm(MathFunctionInt):
+    """
+    Class representing a call to the `math.lcm` function.
+
+    A class which represents a call to the `lcm` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'lcm'
 
-class MathCeil     (MathFunctionInt):
-    """Represent a call to the ceil function in the Math library"""
+class MathCeil(MathFunctionInt):
+    """
+    Class representing a call to the `math.ceil` function.
+
+    A class which represents a call to the `ceil` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'ceil'
-class MathFloor    (MathFunctionInt):
-    """Represent a call to the floor function in the Math library"""
+
+
+class MathFloor(MathFunctionInt):
+    """
+    Class representing a call to the `math.floor` function.
+
+    A class which represents a call to the `floor` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'floor'
-class MathTrunc    (MathFunctionInt):
-    """Represent a call to the trunc function in the Math library"""
+
+
+class MathTrunc(MathFunctionInt):
+    """
+    Class representing a call to the `math.trunc` function.
+
+    A class which represents a call to the `trunc` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'trunc'
 
 # Boolean result
-class MathIsclose (MathFunctionBool):
-    """Represent a call to the isclose function in the Math library"""
+class MathIsclose(MathFunctionBool):
+    """
+    Class representing a call to the `math.isclose` function.
+
+    A class which represents a call to the `isclose` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'isclose'
+
+
 class MathIsfinite(MathFunctionBool):
-    """Represent a call to the isfinite function in the Math library"""
+    """
+    Class representing a call to the `math.isfinite` function.
+
+    A class which represents a call to the `isfinite` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'isfinite'
-class MathIsinf   (MathFunctionBool):
-    """Represent a call to the isinf function in the Math library"""
+
+
+class MathIsinf(MathFunctionBool):
+    """
+    Class representing a call to the `math.isinf` function.
+
+    A class which represents a call to the `isinf` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'isinf'
-class MathIsnan   (MathFunctionBool):
-    """Represent a call to the isnan function in the Math library"""
+
+
+class MathIsnan(MathFunctionBool):
+    """
+    Class representing a call to the `math.isnan` function.
+
+    A class which represents a call to the `isnan` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'isnan'
 

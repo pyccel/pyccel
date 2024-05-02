@@ -20,6 +20,7 @@ from .core          import (AsName, Import, FunctionDef, FunctionCall,
 
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
+from .cmathext      import cmath_mod
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, Nil
@@ -87,6 +88,7 @@ builtin_import_registry = Module('__main__',
             Import('numpy', numpy_mod),
             Import('scipy', scipy_mod),
             Import('itertools', itertools_mod),
+            Import('cmath', cmath_mod),
             Import('math', math_mod),
             Import('pyccel', pyccel_mod),
             Import('sys', sys_mod),

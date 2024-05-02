@@ -9,6 +9,6 @@ xi = 2
 from decorators_types import decr
 yi = decr(xi)
 
-from classes import Point
+from classes_2 import Point
 
-p = Point(0.0, 0.0)
+p = Point(0.0)

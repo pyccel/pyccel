@@ -575,7 +575,7 @@ def C_to_Python(c_object):
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 c_to_py_registry = {
     (NativeBool(), -1)     : 'Bool_to_PyBool',
-    (NativeInteger(), -1)  : 'Int'+str(default_precision['int']*8)+'_to_PyLong',
+    (NativeInteger(), -1)  : 'Int'+str(default_precision[NativeInteger()]*8)+'_to_PyLong',
     (NativeInteger(), 1)   : 'Int8_to_NumpyLong',
     (NativeInteger(), 2)   : 'Int16_to_NumpyLong',
     (NativeInteger(), 4)   : 'Int32_to_NumpyLong',
