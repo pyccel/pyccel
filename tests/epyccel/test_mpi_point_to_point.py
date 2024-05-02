@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from modules import mpi_point_to_point as pmod
+
 from pyccel import epyccel
 
 #==============================================================================
