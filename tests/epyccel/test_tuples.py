@@ -3,8 +3,10 @@ import inspect
 import pytest
 import numpy as np
 
-from pyccel.epyccel import epyccel
 from modules import tuples as tuples_module
+
+from pyccel.decorators import template
+from pyccel.epyccel import epyccel
 
 def is_func_with_0_args(f):
     """ Test if name 'f' corresponds to an argument in the
@@ -146,3 +148,22 @@ def test_homogeneous_tuples_of_numpy_ints_as_args(language):
     epyc_func = epyccel(my_tuple, language=language)
     tuple_arg = (np.int8(1), np.int8(2), np.int8(3))
     assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
+
+def test_homogeneous_tuples_template_args(language):
+    @template('T', [int, float])
+    def my_tuple(a : 'tuple[T,...]'):
+        return len(a), a[0], a[1], a[2]
+
+    epyc_func = epyccel(my_tuple, language=language)
+    tuple_int_arg = (1, 2, 3)
+    tuple_float_arg = (4., 5., 6.)
+
+    int_pyth = my_tuple(tuple_int_arg)
+    int_epyc = my_tuple(tuple_int_arg)
+    assert int_pyth == int_epyc
+    assert isinstance(int_epyc[1], int)
+
+    float_pyth = my_tuple(tuple_float_arg)
+    float_epyc = my_tuple(tuple_float_arg)
+    assert float_pyth == float_epyc
+    assert isinstance(float_epyc[1], float)
