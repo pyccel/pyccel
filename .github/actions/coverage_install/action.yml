@@ -1,4 +1,9 @@
 name: 'Coverage Setup'
+inputs:
+  shell_cmd:
+    description: 'Specifies the shell command (different for anaconda)'
+    required: false
+    default: 'bash'
 
 runs:
   using: "composite"
@@ -6,7 +11,7 @@ runs:
     - name: Installation
       run: |
         python -m pip install coverage
-      shell: bash
+      shell: ${{ inputs.shell_cmd }}
     - name: Directory Creation
       run: |
         INSTALL_DIR=$(cd tests; python -c "import pyccel; print(pyccel.__path__[0])")
@@ -15,4 +20,4 @@ runs:
         echo -e "[run]\nparallel = True\nsource = ${INSTALL_DIR}\ndata_file = $(pwd)/.coverage\n[report]\ninclude = ${INSTALL_DIR}/*\n[xml]\noutput = cobertura.xml" > .coveragerc
         echo "SITE_DIR=${SITE_DIR}" >> $GITHUB_ENV
         echo "COVERAGE_PROCESS_START=$(pwd)/.coveragerc" >> $GITHUB_ENV
-      shell: bash
+      shell: ${{ inputs.shell_cmd }}

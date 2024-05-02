@@ -12,7 +12,8 @@ The key lines of the function `doprint` are the call to `self._print(expr)` and 
 ## `_print`
 
 The `_print` function internally calls a function named `_print_X`, where `X` is the type of the object.
-These functions must have the form:
+The logic of how the `_print` function chooses the appropriate `_print_X` function is detailed in the [overview](./overview.md#function-naming-conventionsfile-navigation).
+These `_print_X` functions must have the form:
 ```python
 def _print_ClassName(self, stmt):
     ...

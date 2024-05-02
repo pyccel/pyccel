@@ -1,4 +1,3 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-@types('float', 'float')
-def compare_isnot_float(a, b):
+def compare_isnot_float(a : 'float', b : 'float'):
     return a is not b

@@ -1,2 +1,0 @@
-Input and Output
-****************

@@ -7,18 +7,76 @@
 # include <string.h>
 # include <stdarg.h>
 # include <stdlib.h>
+# include <stdio.h>
+# include <stdbool.h>
+# include <inttypes.h>
+
+/*
+ * Takes an array, and prints its elements the way they are laid out in memory (similar to ravel)
+*/
+
+void print_ndarray_memory(t_ndarray nd)
+{
+    int i;
+
+    for (i = 0; i < nd.length; ++i)
+    {
+        switch (nd.type)
+        {
+            case nd_int8:
+                printf("[%"PRId8"]", nd.nd_int8[i]);
+                break;
+            case nd_int16:
+                printf("[%"PRId16"]", nd.nd_int16[i]);
+                break;
+            case nd_int32:
+                printf("[%"PRId32"]", nd.nd_int32[i]);
+                break;
+            case nd_int64:
+                printf("[%"PRId64"]", nd.nd_int64[i]);
+                break;
+            case nd_float:
+                printf("[%f]", nd.nd_float[i]);
+                break;
+            case nd_double:
+                printf("[%lf]", nd.nd_double[i]);
+                break;
+            case nd_bool:
+                printf("[%d]", nd.nd_bool[i]);
+                break;
+            case nd_cfloat:
+            {
+                double real = creal(nd.nd_cfloat[i]);
+                double imag = cimag(nd.nd_cfloat[i]);
+                printf("[%lf%+lfj]", real, imag);
+                break;
+            }
+            case nd_cdouble:
+            {
+                double real = creal(nd.nd_cdouble[i]);
+                double imag = cimag(nd.nd_cdouble[i]);
+                printf("[%lf%+lfj]", real, imag);
+                break;
+            }
+        }
+        ++i;
+    }
+    if (i)
+        printf("\n");
+}
 
 /*
 ** allocation
 */
 
 t_ndarray   array_create(int32_t nd, int64_t *shape,
-        enum e_types type, bool is_view)
+        t_types type, bool is_view, t_order order)
 {
     t_ndarray arr;
 
     arr.nd = nd;
     arr.type = type;
+    arr.order = order;
     switch (type)
     {
         case nd_int8:
@@ -59,11 +117,23 @@ t_ndarray   array_create(int32_t nd, int64_t *shape,
     }
     arr.buffer_size = arr.length * arr.type_size;
     arr.strides = malloc(nd * sizeof(int64_t));
-    for (int32_t i = 0; i < arr.nd; i++)
+    if (arr.order == order_c)
     {
-        arr.strides[i] = 1;
-        for (int32_t j = i + 1; j < arr.nd; j++)
-            arr.strides[i] *= arr.shape[j];
+        for (int32_t i = 0; i < arr.nd; i++)
+        {
+            arr.strides[i] = 1;
+            for (int32_t j = i + 1; j < arr.nd; j++)
+                arr.strides[i] *= arr.shape[j];
+        }
+    }
+    else if (arr.order == order_f)
+    {
+        for (int32_t i = 0; i < arr.nd; i++)
+        {
+            arr.strides[i] = 1;
+            for (int32_t j = 0; j < i; j++)
+                arr.strides[i] *= arr.shape[j];
+        }
     }
     if (!is_view)
         arr.raw_data = malloc(arr.buffer_size);
@@ -200,28 +270,28 @@ void   _array_fill_cdouble(double complex c, t_ndarray arr)
 ** deallocation
 */
 
-int32_t free_array(t_ndarray arr)
+int32_t free_array(t_ndarray* arr)
 {
-    if (arr.shape == NULL)
+    if (arr->shape == NULL)
         return (0);
-    free(arr.raw_data);
-    arr.raw_data = NULL;
-    free(arr.shape);
-    arr.shape = NULL;
-    free(arr.strides);
-    arr.strides = NULL;
+    free(arr->raw_data);
+    arr->raw_data = NULL;
+    free(arr->shape);
+    arr->shape = NULL;
+    free(arr->strides);
+    arr->strides = NULL;
     return (1);
 }
 
 
-int32_t free_pointer(t_ndarray arr)
+int32_t free_pointer(t_ndarray* arr)
 {
-    if (arr.is_view == false || arr.shape == NULL)
+    if (arr->is_view == false || arr->shape == NULL)
         return (0);
-    free(arr.shape);
-    arr.shape = NULL;
-    free(arr.strides);
-    arr.strides = NULL;
+    free(arr->shape);
+    arr->shape = NULL;
+    free(arr->strides);
+    arr->strides = NULL;
     return (1);
 }
 
@@ -229,7 +299,7 @@ int32_t free_pointer(t_ndarray arr)
 ** slices
 */
 
-t_slice new_slice(int32_t start, int32_t end, int32_t step, enum e_slice_type type)
+t_slice new_slice(int32_t start, int32_t end, int32_t step, t_slice_type type)
 {
     t_slice slice;
 
@@ -246,17 +316,18 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     va_list  va;
     t_slice slice;
     int32_t start = 0;
-    int32_t j;
+    int32_t j = 0;
+    t_order order = arr.order;
 
     view.nd = n;
     view.type = arr.type;
     view.type_size = arr.type_size;
     view.shape = malloc(sizeof(int64_t) * view.nd);
     view.strides = malloc(sizeof(int64_t) * view.nd);
+    view.order = order;
     view.is_view = true;
 
     va_start(va, n);
-    j = 0;
     for (int32_t i = 0; i < arr.nd; i++)
     {
         slice = va_arg(va, t_slice);
@@ -270,10 +341,12 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     }
     va_end(va);
 
-    view.raw_data = arr.raw_data + start * arr.type_size;
+    view.raw_data = (unsigned char*)arr.raw_data + start * arr.type_size;
     view.length = 1;
     for (int32_t i = 0; i < view.nd; i++)
             view.length *= view.shape[i];
+    view.buffer_size =  view.length * view.type_size;
+
     return (view);
 }
 
@@ -339,7 +412,7 @@ int64_t     get_index(t_ndarray arr, ...)
 ** convert numpy strides to nd_array strides, and return it in a new array, to
 ** avoid the problem of different implementations of strides in numpy and ndarray.
 */
-int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd)
+int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int32_t nd)
 {
     int64_t *ndarray_strides;
 
@@ -355,7 +428,7 @@ int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd
 ** avoid the problem of variation of system architecture because numpy shape
 ** is not saved in fixed length type.
 */
-int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
+int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int32_t nd)
 {
     int64_t *nd_shape;
 
@@ -363,7 +436,77 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
     for (int i = 0; i < nd; i++)
         nd_shape[i] = np_shape[i];
     return nd_shape;
+}
 
+/**
+** takes an array containing the shape of an array 'shape', number of a 
+** certain dimension 'nd', and the number of the array's dimensions
+** returns the stride (number of single elements to jump in a dimension
+** to get to this dimension's next element) of the 'nd`th dimension
+*/
+int64_t get_dimension_stride(int64_t *shape, int32_t nd, int32_t max_nd)
+{
+    int64_t product = 1;
+
+    for (int i = nd; i < max_nd; ++i)
+        product *= shape[i];
+    return (product);
+}
+
+/**
+**  arr : Takes an array needed to do the calculations
+**  flat_c_idx : An element number, representing an element's index if it were
+**              in a flattened (order_c/row major) array
+**  nd : representing the number of dimensions
+**
+**  Returns the element's index depending on its required memory layout
+**          (order_f/column major or order_c/row major)
+*/
+int64_t element_index(t_ndarray arr, int64_t flat_c_idx, int32_t nd)
+{
+    if (arr.order == order_c && !arr.is_view)
+        return flat_c_idx;
+    if (nd == 0)
+        return (0);
+    if (nd == arr.nd)
+        return (flat_c_idx % arr.shape[nd - 1]) * arr.strides[nd - 1] + element_index(arr, flat_c_idx, nd - 1);
+    int64_t true_index = (flat_c_idx / get_dimension_stride(arr.shape, nd, arr.nd));
+    if (true_index >= arr.shape[nd - 1])
+        true_index = true_index % arr.shape[nd - 1];
+    return (true_index * arr.strides[nd - 1] + element_index(arr, flat_c_idx, nd - 1));
+}
+
+bool is_same_shape(t_ndarray a, t_ndarray b)
+{
+    if (a.nd != b.nd)
+        return (false);
+    for (int i = 0; i < a.nd; ++i)
+    {
+        if (a.shape[i] != b.shape[i])
+            return (false);
+    }
+    return (true);
+}
+
+void array_copy_data(t_ndarray *dest, t_ndarray src, uint32_t offset)
+{
+    unsigned char *d = (unsigned char*)dest->raw_data;
+    unsigned char *s = (unsigned char*)src.raw_data;
+
+    if (!src.is_view && dest->order == src.order
+        && (src.order == order_c
+            || (src.order == order_f && is_same_shape(*dest, src))))
+    {
+        memcpy(d + offset * dest->type_size, s, src.buffer_size);
+    }
+    else
+    {
+        for (int64_t element_num = 0; element_num < src.length; ++element_num)
+        {
+            memcpy(d + ((element_index(*dest, element_num, dest->nd) + offset) * dest->type_size),
+                s + (element_index(src, element_num, src.nd) * src.type_size), src.type_size);
+        }
+    }
 }
 
 /*

@@ -1,5 +1,3 @@
 Hello again! Thank you for this new pull request :star_struck:.
 
-Don't forget to let me know when it is complete with the command `/bot mark as ready`.
-
-Here is your checklist:
+Here is your checklist. Please tick items off when you have completed them or determined that they are not necessary for this pull request:

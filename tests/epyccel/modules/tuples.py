@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types, pure
+from pyccel.decorators import pure
 
 __all__ = [
         'homogenous_tuple_int',
@@ -181,8 +181,7 @@ def tuple_homogeneous_return():
 
 def tuple_arg_unpacking():
     @pure
-    @types('int','int')
-    def add2(x, y):
+    def add2(x : 'int', y : 'int'):
         return x+y
 
     args = (3,4)

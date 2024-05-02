@@ -86,7 +86,6 @@ class Scope(object):
         self._parent_scope       = parent_scope
         self._sons_scopes        = {}
 
-
         self._is_loop = is_loop
         # scoping for loops
         self._loops = []
@@ -325,12 +324,16 @@ class Scope(object):
             raise RuntimeError("Variable not found in scope")
 
     def insert_class(self, cls):
-        """ Add a class to the current scope
+        """
+        Add a class to the current scope.
+
+        Add the definition of a class to the current scope to
+        make it discoverable when used.
 
         Parameters
         ----------
-        cls  : ClassDef
-                The class to be inserted into the current scope
+        cls : ClassDef
+            The class to be inserted into the current scope.
         """
         if not isinstance(cls, ClassDef):
             raise TypeError('class must be of type ClassDef')
@@ -340,8 +343,35 @@ class Scope(object):
         if self.is_loop:
             self.parent_scope.insert_class(cls)
         else:
-            #if name in self._locals['classes']:
-            #    raise RuntimeError('New class already exists in scope')
+            if name in self._locals['classes']:
+                raise RuntimeError(f"A class with name '{name}' already exists in the scope")
+            self._locals['classes'][name] = cls
+
+    def update_class(self, cls):
+        """
+        Update a class which is in scope.
+
+        Search for a class in the current scope and its parents. Once it
+        has been found, replace it with the updated ClassDef passed as
+        argument.
+
+        Parameters
+        ----------
+        cls : ClassDef
+            The class to be inserted into the current scope.
+        """
+        if not isinstance(cls, ClassDef):
+            raise TypeError('class must be of type ClassDef')
+
+        name = cls.name
+
+        name_found = name in self._locals['classes']
+
+        if not name_found and self.parent_scope:
+            self.parent_scope.update_class(cls)
+        else:
+            if not name_found:
+                raise RuntimeError('Class not found in scope')
             self._locals['classes'][name] = cls
 
     def insert_macro(self, macro):
@@ -362,7 +392,21 @@ class Scope(object):
         self._locals['templates'][expr.name] = expr
 
     def insert_header(self, expr):
-        """ Add a header to the current scope
+        """
+        Add a header to the current scope.
+
+        Add a header describing a function, method or class to
+        the current scope.
+
+        Parameters
+        ----------
+        expr : pyccel.ast.Header
+            The header description.
+
+        Raises
+        ------
+        TypeError
+            Raised if the header type is unknown.
         """
         if isinstance(expr, (FunctionHeader, MethodHeader)):
             if expr.name in self.headers:
@@ -374,11 +418,7 @@ class Scope(object):
 
             #  create a new Datatype for the current class
 
-            iterable = 'iterable' in expr.options
-            with_construct = 'with' in expr.options
-            dtype = DataTypeFactory(expr.name, '_name',
-                                    is_iterable=iterable,
-                                    is_with_construct=with_construct)
+            dtype = DataTypeFactory(expr.name, '_name')
             self.cls_constructs[expr.name] = dtype
         else:
             msg = 'header of type{0} is not supported'

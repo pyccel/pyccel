@@ -10,7 +10,8 @@ which creates an interface exposing Fortran code to C.
 import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
-from pyccel.ast.bind_c import CLocFunc, BindCModule
+from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
+from pyccel.ast.bind_c import BindCArrayVariable
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
@@ -164,7 +165,7 @@ class FortranToCWrapper(Wrapper):
         self.scope = mod_scope
 
         # Wrap contents
-        funcs_to_wrap = [f for f in expr.funcs if not f.is_private]
+        funcs_to_wrap = expr.funcs
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         if expr.init_func:
             init_func = funcs[next(i for i,f in enumerate(funcs_to_wrap) if f == expr.init_func)]
@@ -174,11 +175,12 @@ class FortranToCWrapper(Wrapper):
             free_func = funcs[next(i for i,f in enumerate(funcs_to_wrap) if f == expr.free_func)]
         else:
             free_func = None
+        removed_functions = [f for f,w in zip(funcs_to_wrap, funcs) if isinstance(w, EmptyNode)]
         funcs = [f for f in funcs if not isinstance(f, EmptyNode)]
         interfaces = [self._wrap(f) for f in expr.interfaces]
         classes = [self._wrap(f) for f in expr.classes]
-        variable_getters = [self._wrap(v) for v in expr.variables if not v.is_private]
-        variable_getters = [v for v in variable_getters if not isinstance(v, EmptyNode)]
+        variables = [self._wrap(v) for v in expr.variables if not v.is_private]
+        variable_getters = [v for v in variables if isinstance(v, BindCArrayVariable)]
         imports = [Import(expr.name, target = expr, mod=expr)]
 
         name = mod_scope.get_new_name(f'bind_c_{expr.name.target}')
@@ -186,11 +188,11 @@ class FortranToCWrapper(Wrapper):
 
         self.exit_scope()
 
-        return BindCModule(name, (), funcs, variable_wrappers = variable_getters,
+        return BindCModule(name, variables, funcs, variable_wrappers = variable_getters,
                 init_func = init_func, free_func = free_func,
                 interfaces = interfaces, classes = classes,
                 imports = imports, original_module = expr,
-                scope = mod_scope)
+                scope = mod_scope, removed_functions = removed_functions)
 
     def _wrap_FunctionDef(self, expr):
         """
@@ -215,6 +217,9 @@ class FortranToCWrapper(Wrapper):
         BindCFunctionDef
             The C-compatible function.
         """
+        if expr.is_private:
+            return EmptyNode()
+
         name = self.scope.get_new_name(f'bind_c_{expr.name.lower()}')
         self._wrapper_names_dict[expr.name] = name
 
@@ -369,7 +374,7 @@ class FortranToCWrapper(Wrapper):
             # Create the C-compatible data pointer
             bind_var = Variable(dtype=BindCPointer(),
                                 name=scope.get_new_name('bound_'+name),
-                                is_const=True, memory_handling='alias')
+                                is_const=False, memory_handling='alias')
             scope.insert_variable(bind_var)
 
             result = BindCFunctionDefResult(bind_var, var, scope)
@@ -417,7 +422,7 @@ class FortranToCWrapper(Wrapper):
             the wrapping module to expose the variable.
         """
         if expr.rank == 0 and expr.dtype in NativeNumeric:
-            return EmptyNode()
+            return expr.clone(expr.name, new_class = BindCVariable)
         else:
             scope = self.scope
             func_name = scope.get_new_name('bind_c_'+expr.name.lower())
@@ -448,4 +453,5 @@ class FortranToCWrapper(Wrapper):
                           imports   = [import_mod],
                           scope = func_scope,
                           original_function = expr)
-            return func
+            return expr.clone(expr.name, new_class = BindCArrayVariable, wrapper_function = func,
+                                original_variable = expr)

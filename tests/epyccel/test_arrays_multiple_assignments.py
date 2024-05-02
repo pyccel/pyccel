@@ -1,10 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
 import sys
+import warnings
 import pytest
 
 from pyccel.epyccel import epyccel
-from pyccel.decorators import stack_array, types
+from pyccel.decorators import stack_array
 from pyccel.errors.errors import Errors, PyccelSemanticError
 from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     ARRAY_DEFINITION_IN_LOOP,
@@ -133,7 +134,10 @@ def test_creation_in_loop_stack(language):
 
     # Check that we got exactly 2 Pyccel errors
     assert errors.has_errors()
-    assert errors.num_messages() == 2
+    if errors.mode == 'developer':
+        assert errors.num_messages() == 1
+    else:
+        assert errors.num_messages() == 2
 
     # Check that the errors are correct
     error_info_list = [*errors.error_info_map.values()][0]
@@ -147,8 +151,7 @@ def test_creation_in_loop_stack(language):
 #==============================================================================
 def test_creation_in_if_heap(language):
 
-    @types('float')
-    def f(c):
+    def f(c : 'float'):
         import numpy as np
         if c > 0.5:
             x = np.ones(2, dtype=int)
@@ -303,20 +306,22 @@ def test_Assign_between_nested_If(lang):
     assert f(True,False) == f2(True,False)
     assert f(False,True) == f2(False,True)
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Compilation problem. NumPy causing unreadable Windows output see issue #1405")
+@pytest.mark.skipif(sys.platform == 'win32', reason="NumPy compilation raises warnings on Windows. See issue #1405")
 def test_conda_flag_disable(language):
     def one():
         return True
-    with pytest.warns(None) as record1:
-        epyccel(one, language='c', conda_warnings = 'off')
-    assert len(record1) == 0 # Equals 0 on every platform
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        epyccel(one, language=language, conda_warnings = 'off')
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Compilation problem. NumPy causing unreadable Windows output see issue #1405")
+@pytest.mark.skipif(sys.platform == 'win32', reason="NumPy compilation raises warnings on Windows. See issue #1405")
 def test_conda_flag_verbose(language):
     def one():
         return True
-    with pytest.warns(None) as record1:
-        epyccel(one, language='c', conda_warnings = 'verbose')
+    #with pytest.warns(Warning) as record1:
+    with warnings.catch_warnings(record=True) as record1:
+        warnings.simplefilter("always")
+        epyccel(one, language=language, conda_warnings = 'verbose')
     if len(record1)>0:
         warn_message = record1[0].message
         p = str(warn_message).split(":")[2].strip()

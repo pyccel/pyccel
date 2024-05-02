@@ -1037,9 +1037,9 @@ def test_array_int_2d_F_initialization(language):
 # TEST: 1D ARRAYS OF REAL
 #==============================================================================
 
-def test_array_real_1d_scalar_add(language):
+def test_array_float_1d_scalar_add(language):
 
-    f1 = arrays.array_real_1d_scalar_add
+    f1 = arrays.array_float_1d_scalar_add
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1051,9 +1051,9 @@ def test_array_real_1d_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_1d_scalar_sub(language):
+def test_array_float_1d_scalar_sub(language):
 
-    f1 = arrays.array_real_1d_scalar_sub
+    f1 = arrays.array_float_1d_scalar_sub
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1065,9 +1065,9 @@ def test_array_real_1d_scalar_sub(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_1d_scalar_mul(language):
+def test_array_float_1d_scalar_mul(language):
 
-    f1 = arrays.array_real_1d_scalar_mul
+    f1 = arrays.array_float_1d_scalar_mul
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1079,9 +1079,9 @@ def test_array_real_1d_scalar_mul(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_1d_scalar_div(language):
+def test_array_float_1d_scalar_div(language):
 
-    f1 = arrays.array_real_1d_scalar_div
+    f1 = arrays.array_float_1d_scalar_div
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1093,8 +1093,8 @@ def test_array_real_1d_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_1d_scalar_mod(language):
-    f1 = arrays.array_real_1d_scalar_mod
+def test_array_float_1d_scalar_mod(language):
+    f1 = arrays.array_float_1d_scalar_mod
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1106,9 +1106,9 @@ def test_array_real_1d_scalar_mod(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_1d_scalar_idiv(language):
+def test_array_float_1d_scalar_idiv(language):
 
-    f1 = arrays.array_real_1d_scalar_idiv
+    f1 = arrays.array_float_1d_scalar_idiv
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1120,9 +1120,9 @@ def test_array_real_1d_scalar_idiv(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_1d_add(language):
+def test_array_float_1d_add(language):
 
-    f1 = arrays.array_real_1d_add
+    f1 = arrays.array_float_1d_add
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1134,9 +1134,9 @@ def test_array_real_1d_add(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_1d_sub(language):
+def test_array_float_1d_sub(language):
 
-    f1 = arrays.array_real_1d_sub
+    f1 = arrays.array_float_1d_sub
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1148,9 +1148,9 @@ def test_array_real_1d_sub(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_1d_mul(language):
+def test_array_float_1d_mul(language):
 
-    f1 = arrays.array_real_1d_mul
+    f1 = arrays.array_float_1d_mul
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1162,9 +1162,9 @@ def test_array_real_1d_mul(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_1d_div(language):
+def test_array_float_1d_div(language):
 
-    f1 = arrays.array_real_1d_div
+    f1 = arrays.array_float_1d_div
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1176,9 +1176,9 @@ def test_array_real_1d_div(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_1d_mod(language):
+def test_array_float_1d_mod(language):
 
-    f1 = arrays.array_real_1d_mod
+    f1 = arrays.array_float_1d_mod
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1190,9 +1190,9 @@ def test_array_real_1d_mod(language):
 
     assert np.array_equal( x1, x2)
 
-def test_array_real_1d_idiv(language):
+def test_array_float_1d_idiv(language):
 
-    f1 = arrays.array_real_1d_idiv
+    f1 = arrays.array_float_1d_idiv
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1208,9 +1208,9 @@ def test_array_real_1d_idiv(language):
 # TEST: 2D ARRAYS OF REAL WITH C ORDERING
 #==============================================================================
 
-def test_array_real_2d_C_scalar_add(language):
+def test_array_float_2d_C_scalar_add(language):
 
-    f1 = arrays.array_real_2d_C_scalar_add
+    f1 = arrays.array_float_2d_C_scalar_add
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1222,9 +1222,9 @@ def test_array_real_2d_C_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_scalar_sub(language):
+def test_array_float_2d_C_scalar_sub(language):
 
-    f1 = arrays.array_real_2d_C_scalar_sub
+    f1 = arrays.array_float_2d_C_scalar_sub
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1236,9 +1236,9 @@ def test_array_real_2d_C_scalar_sub(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_scalar_mul(language):
+def test_array_float_2d_C_scalar_mul(language):
 
-    f1 = arrays.array_real_2d_C_scalar_mul
+    f1 = arrays.array_float_2d_C_scalar_mul
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1250,9 +1250,9 @@ def test_array_real_2d_C_scalar_mul(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_scalar_div(language):
+def test_array_float_2d_C_scalar_div(language):
 
-    f1 = arrays.array_real_2d_C_scalar_div
+    f1 = arrays.array_float_2d_C_scalar_div
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1264,9 +1264,9 @@ def test_array_real_2d_C_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_scalar_mod(language):
+def test_array_float_2d_C_scalar_mod(language):
 
-    f1 = arrays.array_real_2d_C_scalar_mod
+    f1 = arrays.array_float_2d_C_scalar_mod
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1278,9 +1278,9 @@ def test_array_real_2d_C_scalar_mod(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_add(language):
+def test_array_float_2d_C_add(language):
 
-    f1 = arrays.array_real_2d_C_add
+    f1 = arrays.array_float_2d_C_add
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1292,9 +1292,9 @@ def test_array_real_2d_C_add(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_sub(language):
+def test_array_float_2d_C_sub(language):
 
-    f1 = arrays.array_real_2d_C_sub
+    f1 = arrays.array_float_2d_C_sub
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1306,9 +1306,9 @@ def test_array_real_2d_C_sub(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_mul(language):
+def test_array_float_2d_C_mul(language):
 
-    f1 = arrays.array_real_2d_C_mul
+    f1 = arrays.array_float_2d_C_mul
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1320,9 +1320,9 @@ def test_array_real_2d_C_mul(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_div(language):
+def test_array_float_2d_C_div(language):
 
-    f1 = arrays.array_real_2d_C_div
+    f1 = arrays.array_float_2d_C_div
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1334,9 +1334,9 @@ def test_array_real_2d_C_div(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_mod(language):
+def test_array_float_2d_C_mod(language):
 
-    f1 = arrays.array_real_2d_C_mod
+    f1 = arrays.array_float_2d_C_mod
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1348,9 +1348,9 @@ def test_array_real_2d_C_mod(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_array_initialization(language):
+def test_array_float_2d_C_array_initialization(language):
 
-    f1 = arrays.array_real_2d_C_array_initialization
+    f1 = arrays.array_float_2d_C_array_initialization
     f2 = epyccel(f1, language = language)
 
     x1 = np.zeros((2, 3), dtype=float )
@@ -1361,16 +1361,9 @@ def test_array_real_2d_C_array_initialization(language):
 
     assert np.array_equal(x1, x2)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="array function doesn't handle list of variables. See #752"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
-def test_array_real_3d_C_array_initialization_1(language):
+def test_array_float_3d_C_array_initialization_1(language):
 
-    f1 = arrays.array_real_3d_C_array_initialization_1
+    f1 = arrays.array_float_3d_C_array_initialization_1
     f2 = epyccel(f1, language = language)
 
     x  = np.random.random((3,2))
@@ -1385,9 +1378,9 @@ def test_array_real_3d_C_array_initialization_1(language):
 
     assert np.array_equal(x1, x2)
 
-def test_array_real_3d_C_array_initialization_2(language):
+def test_array_float_3d_C_array_initialization_2(language):
 
-    f1 = arrays.array_real_3d_C_array_initialization_2
+    f1 = arrays.array_float_3d_C_array_initialization_2
     f2 = epyccel(f1, language = language)
 
     x1 = np.zeros((2,3,4))
@@ -1398,16 +1391,9 @@ def test_array_real_3d_C_array_initialization_2(language):
 
     assert np.array_equal(x1, x2)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="array function doesn't handle list of variables. See #752"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
-def test_array_real_4d_C_array_initialization(language):
+def test_array_float_4d_C_array_initialization(language):
 
-    f1 = arrays.array_real_4d_C_array_initialization
+    f1 = arrays.array_float_4d_C_array_initialization
     f2 = epyccel(f1, language = language)
 
     x  = np.random.random((3,2,4))
@@ -1425,9 +1411,9 @@ def test_array_real_4d_C_array_initialization(language):
 # TEST: 2D ARRAYS OF REAL WITH F ORDERING
 #==============================================================================
 
-def test_array_real_2d_F_scalar_add(language):
+def test_array_float_2d_F_scalar_add(language):
 
-    f1 = arrays.array_real_2d_F_scalar_add
+    f1 = arrays.array_float_2d_F_scalar_add
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
@@ -1439,9 +1425,9 @@ def test_array_real_2d_F_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_scalar_sub(language):
+def test_array_float_2d_F_scalar_sub(language):
 
-    f1 = arrays.array_real_2d_F_scalar_sub
+    f1 = arrays.array_float_2d_F_scalar_sub
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
@@ -1453,9 +1439,9 @@ def test_array_real_2d_F_scalar_sub(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_scalar_mul(language):
+def test_array_float_2d_F_scalar_mul(language):
 
-    f1 = arrays.array_real_2d_F_scalar_mul
+    f1 = arrays.array_float_2d_F_scalar_mul
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
@@ -1467,9 +1453,9 @@ def test_array_real_2d_F_scalar_mul(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_scalar_div(language):
+def test_array_float_2d_F_scalar_div(language):
 
-    f1 = arrays.array_real_2d_F_scalar_div
+    f1 = arrays.array_float_2d_F_scalar_div
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
@@ -1481,9 +1467,9 @@ def test_array_real_2d_F_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_scalar_mod(language):
+def test_array_float_2d_F_scalar_mod(language):
 
-    f1 = arrays.array_real_2d_F_scalar_mod
+    f1 = arrays.array_float_2d_F_scalar_mod
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
@@ -1495,9 +1481,9 @@ def test_array_real_2d_F_scalar_mod(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_add(language):
+def test_array_float_2d_F_add(language):
 
-    f1 = arrays.array_real_2d_F_add
+    f1 = arrays.array_float_2d_F_add
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
@@ -1509,9 +1495,9 @@ def test_array_real_2d_F_add(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_sub(language):
+def test_array_float_2d_F_sub(language):
 
-    f1 = arrays.array_real_2d_F_sub
+    f1 = arrays.array_float_2d_F_sub
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
@@ -1523,9 +1509,9 @@ def test_array_real_2d_F_sub(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_mul(language):
+def test_array_float_2d_F_mul(language):
 
-    f1 = arrays.array_real_2d_F_mul
+    f1 = arrays.array_float_2d_F_mul
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
@@ -1537,9 +1523,9 @@ def test_array_real_2d_F_mul(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_div(language):
+def test_array_float_2d_F_div(language):
 
-    f1 = arrays.array_real_2d_F_div
+    f1 = arrays.array_float_2d_F_div
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
@@ -1551,9 +1537,9 @@ def test_array_real_2d_F_div(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_mod(language):
+def test_array_float_2d_F_mod(language):
 
-    f1 = arrays.array_real_2d_F_mod
+    f1 = arrays.array_float_2d_F_mod
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
@@ -1565,9 +1551,9 @@ def test_array_real_2d_F_mod(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_array_initialization(language):
+def test_array_float_2d_F_array_initialization(language):
 
-    f1 = arrays.array_real_2d_F_array_initialization
+    f1 = arrays.array_float_2d_F_array_initialization
     f2 = epyccel(f1, language = language)
 
     x1 = np.zeros((2, 3), dtype=float, order='F')
@@ -1578,17 +1564,9 @@ def test_array_real_2d_F_array_initialization(language):
 
     assert np.array_equal(x1, x2)
 
+def test_array_float_3d_F_array_initialization_1(language):
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="array function doesn't handle list of variables. See #752"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
-def test_array_real_3d_F_array_initialization_1(language):
-
-    f1 = arrays.array_real_3d_F_array_initialization_1
+    f1 = arrays.array_float_3d_F_array_initialization_1
     f2 = epyccel(f1, language = language)
 
     x  = np.random.random((3,2)).copy(order='F')
@@ -1603,9 +1581,9 @@ def test_array_real_3d_F_array_initialization_1(language):
 
     assert np.array_equal(x1, x2)
 
-def test_array_real_3d_F_array_initialization_2(language):
+def test_array_float_3d_F_array_initialization_2(language):
 
-    f1 = arrays.array_real_3d_F_array_initialization_2
+    f1 = arrays.array_float_3d_F_array_initialization_2
     f2 = epyccel(f1, language = language)
 
     x1 = np.zeros((2,3,4), order='F')
@@ -1616,17 +1594,9 @@ def test_array_real_3d_F_array_initialization_2(language):
 
     assert np.array_equal(x1, x2)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="array function doesn't handle list of variables. See #752"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
-def test_array_real_4d_F_array_initialization(language):
+def test_array_float_4d_F_array_initialization(language):
 
-    f1 = arrays.array_real_4d_F_array_initialization
+    f1 = arrays.array_float_4d_F_array_initialization
     f2 = epyccel(f1, language = language)
 
     x  = np.random.random((3,2,4)).copy(order='F')
@@ -1642,9 +1612,9 @@ def test_array_real_4d_F_array_initialization(language):
     assert np.array_equal(x1, x2)
 
 @pytest.mark.xfail(reason='Inhomogeneous arguments due to unknown shape')
-def test_array_real_4d_F_array_initialization_mixed_ordering(language):
+def test_array_float_4d_F_array_initialization_mixed_ordering(language):
 
-    f1 = arrays.array_real_4d_F_array_initialization_mixed_ordering
+    f1 = arrays.array_float_4d_F_array_initialization_mixed_ordering
     f2 = epyccel(f1, language = language)
 
     x  = np.array([[16., 17.], [18., 19.]], dtype='float', order='F')
@@ -1755,9 +1725,9 @@ def test_array_int32_in_bool_out_2d_F_complex_3d_expr(language):
 
     assert np.array_equal( r1, r2 )
 
-def test_array_real_1d_complex_3d_expr(language):
+def test_array_float_1d_complex_3d_expr(language):
 
-    f1 = arrays.array_real_1d_complex_3d_expr
+    f1 = arrays.array_float_1d_complex_3d_expr
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [1.,2.,3.] )
@@ -1769,9 +1739,9 @@ def test_array_real_1d_complex_3d_expr(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_complex_3d_expr(language):
+def test_array_float_2d_C_complex_3d_expr(language):
 
-    f1 = arrays.array_real_2d_C_complex_3d_expr
+    f1 = arrays.array_float_2d_C_complex_3d_expr
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1783,9 +1753,9 @@ def test_array_real_2d_C_complex_3d_expr(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_complex_3d_expr(language):
+def test_array_float_2d_F_complex_3d_expr(language):
 
-    f1 = arrays.array_real_2d_F_complex_3d_expr
+    f1 = arrays.array_float_2d_F_complex_3d_expr
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[ 1., 2., 3.], [4.,5.,6.]], order='F' )
@@ -1801,17 +1771,17 @@ def test_array_real_2d_F_complex_3d_expr(language):
 # TEST: 1D Stack ARRAYS OF REAL
 #==============================================================================
 
-def test_array_real_sum_stack_array(language):
+def test_array_float_sum_stack_array(language):
 
-    f1 = arrays.array_real_1d_sum_stack_array
+    f1 = arrays.array_float_1d_sum_stack_array
     f2 = epyccel( f1 , language = language)
     x1 = f1()
     x2 = f2()
     assert np.equal( x1, x2 )
 
-def test_array_real_div_stack_array(language):
+def test_array_float_div_stack_array(language):
 
-    f1 = arrays.array_real_1d_div_stack_array
+    f1 = arrays.array_float_1d_div_stack_array
     f2 = epyccel( f1 , language = language)
     x1 = f1()
     x2 = f2()
@@ -1833,17 +1803,17 @@ def test_multiple_stack_array_2(language):
 # TEST: 2D Stack ARRAYS OF REAL
 #==============================================================================
 
-def test_array_real_sum_2d_stack_array(language):
+def test_array_float_sum_2d_stack_array(language):
 
-    f1 = arrays.array_real_2d_sum_stack_array
+    f1 = arrays.array_float_2d_sum_stack_array
     f2 = epyccel( f1 , language = language)
     x1 = f1()
     x2 = f2()
     assert np.equal( x1, x2 )
 
-def test_array_real_div_2d_stack_array(language):
+def test_array_float_div_2d_stack_array(language):
 
-    f1 = arrays.array_real_2d_div_stack_array
+    f1 = arrays.array_float_2d_div_stack_array
     f2 = epyccel( f1 , language = language)
     x1 = f1()
     x2 = f2()
@@ -1872,8 +1842,8 @@ def test_multiple_2d_stack_array_2(language):
         pytest.param("python", marks = pytest.mark.python)
     ]
 )
-def test_array_real_1d_1d_prod(language):
-    f1 = arrays.array_real_1d_1d_prod
+def test_array_float_1d_1d_prod(language):
+    f1 = arrays.array_float_1d_1d_prod
     f2 = epyccel( f1 , language = language)
     x1 = np.array([3.0, 2.0, 1.0])
     x2 = np.copy(x1)
@@ -1891,8 +1861,8 @@ def test_array_real_1d_1d_prod(language):
         pytest.param("python", marks = pytest.mark.python)
     ]
 )
-def test_array_real_2d_1d_matmul(language):
-    f1 = arrays.array_real_2d_1d_matmul
+def test_array_float_2d_1d_matmul(language):
+    f1 = arrays.array_float_2d_1d_matmul
     f2 = epyccel( f1 , language = language)
     A1 = np.ones([3, 2])
     A1[1,0] = 2
@@ -1913,8 +1883,8 @@ def test_array_real_2d_1d_matmul(language):
         pytest.param("python", marks = pytest.mark.python)
     ]
 )
-def test_array_real_2d_1d_matmul_creation(language):
-    f1 = arrays.array_real_2d_1d_matmul_creation
+def test_array_float_2d_1d_matmul_creation(language):
+    f1 = arrays.array_float_2d_1d_matmul_creation
     f2 = epyccel( f1 , language = language)
     A1 = np.ones([3, 2])
     A1[1,0] = 2
@@ -1933,8 +1903,8 @@ def test_array_real_2d_1d_matmul_creation(language):
         pytest.param("python", marks = pytest.mark.python)
     ]
 )
-def test_array_real_2d_1d_matmul_order_F_F(language):
-    f1 = arrays.array_real_2d_1d_matmul_order_F
+def test_array_float_2d_1d_matmul_order_F_F(language):
+    f1 = arrays.array_float_2d_1d_matmul_order_F
     f2 = epyccel( f1 , language = language)
     A1 = np.ones([3, 2], order='F')
     A1[1,0] = 2
@@ -1955,8 +1925,8 @@ def test_array_real_2d_1d_matmul_order_F_F(language):
         pytest.param("python", marks = pytest.mark.python)
     ]
 )
-def test_array_real_2d_2d_matmul(language):
-    f1 = arrays.array_real_2d_2d_matmul
+def test_array_float_2d_2d_matmul(language):
+    f1 = arrays.array_float_2d_2d_matmul
     f2 = epyccel( f1 , language = language)
     A1 = np.ones([3, 2])
     A1[1, 0] = 2
@@ -1977,8 +1947,8 @@ def test_array_real_2d_2d_matmul(language):
         pytest.param("python", marks = pytest.mark.python)
     ]
 )
-def test_array_real_2d_2d_matmul_F_F_F_F(language):
-    f1 = arrays.array_real_2d_2d_matmul_F_F
+def test_array_float_2d_2d_matmul_F_F_F_F(language):
+    f1 = arrays.array_float_2d_2d_matmul_F_F
     f2 = epyccel( f1 , language = language)
     A1 = np.ones([3, 2], order='F')
     A1[1, 0] = 2
@@ -2002,8 +1972,8 @@ def test_array_real_2d_2d_matmul_F_F_F_F(language):
         pytest.param("python", marks = pytest.mark.python)
     ]
 )
-def test_array_real_2d_2d_matmul_mixorder(language):
-    f1 = arrays.array_real_2d_2d_matmul_mixorder
+def test_array_float_2d_2d_matmul_mixorder(language):
+    f1 = arrays.array_float_2d_2d_matmul_mixorder
     f2 = epyccel( f1 , language = language)
     A1 = np.ones([3, 2])
     A1[1, 0] = 2
@@ -2024,8 +1994,8 @@ def test_array_real_2d_2d_matmul_mixorder(language):
         pytest.param("python", marks = pytest.mark.python)
     ]
 )
-def test_array_real_2d_2d_matmul_operator(language):
-    f1 = arrays.array_real_2d_2d_matmul_operator
+def test_array_float_2d_2d_matmul_operator(language):
+    f1 = arrays.array_float_2d_2d_matmul_operator
     f2 = epyccel( f1 , language = language)
     A1 = np.ones([3, 2])
     A1[1, 0] = 2
@@ -2038,8 +2008,8 @@ def test_array_real_2d_2d_matmul_operator(language):
     f2(A2, B2, C2)
     assert np.array_equal(C1, C2)
 
-def test_array_real_loopdiff(language):
-    f1 = arrays.array_real_loopdiff
+def test_array_float_loopdiff(language):
+    f1 = arrays.array_float_loopdiff
     f2 = epyccel( f1 , language = language)
     x1 = np.ones(5)
     y1 = np.zeros(5)
@@ -3653,6 +3623,60 @@ def test_iterate_slice(language):
     f2 = epyccel(f1, language = language)
     i = randint(2, 10)
     assert f1(i) == f2(i)
+##==============================================================================
+## TEST NESTED ARRAYS INITIALIZATION WITH ORDER C
+##==============================================================================
+
+def test_array_float_nested_C_array_initialization(language):
+
+    f1 = arrays.array_float_nested_C_array_initialization
+    f2 = epyccel(f1, language = language)
+
+    x  = np.random.random((3,2,4))
+    y  = np.random.random((2,4))
+    z  = np.random.random((2,4))
+    a  = np.array([x, [y, z, z], x])
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, z, x1)
+    f2(x, y, z, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_float_nested_C_array_initialization_2(language):
+    f1 = arrays.array_float_nested_C_array_initialization_2
+    f2 = epyccel(f1, language = language)
+
+    a = np.random.random((2,2,3))
+    e = np.random.random((2,3))
+    f = np.random.random(3)
+    nested = np.array([[e, [f, f]], a, [[f, f], [f, f]]])
+
+    x1 = np.zeros_like(nested)
+    x2 = np.zeros_like(nested)
+
+    f1(a, e, f, x1)
+    f2(a, e, f, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_float_nested_C_array_initialization_3(language):
+    f1 = arrays.array_float_nested_C_array_initialization_3
+    f2 = epyccel(f1, language = language)
+
+    a = np.random.random((2,2,3))
+    e = np.random.random((2,3))
+    nested = np.array([[e, [[1., 2., 3.], [1., 2., 3.]]], a, [[[1., 2., 3.], [1., 2., 3.]], [[1., 2., 3.], [1., 2., 3.]]]], order="C")
+
+    x1 = np.zeros_like(nested)
+    x2 = np.zeros_like(nested)
+
+    f1(a, e, x1)
+    f2(a, e, x2)
+
+    assert np.array_equal(x1, x2)
 
 #==============================================================================
 # NUMPY SUM
@@ -3679,9 +3703,166 @@ def test_multiple_np_linspace(language):
     assert f1() == f2()
 
 ##==============================================================================
-## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+## TEST NESTED ARRAYS INITIALIZATION WITH ORDER F
 ##==============================================================================
-#
+
+def test_array_float_nested_F_array_initialization(language):
+    f1 = arrays.array_float_nested_F_array_initialization
+    f2 = epyccel(f1, language = language)
+
+    x  = np.random.random((3,2,4))
+    y  = np.random.random((2,4))
+    z  = np.random.random((2,4))
+    a  = np.array([x, [y, z, z], x], order="F")
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, z, x1)
+    f2(x, y, z, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_float_nested_F_array_initialization_2(language):
+    f1 = arrays.array_float_nested_F_array_initialization_2
+    f2 = epyccel(f1, language = language)
+
+    a = np.random.random((2,2,3))
+    e = np.random.random((2,3))
+    f = np.random.random(3)
+    nested = np.array([[e, [f, f]], a, [[f, f], [f, f]]], order="F")
+
+    x1 = np.zeros_like(nested)
+    x2 = np.zeros_like(nested)
+
+    f1(a, e, f, x1)
+    f2(a, e, f, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_float_nested_F_array_initialization_3(language):
+    f1 = arrays.array_float_nested_F_array_initialization_3
+    f2 = epyccel(f1, language = language)
+
+    a = np.random.random((2,2,3))
+    e = np.random.random((2,3))
+    nested = np.array([[e, [[1., 2., 3.], [1., 2., 3.]]], a, [[[1., 2., 3.], [1., 2., 3.]], [[1., 2., 3.], [1., 2., 3.]]]], order="F")
+
+    x1 = np.zeros_like(nested)
+    x2 = np.zeros_like(nested)
+
+    f1(a, e, x1)
+    f2(a, e, x2)
+
+    assert np.array_equal(x1, x2)
+
+##==============================================================================
+## TEST SIMPLE ARRAY SLICING WITH ORDER C 1D
+##==============================================================================
+
+def test_array_view_steps_C_1D_1(language):
+    a = arrays.a_1d
+
+    f1 = arrays.array_view_steps_C_1D_1
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_view_steps_C_1D_2(language):
+    a = arrays.a_1d
+
+    f1 = arrays.array_view_steps_C_1D_2
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(a), f2(a))
+
+##==============================================================================
+## TEST SIMPLE ARRAY SLICING WITH ORDER C 2D
+##==============================================================================
+
+def test_array_view_steps_C_2D_1(language):
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_view_steps_C_2D_1
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_view_steps_C_2D_2(language):
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_view_steps_C_2D_2
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_view_steps_C_2D_3(language):
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_view_steps_C_2D_3
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(a), f2(a))
+
+##==============================================================================
+## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER F 1D
+##==============================================================================
+
+def test_array_view_steps_F_1D_1(language):
+    a = arrays.a_1d_f
+
+    f1 = arrays.array_view_steps_F_1D_1
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_view_steps_F_1D_2(language):
+    a = arrays.a_1d_f
+
+    f1 = arrays.array_view_steps_F_1D_2
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(a), f2(a))
+
+##==============================================================================
+## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER F 2D
+##==============================================================================
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug, issue #1257"),
+                                        pytest.mark.fortran])
+    ]
+)
+
+def test_array_view_steps_F_2D_1(language):
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_view_steps_F_2D_1
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(a), f2(a))
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug, issue #1257"),
+                                        pytest.mark.fortran])
+    ]
+)
+
+def test_array_view_steps_F_2D_2(language):
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_view_steps_F_2D_2
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(a), f2(a))
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug, issue #1257"),
+                                        pytest.mark.fortran])
+    ]
+)
+
+def test_array_view_steps_F_2D_3(language):
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_view_steps_F_2D_3
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(a), f2(a))
+
 #def teardown_module():
 #    import os, glob
 #    dirname  = os.path.dirname( arrays.__file__ )

@@ -19,7 +19,8 @@ This function is called from the constructor to examine an AST (Abstract Syntax 
 The key line of the function `annotate` is the call to `self._visit(self.ast)`.
 All elements of the tree must be visited.
 Similarly to in the [syntactic stage](syntactic_stage.md), the `_visit` function internally calls a function named `_visit_X`, where `X` is the type of the object.
-These functions must have the form:
+The logic of how the `_visit` function chooses the appropriate `_visit_X` function is detailed in the [overview](./overview.md#function-naming-conventionsfile-navigation).
+These `_visit_X` functions must have the form:
 ```python
 def _visit_ClassName(self, stmt):
     ...

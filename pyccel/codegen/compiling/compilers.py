@@ -13,7 +13,6 @@ import shutil
 import subprocess
 import platform
 import warnings
-from filelock import FileLock
 from pyccel.compilers.default_compilers import available_compilers, vendors
 from pyccel.errors.errors import Errors
 
@@ -22,10 +21,10 @@ errors = Errors()
 if platform.system() == 'Darwin':
     # Collect version using mac tools to avoid unexpected results on Big Sur
     # https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
-    p = subprocess.Popen([shutil.which("sw_vers"), "-productVersion"], stdout=subprocess.PIPE)
-    result, err = p.communicate()
+    with subprocess.Popen([shutil.which("sw_vers"), "-productVersion"], stdout=subprocess.PIPE) as p:
+        result, err = p.communicate()
     mac_version_tuple = result.decode("utf-8").strip().split('.')
-    mac_target = '{}.{}'.format(*mac_version_tuple[:2])
+    mac_target = '.'.join(mac_version_tuple[:2])
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
 
@@ -94,7 +93,7 @@ class Compiler:
                 self._info = available_compilers[('GNU',language)]
         else:
             if vendor not in vendors:
-                raise NotImplementedError("Unrecognised compiler vendor : {}".format(vendor))
+                raise NotImplementedError(f"Unrecognised compiler vendor : {vendor}")
             try:
                 self._info = available_compilers[(vendor,language)]
             except KeyError as e:
@@ -138,7 +137,7 @@ class Compiler:
         os.environ['PATH'] = current_path
 
         if exec_loc is None:
-            errors.report("Could not find compiler ({})".format(exec_cmd),
+            errors.report(f"Could not find compiler ({exec_cmd})",
                     severity='fatal')
 
         return exec_loc
@@ -270,27 +269,30 @@ class Compiler:
 
     def _get_compile_components(self, compile_obj, accelerators = ()):
         """
-        Provide all components required for compiling
+        Provide all components required for compiling.
+
+        Provide all the different componenets (include directories, libraries, etc)
+        which are needed in order to compile any file.
 
         Parameters
         ----------
-        compile_obj  : CompileObj
-                       Object containing all information about the object to be compiled
+        compile_obj : CompileObj
+            Object containing all information about the object to be compiled.
         accelerators : iterable of str
-                       Name of all tools used by the code which require additional flags/includes/etc
+            Name of all tools used by the code which require additional flags/includes/etc.
 
-        Results
+        Returns
         -------
-        exec_cmd      : str
-                        The command required to run the executable
-        inc_flags     : iterable of strs
-                        The include directories required to compile
-        libs_flags    : iterable of strs
-                        The libraries required to compile
+        exec_cmd : str
+            The command required to run the executable.
+        inc_flags : iterable of strs
+            The include directories required to compile.
+        libs_flags : iterable of strs
+            The libraries required to compile.
         libdirs_flags : iterable of strs
-                        The directories containing libraries required to compile
-        m_code        : iterable of strs
-                        The objects required to compile
+            The directories containing libraries required to compile.
+        m_code : iterable of strs
+            The objects required to compile.
         """
 
         # get includes
@@ -302,7 +304,7 @@ class Compiler:
 
         # Get libraries and library directories
         libs = self._get_libs(compile_obj.libs, accelerators)
-        libs_flags = [s if s.startswith('-l') else '-l{}'.format(s) for s in libs]
+        libs_flags = [s if s.startswith('-l') else f'-l{s}' for s in libs]
         libdirs = self._get_libdirs(compile_obj.libdirs, accelerators)
         libdirs_flags = self._insert_prefix_to_list(libdirs, '-L')
 
@@ -312,16 +314,20 @@ class Compiler:
 
     def compile_module(self, compile_obj, output_folder, verbose = False):
         """
-        Compile a module
+        Compile a module.
+
+        Compile a file containing a module to a .o file.
 
         Parameters
         ----------
-        compile_obj   : CompileObj
-                        Object containing all information about the object to be compiled
+        compile_obj : CompileObj
+            Object containing all information about the object to be compiled.
+
         output_folder : str
-                        The folder where the result should be saved
-        verbose       : bool
-                        Indicates whether additional output should be shown
+            The folder where the result should be saved.
+
+        verbose : bool
+            Indicates whether additional output should be shown.
         """
         accelerators = compile_obj.accelerators
 
@@ -345,25 +351,30 @@ class Compiler:
                 compile_obj.source, '-o', compile_obj.module_target,
                 *j_code]
 
-        with FileLock('.lock_acquisition.lock'):
-            compile_obj.acquire_lock()
-        try:
+        with compile_obj:
             self.run_command(cmd, verbose)
-        finally:
-            compile_obj.release_lock()
 
     def compile_program(self, compile_obj, output_folder, verbose = False):
         """
-        Compile a program
+        Compile a program.
+
+        Compile a file containing a program to an executable.
 
         Parameters
         ----------
-        compile_obj   : CompileObj
-                        Object containing all information about the object to be compiled
+        compile_obj : CompileObj
+            Object containing all information about the object to be compiled.
+
         output_folder : str
-                        The folder where the result should be saved
-        verbose       : bool
-                        Indicates whether additional output should be shown
+            The folder where the result should be saved.
+
+        verbose : bool
+            Indicates whether additional output should be shown.
+
+        Returns
+        -------
+        str
+            The name of the generated executable.
         """
         accelerators = compile_obj.accelerators
 
@@ -385,32 +396,37 @@ class Compiler:
                 '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
 
-        with FileLock('.lock_acquisition.lock'):
-            compile_obj.acquire_lock()
-        try:
+        with compile_obj:
             self.run_command(cmd, verbose)
-        finally:
-            compile_obj.release_lock()
 
         return compile_obj.program_target
 
     def compile_shared_library(self, compile_obj, output_folder, verbose = False, sharedlib_modname=None):
         """
-        Compile a module to a shared library
+        Compile a module to a shared library.
+
+        Compile a file containing a module with C-API calls to a shared library which can
+        be called from Python.
 
         Parameters
         ----------
-        compile_obj   : CompileObj
-                        Object containing all information about the object to be compiled
+        compile_obj : CompileObj
+            Object containing all information about the object to be compiled.
+
         output_folder : str
-                        The folder where the result should be saved
-        verbose       : bool
-                        Indicates whether additional output should be shown
+            The folder where the result should be saved.
+
+        verbose : bool
+            Indicates whether additional output should be shown.
+
+        sharedlib_modname : str, optional
+            The name of the library that should be generated. If none is provided then it
+            defaults to matching the name of the file.
 
         Returns
         -------
-        file_out : str
-                   Generated library name
+        str
+            Generated library name.
         """
         # Ensure python options are collected
         accelerators = set(compile_obj.accelerators)
@@ -438,34 +454,43 @@ class Compiler:
                 compile_obj.module_target, *m_code,
                 '-o', file_out, *libs_flags]
 
-        with FileLock('.lock_acquisition.lock'):
-            compile_obj.acquire_lock()
-        try:
+        with compile_obj:
             self.run_command(cmd, verbose)
-        finally:
-            compile_obj.release_lock()
 
         return file_out
 
     @staticmethod
     def run_command(cmd, verbose):
         """
-        Run the provided command and collect the output
+        Run the provided command and collect the output.
+
+        Run the provided compilation command, collect the output and raise any
+        necessary errors if the file does not compile.
 
         Parameters
         ----------
-        cmd     : iterable
-                  The command to run
+        cmd : list of str
+            The command to run.
         verbose : bool
-                  Indicates whether additional output should be shown
+            Indicates whether additional output should be shown.
+
+        Returns
+        -------
+        str
+            The exact command that was run.
+
+        Raises
+        ------
+        RuntimeError
+            Raises `RuntimeError` if the file does not compile.
         """
         cmd = [os.path.expandvars(c) for c in cmd]
         if verbose:
             print(' '.join(cmd))
 
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                universal_newlines=True)
-        out, err = p.communicate()
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True) as p:
+            out, err = p.communicate()
 
         if verbose and out:
             print(out)

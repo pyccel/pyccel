@@ -1,4 +1,9 @@
 name: 'Coverage Collection'
+inputs:
+  shell_cmd:
+    description: 'Specifies the shell command (different for anaconda)'
+    required: false
+    default: 'bash'
 
 runs:
   using: "composite"
@@ -6,7 +11,6 @@ runs:
     - name: Coverage collection
       run: |
         coverage combine
-        coverage xml
         rm ${SITE_DIR}/pyccel_cov.pth
-      shell: bash
+      shell: ${{ inputs.shell_cmd }}
 

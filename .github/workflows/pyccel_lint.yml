@@ -1,7 +1,7 @@
 name: Pyccel Linting
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       python_version:
         required: true
@@ -12,6 +12,19 @@ on:
       base:
         required: true
         type: string
+      check_run_id:
+        required: false
+        type: string
+      pr_repo:
+        required: false
+        type: string
+
+env:
+  COMMIT: ${{ inputs.ref || github.event.ref }}
+  PEM: ${{ secrets.BOT_PEM }}
+  GITHUB_RUN_ID: ${{ github.run_id }}
+  GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
+  PR_REPO: ${{ inputs.pr_repo || github.repository }}
 
 jobs:
   Pyccel-Linter:
@@ -21,17 +34,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.ref }}
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
-        if: inputs.python_version == ''
+          ref: ${{ env.COMMIT }}
+          repository: ${{ env.PR_REPO }}
+          fetch-depth: 0
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ inputs.python_version }}
-        if: inputs.python_version != ''
+      - name: "Setup"
+        id: token
+        run: |
+          pip install jwt requests
+          python ci_tools/setup_check_run.py
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel
@@ -42,12 +56,16 @@ jobs:
         shell: bash
       - name: Collect diff information
         run: |
-          git fetch
-          git diff origin/${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git diff ${{ inputs.base }} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Lint
+        id: lint
         run: |
           python ci_tools/check_slots.py $GITHUB_STEP_SUMMARY
           python ci_tools/check_pylint_commands.py . pull_diff.txt $GITHUB_STEP_SUMMARY
           cat $GITHUB_STEP_SUMMARY
         shell: bash
+      - name: "Post completed"
+        if: always()
+        run:
+          python ci_tools/complete_check_run.py ${{ steps.lint.outcome }}

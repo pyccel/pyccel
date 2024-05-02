@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import pure, types
+from pyccel.decorators import pure
 from pyccel.epyccel import epyccel
 
 #==============================================================================
@@ -31,8 +31,7 @@ def test_const_complex_bool_int(language):
 def test_expr_float_int_bool(language):
 
     @pure
-    @types('int')
-    def expr_complex_int_bool(n):
+    def expr_complex_int_bool(n : 'int'):
         return 0.5+n*1j, 2*n, n==3
 
     compare_epyccel(expr_complex_int_bool, 3, language=language)

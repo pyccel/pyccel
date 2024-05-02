@@ -1,5 +1,0 @@
-Unfortunately your PR is not passing the tests so it does not quite seem ready for review yet. The only failing test is the coverage. Please take a look at the result and add tests which cover the new code. Occasionally the new code cannot be easily tested in your PR. If that is the case, please take the following steps:
-
-- [ ] Add a comment to the PR explaining why the coverage cannot be fixed
-- [ ] Open an issue, if necessary, to request that the relevant section(s) of code be investigated and either removed or tested
-- [ ] Tell me that I can ignore this result with `/bot accept coverage`

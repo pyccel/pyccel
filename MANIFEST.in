@@ -10,6 +10,6 @@ recursive-include pyccel *.f90
 recursive-include pyccel *.h
 recursive-include pyccel *.pyccel
 
-graft tutorial
+graft docs
 graft samples
 graft tests

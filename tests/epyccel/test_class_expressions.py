@@ -150,7 +150,6 @@ def test_int32_conjugate(language):
     assert r == epyc_r
     assert isinstance(r, type(epyc_r))
 
-@pytest.mark.xfail(reason="Class inheritance not fully implemented")
 def test_bool_conjugate(language):
     def f(a : 'bool', b : 'bool'):
         return (a or b).conjugate()

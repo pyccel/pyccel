@@ -1,0 +1,23 @@
+name: "Generate bot token"
+inputs:
+  bot_pem:
+    description: "The private key which identifies the bot"
+    required: true
+  dir:
+    description: "The directory where the code is found"
+    required: false
+    default: "."
+
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        pip install jwt requests
+      shell: bash
+    - run: |
+        cd ${{ inputs.dir }}
+        python -c "from ci_tools.bot_tools.github_api_interactions import get_authorization; t,d=get_authorization(); print('token=',t,sep=''); print('token_exp=',d,sep='')"
+      shell: bash
+      id: get_token
+      env:
+        PEM: ${{ inputs.bot_pem }}

@@ -2,7 +2,7 @@ matrix:
 - name: markdown
   sources:
   - README.md
-  - tutorial/*.md
+  - docs/*.md
   - developer_docs/*.md
   - CHANGELOG.md
   aspell:

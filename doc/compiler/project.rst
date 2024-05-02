@@ -1,4 +1,0 @@
-Working with projects
-*********************
-
-TODO

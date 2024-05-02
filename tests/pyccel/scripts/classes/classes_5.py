@@ -20,7 +20,7 @@ def get_A():
 
 if __name__ == '__main__':
     b = get_A().x
-    c = get_A().f()
+    c = get_A().f()+3
 
     print(b)
     print(c)
