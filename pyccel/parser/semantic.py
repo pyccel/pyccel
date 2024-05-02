@@ -4508,6 +4508,7 @@ class SemanticParser(BasicParser):
             var = var[0]
             self.scope.insert_variable(var)
         return FunctionDefResult(var, annotation = expr.annotation)
+
     #====================================================
     #                 _build functions
     #====================================================
@@ -4844,3 +4845,4 @@ class SemanticParser(BasicParser):
             for_obj = For(for_target, iterable, body)
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
+
