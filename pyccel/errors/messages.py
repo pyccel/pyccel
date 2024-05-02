@@ -1,5 +1,12 @@
-# Constants that represent simple type checker error message, i.e. messages
-# that do not have any parameters.
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
+
+""" Constants that represent simple type checker error message, i.e. messages
+	that do not have any parameters.
+"""
 
 NO_RETURN_VALUE_EXPECTED = 'No return value expected'
 MISSING_RETURN_STATEMENT = 'Missing return statement'
@@ -7,9 +14,11 @@ INVALID_IMPLICIT_RETURN = 'Implicit return in function which does not return'
 INCOMPATIBLE_RETURN_VALUE_TYPE = 'Incompatible return value type'
 RETURN_VALUE_EXPECTED = 'Return value expected'
 NO_RETURN_EXPECTED = 'Return statement in function which does not return'
-RECURSIVE_RESULTS_REQUIRED = ("A results type must be provided for recursive functions with one of the following two syntaxes:\n"
-    "@types('ARG_TYPES', results='RESULT_TYPES')\n"
-    "#$ header function FUNC_NAME(ARG_TYPES) results(RESULT_TYPES)\n")
+RECURSIVE_RESULTS_REQUIRED = ("A results type must be provided for recursive functions with one of the following three syntaxes:\n"
+                              "def FUNC_NAME(arg1_name:arg1_type, ...) -> RESULT_TYPES\n"
+                              "@types('ARG_TYPES', results='RESULT_TYPES')\n"
+                              "#$ header function FUNC_NAME(ARG_TYPES) results(RESULT_TYPES)\n")
+
 INCOMPATIBLE_TYPES = 'Incompatible types'
 INCOMPATIBLE_TYPES_IN_ASSIGNMENT = 'Incompatible types in assignment'
 INCOMPATIBLE_REDEFINITION = 'Incompatible redefinition'
@@ -93,6 +102,7 @@ PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS = 'Uncovered multi operator comparison s
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN = "The result of a list comprehension expression must be saved in a variable"
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE = 'Could not deduce the size of this list comprehension. If you believe this expression is simple then please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS = 'Pyccel cannot handle this list comprehension. This is because there are occasions where the upper bound is smaller than the lower bound for variable {}'
+PYCCEL_RESTRICTION_INHOMOG_LIST = 'Inhomogeneous lists are not supported by Pyccel. Please use a tuple'
 
 # Fortran limitation
 FORTRAN_ALLOCATABLE_IN_EXPRESSION = 'An allocatable function cannot be used in an expression'
@@ -123,9 +133,16 @@ INVALID_FILE_DIRECTORY = 'No file or directory of this name'
 INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` of `pyh`, but found'
 INVALID_PYTHON_SYNTAX = 'Python syntax error'
 
+# ARRAY ERRORS
+ASSIGN_ARRAYS_ONE_ANOTHER = 'Arrays which own their data cannot become views on other arrays'
+ARRAY_ALREADY_IN_USE = 'Attempt to reallocate an array which is being used by another variable'
+INVALID_POINTER_REASSIGN = 'Attempt to give data ownership to a pointer'
+
 # warnings
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'
 FOUND_SYMBOLIC_ASSIGN = 'Found symbolic assignment [Ignored]'
 FOUND_IS_IN_ASSIGN = 'Found `is` statement in assignment [Ignored]'
 ARRAY_REALLOCATION = 'Array redefinition may cause memory reallocation at runtime'
 ARRAY_DEFINITION_IN_LOOP = 'Array definition in for loop may cause memory reallocation at each cycle. Consider creating the array before the loop'
+TEMPLATE_IN_UNIONTYPE = 'Cannot use templates in a union type'
+DUPLICATED_SIGNATURE = 'Same signature defined for the same function multiple times'

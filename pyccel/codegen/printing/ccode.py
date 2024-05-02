@@ -1,32 +1,51 @@
 # coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
-
-from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float, Integer
-from pyccel.ast.core import Nil, PyccelAssociativeParenthesis
-from pyccel.ast.core import Assign, datatype, Variable, Import
-from pyccel.ast.core import SeparatorComment, VariableAddress
-from pyccel.ast.core import DottedName
-
-from pyccel.ast.core import PyccelAdd, PyccelMul, String
-
-from pyccel.ast.datatypes import default_precision
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
-
-
-from pyccel.ast.numpyext import NumpyFloat
-from pyccel.ast.numpyext import NumpyReal, NumpyImag
+import functools
+import operator
 
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
-from pyccel.ast.core import FuncAddressDeclare, FunctionCall
-from pyccel.ast.core import FunctionAddress
-from pyccel.ast.core import Declare, ValuedVariable
+
+from pyccel.ast.core      import Declare
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
+from pyccel.ast.core      import Deallocate
+from pyccel.ast.core      import FunctionAddress
+from pyccel.ast.core      import Assign, datatype, Import
+from pyccel.ast.core      import SeparatorComment
+from pyccel.ast.core      import create_incremented_string
+
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
+from pyccel.ast.operators import PyccelAssociativeParenthesis
+from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
+
+from pyccel.ast.datatypes import default_precision, str_dtype
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
+
+from pyccel.ast.internals import Slice
+
+from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
+from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
+from pyccel.ast.literals  import Nil
+
+from pyccel.ast.numpyext import NumpyFull, NumpyArray
+from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
+
+from pyccel.ast.variable import ValuedVariable
+from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
+from pyccel.ast.variable import DottedName
+
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT )
+
+from .fcode import python_builtin_datatypes
 
 errors = Errors()
 
@@ -119,12 +138,10 @@ math_function_to_c = {
     # 'MathComb'   : 'com' # TODO
     'MathCopysign': 'copysign',
     'MathFabs'   : 'fabs',
-    # 'MathFactorial': '???', # TODO
     'MathFloor'    : 'floor',
     # 'MathFmod'   : '???',  # TODO
     # 'MathRexp'   : '???'   TODO requires two output
     # 'MathFsum'   : '???',  # TODO
-    # 'MathGcd'   : '???',  # TODO
     # 'MathIsclose' : '???',  # TODO
     'MathIsfinite': 'isfinite', # int isfinite(real-floating x);
     'MathIsinf'   : 'isinf', # int isinf(real-floating x);
@@ -146,7 +163,7 @@ math_function_to_c = {
     'MathLog2'  : 'log2',
     'MathLog10'  : 'log10',
     'MathPow'    : 'pow',
-    # 'MathSqrt'   : 'sqrt',    # sqrt is printed using _Print_MathSqrt
+    'MathSqrt'   : 'sqrt',
 
     # --------------------- Trigonometric functions ---------------------------
 
@@ -160,10 +177,6 @@ math_function_to_c = {
     'MathSin'    : 'sin',
     'MathTan'    : 'tan',
 
-    # -------------------------- Angular conversion ---------------------------
-
-    # 'MathDegrees': '???',  # TODO
-    # 'MathRadians': '???', # TODO
 
     # -------------------------- Hyperbolic functions -------------------------
 
@@ -180,17 +193,48 @@ math_function_to_c = {
     'MathErfc'   : 'erfc',
     'MathGamma'  : 'tgamma',
     'MathLgamma' : 'lgamma',
+
+    # --------------------------- internal functions --------------------------
+    'MathFactorial' : 'pyc_factorial',
+    'MathGcd'       : 'pyc_gcd',
+    'MathDegrees'   : 'pyc_degrees',
+    'MathRadians'   : 'pyc_radians',
+    'MathLcm'       : 'pyc_lcm',
 }
+
+c_library_headers = (
+    "complex",
+    "ctype",
+    "float",
+    "math",
+    "stdarg",
+    "stdbool",
+    "stddef",
+    "stdint",
+    "stdio",
+    "stdlib",
+    "tgmath",
+)
 
 dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
                   ('complex',8) : 'double complex',
                   ('complex',4) : 'float complex',
-                  ('int',4)     : 'int',
-                  ('int',8)     : 'long',
-                  ('int',2)     : 'short int',
-                  ('int',1)     : 'char',
+                  ('int',4)     : 'int32_t',
+                  ('int',8)     : 'int64_t',
+                  ('int',2)     : 'int16_t',
+                  ('int',1)     : 'int8_t',
                   ('bool',4)    : 'bool'}
+
+ndarray_type_registry = {('real',8)    : 'nd_double',
+                  ('real',4)    : 'nd_float',
+                  ('complex',8) : 'nd_cdouble',
+                  ('complex',4) : 'nd_cfloat',
+                  ('int',8)     : 'nd_int64',
+                  ('int',4)     : 'nd_int32',
+                  ('int',2)     : 'nd_int16',
+                  ('int',1)     : 'nd_int8',
+                  ('bool',4)    : 'nd_bool'}
 
 import_dict = {'omp_lib' : 'omp' }
 
@@ -227,6 +271,10 @@ class CCodePrinter(CodePrinter):
         self._additional_args = []
         self._temporary_args = []
 
+    def get_additional_imports(self):
+        """return the additional imports collected in printing stage"""
+        return self._additional_imports
+
     def _get_statement(self, codestring):
         return "%s;" % codestring
 
@@ -256,16 +304,28 @@ class CCodePrinter(CodePrinter):
         value = self._print(expr.arg)
         return '({} != 0)'.format(value)
 
-    def _print_Complex(self, expr):
-        return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
-                        PyccelMul(expr.imag, ImaginaryUnit()))))
+    def _print_LiteralInteger(self, expr):
+        return str(expr.p)
+
+    def _print_LiteralFloat(self, expr):
+        return CodePrinter._print_Float(self, expr)
+
+    def _print_LiteralComplex(self, expr):
+        if expr.real == LiteralFloat(0):
+            return self._print(PyccelAssociativeParenthesis(PyccelMul(expr.imag, LiteralImaginaryUnit())))
+        else:
+            return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
+                            PyccelMul(expr.imag, LiteralImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
         self._additional_imports.add("complex")
-        return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real_part,
-                        PyccelMul(expr.imag_part, ImaginaryUnit()))))
+        if expr.is_cast:
+            return self._print(expr.internal_var)
+        else:
+            return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
+                            PyccelMul(expr.imag, LiteralImaginaryUnit()))))
 
-    def _print_ImaginaryUnit(self, expr):
+    def _print_LiteralImaginaryUnit(self, expr):
         return '_Complex_I'
 
     def _print_ModuleHeader(self, expr):
@@ -283,7 +343,7 @@ class CCodePrinter(CodePrinter):
                 #'{classes}\n\n'
                 '{funcs}\n\n'
                 #'{interfaces}\n\n'
-                '#endif // {name}_H').format(
+                '#endif // {name}_H\n').format(
                         name    = name.upper(),
                         imports = imports,
                         funcs   = funcs)
@@ -295,9 +355,15 @@ class CCodePrinter(CodePrinter):
         imports = [Import(expr.name), *map(Import, self._additional_imports)]
         imports = '\n'.join(self._print(i) for i in imports)
         return ('{imports}\n\n'
-                '{body}').format(
+                '{body}\n').format(
                         imports = imports,
                         body    = body)
+
+    def _print_Break(self, expr):
+        return 'break;'
+
+    def _print_Continue(self, expr):
+        return 'continue;'
 
     def _print_While(self, expr):
         body = self._print(expr.body)
@@ -308,11 +374,9 @@ class CCodePrinter(CodePrinter):
         lines = []
         for i, (c, e) in enumerate(expr.args):
             var = self._print(e)
-            if (var == ''):
-                break
             if i == 0:
                 lines.append("if (%s)\n{" % self._print(c))
-            elif i == len(expr.args) - 1 and c is BooleanTrue():
+            elif i == len(expr.args) - 1 and c is LiteralTrue():
                 lines.append("else\n{")
             else:
                 lines.append("else if (%s)\n{" % self._print(c))
@@ -323,12 +387,12 @@ class CCodePrinter(CodePrinter):
         cond = self._print(expr.cond)
         value_true = self._print(expr.value_true)
         value_false = self._print(expr.value_false)
-        return '({cond}) ? {true} : {false}'.format(cond = cond, true =value_true, false = value_false)
+        return '{cond} ? {true} : {false}'.format(cond = cond, true =value_true, false = value_false)
 
-    def _print_BooleanTrue(self, expr):
+    def _print_LiteralTrue(self, expr):
         return '1'
 
-    def _print_BooleanFalse(self, expr):
+    def _print_LiteralFalse(self, expr):
         return '0'
 
     def _print_PyccelAnd(self, expr):
@@ -410,6 +474,8 @@ class CCodePrinter(CodePrinter):
         return code
 
     def _print_Import(self, expr):
+        if expr.ignore:
+            return ''
         if isinstance(expr.source, DottedName):
             source = expr.source.name[-1]
         else:
@@ -423,10 +489,12 @@ class CCodePrinter(CodePrinter):
 
         if source is None:
             return ''
-        else:
+        if str(expr.source) in c_library_headers:
             return '#include <{0}.h>'.format(source)
+        else:
+            return '#include "{0}.h"'.format(source)
 
-    def _print_String(self, expr):
+    def _print_LiteralString(self, expr):
         format_str = format(expr.arg)
         format_str = format_str.replace("\\", "\\\\")\
                                .replace('\a', '\\a')\
@@ -492,10 +560,9 @@ class CCodePrinter(CodePrinter):
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
                 args.append(arg)
-
         args_format = sep.join(args_format)
         args_format += end
-        args_format = self._print(String(args_format))
+        args_format = self._print(LiteralString(args_format))
         code = ', '.join([args_format, *args])
         return "printf({});".format(code)
 
@@ -507,13 +574,25 @@ class CCodePrinter(CodePrinter):
                     symbol = "{}[kind = {}]".format(dtype, prec),
                     severity='fatal')
 
+    def find_in_ndarray_type_registry(self, dtype, prec):
+        try :
+            return ndarray_type_registry[(dtype, prec)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = "{}[kind = {}]".format(dtype, prec),
+                    severity='fatal')
+
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
+        if isinstance(expr.dtype, NativeInteger):
+            self._additional_imports.add('stdint')
         dtype = self.find_in_dtype_registry(dtype, prec)
-
         if rank > 0:
+            if expr.is_ndarray:
+                self._additional_imports.add('ndarrays')
+                return 't_ndarray '
             errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
 
         if self.stored_in_c_pointer(expr):
@@ -586,6 +665,130 @@ class CCodePrinter(CodePrinter):
         else:
             return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
+    def _print_IndexedElement(self, expr):
+        base = expr.base
+        inds = list(expr.indices)
+        base_shape = base.shape
+        allow_negative_indexes = base.allows_negative_indexes
+        for i, ind in enumerate(inds):
+            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
+                inds[i] = PyccelMinus(base_shape[i], ind.args[0])
+            else:
+                #indices of indexedElement of len==1 shouldn't be a tuple
+                if isinstance(ind, tuple) and len(ind) == 1:
+                    inds[i].args = ind[0]
+                if allow_negative_indexes and \
+                        not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
+                    inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
+                        PyccelAdd(base_shape[i], ind), ind)
+        #set dtype to the C struct types
+        dtype = self._print(expr.dtype)
+        dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
+        base_name = self._print(base.name)
+        if base.is_ndarray:
+            if expr.rank > 0:
+                #managing the Slice input
+                for i , ind in enumerate(inds):
+                    if isinstance(ind, Slice):
+                        inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArraySize(base, i),
+                            allow_negative_indexes)
+                    else:
+                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1)), LiteralInteger(1))
+                inds = [self._print(i) for i in inds]
+                return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
+            inds = [self._print(i) for i in inds]
+        else:
+            raise NotImplementedError(expr)
+        return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
+
+    def _print_DottedVariable(self, expr):
+        """convert dotted Variable to their C equivalent"""
+        return '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
+
+    @staticmethod
+    def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
+        """ Create new slice with informations collected from old slice and decorators
+
+        Parameters
+        ----------
+            _slice : Slice
+                slice needed to collect (start, stop, step)
+            array_size : PyccelArraySize
+                call to function size()
+            allow_negative_index : Bool
+                True when the decorator allow_negative_index is present
+        Returns
+        -------
+            Slice
+        """
+        start = LiteralInteger(0) if _slice.start is None else _slice.start
+        stop = array_size if _slice.stop is None else _slice.stop
+
+        # negative start and end in slice
+        if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
+            start = PyccelMinus(array_size, start.args[0])
+        elif allow_negative_index and not isinstance(start, (LiteralInteger, PyccelArraySize)):
+            start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
+                            PyccelMinus(array_size, start), start)
+
+        if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
+            stop = PyccelMinus(array_size, stop.args[0])
+        elif allow_negative_index and not isinstance(stop, (LiteralInteger, PyccelArraySize)):
+            stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
+                            PyccelMinus(array_size, stop), stop)
+
+        # steps in slices
+        step = _slice.step
+
+        if step is None:
+            step = LiteralInteger(1)
+
+        # negative step in slice
+        elif isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
+            start = PyccelMinus(array_size, LiteralInteger(1)) if _slice.start is None else start
+            stop = LiteralInteger(0) if _slice.stop is None else stop
+
+        # variable step in slice
+        elif allow_negative_index and step and not isinstance(step, LiteralInteger):
+            og_start = start
+            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, PyccelMinus(stop, LiteralInteger(1)))
+            stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, og_start)
+
+        return Slice(start, stop, step)
+
+    def _print_PyccelArraySize(self, expr):
+        return '{}.shape[{}]'.format(expr.arg, expr.index)
+
+    def _print_Allocate(self, expr):
+        free_code = ''
+        #free the array if its already allocated and checking if its not null if the status is unknown
+        if  (expr.status == 'unknown'):
+            free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
+            free_code += "{{\n{};\n}}\n".format(self._print(Deallocate(expr.variable)))
+        elif  (expr.status == 'allocated'):
+            free_code += self._print(Deallocate(expr.variable))
+        self._additional_imports.add('ndarrays')
+        shape = expr.shape
+        shape = [self._print(i) for i in shape]
+        shape = ", ".join(a for a in shape)
+        dtype = self._print(expr.variable.dtype)
+        dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
+        shape_dtype = self.find_in_dtype_registry('int', 8)
+        shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
+        alloc_code = "{} = array_create({}, {}, {});".format(expr.variable, len(expr.shape), shape_Assign, dtype)
+        return '{}\n{}'.format(free_code, alloc_code)
+
+    def _print_Deallocate(self, expr):
+        if expr.variable.is_pointer:
+            return 'free_pointer({});'.format(self._print(expr.variable))
+        return 'free_array({});'.format(self._print(expr.variable))
+
+    def _print_Slice(self, expr):
+        start = self._print(expr.start)
+        stop = self._print(expr.stop)
+        step = self._print(expr.step)
+        return 'new_slice({}, {}, {})'.format(start, stop, step)
+
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C
         function call
@@ -649,32 +852,88 @@ class CCodePrinter(CodePrinter):
 
         """
         # add necessary include
-        self._additional_imports.add('math')
         type_name = type(expr).__name__
         try:
             func_name = math_function_to_c[type_name]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+
+        if func_name.startswith("pyc"):
+            self._additional_imports.add('pyc_math')
+        else:
+            if expr.dtype is NativeComplex():
+                self._additional_imports.add('cmath')
+            else:
+                self._additional_imports.add('math')
         args = []
         for arg in expr.args:
-            if arg.dtype is NativeComplex():
-                self._additional_imports.add('complex')
-            if arg.dtype is not NativeReal():
-                args.append(self._print(NumpyFloat(arg)))
-            else :
+            if arg.dtype != expr.dtype:
+                cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
+                args.append(self._print(cast_func(arg)))
+            else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
 
-    def _print_MathSqrt(self, expr):
+    def _print_MathCeil(self, expr):
+        """Convert a Python expression with a math ceil function call to C
+        function call"""
         # add necessary include
         self._additional_imports.add('math')
         arg = expr.args[0]
-        if arg.dtype is not NativeReal():
-            code_args = self._print(NumpyFloat(arg))
-        else :
-            code_args = self._print(arg)
-        return 'sqrt({})'.format(code_args)
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "ceil({})".format(code_arg)
+
+    def _print_MathIsfinite(self, expr):
+        """Convert a Python expression with a math isfinite function call to C
+        function call"""
+        # add necessary include
+        self._additional_imports.add('math')
+        arg = expr.args[0]
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "isfinite({})".format(code_arg)
+
+    def _print_MathIsinf(self, expr):
+        """Convert a Python expression with a math isinf function call to C
+        function call"""
+        # add necessary include
+        self._additional_imports.add('math')
+        arg = expr.args[0]
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "isinf({})".format(code_arg)
+
+    def _print_MathIsnan(self, expr):
+        """Convert a Python expression with a math isnan function call to C
+        function call"""
+        # add necessary include
+        self._additional_imports.add('math')
+        arg = expr.args[0]
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "isnan({})".format(code_arg)
+
+    def _print_MathTrunc(self, expr):
+        """Convert a Python expression with a math trunc function call to C
+        function call"""
+        # add necessary include
+        self._additional_imports.add('math')
+        arg = expr.args[0]
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "trunc({})".format(code_arg)
 
     def _print_FunctionAddress(self, expr):
         return expr.name
@@ -684,6 +943,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_NumpyRandint(self, expr):
         raise NotImplementedError("Randint not implemented")
+
+    def _print_Interface(self, expr):
+        return ""
 
     def _print_FunctionDef(self, expr):
 
@@ -701,23 +963,23 @@ class CCodePrinter(CodePrinter):
         if self._additional_args :
             self._additional_args.pop()
         imports = ''.join(self._print(i) for i in expr.imports)
+        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
 
-        return ('{sep}\n'
-                '{signature}\n{{\n'
-                '{imports}\n'
-                '{decs}\n'
-                '{body}\n'
-                '}}\n{sep}'.format(
-                    sep = sep,
-                    signature = self.function_signature(expr),
-                    imports = imports,
-                    decs = decs,
-                    body = body))
+        parts = [sep,
+                 doc_string,
+                '{signature}\n{{'.format(signature=self.function_signature(expr)),
+                 imports,
+                 decs,
+                 body,
+                 '}',
+                 sep]
+
+        return '\n'.join(p for p in parts if p)
 
     def stored_in_c_pointer(self, a):
         if not isinstance(a, Variable):
             return False
-        return a.is_pointer or a.is_optional or any(a in b for b in self._additional_args)
+        return (a.is_pointer and not a.is_ndarray) or a.is_optional or any(a in b for b in self._additional_args)
 
     def create_tmp_var(self, match_var):
         tmp_var_name = self._parser.get_new_name('tmp')
@@ -728,9 +990,8 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
          # Ensure the correct syntax is used for pointers
-
         args = []
-        for a, f in zip(expr.arguments, func.arguments):
+        for a, f in zip(expr.args, func.arguments):
             if isinstance(a, Variable) and self.stored_in_c_pointer(f):
                 args.append(VariableAddress(a))
             elif f.is_optional and not isinstance(a, Nil):
@@ -768,7 +1029,7 @@ class CCodePrinter(CodePrinter):
             math.pi ==> 3.14159265358979
 
         """
-        val = Float(expr.value)
+        val = LiteralFloat(expr.value)
         return self._print(val)
 
     def _print_Return(self, expr):
@@ -781,6 +1042,9 @@ class CCodePrinter(CodePrinter):
         elif len(args) > 1:
             code += 'return 0;'
         return code
+
+    def _print_Pass(self, expr):
+        return '// pass'
 
     def _print_Nil(self, expr):
         return 'NULL'
@@ -857,7 +1121,40 @@ class CCodePrinter(CodePrinter):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
         lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
+        rhs = expr.rhs
+        if isinstance(rhs, (NumpyArray)):
+            if rhs.rank == 0:
+                raise NotImplementedError(expr.lhs + "=" + expr.rhs)
+            dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
+            declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+            dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+
+            arg = rhs.arg
+            if rhs.rank > 1:
+                arg = functools.reduce(operator.concat, arg)
+            if isinstance(arg, Variable):
+                arg = self._print(arg)
+                cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);".format(lhs, arg, dtype)
+                return '%s\n' % (cpy_data)
+            else :
+                arg = ', '.join(self._print(i) for i in arg)
+                dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
+                cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
+                return  '%s%s\n' % (dummy_array, cpy_data)
+
+        if isinstance(rhs, (NumpyFull)):
+            code_init = ''
+            if rhs.fill_value is not None:
+                if isinstance(rhs.fill_value, Literal):
+                    dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+                    code_init = 'array_fill(({0}){1}, {2});'.format(dtype, self._print(rhs.fill_value), lhs)
+                else:
+                    code_init = 'array_fill({0}, {1});'.format(self._print(rhs.fill_value), lhs)
+            else:
+                return ''
+            return '{}\n'.format(code_init)
+
+        rhs = self._print(rhs)
         return '{} = {};'.format(lhs, rhs)
 
     def _print_AliasAssign(self, expr):
@@ -868,6 +1165,13 @@ class CCodePrinter(CodePrinter):
 
         lhs = self._print(lhs.name)
         rhs = self._print(rhs)
+
+        # the below condition handles the case of reassinging a pointer to an array view.
+        # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
+        if isinstance(expr.lhs, Variable) and expr.lhs.is_ndarray \
+                and isinstance(expr.rhs, Variable) and expr.rhs.is_ndarray and expr.rhs.is_pointer:
+            return 'alias_assign(&{}, {});'.format(lhs, rhs)
+
         return '{} = {};'.format(lhs, rhs)
 
     def _print_For(self, expr):
@@ -890,16 +1194,6 @@ class CCodePrinter(CodePrinter):
             body.append(code)
         return '\n'.join(self._print(b) for b in body)
 
-    def _print_Indexed(self, expr):
-        # calculate index for 1d array
-        dims = expr.shape
-        elem = Integer(0)
-        offset = Integer(1)
-        for i in reversed(list(range(expr.rank))):
-            elem += expr.indices[i]*offset
-            offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
-
     def _print_Idx(self, expr):
         return self._print(expr.label)
 
@@ -915,17 +1209,11 @@ class CCodePrinter(CodePrinter):
     def _print_NegativeInfinity(self, expr):
         return '-HUGE_VAL'
 
-    def _print_NumpyReal(self, expr):
-        if expr.arg.dtype is NativeComplex():
-            return 'creal({})'.format(self._print(expr.arg))
-        else:
-            return self._print(expr.arg)
+    def _print_PythonReal(self, expr):
+        return 'creal({})'.format(self._print(expr.internal_var))
 
-    def _print_NumpyImag(self, expr):
-        if expr.arg.dtype is NativeComplex():
-            return 'cimag({})'.format(self._print(expr.arg))
-        else:
-            return '0'
+    def _print_PythonImag(self, expr):
+        return 'cimag({})'.format(self._print(expr.internal_var))
 
     def _handle_is_operator(self, Op, expr):
 
@@ -948,10 +1236,10 @@ class CCodePrinter(CodePrinter):
             errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                           symbol=expr, severity='fatal')
 
-    def _print_IsNot(self, expr):
+    def _print_PyccelIsNot(self, expr):
         return self._handle_is_operator("!=", expr)
 
-    def _print_Is(self, expr):
+    def _print_PyccelIs(self, expr):
         return self._handle_is_operator("==", expr)
 
     def _print_Piecewise(self, expr):
@@ -1009,14 +1297,17 @@ class CCodePrinter(CodePrinter):
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
-        ln = max(len(i) for i in txts)
-        if ln<20:
-            ln = 20
-        top  = '/*' + '_'*int((ln-12)/2) + 'CommentBlock' + '_'*int((ln-12)/2) + '*/'
-        ln = len(top)
-        bottom = '/*' + '_'*(ln-2) + '*/'
+        header = expr.header
+        header_size = len(expr.header)
 
-        txts = ['/*' + t + ' '*(ln -2 - len(t)) + '*/' for t in txts]
+        ln = max(len(i) for i in txts)
+        if ln<max(20, header_size+4):
+            ln = 20
+        top  = '/*' + '_'*int((ln-header_size)/2) + header + '_'*int((ln-header_size)/2) + '*/'
+        ln = len(top)-4
+        bottom = '/*' + '_'*ln + '*/'
+
+        txts = ['/*' + t + ' '*(ln - len(t)) + '*/' for t in txts]
 
         body = '\n'.join(i for i in txts)
 
@@ -1057,10 +1348,9 @@ class CCodePrinter(CodePrinter):
         # PythonPrint imports last to be sure that all additional_imports have been collected
         imports  = [*expr.imports, *map(Import, self._additional_imports)]
         imports  = '\n'.join(self._print(i) for i in imports)
-
         return ('{imports}\n'
                 'int main()\n{{\n'
-                '{decs}\n'
+                '{decs}\n\n'
                 '{body}\n'
                 'return 0;\n'
                 '}}').format(imports=imports,

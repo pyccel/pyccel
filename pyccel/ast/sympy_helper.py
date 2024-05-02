@@ -1,15 +1,30 @@
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
+"""
+Module containing functions which allow us to treat expressions expressed as pyccel nodes with sympy,
+by providing translations between the sympy representation and the pyccel nodes
+"""
+
 import sympy as sp
 from sympy.core.numbers import One, NegativeOne, Zero, Half
 
-from .core      import PyccelAdd, PyccelMul, PyccelPow
-from .core      import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .core      import Variable, create_incremented_string, PyccelArraySize
+from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
+from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
+from .core      import create_incremented_string
+from .core      import CodeBlock, Comment, For, Assign
+
+from .builtins  import PythonRange, PythonTuple
 
 from .mathext   import MathCeil
 
-from .numbers   import Integer as PyccelInteger, Float as PyccelFloat
+from .literals  import LiteralInteger, LiteralFloat
 
 from .datatypes import NativeInteger
+
+from .variable  import Variable, PyccelArraySize
 
 #==============================================================================
 def sympy_to_pyccel(expr, symbol_map):
@@ -31,19 +46,19 @@ def sympy_to_pyccel(expr, symbol_map):
 
     #Constants
     if isinstance(expr, sp.Integer):
-        return PyccelInteger(expr)
+        return LiteralInteger(expr.p)
     elif isinstance(expr, One):
-        return PyccelInteger(1)
+        return LiteralInteger(1)
     elif isinstance(expr, NegativeOne):
-        return PyccelInteger(-1)
+        return LiteralInteger(-1)
     elif isinstance(expr, Zero):
-        return PyccelInteger(0)
+        return LiteralInteger(0)
     elif isinstance(expr, sp.Float):
-        return PyccelFloat(expr)
+        return LiteralFloat(float(expr))
     elif isinstance(expr, Half):
-        return PyccelFloat(0.5)
+        return LiteralFloat(0.5)
     elif isinstance(expr, sp.Rational):
-        return PyccelFloat(expr)
+        return LiteralFloat(float(expr))
     elif isinstance(expr, sp.Symbol) and expr in symbol_map:
         return symbol_map[expr]
 
@@ -59,31 +74,19 @@ def sympy_to_pyccel(expr, symbol_map):
         return PyccelMul(*args)
     elif isinstance(expr, sp.Add):
         args = [sympy_to_pyccel(e, symbol_map) for e in expr.args]
-        minus_args = []
-        plus_args = []
+        result = args[0]
 
         # Find positive and negative elements
-        for a in args:
-            if isinstance(a, PyccelMul) and a.args[0] == PyccelInteger(-1):
-                minus_args.append(a.args[1])
+        for a in args[1:]:
+            if isinstance(a, PyccelMul) and a.args[0] == LiteralInteger(-1):
+                result = PyccelMinus(result, a.args[1])
             else:
-                plus_args.append(a)
-
-        #Use pyccel Add or Minus as appropriate
-        if len(minus_args) == 0:
-            return PyccelAdd(*plus_args)
-        elif len(plus_args) == 0:
-            return PyccelMul(PyccelInteger(-1), PyccelAssociativeParenthesis(PyccelAdd(*minus_args)))
-        else:
-            if len(plus_args)>1:
-                plus_args = [PyccelAdd(*plus_args)]
-            if len(minus_args)>1:
-                minus_args = [PyccelAssociativeParenthesis(PyccelAdd(*minus_args))]
-            return PyccelMinus(*plus_args,*minus_args)
+                result = PyccelAdd(result, a)
+        return result
     elif isinstance(expr, sp.Pow):
         # Recognise division
         if isinstance(expr.args[1], NegativeOne):
-            return PyccelDiv(PyccelInteger(1), sympy_to_pyccel(expr.args[0], symbol_map))
+            return PyccelDiv(LiteralInteger(1), sympy_to_pyccel(expr.args[0], symbol_map))
         else:
             return PyccelPow(*[sympy_to_pyccel(e, symbol_map) for e in expr.args])
     elif isinstance(expr, sp.ceiling):
@@ -93,6 +96,11 @@ def sympy_to_pyccel(expr, symbol_map):
             return arg
         else:
             return MathCeil(arg)
+
+    elif isinstance(expr, sp.Tuple):
+        args = [sympy_to_pyccel(a, symbol_map) for a in expr]
+        return PythonTuple(*args)
+
     else:
         raise TypeError(str(type(expr)))
 
@@ -119,10 +127,10 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     """
 
     #Constants
-    if isinstance(expr, PyccelInteger):
-        return sp.Integer(expr)
+    if isinstance(expr, LiteralInteger):
+        return sp.Integer(expr.p)
 
-    elif isinstance(expr, PyccelFloat):
+    elif isinstance(expr, LiteralFloat):
         return sp.Float(expr)
 
     #Operators
@@ -137,6 +145,10 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     elif isinstance(expr, PyccelMinus):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
         return args[0] - args[1]
+
+    elif isinstance(expr, PyccelUnarySub):
+        arg = pyccel_to_sympy(expr.args[0], symbol_map, used_names)
+        return -arg
 
     elif isinstance(expr, PyccelAdd):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
@@ -165,6 +177,38 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         sym = sp.Symbol(sym_name)
         symbol_map[sym] = expr
         return sym
+
+    elif isinstance(expr, CodeBlock):
+        body = (pyccel_to_sympy(b, symbol_map, used_names) for b in expr.body)
+        return CodeBlock(body)
+
+    elif isinstance(expr, (Comment)):
+        return Comment('')
+
+    elif isinstance(expr, For):
+        target = pyccel_to_sympy(expr.target, symbol_map, used_names)
+        iter_obj = pyccel_to_sympy(expr.iterable, symbol_map, used_names)
+        body = pyccel_to_sympy(expr.body, symbol_map, used_names)
+        return For(target, iter_obj, body)
+
+    elif isinstance(expr, PythonRange):
+        start = pyccel_to_sympy(expr.start, symbol_map, used_names)
+        stop  = pyccel_to_sympy(expr.stop , symbol_map, used_names)
+        step  = pyccel_to_sympy(expr.step , symbol_map, used_names)
+        return sp.Range(start, stop, step)
+
+    elif isinstance(expr, Assign):
+        lhs = pyccel_to_sympy(expr.lhs, symbol_map, used_names)
+        rhs = pyccel_to_sympy(expr.rhs, symbol_map, used_names)
+        return Assign(lhs, rhs)
+
+    elif isinstance(expr, PythonTuple):
+        args = [pyccel_to_sympy(a, symbol_map, used_names) for a in expr]
+        return sp.Tuple(*args)
+
+    elif isinstance(expr, (sp.core.basic.Atom, sp.core.operations.AssocOp, sp.Set)):
+        # Already translated
+        return expr
 
     else:
         raise TypeError(str(type(expr)))

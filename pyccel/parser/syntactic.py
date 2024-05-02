@@ -1,28 +1,30 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0201
-# pylint: disable=missing-function-docstring
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
+# pylint: disable=R0201, missing-function-docstring 
 
 import os
 import re
 
 import ast
+
 #==============================================================================
 
-from sympy.core.function import Function
 from sympy import Symbol
 from sympy import IndexedBase
-from sympy import Tuple
 from sympy import Lambda
 from sympy import Dict
+from sympy.core import cache
 
 #==============================================================================
 
 from pyccel.ast.basic import PyccelAstNode
 
+from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ParserResult
-from pyccel.ast.core import String
-from pyccel.ast.core import Nil
-from pyccel.ast.core import DottedName, DottedVariable
 from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
@@ -31,16 +33,14 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor
-from pyccel.ast.core import If, IfTernaryOperator
+from pyccel.ast.core import If
 from pyccel.ast.core import While
 from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
 from pyccel.ast.core import PythonTuple
 from pyccel.ast.core import Comment, EmptyNode, NewLine
 from pyccel.ast.core import Break, Continue
-from pyccel.ast.core import Slice
 from pyccel.ast.core import Argument, ValuedArgument
-from pyccel.ast.core import Is, IsNot
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import CommentBlock
@@ -51,16 +51,23 @@ from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import create_variable
 
-from pyccel.ast.core import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
-from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
-from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
-from pyccel.ast.core import PyccelUnary, PyccelUnarySub
+from pyccel.ast.operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
+from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
+from pyccel.ast.operators import PyccelIs, PyccelIsNot
+from pyccel.ast.operators import IfTernaryOperator
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.headers  import Header, MetaVariable
-from pyccel.ast.numbers  import Integer, Float, Complex, BooleanFalse, BooleanTrue
+from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
+from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
+from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
+from pyccel.ast.variable  import DottedName
+
+from pyccel.ast.internals import Slice
 
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser
@@ -76,6 +83,15 @@ from pyccel.errors.errors import Errors
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
 from pyccel.errors.messages import *
+
+def get_name(a):
+    """ get the name of variable or an argument of the AST node."""
+    if isinstance(a, ast.Name):
+        return a.id
+    elif isinstance(a, ast.arg):
+        return a.arg
+    else:
+        raise NotImplementedError()
 
 #==============================================================================
 errors = Errors()
@@ -111,32 +127,23 @@ class SyntaxParser(BasicParser):
 
             code = read_file(inputs)
 
-        self._code = code
-
+        self._code  = code
         self._scope = []
 
-        tree = extend_tree(code)
+        self.load()
 
-        self._fst = tree
-
-        def get_name(a):
-            if isinstance(a, ast.Name):
-                return a.id
-            elif isinstance(a, ast.arg):
-                return a.arg
-            else:
-                raise NotImplementedError()
-
-        self._used_names = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
+        tree                = extend_tree(code)
+        self._fst           = tree
+        self._used_names    = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
         self._dummy_counter = 1
 
         self.parse(verbose=True)
+        self.dump()
 
     def parse(self, verbose=False):
         """converts python ast to sympy ast."""
 
         if self.syntax_done:
-            print ('> syntax analysis already done')
             return self.ast
 
         # TODO - add settings to Errors
@@ -144,17 +151,16 @@ class SyntaxParser(BasicParser):
         errors.set_parser_stage('syntax')
 
         PyccelAstNode.stage = 'syntactic'
-        ast = self._visit(self.fst)
-
+        ast       = self._visit(self.fst)
         self._ast = ast
 
         self._visit_done = True
+        self._syntax_done = True
 
         return ast
 
     def _treat_iterable(self, stmt):
-
-        return [self._visit(i) for i in stmt]
+        return (self._visit(i) for i in stmt)
 
     def _visit(self, stmt):
         """Creates AST from FST."""
@@ -186,6 +192,11 @@ class SyntaxParser(BasicParser):
         is_prog       = False
         body          = [self._visit(v) for v in stmt.body]
 
+        # Define the names of the module and program
+        # The module name allows it to be correctly referenced from an import command
+        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
+        prog_name = 'prog_' + current_mod_name
+
         new_body      = []
         for i in body:
             if isinstance(i, CodeBlock):
@@ -204,6 +215,8 @@ class SyntaxParser(BasicParser):
                 mod.append(v)
                 targets.append(v.name)
                 current_file = mod
+                im = Import(source=current_mod_name, target = [v.name])
+                prog.append(im)
             elif isinstance(v,(Header, Comment, CommentBlock)):
                 # Headers and Comments are defined in the same block as the following object
                 n_empty_lines = 0
@@ -232,15 +245,8 @@ class SyntaxParser(BasicParser):
         if len(start)>0:
             mod.extend(start)
 
-        # Define the names of the module and program
-        # The module name allows it to be correctly referenced from an import command
-        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
-        prog_name = 'prog_' + current_mod_name
         mod_code = CodeBlock(mod) if len(targets)>0 else None
         if is_prog:
-            if mod_code:
-                expr = Import(source=current_mod_name, target = targets)
-                prog.insert(0,expr)
             prog_code = CodeBlock(prog)
             prog_code.set_fst(stmt)
         else:
@@ -265,13 +271,13 @@ class SyntaxParser(BasicParser):
         return PythonTuple(*self._treat_iterable(stmt.elts))
 
     def _visit_List(self, stmt):
-        return PythonList(*self._treat_iterable(stmt.elts), sympify=False)
+        return PythonList(*self._treat_iterable(stmt.elts))
 
     def _visit_tuple(self, stmt):
-        return Tuple(*self._treat_iterable(stmt), sympify=False)
+        return tuple(self._treat_iterable(stmt))
 
     def _visit_list(self, stmt):
-        return self._treat_iterable(stmt)
+        return list(self._treat_iterable(stmt))
 
     def _visit_alias(self, stmt):
         if not isinstance(stmt.name, str):
@@ -295,7 +301,7 @@ class SyntaxParser(BasicParser):
 
             # sympy does not allow keys to be strings
 
-            if isinstance(key, String):
+            if isinstance(key, LiteralString):
                 errors.report(SYMPY_RESTRICTION_DICT_KEYS,
                               severity='error')
 
@@ -313,17 +319,17 @@ class SyntaxParser(BasicParser):
         val =  stmt.s
         if isinstance(self._scope[-2], ast.Expr):
             return CommentBlock(val)
-        return String(val)
+        return LiteralString(val)
 
     def _visit_Num(self, stmt):
         val = stmt.n
 
         if isinstance(val, int):
-            return Integer(val)
+            return LiteralInteger(val)
         elif isinstance(val, float):
-            return Float(val)
+            return LiteralFloat(val)
         elif isinstance(val, complex):
-            return Complex(Float(val.real), Float(val.imag))
+            return LiteralComplex(val.real, val.imag)
         else:
             raise NotImplementedError('Num type {} not recognised'.format(type(val)))
 
@@ -367,18 +373,29 @@ class SyntaxParser(BasicParser):
         return expr
 
     def _visit_arguments(self, stmt):
-        arguments = []
+
         if stmt.vararg or stmt.kwarg:
             errors.report(VARARGS, symbol = stmt,
                     severity='fatal')
 
+        arguments       = []
         if stmt.args:
             n_expl = len(stmt.args)-len(stmt.defaults)
-            arguments += [Argument(a.arg) for a in stmt.args[:n_expl]]
-            arguments += [ValuedArgument(Argument(a.arg),self._visit(d)) for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
+            positional_args        = [Argument(a.arg, annotation=self._visit(a.annotation)) for a in stmt.args[:n_expl]]
+            valued_arguments       = [ValuedArgument(Argument(a.arg, annotation=self._visit(a.annotation)),\
+                                      self._visit(d)) for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
+            arguments              = positional_args + valued_arguments
+
         if stmt.kwonlyargs:
-            arguments += [ValuedArgument(Argument(a.arg),self._visit(d), kwonly=True) if d is not None
-                        else Argument(a.arg, kwonly=True) for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults)]
+            for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
+                annotation = self._visit(a.annotation)
+                if d is not None:
+                    arg = Argument(a.arg, annotation=annotation)
+                    arg = ValuedArgument(arg, self._visit(d), kwonly=True)
+                else:
+                    arg = Argument(a.arg, kwonly=True, annotation=annotation)
+
+                arguments.append(arg)
 
         return arguments
 
@@ -388,19 +405,19 @@ class SyntaxParser(BasicParser):
             return Nil()
 
         elif stmt.value is True:
-            return BooleanTrue()
+            return LiteralTrue()
 
         elif stmt.value is False:
-            return BooleanFalse()
+            return LiteralFalse()
 
         elif isinstance(stmt.value, int):
-            return Integer(stmt.value)
+            return LiteralInteger(stmt.value)
 
         elif isinstance(stmt.value, float):
-            return Float(stmt.value)
+            return LiteralFloat(stmt.value)
 
         elif isinstance(stmt.value, complex):
-            return Complex(Float(stmt.value.real), Float(stmt.value.imag))
+            return LiteralComplex(stmt.value.real, stmt.value.imag)
 
         elif isinstance(stmt.value, str):
             return self._visit_Str(stmt)
@@ -413,10 +430,10 @@ class SyntaxParser(BasicParser):
             return Nil()
 
         elif stmt.value is True:
-            return BooleanTrue()
+            return LiteralTrue()
 
         elif stmt.value is False:
-            return BooleanFalse()
+            return LiteralFalse()
 
         else:
             raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
@@ -582,9 +599,9 @@ class SyntaxParser(BasicParser):
         if isinstance(op, ast.GtE):
             return PyccelGe(first, second)
         if isinstance(op, ast.Is):
-            return Is(first, second)
+            return PyccelIs(first, second)
         if isinstance(op, ast.IsNot):
-            return IsNot(first, second)
+            return PyccelIsNot(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt,
@@ -612,75 +629,148 @@ class SyntaxParser(BasicParser):
 
         local_vars   = []
         global_vars  = []
-        header       = None
-        hide         = False
-        kind         = 'function'
+        headers      = []
+        templates    = {}
         is_pure      = False
         is_elemental = False
         is_private   = False
         imports      = []
+        doc_string   = None
 
-        # TODO improve later
-        decorators = {str(d) if isinstance(d, Symbol) else str(type(d)): d \
-                            for d in self._visit(stmt.decorator_list)}
+        def fill_types(ls):
+            container = []
+            for arg in ls:
+                if isinstance(arg, Symbol):
+                    arg = arg.name
+                    container.append(arg)
+                elif isinstance(arg, LiteralString):
+                    arg = str(arg)
+                    arg = arg.strip("'").strip('"')
+                    container.append(arg)
+                else:
+                    msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
+                    errors.report(msg,
+                                bounding_box = (stmt.lineno, stmt.col_offset),
+                                severity='error')
+            return container
+
+        decorators = {}
+
+        # add the decorator @types if the arguments are annotated
+        annotated_args = []
+        for a in arguments:
+            if isinstance(a, Argument):
+                annotated_args.append(a.annotation)
+            elif isinstance(a, ValuedArgument):
+                annotated_args.append(a.argument.annotation)
+
+        if all(not isinstance(a, Nil) for a in annotated_args):
+            if stmt.returns:
+                returns = ValuedArgument(Symbol('results'),self._visit(stmt.returns))
+                annotated_args.append(returns)
+            decorators['types'] = [FunctionCall('types', annotated_args)]
+
+        for d in self._visit(stmt.decorator_list):
+            tmp_var = str(d) if isinstance(d, Symbol) else str(d.funcdef)
+            if tmp_var in decorators:
+                decorators[tmp_var] += [d]
+            else:
+                decorators[tmp_var] = [d]
 
         if 'bypass' in decorators:
             return EmptyNode()
 
         if 'stack_array' in decorators:
-            decorators['stack_array'] = tuple(str(a) for a in decorators['stack_array'].args)
+            decorators['stack_array'] = tuple(str(b) for a in decorators['stack_array']
+                for b in a.args)
 
         if 'allow_negative_index' in decorators:
-            decorators['allow_negative_index'] = tuple(str(a) for a in decorators['allow_negative_index'].args)
+            decorators['allow_negative_index'] = tuple(str(b) for a in decorators['allow_negative_index'] for b in a.args)
+
+        # extract the templates
+        if 'template' in decorators:
+            for comb_types in decorators['template']:
+                cache.clear_cache()
+                types = []
+                if len(comb_types.args) != 2:
+                    msg = 'Number of Arguments provided to the template decorator is not valid'
+                    errors.report(msg,
+                                    symbol = comb_types,
+                                    bounding_box = (stmt.lineno, stmt.col_offset),
+                                    severity='error')
+
+                for i in comb_types.args:
+                    if isinstance(i, ValuedArgument) and not i.name in ('name',
+                            'types'):
+                        msg = 'Argument provided to the template decorator is not valid'
+                        errors.report(msg,
+                                        symbol = comb_types,
+                                        bounding_box = (stmt.lineno, stmt.col_offset),
+                                        severity='error')
+                if all(isinstance(i, ValuedArgument) for i in comb_types.args):
+                    tp_name, ls = (comb_types.args[0].value, comb_types.args[1].value) if\
+                            comb_types.args[0].name == 'name' else\
+                            (comb_types.args[1].value, comb_types.args[0].value)
+                else:
+                    tp_name = comb_types.args[0]
+                    ls = comb_types.args[1]
+                    ls = ls.value if isinstance(ls, ValuedArgument) else ls
+                try:
+                    tp_name = str(tp_name)
+                    ls = ls if isinstance(ls, PythonTuple) else list(ls)
+                except TypeError:
+                    msg = 'Argument provided to the template decorator is not valid'
+                    errors.report(msg,
+                                    symbol = comb_types,
+                                    bounding_box = (stmt.lineno, stmt.col_offset),
+                                    severity='fatal')
+
+                types = fill_types(ls)
+
+                txt  = '#$ header template ' + str(tp_name)
+                txt += '(' + '|'.join(types) + ')'
+                if tp_name in templates:
+                    msg = 'The template "{}" is duplicated'.format(tp_name)
+                    errors.report(msg,
+                                bounding_box = (stmt.lineno, stmt.col_offset),
+                                severity='warning')
+
+                templates[tp_name] = hdr_parse(stmts=txt)
 
         # extract the types to construct a header
         if 'types' in decorators:
-            types = []
-            results = []
-            container = types
-            i = 0
-            ls = decorators['types'].args
-            while i<len(ls) :
-                arg = ls[i]
+            for comb_types in decorators['types']:
 
-                if isinstance(arg, Symbol):
-                    arg = arg.name
-                    container.append(arg)
-                elif isinstance(arg, String):
-                    arg = str(arg)
-                    arg = arg.strip("'").strip('"')
-                    container.append(arg)
-                elif isinstance(arg, ValuedArgument):
-                    arg_name = arg.name
-                    arg  = arg.value
-                    container = results
+                cache.clear_cache()
+                results = []
+                ls = comb_types.args
+
+                if len(ls) > 0 and isinstance(ls[-1], ValuedArgument):
+                    arg_name = ls[-1].name
                     if not arg_name == 'results':
                         msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
                         errors.report(msg,
-                                      symbol = decorators['types'],
-                                      bounding_box = (stmt.lineno, stmt.col_offset),
-                                      severity='error')
+                                    symbol = comb_types,
+                                    bounding_box = (stmt.lineno, stmt.col_offset),
+                                    severity='error')
                     else:
-                        ls = arg if isinstance(arg, PythonTuple) else [arg]
-                        i = -1
+                        container = ls[-1].value
+                        container = container if isinstance(container, PythonTuple) else [container]
+                        results = fill_types(container)
+                    types = fill_types(ls[:-1])
                 else:
-                    msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
-                    errors.report(msg,
-                                  symbol = decorators['types'],
-                                  bounding_box = (stmt.lineno, stmt.col_offset),
-                                  severity='error')
+                    types = fill_types(ls)
 
-                i = i+1
+                txt  = '#$ header ' + name
+                txt += '(' + ','.join(types) + ')'
 
-            txt  = '#$ header ' + name
-            txt += '(' + ','.join(types) + ')'
+                if results:
+                    txt += ' results(' + ','.join(results) + ')'
 
-            if results:
-                txt += ' results(' + ','.join(results) + ')'
-
-            header = hdr_parse(stmts=txt)
-            if name in self.namespace.static_functions:
-                header = header.to_static()
+                header = hdr_parse(stmts=txt)
+                if name in self.namespace.static_functions:
+                    header = header.to_static()
+                headers += [header]
 
         body = stmt.body
 
@@ -706,6 +796,10 @@ class SyntaxParser(BasicParser):
 
         else:
             body = self._visit(body)
+        if len(body) > 0 and isinstance(body[0], CommentBlock):
+            doc_string = body[0]
+            doc_string.header = ''
+            body = body[1:]
 
         if 'pure' in decorators.keys():
             is_pure = True
@@ -746,14 +840,14 @@ class SyntaxParser(BasicParser):
                body,
                local_vars=local_vars,
                global_vars=global_vars,
-               hide=hide,
-               kind=kind,
                is_pure=is_pure,
                is_elemental=is_elemental,
                is_private=is_private,
                imports=imports,
                decorators=decorators,
-               header=header)
+               headers=headers,
+               templates=templates,
+               doc_string=doc_string)
 
         func.set_fst(stmt)
         return func
@@ -763,7 +857,7 @@ class SyntaxParser(BasicParser):
         name = stmt.name
         methods = [self._visit(i) for i in stmt.body if isinstance(i, ast.FunctionDef)]
         for i in methods:
-            i.set_cls_name(name)
+            i.cls_name = name
         attributes = methods[0].arguments
         parent = [self._visit(i) for i in stmt.bases]
         expr = ClassDef(name=name, attributes=attributes,
@@ -780,7 +874,7 @@ class SyntaxParser(BasicParser):
         args = []
         while isinstance(ch, ast.Subscript):
             val = self._visit(ch.slice)
-            if isinstance(val, (Tuple, PythonTuple)):
+            if isinstance(val, (PythonTuple, list)):
                 args += val
             else:
                 args.insert(0, val)
@@ -791,28 +885,15 @@ class SyntaxParser(BasicParser):
         return var
 
     def _visit_ExtSlice(self, stmt):
-        return self._visit(tuple(stmt.dims))
+        return self._visit(stmt.dims)
 
     def _visit_Slice(self, stmt):
 
-        upper = self._visit(stmt.upper)
-        lower = self._visit(stmt.lower)
+        upper = self._visit(stmt.upper) if stmt.upper is not None else None
+        lower = self._visit(stmt.lower) if stmt.lower is not None else None
+        step = self._visit(stmt.step) if stmt.step is not None else None
 
-        if stmt.step is not None:
-            raise NotImplementedError("Steps in slices are not implemented")
-
-        if not isinstance(upper, Nil) and not isinstance(lower, Nil):
-
-            return Slice(lower, upper)
-        elif not isinstance(lower, Nil):
-
-            return Slice(lower, None)
-        elif not isinstance(upper, Nil):
-
-            return Slice(None, upper)
-        else:
-
-            return Slice(None, None)
+        return Slice(lower, upper, step)
 
     def _visit_Index(self, stmt):
         return self._visit(stmt.value)
@@ -820,7 +901,7 @@ class SyntaxParser(BasicParser):
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
         attr = Symbol(stmt.attr)
-        return DottedVariable(val, attr)
+        return DottedName(val, attr)
 
 
     def _visit_Call(self, stmt):
@@ -837,15 +918,15 @@ class SyntaxParser(BasicParser):
         func = self._visit(stmt.func)
 
         if isinstance(func, Symbol):
-            f_name = func.name
-            if str(f_name) == "print":
+            f_name = str(func.name)
+            if f_name == "print":
                 func = PythonPrint(PythonTuple(*args))
             else:
-                func = Function(f_name)(*args)
-        elif isinstance(func, DottedVariable):
-            f_name = func.rhs.name
-            func_attr = Function(f_name)(*args)
-            func = DottedVariable(func.lhs, func_attr)
+                func = FunctionCall(f_name, args)
+        elif isinstance(func, DottedName):
+            f_name = str(func.name[-1])
+            func_attr = FunctionCall(f_name, args)
+            func = DottedName(*func.name[:-1], func_attr)
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
 
@@ -862,7 +943,7 @@ class SyntaxParser(BasicParser):
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
         body = self._visit(stmt.body)
-        expr = For(iterator, iterable, body, strict=False)
+        expr = For(iterator, iterable, body)
         expr.set_fst(stmt)
         return expr
 
@@ -870,7 +951,7 @@ class SyntaxParser(BasicParser):
 
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
-        expr = For(iterator, iterable, [], strict=False)
+        expr = For(iterator, iterable, [])
         expr.set_fst(stmt)
         return expr
 
@@ -896,11 +977,11 @@ class SyntaxParser(BasicParser):
         args = [index]
         target = IndexedBase(lhs)[args]
         target = Assign(target, result)
-        assign1 = Assign(index, Integer(0))
+        assign1 = Assign(index, LiteralInteger(0))
         assign1.set_fst(stmt)
         target.set_fst(stmt)
         generators[-1].insert2body(target)
-        assign2 = Assign(index, PyccelAdd(index, Integer(1)))
+        assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
         assign2.set_fst(stmt)
         generators[-1].insert2body(assign2)
 
@@ -937,7 +1018,7 @@ class SyntaxParser(BasicParser):
         if name == 'sum':
             body = AugAssign(lhs, '+', body)
         else:
-            body = Function(name)(lhs, body)
+            body = FunctionCall(name, (lhs, body))
             body = Assign(lhs, body)
 
         body.set_fst(parent)
@@ -971,10 +1052,10 @@ class SyntaxParser(BasicParser):
         orelse = self._visit(stmt.orelse)
         if len(orelse)==1 and isinstance(orelse[0],If):
             orelse = orelse[0]._args
-            return If(Tuple(test, body, sympify=False), *orelse)
+            return If((test, body), *orelse)
         else:
-            orelse = Tuple(BooleanTrue(), orelse, sympify=False)
-            return If(Tuple(test, body, sympify=False), orelse)
+            orelse = (LiteralTrue(), orelse)
+            return If((test, body), orelse)
 
     def _visit_IfExp(self, stmt):
 

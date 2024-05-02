@@ -34,6 +34,12 @@ def test_func_no_args_2(language):
     with pytest.raises(TypeError):
         c_lose(unexpected_arg)
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python),
+    ]
+)
 def test_func_no_return_1(language):
     '''Test function with args and no return '''
     @types(int)
@@ -125,7 +131,7 @@ def test_decorator_f4():
         epyccel(f4)
 
 #------------------------------------------------------------------------------
-def test_decorator_f5():
+def test_decorator_f5(language):
     @types('int', 'real [:]')
     def f5(m1, x):
         x[:] = 0.
@@ -172,7 +178,7 @@ def test_decorator_f6():
 #------------------------------------------------------------------------------
 # in order to call the pyccelized function here, we have to create x with
 # Fortran ordering
-def test_decorator_f7():
+def test_decorator_f7(language):
 
     @types('int', 'int', 'real [:,:](order=F)')
     def f7(m1, m2, x):
@@ -209,12 +215,17 @@ def test_decorator_f8(language):
     # ...
 
 
-def test_arguments_f9():
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+    ]
+)
+def test_arguments_f9(language):
     @types('int64[:]')
     def f9(x):
         x += 1
 
-    f = epyccel(f9)
+    f = epyccel(f9, language = language)
 
     x = np.zeros(10, dtype='int64')
     x_expected = x.copy()
@@ -223,12 +234,17 @@ def test_arguments_f9():
     f(x_expected)
     assert np.array_equal(x, x_expected)
 
-def test_arguments_f10():
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+    ]
+)
+def test_arguments_f10(language):
     @types('int64[:]')
     def f10(x):
         x[:] += 1
 
-    f = epyccel(f10)
+    f = epyccel(f10, language = language)
 
     x = np.zeros(10, dtype='int64')
     x_expected = x.copy()
@@ -333,7 +349,7 @@ def test_decorator_f20(language):
         b = a
         return b
     f = epyccel(f20, language=language)
-    assert f(complex(1, 2.2) == f20(complex(1, 2.2)))
+    assert f(complex(1, 2.2)) == f20(complex(1, 2.2))
 
 def test_decorator_f21(language):
     @types('complex64')
@@ -341,7 +357,7 @@ def test_decorator_f21(language):
         b = a
         return b
     f = epyccel(f21, language=language)
-    assert f(complex(1, 2.2) == f21(complex(1, 2.2)))
+    assert f(np.complex64(1+ 2.2j)) == f21(np.complex64(1+ 2.2j))
 
 def test_decorator_f22(language):
     @types('complex128')
@@ -349,7 +365,7 @@ def test_decorator_f22(language):
         b = a
         return b
     f = epyccel(f22, language=language)
-    assert f(complex(1, 2.2) == f22(complex(1, 2.2)))
+    assert f(complex(1, 2.2)) == f22(complex(1, 2.2))
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS

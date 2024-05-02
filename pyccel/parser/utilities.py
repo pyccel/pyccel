@@ -1,4 +1,8 @@
 # coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 
 """This file contains different utilities for the Parser."""
 
@@ -9,7 +13,7 @@ import os
 import string
 import random
 
-from pyccel.ast.core import DottedName
+from pyccel.ast.variable       import DottedName
 from pyccel.parser.extend_tree import CommentLine
 
 pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",

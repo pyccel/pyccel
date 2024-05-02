@@ -1,3 +1,8 @@
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
 """Extended AST with CommentLine nodes
 ======================================
 
@@ -18,6 +23,9 @@ class CommentLine(AST):
         self.s = s
         self.lineno     = lineno
         self.col_offset = col_offset
+
+    def __reduce_ex__(self, i):
+        return (self.__class__, (self.s, self.lineno, self.col_offset))
 
 class CommentMultiLine(CommentLine):
     """"New AST node representing a multi-line comment"""

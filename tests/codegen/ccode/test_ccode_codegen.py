@@ -14,7 +14,7 @@ from pyccel.errors.errors   import Errors
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
 
-failing_files = {'arrays.py':'Arrays not yet supported. See issue 312'}
+failing_files = {}
 files = sorted(os.listdir(path_dir))
 files = [os.path.join(path_dir,f) \
          if f not in failing_files \

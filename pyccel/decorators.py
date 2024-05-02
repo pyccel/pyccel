@@ -1,3 +1,12 @@
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
+"""
+This module contains all the provided decorator methods.
+"""
+
 #TODO use pycode and call exec after that in lambdify
 
 __all__ = (
@@ -6,6 +15,7 @@ __all__ = (
     'sympy',
     'bypass',
     'types',
+    'template',
     'pure',
     'private',
     'elemental',
@@ -34,6 +44,12 @@ def bypass(f):
     return f
 
 def types(*args,**kw):
+    def identity(f):
+        return f
+    return identity
+
+def template(name, types=()):
+    """template decorator."""
     def identity(f):
         return f
     return identity

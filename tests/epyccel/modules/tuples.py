@@ -32,16 +32,20 @@ __all__ = [
         'tuples_homogeneous_copies_have_pointers',
         'tuples_inhomogeneous_copies_have_pointers',
         'tuples_mul_homogeneous',
+        'tuples_mul_homogeneous2',
         'tuples_mul_inhomogeneous',
+        'tuples_mul_inhomogeneous2',
         'tuples_mul_homogeneous_2d',
         'tuples_mul_mixed_homogeneous_2d',
         'tuples_mul_inhomogeneous_2d',
         'tuples_add_homogeneous',
         'tuples_add_homogeneous_variables',
         'tuples_add_homogeneous_with_variables',
+        'tuples_add_homogeneous_with_variables2',
         'tuples_add_inhomogeneous',
         'tuples_add_inhomogeneous_variables',
         'tuples_add_inhomogeneous_with_variables',
+        'tuples_add_inhomogeneous_with_variables2',
         'tuples_add_mixed_homogeneous',
         'tuples_add_mixed_homogeneous_variables',
         'tuples_add_mixed_homogeneous_with_variables',
@@ -232,9 +236,19 @@ def tuples_mul_homogeneous():
     b = a*2
     return b[0], b[1], b[2], b[3], b[4], b[5]
 
+def tuples_mul_homogeneous2():
+    a = (1,2,3)
+    b = 2*a
+    return b[0], b[1], b[2], b[3], b[4], b[5]
+
 def tuples_mul_inhomogeneous():
     a = (1,False)
     b = a*3
+    return b[0], b[1], b[2], b[3], b[4], b[5]
+
+def tuples_mul_inhomogeneous2():
+    a = (1,False)
+    b = 3*a
     return b[0], b[1], b[2], b[3], b[4], b[5]
 
 def tuples_mul_homogeneous_2d():
@@ -270,6 +284,11 @@ def tuples_add_homogeneous_with_variables():
     c = a + (4,5,6)
     return c[0], c[1], c[2], c[3], c[4], c[5]
 
+def tuples_add_homogeneous_with_variables2():
+    a = (1,2,3)
+    c = (4,5,6) + a
+    return c[0], c[1], c[2], c[3], c[4], c[5]
+
 def tuples_add_inhomogeneous():
     a = (1,2,True) + (False,5,6)
     return a[0], a[1], a[2], a[3], a[4], a[5]
@@ -283,6 +302,11 @@ def tuples_add_inhomogeneous_variables():
 def tuples_add_inhomogeneous_with_variables():
     a = (1,2,True)
     c = a + (4,False,6)
+    return c[0], c[1], c[2], c[3], c[4], c[5]
+
+def tuples_add_inhomogeneous_with_variables2():
+    a = (1,2,True)
+    c = (4,False,6) + a
     return c[0], c[1], c[2], c[3], c[4], c[5]
 
 def tuples_add_mixed_homogeneous():

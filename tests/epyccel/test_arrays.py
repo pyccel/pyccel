@@ -135,6 +135,55 @@ def test_array_int32_1d_idiv():
 
     assert np.array_equal( x1, x2 )
 
+def test_array_int32_1d_add_augassign():
+
+    f1 = arrays.array_int32_1d_add_augassign
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a  = np.array( [1,2,3], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int32_1d_sub_augassign():
+
+    f1 = arrays.array_int32_1d_sub_augassign
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a  = np.array( [1,2,3], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_1d_initialization_1():
+
+    f1 = arrays.array_int_1d_initialization_1
+    f2 = epyccel( f1 )
+
+    assert np.array_equal(f1(), f2())
+
+def test_array_int_1d_initialization_2():
+
+    f1 = arrays.array_int_1d_initialization_2
+    f2 = epyccel( f1 )
+
+    assert np.array_equal(f1(), f2())
+
+def test_array_int_1d_initialization_3():
+
+    f1 = arrays.array_int_1d_initialization_3
+    f2 = epyccel( f1 )
+
+    assert np.array_equal(f1(), f2())
+
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================
@@ -1002,9 +1051,9 @@ def test_array_real_2d_C_div():
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_initialization():
+def test_array_real_2d_C_array_initialization():
 
-    f1 = arrays.array_real_2d_C_initialization
+    f1 = arrays.array_real_2d_C_array_initialization
     f2 = epyccel(f1)
 
     x1 = np.zeros((2, 3), dtype=float )
@@ -1015,6 +1064,52 @@ def test_array_real_2d_C_initialization():
 
     assert np.array_equal(x1, x2)
 
+def test_array_real_3d_C_array_initialization_1():
+
+    f1 = arrays.array_real_3d_C_array_initialization_1
+    f2 = epyccel(f1)
+
+    x  = np.random.random((3,2))
+    y  = np.random.random((3,2))
+    a  = np.array([x,y])
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, x1)
+    f2(x, y, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_real_3d_C_array_initialization_2():
+
+    f1 = arrays.array_real_3d_C_array_initialization_2
+    f2 = epyccel(f1)
+
+    x1 = np.zeros((2,3,4))
+    x2 = np.zeros((2,3,4))
+
+    f1(x1)
+    f2(x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_real_4d_C_array_initialization():
+
+    f1 = arrays.array_real_4d_C_array_initialization
+    f2 = epyccel(f1)
+
+    x  = np.random.random((3,2,4))
+    y  = np.random.random((3,2,4))
+    a  = np.array([x,y])
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, x1)
+    f2(x, y, x2)
+
+    assert np.array_equal(x1, x2)
 #==============================================================================
 # TEST: 2D ARRAYS OF REAL WITH F ORDERING
 #==============================================================================
@@ -1131,9 +1226,9 @@ def test_array_real_2d_F_div():
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_initialization():
+def test_array_real_2d_F_array_initialization():
 
-    f1 = arrays.array_real_2d_F_initialization
+    f1 = arrays.array_real_2d_F_array_initialization
     f2 = epyccel(f1)
 
     x1 = np.zeros((2, 3), dtype=float, order='F')
@@ -1145,7 +1240,75 @@ def test_array_real_2d_F_initialization():
     assert np.array_equal(x1, x2)
 
 
+def test_array_real_3d_F_array_initialization_1():
 
+    f1 = arrays.array_real_3d_F_array_initialization_1
+    f2 = epyccel(f1)
+
+    x  = np.random.random((3,2)).copy(order='F')
+    y  = np.random.random((3,2)).copy(order='F')
+    a  = np.array([x,y], order='F')
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, x1)
+    f2(x, y, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_real_3d_F_array_initialization_2():
+
+    f1 = arrays.array_real_3d_F_array_initialization_2
+    f2 = epyccel(f1)
+
+    x1 = np.zeros((2,3,4), order='F')
+    x2 = np.zeros((2,3,4), order='F')
+
+    f1(x1)
+    f2(x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_real_4d_F_array_initialization():
+
+    f1 = arrays.array_real_4d_F_array_initialization
+    f2 = epyccel(f1)
+
+    x  = np.random.random((3,2,4)).copy(order='F')
+    y  = np.random.random((3,2,4)).copy(order='F')
+    a  = np.array([x,y], order='F')
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, x1)
+    f2(x, y, x2)
+
+    assert np.array_equal(x1, x2)
+
+@pytest.mark.xfail
+def test_array_real_4d_F_array_initialization_mixed_ordering():
+
+    f1 = arrays.array_real_4d_F_array_initialization_mixed_ordering
+    f2 = epyccel(f1)
+
+    x  = np.array([[16., 17.], [18., 19.]], dtype='float', order='F')
+    a  = np.array(([[[0., 1.], [2., 3.]],
+                  [[4., 5.], [6., 7.]],
+                  [[8., 9.], [10., 11.]]],
+                  [[[12., 13.], [14., 15.]],
+                  x,
+                  [[20., 21.], [22., 23.]]]),
+                  dtype='float', order='F')
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, x1)
+    f2(x, x2)
+
+    assert np.array_equal(x1, x2)
 #==============================================================================
 # TEST: COMPLEX EXPRESSIONS IN 3D : TEST CONSTANT AND UNKNOWN SHAPES
 #==============================================================================
@@ -1300,6 +1463,18 @@ def test_array_real_div_stack_array():
     x2 = f2()
     assert np.equal( x1, x2 )
 
+def test_multiple_stack_array_1():
+
+    f1 = arrays.multiple_stack_array_1
+    f2 = epyccel(f1)
+    assert np.equal(f1(), f2())
+
+def test_multiple_stack_array_2():
+
+    f1 = arrays.multiple_stack_array_2
+    f2 = epyccel(f1)
+    assert np.equal(f1(), f2())
+
 #==============================================================================
 # TEST: Product and matrix multiplication
 #==============================================================================
@@ -1446,6 +1621,38 @@ def test_expr_negative_index():
     f2 = epyccel( f1 )
     assert f1(n,idx1,idx2) == f2(n,idx1,idx2)
 
+def test_multiple_negative_index():
+    f1 = arrays.test_multiple_negative_index
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(-2, -1), f2(-2, -1))
+
+def test_multiple_negative_index_2():
+    f1 = arrays.test_multiple_negative_index_2
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(-4, -2), f2(-4, -2))
+
+def test_multiple_negative_index_3():
+    f1 = arrays.test_multiple_negative_index_3
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(-1, -1, -3), f2(-1, -1, -3))
+
+def test_argument_negative_index_1():
+    a = arrays.a_1d
+
+    f1 = arrays.test_argument_negative_index_1
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_argument_negative_index_2():
+    a = arrays.a_1d
+
+    f1 = arrays.test_argument_negative_index_2
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a, a), f2(a, a))
+
 #==============================================================================
 # TEST: shape initialisation
 #==============================================================================
@@ -1465,6 +1672,1010 @@ def test_array_variable_size():
     s1, s2 = f2(n,m)
     assert s1 == s2
 
+#==============================================================================
+# TEST : 1d array slices
+#==============================================================================
+
+def test_array_1d_slice_1():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_1
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_2():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_2
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_3():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_3
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_4():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_4
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_5():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_5
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_6():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_6
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_7():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_7
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_8():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_8
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_9():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_9
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_10():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_10
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_11():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_11
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_12():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_12
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(a), f2(a))
+
+#==============================================================================
+# TEST : 2d array slices order F
+#==============================================================================
+
+def test_array_2d_F_slice_1():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_1
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_2():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_2
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_3():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_3
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_4():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_4
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_5():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_5
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_6():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_6
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_7():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_7
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_2d_F_slice_8():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_8
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_9():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_9
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_10():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_10
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_11():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_11
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_12():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_12
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_13():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_13
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_14():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_14
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_15():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_15
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_16():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_16
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_17():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_17
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_18():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_18
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_19():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_19
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_20():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_20
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_21():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_21
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_22():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_22
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_23():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_23
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+#==============================================================================
+# TEST : 2d array slices order C
+#==============================================================================
+
+
+def test_array_2d_C_slice_1():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_1
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_2():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_2
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_3():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_3
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_4():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_4
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_5():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_5
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_6():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_6
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_7():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_7
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_2d_C_slice_8():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_8
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_9():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_9
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_10():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_10
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_11():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_11
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_12():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_12
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_13():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_13
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_14():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_14
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_15():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_15
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_16():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_16
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_17():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_17
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_18():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_18
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_19():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_19
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_20():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_20
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_21():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_21
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_22():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_22
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_23():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_23
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+#==============================================================================
+# TEST : 1d array slices stride
+#==============================================================================
+
+def test_array_1d_slice_stride_1():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_1
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_2():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_2
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_3():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_3
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_4():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_4
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_5():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_5
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_6():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_6
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_7():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_7
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_8():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_8
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_9():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_9
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_10():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_10
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_11():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_11
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_12():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_12
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_13():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_13
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_14():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_14
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_15():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_15
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_1d_slice_stride_16():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_16
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_stride_17():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_17
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_stride_18():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_18
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_stride_19():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_19
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_stride_20():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_20
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_stride_21():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_21
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_stride_22():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_22
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_stride_23():
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_stride_23
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+#==============================================================================
+# TEST : 2d array slices stride order F
+#==============================================================================
+
+def test_array_2d_F_slice_stride_1():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_1
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_2():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_2
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_3():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_3
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_4():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_4
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_5():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_5
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_6():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_6
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_7():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_7
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_2d_F_slice_stride_8():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_8
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_9():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_9
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_10():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_10
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_11():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_11
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_12():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_12
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_13():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_13
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_14():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_14
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_15():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_15
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_16():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_16
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_17():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_17
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_18():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_18
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_19():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_19
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_20():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_20
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_2d_F_slice_stride_21():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_21
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_22():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_22
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_23():
+    a = arrays.a_2d_f
+
+    f1 = arrays.array_2d_F_slice_stride_23
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+#==============================================================================
+# TEST : 2d array slices stride order C
+#==============================================================================
+
+def test_array_2d_C_slice_stride_1():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_1
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_2():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_2
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_3():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_3
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_4():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_4
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_5():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_5
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_6():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_6
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_7():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_7
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+
+def test_array_2d_C_slice_stride_8():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_8
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_9():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_9
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_10():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_10
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_11():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_11
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_12():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_12
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_13():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_13
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_14():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_14
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_15():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_15
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_16():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_16
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_17():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_17
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_18():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_18
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_19():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_19
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_20():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_20
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_21():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_21
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_22():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_22
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_23():
+    a = arrays.a_2d_c
+
+    f1 = arrays.array_2d_C_slice_stride_23
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+#==============================================================================
+# TEST : arithmetic operations
+#==============================================================================
+
+def test_arrs_similar_shapes_0():
+    f1 = arrays.arrs_similar_shapes_0
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_similar_shapes_1():
+    f1 = arrays.arrs_similar_shapes_1
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_different_shapes_0():
+    f1 = arrays.arrs_different_shapes_0
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_uncertain_shape_1():
+    f1 = arrays.arrs_uncertain_shape_1
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_2d_similar_shapes_0():
+    f1 = arrays.arrs_2d_similar_shapes_0
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_2d_different_shapes_0():
+    f1 = arrays.arrs_2d_different_shapes_0
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_negative_index_1():
+    f1 = arrays.arrs_1d_negative_index_1
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_negative_index_2():
+    f1 = arrays.arrs_1d_negative_index_2
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_negative_index_negative_step():
+    f1 = arrays.arrs_1d_negative_index_negative_step
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_negative_step_positive_step():
+    f1 = arrays.arrs_1d_negative_step_positive_step
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_2d_negative_index():
+    f1 = arrays.arrs_2d_negative_index
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================

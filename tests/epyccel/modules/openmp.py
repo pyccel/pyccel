@@ -206,14 +206,14 @@ def test_omp_get_set_schedule():
     from pyccel.stdlib.internal.openmp import omp_get_schedule, omp_set_schedule
     result = 0
     #$ omp parallel private(i)
-    #$ omp do schedule(runtime) reduction (+:sum)
+    #$ omp for schedule(runtime) reduction (+:sum)
     omp_set_schedule(2, 2)
     schedule_kind = 0
     chunk_size = 0
     omp_get_schedule(schedule_kind, chunk_size)
     for i in range(16):
         result = result + i
-    #$ omp end do nowait
+    #$ omp end for nowait
     return True
 
 def test_omp_get_max_task_priority():
@@ -233,12 +233,12 @@ def test_omp_get_max_task_priority():
 @types('real[:,:], real[:,:], real[:,:]')
 def omp_matmul(A, x, out):
     #$ omp parallel shared(A,x,out) private(i,j,k)
-    #$ omp do
+    #$ omp for
     for i in range(len(A)):# pylint: disable=C0200
         for j in range(len(x[0])):# pylint: disable=C0200
             for k in range(len(x)):# pylint: disable=C0200
                 out[i][j] += A[i][k] * x[k][j]
-    #$ omp end do
+    #$ omp end for
     #$ omp end parallel
     #to let the function compile using epyccel issue #468
     "bypass issue #468" # pylint: disable=W0105
@@ -258,10 +258,10 @@ def omp_matmul_single(A, x, out):
 def omp_arraysum(x):
     result = 0
     #$ omp parallel private(i)
-    #$ omp do reduction (+:result)
+    #$ omp for reduction (+:result)
     for i in range(0, 5):
         result += x[i]
-    #$ omp end do
+    #$ omp end for
     #$ omp end parallel
     return result
 

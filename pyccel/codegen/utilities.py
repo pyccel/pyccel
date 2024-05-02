@@ -1,4 +1,8 @@
 # coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 
 """
 This file contains some useful functions to compile the generated fortran code
@@ -91,7 +95,7 @@ def construct_flags(compiler,
 def compile_files(filename, compiler, flags,
                     binary=None,
                     verbose=False,
-                    modules=[],
+                    modules=(),
                     is_module=False,
                     libs=(),
                     libdirs=(),
@@ -172,7 +176,15 @@ def compile_files(filename, compiler, flags,
 def get_gfortran_library_dir():
     """Provide the location of the gfortran libraries for linking
     """
-    file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name=libgfortran.a'],
+    if sys.platform == "win32":
+        file_name = 'gfortran.lib'
+    else:
+        file_name = 'libgfortran.a'
+    file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name='+file_name],
             universal_newlines = True)
-    lib_dir = os.path.dirname(file_location)
+    lib_dir = os.path.abspath(os.path.dirname(file_location))
+    if lib_dir:
+        if lib_dir not in sys.path:
+            # Add to sytem path
+            sys.path.insert(0, lib_dir)
     return lib_dir

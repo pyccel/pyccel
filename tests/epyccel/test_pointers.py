@@ -34,9 +34,9 @@ def compare_python_pyccel( p_output, f_output ):
 marks = [f[1] for f in pointers_funcs]
 
 @pytest.mark.parametrize('test_func',marks)
-def test_pointers(test_func):
+def test_pointers(test_func, language):
     f1 = test_func
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1 , language=language)
 
     python_out = f1()
     pyccel_out = f2()

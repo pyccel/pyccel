@@ -1,4 +1,9 @@
 # coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
 
 import inspect
 import importlib
@@ -55,7 +60,6 @@ def epyccel_seq(function_or_module, *,
                 libdirs      = (),
                 modules      = (),
                 libs         = (),
-                extra_args   = '',
                 folder       = None):
 
     # ... get the module source code
@@ -128,7 +132,6 @@ def epyccel_seq(function_or_module, *,
                        modules     = modules,
                        libs        = libs,
                        debug       = debug,
-                       extra_args  = extra_args,
                        accelerator = accelerator,
                        output_name = module_name)
     finally:
@@ -146,10 +149,11 @@ def epyccel_seq(function_or_module, *,
     package = importlib.import_module(module_name)
     sys.path.remove(epyccel_dirpath)
 
-    # Verify that we have imported the shared library, not the Python one
-    loader = getattr(package, '__loader__', None)
-    if not isinstance(loader, ExtensionFileLoader):
-        raise ImportError('Could not load shared library')
+    if language != 'python':
+        # Verify that we have imported the shared library, not the Python one
+        loader = getattr(package, '__loader__', None)
+        if not isinstance(loader, ExtensionFileLoader):
+            raise ImportError('Could not load shared library')
 
     # If Python object was function, extract it from module
     if isinstance(function_or_module, FunctionType):
@@ -240,8 +244,8 @@ def epyccel( python_function_or_module, **kwargs ):
                 fun_name = python_function_or_module.__name__ if fun else None
                 success  = True
             # error handling carried out after broadcast to prevent deadlocks
-            except: # pylint: disable=bare-except
-                exc_info = sys.exc_info()
+            except BaseException as e: # pylint: disable=broad-except
+                exc_info = e
                 success  = False
 
         # Non-master processes initialize empty variables

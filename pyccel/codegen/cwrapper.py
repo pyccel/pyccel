@@ -1,3 +1,7 @@
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 """ Functions necessary for creating the setup_X.py file which
 uses python setuptools to compile a c file and generate the
 corresponding shared library file"""
@@ -13,10 +17,10 @@ def create_c_setup(mod_name,
         wrapper_file,
         dependencies,
         compiler,
-        include = '',
-        libs = '',
-        libdirs = '',
-        flags = ''):
+        include = (),
+        libs    = (),
+        libdirs = (),
+        flags   = () ):
     """
     Create the code for the setup file which uses python setuptools
     to compile a c file and generate the corresponding shared
@@ -47,7 +51,8 @@ def create_c_setup(mod_name,
     """
 
     code  = "from setuptools import Extension, setup\n"
-    code += "import numpy\n\n"
+    code += "import numpy\n"
+    code += "\n"
 
     wrapper_file = "[ r'{0}' ]".format(wrapper_file)
 
@@ -72,10 +77,11 @@ def create_c_setup(mod_name,
     flags_str   = ('extra_compile_args = {0}'.format(print_list(flags))
                    if flags else None)
 
-    flags_str   = ('extra_link_args = {0}'.format(print_list(flags))
+    linker_flags = [f for f in flags if f.startswith("-Wl")]
+    linker_flags_str   = ('extra_link_args = {0}'.format(print_list(linker_flags))
                    if flags else None)
 
-    args = [mod, wrapper_file, files, include_str, libs_str, libdirs_str, flags_str]
+    args = [mod, wrapper_file, files, include_str, libs_str, libdirs_str, flags_str, linker_flags_str]
     args = ',\n\t\t'.join(a for a in args if a is not None)
 
     code += "extension_mod = Extension({args})\n\n".format(args=args)

@@ -1,18 +1,22 @@
 # coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 
 from itertools import chain
-
-from sympy.core import Tuple
 
 from sympy.printing.pycode import PythonCodePrinter as SympyPythonCodePrinter
 from sympy.printing.pycode import _known_functions
 from sympy.printing.pycode import _known_functions_math
 from sympy.printing.pycode import _known_constants_math
 
+from pyccel.decorators import __all__ as pyccel_decorators
+
 from pyccel.ast.utilities  import build_types_decorator
-from pyccel.ast.core       import CodeBlock
+from pyccel.ast.core       import CodeBlock, Import, DottedName
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -23,7 +27,7 @@ errors = Errors()
 def _construct_header(func_name, args):
     args = build_types_decorator(args, order='F')
     args = ','.join("{}".format(i) for i in args)
-    pattern = '#$ header procedure static {name}({args})'
+    pattern = '#$ header function static {name}({args})'
     return pattern.format(name=func_name, args=args)
 
 #==============================================================================
@@ -34,10 +38,15 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     ))
     _kc = {k: ''+v for k, v in _known_constants_math.items()}
 
-    def __init__(self, settings=None):
+    def __init__(self, parser=None, settings=None):
         self.assert_contiguous = settings.pop('assert_contiguous', False)
-
+        self.parser = parser
         SympyPythonCodePrinter.__init__(self, settings=settings)
+        self._additional_imports = set()
+
+    def get_additional_imports(self):
+        """return the additional imports collected in printing stage"""
+        return self._additional_imports
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
@@ -50,9 +59,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_IndexedElement(self, expr):
         indices = expr.indices
-        if isinstance(indices, (tuple, list, Tuple)):
+        if isinstance(indices, (tuple, list)):
             # this a fix since when having a[i,j] the generated code is a[(i,j)]
-            if len(indices) == 1 and isinstance(indices[0], (tuple, list, Tuple)):
+            if len(indices) == 1 and isinstance(indices[0], (tuple, list)):
                 indices = indices[0]
 
             indices = [self._print(i) for i in indices]
@@ -78,29 +87,65 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         decorators = expr.decorators
 
         if decorators:
-            for n,func in decorators.items():
-                args = func.args
-                if args:
-                    args = ', '.join("{}".format(self._print(i)) for i in args)
-                    dec = '@{name}({args})'.format(name=n, args=args)
+            for n,f in decorators.items():
+                if n in pyccel_decorators:
+                    self._additional_imports.add(Import(DottedName('pyccel.decorators'), n))
+                # TODO - All decorators must be stored in a list
+                if not isinstance(f, list):
+                    f = [f]
+                dec = ''
+                for func in f:
+                    args = func.args
+                    if args:
+                        args = ', '.join("{}".format(self._print(i)) for i in args)
+                        dec += '@{name}({args})\n'.format(name=n, args=args)
 
-                else:
-                    dec = '@{name}'.format(name=n)
+                    else:
+                        dec += '@{name}\n'.format(name=n)
 
-                code = '{dec}\n{code}'.format(dec=dec, code=code)
-        header = expr.header
-        if header:
-            header = self._print(header)
+                code = '{dec}{code}'.format(dec=dec, code=code)
+        headers = expr.headers
+        if headers:
+            headers = self._print(headers)
             code = '{header}\n{code}'.format(header=header, code=code)
 
         return code
 
     def _print_Return(self, expr):
-        return 'return {}'.format(self._print(expr.expr))
+        code = ''
+        if expr.stmt:
+            code += self._print(expr.stmt)+'\n'
+        if expr.expr:
+            ret = ','.join([self._print(i) for i in expr.expr])
+            code += 'return {}'.format(ret)
+        return code
+
+    def _print_Program(self, expr):
+        body  = self._print(expr.body)
+        body = self._indent_codestring(body)
+        imports  = [*expr.imports, *self._additional_imports]
+        imports  = '\n'.join(self._print(i) for i in imports)
+
+        return ('{imports}\n'
+                'if __name__ == "__main__":\n'
+                '{body}\n').format(imports=imports,
+                                    body=body)
+
+
+    def _print_AsName(self, expr):
+        name = self._print(expr.name)
+        target = self._print(expr.target)
+
+        return '{name} as {target}'.format(name = name, target = target)
 
     def _print_PythonTuple(self, expr):
         args = ', '.join(self._print(i) for i in expr.args)
         return '('+args+')'
+
+    def _print_PyccelArraySize(self, expr):
+        arg = self._print(expr.arg)
+        index = self._print(expr.index)
+        return 'shape({0})[{1}]'.format(arg, index)
 
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
@@ -116,19 +161,19 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
-        func = self._print(expr.func)
-        args = ','.join(self._print(i) for i in expr.arguments)
-        return'{func}({args})'.format(func=func, args=args)
+        func = expr.funcdef
+        args = ', '.join(self._print(i) for i in expr.args)
+        return'{func}({args})'.format(func=func.name, args=args)
 
     def _print_Len(self, expr):
         return 'len({})'.format(self._print(expr.arg))
 
     def _print_Import(self, expr):
-        target = ', '.join([self._print(i) for i in expr.target])
-        if expr.source is None:
-            return 'import {target}'.format(target=target)
+        source = self._print(expr.source)
+        if not expr.target:
+            return 'import {source}'.format(source=source)
         else:
-            source = self._print(expr.source)
+            target = ', '.join([self._print(i) for i in expr.target])
             return 'from {source} import {target}'.format(source=source, target=target)
 
     def _print_CodeBlock(self, expr):
@@ -138,7 +183,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_For(self, expr):
         iterable = self._print(expr.iterable)
         target   = expr.target
-        if not isinstance(target,(list, tuple, Tuple)):
+        if not isinstance(target,(list, tuple)):
             target = [target]
         target = ','.join(self._print(i) for i in target)
         body   = self._print(expr.body)
@@ -169,20 +214,6 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         args = ','.join(self._print(i) for i in expr.elements)
         return 'product({})'.format(args)
 
-    def _print_IndexedBase(self, expr):
-        return self._print(expr.label)
-
-    def _print_Indexed(self, expr):
-        inds = list(expr.indices)
-        #indices of indexedElement of len==1 shouldn't be a Tuple
-        for i, ind in enumerate(inds):
-            if isinstance(ind, Tuple) and len(ind) == 1:
-                inds[i] = ind[0]
-
-        inds = [self._print(i) for i in inds]
-
-        return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
-
     def _print_Zeros(self, expr):
         return 'zeros('+ self._print(expr.shape)+')'
 
@@ -206,7 +237,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Pass(self, expr):
         return 'pass'
 
-    def _print_Is(self, expr):
+    def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return'{0} is {1}'.format(lhs,rhs)
@@ -230,7 +261,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
                 lines.append(self._print(e))
         return "\n".join(lines)
 
-    def _print_String(self, expr):
+    def _print_LiteralString(self, expr):
         return '"{}"'.format(self._print(expr.arg))
 
     def _print_Shape(self, expr):
@@ -248,7 +279,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             if isinstance(f, str):
                 args.append("'{}'".format(f))
 
-            elif isinstance(f, Tuple):
+            elif isinstance(f, tuple):
                 for i in f:
                     args.append("{}".format(self._print(i)))
 
@@ -260,7 +291,13 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return 'print({0})'.format(fs)
 
     def _print_Module(self, expr):
-        return '\n'.join(self._print(e) for e in expr.body)
+        body = '\n'.join(self._print(e) for e in expr.body)
+        imports  = [*expr.imports, *self._additional_imports]
+        imports  = '\n'.join(self._print(i) for i in imports)
+        return ('{imports}\n\n'
+                '{body}').format(
+                        imports = imports,
+                        body    = body)
 
     def _print_PyccelPow(self, expr):
         base = self._print(expr.args[0])

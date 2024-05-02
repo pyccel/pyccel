@@ -92,6 +92,13 @@ def not_val(a):
         c = True
     return c
 
+@types('int')
+def not_int(a):
+    c = False
+    if not a:
+        c = True
+    return c
+
 @types('bool')
 def is_nil(a = None):
     c = False
@@ -190,3 +197,19 @@ def none_is_none():
 
 def none_isnot_none():
     return None is not None
+
+@types('int')
+def pass_if(x):
+    if x > 0:
+        pass
+    x = x + 1
+    return x
+
+@types('real')
+def pass2_if(b):
+    c = 1
+    if b:
+        pass
+    else:
+        c = 2
+    return c

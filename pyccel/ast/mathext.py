@@ -1,10 +1,12 @@
-# Copyright 2020 Yaman Guçlü
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 
 import math
-from sympy import Function
 
-from pyccel.ast.basic     import PyccelAstNode
-from pyccel.ast.core      import Constant
+from pyccel.ast.variable  import Constant
+from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeReal,
                                   default_precision)
 
@@ -56,6 +58,7 @@ __all__ = (
     'MathFactorial',
     'MathFloor',
     'MathGcd',
+    'MathLcm',
     'MathTrunc',
     # ---
     'MathIsclose',
@@ -81,7 +84,8 @@ math_constants = {
 #==============================================================================
 # Base classes
 #==============================================================================
-class MathFunctionBase(Function, PyccelAstNode):
+class MathFunctionBase(PyccelInternalFunction):
+    """Abstract base class for the Math Functions"""
     _shape = ()
     _rank  = 0
 
@@ -112,7 +116,6 @@ class MathAtanh   (MathFunctionFloat): pass
 class MathCopysign(MathFunctionFloat): pass
 class MathCos     (MathFunctionFloat): pass
 class MathCosh    (MathFunctionFloat): pass
-class MathDegrees (MathFunctionFloat): pass
 class MathErf     (MathFunctionFloat): pass
 class MathErfc    (MathFunctionFloat): pass
 class MathExp     (MathFunctionFloat): pass
@@ -129,7 +132,6 @@ class MathLog10   (MathFunctionFloat): pass
 class MathLog1p   (MathFunctionFloat): pass
 class MathLog2    (MathFunctionFloat): pass
 class MathPow     (MathFunctionFloat): pass
-class MathRadians (MathFunctionFloat): pass
 class MathSin     (MathFunctionFloat): pass
 class MathSinh    (MathFunctionFloat): pass
 class MathSqrt    (MathFunctionFloat): pass
@@ -137,11 +139,21 @@ class MathTan     (MathFunctionFloat): pass
 class MathTanh    (MathFunctionFloat): pass
 class MathRemainder (MathFunctionFloat): pass
 
+class MathRadians (MathFunctionFloat):
+    """Represent a call to the radians function in the Math library"""
+class MathDegrees (MathFunctionFloat):
+    """Represent a call to the degrees function in the Math library"""
+
 # Integer result
+class MathFactorial(MathFunctionInt):
+    """Represent a call to the factorial function in the Math library"""
+class MathGcd      (MathFunctionInt):
+    """Represent a call to the gcd function in the Math library"""
+class MathLcm      (MathFunctionInt):
+    """Represent a call to the lcm function in the Math library"""
+
 class MathCeil     (MathFunctionInt): pass
-class MathFactorial(MathFunctionInt): pass
 class MathFloor    (MathFunctionInt): pass
-class MathGcd      (MathFunctionInt): pass
 class MathTrunc    (MathFunctionInt): pass
 
 # Boolean result

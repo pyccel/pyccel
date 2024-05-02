@@ -1,5 +1,13 @@
 # coding: utf-8
 
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
+"""
+Classes and methods that handle supported datatypes in C/Fortran.
+"""
 
 from .basic import Basic
 
@@ -52,6 +60,7 @@ __all__ = (
     'Real',
     'String',
     'Void',
+	'NativeNumeric',
 #    '_Symbol',
     'default_precision',
     'dtype_and_precision_registry',
@@ -61,10 +70,10 @@ __all__ = (
 #==============================================================================
 iso_c_binding = {
     "integer" : {
-        1  : 'C_SIGNED_CHAR',
-        2  : 'C_SHORT',
-        4  : 'C_INT',
-        8  : 'C_LONG_LONG',
+        1  : 'C_INT8_T',
+        2  : 'C_INT16_T',
+        4  : 'C_INT32_T',
+        8  : 'C_INT64_T',
         16 : 'C_INT128'}, #no supported yet
     "real"    : {
         4  : 'C_FLOAT',
@@ -127,6 +136,8 @@ class NativeReal(DataType):
 
 class NativeComplex(DataType):
     _name = 'Complex'
+
+NativeNumeric = (NativeBool(), NativeInteger(), NativeReal(), NativeComplex())
 
 class NativeString(DataType):
     _name = 'String'
@@ -235,7 +246,7 @@ def DataTypeFactory(name, argnames=["_name"],
                     alias=None,
                     is_iterable=False,
                     is_with_construct=False,
-                    is_polymorphic=True):
+                    is_polymorphic=False):
     def __init__(self, **kwargs):
         for key, value in list(kwargs.items()):
             # here, the argnames variable is the one passed to the

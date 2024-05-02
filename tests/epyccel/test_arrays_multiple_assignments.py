@@ -7,7 +7,8 @@ from pyccel.errors.errors import Errors, PyccelSemanticError
 from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     ARRAY_DEFINITION_IN_LOOP,
                                     INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
-                                    STACK_ARRAY_DEFINITION_IN_LOOP)
+                                    STACK_ARRAY_DEFINITION_IN_LOOP,
+                                    ASSIGN_ARRAYS_ONE_ANOTHER, ARRAY_ALREADY_IN_USE)
 
 @pytest.fixture(params=[
     pytest.param('fortran', marks = pytest.mark.fortran),
@@ -61,7 +62,7 @@ def test_reallocation_heap(language):
     assert errors.has_warnings()
     assert errors.num_messages() == 1
 
-    # Check that we the warning is correct
+    # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
     assert warning_info.message == ARRAY_REALLOCATION
@@ -87,7 +88,7 @@ def test_reallocation_stack(language):
     assert errors.has_errors()
     assert errors.num_messages() == 1
 
-    # Check that we the error is correct
+    # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol  == 'x'
     assert error_info.message == INCOMPATIBLE_REDEFINITION_STACK_ARRAY
@@ -114,7 +115,7 @@ def test_creation_in_loop_heap(language):
     assert errors.has_warnings()
     assert errors.num_messages() == 1
 
-    # Check that we the warning is correct
+    # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
     assert warning_info.message == ARRAY_DEFINITION_IN_LOOP
@@ -140,7 +141,7 @@ def test_creation_in_loop_stack(language):
     assert errors.has_errors()
     assert errors.num_messages() == 1
 
-    # Check that we the error is correct
+    # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol  == 'x'
     assert error_info.message == STACK_ARRAY_DEFINITION_IN_LOOP
@@ -166,6 +167,60 @@ def test_creation_in_if_heap(language):
     assert f(c) == g(c)
 
 #==============================================================================
+def test_Reassign_to_Target():
+
+    def f():
+        import numpy as np
+        x = np.zeros((3, 7), dtype=int)
+        c = x
+        x = np.ones ((4, 5), dtype=int)
+        return c.sum()
+
+     # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+
+    # epyccel should raise an Exception
+    with pytest.raises(PyccelSemanticError):
+        epyccel(f)
+
+    # Check that we got exactly 1 Pyccel error
+    assert errors.has_errors() == 1
+    assert errors.num_messages() == 1
+
+    # Check that the error is correct
+    error_info = [*errors.error_info_map.values()][0][0]
+    assert error_info.symbol  == 'x'
+    assert error_info.message == ARRAY_ALREADY_IN_USE
+
+#==============================================================================
+
+def test_Assign_Between_Allocatables():
+
+    def f():
+        import numpy as np
+        x = np.zeros((3, 7), dtype=int)
+        y = np.ones ((4, 5), dtype=int)
+        x = y
+        x[0][0] = 1
+        return y.sum()
+
+     # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+
+    # epyccel should raise an Exception
+    with pytest.raises(PyccelSemanticError):
+        epyccel(f)
+
+    # Check that we got exactly 1 Pyccel error
+    assert errors.has_errors() == 1
+    assert errors.num_messages() == 1
+
+    # Check that the error is correct
+    error_info = [*errors.error_info_map.values()][0][0]
+    assert error_info.symbol  == 'x'
+    assert error_info.message == ASSIGN_ARRAYS_ONE_ANOTHER
+
+#==============================================================================
 if __name__ == '__main__':
 
     for l in ['fortran']:
@@ -179,3 +234,6 @@ if __name__ == '__main__':
         test_creation_in_loop_stack(l)
 
         test_creation_in_if_heap(l)
+
+    test_Reassign_to_Target()
+    test_Assign_Between_Allocatables()

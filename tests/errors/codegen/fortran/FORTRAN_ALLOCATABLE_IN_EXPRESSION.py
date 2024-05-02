@@ -1,3 +1,3 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import numpy as np
-a = np.ones(4)*5
+a = np.empty(4)*5

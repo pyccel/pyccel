@@ -8,6 +8,9 @@ recursive-include pyccel *.tx
 recursive-include pyccel *.txt
 recursive-include pyccel *.cmake
 recursive-include pyccel *.pyh
+recursive-include pyccel *.c
+recursive-include pyccel *.f90
+recursive-include pyccel *.h
 
 graft doc
 graft samples

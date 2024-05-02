@@ -1,10 +1,15 @@
+/* --------------------------------------------------------------------------------------- */
+/* This file is part of Pyccel which is released under MIT License. See the LICENSE file   */
+/* or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. */
+/* --------------------------------------------------------------------------------------- */
+
 #include "ndarrays.h"
 
-/* 
+/*
 ** allocation
 */
 
-t_ndarray   array_create(int nd, int *shape, enum e_types type)
+t_ndarray   array_create(int32_t nd, int64_t *shape, enum e_types type)
 {
     t_ndarray arr;
 
@@ -12,8 +17,17 @@ t_ndarray   array_create(int nd, int *shape, enum e_types type)
     arr.type = type;
     switch (type)
     {
-        case nd_int:
-            arr.type_size = sizeof(int);
+        case nd_int8:
+            arr.type_size = sizeof(int8_t);
+            break;
+        case nd_int16:
+            arr.type_size = sizeof(int16_t);
+            break;
+        case nd_int32:
+            arr.type_size = sizeof(int32_t);
+            break;
+        case nd_int64:
+            arr.type_size = sizeof(int64_t);
             break;
         case nd_float:
             arr.type_size = sizeof(float);
@@ -21,37 +35,88 @@ t_ndarray   array_create(int nd, int *shape, enum e_types type)
         case nd_double:
             arr.type_size = sizeof(double);
             break;
+        case nd_bool:
+            arr.type_size = sizeof(bool);
+            break;
+        case nd_cfloat:
+            arr.type_size = sizeof(float complex);
+            break;
         case nd_cdouble:
             arr.type_size = sizeof(double complex);
             break;
     }
-    arr.is_slice = false;
+    arr.is_view = false;
     arr.length = 1;
-    arr.shape = malloc(arr.nd * sizeof(int));
-    for (int i = 0; i < arr.nd; i++)
+    arr.shape = malloc(arr.nd * sizeof(int64_t));
+    for (int32_t i = 0; i < arr.nd; i++)
     {
         arr.length *= shape[i];
         arr.shape[i] = shape[i];
     }
     arr.buffer_size = arr.length * arr.type_size;
-    arr.strides = malloc(nd * sizeof(int));
-    for (int i = 0; i < arr.nd; i++)
+    arr.strides = malloc(nd * sizeof(int64_t));
+    for (int32_t i = 0; i < arr.nd; i++)
     {
         arr.strides[i] = 1;
-        for (int j = i + 1; j < arr.nd; j++)
+        for (int32_t j = i + 1; j < arr.nd; j++)
             arr.strides[i] *= arr.shape[j];
     }
     arr.raw_data = malloc(arr.buffer_size);
     return (arr);
 }
 
-void   _array_fill_int(int c, t_ndarray arr)
+void   _array_fill_int8(int8_t c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
     else
-        for (int i = 0; i < arr.length; i++)
-            arr.nd_int[i] = c;
+        for (int32_t i = 0; i < arr.length; i++)
+            arr.nd_int8[i] = c;
+}
+
+void   _array_fill_int16(int16_t c, t_ndarray arr)
+{
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    else
+        for (int32_t i = 0; i < arr.length; i++)
+            arr.nd_int16[i] = c;
+}
+
+void   _array_fill_int32(int32_t c, t_ndarray arr)
+{
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    else
+        for (int32_t i = 0; i < arr.length; i++)
+            arr.nd_int32[i] = c;
+}
+
+void   _array_fill_int64(int64_t c, t_ndarray arr)
+{
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    else
+        for (int32_t i = 0; i < arr.length; i++)
+            arr.nd_int64[i] = c;
+}
+
+void   _array_fill_bool(bool c, t_ndarray arr)
+{
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    else
+        for (int32_t i = 0; i < arr.length; i++)
+            arr.nd_bool[i] = c;
+}
+
+void   _array_fill_float(float c, t_ndarray arr)
+{
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    else
+        for (int32_t i = 0; i < arr.length; i++)
+            arr.nd_float[i] = c;
 }
 
 void   _array_fill_double(double c, t_ndarray arr)
@@ -59,16 +124,26 @@ void   _array_fill_double(double c, t_ndarray arr)
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
     else
-        for (int i = 0; i < arr.length; i++)
+        for (int32_t i = 0; i < arr.length; i++)
             arr.nd_double[i] = c;
 }
+
+void   _array_fill_cfloat(float complex c, t_ndarray arr)
+{
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    else
+        for (int32_t i = 0; i < arr.length; i++)
+            arr.nd_cfloat[i] = c;
+}
+
 
 void   _array_fill_cdouble(double complex c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
     else
-        for (int i = 0; i < arr.length; i++)
+        for (int32_t i = 0; i < arr.length; i++)
             arr.nd_cdouble[i] = c;
 }
 
@@ -76,79 +151,157 @@ void   _array_fill_cdouble(double complex c, t_ndarray arr)
 ** deallocation
 */
 
-int free_array(t_ndarray dump)
+int32_t free_array(t_ndarray arr)
 {
-    if (!dump.is_slice)
-    {
-        free(dump.raw_data);
-        dump.raw_data = NULL;
-    }
-    free(dump.shape);
-    dump.shape = NULL;
-    free(dump.strides);
-    dump.strides = NULL;
+    if (arr.shape == NULL)
+        return (0);
+    free(arr.raw_data);
+    arr.raw_data = NULL;
+    free(arr.shape);
+    arr.shape = NULL;
+    free(arr.strides);
+    arr.strides = NULL;
     return (1);
 }
 
-/* 
+
+int32_t free_pointer(t_ndarray arr)
+{
+    if (arr.is_view == false || arr.shape == NULL)
+        return (0);
+    free(arr.shape);
+    arr.shape = NULL;
+    free(arr.strides);
+    arr.strides = NULL;
+    return (1);
+}
+
+/*
 ** slices
 */
 
-t_slice new_slice(int start, int end, int step)
+t_slice new_slice(int32_t start, int32_t end, int32_t step)
 {
-    t_slice slice_d;
+    t_slice slice;
 
-    slice_d.start = start;
-    slice_d.end = end;
-    slice_d.step = step;
-    return (slice_d);
+    slice.start = start;
+    slice.end = end;
+    slice.step = step;
+    return (slice);
 }
 
-t_ndarray array_slicing(t_ndarray p, ...)
+t_ndarray array_slicing(t_ndarray arr, int n, ...)
 {
-    t_ndarray slice;
+    t_ndarray view;
     va_list  va;
-    t_slice slice_data;
-    int start = 0;
+    t_slice slice;
+    int32_t start = 0;
 
-    slice.nd = p.nd;
-    slice.type = p.type;
-    slice.type_size = p.type_size;
-    slice.shape = malloc(sizeof(int) * p.nd);
-    slice.strides = malloc(sizeof(int) * p.nd);
-    memcpy(slice.strides, p.strides, sizeof(int) * p.nd);
-    slice.is_slice = true;
-    va_start(va, p);
-    for (int i = 0; i < p.nd ; i++)
+    view.nd = n;
+    view.type = arr.type;
+    view.type_size = arr.type_size;
+    view.shape = malloc(sizeof(int64_t) * arr.nd);
+    view.strides = malloc(sizeof(int64_t) * arr.nd);
+    memcpy(view.strides, arr.strides, sizeof(int64_t) * arr.nd);
+    view.is_view = true;
+    va_start(va, n);
+    for (int32_t i = 0; i < arr.nd ; i++)
     {
-        slice_data = va_arg(va, t_slice);
-        slice.shape[i] = (slice_data.end - slice_data.start + (slice_data.step - 1)) / slice_data.step; // we need to round up the shape
-        start += slice_data.start * p.strides[i];
-        slice.strides[i] *= slice_data.step;
+        slice = va_arg(va, t_slice);
+        view.shape[i] = (slice.end - slice.start + (slice.step - 1)) / slice.step; // we need to round up the shape
+        start += slice.start * arr.strides[i];
+        view.strides[i] *= slice.step;
     }
     va_end(va);
-    slice.raw_data = p.raw_data + start * p.type_size;
-    slice.length = 1;
-    for (int i = 0; i < slice.nd; i++)
-            slice.length *= slice.shape[i];
-    return (slice);
+    int32_t j = arr.nd - view.nd;
+    if (j)
+    {
+        int64_t *tmp_strides = malloc(sizeof(int32_t) * view.nd);
+        int64_t *tmp_shape = malloc(sizeof(int32_t) * view.nd);
+        for (int32_t i = 0; i < view.nd; i++)
+        {
+            tmp_strides[i] = view.strides[j];
+            tmp_shape[i] = view.shape[j];
+            j++;
+        }
+        free(view.shape);
+        free(view.strides);
+        view.strides = tmp_strides;
+        view.shape = tmp_shape;
+    }
+    view.raw_data = arr.raw_data + start * arr.type_size;
+    view.length = 1;
+    for (int32_t i = 0; i < view.nd; i++)
+            view.length *= view.shape[i];
+    return (view);
+}
+
+/*
+** assigns
+*/
+
+void        alias_assign(t_ndarray *dest, t_ndarray src)
+{
+    /*
+    ** copy src to dest
+    ** allocate new memory for shape and strides
+    ** setting is_view to true for the garbage collector to deallocate
+    */
+
+    *dest = src;
+    dest->shape = malloc(sizeof(int64_t) * src.nd);
+    memcpy(dest->shape, src.shape, sizeof(int64_t) * src.nd);
+    dest->strides = malloc(sizeof(int64_t) * src.nd);
+    memcpy(dest->strides, src.strides, sizeof(int64_t) * src.nd);
+    dest->is_view = true;
 }
 
 /*
 ** indexing
 */
 
-int get_index(t_ndarray arr, ...)
+int32_t     get_index(t_ndarray arr, ...)
 {
     va_list va;
-    int index;
+    int32_t index;
 
     va_start(va, arr);
     index = 0;
-    for (int i = 0; i < arr.nd; i++)
+    for (int32_t i = 0; i < arr.nd; i++)
     {
-        index += va_arg(va, int) * arr.strides[i];
+        index += va_arg(va, int32_t) * arr.strides[i];
     }
     va_end(va);
     return (index);
+}
+
+/*
+** convert numpy strides to nd_array strides, and return it in a new array, to
+** avoid the problem of different implementations of strides in numpy and ndarray.
+*/
+int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd)
+{
+    int64_t *ndarray_strides;
+
+    ndarray_strides = (int64_t*)malloc(sizeof(int64_t) * nd);
+    for (int i = 0; i < nd; i++)
+        ndarray_strides[i] = np_strides[i] / type_size;
+    return ndarray_strides;
+
+}
+
+/*
+** copy numpy shape to nd_array shape, and return it in a new array, to
+** avoid the problem of variation of system architecture because numpy shape
+** is not saved in fixed length type.
+*/
+int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
+{
+    int64_t *nd_shape;
+
+    nd_shape = (int64_t*)malloc(sizeof(int64_t) * nd);
+    for (int i = 0; i < nd; i++)
+        nd_shape[i] = np_shape[i];
+    return nd_shape;
+
 }
