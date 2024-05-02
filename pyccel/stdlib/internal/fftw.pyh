@@ -1,3 +1,4 @@
+#$ header metavar external=False
 #$ header variable int  FFTW_FORWARD
 #$ header variable int  FFTW_BACKWARD
 #$ header variable int  FFTW_REAL_TO_COMPLEX

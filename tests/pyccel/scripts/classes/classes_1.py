@@ -16,11 +16,12 @@ class Point(object):
     def translate(self, a):
         self.x[:]   =  self.x + a
 
-x = np.array([0.,0.,0.])
-p = Point(x)
+if __name__ == '__main__':
+    x = np.array([0.,0.,0.])
+    p = Point(x)
 
-a = np.array([1.,1.,1.])
+    a = np.array([1.,1.,1.])
 
-p.translate(a)
-print(p.x)
+    p.translate(a)
+    print(p.x)
 

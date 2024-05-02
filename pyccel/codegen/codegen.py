@@ -4,15 +4,14 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+import os
 
 from pyccel.codegen.printing.fcode  import FCodePrinter
 from pyccel.codegen.printing.ccode  import CCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
 
 from pyccel.ast.basic     import PyccelAstNode
-from pyccel.ast.core      import FunctionDef, Module, Program, Interface, ModuleHeader
-from pyccel.ast.core      import EmptyNode, Comment, CommentBlock
-from pyccel.ast.headers   import Header
+from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
 from pyccel.errors.errors import Errors
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
@@ -42,8 +41,6 @@ class Codegen(object):
         self._ast      = parser.ast
         self._name     = name
         self._printer  = None
-        self._kind     = None
-        self._code     = None
         self._language = None
 
         #TODO verify module name != function name
@@ -63,7 +60,7 @@ class Codegen(object):
             self._stmts[key] = []
 
         self._collect_statements()
-        self._set_kind()
+        self._is_program = self.ast.program is not None
 
 
     @property
@@ -75,12 +72,6 @@ class Codegen(object):
         """Returns the name associated to the source code"""
 
         return self._name
-
-    @property
-    def kind(self):
-        """Returns the kind of the source code: Module, Program or None."""
-
-        return self._kind
 
     @property
     def imports(self):
@@ -125,16 +116,10 @@ class Codegen(object):
         return self._stmts['modules']
 
     @property
-    def is_module(self):
-        """Returns True if a Module."""
-
-        return self.kind == 'module'
-
-    @property
     def is_program(self):
         """Returns True if a Program."""
 
-        return self.kind == 'program'
+        return self._is_program
 
     @property
     def ast(self):
@@ -143,22 +128,10 @@ class Codegen(object):
         return self._ast
 
     @property
-    def expr(self):
-        """Returns the AST after Module/Program treatment."""
-
-        return self._expr
-
-    @property
     def language(self):
         """Returns the used language"""
 
         return self._language
-
-    @property
-    def code(self):
-        """Returns the generated code."""
-
-        return self._code
 
     def set_printer(self, **settings):
         """ Set the current codeprinter instance"""
@@ -203,57 +176,12 @@ class Codegen(object):
         self._stmts['interfaces'] = interfaces
         self._stmts['body']       = self.ast
 
-
-    def _set_kind(self):
-        """Finds the source code kind."""
-
-
-        cls = (Header, EmptyNode, Comment, CommentBlock, Module)
-        is_module = all(isinstance(i,cls) for i in self.ast.body)
-
-
-
-        if is_module:
-            self._kind = 'module'
-        else:
-            self._kind = 'program'
-
-        #  ...
-
-        #  ...
-
-        expr = None
-
-        if self.is_module:
-            expr = Module(
-                self.name,
-                self.variables,
-                self.routines,
-                self.interfaces,
-                self.classes,
-                imports=self.imports)
-
-        elif self.is_program:
-            expr = Program(
-                self.name,
-                self.variables,
-                self.body.body,
-                imports=self.imports)
-
-        else:
-            raise NotImplementedError('TODO')
-
-
-        self._expr = expr
-
-        #  ...
-
     def doprint(self, **settings):
         """Prints the code in the target language."""
         if not self._printer:
             self.set_printer(**settings)
-        self._code = self._printer.doprint(self.expr)
-        return self._code
+        return self._printer.doprint(self.ast)
+
 
     def export(self, filename=None, **settings):
         """Export code in filename"""
@@ -265,15 +193,28 @@ class Codegen(object):
         header_filename = '{name}.{ext}'.format(name=filename, ext=header_ext)
         filename = '{name}.{ext}'.format(name=filename, ext=ext)
 
-        if header_ext is not None and self.is_module:
-            code = self._printer.doprint(ModuleHeader(self.expr))
+        # print module header
+        if header_ext is not None:
+            code = self._printer.doprint(ModuleHeader(self.ast))
             with open(header_filename, 'w') as f:
                 for line in code:
                     f.write(line)
-        # print module or program code
-        self._code = self._printer.doprint(self.expr)
+
+        # print module
+        code = self._printer.doprint(self.ast)
         with open(filename, 'w') as f:
-            for line in self._code:
+            for line in code:
                 f.write(line)
 
-        return filename
+        # print program
+        prog_filename = None
+        if self.is_program and self.language != 'python':
+            folder = os.path.dirname(filename)
+            fname  = os.path.basename(filename)
+            prog_filename = os.path.join(folder,"prog_"+fname)
+            code = self._printer.doprint(self.ast.program)
+            with open(prog_filename, 'w') as f:
+                for line in code:
+                    f.write(line)
+
+        return filename, prog_filename

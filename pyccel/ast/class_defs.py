@@ -7,7 +7,7 @@ This module contains all types which define a python class which is automaticall
 """
 from .builtins  import PythonImag, PythonReal
 from .core      import ClassDef, FunctionDef
-from .datatypes import (NativeBool, NativeInteger, NativeReal,
+from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString)
 from .numpyext  import (Shape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose)
@@ -35,7 +35,7 @@ ComplexClass = ClassDef('complex',
 
 #=======================================================================================
 
-RealClass = ClassDef('real',
+FloatClass = ClassDef('float',
         methods=[
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonImag}),
@@ -155,7 +155,7 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
 literal_classes = {
         NativeBool()    : BooleanClass,
         NativeInteger() : IntegerClass,
-        NativeReal()    : RealClass,
+        NativeFloat()   : FloatClass,
         NativeComplex() : ComplexClass,
         NativeString()  : StringClass
 }

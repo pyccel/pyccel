@@ -7,8 +7,8 @@ from pyccel.errors.errors   import Errors
 from pyccel.ast.basic       import Basic
 from pyccel.ast.core        import Assign, Return, FunctionDef
 from pyccel.ast.literals    import LiteralInteger
-from pyccel.ast.operators   import PyccelAdd, PyccelMinus
-from pyccel.ast.variable    import Variable, ValuedVariable
+from pyccel.ast.operators   import PyccelOperator, PyccelAdd, PyccelMinus
+from pyccel.ast.variable    import Variable
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
@@ -40,7 +40,7 @@ def test_get_attribute_nodes():
 
     expected = [Variable('int', 'a'),
                 Variable('int', 'b'),
-                ValuedVariable('int', 'c'),
+                Variable('int', 'c'),
                 Variable('int', 'd'),
                 Variable('int', 'e'),
                 Variable('int', 'f')]
@@ -52,21 +52,18 @@ def test_get_attribute_nodes_exclude():
     filename = os.path.join(path_dir, "math.py")
 
     fst = get_functions(filename)[0]
-    atts = fst.get_attribute_nodes(Variable, excluded_nodes=(ValuedVariable,))
+    atts = fst.get_attribute_nodes(PyccelOperator, excluded_nodes=(PyccelAdd,))
 
-    assert(all(isinstance(a, Variable) for a in atts))
+    assert(all(isinstance(a, PyccelOperator) for a in atts))
+    assert(all(not isinstance(a, PyccelAdd) for a in atts))
+    assert(len(atts)==1)
+    minus = atts[0]
+    assert(isinstance(minus, PyccelMinus)==1)
 
-    expected = [Variable('int', 'a'),
-                Variable('int', 'b'),
-                Variable('int', 'd'),
-                Variable('int', 'e'),
-                Variable('int', 'f')]
-
-    for e in expected:
-        assert(e in atts)
-
-    not_expected = ValuedVariable('int', 'c', value=LiteralInteger(0))
-    assert(not_expected not in atts)
+    a = Variable('int', 'a')
+    b = Variable('int', 'b')
+    assert(minus.args[0] == a)
+    assert(minus.args[1] == b)
 
 def test_get_user_nodes():
     filename = os.path.join(path_dir, "math.py")

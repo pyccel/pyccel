@@ -13,22 +13,23 @@ def pairwise_python (X, D) :
                 r += tmp * tmp
             D[ i , j ] = sqrt(r)
 
-from numpy import zeros
+if __name__ == '__main__':
+    from numpy import zeros
 
-s = 100
-X = zeros([s, s])
-rand = 0
-a = 100
-b = 821
-m = 213
-for i in range(s):
-    for j in range(s):
-        rand = (a * rand + b) % m
-        X[i,j] = rand
+    s = 100
+    X = zeros([s, s])
+    rand = 0
+    a = 100
+    b = 821
+    m = 213
+    for i in range(s):
+        for j in range(s):
+            rand = (a * rand + b) % m
+            X[i,j] = rand
 
-D = zeros([s,s])
-pairwise_python(X, D)
+    D = zeros([s,s])
+    pairwise_python(X, D)
 
-for i in range(s):
-    for j in range(s):
-        print(D[i,j])
+    for i in range(s):
+        for j in range(s):
+            print(D[i,j])

@@ -13,11 +13,12 @@ def add_2(a,b):
     mult_2(a)
     b[:] = b[:] + a[:]
 
-import numpy as np
+if __name__ == '__main__':
+    import numpy as np
 
-x = np.ones(4)
-y = np.full_like(x,6)
+    x = np.ones(4)
+    y = np.full_like(x,6)
 
-add_2(x,y)
+    add_2(x,y)
 
-print(y)
+    print(y)

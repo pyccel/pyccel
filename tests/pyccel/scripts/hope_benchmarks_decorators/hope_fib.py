@@ -9,4 +9,5 @@ def fib(n) :
     result = fib (n - 1) + fib (n - 2)
     return result
 
-print(fib(20))
+if __name__ == '__main__':
+    print(fib(20))

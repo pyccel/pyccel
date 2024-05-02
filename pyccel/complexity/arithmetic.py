@@ -31,6 +31,7 @@ from sympy import count_ops as sympy_count_ops
 from sympy import Tuple
 
 from pyccel.ast.core     import For, Assign, CodeBlock, Comment
+from pyccel.ast.core     import Module, Program
 from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
@@ -64,6 +65,10 @@ def count_ops(expr, visual=None):
         return a*ops
     elif isinstance(expr, CodeBlock):
         return sum(count_ops(i, visual) for i in expr.body)
+    elif isinstance(expr, Module):
+        return count_ops(expr.program, visual)
+    elif isinstance(expr, Program):
+        return count_ops(expr.body, visual)
     elif isinstance(expr, (NumpyZeros, NumpyOnes, Comment)):
         return 0
 

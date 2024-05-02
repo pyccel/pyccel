@@ -29,11 +29,10 @@ from .literals      import LiteralInteger, Literal, Nil
 
 from .numpyext      import (NumpyEmpty, numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants, NumpyArray,
-                            NumpyTranspose)
+                            NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
-from .variable      import (Constant, Variable, ValuedVariable,
-                            IndexedElement, InhomogeneousTupleVariable, VariableAddress,
-                            HomogeneousTupleVariable )
+from .variable      import (Constant, Variable, IndexedElement, InhomogeneousTupleVariable,
+                            VariableAddress, HomogeneousTupleVariable )
 
 errors = Errors()
 
@@ -45,7 +44,7 @@ __all__ = (
 )
 
 scipy_constants = {
-    'pi': Constant('real', 'pi', value=pi),
+    'pi': Constant('float', 'pi', value=pi),
                   }
 
 #==============================================================================
@@ -60,6 +59,9 @@ def builtin_function(expr, args=None):
         raise TypeError('expr must be of type str or FunctionCall')
 
     dic = builtin_functions_dict
+
+    # Unpack FunctionCallArguments
+    args = [a.value for a in args]
 
     if name in dic.keys() :
         try:
@@ -158,16 +160,14 @@ def split_positional_keyword_arguments(*args):
     # Distinguish between positional and keyword arguments
     val_args = ()
     for i, a in enumerate(args):
-        if isinstance(a, ValuedVariable):
+        if a.has_keyword:
             args, val_args = args[:i], args[i:]
             break
 
+    # Collect values from args
+    args = [a.value for a in args]
     # Convert list of keyword arguments into dictionary
-    kwargs = {}
-    for v in val_args:
-        key   = str(v.name)
-        value = v.value
-        kwargs[key] = value
+    kwargs = {a.keyword: a.value for a in val_args}
 
     return args, kwargs
 
@@ -192,7 +192,7 @@ def compatible_operation(*args, language_has_vectors = True):
     if language_has_vectors:
         # If the shapes don't match then an index must be required
         shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.shape != ()]
-        shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
+        shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
         order  = set(a.order for a in args if a.order is not None)
         return len(shapes) <= 1 and len(order) <= 1
     else:
@@ -343,7 +343,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
 
         if (isinstance(line, Assign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
-                not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (ValuedVariable)) and # not creating array
+                not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (FunctionDef)) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
 
             # Collect lhs variable
@@ -456,6 +456,10 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                 new_vars_t = [insert_index(v, index, index_var) for v in new_vars_t]
                 if compatible_operation(*new_vars, *new_vars_t, language_has_vectors = language_has_vectors):
                     break
+
+            # TODO [NH]: get all indices when adding axis argument to linspace function
+            if isinstance(line.rhs, NumpyLinspace):
+                line.rhs.ind = indices[0]
 
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars, excluded_nodes = (FunctionCall, PyccelInternalFunction))

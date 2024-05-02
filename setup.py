@@ -23,7 +23,8 @@ setup_args = dict(
     name                 = NAME,
     version              = VERSION,
     description          = DESCR,
-    long_description     = open('README.rst').read(),
+    long_description     = open('README.md').read(),
+    long_description_content_type = 'text/markdown',
     author               = AUTHOR,
     author_email         = EMAIL,
     license              = LICENSE,
@@ -40,7 +41,7 @@ install_requires = [
     'numpy',
     'sympy>=1.2',
     'termcolor',
-    'textx>=1.6',
+    'textx>=2.2',
     'filelock'
 ]
 

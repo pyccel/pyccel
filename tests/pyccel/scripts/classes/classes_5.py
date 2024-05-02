@@ -18,8 +18,9 @@ def get_A():
     a_cls = A(3)
     return a_cls
 
-b = get_A().x
-c = get_A().f()
+if __name__ == '__main__':
+    b = get_A().x
+    c = get_A().f()
 
-print(b)
-print(c)
+    print(b)
+    print(c)

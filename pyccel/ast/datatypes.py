@@ -29,7 +29,7 @@ __all__ = (
     'NativeTuple',
 #    'NativeNil',
     'NativeRange',
-    'NativeReal',
+    'NativeFloat',
     'NativeString',
     'NativeSymbol',
     'NativeVoid',
@@ -52,7 +52,7 @@ __all__ = (
     'Generic',
     'Int',
     'Nil',
-    'Real',
+    'Float',
     'String',
     'Void',
 	'NativeNumeric',
@@ -95,18 +95,17 @@ iso_c_binding_shortcut_mapping = {
     'C_LONG_DOUBLE_COMPLEX' : 'c128',
     'C_BOOL'                : 'b4'
 }
-default_precision = {'real': 8,
+default_precision = {'float': 8,
                     'int': numpy.dtype(int).alignment,
                     'integer': numpy.dtype(int).alignment,
                     'complex': 8,
-                    'bool':4,
-                    'float':8}
-dtype_and_precision_registry = { 'real':('real',default_precision['float']),
-                                 'double':('real',default_precision['float']),
-                                 'float':('real',default_precision['float']),
-                                 'pythonfloat':('real',default_precision['float']), # built-in float
-                                 'float32':('real',4),
-                                 'float64':('real',8),
+                    'bool':4}
+dtype_and_precision_registry = { 'float':('float',default_precision['float']),
+                                 'double':('float',default_precision['float']),
+                                 'real':('float',default_precision['float']),
+                                 'pythonfloat':('float',default_precision['float']), # built-in float
+                                 'float32':('float',4),
+                                 'float64':('float',8),
                                  'pythoncomplex':('complex',default_precision['complex']),
                                  'complex':('complex',default_precision['complex']),  # to create numpy array with dtype='complex'
                                  'complex64':('complex',4),
@@ -138,24 +137,29 @@ class DataType(metaclass=Singleton):
         return str(self.__class__.__name__)+'()'
 
 class NativeBool(DataType):
+    """Class representing boolean datatype"""
     __slots__ = ()
     _name = 'Bool'
 
 class NativeInteger(DataType):
+    """Class representing integer datatype"""
     __slots__ = ()
     _name = 'Int'
 
-class NativeReal(DataType):
+class NativeFloat(DataType):
+    """Class representing float datatype"""
     __slots__ = ()
-    _name = 'Real'
+    _name = 'Float'
 
 class NativeComplex(DataType):
+    """Class representing complex datatype"""
     __slots__ = ()
     _name = 'Complex'
 
-NativeNumeric = (NativeBool(), NativeInteger(), NativeReal(), NativeComplex())
+NativeNumeric = (NativeBool(), NativeInteger(), NativeFloat(), NativeComplex())
 
 class NativeString(DataType):
+    """Class representing string datatype"""
     __slots__ = ()
     _name = 'String'
 
@@ -227,7 +231,7 @@ class FunctionType(DataType):
 
 Bool           = NativeBool()
 Int            = NativeInteger()
-Real           = NativeReal()
+Float          = NativeFloat()
 Cmplx          = NativeComplex()
 Void           = NativeVoid()
 Nil            = NativeNil()
@@ -238,7 +242,7 @@ Generic        = NativeGeneric()
 dtype_registry = {'bool': Bool,
                   'int': Int,
                   'integer': Int,
-                  'real'   : Real,
+                  'float'   : Float,
                   'complex': Cmplx,
                   'void': Void,
                   'nil': Nil,
@@ -317,12 +321,12 @@ def is_with_construct_datatype(dtype):
     else:
         return False
 
-# TODO check the use of Reals
+# TODO check the use of Floats
 def datatype(arg):
     """Returns the datatype singleton for the given dtype.
 
     arg : str or pyccel expression
-        If a str ('bool', 'int', 'real','complex', or 'void'), return the
+        If a str ('bool', 'int', 'float','complex', or 'void'), return the
         singleton for the corresponding dtype. If a pyccel expression, return
         the datatype that best fits the expression. This is determined from the
         assumption system. For more control, use the `DataType` class directly.
@@ -358,14 +362,14 @@ def str_dtype(dtype):
     if isinstance(dtype, str):
         if dtype == 'int':
             return 'integer'
-        elif dtype== 'real':
-            return 'real'
+        elif dtype== 'float':
+            return 'float'
         else:
             return dtype
     if isinstance(dtype, NativeInteger):
         return 'integer'
-    elif isinstance(dtype, NativeReal):
-        return 'real'
+    elif isinstance(dtype, NativeFloat):
+        return 'float'
     elif isinstance(dtype, NativeComplex):
         return 'complex'
     elif isinstance(dtype, NativeBool):

@@ -7,8 +7,8 @@
 from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
 
 from .basic              import PyccelAstNode, Basic
-from .datatypes          import (NativeInteger, NativeBool, NativeReal,
-                                  NativeComplex, NativeString, default_precision, NativeReal)
+from .datatypes          import (NativeInteger, NativeBool, NativeFloat,
+                                  NativeComplex, NativeString, default_precision, NativeFloat)
 
 __all__ = (
     'LiteralTrue',
@@ -114,7 +114,7 @@ class LiteralInteger(Literal):
 class LiteralFloat(Literal):
     """Represents a float literal in python"""
     __slots__ = ('_value',)
-    _dtype     = NativeReal()
+    _dtype     = NativeFloat()
 
     def __init__(self, value, *, precision = default_precision['float']):
         if not isinstance(value, (int, float, LiteralFloat)):
@@ -244,7 +244,7 @@ def get_default_literal_value(dtype):
     """Returns the default value of a native datatype."""
     if isinstance(dtype, NativeInteger):
         value = LiteralInteger(0)
-    elif isinstance(dtype, NativeReal):
+    elif isinstance(dtype, NativeFloat):
         value = LiteralFloat(0.0)
     elif isinstance(dtype, NativeComplex):
         value = LiteralComplex(0.0, 0.0)
@@ -284,7 +284,7 @@ def convert_to_literal(value, dtype = None, precision = None):
         if isinstance(value, int):
             dtype = NativeInteger()
         elif isinstance(value, float):
-            dtype = NativeReal()
+            dtype = NativeFloat()
         elif isinstance(value, complex):
             dtype = NativeComplex()
         elif isinstance(value, bool):
@@ -302,7 +302,7 @@ def convert_to_literal(value, dtype = None, precision = None):
             literal_val = LiteralInteger(value, precision)
         else:
             literal_val = PyccelUnarySub(LiteralInteger(-value, precision))
-    elif isinstance(dtype, NativeReal):
+    elif isinstance(dtype, NativeFloat):
         literal_val = LiteralFloat(value, precision=precision)
     elif isinstance(dtype, NativeComplex):
         literal_val = LiteralComplex(value.real, value.imag, precision)

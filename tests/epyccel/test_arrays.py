@@ -1610,6 +1610,26 @@ def test_array_real_2d_1d_matmul(language):
         pytest.param("python", marks = pytest.mark.python)
     ]
 )
+def test_array_real_2d_1d_matmul_creation(language):
+    f1 = arrays.array_real_2d_1d_matmul_creation
+    f2 = epyccel( f1 , language = language)
+    A1 = np.ones([3, 2])
+    A1[1,0] = 2
+    A2 = np.copy(A1)
+    x1 = np.ones([2])
+    x2 = np.copy(x1)
+    y1 = f1(A1, x1)
+    y2 = f2(A2, x2)
+    assert np.isclose(y1, y2)
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="matmul not implemented in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python)
+    ]
+)
 def test_array_real_2d_1d_matmul_order_F_F(language):
     f1 = arrays.array_real_2d_1d_matmul_order_F
     f2 = epyccel( f1 , language = language)

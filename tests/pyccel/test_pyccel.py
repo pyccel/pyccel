@@ -29,7 +29,7 @@ def get_exe(filename, language=None):
         exefile1 += ".exe"
 
     dirname = os.path.dirname(filename)
-    basename = "prog_"+os.path.basename(exefile1)
+    basename = os.path.basename(exefile1)
     exefile2 = os.path.join(dirname, basename)
 
     if os.path.isfile(exefile2):
@@ -60,7 +60,7 @@ def compile_pyccel(path_dir,test_file, options = ""):
         options += " --output=__pyccel__"
     cmd = [shutil.which("pyccel"), "%s" % test_file]
     if options != "":
-        cmd += options.strip().split(' ')
+        cmd += options.strip().split()
     p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir)
     p.wait()
     assert(p.returncode==0)
@@ -80,24 +80,29 @@ def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,is_m
     assert(os.path.isfile(root+extension))
 
     deps = [dependencies] if isinstance(dependencies, str) else dependencies
+    base_dir = os.path.dirname(root)
     if not is_mod:
-        base_dir = os.path.dirname(root)
         base_name = os.path.basename(root)
         prog_root = os.path.join(base_dir, "prog_"+base_name)
         if os.path.isfile(prog_root+extension):
-            compile_fortran(path_dir, test_file, dependencies, is_mod = True)
-            dependencies.append(test_file)
+            compile_fortran_or_c(compiler, extension,
+                                path_dir, test_file,
+                                dependencies, is_mod = True)
             root = prog_root
+            deps.append(test_file)
 
     if is_mod:
         command = [shutil.which(compiler), "-c", root+extension]
+        for d in deps:
+            d = insert_pyccel_folder(d)
+            command.append("-I"+os.path.dirname(d))
     else:
         command = [shutil.which(compiler), "-O3", root+extension]
-
-    for d in deps:
-        d = insert_pyccel_folder(d)
-        command.append(d[:-3]+".o")
-        command.append("-I"+os.path.dirname(d))
+        for d in deps:
+            d = insert_pyccel_folder(d)
+            command.append(d[:-3]+".o")
+            command.append("-I"+os.path.dirname(d))
+    command.append("-I"+base_dir)
 
     command.append("-o")
     if is_mod:
@@ -252,7 +257,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 
     if output_dir is None:
         if language=="python":
-            output_dir = get_abs_path('__pyccel__')
+            output_dir = os.path.join(get_abs_path(rel_test_dir),'__pyccel__')
 
     if dependencies:
         if isinstance(dependencies, str):
@@ -409,8 +414,8 @@ def test_funcs(language):
 
 #------------------------------------------------------------------------------
 # Enumerate not supported in c
-def test_inout_func():
-    pyccel_test("scripts/runtest_inoutfunc.py")
+def test_inout_func(language):
+    pyccel_test("scripts/runtest_inoutfunc.py", language = language)
 
 #------------------------------------------------------------------------------
 def test_bool(language):
@@ -436,13 +441,13 @@ def test_generic_functions():
                     int,int])
 
 #------------------------------------------------------------------------------
-# C does not handle functions in functions
-def test_default_arguments():
+def test_default_arguments(language):
     pyccel_test("scripts/runtest_default_args.py",
             dependencies = "scripts/default_args_mod.py",
             output_dtype = [int,int,float,float,float,
                 float,float,float,float,bool,bool,bool,
-                float,float,float,float])
+                float,float,float,float],
+            language=language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
@@ -611,9 +616,7 @@ def test_print_strings(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.xfail(reason="sep and end params not working in python : https://github.com/pyccel/pyccel/issues/874"),
-            pytest.mark.python]),
+        pytest.param("python", marks = pytest.mark.python),
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="formated string not implemented in fortran"),
             pytest.mark.fortran]
@@ -659,7 +662,8 @@ def test_headers(language):
                 "def f(x):\n"
                 "    y = x\n"
                 "    return y\n"
-                "print(f(1))\n")
+                "if __name__ == '__main__':\n"
+                "    print(f(1))\n")
 
         f.write(code)
 
@@ -685,7 +689,8 @@ def test_headers(language):
                 "def f(x):\n"
                 "    y = x\n"
                 "    return y\n"
-                "print(f(1.5))\n")
+                "if __name__ == '__main__':\n"
+                "    print(f(1.5))\n")
 
         f.write(code)
 
@@ -717,3 +722,114 @@ def test_basic_header():
                                         ] )
 def test_classes( test_file ):
     pyccel_test(test_file, compile_with_pyccel = False)
+
+#------------------------------------------------------------------------------
+
+def test_type_print( language ):
+    test_file = 'scripts/runtest_type_print.py'
+
+    test_file = os.path.normpath(test_file)
+
+    cwd = os.path.dirname(test_file)
+    cwd = get_abs_path(cwd)
+
+    test_file = get_abs_path(test_file)
+
+    pyccel_commands = "--language="+language
+
+    if language=="python":
+        output_dir = get_abs_path('__pyccel__')
+        pyccel_commands += " --output=" + output_dir
+        output_test_file = os.path.join(output_dir, os.path.basename(test_file))
+    else:
+        output_test_file = test_file
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+
+    lang_out = get_lang_output(output_test_file, language)
+    lang_out = lang_out.split('\n')
+    assert len(lang_out)>=5
+
+    if language=="python":
+        assert 'int16' in lang_out[0]
+        if sys.platform == "win32":
+            assert 'int' in lang_out[1]
+            assert 'int64' in lang_out[2]
+        else:
+            assert 'int32' in lang_out[1]
+            assert 'int' in lang_out[2]
+        assert 'float32' in lang_out[3]
+        assert 'float' in lang_out[4]
+    else:
+        assert 'int16' in lang_out[0]
+        assert 'int32' in lang_out[1]
+        assert 'int64' in lang_out[2]
+        assert 'float32' in lang_out[3]
+        assert 'float64' in lang_out[4]
+
+def test_module_init( language ):
+    test_mod  = get_abs_path("scripts/module_init.py")
+    test_prog = get_abs_path("scripts/runtest_module_init.py")
+
+    output_dir   = get_abs_path('scripts/__pyccel__')
+    output_test_file = os.path.join(output_dir, os.path.basename(test_prog))
+
+    cwd = get_abs_path("scripts")
+
+    pyccel_commands = "--language="+language
+    if language=="python":
+        if output_dir is None:
+            pyccel_commands += "--output="+output_dir
+
+    pyth_out = get_python_output(test_prog)
+
+    compile_pyccel(cwd, test_mod, pyccel_commands)
+
+    if language != "python":
+        pyth_mod_out = get_python_output(test_prog, cwd)
+        compare_pyth_fort_output(pyth_out, pyth_mod_out, str, language)
+
+    compile_pyccel(cwd, test_prog, pyccel_commands)
+
+    if language == 'python' :
+        lang_out = get_lang_output(output_test_file, language)
+    else:
+        lang_out = get_lang_output(test_prog, language)
+
+    compare_pyth_fort_output(pyth_out, lang_out, str, language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions are not handled. And chained imports (see #756)"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_module_init_collisions( language ):
+    test_mod  = get_abs_path("scripts/module_init2.py")
+    test_prog = get_abs_path("scripts/runtest_module_init2.py")
+
+    output_dir   = get_abs_path('scripts/__pyccel__')
+    output_test_file = os.path.join(output_dir, os.path.basename(test_prog))
+
+    cwd = get_abs_path("scripts")
+
+    pyccel_commands = "--language="+language
+    if language=="python":
+        if output_dir is None:
+            pyccel_commands += "--output="+output_dir
+
+    pyth_out = get_python_output(test_prog)
+
+    compile_pyccel(cwd, test_mod, pyccel_commands)
+    compile_pyccel(cwd, test_prog, pyccel_commands)
+
+    if language == 'python' :
+        lang_out = get_lang_output(output_test_file, language)
+    else:
+        lang_out = get_lang_output(test_prog, language)
+
+    compare_pyth_fort_output(pyth_out, lang_out, [float, float, float, int, float, float, float, int], language)
