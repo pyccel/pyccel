@@ -45,30 +45,32 @@ def get_untested_lines(coverage_filename):
 
 def compare_coverage_to_diff(coverage, diff):
     """
+    Compare coverage to git diff.
+
     Compare dictionaries containing coverage information and git
     diff information to find untested lines which have been added
-    to the code base
+    to the code base.
 
     Parameters
     ----------
     coverage : dict
             A dictionary whose keys are the files in pyccel
             and whose values are lists containing the line numbers
-            where coverage is lacking in that file
-    diff     : dict
+            where coverage is lacking in that file.
+    diff : dict
             A dictionary whose keys are files which have been
             changed in this branch and whose values are a dictionary.
             The dictionary must contain a key 'addition' whose value
             is a list containing the line numbers of lines which have
-            been changed/added
+            been changed/added.
 
     Returns
     -------
-    untested : dict
+    dict
             A dictionary whose keys are the files in pyccel with
             untested lines which have been added in this branch
             and whose values are lists containing the line numbers
-            where coverage is lacking in that file
+            where coverage is lacking in that file.
     """
     untested = {}
     for f,line_info in diff.items():
@@ -81,10 +83,56 @@ def compare_coverage_to_diff(coverage, diff):
             untested[f] = [n for n in new_lines if n in untested_lines]
     return untested
 
-def allow_untested_error_calls(untested):
+def allow_untested_debug_code(untested):
     """
     Takes a dictionary describing untested lines and returns an
-    equivalent dictionary without lines designed to raise errors
+    equivalent dictionary without lines designed to print a class
+    (should only be used for debugging).
+
+    Parameters
+    ----------
+    untested : dict
+            A dictionary whose keys are the files in pyccel with
+            untested lines which have been added in this branch
+            and whose values are lists containing the line numbers
+            where coverage is lacking in that file.
+
+    Returns
+    -------
+    dict
+            A dictionary which is a copy of the input dictionary
+            without the lines which express raise statements.
+    """
+    reduced_untested = {}
+    for f,line_nums in untested.items():
+        with open(f, encoding="utf-8") as filename:
+            f_lines = filename.readlines()
+        for l in line_nums:
+            line = f_lines[l-1]
+            n = len(line)-len(line.lstrip())
+            i = l
+            func_found = ''
+            while i >= 0 and not func_found:
+                line = f_lines[i]
+                strip_line = line.lstrip()
+                n_indent = len(line)-len(strip_line)
+                if n_indent < n and strip_line.startswith('def '):
+                    func_found = strip_line.split()[1].split('(')[0]
+                else:
+                    if n_indent < n and strip_line!='':
+                        n = n_indent
+                    i-=1
+            if func_found not in ('__repr__', '__str__'):
+                reduced_untested.setdefault(f, []).append(l)
+
+    return reduced_untested
+
+def allow_untested_error_calls(untested):
+    """
+    Remove error calls from untested lines.
+
+    Takes a dictionary describing untested lines and returns an
+    equivalent dictionary without lines designed to raise errors.
 
     Parameter
     ---------
@@ -92,13 +140,13 @@ def allow_untested_error_calls(untested):
             A dictionary whose keys are the files in pyccel with
             untested lines which have been added in this branch
             and whose values are lists containing the line numbers
-            where coverage is lacking in that file
+            where coverage is lacking in that file.
 
     Returns
     -------
-    reduced_untested : dict
+    dict
             A dictionary which is a copy of the input dictionary
-            without the lines which express raise statements
+            without the lines which express raise statements.
     """
     reduced_untested = {}
     for f,line_nums in untested.items():

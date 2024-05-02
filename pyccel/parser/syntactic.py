@@ -4,8 +4,6 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-# pylint: disable=missing-function-docstring
-
 import os
 import re
 
@@ -36,6 +34,7 @@ from pyccel.ast.core import Assert
 from pyccel.ast.core import Comment, EmptyNode
 from pyccel.ast.core import Break, Continue
 from pyccel.ast.core import FunctionDefArgument
+from pyccel.ast.core import FunctionDefResult
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import CommentBlock
@@ -104,11 +103,22 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 #==============================================================================
 
 class SyntaxParser(BasicParser):
+    """
+    Class which handles the syntactic stage as described in the developer docs.
 
-    """ Class for a Syntax Parser.
+    This class is described in detail in developer_docs/syntactic_stage.md.
+    It extracts all necessary information from the Python AST in order to create
+    a representation complete enough for the semantic stage to determine types, etc
+    as described in developer_docs/semantic_stage.md.
 
-        inputs: str
-            filename or code to parse as a string
+    Parameters
+    ----------
+    inputs : str
+        A string containing code or containing the name of a file whose code
+        should be read.
+
+    **kwargs : dict
+        Additional keyword arguments for BasicParser.
     """
 
     def __init__(self, inputs, **kwargs):
@@ -795,7 +805,7 @@ class SyntaxParser(BasicParser):
             else:
                 result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
 
-            results.append(result_name)
+            results.append(FunctionDefResult(result_name))
 
         self.exit_function_scope()
 

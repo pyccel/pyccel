@@ -3,6 +3,8 @@
 import argparse
 import sys
 
+from list_docs_tovalidate import should_ignore
+
 parser = argparse.ArgumentParser(description='Check doc coverage change')
 parser.add_argument('base', metavar='head_cov', type=str,
                         help='File containing the coverage of the head branch')
@@ -26,14 +28,15 @@ for branch_file in [args.base, args.compare]:
     n = len(lines)
     i = 0
     while i < n:
-        modname = lines[i].split()[1].strip('"')[:-3].replace('/','.').split(branch, 1)[1][1:]
+        modname = lines[i].split()[1].strip('"')[:-3].replace('/','.').split(f'.{branch}.', 1)[1]
         i+=1
         while i<n and lines[i].startswith(' - '):
             if lines[i].startswith(' - No module docstring'):
-                results[branch + '_no_mod'].update([modname])
+                results[branch + '_no_mod'].add(modname)
             else:
                 objname = lines[i].split()[-1].strip('`')
-                results[branch + '_no_obj'].update(['.'.join([modname,objname])])
+                if not should_ignore(objname):
+                    results[branch + '_no_obj'].add('.'.join([modname,objname]))
             i += 1
 
 added_mod = [mod for mod in results['compare_no_mod'] if mod not in results['base_no_mod']]

@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 
 #$ header function funct_c(int32[:], const int32[:])
 def funct_c( x, y ):

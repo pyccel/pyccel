@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 
 #$ header function pdf(double[:,:],int,int,double,double,double[:,:],double,double,double)
 def pdf ( density , x_range , y_range , x_center , y_center , w2D, r50 , b , a) :

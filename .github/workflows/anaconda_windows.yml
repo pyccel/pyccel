@@ -1,0 +1,49 @@
+name: Anaconda-Windows
+
+on:
+  workflow_call:
+    inputs:
+      python_version:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
+
+jobs:
+  Anaconda-Windows:
+    runs-on: windows-latest
+    name: Unit tests
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          auto-activate-base: true
+          python-version: '3.10'
+        if: inputs.python_version == ''
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          auto-activate-base: true
+          python-version: ${{ inputs.python_version }}
+        if: inputs.python_version != ''
+      - name: Install dependencies
+        uses: ./.github/actions/windows_install
+      - name: Install python dependencies
+        uses: ./.github/actions/conda_installation
+        with:
+          mpi_type: msmpi
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
+        with:
+          shell_cmd: 'bash -l -eo pipefail {0}'
+          pytest_mark: 'and not external'
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
+        with:
+          shell_cmd: 'bash -l -eo pipefail {0}'
+

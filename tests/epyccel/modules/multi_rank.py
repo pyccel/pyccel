@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import types
 
 @types('real[:,:]','real[:,:](order=F)')

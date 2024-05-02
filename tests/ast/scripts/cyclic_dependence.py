@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring, unused-variable
+# pylint: disable=missing-function-docstring, missing-module-docstring
 
 def fib_caller(x : int):
     def fib(n : int) -> int:

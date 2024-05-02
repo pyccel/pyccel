@@ -1,0 +1,17 @@
+The following is a list of keywords which can be used to run tests. Tests in bold are run by pull requests when they are marked as ready for review or pushed to while not in draft:
+- **linux** : Runs the unit tests on a Linux system.
+- **windows** : Runs the unit tests on a Windows system.
+- **macosx** : Runs the unit tests on a MacOS X system.
+- **coverage** : Runs the unit tests on a Linux system and checks the coverage of the tests.
+- **docs** : Checks if the documentation follows the numpydoc format.
+- **pylint** : Runs pylint on files which are too big to be handled by codacy.
+- **lint** : Runs a linter to check that Pyccel's best practices are followed.
+- **spelling** : Checks if everything in the documentation is spelled (and capitalised) correctly.
+- pr_tests : Runs all the tests marked in bold.
+- pickle : Checks that .pyccel files have been correctly generated and installed by the installation process.
+- editable_pickle : Checks that .pyccel files have been correctly generated and installed by the editable installation process.
+- pickle_wheel : Checks that .pyccel files have been correctly generated and packaged into the wheel.
+- linux_anaconda : Runs the unit tests on a linux system using anaconda for python.
+- windows_anaconda : Runs the unit tests on a windows system using anaconda for python.
+
+These tests can be run with the command `/bot run X` (multiple tests can be specified separated by spaces), or with `try V X` to test on Python version V.

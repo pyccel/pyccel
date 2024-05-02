@@ -1,8 +1,6 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
-# pylint: disable=wildcard-import
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy.random import randint, uniform
 from numpy import isclose
-from conftest       import *
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types

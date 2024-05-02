@@ -1,4 +1,4 @@
-# pylint: disable=missing-class-docstring,  disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring
 # coding: utf-8
 
 #$ header class Point(public)

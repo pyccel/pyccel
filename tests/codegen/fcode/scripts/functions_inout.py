@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 # TODO add AugAssign to these tests
 
 #$ header function f_assign(int, double [:])

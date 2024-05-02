@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 # ------------------------------- Strings ------------------------------------
 
 from numpy import int32, int64, int16, int8

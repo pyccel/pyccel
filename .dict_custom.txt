@@ -80,3 +80,6 @@ inhomogeneous
 natively
 PSYDAC
 prepend
+uniformise
+incrementation
+Pylint

@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 a0 = [6]*10
 a1 = sum(a0[i] for i in range(len(a0)))
 a2 = sum(i for i in a0)

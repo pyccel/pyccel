@@ -41,7 +41,7 @@ __all__ = (
     'LoopCollection',
     'builtin_function',
     'builtin_import',
-    'builtin_import_registery',
+    'builtin_import_registry',
     'split_positional_keyword_arguments',
 )
 
@@ -81,32 +81,45 @@ pyccel_mod = Module('pyccel',(),(),
         imports = [Import('decorators', decorators_mod)])
 
 # TODO add documentation
-builtin_import_registery = Module('__main__',
+builtin_import_registry = Module('__main__',
         (),(),
         imports = [
-            Import('numpy', AsName(numpy_mod,'numpy')),
-            Import('scipy', AsName(scipy_mod,'scipy')),
-            Import('itertools', AsName(itertools_mod,'itertools')),
-            Import('math', AsName(math_mod,'math')),
-            Import('pyccel', AsName(pyccel_mod,'pyccel')),
-            Import('sys', AsName(sys_mod,'sys')),
+            Import('numpy', numpy_mod),
+            Import('scipy', scipy_mod),
+            Import('itertools', itertools_mod),
+            Import('math', math_mod),
+            Import('pyccel', pyccel_mod),
+            Import('sys', sys_mod),
             ])
 if sys.version_info < (3, 10):
     from .builtin_imports import python_builtin_libs
 else:
     python_builtin_libs = set(sys.stdlib_module_names) # pylint: disable=no-member
 
-recognised_libs = python_builtin_libs | builtin_import_registery.keys()
+recognised_libs = python_builtin_libs | builtin_import_registry.keys()
 
 def recognised_source(source_name):
-    """ Determine whether the imported source is recognised by pyccel.
-    If it is not recognised then it should be imported and translated
+    """
+    Determine whether the imported source is recognised by pyccel.
+
+    Determine whether the imported source is recognised by pyccel.
+    If it is not recognised then it will need to be imported and translated.
+
+    Parameters
+    ----------
+    source_name : str
+        The name of the imported module.
+
+    Returns
+    -------
+    bool
+        True if the source is recognised, False otherwise.
     """
     source = str(source_name).split('.')
-    if source[0] in python_builtin_libs and source[0] not in builtin_import_registery.keys():
+    if source[0] in python_builtin_libs and source[0] not in builtin_import_registry.keys():
         return True
     else:
-        return source_name in builtin_import_registery
+        return source_name in builtin_import_registry
 
 #==============================================================================
 def collect_relevant_imports(module, targets):
@@ -140,7 +153,24 @@ def collect_relevant_imports(module, targets):
     return imports
 
 def builtin_import(expr):
-    """Returns a builtin pyccel-extension function/object from an import."""
+    """
+    Return a Pyccel-extension function/object from an import of a recognised module.
+
+    Examine an Import object which imports something which is recognised by
+    Pyccel internally. The object(s) imported are then returned for use in the
+    code.
+
+    Parameters
+    ----------
+    expr : Import
+        The expression which imports the module.
+
+    Returns
+    -------
+    list
+        A list of 2-tuples. The first element is the name of the imported object,
+        the second element is the object itself.
+    """
 
     if not isinstance(expr, Import):
         raise TypeError('Expecting an Import expression')
@@ -150,13 +180,13 @@ def builtin_import(expr):
     else:
         source = str(expr.source)
 
-    if source in builtin_import_registery:
+    if source in builtin_import_registry:
         if expr.target:
-            return collect_relevant_imports(builtin_import_registery[source], expr.target)
+            return collect_relevant_imports(builtin_import_registry[source], expr.target)
         elif isinstance(expr.source, AsName):
-            return [(expr.source.target, builtin_import_registery[source])]
+            return [(expr.source.target, builtin_import_registry[source])]
         else:
-            return [(expr.source, builtin_import_registery[source])]
+            return [(expr.source, builtin_import_registry[source])]
 
     return []
 
@@ -325,13 +355,16 @@ LoopCollection = namedtuple('LoopCollection', ['body', 'length', 'modified_vars'
 #==============================================================================
 def collect_loops(block, indices, new_index, language_has_vectors = False, result = None):
     """
+    Collect blocks of code into loops.
+
     Run through a code block and split it into lists of tuples of lists where
     each inner list represents a code block and the tuples contain the lists
     and the size of the code block.
     So the following:
-    a = a+b
+    `a = a+b`
     for a: int[:,:] and b: int[:]
     Would be returned as:
+    ```
     [
       ([
         ([a[i,j]=a[i,j]+b[j]],a.shape[1])
@@ -339,23 +372,28 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
        , a.shape[0]
       )
     ]
+    ```
 
     Parameters
-    ==========
-    block                 : list of Ast Nodes
-                            The expressions to be modified
-    indices               : list
-                            An empty list to be filled with the temporary variables created
-    new_index             : function (class method of a Scope)
-                            A function which provides a new variable from a base name,
-                            avoiding name collisions.
-    language_has_vectors  : bool
-                            Indicates if the language has support for vector
-                            operations of the same shape
-    Results
-    =======
-    block : list of tuples of lists
-            The modified expression
+    ----------
+    block : list of Ast Nodes
+        The expressions to be modified.
+    indices : list
+        An empty list to be filled with the temporary variables created.
+    new_index : function (class method of a Scope)
+        A function which provides a new variable from a base name,
+        avoiding name collisions.
+    language_has_vectors : bool
+        Indicates if the language has support for vector
+        operations of the same shape.
+    result : list, default: None
+        The list which will be returned. If none is provided, a new list
+        is created.
+
+    Returns
+    -------
+    list of tuples of lists
+        The modified expression.
     """
     if result is None:
         result = []
@@ -445,7 +483,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                         "which return tuples or None",
                         symbol=line, severity='fatal')
 
-            func_results = [f.funcdef.results[0] for f in funcs]
+            func_results = [f.funcdef.results[0].var for f in funcs]
             func_vars2 = [new_index(r.dtype, r.name) for r in func_results]
             assigns   += [Assign(v, f) for v,f in zip(func_vars2, funcs)]
 

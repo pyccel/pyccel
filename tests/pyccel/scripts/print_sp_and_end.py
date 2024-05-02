@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 #  ------------------------string with sep and end ---------------------------
 
 if __name__ == '__main__':

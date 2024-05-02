@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 #
 # Testing various kernels, adapted from
 # https://github.com/redmod-team/profit/blob/master/profit/sur/backend/kernels.py

@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 
 #$ header function pairwise_python(double[:,:],double[:,:])
 def pairwise_python (X, D) :

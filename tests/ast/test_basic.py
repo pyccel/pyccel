@@ -43,7 +43,7 @@ def test_get_attribute_nodes():
                 Variable('int', 'c'),
                 Variable('int', 'd'),
                 Variable('int', 'e'),
-                Variable('int', 'f')]
+                Variable('int', 'g')]
 
     for e in expected:
         assert(e in atts)
@@ -93,11 +93,8 @@ def test_get_user_nodes_excluded():
 
     a_var = atts[0]
 
-    ret_assign = a_var.get_user_nodes(Assign, excluded_nodes = (PyccelAdd,PyccelMinus))
-
-    assert(len(ret_assign) == 1)
-    ret = ret_assign[0].get_user_nodes(Return)
-    assert(len(ret)==1)
+    plus_assign = a_var.get_user_nodes(Assign, excluded_nodes = PyccelMinus)
+    assert(len(plus_assign)==2)
 
 def test_get_direct_user_nodes():
     filename = os.path.join(path_dir, "math.py")
@@ -152,7 +149,7 @@ def test_substitute_exclude():
     old_parents = set(a_var.get_user_nodes(Basic))
     assert(len(a_var.get_user_nodes(Basic))>0)
 
-    fst.substitute(a_var, new_var, excluded_nodes=(Return))
+    fst.substitute(a_var, new_var, excluded_nodes=(PyccelMinus))
 
     assert(len(a_var.get_user_nodes(Basic))==1)
 

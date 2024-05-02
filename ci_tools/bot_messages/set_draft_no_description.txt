@@ -1,0 +1,1 @@
+It seems like you may have forgotten to write a detailed description for this pull request. Please could you fix that and anything else missing from your checklist. Let me know when this is fixed with `/bot mark as ready`.

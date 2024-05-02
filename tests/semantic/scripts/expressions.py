@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 # this file is used inside imports.py
 # make sure that you update the imports.py file if needed
 # pylint: disable=unused-variable

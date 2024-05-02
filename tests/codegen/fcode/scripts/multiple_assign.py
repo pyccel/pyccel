@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 #$ header g(double, double) results(double, double)
 def g(x,v):
     m = x - v

@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 
 def set_i(x : 'float[:]', i : 'int', val : 'float'):
     x[i] = val

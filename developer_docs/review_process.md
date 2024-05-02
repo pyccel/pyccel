@@ -13,7 +13,7 @@ Once the pull request is opened 9 tests should be triggered they are:
 -   **Python Linting** : Does the same job as Codacy for certain files which are too large for Codacy to handle.
 -   **Pyccel Linting** : Runs a small static compiler to ensure that Pyccel coding guidelines are followed
 -   **Spellcheck** : Checks whether there are any spelling mistakes in the documentation (if a word is incorrectly flagged as a typo it should be added to the file [.dict_custom.txt](../.dict_custom.txt))
--   **Coverage Checker** : Checks that the code which has been added is used in at least one test
+-   **Coverage Checker** : Checks that the code which has been added is used in at least one test. Occasionally this test is overenthusiastic, it may therefore be disabled if an issue is created to find the problem at a later date.
 -   **Doc Coverage** : Runs the [numpydoc](https://numpydoc.readthedocs.io/en/latest/index.html) static compiler to ensure that docstrings are present and correctly formatted. This means that they should respect NumPy's style guide as described [here](https://numpydoc.readthedocs.io/en/latest/format.html).
 
 Many of these tests generate human-friendly output so make sure you check the "Summary" section of the action to see these.

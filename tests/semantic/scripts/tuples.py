@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 ai = (1,4,5)
 bi = ai[0]
 ci = 2 * ai[0]

@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 #$ header class Point(public)
 #$ header method __init__(Point)
 #$ header method __del__(Point)
