@@ -2354,6 +2354,10 @@ class CToPythonWrapper(Wrapper):
         list[PyccelAstNode]
             A list of expressions which extract the argument from collect_arg into arg_var.
         """
+        if arg_var.rank > 1:
+            errors.report("Wrapping multi-level tuples is not yet supported",
+                    severity='fatal', symbol=arg_var)
+
         assert not bound_argument
         idx = self.scope.get_temporary_variable(CNativeInt())
         size_var = self.scope.get_temporary_variable(PythonNativeInt(), f'{orig_var.name}_size')
