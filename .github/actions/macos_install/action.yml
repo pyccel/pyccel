@@ -10,7 +10,7 @@ runs:
         GFORTRAN_HOME=$(which gfortran || true)
         echo "GFORTRAN_HOME : $GFORTRAN_HOME"
         if [[ ! -f "$GFORTRAN_HOME" ]]; then
-          gfort=$(find ${PATH//:/\/ } -name 'gfortran-*' | tail -n 1 || true)
+          gfort=$(find ${PATH//:/\/ } -name 'gfortran-*' | sort | tail -n 1 || true)
           echo "Found $gfort"
           folder=$(dirname ${gfort})
           ln -s ${gfort} ${folder}/gfortran
