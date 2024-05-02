@@ -173,12 +173,15 @@ def test_multi_level_tuple_arg(language):
     def my_tuple(a : 'tuple[tuple[int,...],...]'):
         return len(a), len(a[0]), a[0][0], a[1][0], a[0][1], a[1][1]
 
-    #tuple_arg = ((1,2), (3,4))
+    tuple_arg = ((1,2), (3,4))
 
-    # Raises an error because tuples inside tuples may have different lengths
-    # This could be removed once lists are supported as the tuples could then
-    # be stored in lists instead of arrays.
-    with pytest.raises(PyccelError):
-        _ = epyccel(my_tuple, language=language)
+    if language != 'python':
+        # Raises an error because tuples inside tuples may have different lengths
+        # This could be removed once lists are supported as the tuples could then
+        # be stored in lists instead of arrays.
+        with pytest.raises(PyccelError):
+            _ = epyccel(my_tuple, language=language)
+    else:
+        epyc_func = epyccel(my_tuple, language=language)
 
-    #assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
+        assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
