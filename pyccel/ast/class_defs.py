@@ -7,16 +7,18 @@ This module contains all types which define a python class which is automaticall
 """
 from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
+from .c_concepts import CStackArray
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
-                        NativeComplex, NativeString, NativeNumeric)
+                        NativeComplex, NativeString, NativeNumeric,
+                        NativeTuple, CustomDataType)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpySize, NumpyResultType,
-                        NumpyArray)
+                        NumpyArray, NumpyNDArrayType)
 
 __all__ = ('BooleanClass',
         'IntegerClass',
-        'RealClass',
+        'FloatClass',
         'ComplexClass',
         'StringClass',
         'NumpyArrayClass',
@@ -26,7 +28,7 @@ __all__ = ('BooleanClass',
 
 #=======================================================================================
 
-ComplexClass = ClassDef('complex',
+ComplexClass = ClassDef('complex', class_type = NativeComplex(),
         methods=[
             PyccelFunctionDef('imag', func_class = PythonImag,
                 decorators={'property':'property', 'numpy_wrapper':'numpy_wrapper'}),
@@ -38,7 +40,7 @@ ComplexClass = ClassDef('complex',
 
 #=======================================================================================
 
-FloatClass = ClassDef('float',
+FloatClass = ClassDef('float', class_type = NativeFloat(),
         methods=[
             PyccelFunctionDef('imag', func_class = PythonImag,
                 decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
@@ -54,7 +56,7 @@ FloatClass = ClassDef('float',
 
 #=======================================================================================
 
-IntegerClass = ClassDef('integer',
+IntegerClass = ClassDef('integer', class_type = NativeInteger(),
         methods=[
             PyccelFunctionDef('imag', func_class = PythonImag,
                 decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
@@ -72,12 +74,12 @@ IntegerClass = ClassDef('integer',
 
 #=======================================================================================
 
-BooleanClass = ClassDef('boolean',
+BooleanClass = ClassDef('boolean', class_type = NativeBool(),
         superclasses=(IntegerClass,))
 
 #=======================================================================================
 
-StringClass = ClassDef('string',
+StringClass = ClassDef('string', class_type = NativeString(),
         methods=[
                 #capitalize
                 #casefold
@@ -128,7 +130,7 @@ StringClass = ClassDef('string',
 
 #=======================================================================================
 
-TupleClass = ClassDef('tuple',
+TupleClass = ClassDef('tuple', class_type = NativeTuple(),
         methods=[
             #index
             #count
@@ -136,7 +138,7 @@ TupleClass = ClassDef('tuple',
 
 #=======================================================================================
 
-NumpyArrayClass = ClassDef('numpy.ndarray',
+NumpyArrayClass = ClassDef('numpy.ndarray', class_type = NumpyNDArrayType(),
         methods=[
             PyccelFunctionDef('shape', func_class = NumpyShape,
                 decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
@@ -169,6 +171,10 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
 
 #=======================================================================================
 
+StackArrayClass = ClassDef('stack_array', class_type = CStackArray())
+
+#=======================================================================================
+
 literal_classes = {
         NativeBool()    : BooleanClass,
         NativeInteger() : IntegerClass,
@@ -179,7 +185,7 @@ literal_classes = {
 
 #=======================================================================================
 
-def get_cls_base(dtype, precision, rank):
+def get_cls_base(dtype, precision, container_type):
     """
     Determine the base class of an object.
 
@@ -193,8 +199,9 @@ def get_cls_base(dtype, precision, rank):
     precision : int
         The precision of the object.
 
-    rank : int
-        The rank of the object.
+    container_type : DataType
+        The Python type of the object. If this is different to the dtype then
+        the object is a container.
 
     Returns
     -------
@@ -206,14 +213,18 @@ def get_cls_base(dtype, precision, rank):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    if precision in (-1, 0, None) and rank == 0:
+    if isinstance(dtype, CustomDataType) and container_type is dtype:
+        return None
+    if precision in (-1, 0, None) and container_type is dtype:
         return literal_classes[dtype]
-    elif dtype in NativeNumeric:
+    elif dtype in NativeNumeric or isinstance(container_type, NumpyNDArrayType):
         return NumpyArrayClass
+    elif isinstance(container_type, NativeTuple):
+        return TupleClass
     else:
-        type_name = f"{dtype}({precision})"
-        if rank:
-            dims = ','.join(':' for _ in range(rank))
-            type_name += f"[{dims}]"
+        if container_type:
+            type_name = str(container_type)
+        else:
+            type_name = f"{dtype}({precision})"
         raise NotImplementedError(f"No class definition found for type {type_name}")
 

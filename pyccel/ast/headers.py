@@ -4,17 +4,13 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from pyccel.utilities.strings import create_incremented_string
 from ..errors.errors    import Errors
-from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import PyccelAstNode, iterable
 from .core              import Assign, FunctionCallArgument
-from .core              import FunctionDef, FunctionCall, FunctionAddress
-from .core              import FunctionDefArgument, FunctionDefResult
-from .datatypes         import datatype, DataTypeFactory, UnionType, default_precision
+from .core              import FunctionCall
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
-from .type_annotations  import SyntacticTypeAnnotation
+from .type_annotations  import SyntacticTypeAnnotation, UnionTypeAnnotation
 from .variable          import DottedName, DottedVariable
 from .variable          import Variable
 
@@ -307,11 +303,11 @@ class MethodHeader(FunctionHeader):
             raise TypeError("Expecting dtypes to be iterable.")
 
         for d in dtypes:
-            if not isinstance(d, (UnionType, SyntacticTypeAnnotation)):
+            if not isinstance(d, (UnionTypeAnnotation, SyntacticTypeAnnotation)):
                 raise TypeError("Wrong element in dtypes.")
 
         for d in results:
-            if not isinstance(d, (UnionType, SyntacticTypeAnnotation)):
+            if not isinstance(d, (UnionTypeAnnotation, SyntacticTypeAnnotation)):
                 raise TypeError("Wrong element in dtypes.")
 
 

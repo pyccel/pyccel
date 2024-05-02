@@ -81,7 +81,7 @@ def get_unique_name(prefix, path):
         tag = random_string(12)
         module_name = module_import_prefix + tag
 
-    module_name = module_name.split('.')[-1] + '_' + tag
+    module_name = module_name.split('.')[-1]
 
     # Create new directories if not existing
     os.makedirs(path, exist_ok=True)
@@ -104,6 +104,7 @@ def epyccel_seq(function_or_module, *,
                 wrapper_flags = None,
                 accelerators  = (),
                 verbose       = False,
+                time_execution  = False,
                 debug         = False,
                 includes      = (),
                 libdirs       = (),
@@ -138,6 +139,8 @@ def epyccel_seq(function_or_module, *,
         (currently supported: 'mpi', 'openmp', 'openacc').
     verbose : bool
         Print additional information (default: False).
+    time_execution : bool
+        Time the execution of Pyccel's internal stages.
     debug : bool, optional
         Enable debug mode.
     includes : tuple, optional
@@ -170,7 +173,7 @@ def epyccel_seq(function_or_module, *,
     # Store current directory
     base_dirpath = os.getcwd()
 
-    if isinstance(function_or_module, FunctionType):
+    if isinstance(function_or_module, (FunctionType, type)):
         dirpath = os.getcwd()
 
     elif isinstance(function_or_module, ModuleType):
@@ -178,7 +181,7 @@ def epyccel_seq(function_or_module, *,
 
     # Define working directory 'folder'
     if folder is None:
-        folder = os.path.dirname(dirpath)
+        folder = dirpath
     else:
         folder = os.path.abspath(folder)
 
@@ -187,7 +190,7 @@ def epyccel_seq(function_or_module, *,
     epyccel_dirpath = os.path.join(folder, epyccel_dirname)
 
     # ... get the module source code
-    if isinstance(function_or_module, FunctionType):
+    if isinstance(function_or_module, (FunctionType, type)):
         pyfunc = function_or_module
         code = get_source_function(pyfunc)
 
@@ -201,7 +204,7 @@ def epyccel_seq(function_or_module, *,
         module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
 
     else:
-        raise TypeError('> Expecting a FunctionType or a ModuleType')
+        raise TypeError('> Expecting a FunctionType, type or a ModuleType')
 
     # Try is necessary to ensure lock is released
     try:
@@ -224,6 +227,7 @@ def epyccel_seq(function_or_module, *,
             # Generate shared library
             execute_pyccel(pymod_filename,
                            verbose       = verbose,
+                           show_timings  = time_execution,
                            language      = language,
                            compiler      = compiler,
                            fflags        = fflags,
@@ -258,7 +262,7 @@ def epyccel_seq(function_or_module, *,
                 raise ImportError('Could not load shared library')
 
         # If Python object was function, extract it from module
-        if isinstance(function_or_module, FunctionType):
+        if isinstance(function_or_module, (FunctionType, type)):
             func = getattr(package, pyfunc.__name__)
         else:
             func = None
@@ -302,7 +306,7 @@ def epyccel( python_function_or_module, **kwargs ):
     >>> one_f = epyccel(one, language='fortran')
     >>> one_c = epyccel(one, language='c')
     """
-    assert isinstance( python_function_or_module, (FunctionType, ModuleType) )
+    assert isinstance( python_function_or_module, (FunctionType, type, ModuleType) )
 
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)

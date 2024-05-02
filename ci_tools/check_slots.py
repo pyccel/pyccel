@@ -180,7 +180,7 @@ if __name__ == '__main__':
 
     failure = (bool(error_collection['missing_all']) or # bool(error_collection['non_alphabetical_all']) or
               bool(error_collection['missing_slots']) or bool(error_collection['missing_attribute_nodes']) or
-              bool(error_collection['overridden_slots']))
+              bool(error_collection['overridden_slots']) or bool(error_collection['missing_from_all']))
 
 
     if failure:

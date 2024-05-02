@@ -26,6 +26,16 @@ interface pyc_lcm
     module procedure pyc_lcm_8
 end interface pyc_lcm
 
+interface amax
+    module procedure amax_4
+    module procedure amax_8
+end interface
+
+interface amin
+    module procedure amin_4
+    module procedure amin_8
+end interface
+
 contains
 
 ! Implementation of math factorial function
@@ -155,5 +165,95 @@ pure function pyc_degrees(rad) result(deg)
     return
 
 end function pyc_degrees
+
+! Implementation of numpy amax function
+function amax_4(arr) result(max_value)
+
+    implicit none
+
+    complex( C_FLOAT_COMPLEX)                :: max_value
+    complex( C_FLOAT_COMPLEX), intent(in)    :: arr(0:)
+    complex( C_FLOAT_COMPLEX)                :: a
+    integer(C_INT64_T)                       :: current_value
+
+    max_value = arr(0_C_INT64_T)
+    do current_value = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+      a = arr(current_value)
+      if (Real(a, C_FLOAT) > Real(max_value, C_FLOAT) .or. (Real(a, C_FLOAT) == &
+            Real(max_value, C_FLOAT) .and. aimag(a) > aimag(max_value &
+            ))) then
+        max_value = a
+      end if
+    end do
+    return
+
+  end function amax_4
+  
+  function amax_8(arr) result(max_value)
+
+    implicit none
+
+    complex(C_DOUBLE_COMPLEX)                :: max_value
+    complex(C_DOUBLE_COMPLEX), intent(in)    :: arr(0:)
+    complex(C_DOUBLE_COMPLEX)                :: a
+    integer(C_INT64_T)                       :: current_value
+
+    max_value = arr(0_C_INT64_T)
+    do current_value = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+      a = arr(current_value)
+      if (Real(a, C_DOUBLE) > Real(max_value, C_DOUBLE) .or. (Real(a, C_DOUBLE) == &
+            Real(max_value, C_DOUBLE) .and. aimag(a) > aimag(max_value &
+            ))) then
+        max_value = a
+      end if
+    end do
+    return
+
+  end function amax_8
+  
+! Implementation of numpy amin function
+function amin_4(arr) result(min_value)
+
+    implicit none
+
+    complex( C_FLOAT_COMPLEX)                :: min_value
+    complex( C_FLOAT_COMPLEX), intent(in)    :: arr(0:)
+    complex( C_FLOAT_COMPLEX)                :: a
+    integer(C_INT64_T)                       :: current_value
+
+    min_value = arr(0_C_INT64_T)
+    do current_value = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+      a = arr(current_value)
+      if (Real(a, C_FLOAT) < Real(min_value, C_FLOAT) .or. (Real(a, C_FLOAT) == &
+            Real(min_value, C_FLOAT) .and. aimag(a) < aimag(min_value &
+            ))) then
+        min_value = a
+      end if
+    end do
+    return
+
+  end function amin_4
+
+  function amin_8(arr) result(min_value)
+
+    implicit none
+
+    complex(C_DOUBLE_COMPLEX)                :: min_value
+    complex(C_DOUBLE_COMPLEX), intent(in)    :: arr(0:)
+    complex(C_DOUBLE_COMPLEX)                :: a
+    integer(C_INT64_T)                       :: current_value
+
+    min_value = arr(0_C_INT64_T)
+    do current_value = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+      a = arr(current_value)
+      if (Real(a, C_DOUBLE) < Real(min_value, C_DOUBLE) .or. (Real(a, C_DOUBLE) == &
+            Real(min_value, C_DOUBLE) .and. aimag(a) < aimag(min_value &
+            ))) then
+        min_value = a
+      end if
+    end do
+    return
+
+  end function amin_8
 
 end module pyc_math_f90

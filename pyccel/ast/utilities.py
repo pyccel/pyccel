@@ -5,22 +5,21 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-import inspect
 import sys
 from itertools import chain
 from collections import namedtuple
 
 import pyccel.decorators as pyccel_decorators
-from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors, PyccelError
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
-                            Concatenate, Decorator, Module, PyccelFunctionDef)
+                            Concatenate, Module, PyccelFunctionDef)
 
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
 from .cmathext      import cmath_mod
+from .datatypes     import NativeHomogeneousTuple
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, Nil
@@ -31,8 +30,8 @@ from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .scipyext      import scipy_mod
-from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable,
-                            HomogeneousTupleVariable )
+from .typingext     import typing_mod
+from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable )
 
 from .c_concepts import ObjectAddress
 
@@ -70,9 +69,6 @@ def builtin_function(expr, args=None):
                     symbol=expr,
                     severity='fatal')
 
-    if name == 'lambdify':
-        return lambdify(expr, args)
-
     return None
 
 #==============================================================================
@@ -92,6 +88,7 @@ builtin_import_registry = Module('__main__',
             Import('math', math_mod),
             Import('pyccel', pyccel_mod),
             Import('sys', sys_mod),
+            Import('typing', typing_mod)
             ])
 if sys.version_info < (3, 10):
     from .builtin_imports import python_builtin_libs
@@ -659,12 +656,18 @@ def insert_fors(blocks, indices, scope, level = 0):
 #==============================================================================
 def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
     """
-    Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines
+    Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines.
+
+    Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines.
+    These changes are carried out in-place.
 
     Parameters
-    ==========
-    block      : CodeBlock
-                The expression to be modified
+    ----------
+    block : CodeBlock
+        The expression to be modified.
+
+    language_has_vectors : bool, default=False
+        Indicates whether the target language has built-in support for vector operations.
 
     Examples
     --------
@@ -682,13 +685,14 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
     """
     if not language_has_vectors:
         allocs_to_unravel = [a for a in block.get_attribute_nodes(Assign) \
-                    if isinstance(a.lhs, HomogeneousTupleVariable) \
-                    and isinstance(a.rhs, (HomogeneousTupleVariable, Duplicate, Concatenate))]
+                    if isinstance(a.lhs, Variable) \
+                    and isinstance(a.lhs.class_type, NativeHomogeneousTuple) \
+                    and isinstance(a.rhs.class_type, NativeHomogeneousTuple)]
         new_allocs = [(Assign(a.lhs, NumpyEmpty(a.lhs.shape,
                                      dtype=a.lhs.dtype,
                                      order=a.lhs.order)
-                    ), a) if a.lhs.on_stack
-                    else (a) if a.lhs.on_heap
+                    ), a) if getattr(a.lhs, 'on_stack', False)
+                    else (a) if getattr(a.lhs, 'on_heap', False)
                     else (Allocate(a.lhs,
                             shape=a.lhs.shape,
                             order = a.lhs.order,

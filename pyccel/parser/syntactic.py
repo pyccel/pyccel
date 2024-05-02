@@ -167,7 +167,6 @@ class SyntaxParser(BasicParser):
 
         # TODO - add settings to Errors
         #      - filename
-        errors.set_parser_stage('syntax')
 
         pyccel_stage.set_stage('syntactic')
         ast       = self._visit(self.fst)
@@ -244,7 +243,7 @@ class SyntaxParser(BasicParser):
             txt = line[1:].lstrip()
             expr = Comment(txt)
 
-        expr.set_fst(stmt)
+        expr.set_current_ast(stmt)
         return expr
 
     def _treat_type_annotation(self, stmt, annotation):
@@ -271,10 +270,8 @@ class SyntaxParser(BasicParser):
         """
         if isinstance(annotation, (tuple, list)):
             return UnionTypeAnnotation(*[self._treat_type_annotation(stmt, a) for a in annotation])
-        if isinstance(annotation, (PyccelSymbol, DottedName)):
-            return SyntacticTypeAnnotation(dtypes=[annotation], ranks=[0], orders=[None], is_const=False)
-        elif isinstance(annotation, IndexedElement):
-            return SyntacticTypeAnnotation(dtypes=[annotation], ranks=[len(annotation.indices)], orders=[None], is_const=False)
+        if isinstance(annotation, (PyccelSymbol, DottedName, IndexedElement)):
+            return SyntacticTypeAnnotation(dtype=annotation)
         elif isinstance(annotation, LiteralString):
             try:
                 annotation = types_meta.model_from_str(annotation.python_value)
@@ -282,11 +279,11 @@ class SyntaxParser(BasicParser):
                 errors.report(f"Invalid header. {e.message}",
                         symbol = stmt, column = e.col,
                         severity='fatal')
-            annot = SyntacticTypeAnnotation.build_from_textx(annotation)
+            annot = annotation.expr
             if isinstance(stmt, PyccelAstNode):
-                annot.set_fst(stmt.fst)
+                annot.set_current_ast(stmt.python_ast)
             else:
-                annot.set_fst(stmt)
+                annot.set_current_ast(stmt)
             return annot
         elif annotation is Nil():
             return None
@@ -302,7 +299,25 @@ class SyntaxParser(BasicParser):
     #====================================================
 
     def _visit(self, stmt):
-        """Creates AST from FST."""
+        """
+        Build the AST from the AST parsed by Python.
+
+        The annotation is done by finding the appropriate function _visit_X
+        for the object expr. X is the type of the object expr. If this function
+        does not exist then the method resolution order is used to search for
+        other compatible _visit_X functions. If none are found then an error is
+        raised.
+
+        Parameters
+        ----------
+        stmt : ast.stmt
+            Object to visit of type X.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            AST object which is the syntactic equivalent of stmt.
+        """
 
         # TODO - add settings to Errors
         #      - line and column
@@ -313,8 +328,8 @@ class SyntaxParser(BasicParser):
         if hasattr(self, syntax_method):
             self._context.append(stmt)
             result = getattr(self, syntax_method)(stmt)
-            if isinstance(result, PyccelAstNode) and result.fst is None and isinstance(stmt, ast.AST):
-                result.set_fst(stmt)
+            if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
+                result.set_current_ast(stmt)
             self._context.pop()
             return result
 
@@ -377,24 +392,6 @@ class SyntaxParser(BasicParser):
 
         return stmt
 
-    def _visit_Str(self, stmt):
-        val =  stmt.s
-        if isinstance(self._context[-2], ast.Expr):
-            return CommentBlock(val)
-        return LiteralString(val)
-
-    def _visit_Num(self, stmt):
-        val = stmt.n
-
-        if isinstance(val, int):
-            return LiteralInteger(val)
-        elif isinstance(val, float):
-            return LiteralFloat(val)
-        elif isinstance(val, complex):
-            return LiteralComplex(val.real, val.imag)
-        else:
-            raise NotImplementedError('Num type {} not recognised'.format(type(val)))
-
     def _visit_Assign(self, stmt):
 
         self._in_lhs_assign = True
@@ -408,8 +405,6 @@ class SyntaxParser(BasicParser):
         rhs = self._visit(stmt.value)
 
         expr = Assign(lhs, rhs)
-
-        # we set the fst to keep track of needed information for errors
 
         return expr
 
@@ -447,6 +442,7 @@ class SyntaxParser(BasicParser):
             return Assign(annotated_lhs, rhs)
 
     def _visit_arguments(self, stmt):
+        is_class_method = len(self._context) > 2 and isinstance(self._context[-3], ast.ClassDef)
 
         if stmt.vararg or stmt.kwarg:
             errors.report(VARARGS, symbol = stmt,
@@ -462,7 +458,7 @@ class SyntaxParser(BasicParser):
                 annotation=self._treat_type_annotation(a, self._visit(a.annotation))
                 new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                                             annotation=annotation)
-                new_arg.set_fst(a)
+                new_arg.set_current_ast(a)
                 arguments.append(new_arg)
 
             for a,d in zip(stmt.args[n_expl:], stmt.defaults):
@@ -470,8 +466,20 @@ class SyntaxParser(BasicParser):
                 new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                                             annotation=annotation,
                                             value = self._visit(d))
-                new_arg.set_fst(a)
+                new_arg.set_current_ast(a)
                 arguments.append(new_arg)
+
+        headers = self.scope.find(self._context[-2].name, 'headers') \
+                if isinstance(self._context[-2], ast.FunctionDef) else None
+
+        if is_class_method and not headers:
+            expected_self_arg = arguments[0]
+            if expected_self_arg.annotation is None:
+                class_name = self._context[-3].name
+                annotation = self._treat_type_annotation(class_name, PyccelSymbol(class_name))
+                arguments[0] = FunctionDefArgument(AnnotatedPyccelSymbol(expected_self_arg.name, annotation),
+                                            annotation=annotation,
+                                            value = expected_self_arg.value)
 
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
@@ -480,7 +488,7 @@ class SyntaxParser(BasicParser):
                 arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                             annotation=annotation,
                             value=val, kwonly=True)
-                arg.set_fst(a)
+                arg.set_current_ast(a)
 
                 arguments.append(arg)
 
@@ -509,24 +517,12 @@ class SyntaxParser(BasicParser):
             return LiteralComplex(stmt.value.real, stmt.value.imag)
 
         elif isinstance(stmt.value, str):
-            return self._visit_Str(stmt)
+            if isinstance(self._context[-2], ast.Expr):
+                return CommentBlock(stmt.value)
+            return LiteralString(stmt.value)
 
         else:
             raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
-
-    def _visit_NameConstant(self, stmt):
-        if stmt.value is None:
-            return Nil()
-
-        elif stmt.value is True:
-            return LiteralTrue()
-
-        elif stmt.value is False:
-            return LiteralFalse()
-
-        else:
-            raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
-
 
     def _visit_Name(self, stmt):
         name = PyccelSymbol(stmt.id)
@@ -553,7 +549,7 @@ class SyntaxParser(BasicParser):
             else:
                 source = self._treat_import_source(imp, 0)
             import_line = Import(source)
-            import_line.set_fst(stmt)
+            import_line.set_current_ast(stmt)
             self.insert_import(import_line)
             expr.append(import_line)
 
@@ -731,7 +727,7 @@ class SyntaxParser(BasicParser):
         is_private   = False
         is_inline    = False
         imports      = []
-        doc_string   = None
+        docstring   = None
 
         decorators = {}
 
@@ -921,7 +917,7 @@ class SyntaxParser(BasicParser):
             # TODO maybe we should run pylint here
             stmt.decorators.pop()
             func = SympyFunction(name, arguments, [], [str(stmt)])
-            func.set_fst(stmt)
+            func.set_current_ast(stmt)
             self.insert_function(func)
             return EmptyNode()
 
@@ -930,8 +926,8 @@ class SyntaxParser(BasicParser):
 
         # Collect docstring
         if len(body) > 0 and isinstance(body[0], CommentBlock):
-            doc_string = body[0]
-            doc_string.header = ''
+            docstring = body[0]
+            docstring.header = ''
             body = body[1:]
 
         body = CodeBlock(body)
@@ -948,7 +944,7 @@ class SyntaxParser(BasicParser):
 
         local_symbols = self.scope.local_used_symbols
 
-        if result_annotation and not isinstance(result_annotation, tuple):
+        if result_annotation and not isinstance(result_annotation, (tuple, list)):
             result_annotation = [result_annotation]
 
         for i,r in enumerate(zip(*returns)):
@@ -967,7 +963,7 @@ class SyntaxParser(BasicParser):
                 result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation[i])
 
             results.append(FunctionDefResult(result_name, annotation = result_annotation))
-            results[-1].set_fst(stmt)
+            results[-1].set_current_ast(stmt)
 
         self.exit_function_scope()
 
@@ -982,7 +978,7 @@ class SyntaxParser(BasicParser):
                is_private=is_private,
                imports=imports,
                decorators=decorators,
-               doc_string=doc_string,
+               docstring=docstring,
                scope=scope)
 
         return func
@@ -990,28 +986,30 @@ class SyntaxParser(BasicParser):
     def _visit_ClassDef(self, stmt):
 
         name = stmt.name
+        self.scope.insert_symbol(name)
         scope = self.create_new_class_scope(name)
         methods = []
         attributes = []
+        docstring = None
         for i in stmt.body:
             visited_i = self._visit(i)
             if isinstance(visited_i, FunctionDef):
                 methods.append(visited_i)
+                visited_i.arguments[0].bound_argument = True
             elif isinstance(visited_i, Pass):
-                return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
+                continue
             elif isinstance(visited_i, AnnotatedPyccelSymbol):
                 attributes.append(visited_i)
+            elif isinstance(visited_i, CommentBlock):
+                docstring = visited_i
             else:
                 errors.report(f"{type(visited_i)} not currently supported in classes",
                         severity='error', symbol=visited_i)
-        for i in methods:
-            i.cls_name = name
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,
-                        methods=methods, superclasses=parent, scope=scope)
-
-        # we set the fst to keep track of needed information for errors
+                        methods=methods, superclasses=parent, scope=scope,
+                        docstring = docstring)
 
         return expr
 
@@ -1058,11 +1056,11 @@ class SyntaxParser(BasicParser):
 
         args = []
         if stmt.args:
-            args += [FunctionCallArgument(self._visit(a), fst=a) for a in stmt.args]
+            args += [FunctionCallArgument(self._visit(a), python_ast=a) for a in stmt.args]
         if stmt.keywords:
             kwargs = self._visit(stmt.keywords)
             for k, a in zip(kwargs, stmt.keywords):
-                k.set_fst(a)
+                k.set_current_ast(a)
 
             args += kwargs
 
@@ -1119,6 +1117,10 @@ class SyntaxParser(BasicParser):
 
         self.exit_loop_scope()
 
+        if stmt.ifs:
+            errors.report("Cannot handle if statements in list comprehensions. List length cannot be calculated.\n" + PYCCEL_RESTRICTION_TODO,
+                    symbol=stmt, severity='error')
+
         expr = For(iterator, iterable, [], scope=scope)
         return expr
 
@@ -1146,11 +1148,11 @@ class SyntaxParser(BasicParser):
         target = IndexedElement(lhs, *args)
         target = Assign(target, result)
         assign1 = Assign(index, LiteralInteger(0))
-        assign1.set_fst(stmt)
-        target.set_fst(stmt)
+        assign1.set_current_ast(stmt)
+        target.set_current_ast(stmt)
         generators[-1].insert2body(target)
         assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
-        assign2.set_fst(stmt)
+        assign2.set_current_ast(stmt)
         generators[-1].insert2body(assign2)
 
         indices = [generators[-1].target]
@@ -1189,7 +1191,7 @@ class SyntaxParser(BasicParser):
             body = FunctionCall(name, (lhs, body))
             body = Assign(lhs, body)
 
-        body.set_fst(parent)
+        body.set_current_ast(parent)
         indices = []
         generators = list(generators)
         while len(generators) > 0:
@@ -1211,7 +1213,7 @@ class SyntaxParser(BasicParser):
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='error')
 
-        expr.set_fst(parent)
+        expr.set_current_ast(parent)
 
         return expr
 

@@ -70,6 +70,8 @@ if __name__ == '__main__':
         outcome = values[1] if len(values) >= 2 else None
         out_file = values[2] if len(values) >= 3 else None
 
+        fails = {}
+
         if out_file is not None and os.path.exists(out_file):
             with open(out_file , 'r', encoding='utf-8') as f:
                 outfile = f.read()
@@ -80,8 +82,6 @@ if __name__ == '__main__':
 
             failed_matches = failed_pattern.findall(outfile, re.MULTILINE)
             failed_matches = [re.sub(r'.*FAILED ', "- ``", string) for string in failed_matches]
-
-            fails = {}
 
             for lang in languages:
                 failed_matches = pattern[lang].findall(outfile, re.MULTILINE)

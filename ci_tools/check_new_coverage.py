@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     new_untested = cov.allow_untested_debug_code(new_untested)
 
-    old_comments, new_comments, fixed_comments = cov.get_json_summary(new_untested, file_contents, commented_lines)
+    old_comments, new_comments, fixed_comments = cov.get_json_summary(new_untested, file_contents, commented_lines, diff)
 
     success = cov.evaluate_success(old_comments, new_comments, commented_lines)
 

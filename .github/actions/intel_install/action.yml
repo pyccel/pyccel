@@ -13,18 +13,18 @@ runs:
       with:
         path: |
           /opt/intel/oneapi/
-        key: ${{ runner.os }}-intel-2023
+        key: ${{ runner.os }}-intel-2024
         restore-keys: |
           ${{ runner.os }}-intel-
     - name: Install Intel OneAPI
       if: steps.cache-intel-restore.outputs.cache-hit != 'true'
       run: |
-        # See https://github.com/oneapi-src/oneapi-ci
-        wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
-        sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
-        echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
-        sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/oneAPI.list" -o APT::Get::List-Cleanup="0"
-        sudo apt-get install -y intel-oneapi-compiler-fortran intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-openmp intel-oneapi-mkl intel-oneapi-mpi-devel
+        # See https://www.intel.com/content/www/us/en/developer/tools/oneapi/hpc-toolkit-download.html?operatingsystem=linux&distributions=aptpackagemanager
+        wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+          | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+        echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt update
+        sudo apt install intel-hpckit
       shell: bash
     - name: Save Intel environment variables
       run: |

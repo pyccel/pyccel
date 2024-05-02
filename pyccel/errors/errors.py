@@ -16,6 +16,7 @@ from os.path import basename
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.utilities.metaclasses import Singleton
+from pyccel.utilities.stage import PyccelStage
 
 # ...
 #ERROR = 'error'
@@ -56,6 +57,7 @@ _severity_registry = {'error': ERROR,
                       'fatal': FATAL,
                       'warning': WARNING}
 
+pyccel_stage = PyccelStage()
 
 class PyccelError(Exception):
     def __init__(self, message, errors=''):
@@ -86,7 +88,7 @@ class ErrorInfo:
     Parameters
     ----------
     stage : str
-        The parser stage when the error occured.
+        The Pyccel stage when the error occured.
 
     filename : str
         The file where the error was detected.
@@ -196,14 +198,9 @@ class Errors(metaclass = Singleton):
     def __init__(self):
         self.error_info_map = None
         self._target = None
-        self._parser_stage = None
         self._mode = ErrorsMode()
 
         self.initialize()
-
-    @property
-    def parser_stage(self):
-        return self._parser_stage
 
     @property
     def target(self):
@@ -224,10 +221,6 @@ class Errors(metaclass = Singleton):
 
     def reset(self):
         self.initialize()
-
-    def set_parser_stage(self, stage):
-        assert(stage in ['syntax', 'semantic', 'codegen'])
-        self._parser_stage = stage
 
     def set_target(self, target, kind):
         assert(kind in ['file', 'module', 'function', 'class'])
@@ -258,8 +251,8 @@ class Errors(metaclass = Singleton):
         """
         Report an error.
 
-        Report message at the given line using the current error context.
-        stage: 'syntax', 'semantic' or 'codegen'.
+        Report message at the given line using the current error context
+        stage: 'syntactic', 'semantic' 'codegen', or 'cwrapper'.
 
         Parameters
         ----------
@@ -306,23 +299,23 @@ class Errors(metaclass = Singleton):
             line   = bounding_box[0]
             column = bounding_box[1]
 
-        fst = None
+        ast_node = None
 
         if symbol is not None:
             if isinstance(symbol, ast.AST):
-                fst = symbol
+                ast_node = symbol
                 if sys.version_info < (3, 9):
-                    symbol = ast.dump(fst)
+                    symbol = ast.dump(ast_node)
                 else:
-                    symbol = ast.unparse(fst) # pylint: disable=no-member
+                    symbol = ast.unparse(ast_node) # pylint: disable=no-member
             elif isinstance(symbol, PyccelAstNode):
-                fst = symbol.fst
+                ast_node = symbol.python_ast
 
-        if fst:
+        if ast_node:
             if line is None:
-                line   = getattr(fst, 'lineno', None)
+                line   = getattr(ast_node, 'lineno', None)
             if column is None:
-                column = getattr(fst, 'col_offset', None)
+                column = getattr(ast_node, 'col_offset', None)
 
         if self.mode == 'developer':
             if traceback:
@@ -332,7 +325,7 @@ class Errors(metaclass = Singleton):
         else:
             traceback = None
 
-        info = ErrorInfo(stage=self._parser_stage,
+        info = ErrorInfo(stage=pyccel_stage.current_stage,
                          filename=filename,
                          message=message,
                          line=line,
@@ -346,11 +339,11 @@ class Errors(metaclass = Singleton):
         self.add_error_info(info)
 
         if info.blocker:
-            if self._parser_stage == 'syntax':
+            if pyccel_stage == 'syntactic':
                 raise PyccelSyntaxError(message)
-            elif self._parser_stage == 'semantic':
+            elif pyccel_stage == 'semantic':
                 raise PyccelSemanticError(message)
-            elif self._parser_stage == 'codegen':
+            elif pyccel_stage == 'codegen':
                 raise PyccelCodegenError(message)
             else:
                 raise PyccelError(message)
