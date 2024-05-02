@@ -39,7 +39,7 @@ packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
 install_requires = [
     'numpy',
     'scipy',
-    'sympy>=1.2',
+    'sympy>=1.2,<1.5',
     'textx>=1.6',
     'pylint>=1.8',
     'parse>=1.8',
