@@ -160,12 +160,12 @@ def test_homogeneous_tuples_template_args(language):
     tuple_float_arg = (4., 5., 6.)
 
     int_pyth = my_tuple(tuple_int_arg)
-    int_epyc = my_tuple(tuple_int_arg)
+    int_epyc = epyc_func(tuple_int_arg)
     assert int_pyth == int_epyc
     assert isinstance(int_epyc[1], int)
 
     float_pyth = my_tuple(tuple_float_arg)
-    float_epyc = my_tuple(tuple_float_arg)
+    float_epyc = epyc_func(tuple_float_arg)
     assert float_pyth == float_epyc
     assert isinstance(float_epyc[1], float)
 
@@ -173,12 +173,12 @@ def test_multi_level_tuple_arg(language):
     def my_tuple(a : 'tuple[tuple[int,...],...]'):
         return len(a), len(a[0]), a[0][0], a[1][0], a[0][1], a[1][1]
 
-    tuple_arg = ((1,2), (3,4))
+    #tuple_arg = ((1,2), (3,4))
 
     # Raises an error because tuples inside tuples may have different lengths
     # This could be removed once lists are supported as the tuples could then
     # be stored in lists instead of arrays.
     with pytest.raises(PyccelError):
-        epyc_func = epyccel(my_tuple, language=language)
+        _ = epyccel(my_tuple, language=language)
 
     #assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
