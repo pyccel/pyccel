@@ -1185,7 +1185,6 @@ class CCodePrinter(CodePrinter):
             dtype = dtype.element_type._name
             key = cointainer_type + dtype
             source = 'stc/'+ cointainer_type + dtype
-        
             self.add_import(Import(source, Module(dtype, (), ())))
             return key
         else:
