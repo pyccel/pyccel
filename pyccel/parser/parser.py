@@ -207,7 +207,7 @@ class Parser(object):
         not_treated = [i for i in source_to_filename.values() if i not in treated]
         for filename in not_treated:
             if verbose:
-                print ('>>> treating :: {}'.format(source))
+                print ('>>> treating :: {}'.format(filename))
 
             # get the absolute path corresponding to source
             if filename in d_parsers_by_filename:

@@ -38,6 +38,20 @@ internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_
                                                                              internal_libs["cwrapper"][1])))
 
 #==============================================================================
+
+def not_a_copy(src_folder, dst_folder, filename):
+    """ Check if the file filename present in src_folder
+    is a copy of the file filename present in dst_folder
+    or if the source file has been updated since the last
+    copy
+    """
+    abs_src_file = os.path.join(src_folder, filename)
+    abs_dst_file = os.path.join(dst_folder, filename)
+    src_mod_time = os.path.getatime(abs_src_file)
+    dst_mod_time = os.path.getatime(abs_dst_file)
+    return src_mod_time > dst_mod_time
+
+#==============================================================================
 def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     """
     Copy an internal library from its specified stdlib folder to the pyccel
@@ -67,24 +81,54 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     # new one from pyccel stdlib
     lib_dest_path = os.path.join(pyccel_dirpath, lib_folder)
     with FileLock(lib_dest_path + '.lock'):
-        to_copy = False
+        # Check if folder exists
         if not os.path.exists(lib_dest_path):
-            to_copy = True
+            to_create = True
+            to_update = False
         else:
+            to_create = False
+            # If folder exists check if it needs updating
             src_files = os.listdir(lib_path)
             dst_files = os.listdir(lib_dest_path)
-            outdated = any(s not in dst_files for s in src_files)
-            if not outdated:
-                outdated = any(os.path.getmtime(os.path.join(lib_path, s)) > os.path.getmtime(os.path.join(lib_dest_path,s)) for s in src_files)
-            if outdated:
-                shutil.rmtree(lib_dest_path)
-                to_copy = True
-        if to_copy:
+            # Check if all files are present in destination
+            to_update = any(s not in dst_files for s in src_files)
+
+            # Check if original files have been modified
+            if not to_update:
+                to_update = any(not_a_copy(lib_path, lib_dest_path, s) for s in src_files)
+
+        if to_create:
+            # Copy all files from the source to the destination
             shutil.copytree(lib_path, lib_dest_path)
+            # Create any requested extra files
             if extra_files:
                 for filename, contents in extra_files.items():
                     with open(os.path.join(lib_dest_path, filename), 'w') as f:
                         f.writelines(contents)
+        elif to_update:
+            locks = []
+            for s in src_files:
+                base, ext = os.path.splitext(s)
+                if ext != '.h':
+                    locks.append(FileLock(os.path.join(lib_dest_path, base+'.o.lock')))
+            # Acquire locks to avoid compilation problems
+            for l in locks:
+                l.acquire()
+            # Remove all files in destination directory
+            for d in dst_files:
+                os.remove(os.path.join(lib_dest_path, d))
+            # Copy all files from the source to the destination
+            for s in src_files:
+                shutil.copyfile(os.path.join(lib_path, s),
+                        os.path.join(lib_dest_path, s))
+            # Create any requested extra files
+            if extra_files:
+                for filename, contents in extra_files.items():
+                    with open(os.path.join(lib_dest_path, filename), 'w') as f:
+                        f.writelines(contents)
+            # Release the locks
+            for l in locks:
+                l.release()
     return lib_dest_path
 
 #==============================================================================

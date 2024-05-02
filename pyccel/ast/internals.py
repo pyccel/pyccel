@@ -71,7 +71,7 @@ class PyccelArraySize(PyccelInternalFunction):
     _dtype = NativeInteger()
     _precision = -1
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, arg, index):

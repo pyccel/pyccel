@@ -10,6 +10,7 @@ jobs:
 
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: [3.7, 3.8, 3.9, '3.10']
 
@@ -183,7 +184,8 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
-          auto-activate-base: true
+          activate-environment: test
+          python-version: "3.10"
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
@@ -192,7 +194,6 @@ jobs:
           mpi_type: msmpi
       - name: Fortran/C tests with pytest
         run: |
-          which python
           python -m pytest -n auto -rX -m "not (parallel or xdist_incompatible or external) and c" --ignore=symbolic --ignore=ndarrays
           python -m pytest -rX -m "xdist_incompatible and not parallel and c and not external" --ignore=symbolic --ignore=ndarrays
           pyccel-clean
@@ -202,8 +203,8 @@ jobs:
           python -m pytest ndarrays/ -rX
           pyccel-clean
         working-directory: ./tests
-        shell: "bash -l {0}"
+        shell: bash -l -eo pipefail {0}
       - name: Python tests with pytest
         uses: ./.github/actions/pytest_run_python
         with:
-          shell_cmd: "bash -l {0}"
+          shell_cmd: 'bash -l -eo pipefail {0}'

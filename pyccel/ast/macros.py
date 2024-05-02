@@ -58,7 +58,7 @@ class MacroShape(Macro):
     def __init__(self, argument, index=None):
         if index is not None:
             self._rank = 0
-            self._shape = ()
+            self._shape = None
         elif pyccel_stage != "syntactic":
             self._rank      = int(argument.rank>1)
             self._shape     = (argument.rank,)
@@ -87,7 +87,7 @@ class MacroType(Macro):
     _dtype     = NativeGeneric()
     _precision = 0
     _rank      = 0
-    _shape     = ()
+    _shape     = None
     _order     = None
 
     def __str__(self):
@@ -101,7 +101,7 @@ class MacroCount(Macro):
     _dtype     = NativeInteger()
     _precision = -1
     _rank      = 0
-    _shape     = ()
+    _shape     = None
     _order     = None
 
     def __str__(self):

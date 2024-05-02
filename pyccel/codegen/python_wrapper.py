@@ -15,11 +15,14 @@ from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.utilities      import internal_libs
 from pyccel.naming                 import name_clash_checkers
 from pyccel.parser.scope           import Scope
+from pyccel.utilities.stage        import PyccelStage
 from .compiling.basic     import CompileObj
 
 from pyccel.errors.errors import Errors
 
 errors = Errors()
+
+pyccel_stage = PyccelStage()
 
 __all__ = ['create_shared_library']
 
@@ -33,6 +36,8 @@ def create_shared_library(codegen,
                           wrapper_compiler,
                           sharedlib_modname=None,
                           verbose = False):
+
+    pyccel_stage.set_stage('cwrapper')
 
     # Get module name
     module_name = codegen.name

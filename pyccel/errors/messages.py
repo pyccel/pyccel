@@ -30,7 +30,7 @@ INCOMPATIBLE_ARGUMENT = 'Argument {} : {}, passed to function {} is incompatible
 INCOMPATIBLE_ORDERING = "Argument {idx} : {arg}, passed to function {func} is incompatible as it has the wrong ordering (expected '{order}'). Please use an argument with '{order}' ordering, explicitly transpose {arg}, or overload the function (see https://github.com/pyccel/pyccel/blob/master/tutorial/headers.md for details)"
 UNRECOGNISED_FUNCTION_CALL = 'Function call cannot be processed. Please ensure that your code runs correctly in python. If this is the case then you may be using function arguments which are not currently supported by pyccel. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
 
-UNSUPPORTED_ARRAY_RETURN_VALUE = 'Array return arguments are currently not supported'
+UNSUPPORTED_POINTER_RETURN_VALUE = "returning a pointer is not implemented yet."
 UNSUPPORTED_ARRAY_RANK = 'Arrays of dimensions > 15 are currently not supported'
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
@@ -131,6 +131,7 @@ UNDEFINED_METHOD   = 'Undefined method'
 UNDEFINED_VARIABLE = 'Undefined variable'
 UNDEFINED_INDEXED_VARIABLE = 'Undefined indexed variable'
 UNDEFINED_IMPORT_OBJECT = 'Could not find {} in imported module {}'
+UNDERSCORE_NOT_A_THROWAWAY = "Variables named '_' are assumed to be throwaways so their value cannot be used"
 
 REDEFINING_VARIABLE = 'Variable already defined'
 
@@ -147,8 +148,6 @@ ARRAY_IS_ARG = 'Attempt to reallocate an array which is an argument. Array argum
 INVALID_POINTER_REASSIGN = 'Attempt to give data ownership to a pointer'
 INVALID_INDICES = 'only integers and slices (`:`) are valid indices'
 
-INVALID_WHERE_ARGUMENT = 'Numpy Where function takes 3 positional arguments'
-
 # warnings
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'
 FOUND_SYMBOLIC_ASSIGN = 'Found symbolic assignment [Ignored]'
@@ -159,3 +158,5 @@ TEMPLATE_IN_UNIONTYPE = 'Cannot use templates in a union type'
 DUPLICATED_SIGNATURE = 'Same signature defined for the same function multiple times'
 INVALID_MACRO_COMPOSITION = 'Invalid macro composition'
 WRONG_LINSPACE_ENDPOINT = 'endpoint argument must be boolean'
+NON_LITERAL_KEEP_DIMS = 'keep_dims argument must be a literal, otherwise rank is unknown'
+NON_LITERAL_AXIS = 'axis argument must be a literal, otherwise pyccel cannot determine which dimension to operate on'

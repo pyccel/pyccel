@@ -14,12 +14,14 @@ The aim of **Pyccel** is to provide a simple way to generate automatically, para
 -   _Python-to-Fortran/C_ converter
 -   a compiler for a _Domain Specific Language_ with _Python_ syntax
 
-Pyccel comes with a selection of **extensions** allowing you to convert calls to some specific python packages to Fortran/C. The following packages will be covered (partially):
+Pyccel comes with a selection of **extensions** allowing you to convert calls to some specific Python packages to Fortran/C. The following packages will be covered (partially):
 
 -   numpy
 -   scipy
 -   mpi4py (not available yet)
 -   h5py (not available yet)
+
+Pyccel's acceleration capabilities lead to much faster code. A small speed comparison of Python vs Pyccel or other tools can be found in the [performance](./performance.md) file.
 
 If you are eager to try Pyccel out, we recommend reading our [quick-start guide](./tutorial/quickstart.md)
 
@@ -165,11 +167,11 @@ This requires that the Command Line Tools (CLT) for Xcode are installed.
 
 Support for Windows is still experimental, and the installation of all requirements is more cumbersome.
 We recommend using [Chocolatey](https://chocolatey.org/) to speed up the process, and we provide commands that work in a git-bash sh.
-In an Administrator prompt install git-bash (if needed), a Python3 Anaconda distribution, and a GCC compiler:
+In an Administrator prompt install git-bash (if needed), a Python3 distribution, and a GCC compiler:
 
 ```sh
 choco install git
-choco install anaconda3
+choco install python3
 choco install mingw
 ```
 
@@ -224,16 +226,31 @@ dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
 cd -
 ```
 
-Before installing Pyccel and using it, the Anaconda environment should be activated with:
-
+On Windows it is important that all locations containing DLLs are on the PATH. If you have added any variables to locations which are not on the PATH then you need to add them:
 ```sh
-source /c/tools/Anaconda3/etc/profile.d/conda.sh
-conda activate
+echo $PATH
+export PATH=$LIBRARY_DIR;$PATH
 ```
 
-On Windows and/or Anaconda Python, use `pip` instead of `pip3` for the Installation of pyccel below.
+[As of Python 3.8](https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew) it is also important to tell Python which directories contain trusted DLLs. In order to use Pyccel this should include all folders containing DLLs used by your chosen compiler. The function which communicates this to Python is: [`os.add_dll_directory`](https://docs.python.org/3/library/os.html#os.add_dll_directory).
+E.g:
+```python
+import os
+os.add_dll_directory(C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib')
+os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin')
+```
+
+These commands must be run every time a Python instance is opened which will import a Pyccel-generated library.
+
+If you use Pyccel often and aren't scared of debugging any potential DLL confusion from other libraries. You can use a `.pth` file to run the necessary commands automatically. The location where the `.pth` file should be installed is described in the [python docs](https://docs.python.org/3/library/site.html). Once the site is located you can run:
+```sh
+echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin')" > $SITE_PATH/dll_path.pth
+```
+(The command may need adapting for your installation locations)
 
 ## Installation
+
+On Windows and/or Anaconda Python, use `pip` instead of `pip3` for the Installation of Pyccel below.
 
 ### From PyPi
 
@@ -274,13 +291,13 @@ Any required Python packages will be installed automatically from PyPI.
 
 ### On a read-only system
 
-If the folder where pyccel is saved is read only, it may be necessary to run an additional command after installation or updating:
+If the folder where Pyccel is saved is read only, it may be necessary to run an additional command after installation or updating:
 ```sh
 sudo pyccel-init
 ```
 
 This step is necessary in order to [pickle header files](./tutorial/header-files.md#Pickling-header-files).
-If this command is not run then pyccel will still run correctly but may be slower when using [OpenMP](./tutorial/openmp.md) or other supported external packages.
+If this command is not run then Pyccel will still run correctly but may be slower when using [OpenMP](./tutorial/openmp.md) or other supported external packages.
 A warning, reminding the user to execute this command, will be printed to the screen when pyccelizing files which rely on these packages if the pickling step has not been executed.
 
 ## Additional packages
@@ -318,9 +335,9 @@ The images:
 -   use distro packaged python3, gcc, gfortran, blas and openmpi
 -   support all pyccel releases except the legacy "0.1"
 
-Image tags match pyccel releases.
+Image tags match Pyccel releases.
 
-In order to implement your pyccel accelerated code, you can use a host based volume during the pyccel container creation.
+In order to implement your Pyccel-accelerated code, you can use a host based volume during the Pyccel container creation.
 
 For example:
 

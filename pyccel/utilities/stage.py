@@ -12,6 +12,7 @@ class PyccelStage(metaclass = Singleton):
      - syntactic
      - semantic
      - codegen
+     - cwrapper
 
     When Pyccel is not executing the stage is None
     """
@@ -21,7 +22,7 @@ class PyccelStage(metaclass = Singleton):
     def set_stage(self, stage):
         """ Set the current treatment stage
         """
-        assert stage in ('syntactic', 'semantic', 'codegen')
+        assert stage in ('syntactic', 'semantic', 'codegen', 'cwrapper')
         self._stage = stage
 
     def __eq__(self, other):

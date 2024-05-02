@@ -35,6 +35,8 @@
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html
  */
+enum NPY_TYPES get_numpy_type(t_ndarray *o);
+enum e_types get_ndarray_type(PyArrayObject *a);
 t_ndarray	pyarray_to_ndarray(PyArrayObject *o);
 PyObject* ndarray_to_pyarray(t_ndarray *o);
 PyObject* c_ndarray_to_pyarray(t_ndarray *o);

@@ -78,7 +78,7 @@ __all__ = (
 class MathFunctionBase(PyccelInternalFunction):
     """Abstract base class for the Math Functions"""
     __slots__ = ()
-    _shape = ()
+    _shape = None
     _rank  = 0
     _order = None
 
