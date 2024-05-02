@@ -3489,6 +3489,15 @@ def test_tuple_sum(language):
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
+#==============================================================================
+# NUMPY LINSPACE
+#==============================================================================
+
+def test_multiple_np_linspace(language):
+    f1 = arrays.multiple_np_linspace
+    f2 = epyccel(f1, language = language)
+    assert f1() == f2()
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
