@@ -4,19 +4,13 @@
 # to test different versions of python, check the numpy travis file on:
 #   https://github.com/numpy/numpy/blob/master/.travis.yml
 
-sudo: required
 language: python
-
-# Existing Python versions
+os: linux
+dist: xenial
 python:
-  - "3.5"
-  - "3.6"
-
-# Enable 3.7 without globally enabling 'dist: xenial' for other build jobs
-matrix:
-  include:
-    - python: 3.7
-      dist: xenial
+  - 3.5
+  - 3.6
+  - 3.7
 
 # command before installation
 before_install:
@@ -53,7 +47,8 @@ script:
   - python -m pytest ../tests/errors/test_errors.py
   - python -m pytest ../tests/warnings/test_warnings.py
   - python -m pytest ../tests/semantic/test_semantic.py
-  - python -m pytest ../tests/codegen/test_codegen.py
+  - python -m pytest ../tests/codegen/fcode/test_fcode_codegen.py
+  - python -m pytest ../tests/codegen/pycode/test_pycode_codegen.py
   - python -m pytest ../tests/complexity/test_complexity.py
   - python -m pytest ../tests/epyccel -v -m "not parallel"
   - python -m pytest ../tests/pyccel/test_pyccel.py -v

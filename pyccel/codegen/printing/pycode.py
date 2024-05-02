@@ -12,6 +12,7 @@ from sympy.printing.pycode import _known_functions_math
 from sympy.printing.pycode import _known_constants_math
 
 from pyccel.ast.utilities  import build_types_decorator
+from pyccel.ast.core       import CodeBlock
 
 #==============================================================================
 def _construct_header(func_name, args):
@@ -56,7 +57,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_FunctionDef(self, expr):
         name = self._print(expr.name)
-        body = '\n'.join(self._print(i) for i in expr.body)
+        body = self._print(expr.body)
         body = self._indent_codestring(body)
         args = ', '.join(self._print(i) for i in expr.arguments)
 
@@ -125,7 +126,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         if not isinstance(target,(list, tuple, Tuple)):
             target = [target]
         target = ','.join(self._print(i) for i in target)
-        body   = '\n'.join(self._print(i) for i in expr.body)
+        body   = self._print(expr.body)
         body   = self._indent_codestring(body)
         code   = ('for {0} in {1}:\n'
                 '{2}\n').format(target,iter,body)
@@ -207,10 +208,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             else:
                 lines.append("elif (%s):" % self._print(c))
 
-            if isinstance(e, (list, tuple, Tuple)):
-                for ee in e:
-                    body = self._indent_codestring(self._print(ee))
-                    lines.append(body)
+            if isinstance(e, CodeBlock):
+                body = self._indent_codestring(self._print(e))
+                lines.append(body)
             else:
                 lines.append(self._print(e))
         return "\n".join(lines)
@@ -244,6 +244,8 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
         return 'print({0})'.format(fs)
 
+    def _print_Module(self, expr):
+        return '\n'.join(self._print(e) for e in expr.body)
 #==============================================================================
 def pycode(expr, **settings):
     """ Converts an expr to a string of Python code
@@ -261,4 +263,5 @@ def pycode(expr, **settings):
     >>> pycode(tan(Symbol('x')) + 1)
     'math.tan(x) + 1'
     """
+    settings.pop('parser', None)
     return PythonCodePrinter(settings).doprint(expr)

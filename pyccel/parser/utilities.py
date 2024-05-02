@@ -213,7 +213,7 @@ def get_module_name( dotted_as_node ):
         return import_name.dumps().split('.')
 
 def preprocess_imports(red):
-    imports = red.find_all("import", recursive = False)
+    imports = red.find_all("import")
     code_names = []
     idx = 0
     while idx < len(imports):
