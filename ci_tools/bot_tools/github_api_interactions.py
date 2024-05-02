@@ -767,7 +767,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/requested_reviewers"
         review_requests = {}
         if request_team:
-            review_requests['team_reviewers'] = 'pyccel/pyccel-dev'
+            review_requests['team_reviewers'] = ['pyccel-dev']
         if reviewers:
             review_requests['reviewers'] = list(reviewers)
 

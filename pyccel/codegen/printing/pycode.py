@@ -704,11 +704,13 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyArray(self, expr):
         name = self._get_numpy_name(expr)
+        arg_var = expr.arg
 
-        arg   = self._print(expr.arg)
+        arg   = self._print(arg_var)
         dtype = self._print_dtype_argument(expr, expr.init_dtype)
         order = f"order='{expr.order}'" if expr.order else ''
-        args  = ', '.join(a for a in [arg, dtype, order] if a!= '')
+        ndmin = f"ndmin={expr.rank}" if expr.rank > arg_var.rank else ''
+        args  = ', '.join(a for a in [arg, dtype, order, ndmin] if a!= '')
         return f"{name}({args})"
 
     def _print_NumpyAutoFill(self, expr):

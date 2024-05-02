@@ -33,8 +33,6 @@ min_float64 = finfo('float64').min
 max_float64 = finfo('float64').max
 
 # Functions still to be tested:
-#    array
-#    # ...
 #    diag
 #    cross
 #    # ---
@@ -5986,3 +5984,56 @@ def test_result_type(language):
     assert matching_types(epyccel_type_comparison(), type_comparison())
     assert matching_types(epyccel_type_comparison2(), type_comparison2())
     assert matching_types(epyccel_value_types(), value_types())
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip("Template causes problems with order"),
+            pytest.mark.python]
+        ),
+    )
+)
+def test_copy(language):
+    @template('T', ['int[:]', 'float[:,:]', 'complex[:,:,:](order=F)'])
+    def copy_array(a : 'T'):
+        b = a.copy()
+        return b
+
+    @template('T', ['float[:,:]', 'complex[:,:,:](order=F)'])
+    def copy_array_to_F(a : 'T'):
+        b = a.copy(order='F')
+        return b
+
+    @template('T', ['float[:,:]', 'complex[:,:,:](order=F)'])
+    def copy_array_to_C(a : 'T'):
+        b = a.copy(order='C')
+        return b
+
+    arr_1d = randint(min_int, max_int, size=5)
+    arr_2d = uniform(min_float64 / 2, max_float64 / 2, size=(3,4))
+    arr_3d = (uniform(min_float64 / 2, max_float64 / 2, size=(3,4,5)) \
+            + uniform(min_float64 / 2, max_float64 / 2, size=(3,4,5))*1j).T
+
+    funcs = [(f.__name__, f, epyccel(f, language=language)) for f in (copy_array, copy_array_to_F, copy_array_to_C)]
+
+    _, f, epyc_f = funcs[0]
+    res_1d_pyt = f(arr_1d)
+    res_1d_pyc = epyc_f(arr_1d)
+    assert np.array_equal(res_1d_pyt, res_1d_pyc)
+    assert res_1d_pyt.dtype is res_1d_pyc.dtype
+
+    for _, f, epyc_f in funcs:
+        res_2d_pyt = f(arr_2d)
+        res_2d_pyc = epyc_f(arr_2d)
+        assert np.array_equal(res_2d_pyt, res_2d_pyc)
+        assert res_2d_pyt.dtype is res_2d_pyc.dtype
+        assert res_2d_pyt.flags.c_contiguous == res_2d_pyc.flags.c_contiguous
+        assert res_2d_pyt.flags.f_contiguous == res_2d_pyc.flags.f_contiguous
+
+        res_3d_pyt = f(arr_3d)
+        res_3d_pyc = epyc_f(arr_3d)
+        assert np.array_equal(res_3d_pyt, res_3d_pyc)
+        assert res_3d_pyt.dtype is res_3d_pyc.dtype
+        assert res_3d_pyt.flags.c_contiguous == res_3d_pyc.flags.c_contiguous
+        assert res_3d_pyt.flags.f_contiguous == res_3d_pyc.flags.f_contiguous

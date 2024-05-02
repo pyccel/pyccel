@@ -1,56 +1,49 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import numpy as np
 
-#$ header function incr_(int)
-def incr_(x):
-    #$ header function decr_(int)
-    def decr_(y):
-        y = y-1
-        return y
-    x = x + 1
+def incr_(x : int):
+    x = x + 2
     return x
 
 def helloworld():
     print('hello world')
 
-#$ header function incr(int)
-def incr(x):
+def incr(x : int):
     x = x + 1
     return x
 
-#$ header function decr(int) results(int)
-def decr(x):
+def decr(x : int) -> int:
     y = x - 1
     return y
 
-#$ header function incr_array(int [:])
-def incr_array(x):
+def incr_array(x : 'int[:]'):
     x[:] = x + 1
 
-y_=[1,2,3]
+y_ = np.array([1,2,3])
 
-# #$ header function decr_array([int]) results([int])
-# def decr_array(x):
+# def decr_array(x : int) -> int:
 #     y_[1] = 6
 #     z = y_
 #     t = y_+x
 #     return t
 
-#$ header function decr_array(int [:])
-def decr_array(x):
+def decr_array(x : 'int[:]'):
     x[:] = x - 1
 
-#$ header function f1(int, int, int) results(int)
-def f1(x, n=2, m=3):
+def f1(x : int, n : int = 2, m : int = 3) -> int:
     y = x - n*m
     return y
 
-#$ header function f2(int, int) results(int)
-def f2(x, m=None):
+def f2(x : int, m : int = None):
     if m is None:
         y = x + 1
     else:
         y = x - 1
     return y
+
+def my_print(a : 'int[:]'):
+    print(a)
+
 
 y = decr(2)
 z = f1(1)
@@ -69,3 +62,4 @@ if __name__ == '__main__':
     print(z)
     print(z1)
     print(z2)
+    my_print(np.array([1,2,3]))

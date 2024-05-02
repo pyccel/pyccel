@@ -892,8 +892,15 @@ class SemanticParser(BasicParser):
             The semantic representation of the call.
         """
         if isinstance(func, PyccelFunctionDef):
+            argument_description = func.argument_description
             func = func.cls_name
             args, kwargs = split_positional_keyword_arguments(*args)
+
+            # Ignore values passed by position but add any unspecified keywords
+            # with the correct default value
+            for kw, val in list(argument_description.items())[len(args):]:
+                if kw not in kwargs:
+                    kwargs[kw] = val
 
             try:
                 new_expr = func(*args, **kwargs)
@@ -1827,7 +1834,7 @@ class SemanticParser(BasicParser):
     def _visit_FunctionCallArgument(self, expr):
         value = self._visit(expr.value)
         a = FunctionCallArgument(value, expr.keyword)
-        if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
+        if isinstance(value, (PyccelArithmeticOperator, PyccelInternalFunction)) and value.rank:
             tmp_var = self.scope.get_new_name()
             assign = self._visit(Assign(tmp_var, expr.value, fst = expr.value.fst))
             self._additional_exprs[-1].append(assign)
