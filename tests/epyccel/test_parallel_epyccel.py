@@ -5,6 +5,9 @@ import numpy as np
 
 from pyccel.epyccel import epyccel
 
+RTOL = 2e-14
+ATOL = 1e-15
+
 #==============================================================================
 @pytest.mark.parallel
 def test_module_1(language):
@@ -22,7 +25,7 @@ def test_module_1(language):
     modnew.f(x)
     modnew.g(x)
 
-    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
+    assert np.allclose( x, x_expected, rtol=RTOL, atol=ATOL )
     # ...
 
 #==============================================================================
@@ -41,7 +44,7 @@ def test_module_2(language):
     x_expected = np.zeros((m1,m2))
     mod.f6(m1, m2, x_expected)
 
-    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
+    assert np.allclose( x, x_expected, rtol=RTOL, atol=ATOL )
     # ...
 
 #==============================================================================

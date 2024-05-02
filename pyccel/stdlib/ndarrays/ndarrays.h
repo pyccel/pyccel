@@ -6,11 +6,7 @@
 #ifndef NDARRAYS_H
 # define NDARRAYS_H
 
-# include <stdlib.h>
 # include <complex.h>
-# include <string.h>
-# include <stdio.h>
-# include <stdarg.h>
 # include <stdbool.h>
 # include <stdint.h>
 
@@ -130,6 +126,7 @@ t_ndarray   array_slicing(t_ndarray arr, int n, ...);
 
 /* assigns */
 void        alias_assign(t_ndarray *dest, t_ndarray src);
+void        transpose_alias_assign(t_ndarray *dest, t_ndarray src);
 
 /* free */
 int32_t         free_array(t_ndarray dump);

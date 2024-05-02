@@ -183,8 +183,10 @@ class PyccelOperator(PyccelAstNode):
         Otherwise it defaults to 'C'
         """
         if self._rank is not None and self._rank > 1:
-            if all(a.order == self._args[0].order for a in self._args):
-                self._order = self._args[0].order
+            orders = [a.order for a in self._args if a.order is not None]
+            my_order = orders[0]
+            if all(o == my_order for o in orders):
+                self._order = my_order
             else:
                 self._order = 'C'
         else:

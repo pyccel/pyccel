@@ -17,7 +17,7 @@ from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
 
 from pyccel.codegen.pipeline import execute_pyccel
-from pyccel.errors.errors import PyccelError, ErrorsMode
+from pyccel.errors.errors import ErrorsMode
 
 __all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
 

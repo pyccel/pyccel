@@ -6,6 +6,7 @@
 #$ header metavar module_version = '4.5'
 #$ header metavar import_all = True
 #$ header metavar save=True
+#$ header metavar no_target=True
 
 # ............................................................
 #            Runtime Library Routines for Fortran

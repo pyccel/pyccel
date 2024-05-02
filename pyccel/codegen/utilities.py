@@ -22,11 +22,13 @@ __all__ = ['copy_internal_library','recompile_object']
 language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 
 #==============================================================================
-def copy_internal_library(lib_folder, pyccel_dirpath):
+def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     """
     Copy an internal library from its specified stdlib folder to the pyccel
     directory. The copy is only done if the files are not already present or
-    if the files have changed since they were last copied
+    if the files have changed since they were last copied. Extra files can be
+    added to the folder if and when the copy occurs (e.g. for specifying
+    the numpy version compatibility)
 
     Parameters
     ----------
@@ -34,6 +36,9 @@ def copy_internal_library(lib_folder, pyccel_dirpath):
                      The name of the folder to be copied, relative to the stdlib folder
     pyccel_dirpath : str
                      The location that the folder should be copied to
+    extra_files    : dict
+                     A dictionary whose keys are the names of any files to be created
+                     in the folder and whose values are the contents of the file
 
     Results
     -------
@@ -46,8 +51,9 @@ def copy_internal_library(lib_folder, pyccel_dirpath):
     # new one from pyccel stdlib
     lib_dest_path = os.path.join(pyccel_dirpath, lib_folder)
     with FileLock(lib_dest_path + '.lock'):
+        to_copy = False
         if not os.path.exists(lib_dest_path):
-            shutil.copytree(lib_path, lib_dest_path)
+            to_copy = True
         else:
             src_files = os.listdir(lib_path)
             dst_files = os.listdir(lib_dest_path)
@@ -56,7 +62,13 @@ def copy_internal_library(lib_folder, pyccel_dirpath):
                 outdated = any(os.path.getmtime(os.path.join(lib_path, s)) > os.path.getmtime(os.path.join(lib_dest_path,s)) for s in src_files)
             if outdated:
                 shutil.rmtree(lib_dest_path)
-                shutil.copytree(lib_path, lib_dest_path)
+                to_copy = True
+        if to_copy:
+            shutil.copytree(lib_path, lib_dest_path)
+            if extra_files:
+                for filename, contents in extra_files.items():
+                    with open(os.path.join(lib_dest_path, filename), 'w') as f:
+                        f.writelines(contents)
     return lib_dest_path
 
 #==============================================================================

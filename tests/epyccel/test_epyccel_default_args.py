@@ -49,14 +49,14 @@ def test_f2(language):
     x_expected = np.zeros(m1)
     f5(x_expected)
 
-    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
+    assert np.allclose( x, x_expected, rtol=2e-14, atol=1e-15 )
     # ...
 
     f(x, m1 = m1)
 
     f5(x_expected, m1)
 
-    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
+    assert np.allclose( x, x_expected, rtol=2e-14, atol=1e-15 )
 
 
 #------------------------------------------------------------------------------

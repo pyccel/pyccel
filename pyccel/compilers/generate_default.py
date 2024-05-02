@@ -16,7 +16,7 @@ gfort_info = {'exec' : 'gfortran',
               'language': 'fortran',
               'module_output_flag': '-J',
               'debug_flags': ("-fcheck=bounds",),
-              'release_flags': ("-O3",),
+              'release_flags': ("-O3","-funroll-loops",),
               'general_flags' : ('-fPIC',),
               'standard_flags' : ('-std=f2003',),
               'mpi': {
@@ -42,7 +42,7 @@ ifort_info = {'exec' : 'ifort',
               'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-check=bounds",),
-              'release_flags': ("-O3",),
+              'release_flags': ("-O3","-funroll-loops",),
               'general_flags' : ('-fPIC',),
               'standard_flags' : ('-std=f2003',),
               'openmp': {
@@ -61,7 +61,7 @@ pgfortran_info = {'exec' : 'pgfortran',
               'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-Mbounds",),
-              'release_flags': ("-O3",),
+              'release_flags': ("-O3","-Munroll",),
               'general_flags' : ('-fPIC',),
               'standard_flags' : ('-Mstandard',),
               'openmp': {
@@ -79,7 +79,7 @@ nvfort_info = {'exec' : 'nvfort',
               'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-Mbounds",),
-              'release_flags': ("-O3",),
+              'release_flags': ("-O3","-Munroll",),
               'general_flags' : ('-fPIC',),
               'standard_flags' : ('-Mstandard',),
               'openmp': {
@@ -96,7 +96,7 @@ gcc_info = {'exec' : 'gcc',
             'mpi_exec' : 'mpicc',
             'language': 'c',
             'debug_flags': ("-g",),
-            'release_flags': ("-O3",),
+            'release_flags': ("-O3","-funroll-loops",),
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'openmp': {
@@ -117,7 +117,7 @@ icc_info = {'exec' : 'icc',
             'mpi_exec' : 'mpiicc',
             'language': 'c',
             'debug_flags': ("-g",),
-            'release_flags': ("-O3",),
+            'release_flags': ("-O3","-funroll-loops",),
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'openmp': {
@@ -134,7 +134,7 @@ pgcc_info = {'exec' : 'pgcc',
             'mpi_exec' : 'pgcc',
             'language': 'c',
             'debug_flags': ("-g",),
-            'release_flags': ("-O3",),
+            'release_flags': ("-O3","-Munroll",),
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'openmp': {
@@ -151,7 +151,7 @@ nvc_info = {'exec' : 'nvc',
             'mpi_exec' : 'nvc',
             'language': 'c',
             'debug_flags': ("-g",),
-            'release_flags': ("-O3",),
+            'release_flags': ("-O3","-Munroll",),
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'openmp': {
@@ -181,7 +181,7 @@ def change_to_lib_flag(lib):
 python_version = sysconfig.get_python_version()
 config_vars = sysconfig.get_config_vars()
 linker_flags = [change_to_lib_flag(l) for l in
-                    config_vars.get("BLDLIBRARY","").split() + \
+                    config_vars.get("LIBRARY","").split() + \
                     config_vars.get("LDSHARED","").split()[1:]]
 python_info = {
         "libs" : config_vars.get("LIBM","").split(), # Strip -l from beginning
