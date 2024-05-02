@@ -33,8 +33,8 @@ def idiv_gt_add(a, m, n):
     return a//m > n+1
 
 #==============================================================================
-def test_mod_eq_pow():
-    test = epyccel_test(mod_eq_pow)
+def test_mod_eq_pow(language):
+    test = epyccel_test(mod_eq_pow, lang=language)
     # True
     test.compare_epyccel(10, 3, 1)
     test.compare_epyccel(19, 10, 3)
@@ -44,8 +44,8 @@ def test_mod_eq_pow():
     test.compare_epyccel(19, 10, 1)
     test.compare_epyccel(21, 3, 1)
 
-def test_mod_neq_pow():
-    test = epyccel_test(mod_neq_pow)
+def test_mod_neq_pow(language):
+    test = epyccel_test(mod_neq_pow, lang=language)
     # True
     test.compare_epyccel(10, 5, 2)
     test.compare_epyccel(19, 10, 1)
@@ -55,8 +55,8 @@ def test_mod_neq_pow():
     test.compare_epyccel(19, 10, 3)
     test.compare_epyccel(21, 3, 0)
 
-def test_idiv_gt_add():
-    test = epyccel_test(idiv_gt_add)
+def test_idiv_gt_add(language):
+    test = epyccel_test(idiv_gt_add, lang=language)
     # True
     test.compare_epyccel(10, 3, 2)
     test.compare_epyccel(8, 2, 2)

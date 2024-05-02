@@ -5,52 +5,29 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-import importlib
 from collections     import OrderedDict
 
-from sympy import sympify
-from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
-from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
-from sympy import Integral, Symbol
-from sympy import Lambda
-from sympy import Integer as sp_Integer
-from sympy import Float as sp_Float, Rational as sp_Rational
-from sympy import preorder_traversal
-
-from sympy.simplify.radsimp   import fraction
-from sympy.core.compatibility import with_metaclass
-from sympy.core.singleton     import Singleton, S
-from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
-from sympy.core.function      import _coeff_isneg
-from sympy.core.expr          import Expr, AtomicExpr
-from sympy.logic.boolalg      import And as sp_And, Or as sp_Or
-from sympy.logic.boolalg      import Boolean as sp_Boolean
-from sympy.tensor             import Idx, Indexed, IndexedBase
-
-from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
-from sympy.utilities.iterables          import iterable
+from sympy.logic.boolalg      import And as sp_And
 
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
 
-from .basic     import Basic, PyccelAstNode
-from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
-                        PythonRange, PythonZip, PythonTuple, PythonBool)
-from .datatypes import (datatype, DataType, NativeSymbol,
-                        NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeTuple, is_iterable_datatype, str_dtype)
-from .internals      import PyccelInternalFunction, PyccelArraySize, Slice
+from pyccel.utilities.metaclasses import Singleton
 
-from .literals       import LiteralTrue, LiteralFalse, LiteralInteger, Nil
-from .literals       import LiteralImaginaryUnit, LiteralString, Literal
-from .literals       import Nil
+from .basic     import Basic, PyccelAstNode, iterable
+from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
+                        PythonRange, PythonZip, PythonBool, Lambda)
+from .datatypes import (datatype, DataType, NativeSymbol,
+                        NativeBool, NativeRange,
+                        NativeTuple, is_iterable_datatype, str_dtype)
+from .internals      import Slice, PyccelSymbol
+
+from .literals       import LiteralInteger, Nil, convert_to_literal
 from .itertoolsext   import Product
-from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-from .operators import PyccelMul
+from .operators import PyccelMul, Relational
 
 from .variable import DottedName, DottedVariable, IndexedElement
 from .variable import ValuedVariable, Variable
@@ -76,7 +53,6 @@ __all__ = (
     'CodeBlock',
     'Comment',
     'CommentBlock',
-    'Concatenate',
     'ConstructorCall',
     'Continue',
     'Declare',
@@ -85,82 +61,46 @@ __all__ = (
     'Dlist',
     'DoConcurrent',
     'EmptyNode',
-    'ErrorExit',
-    'Eval',
-    'Exit',
     'BindCFunctionDef',
     'For',
-    'ForAll',
     'ForIterator',
     'FunctionCall',
     'FunctionDef',
-    'GetDefaultFunctionArg',
     'If',
-    'IfTernaryOperator',
     'Import',
     'Interface',
-    'Load',
     'ModOp',
     'Module',
     'ModuleHeader',
     'MulOp',
     'NativeOp',
-    'NewLine',
-    'ParallelBlock',
-    'ParallelRange',
     'ParserResult',
     'Pass',
     'Program',
     'PythonFunction',
-    'Random',
     'Return',
     'SeparatorComment',
     'StarredArguments',
     'SubOp',
-    'Subroutine',
-    'SumFunction',
     'SymbolicAssign',
     'SymbolicPrint',
     'SympyFunction',
-    'Tensor',
-    'Tile',
-    'TupleImport',
     'ValuedArgument',
-    'Void',
-    'VoidFunction',
     'While',
     'With',
-    '_atomic',
-#    'allocatable_like',
     'create_variable',
     'create_incremented_string',
-    'extract_subexpressions',
-#    'float2int',
     'get_assigned_symbols',
     'get_initial_value',
     'get_iterable_ranges',
     'inline',
-    'int2float',
-#    'is_simple_assign',
-    'local_sympify',
 #    'operator',
 #    'op_registry',
     'process_shape',
-    'subs',
-    'OMP_For_Loop',
-    'OMP_Parallel_Construct',
-    'OMP_Single_Construct',
-    'Omp_End_Clause'
+    'subs'
 )
 
 #==============================================================================
-local_sympify = {
-    'N'    : Symbol('N'),
-    'S'    : Symbol('S'),
-    'zeros': Symbol('zeros'),
-    'ones' : Symbol('ones'),
-    'Point': Symbol('Point')
-}
 
 # TODO - add EmptyStmt => empty lines
 #      - update code examples
@@ -175,7 +115,7 @@ def apply(func, args, kwargs):return func(*args, **kwargs)
 #==============================================================================
 def subs(expr, new_elements):
     """
-    Substitutes old for new in an expression after sympifying args.
+    Substitutes old for new in an expression.
 
     Parameters
     ----------
@@ -220,231 +160,17 @@ def subs(expr, new_elements):
         new_expr = expr.subs(new_elements)
         new_expr.set_fst(expr.fst)
         return new_expr
-    elif isinstance(expr, Expr):
+    elif isinstance(expr, PyccelAstNode):
         return expr.subs(new_elements)
 
     else:
         return expr
-
-
-def allocatable_like(expr, verbose=False):
-    """
-    finds attributes of an expression
-
-    Parameters
-    ----------
-    expr: Expr
-        a pyccel expression
-
-    verbose: bool
-        talk more
-    """
-
-    if isinstance(expr, (Variable, IndexedElement)):
-        return expr
-    elif isinstance(expr, str):
-        # if the rhs is a string
-        return expr
-    elif isinstance(expr, Expr):
-        args = [expr]
-        while args:
-            a = args.pop()
-            # XXX: This is a hack to support non-Basic args
-            if isinstance(a, str):
-                continue
-
-            if a.is_Mul:
-                if _coeff_isneg(a):
-                    if a.args[0] is S.NegativeOne:
-                        a = a.as_two_terms()[1]
-                    else:
-                        a = -a
-                (n, d) = fraction(a)
-                if n.is_Integer:
-                    args.append(d)
-                    continue  # won't be -Mul but could be Add
-                elif d is not S.One:
-                    if not d.is_Integer:
-                        args.append(d)
-                    args.append(n)
-                    continue  # could be -Mul
-            elif a.is_Add:
-                aargs = list(a.args)
-                negs = 0
-                for ai in aargs:
-                    if _coeff_isneg(ai):
-                        negs += 1
-                        args.append(-ai)
-                    else:
-                        args.append(ai)
-                continue
-            if a.is_Pow and a.exp is S.NegativeOne:
-                args.append(a.base)  # won't be -Mul but could be Add
-                continue
-            if a.is_Mul or a.is_Pow or a.is_Function or \
-                    isinstance(a, (Derivative, Integral)):
-
-                o = Symbol(a.func.__name__.upper())
-            if not a.is_Symbol and not isinstance(a, (IndexedElement,
-                    FunctionCall)):
-                args.extend(a.args)
-
-            if isinstance(a, (Variable, IndexedElement)):
-                return a
-            elif a.is_Symbol:
-                raise TypeError('Found an unknown symbol {0}'.format(str(a)))
-    else:
-        raise TypeError('Unexpected type {0}'.format(type(expr)))
-
-
-
-def _atomic(e, cls=None,ignore=()):
-
-    """Return atom-like quantities as far as substitution is
-    concerned: Functions and DottedVarviables, Variables. we don't
-    return atoms that are inside such quantities too
-    """
-
-    pot = preorder_traversal(e)
-    seen = []
-    atoms_ = []
-    if cls is None:
-        cls = (Application, Variable, IndexedElement)
-
-    for p in pot:
-        if p in seen or isinstance(p, ignore):
-            pot.skip()
-            continue
-        seen.append(p)
-        if isinstance(p, cls):
-            pot.skip()
-            atoms_.append(p)
-
-    return atoms_
-
-
-
-def extract_subexpressions(expr):
-    """this function takes an expression and returns a list
-      of statements if this expression contains sub expressions that need
-      to be evaluated outside of the expression
-
-
-      Parameters
-      ----------
-      expr : Add, Mul, Pow, FunctionCall
-
-    """
-
-    stmts = []
-    cls   = (sp_Add, sp_Mul, sp_Pow, sp_And,
-             sp_Or, sp_Eq, sp_Ne, sp_Lt, sp_Gt,
-             sp_Le, sp_Ge)
-
-    id_cls = (Symbol, Indexed, IndexedBase,
-              DottedVariable, sp_Float, sp_Integer,
-              sp_Rational, LiteralImaginaryUnit,sp_Boolean,
-              LiteralTrue, LiteralFalse, LiteralString,
-              ValuedArgument, Nil, PythonList, PythonTuple,
-              StarredArguments)
-
-    func_names = ('diag', 'empty', 'zip', 'enumerate')
-    #TODO put only imported functions
-    def substitute(expr):
-        if isinstance(expr, id_cls):
-            return expr
-        if isinstance(expr, cls):
-            args = expr.args
-            args = [substitute(arg) for arg in args]
-            return expr.func(*args, evaluate=False)
-        elif isinstance(expr, FunctionCall):
-            args = substitute(expr.args)
-
-            if str(expr.func) in func_names:
-                var = create_variable(expr)
-                expr = expr.func(*args, evaluate=False)
-                expr = Assign(var, expr)
-                stmts.append(expr)
-
-                return var
-            else:
-                expr = expr.func(*args, evaluate=False)
-                return expr
-        elif isinstance(expr, GC):
-            stmts.append(expr)
-            return expr.lhs
-        elif isinstance(expr,IfTernaryOperator):
-            var = create_variable(expr)
-            new = Assign(var, expr)
-            new.set_fst(expr.fst)
-            stmts.append(new)
-            return var
-        elif isinstance(expr, PythonList):
-            args = []
-            for i in expr:
-                args.append(substitute(i))
-
-            return PythonList(*args, sympify=False)
-
-        elif isinstance(expr, (tuple, list)):
-            args = []
-
-            for i in expr:
-                args.append(substitute(i))
-            return args
-
-        else:
-            raise TypeError('statement {} not supported yet'.format(type(expr)))
-
-
-    new_expr  = substitute(expr)
-    return stmts, new_expr
-
-
-
-#def collect_vars(ast):
-#    """ collect variables in order to be declared"""
-#    #TODO use the namespace to get the declared variables
-#    variables = {}
-#    def collect(stmt):
-#
-#        if isinstance(stmt, Variable):
-#            if not isinstance(stmt.name, DottedName):
-#                variables[stmt.name] = stmt
-#        elif isinstance(stmt, (tuple, list)):
-#            for i in stmt:
-#                collect(i)
-#        if isinstance(stmt, For):
-#            collect(stmt.target)
-#            collect(stmt.body)
-#        elif isinstance(stmt, FunctionalFor):
-#            collect(stmt.lhs)
-#            collect(stmt.loops)
-#        elif isinstance(stmt, If):
-#            collect(stmt.bodies)
-#        elif isinstance(stmt, (While, CodeBlock)):
-#            collect(stmt.body)
-#        elif isinstance(stmt, (Assign, AliasAssign, AugAssign)):
-#            collect(stmt.lhs)
-#            if isinstance(stmt.rhs, (Linspace, Diag, Where)):
-#                collect(stmt.rhs.index)
-#
-#
-#    collect(ast)
-#    return variables.values()
 
 def inline(func, args):
     local_vars = func.local_vars
     body = func.body
     body = subs(body, zip(func.arguments, args))
     return Block(str(func.name), local_vars, body)
-
-
-def int2float(expr):
-    return expr
-
-def float2int(expr):
-    return expr
 
 def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
     """This function takes a prefix and a counter and uses them to construct
@@ -491,7 +217,7 @@ def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
 
 def create_variable(forbidden_names, prefix = None, counter = 1):
     """This function takes a prefix and a counter and uses them to construct
-    a Symbol with a name of the form:
+    a PyccelSymbol with a name of the form:
             prefix_counter
     Where counter is formatted to fill 4 characters
     The new name is checked against a list of forbidden expressions. If the
@@ -509,8 +235,8 @@ def create_variable(forbidden_names, prefix = None, counter = 1):
 
       Returns
       ----------
-      name            : sympy.Symbol
-                        A sympy Symbol with the incremented string name
+      name            : PyccelSymbol
+                        A PyccelSymbol with the incremented string name
       counter         : int
                         The expected value of the next name
 
@@ -518,7 +244,7 @@ def create_variable(forbidden_names, prefix = None, counter = 1):
 
     name, counter = create_incremented_string(forbidden_names, prefix, counter = counter)
 
-    return Symbol(name), counter
+    return PyccelSymbol(name, is_temp=True), counter
 
 
 class AsName(Basic):
@@ -531,28 +257,35 @@ class AsName(Basic):
     >>> from pyccel.ast.core import AsName
     >>> AsName('old', 'new')
     old as new
+
+    Parameters
+    ==========
+    name   : str
+             original name of variable or function
+    target : str
+             name of variable or function in this context
     """
+    __slots__ = ('_name', '_target')
+    _attribute_nodes = ()
 
-    def __new__(cls, name, target):
-
-        # TODO check
-
-        return Basic.__new__(cls, name, target)
+    def __init__(self, name, target):
+        self._name = name
+        self._target = target
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def target(self):
-        return self._args[1]
+        return self._target
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} as {1}'.format(sstr(self.name), sstr(self.target))
+    def __str__(self):
+        return '{0} as {1}'.format(str(self.name), str(self.target))
 
     def __eq__(self, string):
-        if isinstance(string, (str, Symbol)):
+        if isinstance(string, str):
             return string == self.target
         else:
             return self is string
@@ -567,27 +300,32 @@ class Dlist(PyccelAstNode):
 
     Parameters
     ----------
-    value : Expr
-           a sympy expression which represents the initilized value of the list
+    value : PyccelAstNode
+           an expression which represents the initilized value of the list
 
     shape : the shape of the array
     """
-
-    def __new__(cls, val, length):
-        return Basic.__new__(cls, val, length)
+    __slots__ = ('_val', '_length','_dtype','_precision','_rank','_shape','_order')
+    _attribute_nodes = ('_val', '_length')
 
     def __init__(self, val, length):
-        self._rank = val.rank
-        self._shape = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
-        self._order = val.order
+        self._dtype     = val.dtype
+        self._precision = val.precision
+        self._rank      = val.rank
+        self._shape     = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
+        self._order     = val.order
+
+        self._val       = val
+        self._length    = length
+        super().__init__()
 
     @property
     def val(self):
-        return self._args[0]
+        return self._val
 
     @property
     def length(self):
-        return self._args[1]
+        return self._length
 
 
 class Assign(Basic):
@@ -596,17 +334,20 @@ class Assign(Basic):
 
     Parameters
     ----------
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
+    lhs : PyccelAstNode
+        In the syntactic stage:
+           Object representing the lhs of the expression. These should be
+           singular objects, such as one would use in writing code. Notable types
+           include PyccelSymbol, and IndexedElement. Types that
+           subclass these types are also supported.
+        In the semantic stage:
+           Variable or IndexedElement
 
-    rhs : Expr
-        Sympy object representing the rhs of the expression. This can be any
-        type, provided its shape corresponds to that of the lhs. For example,
-        a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
-        the dimensions will not align.
+    rhs : PyccelAstNode
+        In the syntactic stage:
+          Object representing the rhs of the expression
+        In the semantic stage :
+          PyccelAstNode with the same shape as the lhs
 
     status: None, str
         if lhs is not allocatable, then status is None.
@@ -617,42 +358,50 @@ class Assign(Basic):
 
     Examples
     --------
-    >>> from sympy import symbols, MatrixSymbol, Matrix
+    >>> from pyccel.ast.internals import symbols
+    >>> from pyccel.ast.variable import Variable
     >>> from pyccel.ast.core import Assign
     >>> x, y, z = symbols('x, y, z')
     >>> Assign(x, y)
     x := y
     >>> Assign(x, 0)
     x := 0
-    >>> A = MatrixSymbol('A', 1, 3)
-    >>> mat = Matrix([x, y, z]).T
-    >>> Assign(A, mat)
-    A := Matrix([[x, y, z]])
-    >>> Assign(A[0, 1], x)
-    A[0, 1] := x
-
+    >>> A = Variable('int', 'A', rank = 2)
+    >>> Assign(x, A)
+    x := A
+    >>> Assign(A[0,1], x)
+    IndexedElement(A, 0, 1) := x
     """
+    __slots__ = ('_lhs', '_rhs', '_status', '_like')
+    _attribute_nodes = ('_lhs', '_rhs')
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         lhs,
         rhs,
         status=None,
         like=None,
         ):
-        return Basic.__new__(cls, lhs, rhs, status, like)
+        if isinstance(lhs, (tuple, list)):
+            lhs = PythonTuple(*lhs)
+        if isinstance(rhs, (tuple, list)):
+            rhs = PythonTuple(*rhs)
+        self._lhs = lhs
+        self._rhs = rhs
+        self._status = status
+        self._like = like
+        super().__init__()
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.rhs))
+    def __str__(self):
+        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
     @property
     def lhs(self):
-        return self._args[0]
+        return self._lhs
 
     @property
     def rhs(self):
-        return self._args[1]
+        return self._rhs
 
     # TODO : remove
 
@@ -662,11 +411,11 @@ class Assign(Basic):
 
     @property
     def status(self):
-        return self._args[2]
+        return self._status
 
     @property
     def like(self):
-        return self._args[3]
+        return self._like
 
     @property
     def is_alias(self):
@@ -678,7 +427,7 @@ class Assign(Basic):
         rhs = self.rhs
         cond = isinstance(rhs, Variable) and rhs.rank > 0
         cond = cond or isinstance(rhs, IndexedElement)
-        cond = cond and isinstance(lhs, Symbol)
+        cond = cond and isinstance(lhs, PyccelSymbol)
         cond = cond or isinstance(rhs, Variable) and rhs.is_pointer
         return cond
 
@@ -692,12 +441,12 @@ class Assign(Basic):
         rhs = self.rhs
         if isinstance(lhs, Variable):
             return isinstance(lhs.dtype, NativeSymbol)
-        elif isinstance(lhs, Symbol):
+        elif isinstance(lhs, PyccelSymbol):
             if isinstance(rhs, PythonRange):
                 return True
             elif isinstance(rhs, Variable):
                 return isinstance(rhs.dtype, NativeSymbol)
-            elif isinstance(rhs, Symbol):
+            elif isinstance(rhs, PyccelSymbol):
                 return True
 
         return False
@@ -730,6 +479,8 @@ class Allocate(Basic):
     mutable Variable object.
 
     """
+    __slots__ = ('_variable', '_shape', '_order', '_status')
+    _attribute_nodes = ('_variable',)
 
     # ...
     def __init__(self, variable, *, shape, order, status):
@@ -760,6 +511,7 @@ class Allocate(Basic):
         self._shape    = shape
         self._order    = order
         self._status   = status
+        super().__init__()
     # ...
 
     @property
@@ -778,16 +530,18 @@ class Allocate(Basic):
     def status(self):
         return self._status
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
+    def __str__(self):
         return 'Allocate({}, shape={}, order={}, status={})'.format(
-                sstr(self.variable), sstr(self.shape), sstr(self.order), sstr(self.status))
+                str(self.variable), str(self.shape), str(self.order), str(self.status))
 
     def __eq__(self, other):
-        return (self.variable is other.variable) and \
-               (self.shape    == other.shape   ) and \
-               (self.order    == other.order   ) and \
-               (self.status   == other.status  )
+        if isinstance(other, Allocate):
+            return (self.variable is other.variable) and \
+                   (self.shape    == other.shape   ) and \
+                   (self.order    == other.order   ) and \
+                   (self.status   == other.status  )
+        else:
+            return False
 
     def __hash__(self):
         return hash((id(self.variable), self.shape, self.order, self.status))
@@ -810,6 +564,8 @@ class Deallocate(Basic):
     mutable Variable object.
 
     """
+    __slots__ = ('_variable',)
+    _attribute_nodes = ('_variable',)
 
     # ...
     def __init__(self, variable):
@@ -818,6 +574,7 @@ class Deallocate(Basic):
             raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
 
         self._variable = variable
+        super().__init__()
 
     # ...
 
@@ -826,7 +583,10 @@ class Deallocate(Basic):
         return self._variable
 
     def __eq__(self, other):
-        return (self.variable is other.variable)
+        if isinstance(other, Deallocate):
+            return (self.variable is other.variable)
+        else:
+            return False
 
     def __hash__(self):
         return hash(id(self.variable))
@@ -837,22 +597,24 @@ class CodeBlock(Basic):
     """Represents a list of stmt for code generation.
        we use it when a single statement in python
        produce multiple statement in the targeted language
-    """
 
-    def __new__(cls, body):
+       Parameters
+       ==========
+       body : iterable
+    """
+    __slots__ = ('_body',)
+    _attribute_nodes = ('_body',)
+
+
+    def __init__(self, body):
         ls = []
         for i in body:
             if isinstance(i, CodeBlock):
                 ls += i.body
-            else:
+            elif i is not None and not isinstance(i, EmptyNode):
                 ls.append(i)
-
-        return Basic.__new__(cls, ls)
-
-    def __init__(self, body):
-        self._body = self._args[0]
-        if len(self._body)>0 and isinstance(self._body[-1], (Assign, AugAssign)):
-            self.set_fst(self._body[-1].fst)
+        self._body = tuple(ls)
+        super().__init__()
 
     @property
     def body(self):
@@ -865,6 +627,30 @@ class CodeBlock(Basic):
     def insert2body(self, obj):
         self._body = tuple(self.body + (obj,))
 
+    def __str__(self):
+        return 'CodeBlock({})'.format(self.body)
+
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
+        kwargs = dict(body = self.body)
+        return (apply, (self.__class__, (), kwargs))
+
 class AliasAssign(Basic):
 
     """Represents aliasing for code generation. An alias is any statement of the
@@ -872,9 +658,9 @@ class AliasAssign(Basic):
 
     Parameters
     ----------
-    lhs : Symbol
+    lhs : PyccelSymbol
         at this point we don't know yet all information about lhs, this is why a
-        Symbol is the appropriate type.
+        PyccelSymbol is the appropriate type.
 
     rhs : Variable, IndexedElement
         an assignable variable can be of any rank and any datatype, however its
@@ -882,17 +668,19 @@ class AliasAssign(Basic):
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import PyccelSymbol
     >>> from pyccel.ast.core import AliasAssign
     >>> from pyccel.ast.core import Variable
     >>> n = Variable('int', 'n')
     >>> x = Variable('int', 'x', rank=1, shape=[n])
-    >>> y = Symbol('y')
+    >>> y = PyccelSymbol('y')
     >>> AliasAssign(y, x)
 
     """
+    __slots__ = ('_lhs','_rhs')
+    _attribute_nodes = ('_lhs','_rhs')
 
-    def __new__(cls, lhs, rhs):
+    def __init__(self, lhs, rhs):
         if PyccelAstNode.stage == 'semantic':
             if not lhs.is_pointer:
                 raise TypeError('lhs must be a pointer')
@@ -900,19 +688,20 @@ class AliasAssign(Basic):
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
-        return Basic.__new__(cls, lhs, rhs)
+        self._lhs = lhs
+        self._rhs = rhs
+        super().__init__()
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.rhs))
+    def __str__(self):
+        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
     @property
     def lhs(self):
-        return self._args[0]
+        return self._lhs
 
     @property
     def rhs(self):
-        return self._args[1]
+        return self._rhs
 
 
 class SymbolicAssign(Basic):
@@ -922,65 +711,74 @@ class SymbolicAssign(Basic):
 
     Parameters
     ----------
-    lhs : Symbol
+    lhs : PyccelSymbol
 
     rhs : Range
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import PyccelSymbol
     >>> from pyccel.ast.core import SymbolicAssign
     >>> from pyccel.ast.core import Range
     >>> r = Range(0, 3)
-    >>> y = Symbol('y')
+    >>> y = PyccelSymbol('y')
     >>> SymbolicAssign(y, r)
 
     """
+    __slots__ = ('_lhs', '_rhs')
+    _attribute_nodes = ('_lhs', '_rhs')
 
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+    def __init__(self, lhs, rhs):
+        self._lhs = lhs
+        self._rhs = rhs
+        super().__init__()
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.rhs))
+    def __str__(self):
+        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
     @property
     def lhs(self):
-        return self._args[0]
+        return self._lhs
 
     @property
     def rhs(self):
-        return self._args[1]
+        return self._rhs
 
 
-# The following are defined to be sympy approved nodes. If there is something
+# The following were defined to be sympy approved nodes. If there is something
 # smaller that could be used, that would be preferable. We only use them as
 # tokens.
 
-class NativeOp(with_metaclass(Singleton, Basic)):
+class NativeOp(metaclass=Singleton):
 
     """Base type for native operands."""
+    __slots__ = ()
 
     pass
 
 
 class AddOp(NativeOp):
+    __slots__ = ()
     _symbol = '+'
 
 
 class SubOp(NativeOp):
+    __slots__ = ()
     _symbol = '-'
 
 
 class MulOp(NativeOp):
+    __slots__ = ()
     _symbol = '*'
 
 
 class DivOp(NativeOp):
+    __slots__ = ()
     _symbol = '/'
 
 
 class ModOp(NativeOp):
+    __slots__ = ()
     _symbol = '%'
 
 
@@ -1007,20 +805,23 @@ class AugAssign(Assign):
 
     Parameters
     ----------
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
+    lhs : PyccelAstNode
+        In the syntactic stage:
+           Object representing the lhs of the expression. These should be
+           singular objects, such as one would use in writing code. Notable types
+           include PyccelSymbol, and IndexedElement. Types that
+           subclass these types are also supported.
+        In the semantic stage:
+           Variable or IndexedElement
 
-    op : NativeOp
+    op : str
         Operator (+, -, /, \*, %).
 
-    rhs : Expr
-        Sympy object representing the rhs of the expression. This can be any
-        type, provided its shape corresponds to that of the lhs. For example,
-        a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
-        the dimensions will not align.
+    rhs : PyccelAstNode
+        In the syntactic stage:
+          Object representing the rhs of the expression
+        In the semantic stage :
+          PyccelAstNode with the same shape as the lhs
 
     status: None, str
         if lhs is not allocatable, then status is None.
@@ -1038,9 +839,10 @@ class AugAssign(Assign):
     >>> AugAssign(s, '+', 2 * t + 1)
     s += 1 + 2*t
     """
+    __slots__ = ('_op',)
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         lhs,
         op,
         rhs,
@@ -1053,39 +855,17 @@ class AugAssign(Assign):
         elif op not in list(op_registry.values()):
             raise TypeError('Unrecognized Operator')
 
-        return Basic.__new__(
-            cls,
-            lhs,
-            op,
-            rhs,
-            status,
-            like,
-            )
+        self._op = op
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} {1}= {2}'.format(sstr(self.lhs), self.op._symbol,
-                sstr(self.rhs))
+        super().__init__(lhs, rhs, status, like)
 
-    @property
-    def lhs(self):
-        return self._args[0]
+    def __str__(self):
+        return '{0} {1}= {2}'.format(str(self.lhs), self.op._symbol,
+                str(self.rhs))
 
     @property
     def op(self):
-        return self._args[1]
-
-    @property
-    def rhs(self):
-        return self._args[2]
-
-    @property
-    def status(self):
-        return self._args[3]
-
-    @property
-    def like(self):
-        return self._args[4]
+        return self._op
 
 
 class While(Basic):
@@ -1098,44 +878,49 @@ class While(Basic):
 
     Parameters
     ----------
-    test : expression
-        test condition given as a sympy expression
-    body : sympy expr
+    test : PyccelAstNode
+        test condition given as an expression
+    body : list of Pyccel objects
         list of statements representing the body of the While statement.
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import PyccelSymbol
     >>> from pyccel.ast.core import Assign, While
-    >>> n = Symbol('n')
+    >>> n = PyccelSymbol('n')
     >>> While((n>1), [Assign(n,n-1)])
     While(n > 1, (n := n - 1,))
     """
+    __slots__ = ('_body','_test','_local_vars')
+    _attribute_nodes = ('_body','_test','_local_vars')
 
-    def __new__(cls, test, body, local_vars=[]):
-        test = sympify(test, locals=local_sympify)
+    def __init__(self, test, body, local_vars=()):
 
         if PyccelAstNode.stage == 'semantic':
             if test.dtype is not NativeBool():
                 test = PythonBool(test)
 
         if iterable(body):
-            body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
+            body = CodeBlock(body)
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
-        return Basic.__new__(cls, test, body, local_vars)
+
+        self._test = test
+        self._body = body
+        self._local_vars = local_vars
+        super().__init__()
 
     @property
     def test(self):
-        return self._args[0]
+        return self._test
 
     @property
     def body(self):
-        return self._args[1]
+        return self._body
 
     @property
     def local_vars(self):
-        return self._args[2]
+        return self._local_vars
 
 
 class With(Basic):
@@ -1148,44 +933,42 @@ class With(Basic):
 
     Parameters
     ----------
-    test : expression
-        test condition given as a sympy expression
-    body : sympy expr
+    test : PyccelAstNode
+        test condition given as an expression
+    body : list of Pyccel objects
         list of statements representing the body of the With statement.
 
     Examples
     --------
 
     """
+    __slots__ = ('_test','_body')
+    _attribute_nodes = ('_test','_body')
 
     # TODO check prelude and epilog
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         test,
         body,
-        settings,
         ):
-        test = sympify(test, locals=local_sympify)
 
         if iterable(body):
-            body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
+            body = CodeBlock(body)
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable')
 
-        return Basic.__new__(cls, test, body, settings)
+        self._test = test
+        self._body = body
+        super().__init__()
 
     @property
     def test(self):
-        return self._args[0]
+        return self._test
 
     @property
     def body(self):
-        return self._args[1]
-
-    @property
-    def settings(self):
-        return self._args[2]
+        return self._body
 
     @property
     def block(self):
@@ -1204,110 +987,6 @@ class With(Basic):
         body += self.body.body
         body +=  end.body.body
         return Block('with', [], body)
-
-class Tile(PythonRange):
-
-    """
-    Representes a tile.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable
-    >>> from pyccel.ast.core import Tile
-    >>> from sympy import Symbol
-    >>> s = Variable('int', 's')
-    >>> e = Symbol('e')
-    >>> Tile(s, e, 1)
-    Tile(0, n, 1)
-    """
-
-    def __new__(cls, start, stop):
-        step = 1
-        return PythonRange.__new__(cls, start, stop, step)
-
-    @property
-    def start(self):
-        return self._args[0]
-
-    @property
-    def stop(self):
-        return self._args[1]
-
-    @property
-    def size(self):
-        return self.stop - self.start
-
-
-class ParallelRange(PythonRange):
-
-    """
-    Representes a parallel range using OpenMP/OpenACC.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable
-    """
-
-    pass
-
-
-# TODO: implement it as an extension of sympy Tensor?
-
-class Tensor(Basic):
-
-    """
-    Base class for tensor.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable
-    >>> from pyccel.ast.core import Range, Tensor
-    >>> from sympy import Symbol
-    >>> s1 = Variable('int', 's1')
-    >>> s2 = Variable('int', 's2')
-    >>> e1 = Variable('int', 'e1')
-    >>> e2 = Variable('int', 'e2')
-    >>> r1 = Range(s1, e1, 1)
-    >>> r2 = Range(s2, e2, 1)
-    >>> Tensor(r1, r2)
-    Tensor(Range(s1, e1, 1), Range(s2, e2, 1), name=tensor)
-    """
-
-    def __new__(cls, *args, **kwargs):
-        for r in args:
-            cond = isinstance(r, Variable) and isinstance(r.dtype,
-                    (NativeRange, NativeTensor))
-            cond = cond or isinstance(r, (PythonRange, Tensor))
-
-            if not cond:
-                raise TypeError('non valid argument, given {0}'.format(type(r)))
-
-        try:
-            name = kwargs['name']
-        except KeyError:
-            name = 'tensor'
-
-        args = list(args) + [name]
-
-        return Basic.__new__(cls, *args, **kwargs)
-
-    @property
-    def name(self):
-        return self._args[-1]
-
-    @property
-    def ranges(self):
-        return self._args[:-1]
-
-    @property
-    def dim(self):
-        return len(self.ranges)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        txt = ', '.join(sstr(n) for n in self.ranges)
-        txt = 'Tensor({0}, name={1})'.format(txt, sstr(self.name))
-        return txt
 
 
 # TODO add a name to a block?
@@ -1335,9 +1014,11 @@ class Block(Basic):
     >>> Block([n, x], [Assign(x,2.*n + 1.), Assign(n, n + 1)])
     Block([n, x], [x := 1.0 + 2.0*n, n := 1 + n])
     """
+    __slots__ = ('_name','_variables','_body')
+    _attribute_nodes = ('_variables','_body')
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         name,
         variables,
         body):
@@ -1352,83 +1033,27 @@ class Block(Basic):
             body = CodeBlock(body)
         elif not isinstance(body, CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
-        return Basic.__new__(cls, name, variables, body)
+        self._name = name
+        self._variables = variables
+        self._body = body
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def variables(self):
-        return self._args[1]
+        return self._variables
 
     @property
     def body(self):
-        return self._args[2]
+        return self._body
 
     @property
     def declarations(self):
         return [Declare(i.dtype, i) for i in self.variables]
 
-
-class ParallelBlock(Block):
-
-    """
-    Represents a parallel block in the code.
-    In addition to block inputs, there is
-
-    Parameters
-    ----------
-    clauses: list
-        a list of clauses
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import ParallelBlock
-    >>> from pyccel.ast.core import Variable, Assign, Block
-    >>> n = Variable('int', 'n')
-    >>> x = Variable('int', 'x')
-    >>> body = [Assign(x,2.*n + 1.), Assign(n, n + 1)]
-    >>> variables = [x,n]
-    >>> clauses = []
-    >>> ParallelBlock(clauses, variables, body)
-    # parallel
-    x := 1.0 + 2.0*n
-    n := 1 + n
-    """
-
-    _prefix = '#'
-
-    def __new__(
-        cls,
-        clauses,
-        variables,
-        body,
-        ):
-        if not iterable(clauses):
-            raise TypeError('Expecting an iterable for clauses')
-
-        cls._clauses = clauses
-
-        return Block.__new__(cls, variables, body)
-
-    @property
-    def clauses(self):
-        return self._clauses
-
-    @property
-    def prefix(self):
-        return self._prefix
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-
-        prefix = sstr(self.prefix)
-        clauses = ' '.join('{0}'.format(sstr(i)) for i in self.clauses)
-        body = '\n'.join('{0}'.format(sstr(i)) for i in self.body)
-
-        code = '{0} parallel {1}\n{2}'.format(prefix, clauses, body)
-        return code
 
 
 class Module(Basic):
@@ -1475,15 +1100,17 @@ class Module(Basic):
     >>> Module('my_module', [], [incr, decr], classes = [Point])
     Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
+    __slots__ = ('_name','_variables','_funcs','_interfaces','_classes','_imports')
+    _attribute_nodes = ('_variables','_funcs','_interfaces','_classes','_imports')
 
     def __init__(
         self,
         name,
         variables,
         funcs,
-        interfaces=[],
-        classes=[],
-        imports=[],
+        interfaces=(),
+        classes=(),
+        imports=(),
         ):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
@@ -1528,6 +1155,7 @@ class Module(Basic):
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
+        super().__init__()
 
     @property
     def name(self):
@@ -1594,12 +1222,15 @@ class ModuleHeader(Basic):
     >>> ModuleHeader(mod)
     Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
+    __slots__ = ('_module',)
+    _attribute_nodes = ('_module',)
 
     def __init__(self, module):
         if not isinstance(module, Module):
             raise TypeError('module must be a Module')
 
         self._module = module
+        super().__init__()
 
     @property
     def module(self):
@@ -1624,13 +1255,15 @@ class Program(Basic):
         list of needed imports
 
     """
+    __slots__ = ('_name', '_variables', '_body', '_imports')
+    _attribute_nodes = ('_variables', '_body', '_imports')
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         name,
         variables,
         body,
-        imports=[],
+        imports=(),
         ):
 
         if not isinstance(name, str):
@@ -1653,29 +1286,28 @@ class Program(Basic):
         imports = set(imports)  # for unicity
         imports = tuple(imports)
 
-        return Basic.__new__(
-            cls,
-            name,
-            variables,
-            body,
-            imports,
-            )
+        self._name = name
+        self._variables = variables
+        self._body = body
+        self._imports = imports
+
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def variables(self):
-        return self._args[1]
+        return self._variables
 
     @property
     def body(self):
-        return self._args[2]
+        return self._body
 
     @property
     def imports(self):
-        return self._args[3]
+        return self._imports
 
     @property
     def declarations(self):
@@ -1692,25 +1324,28 @@ class For(Basic):
 
     Parameters
     ----------
-    target : symbol
+    target : symbol / Variable
         symbol representing the iterator
     iter : iterable
         iterable object. for the moment only Range is used
-    body : sympy expr
+    body : list of pyccel objects
         list of statements representing the body of the For statement.
 
     Examples
     --------
-    >>> from sympy import symbols, MatrixSymbol
+    >>> from pyccel.ast.variable import Variable
     >>> from pyccel.ast.core import Assign, For
+    >>> from pyccel.ast.internals import symbols
     >>> i,b,e,s,x = symbols('i,b,e,s,x')
-    >>> A = MatrixSymbol('A', 1, 3)
-    >>> For(i, (b,e,s), [Assign(x,x-1), Assign(A[0, 1], x)])
-    For(i, Range(b, e, s), (x := x - 1, A[0, 1] := x))
+    >>> A = Variable('int', 'A', rank = 2)
+    >>> For(i, (b,e,s), [Assign(x, i), Assign(A[0, 1], x)])
+    For(i, (b, e, s), (x := i, IndexedElement(A, 0, 1) := x))
     """
+    __slots__ = ('_target','_iterable','_body','_local_vars')
+    _attribute_nodes = ('_target','_iterable','_body','_local_vars')
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         target,
         iter_obj,
         body,
@@ -1732,19 +1367,11 @@ class For(Basic):
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable or a Codeblock')
 
-        return Basic.__new__(cls, target, iter_obj, body, local_vars)
-
-    def __init__(
-        self,
-        target,
-        iter_obj,
-        body,
-        local_vars = [],
-        ):
-        self._target = self._args[0]
-        self._iterable = self._args[1]
-        self._body = self._args[2]
-        self._local_vars = self._args[3]
+        self._target = target
+        self._iterable = iter_obj
+        self._body = body
+        self._local_vars = local_vars
+        super().__init__()
 
     @property
     def target(self):
@@ -1768,49 +1395,25 @@ class For(Basic):
 
 
 class DoConcurrent(For):
+    __slots__ = ()
     pass
 
-
-class ForAll(Basic):
-    """ class that represents the forall statement in fortran"""
-    def __new__(cls, iter_obj, target, mask, body):
-
-        if not isinstance(iter_obj, PythonRange):
-            raise TypeError('iterable must be of type Range')
-
-        return Basic.__new__(cls, iter_obj, target, mask, body)
-
-
-    @property
-    def iter(self):
-        return self._args[0]
-
-    @property
-    def target(self):
-        return self._args[1]
-
-    @property
-    def mask(self):
-        return self._args[2]
-
-    @property
-    def body(self):
-        return self._args[3]
 
 class ForIterator(For):
 
     """Class that describes iterable classes defined by the user."""
+    __slots__ = ()
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         target,
         iterable,
         body,
         ):
 
-        if isinstance(iterable, Symbol):
+        if isinstance(iterable, Variable):
             iterable = PythonRange(PythonLen(iterable))
-        return For.__new__(cls, target, iterable, body)
+        super().__init__(target, iterable, body)
 
     # TODO uncomment later when we intriduce iterators
     # @property
@@ -1828,11 +1431,6 @@ class ForIterator(For):
         if isinstance(it, Variable):
             if isinstance(it.dtype, NativeRange):
                 return 1
-            if isinstance(it.dtype, NativeTensor):
-
-                # TODO must be computed
-
-                return 2
 
             cls_base = it.cls_base
             if not cls_base:
@@ -1856,7 +1454,7 @@ class ForIterator(For):
     def ranges(self):
         return get_iterable_ranges(self.iterable)
 
-class ConstructorCall(AtomicExpr):
+class ConstructorCall(Basic):
 
     """
     It  serves as a constructor for undefined function classes.
@@ -1870,23 +1468,12 @@ class ConstructorCall(AtomicExpr):
         a list of arguments.
 
     """
+    __slots__ = ('_cls_variable', '_func', '_arguments')
+    _attribute_nodes = ('_func', '_arguments')
 
     is_commutative = True
 
     # TODO improve
-
-    def __new__(
-        cls,
-        func,
-        arguments,
-        cls_variable=None,
-        ):
-        if not isinstance(func, (FunctionDef, Interface, str)):
-            raise TypeError('Expecting func to be a FunctionDef or str')
-
-        f_name = func.name
-
-        return Basic.__new__(cls, f_name)
 
     def __init__(
         self,
@@ -1894,17 +1481,19 @@ class ConstructorCall(AtomicExpr):
         arguments,
         cls_variable=None,
         ):
+        if not isinstance(func, (FunctionDef, Interface, str)):
+            raise TypeError('Expecting func to be a FunctionDef or str')
 
         self._cls_variable = cls_variable
         self._func = func
         self._arguments = arguments
+        super().__init__()
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        name = sstr(self.name)
+    def __str__(self):
+        name = str(self.name)
         args = ''
         if not self.arguments is None:
-            args = ', '.join(sstr(i) for i in self.arguments)
+            args = ', '.join(str(i) for i in self.arguments)
         return '{0}({1})'.format(name, args)
 
     @property
@@ -1926,19 +1515,7 @@ class ConstructorCall(AtomicExpr):
         else:
             return self.func
 
-class Void(Basic):
-
-    pass
-
-class VoidFunction(Basic):
-    #this class is used in order to eliminate certain atoms
-    # in an arithmitic expression so that we dont take them into
-    # consideration
-    def __new__(cls, *args):
-        return Symbol("""x9846548484665
-                      494794564465165161561""")
-
-class Argument(Symbol, PyccelAstNode):
+class Argument(PyccelAstNode):
 
     """An abstract Argument data structure.
 
@@ -1949,13 +1526,18 @@ class Argument(Symbol, PyccelAstNode):
     >>> n
     n
     """
-
-    def __new__(cls, name, *, kwonly=False, annotation=None):
-        return Symbol.__new__(cls, name)
+    __slots__ = ('_name','_kwonly','_annotation')
+    _attribute_nodes = ()
 
     def __init__(self, name, *, kwonly=False, annotation=None):
+        self._name       = name
         self._kwonly     = kwonly
         self._annotation = annotation
+        super().__init__()
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def is_kwonly(self):
@@ -1964,6 +1546,9 @@ class Argument(Symbol, PyccelAstNode):
     @property
     def annotation(self):
         return self._annotation
+
+    def __str__(self):
+        return str(self.name)
 
 class ValuedArgument(Basic):
 
@@ -1976,19 +1561,31 @@ class ValuedArgument(Basic):
     >>> n
     n=4
     """
+    __slots__ = ('_name','_expr','_value','_kwonly')
+    _attribute_nodes = ()
 
     def __init__(self, expr, value, *, kwonly = False):
-        if isinstance(expr, str):
-            expr = Symbol(expr)
-
         # TODO should we turn back to Argument
 
-        if not isinstance(expr, Symbol):
+        if isinstance(expr, Argument):
+            self._name = expr.name
+        elif isinstance(expr, str):
+            self._name = expr
+        else:
             raise TypeError('Expecting an argument')
+
+        if isinstance(value, (bool, int, float, complex, str)) and not isinstance(value, PyccelSymbol):
+            value = convert_to_literal(value)
+        elif not isinstance(value, (Basic, PyccelSymbol)):
+            raise TypeError("Expecting a pyccel object not {}".format(type(value)))
+
+        if not isinstance(kwonly, bool):
+            raise TypeError("kwonly must be a bool")
 
         self._expr   = expr
         self._value  = value
         self._kwonly = kwonly
+        super().__init__()
 
     @property
     def argument(self):
@@ -2000,30 +1597,33 @@ class ValuedArgument(Basic):
 
     @property
     def name(self):
-        return self.argument.name
+        return self._name
 
     @property
     def is_kwonly(self):
         return self._kwonly
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-
-        argument = sstr(self.argument)
-        value = sstr(self.value)
+    def __str__(self):
+        argument = str(self.argument)
+        value = str(self.value)
         return '{0}={1}'.format(argument, value)
 
 class FunctionCall(PyccelAstNode):
 
     """Represents a function call in the code.
     """
+    __slots__ = ('_arguments','_funcdef','_interface','_func_name','_interface_name',
+                 '_dtype','_precision','_shape','_rank','_order')
+    _attribute_nodes = ('_arguments','_funcdef','_interface')
 
     def __init__(self, func, args, current_function=None):
 
         if self.stage == "syntactic":
             self._interface = None
             self._funcdef   = func
-            self._arguments = args
+            self._arguments = tuple(args)
+            self._func_name = func
+            super().__init__()
             return
 
         # ...
@@ -2032,8 +1632,8 @@ class FunctionCall(PyccelAstNode):
 
         if isinstance(func, Interface):
             self._interface = func
-            func = func.point(args)
             self._interface_name = func.name
+            func = func.point(args)
         else:
             self._interface = None
 
@@ -2041,8 +1641,7 @@ class FunctionCall(PyccelAstNode):
         # ...
         if isinstance(current_function, DottedName):
             current_function = current_function.name[-1]
-
-        if str(current_function) == str(name):
+        if current_function == name:
             func.set_recursive()
 
         if not isinstance(args, (tuple, list)):
@@ -2069,7 +1668,7 @@ class FunctionCall(PyccelAstNode):
 
         args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
 
-        if str(current_function) == str(func.name):
+        if current_function == func.name:
             if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
                 errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
@@ -2081,6 +1680,7 @@ class FunctionCall(PyccelAstNode):
         self._precision     = func.results[0].precision if len(func.results) == 1 else None
         self._order         = func.results[0].order     if len(func.results) == 1 else None
         self._func_name     = func.name
+        super().__init__()
 
     @property
     def args(self):
@@ -2101,6 +1701,9 @@ class FunctionCall(PyccelAstNode):
     @property
     def interface_name(self):
         return self._interface_name
+
+    def __repr__(self):
+        return '{}({})'.format(self.func_name, ', '.join(str(a) for a in self.args))
 
 class DottedFunctionCall(FunctionCall):
     """
@@ -2125,13 +1728,15 @@ class DottedFunctionCall(FunctionCall):
                         (This is required in order to recognise
                         recursive functions)
     """
+    __slots__ = ('_prefix',)
+    _attribute_nodes = (*FunctionCall._attribute_nodes, '_prefix')
 
     def __init__(self, func, args, prefix, current_function=None):
-        FunctionCall.__init__(self, func, args, current_function)
+        self._prefix = prefix
+        super().__init__(func, args, current_function)
         self._func_name = DottedName(prefix, self._func_name)
         if self._interface:
             self._interface_name = DottedName(prefix, self._interface_name)
-        self._prefix = prefix
 
     @property
     def prefix(self):
@@ -2145,26 +1750,31 @@ class Return(Basic):
 
     Parameters
     ----------
-    expr : sympy expr
+    expr : PyccelAstNode
         The expression to return.
 
     stmts :represent assign stmts in the case of expression return
     """
+    __slots__ = ('_expr', '_stmt')
+    _attribute_nodes = ('_expr', '_stmt')
 
-    def __new__(cls, expr, stmt=None):
+    def __init__(self, expr, stmt=None):
 
-        if stmt and not isinstance(stmt, (Assign, CodeBlock)):
-            raise TypeError('stmt should only be of type Assign')
+        if stmt and not isinstance(stmt, CodeBlock):
+            raise TypeError('stmt should only be of type CodeBlock')
 
-        return Basic.__new__(cls, expr, stmt)
+        self._expr = expr
+        self._stmt = stmt
+
+        super().__init__()
 
     @property
     def expr(self):
-        return self._args[0]
+        return self._expr
 
     @property
     def stmt(self):
-        return self._args[1]
+        return self._stmt
 
     def __getnewargs__(self):
         """used for Pickling self."""
@@ -2234,7 +1844,6 @@ class FunctionDef(Basic):
     >>> from pyccel.ast.core import Assign
     >>> from pyccel.ast.core import FunctionDef
     >>> from pyccel.ast.core import ValuedArgument
-    >>> from pyccel.ast.core import GetDefaultFunctionArg
     >>> n = ValuedArgument('n', 4)
     >>> x = Variable('real', 'x')
     >>> y = Variable('real', 'y')
@@ -2244,11 +1853,13 @@ class FunctionDef(Basic):
     >>> FunctionDef('incr', args, results, body)
     FunctionDef(incr, (x, n=4), (y,), [y := 1 + x], [], [], None, False, function, [])
     """
-
-    def __new__(cls, *args, **kwargs):
-        kwargs.pop('decorators', None)
-        kwargs.pop('templates', None)
-        return super().__new__(cls, *args, **kwargs)
+    __slots__ = ('_name','_arguments','_results','_body','_local_vars',
+                 '_global_vars','_cls_name','_is_static','_imports',
+                 '_decorators','_headers','_is_recursive','_is_pure',
+                 '_is_elemental','_is_private','_is_header','_arguments_inout',
+                 '_functions','_interfaces','_doc_string')
+    _attribute_nodes = ('_arguments','_results','_body','_local_vars',
+                 '_global_vars','_imports','_functions','_interfaces')
 
     def __init__(
         self,
@@ -2256,38 +1867,36 @@ class FunctionDef(Basic):
         arguments,
         results,
         body,
-        local_vars=[],
-        global_vars=[],
+        local_vars=(),
+        global_vars=(),
         cls_name=None,
         is_static=False,
-        imports=[],
+        imports=(),
         decorators={},
-        headers=[],
-        templates={},
+        headers=(),
         is_recursive=False,
         is_pure=False,
         is_elemental=False,
         is_private=False,
         is_header=False,
-        arguments_inout=[],
-        functions=[],
-        interfaces=[],
+        arguments_inout=(),
+        functions=(),
+        interfaces=(),
         doc_string=None):
 
         if isinstance(name, str):
-            name = Symbol(name)
+            name = PyccelSymbol(name)
         elif isinstance(name, (tuple, list)):
             name_ = []
             for i in name:
                 if isinstance(i, str):
-                    name = name + Symbol(i)
-                elif not isinstance(i, Symbol):
-                    raise TypeError('Function name must be Symbol or string'
+                    name_.append(PyccelSymbol(i))
+                else:
+                    raise TypeError('Function name must be PyccelSymbol or string'
                                     )
             name = tuple(name_)
-        elif not isinstance(name, Symbol):
-
-            raise TypeError('Function name must be Symbol or string')
+        else:
+            raise TypeError('Function name must be PyccelSymbol or string')
 
         # arguments
 
@@ -2372,7 +1981,6 @@ class FunctionDef(Basic):
         self._imports         = imports
         self._decorators      = decorators
         self._headers         = headers
-        self._templates       = templates
         self._is_recursive    = is_recursive
         self._is_pure         = is_pure
         self._is_elemental    = is_elemental
@@ -2382,6 +1990,7 @@ class FunctionDef(Basic):
         self._functions       = functions
         self._interfaces      = interfaces
         self._doc_string      = doc_string
+        super().__init__()
 
     @property
     def name(self):
@@ -2525,7 +2134,8 @@ class FunctionDef(Basic):
             new name for the FunctionDef
         """
         args, kwargs = self.__getnewargs__()
-        new_func = FunctionDef(*args, **kwargs)
+        cls = type(self)
+        new_func = cls(*args, **kwargs)
         new_func.rename(newname)
         return new_func
 
@@ -2543,6 +2153,17 @@ class FunctionDef(Basic):
 
         self._name = newname
 
+    def add_local_vars(self, *variables):
+        """
+        Add (a) new variable(s) to the local variables tuple
+
+        Parameters
+        ----------
+        var : Variable
+              The new local variable
+        """
+        _ = [v.set_current_user_node(self) for v in variables]
+        self._local_vars += variables
 
     def __getnewargs__(self):
         """
@@ -2563,7 +2184,6 @@ class FunctionDef(Basic):
         'imports':self._imports,
         'decorators':self._decorators,
         'headers':self._headers,
-        'templates':self._templates,
         'is_recursive':self._is_recursive,
         'is_pure':self._is_pure,
         'is_elemental':self._is_elemental,
@@ -2605,6 +2225,10 @@ class FunctionDef(Basic):
                 args   = args,
                 result = result)
 
+    @property
+    def is_unused(self):
+        return False
+
 class Interface(Basic):
 
     """Represents an Interface.
@@ -2626,6 +2250,8 @@ class Interface(Basic):
     >>> f = FunctionDef('F', [], [], [])
     >>> Interface('I', [f])
     """
+    __slots__ = ('_name','_functions','_is_argument')
+    _attribute_nodes = ('_functions',)
 
     def __init__(
         self,
@@ -2641,6 +2267,7 @@ class Interface(Basic):
         self._name = name
         self._functions = functions
         self._is_argument = is_argument
+        super().__init__()
 
     @property
     def name(self):
@@ -2726,6 +2353,7 @@ class FunctionAddress(FunctionDef):
 
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
     """
+    __slots__ = ('_is_optional','_is_pointer','_is_kwonly','_is_argument')
 
     def __init__(
         self,
@@ -2739,7 +2367,7 @@ class FunctionAddress(FunctionDef):
         is_argument=False,
         **kwargs
         ):
-        FunctionDef.__init__(self, name, arguments, results, body, **kwargs)
+        super().__init__(name, arguments, results, body, **kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
@@ -2753,7 +2381,6 @@ class FunctionAddress(FunctionDef):
             raise TypeError('is_optional must be a boolean.')
 
         self._is_optional   = is_optional
-        self._name          = name
         self._is_pointer    = is_pointer
         self._is_kwonly     = is_kwonly
         self._is_argument   = is_argument
@@ -2794,14 +2421,12 @@ class ValuedFunctionAddress(FunctionAddress):
     >>> f = FunctionDef('f', [], [], [])
     >>> n  = ValuedFunctionAddress('g', [x], [y], [], value=f)
     """
-
-    def __new__(cls, *args, **kwargs):
-        kwargs.pop('value', Nil())
-        return FunctionAddress.__new__(cls, *args, **kwargs)
+    __slots__ = ('_value')
+    _attribute_nodes = (*FunctionAddress._attribute_nodes, '_value')
 
     def __init__(self, *args, **kwargs):
         self._value = kwargs.pop('value', Nil())
-        FunctionAddress.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def value(self):
@@ -2810,39 +2435,14 @@ class ValuedFunctionAddress(FunctionAddress):
 class SympyFunction(FunctionDef):
 
     """Represents a function definition."""
-
-    def rename(self, newname):
-        """
-        Rename the SympyFunction name by creating a new SympyFunction with
-        newname.
-
-        Parameters
-        ----------
-        newname: str
-            new name for the SympyFunction
-        """
-
-        return SympyFunction(newname, self.arguments, self.results,
-                             self.body, cls_name=self.cls_name)
+    __slots__ = ()
 
 
+# TODO: [EB 06.01.2021] Is this class used? What for? See issue #668
 class PythonFunction(FunctionDef):
 
     """Represents a Python-Function definition."""
-
-    def rename(self, newname):
-        """
-        Rename the PythonFunction name by creating a new PythonFunction with
-        newname.
-
-        Parameters
-        ----------
-        newname: str
-            new name for the PythonFunction
-        """
-
-        return PythonFunction(newname, self.arguments, self.results,
-                              self.body, cls_name=self.cls_name)
+    __slots__ = ()
 
 
 class BindCFunctionDef(FunctionDef):
@@ -2860,12 +2460,12 @@ class BindCFunctionDef(FunctionDef):
     original_function : FunctionDef
         The function from which the c-compatible version was created
     """
-    def __new__(cls, *args, original_function, **kwargs):
-        return FunctionDef.__new__(cls, *args, **kwargs)
+    __slots__ = ('_original_function',)
+    _attribute_nodes = (*FunctionDef._attribute_nodes, '_original_function')
 
     def __init__(self, *args, original_function, **kwargs):
         self._original_function = original_function
-        FunctionDef.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def name(self):
@@ -2874,88 +2474,6 @@ class BindCFunctionDef(FunctionDef):
     @property
     def original_function(self):
         return self._original_function
-
-
-class GetDefaultFunctionArg(Basic):
-
-    """Creates a FunctionDef for handling optional arguments in the code.
-
-    Parameters
-    ----------
-    arg: ValuedArgument, ValuedVariable
-        argument for which we want to create the function returning the default
-        value
-
-    func: FunctionDef
-        the function/subroutine in which the optional arg is used
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable
-    >>> from pyccel.ast.core import Assign
-    >>> from pyccel.ast.core import FunctionDef
-    >>> from pyccel.ast.core import ValuedArgument
-    >>> from pyccel.ast.core import GetDefaultFunctionArg
-    >>> n = ValuedArgument('n', 4)
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> args        = [x, n]
-    >>> results     = [y]
-    >>> body        = [Assign(y,x+n)]
-    >>> incr = FunctionDef('incr', args, results, body)
-    >>> get_n = GetDefaultFunctionArg(n, incr)
-    >>> get_n.name
-    get_default_incr_n
-    >>> get_n
-    get_default_incr_n(n=4)
-
-    You can also use **ValuedVariable** as in the following example
-
-    >>> from pyccel.ast.core import ValuedVariable
-    >>> n = ValuedVariable('int', 'n', value=4)
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> args        = [x, n]
-    >>> results     = [y]
-    >>> body        = [Assign(y,x+n)]
-    >>> incr = FunctionDef('incr', args, results, body)
-    >>> get_n = GetDefaultFunctionArg(n, incr)
-    >>> get_n
-    get_default_incr_n(n=4)
-    """
-
-    def __new__(cls, arg, func):
-
-        if not isinstance(arg, (ValuedArgument, ValuedVariable)):
-            raise TypeError('Expecting a ValuedArgument or ValuedVariable'
-                            )
-
-        if not isinstance(func, FunctionDef):
-            raise TypeError('Expecting a FunctionDef')
-
-        return Basic.__new__(cls, arg, func)
-
-    @property
-    def argument(self):
-        return self._args[0]
-
-    @property
-    def func(self):
-        return self._args[1]
-
-    @property
-    def name(self):
-        text = \
-            'get_default_{func}_{arg}'.format(arg=self.argument.name,
-                func=self.func.name)
-        return text
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-
-        name = sstr(self.name)
-        argument = sstr(self.argument)
-        return '{0}({1})'.format(name, argument)
 
 
 class ClassDef(Basic):
@@ -2979,8 +2497,8 @@ class ClassDef(Basic):
     imports: list, tuple
         list of needed imports
 
-    parent : str
-        parent's class name
+    superclass : str
+        superclass's class name
 
     Examples
     --------
@@ -2999,24 +2517,27 @@ class ClassDef(Basic):
     >>> ClassDef('Point', attributes, methods)
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
+    __slots__ = ('_name','_attributes','_methods','_options',
+                 '_imports','_superclass','_interfaces')
+    _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces')
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         name,
-        attributes=[],
-        methods=[],
-        options=['public'],
-        imports=[],
-        parent=[],
-        interfaces=[],
+        attributes=(),
+        methods=(),
+        options=('public',),
+        imports=(),
+        superclass=(),
+        interfaces=(),
         ):
 
         # name
 
         if isinstance(name, str):
-            name = Symbol(name)
-        elif not isinstance(name, Symbol):
-            raise TypeError('Function name must be Symbol or string')
+            name = PyccelSymbol(name)
+        else:
+            raise TypeError('Function name must be PyccelSymbol or string')
 
         # attributes
 
@@ -3039,8 +2560,8 @@ class ClassDef(Basic):
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        if not iterable(parent):
-            raise TypeError('parent must be iterable')
+        if not iterable(superclass):
+            raise TypeError('superclass must be iterable')
 
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')
@@ -3081,45 +2602,43 @@ class ClassDef(Basic):
         methods = tuple(methods)
 
         # ...
+        self._name = name
+        self._attributes = attributes
+        self._methods = methods
+        self._options = options
+        self._imports = imports
+        self._superclass  = superclass
+        self._interfaces = interfaces
 
-        return Basic.__new__(
-            cls,
-            name,
-            attributes,
-            methods,
-            options,
-            imports,
-            parent,
-            interfaces,
-            )
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def attributes(self):
-        return self._args[1]
+        return self._attributes
 
     @property
     def methods(self):
-        return self._args[2]
+        return self._methods
 
     @property
     def options(self):
-        return self._args[3]
+        return self._options
 
     @property
     def imports(self):
-        return self._args[4]
+        return self._imports
 
     @property
-    def parent(self):
-        return self._args[5]
+    def superclass(self):
+        return self._superclass
 
     @property
     def interfaces(self):
-        return self._args[6]
+        return self._interfaces
 
     @property
     def methods_as_dict(self):
@@ -3128,7 +2647,7 @@ class ClassDef(Basic):
 
         d_methods = {}
         for i in self.methods:
-            d_methods[str(i.name)] = i
+            d_methods[i.name] = i
         return d_methods
 
     @property
@@ -3138,7 +2657,7 @@ class ClassDef(Basic):
 
         d_attributes = {}
         for i in self.attributes:
-            d_attributes[str(i.name)] = i
+            d_attributes[i.name] = i
         return d_attributes
 
     # TODO add other attributes?
@@ -3151,20 +2670,20 @@ class ClassDef(Basic):
             raise TypeError('Expecting attribute to be a string')
 
         if isinstance(O, Variable):
-            cls_name = str(O.name)
+            cls_name = O.name
         else:
             cls_name = str(O)
 
         attributes = {}
         for i in self.attributes:
-            attributes[str(i.name)] = i
+            attributes[i.name] = i
 
         if not attr in attributes:
             raise ValueError('{0} is not an attribute of {1}'.format(attr,
                              str(self)))
 
         var = attributes[attr]
-        name = DottedName(cls_name, str(var.name))
+        name = DottedName(cls_name, var.name)
         return Variable(
             var.dtype,
             name,
@@ -3209,8 +2728,9 @@ class ClassDef(Basic):
         else:
             return self.is_iterable or self.is_with_construct
 
-    def _eval_subs(self, old , new):
-        return self
+    @property
+    def is_unused(self):
+        return False
 
 
 class Import(Basic):
@@ -3236,22 +2756,23 @@ class Import(Basic):
     >>> Import(['foo', abc])
     import foo, foo.bar.baz
     """
+    __slots__ = ('_source','_target','_ignore_at_print')
+    _attribute_nodes = ()
 
-    def __new__(cls, source, target = None, ignore_at_print = False):
+    def __init__(self, source, target = None, ignore_at_print = False):
 
         if not source is None:
             source = Import._format(source)
 
-        return Basic.__new__(cls, source)
-
-    def __init__(self, source, target = None, ignore_at_print = False):
-        self._target = []
+        self._source = source
+        self._target = set()
         self._ignore_at_print = ignore_at_print
-        if isinstance(target, (str, Symbol, DottedName, AsName)):
-            self._target = [Import._format(target)]
+        if isinstance(target, (str, DottedName, AsName)):
+            self._target = set([Import._format(target)])
         elif iterable(target):
             for i in target:
-                self._target.append(Import._format(i))
+                self._target.add(Import._format(i))
+        super().__init__()
 
     @staticmethod
     def _format(i):
@@ -3259,13 +2780,13 @@ class Import(Basic):
             if '.' in i:
                 return DottedName(*i.split('.'))
             else:
-                return Symbol(i)
+                return PyccelSymbol(i)
         if isinstance(i, (DottedName, AsName)):
             return i
-        elif isinstance(i, Symbol):
+        elif isinstance(i, PyccelSymbol):
             return i
         else:
-            raise TypeError('Expecting a string, Symbol DottedName, given {}'.format(type(i)))
+            raise TypeError('Expecting a string, PyccelSymbol DottedName, given {}'.format(type(i)))
 
     @property
     def target(self):
@@ -3273,7 +2794,7 @@ class Import(Basic):
 
     @property
     def source(self):
-        return self._args[0]
+        return self._source
 
     @property
     def ignore(self):
@@ -3285,143 +2806,25 @@ class Import(Basic):
             raise TypeError('to_ignore must be a boolean.')
         self._ignore_at_print = to_ignore
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        source = sstr(self.source)
+    def __str__(self):
+        source = str(self.source)
         if len(self.target) == 0:
             return 'import {source}'.format(source=source)
         else:
-            target = ', '.join([sstr(i) for i in self.target])
+            target = ', '.join([str(i) for i in self.target])
             return 'from {source} import {target}'.format(source=source,
                     target=target)
 
     def define_target(self, new_target):
-        self._target.append(new_target)
+        self._target.add(new_target)
 
     def find_module_target(self, new_target):
         for t in self._target:
-            if isinstance(t, AsName) and new_target == str(t.name):
+            if isinstance(t, AsName) and new_target == t.name:
                 return t.target
-            elif new_target == str(t):
+            elif new_target == t:
                 return t
         return None
-
-class TupleImport(Basic):
-
-    def __new__(cls, *args):
-        for a in args:
-            if not isinstance(a, Import):
-                raise TypeError('Expecting an Import statement')
-        return Basic.__new__(cls, *args)
-
-    @property
-    def imports(self):
-        return self._args
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '\n'.join(sstr(n) for n in self.imports)
-
-
-class Load(Basic):
-
-    """Similar to 'importlib' in python. In addition, we can also provide the
-    functions we want to import.
-
-    Parameters
-    ----------
-    module: str, DottedName
-        name of the module to load.
-
-    funcs: str, list, tuple
-        a string representing the function to load, or a list of strings.
-
-    as_lambda: bool
-        load as a Lambda expression, if True
-
-    nargs: int
-        number of arguments of the function to load. (default = 1)
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Load
-    """
-
-    def __new__(
-        cls,
-        module,
-        funcs=None,
-        as_lambda=False,
-        nargs=1,
-        ):
-        if not isinstance(module, (str, DottedName, list, tuple)):
-            raise TypeError('Expecting a string, DottedName, list or tuple, given {0}'.format(type(module)))
-
-        # see syntax
-
-        if isinstance(module, str):
-            module = module.replace('__', """.""")
-
-        if isinstance(module, (list, tuple)):
-            module = DottedName(*module)
-
-        if funcs:
-            if not isinstance(funcs, (str, DottedName, list, tuple)):
-                raise TypeError('Expecting a string, DottedName, list or tuple')
-
-            if isinstance(funcs, str):
-                funcs = [funcs]
-            elif not isinstance(funcs, (list, tuple)):
-                raise TypeError('Expecting a string, list, tuple')
-
-        if not isinstance(as_lambda, (LiteralTrue, LiteralFalse, bool)):
-            raise TypeError('Expecting a boolean, given {0}'.format(as_lambda))
-
-        return Basic.__new__(cls, module, funcs, as_lambda, nargs)
-
-    @property
-    def module(self):
-        return self._args[0]
-
-    @property
-    def funcs(self):
-        return self._args[1]
-
-    @property
-    def as_lambda(self):
-        return self._args[2]
-
-    @property
-    def nargs(self):
-        return self._args[3]
-
-    def execute(self):
-        module = str(self.module)
-        package = importlib.import_module(module)
-
-        ls = []
-        for f in self.funcs:
-            try:
-                m = getattr(package, '{0}'.format(str(f)))
-            except AttributeError:
-                raise ImportError('could not import {0}'.format(f))
-
-            # TODO improve
-
-            if self.as_lambda:
-                args = []
-                for i in range(0, self.nargs):
-                    fi = Symbol('f{0}'.format(i))
-                    args.append(fi)
-                if len(args) == 1:
-                    arg = args[0]
-                    m = Lambda(arg, m(arg, evaluate=False))
-                else:
-                    m = Lambda(tuple(args), m(evaluate=False, *args))
-
-            ls.append(m)
-
-        return ls
 
 
 # TODO: Should Declare have an optional init value for each var?
@@ -3436,7 +2839,7 @@ class FuncAddressDeclare(Basic):
         An instance of FunctionAddress.
     intent: None, str
         one among {'in', 'out', 'inout'}
-    value: Expr
+    value: PyccelAstNode
         variable value
     static: bool
         True for a static declaration of an array.
@@ -3448,6 +2851,8 @@ class FuncAddressDeclare(Basic):
     >>> y = Variable('real', 'y')
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
     """
+    __slots__ = ('_variable','_intent','_value','_static')
+    _attribute_nodes = ('_variable', '_value')
 
     def __init__(
         self,
@@ -3471,6 +2876,7 @@ class FuncAddressDeclare(Basic):
         self._intent    = intent
         self._value     = value
         self._static    = static
+        super().__init__()
 
     @property
     def results(self):
@@ -3513,7 +2919,7 @@ class Declare(Basic):
         Variables must be of the same type.
     intent: None, str
         one among {'in', 'out', 'inout'}
-    value: Expr
+    value: PyccelAstNode
         variable value
     static: bool
         True for a static declaration of an array.
@@ -3526,9 +2932,12 @@ class Declare(Basic):
     >>> Declare('real', Variable('real', 'x'), intent='out')
     Declare(NativeReal(), (x,), out)
     """
+    __slots__ = ('_dtype','_variable','_intent','_value',
+                 '_static','_passed_from_dotted')
+    _attribute_nodes = ('_variable', '_value')
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         dtype,
         variable,
         intent=None,
@@ -3556,127 +2965,61 @@ class Declare(Basic):
         if not isinstance(passed_from_dotted, bool):
             raise TypeError('Expecting a boolean for passed_from_dotted attribute')
 
-        return Basic.__new__(
-            cls,
-            dtype,
-            variable,
-            intent,
-            value,
-            static,
-            passed_from_dotted
-            )
+        self._dtype = dtype
+        self._variable = variable
+        self._intent = intent
+        self._value = value
+        self._static = static
+        self._passed_from_dotted = passed_from_dotted
+        super().__init__()
 
     @property
     def dtype(self):
-        return self._args[0]
+        return self._dtype
 
     @property
     def variable(self):
-        return self._args[1]
+        return self._variable
 
     @property
     def intent(self):
-        return self._args[2]
+        return self._intent
 
     @property
     def value(self):
-        return self._args[3]
+        return self._value
 
     @property
     def static(self):
-        return self._args[4]
+        return self._static
 
     @property
     def passed_from_dotted(self):
         """ Argument is the lhs of a DottedFunction
         """
-        return self._args[5]
-
-
-class Subroutine(sp_UndefinedFunction):
-    pass
+        return self._passed_from_dotted
 
 
 class Break(Basic):
 
     """Represents a break in the code."""
-
-    pass
+    __slots__ = ()
+    _attribute_nodes = ()
 
 
 class Continue(Basic):
 
     """Represents a continue in the code."""
-
-    pass
+    __slots__ = ()
+    _attribute_nodes = ()
 
 
 class Raise(Basic):
 
     """Represents a raise in the code."""
+    __slots__ = ()
+    _attribute_nodes = ()
 
-    pass
-
-
-# TODO: add example
-
-class Random(PyccelInternalFunction):
-
-    """
-    Represents a 'random' number in the code.
-    """
-
-    # TODO : remove later
-
-    def __str__(self):
-        return 'random'
-
-    def __init__(self, seed):
-        PyccelInternalFunction.__init__(self, seed)
-
-    @property
-    def seed(self):
-        return self._args[0]
-
-
-# TODO: improve with __new__ from Function and add example
-
-class SumFunction(PyccelAstNode):
-
-    """Represents a Sympy Sum Function.
-
-       Parameters
-       ----------
-       body: Expr
-       Sympy Expr in which the sum will be performed.
-
-       iterator:
-       a tuple  that containts the index of the sum and it's range.
-    """
-
-    def __new__(
-        cls,
-        body,
-        iterator,
-        stmts=None,
-        ):
-        if not isinstance(iterator, tuple):
-            raise TypeError('iterator must be a tuple')
-        if not len(iterator) == 3:
-            raise ValueError('iterator must be of length 3')
-        return Basic.__new__(cls, body, iterator, stmts)
-
-    @property
-    def body(self):
-        return self._args[0]
-
-    @property
-    def iterator(self):
-        return self._args[1]
-
-    @property
-    def stmts(self):
-        return self._args[2]
 
 
 class SymbolicPrint(Basic):
@@ -3685,19 +3028,21 @@ class SymbolicPrint(Basic):
 
     Parameters
     ----------
-    expr : sympy expr
-        The expression to return.
+    expr : PyccelAstNode
+        The expression to print
 
     Examples
     --------
-    >>> from sympy import symbols
+    >>> from pyccel.ast.internals import symbols
     >>> from pyccel.ast.core import Print
     >>> n,m = symbols('n,m')
     >>> Print(('results', n,m))
     Print((results, n, m))
     """
+    __slots__ = ('_expr',)
+    _attribute_nodes = ('_expr',)
 
-    def __new__(cls, expr):
+    def __init__(self, expr):
         if not iterable(expr):
             raise TypeError('Expecting an iterable')
 
@@ -3706,11 +3051,13 @@ class SymbolicPrint(Basic):
                               SympyFunction)):
                 raise TypeError('Expecting Lambda, SymbolicAssign, SympyFunction for {}'.format(i))
 
-        return Basic.__new__(cls, expr)
+        self._expr = expr
+
+        super().__init__()
 
     @property
     def expr(self):
-        return self._args[0]
+        return self._expr
 
 
 class Del(Basic):
@@ -3729,18 +3076,22 @@ class Del(Basic):
     >>> Del([x])
     Del([x])
     """
+    __slots__ = ('_variables',)
+    _attribute_nodes = ('_variables',)
 
-    def __new__(cls, expr):
+    def __init__(self, expr):
 
         # TODO: check that the variable is allocatable
 
         if not iterable(expr):
             expr = tuple([expr])
-        return Basic.__new__(cls, expr)
+
+        self._variables = expr
+        super().__init__()
 
     @property
     def variables(self):
-        return self._args[0]
+        return self._variables
 
 
 class EmptyNode(Basic):
@@ -3762,35 +3113,11 @@ class EmptyNode(Basic):
     >>> EmptyNode()
 
     """
+    __slots__ = ()
+    _attribute_nodes = ()
 
-    def __new__(cls):
-        return Basic.__new__(cls)
-
-    def _sympystr(self, printer):
+    def __str__(self):
         return ''
-
-
-class NewLine(Basic):
-
-    """Represents a NewLine in the code.
-
-    Parameters
-    ----------
-    text : str
-       the comment line
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import NewLine
-    >>> NewLine()
-
-    """
-
-    def __new__(cls):
-        return Basic.__new__(cls)
-
-    def _sympystr(self, printer):
-        return '\n'
 
 
 class Comment(Basic):
@@ -3808,17 +3135,40 @@ class Comment(Basic):
     >>> Comment('this is a comment')
     # this is a comment
     """
+    __slots__ = ('_text')
+    _attribute_nodes = ()
 
-    def __new__(cls, text):
-        return Basic.__new__(cls, text)
+    def __init__(self, text):
+        self._text = text
+        super().__init__()
 
     @property
     def text(self):
-        return self._args[0]
+        return self._text
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '# {0}'.format(sstr(self.text))
+    def __str__(self):
+        return '# {0}'.format(str(self.text))
+
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
+        kwargs = dict(text = self.text)
+        return (apply, (self.__class__, (), kwargs))
 
 
 class SeparatorComment(Comment):
@@ -3836,10 +3186,11 @@ class SeparatorComment(Comment):
     >>> SeparatorComment(n=40)
     # ........................................
     """
+    __slots__ = ()
 
-    def __new__(cls, n):
+    def __init__(self, n):
         text = """.""" * n
-        return Comment.__new__(cls, text)
+        super().__init__(text)
 
 class AnnotatedComment(Basic):
 
@@ -3848,7 +3199,7 @@ class AnnotatedComment(Basic):
     Parameters
     ----------
     accel : str
-       accelerator id. One among {'omp', 'acc'}
+       accelerator id. One among {'acc'}
 
     txt: str
         statement to print
@@ -3856,46 +3207,30 @@ class AnnotatedComment(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import AnnotatedComment
-    >>> AnnotatedComment('omp', 'parallel')
-    AnnotatedComment(omp, parallel)
+    >>> AnnotatedComment('acc', 'parallel')
+    AnnotatedComment(acc, parallel)
     """
+    __slots__ = ('_accel','_txt')
+    _attribute_nodes = ()
 
-    def __new__(cls, accel, txt):
-        return Basic.__new__(cls, accel, txt)
+    def __init__(self, accel, txt):
+        self._accel = accel
+        self._txt = txt
+        super().__init__()
 
     @property
     def accel(self):
-        return self._args[0]
+        return self._accel
 
     @property
     def txt(self):
-        return self._args[1]
+        return self._txt
 
     def __getnewargs__(self):
         """used for Pickling self."""
 
         args = (self.accel, self.txt)
         return args
-
-class OMP_For_Loop(AnnotatedComment):
-    """ Represents an OpenMP Loop construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
-
-class OMP_Parallel_Construct(AnnotatedComment):
-    """ Represents an OpenMP Parallel construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
-
-class OMP_Single_Construct(AnnotatedComment):
-    """ Represents an OpenMP Single construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
-
-class Omp_End_Clause(AnnotatedComment):
-    """ Represents the End of an OpenMP block. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
 
 class CommentBlock(Basic):
 
@@ -3906,20 +3241,23 @@ class CommentBlock(Basic):
     txt : str
 
     """
-    def __new__(cls, txt, header = 'CommentBlock'):
+    __slots__ = ('_header','_comments')
+    _attribute_nodes = ()
+
+    def __init__(self, txt, header = 'CommentBlock'):
         if not isinstance(txt, str):
             raise TypeError('txt must be of type str')
         txt = txt.replace('"','')
         txts = txt.split('\n')
 
-        return Basic.__new__(cls, txts)
-
-    def __init__(self, txt, header = 'CommentBlock'):
         self._header = header
+        self._comments = txts
+
+        super().__init__()
 
     @property
     def comments(self):
-        return self._args[0]
+        return self._comments
 
     @property
     def header(self):
@@ -3930,105 +3268,101 @@ class CommentBlock(Basic):
         self._header = header
 
 
-class Concatenate(PyccelAstNode):
-
-    """Represents the String concatination operation.
-
-    Parameters
-    ----------
-    left : Symbol or string or List
-
-    right : Symbol or string or List
-
-
-    Examples
-    --------
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Concatenate
-    >>> x = symbols('x')
-    >>> Concatenate('some_string',x)
-    some_string+x
-    >>> Concatenate('some_string','another_string')
-    'some_string' + 'another_string'
-    """
-
-    # TODO add step
-
-    def __new__(cls, args, is_list):
-        args = list(args)
-
-        args = [ repr(arg) if isinstance(arg, str) else arg for arg in args]
-
-        return Basic.__new__(cls, args, is_list)
-
-    @property
-    def args(self):
-        return self._args[0]
-
-    @property
-    def is_list(self):
-        return self._args[1]
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-
-        args = '+'.join(sstr(arg) for arg in self.args)
-
-        return args
-
-
 class Assert(Basic):
 
     """Represents a assert statement in the code.
 
     Parameters
     ----------
-    test: Expr
+    test: PyccelAstNode
         boolean expression to check
 
     Examples
     --------
     """
+    __slots__ = ('_test',)
+    _attribute_nodes = ('_test',)
     #TODO add type check in the semantic stage
-    def __new__(cls, test):
+    def __init__(self, test):
         #if not isinstance(test, (bool, Relational, sp_Boolean)):
         #    raise TypeError('test %s is of type %s, but must be a Relational, Boolean, or a built-in bool.'
         #                     % (test, type(test)))
 
-        return Basic.__new__(cls, test)
+        self._test = test
+        super().__init__()
 
     @property
     def test(self):
-        return self._args[0]
-
-
-class Eval(Basic):
-
-    """Basic class for eval instruction."""
-
-    pass
+        return self._test
 
 
 class Pass(Basic):
 
     """Basic class for pass instruction."""
-
-    pass
-
+    __slots__ = ()
+    _attribute_nodes = ()
 
 class Exit(Basic):
 
-    """Basic class for exists."""
+    """Basic class for exits."""
+    __slots__ = ()
+    _attribute_nodes = ()
 
-    pass
-
-
+#TODO: [EB 26.01.2021] Do we need this unused class?
 class ErrorExit(Exit):
 
-    """Exist with error."""
+    """Exit with error."""
+    __slots__ = ()
 
-    pass
+class IfSection(Basic):
+    """Represents a condition and associated code block
+    in an if statement in the code.
 
+    Parameters
+    ----------
+    cond : PyccelAstNode
+           A boolean expression indicating whether or not the block
+           should be executed
+    body : CodeBlock
+           The code to be executed in the condition is satisfied
+
+    Examples
+    --------
+    >>> from pyccel.ast.internals import PyccelSymbol
+    >>> from pyccel.ast.core import Assign, IfSection, CodeBlock
+    >>> n = PyccelSymbol('n')
+    >>> IfSection((n>1), CodeBlock([Assign(n,n-1)]))
+    IfSection((n>1), CodeBlock([Assign(n,n-1)]))
+    """
+    __slots__ = ('_condition','_block')
+    _attribute_nodes = ('_condition','_block')
+
+    def __init__(self, cond, body):
+
+        if PyccelAstNode.stage == 'semantic' and cond.dtype is not NativeBool():
+            cond = PythonBool(cond)
+        if isinstance(body, (list, tuple)):
+            body = CodeBlock(body)
+        elif isinstance(body, CodeBlock):
+            body = body
+        else:
+            raise TypeError('body is not iterable or CodeBlock')
+
+        self._condition = cond
+        self._block     = body
+
+        super().__init__()
+
+    @property
+    def condition(self):
+        return self._condition
+
+    @property
+    def body(self):
+        return self._block
+
+    def __iter__(self):
+        return iter((self.condition, self.body))
 
 class If(Basic):
 
@@ -4036,66 +3370,51 @@ class If(Basic):
 
     Parameters
     ----------
-    args :
-        every argument is a tuple and
-        is defined as (cond, expr) where expr is a valid ast element
-        and cond is a boolean test.
+    args : IfSection
+           All arguments are sections of the complete If block
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import PyccelSymbol
     >>> from pyccel.ast.core import Assign, If
-    >>> n = Symbol('n')
-    >>> If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
-    If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
+    >>> n = PyccelSymbol('n')
+    >>> i1 = IfSection((n>1), [Assign(n,n-1)])
+    >>> i2 = IfSection(True, [Assign(n,n+1)])
+    >>> If(i1, i2)
+    If(IfSection((n>1), [Assign(n,n-1)]), IfSection(True, [Assign(n,n+1)]))
     """
+    __slots__ = ('_blocks',)
+    _attribute_nodes = ('_blocks',)
 
     # TODO add type check in the semantic stage
 
-    def __new__(cls, *args):
+    def __init__(self, *args):
 
-        newargs = []
-        for ce in args:
-            cond = ce[0]
-            if PyccelAstNode.stage == 'semantic' and cond.dtype is not NativeBool():
-                cond = PythonBool(cond)
-            if isinstance(ce[1], (list, tuple)):
-                body = CodeBlock(ce[1])
-            elif isinstance(ce[1], CodeBlock):
-                body = ce[1]
-            else:
-                raise TypeError('body is not iterable or CodeBlock')
-            newargs.append((cond,body))
+        if not all(isinstance(a, IfSection) for a in args):
+            raise TypeError("An If must be composed of IfSections")
 
-        return Basic.__new__(cls, *newargs)
+        self._blocks = args
+
+        super().__init__()
+
+    @property
+    def blocks(self):
+        return self._blocks
 
     @property
     def bodies(self):
-        b = []
-        for i in self._args:
-            b.append( i[1])
-        return b
+        return [b.body for b in self._blocks]
 
 class StarredArguments(Basic):
-    def __new__(cls, args):
-        return Basic.__new__(cls, args)
+    __slots__ = ('_starred_obj',)
+    _attribute_nodes = ('_starred_obj',)
+    def __init__(self, args):
+        self._starred_obj = args
+        super().__init__()
 
     @property
     def args_var(self):
-        return self._args[0]
-
-
-def is_simple_assign(expr):
-    if not isinstance(expr, Assign):
-        return False
-
-    assignable = [Variable, IndexedElement]
-    assignable += [sp_Integer, sp_Float]
-    assignable = tuple(assignable)
-    if isinstance(expr.rhs, assignable):
-        return True
-    else:
-        return False
+        return self._starred_obj
 
 
 # ...
@@ -4194,7 +3513,7 @@ def get_initial_value(expr, var):
 # ... TODO treat other statements
 
 def get_assigned_symbols(expr):
-    """Returns all assigned symbols (as sympy Symbol) in the AST.
+    """Returns all assigned symbols in the AST.
 
     Parameters
     ----------
@@ -4294,27 +3613,11 @@ def get_iterable_ranges(it, var_name=None):
                 args += [arg]
 
             return [PythonRange(*args)]
-        elif isinstance(cls_base, Tensor):
-
-            if not isinstance(it.name, DottedName):
-                raise TypeError('Expecting a DottedName, given  {0}'.format(type(it.name)))
-
-            # ...
-
-            ranges = []
-            for r in cls_base.ranges:
-                ranges += get_iterable_ranges(r,
-                        var_name=str(it.name.name[0]))
-
-            # ...
-
-            return ranges
 
     elif isinstance(it, ConstructorCall):
         cls_base = it.this.cls_base
 
         # arguments[0] is 'self'
-        # TODO must be improved in syntax, so that a['value'] is a sympy object
 
         args = []
         kwargs = {}
@@ -4482,6 +3785,8 @@ def get_iterable_ranges(it, var_name=None):
     return [PythonRange(s, e, 1) for (s, e) in zip(starts, ends)]
 
 class ParserResult(Basic):
+    __slots__ = ('_program','_module','_prog_name','_mod_name')
+    _attribute_nodes = ('_program','_module')
 
     def __init__(
         self,
@@ -4511,6 +3816,7 @@ class ParserResult(Basic):
         self._module    = module
         self._prog_name = prog_name
         self._mod_name  = mod_name
+        super().__init__()
 
 
     @property
@@ -4575,11 +3881,9 @@ def process_shape(shape):
     for s in shape:
         if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, FunctionCall)):
             new_shape.append(s)
-        elif isinstance(s, sp_Integer):
-            new_shape.append(LiteralInteger(s.p))
         elif isinstance(s, int):
             new_shape.append(LiteralInteger(s))
         else:
-            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, FunctionCall')
+            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger, Variable, Slice, PyccelAstNode, int, FunctionCall')
     return tuple(new_shape)
 

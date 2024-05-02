@@ -14,13 +14,12 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
 from .core      import create_incremented_string
-from .core      import CodeBlock, Comment, For, Assign
 
 from .builtins  import PythonRange, PythonTuple
 
 from .mathext   import MathCeil
 
-from .literals  import LiteralInteger, LiteralFloat
+from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 
 from .datatypes import NativeInteger
 
@@ -128,10 +127,13 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     #Constants
     if isinstance(expr, LiteralInteger):
-        return sp.Integer(expr.p)
+        return sp.Integer(expr.python_value)
 
     elif isinstance(expr, LiteralFloat):
-        return sp.Float(expr)
+        return sp.Float(expr.python_value)
+
+    elif isinstance(expr, LiteralComplex):
+        return sp.Float(expr.real) + sp.Float(expr.imag) * 1j
 
     #Operators
     elif isinstance(expr, PyccelDiv):
@@ -140,7 +142,7 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     elif isinstance(expr, PyccelMul):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return sp.Mul(*args)
+        return args[0] * args[1]
 
     elif isinstance(expr, PyccelMinus):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
@@ -152,11 +154,11 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     elif isinstance(expr, PyccelAdd):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return sp.Add(*args)
+        return args[0] + args[1]
 
     elif isinstance(expr, PyccelPow):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return sp.Pow(*args)
+        return args[0] ** args[1]
 
     elif isinstance(expr, PyccelAssociativeParenthesis):
         return pyccel_to_sympy(expr.args[0], symbol_map, used_names)
@@ -178,29 +180,11 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         symbol_map[sym] = expr
         return sym
 
-    elif isinstance(expr, CodeBlock):
-        body = (pyccel_to_sympy(b, symbol_map, used_names) for b in expr.body)
-        return CodeBlock(body)
-
-    elif isinstance(expr, (Comment)):
-        return Comment('')
-
-    elif isinstance(expr, For):
-        target = pyccel_to_sympy(expr.target, symbol_map, used_names)
-        iter_obj = pyccel_to_sympy(expr.iterable, symbol_map, used_names)
-        body = pyccel_to_sympy(expr.body, symbol_map, used_names)
-        return For(target, iter_obj, body)
-
     elif isinstance(expr, PythonRange):
         start = pyccel_to_sympy(expr.start, symbol_map, used_names)
         stop  = pyccel_to_sympy(expr.stop , symbol_map, used_names)
         step  = pyccel_to_sympy(expr.step , symbol_map, used_names)
         return sp.Range(start, stop, step)
-
-    elif isinstance(expr, Assign):
-        lhs = pyccel_to_sympy(expr.lhs, symbol_map, used_names)
-        rhs = pyccel_to_sympy(expr.rhs, symbol_map, used_names)
-        return Assign(lhs, rhs)
 
     elif isinstance(expr, PythonTuple):
         args = [pyccel_to_sympy(a, symbol_map, used_names) for a in expr]

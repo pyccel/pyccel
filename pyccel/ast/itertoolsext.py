@@ -17,15 +17,22 @@ class Product(Basic):
 
     arg : list, tuple
     """
+    __slots__ = ('_elements',)
+    _attribute_nodes = ('_elements',)
 
     def __new__(cls, *args):
         if not isinstance(args, (tuple, list)):
             raise TypeError('args must be an iterable')
         elif len(args) < 2:
             return args[0]
-        return Basic.__new__(cls, *args)
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, *args):
+        self._elements = args
+        super().__init__()
 
     @property
     def elements(self):
         """get expression's elements"""
-        return self._args
+        return self._elements

@@ -10,7 +10,7 @@ from pyccel.codegen.printing.ccode  import CCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
 
 from pyccel.ast.core      import FunctionDef, Module, Program, Interface, ModuleHeader
-from pyccel.ast.core      import EmptyNode, NewLine, Comment, CommentBlock
+from pyccel.ast.core      import EmptyNode, Comment, CommentBlock
 from pyccel.ast.headers   import Header
 from pyccel.errors.errors import Errors
 
@@ -173,7 +173,7 @@ class Codegen(object):
         errors = Errors()
         errors.set_parser_stage('codegen')
         # set the code printer
-        self._printer = code_printer(self.parser, settings)
+        self._printer = code_printer(self.parser, **settings)
 
     def get_printer_imports(self):
         """return the imports of the current codeprinter"""
@@ -206,7 +206,7 @@ class Codegen(object):
         """Finds the source code kind."""
 
 
-        cls = (Header, EmptyNode, NewLine, Comment, CommentBlock, Module)
+        cls = (Header, EmptyNode, Comment, CommentBlock, Module)
         is_module = all(isinstance(i,cls) for i in self.ast.body)
 
 

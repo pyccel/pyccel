@@ -4,16 +4,16 @@
 #------------------------------------------------------------------------------------------#
 from sympy import cse as sympy_cse
 from sympy import Sum
-from sympy import IndexedBase, Indexed
-from sympy import Symbol
-from sympy import Tuple, Lambda
+from sympy import Tuple
 
 from sympy.core.function  import Function
+from pyccel.ast.builtins import Lambda
 from pyccel.ast.core import Import
 from pyccel.ast.core import Return, FunctionDef
 from pyccel.ast.core import Assign, create_variable
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import For
+from pyccel.ast.internals      import PyccelSymbol
 from pyccel.ast.functionalexpr import GeneratorComprehension as GC
 from pyccel.ast.functionalexpr import FunctionalSum
 
@@ -32,7 +32,7 @@ def cse(expr):
     (vars_old, stmts) = map(list, zip(*ls))
     vars_new = []
     free_gl = expr.free_symbols
-    free_gl.update(expr.atoms(IndexedBase))
+    #free_gl.update(expr.atoms(IndexedBase)) #What should this be instead?
     free_gl.update(vars_old)
     stmts.append(expr)
 
@@ -42,7 +42,7 @@ def cse(expr):
         free = list(free)
         var = create_variable(stmts[i])
         if len(free) > 0:
-            var = IndexedBase(var)[free]
+            var = var[free]
         vars_new.append(var)
     for i in range(len(stmts) - 1):
         stmts[i + 1] = stmts[i + 1].replace(vars_old[i],
@@ -53,7 +53,7 @@ def cse(expr):
     for i in range(len(stmts) - 1):
         stmts[i] = Assign(vars_new[i], stmts[i])
         stmts[i] = pyccel_sum(stmts[i])
-        if isinstance(vars_new[i], Indexed):
+        if isinstance(vars_new[i], IndexedElement):
             ind = vars_new[i].indices
             tp = list(stmts[i + 1].atoms(Tuple))
             size = None
@@ -65,8 +65,7 @@ def cse(expr):
                         break
             if not all(size):
                 raise ValueError('Unable to find range of index')
-            name = str(vars_new[i].base)
-            var = Symbol(name)
+            var = PyccelSymbol(vars_new[i].base)
             stmt = Assign(var, Function('empty')(size[0]))
             allocate.append(stmt)
             stmts[i] = For(ind[0], Function('range')(size[0]), [stmts[i]])

@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-# pylint: disable=R0201, missing-function-docstring 
+# pylint: disable=R0201, missing-function-docstring
 
 import os
 import re
@@ -13,15 +13,11 @@ import ast
 
 #==============================================================================
 
-from sympy import Symbol
-from sympy import IndexedBase
-from sympy import Lambda
-from sympy import Dict
 from sympy.core import cache
 
 #==============================================================================
 
-from pyccel.ast.basic import PyccelAstNode
+from pyccel.ast.basic import Basic, PyccelAstNode
 
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ParserResult
@@ -33,25 +29,23 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor
-from pyccel.ast.core import If
+from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import While
 from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
-from pyccel.ast.core import PythonTuple
-from pyccel.ast.core import Comment, EmptyNode, NewLine
+from pyccel.ast.core import Comment, EmptyNode
 from pyccel.ast.core import Break, Continue
 from pyccel.ast.core import Argument, ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import CommentBlock
 from pyccel.ast.core import With
-from pyccel.ast.core import PythonList
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
-from pyccel.ast.core import _atomic
+from pyccel.ast.core import IndexedElement
 from pyccel.ast.core import create_variable
 
-from pyccel.ast.operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
+from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
@@ -59,7 +53,8 @@ from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.operators import IfTernaryOperator
 
-from pyccel.ast.builtins import PythonPrint
+from pyccel.ast.builtins import PythonTuple, PythonList
+from pyccel.ast.builtins import PythonPrint, Lambda
 from pyccel.ast.headers  import Header, MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
@@ -67,7 +62,7 @@ from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast.variable  import DottedName
 
-from pyccel.ast.internals import Slice
+from pyccel.ast.internals import Slice, PyccelSymbol
 
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser
@@ -174,6 +169,8 @@ class SyntaxParser(BasicParser):
         if hasattr(self, syntax_method):
             self._scope.append(stmt)
             result = getattr(self, syntax_method)(stmt)
+            if isinstance(result, Basic) and isinstance(stmt, ast.AST):
+                result.set_fst(stmt)
             self._scope.pop()
             return result
 
@@ -222,7 +219,7 @@ class SyntaxParser(BasicParser):
                 n_empty_lines = 0
                 current_file = start
                 current_file.append(v)
-            elif isinstance(v, (NewLine, EmptyNode)):
+            elif isinstance(v, EmptyNode):
                 # EmptyNodes are defined in the same block as the previous line
                 current_file.append(v)
                 n_empty_lines += 1
@@ -259,9 +256,6 @@ class SyntaxParser(BasicParser):
                             module    = mod_code,
                             prog_name = prog_name,
                             mod_name  = current_mod_name)
-        code.set_fst(stmt)
-        code._fst.lineno=1
-        code._fst.col_offset=1
         return code
 
     def _visit_Expr(self, stmt):
@@ -292,21 +286,8 @@ class SyntaxParser(BasicParser):
             return old
 
     def _visit_Dict(self, stmt):
-
-        d = {}
-        for key, value in zip(stmt.keys, stmt.values):
-
-            key = self._visit(key)
-            value = self._visit(value)
-
-            # sympy does not allow keys to be strings
-
-            if isinstance(key, LiteralString):
-                errors.report(SYMPY_RESTRICTION_DICT_KEYS,
-                              severity='error')
-
-            d[key] = value
-        return Dict(d)
+        errors.report(PYCCEL_RESTRICTION_TODO,
+                symbol=stmt, severity='fatal')
 
     def _visit_NoneType(self, stmt):
         return Nil()
@@ -346,7 +327,6 @@ class SyntaxParser(BasicParser):
 
         # we set the fst to keep track of needed information for errors
 
-        expr.set_fst(stmt)
         return expr
 
     def _visit_AugAssign(self, stmt):
@@ -369,7 +349,6 @@ class SyntaxParser(BasicParser):
 
         # we set the fst to keep track of needed information for errors
 
-        expr.set_fst(stmt)
         return expr
 
     def _visit_arguments(self, stmt):
@@ -440,12 +419,12 @@ class SyntaxParser(BasicParser):
 
 
     def _visit_Name(self, stmt):
-        return Symbol(stmt.id)
+        return PyccelSymbol(stmt.id)
 
     def _treat_import_source(self, source, level):
-        source = '.'*level + str(source)
+        source = '.'*level + source
         if source.count('.') == 0:
-            source = Symbol(source)
+            source = PyccelSymbol(source)
         else:
             source = DottedName(*source.split('.'))
 
@@ -468,7 +447,6 @@ class SyntaxParser(BasicParser):
             return expr[0]
         else:
             expr = CodeBlock(expr)
-            expr.set_fst(stmt)
             return expr
 
     def _visit_ImportFrom(self, stmt):
@@ -486,7 +464,6 @@ class SyntaxParser(BasicParser):
             targets.append(s)
 
         expr = Import(source, targets)
-        expr.set_fst(stmt)
         self.insert_import(expr)
         return expr
 
@@ -612,7 +589,6 @@ class SyntaxParser(BasicParser):
         if not isinstance(results, (list, PythonTuple, PythonList)):
             results = [results]
         expr = Return(results)
-        expr.set_fst(stmt)
         return expr
 
     def _visit_Pass(self, stmt):
@@ -630,7 +606,7 @@ class SyntaxParser(BasicParser):
         local_vars   = []
         global_vars  = []
         headers      = []
-        templates    = {}
+        template    = {}
         is_pure      = False
         is_elemental = False
         is_private   = False
@@ -640,8 +616,7 @@ class SyntaxParser(BasicParser):
         def fill_types(ls):
             container = []
             for arg in ls:
-                if isinstance(arg, Symbol):
-                    arg = arg.name
+                if isinstance(arg, PyccelSymbol):
                     container.append(arg)
                 elif isinstance(arg, LiteralString):
                     arg = str(arg)
@@ -666,12 +641,12 @@ class SyntaxParser(BasicParser):
 
         if all(not isinstance(a, Nil) for a in annotated_args):
             if stmt.returns:
-                returns = ValuedArgument(Symbol('results'),self._visit(stmt.returns))
+                returns = ValuedArgument(PyccelSymbol('results'),self._visit(stmt.returns))
                 annotated_args.append(returns)
             decorators['types'] = [FunctionCall('types', annotated_args)]
 
         for d in self._visit(stmt.decorator_list):
-            tmp_var = str(d) if isinstance(d, Symbol) else str(d.funcdef)
+            tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
             if tmp_var in decorators:
                 decorators[tmp_var] += [d]
             else:
@@ -686,7 +661,7 @@ class SyntaxParser(BasicParser):
 
         if 'allow_negative_index' in decorators:
             decorators['allow_negative_index'] = tuple(str(b) for a in decorators['allow_negative_index'] for b in a.args)
-
+        template['template_dict'] = {}
         # extract the templates
         if 'template' in decorators:
             for comb_types in decorators['template']:
@@ -727,16 +702,21 @@ class SyntaxParser(BasicParser):
 
                 types = fill_types(ls)
 
-                txt  = '#$ header template ' + str(tp_name)
+                txt  = '#$ header template ' + tp_name
                 txt += '(' + '|'.join(types) + ')'
-                if tp_name in templates:
+                if tp_name in template['template_dict']:
                     msg = 'The template "{}" is duplicated'.format(tp_name)
                     errors.report(msg,
                                 bounding_box = (stmt.lineno, stmt.col_offset),
                                 severity='warning')
+                # Make templates decorator dict accessible from decorators dict
+                template['template_dict'][tp_name] = hdr_parse(stmts=txt)
+            # Make template decorator list accessible from decorators dict
+            template['decorator_list'] = decorators['template']
+            decorators['template'] = template
 
-                templates[tp_name] = hdr_parse(stmts=txt)
-
+        if not template['template_dict']:
+            decorators['template'] = None
         # extract the types to construct a header
         if 'types' in decorators:
             for comb_types in decorators['types']:
@@ -815,23 +795,27 @@ class SyntaxParser(BasicParser):
         if 'private' in decorators.keys():
             is_private = True
 
-        returns = [i.expr for i in _atomic(body, cls=Return)]
+        body = CodeBlock(body)
+
+        returns = [i.expr for i in body.get_attribute_nodes(Return)]
         assert all(len(i) == len(returns[0]) for i in returns)
         results = []
         result_counter = 1
-        for i in zip(*returns):
-            if not all(i[0]==j for j in i) or not isinstance(i[0], Symbol):
-                result_name, result_counter = create_variable(self._used_names,
-                                                              prefix = 'Out',
-                                                              counter = result_counter)
-                results.append(result_name)
-            elif isinstance(i[0], Symbol) and any(i[0].name==x.name for x in arguments):
-                result_name, result_counter = create_variable(self._used_names,
-                                                              prefix = 'Out',
-                                                              counter = result_counter)
-                results.append(result_name)
+
+        for r in zip(*returns):
+            r0 = r[0]
+
+            pyccel_symbol  = isinstance(r0, PyccelSymbol)
+            same_results   = all(r0 == ri for ri in r)
+            name_available = all(r0 != a.name for a in arguments)
+
+            if pyccel_symbol and same_results and name_available:
+                result_name = r0
             else:
-                results.append(i[0])
+                result_name, result_counter = create_variable(self._used_names, \
+                            prefix = 'Out', counter = result_counter)
+
+            results.append(result_name)
 
         func = FunctionDef(
                name,
@@ -846,10 +830,8 @@ class SyntaxParser(BasicParser):
                imports=imports,
                decorators=decorators,
                headers=headers,
-               templates=templates,
                doc_string=doc_string)
 
-        func.set_fst(stmt)
         return func
 
     def _visit_ClassDef(self, stmt):
@@ -861,11 +843,10 @@ class SyntaxParser(BasicParser):
         attributes = methods[0].arguments
         parent = [self._visit(i) for i in stmt.bases]
         expr = ClassDef(name=name, attributes=attributes,
-                        methods=methods, parent=parent)
+                        methods=methods, superclass=parent)
 
         # we set the fst to keep track of needed information for errors
 
-        expr.set_fst(stmt)
         return expr
 
     def _visit_Subscript(self, stmt):
@@ -881,7 +862,7 @@ class SyntaxParser(BasicParser):
             ch = ch.value
         args = tuple(args)
         var = self._visit(ch)
-        var = IndexedBase(var)[args]
+        var = IndexedElement(var, *args)
         return var
 
     def _visit_ExtSlice(self, stmt):
@@ -900,7 +881,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
-        attr = Symbol(stmt.attr)
+        attr = PyccelSymbol(stmt.attr)
         return DottedName(val, attr)
 
 
@@ -917,15 +898,13 @@ class SyntaxParser(BasicParser):
 
         func = self._visit(stmt.func)
 
-        if isinstance(func, Symbol):
-            f_name = str(func.name)
-            if f_name == "print":
+        if isinstance(func, PyccelSymbol):
+            if func == "print":
                 func = PythonPrint(PythonTuple(*args))
             else:
-                func = FunctionCall(f_name, args)
+                func = FunctionCall(func, args)
         elif isinstance(func, DottedName):
-            f_name = str(func.name[-1])
-            func_attr = FunctionCall(f_name, args)
+            func_attr = FunctionCall(func.name[-1], args)
             func = DottedName(*func.name[:-1], func_attr)
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
@@ -944,7 +923,6 @@ class SyntaxParser(BasicParser):
         iterable = self._visit(stmt.iter)
         body = self._visit(stmt.body)
         expr = For(iterator, iterable, body)
-        expr.set_fst(stmt)
         return expr
 
     def _visit_comprehension(self, stmt):
@@ -952,7 +930,6 @@ class SyntaxParser(BasicParser):
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
         expr = For(iterator, iterable, [])
-        expr.set_fst(stmt)
         return expr
 
     def _visit_ListComp(self, stmt):
@@ -975,7 +952,7 @@ class SyntaxParser(BasicParser):
         index = self.get_new_variable()
 
         args = [index]
-        target = IndexedBase(lhs)[args]
+        target = IndexedElement(lhs, *args)
         target = Assign(target, result)
         assign1 = Assign(index, LiteralInteger(0))
         assign1.set_fst(stmt)
@@ -1042,7 +1019,6 @@ class SyntaxParser(BasicParser):
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
-        expr.set_fst(stmt)
         return expr
 
     def _visit_If(self, stmt):
@@ -1051,11 +1027,13 @@ class SyntaxParser(BasicParser):
         body = self._visit(stmt.body)
         orelse = self._visit(stmt.orelse)
         if len(orelse)==1 and isinstance(orelse[0],If):
-            orelse = orelse[0]._args
-            return If((test, body), *orelse)
+            orelse = orelse[0].blocks
+            return If(IfSection(test, body), *orelse)
+        elif len(orelse)==0:
+            return If(IfSection(test, body))
         else:
-            orelse = (LiteralTrue(), orelse)
-            return If((test, body), orelse)
+            orelse = IfSection(LiteralTrue(), orelse)
+            return If(IfSection(test, body), orelse)
 
     def _visit_IfExp(self, stmt):
 
@@ -1063,7 +1041,6 @@ class SyntaxParser(BasicParser):
         first = self._visit(stmt.body)
         second = self._visit(stmt.orelse)
         expr = IfTernaryOperator(test1, first, second)
-        expr.set_fst(stmt)
         return expr
 
     def _visit_While(self, stmt):
@@ -1133,8 +1110,6 @@ class SyntaxParser(BasicParser):
 
                     self._metavars[str(expr.name)] = str(expr.value)
                     expr = EmptyNode()
-                else:
-                    expr.set_fst(stmt)
 
                 return expr
             else:
@@ -1173,8 +1148,7 @@ class SyntaxParser(BasicParser):
         if len(domain) == 1:
             domain = domain[0]
         body = self._visit(stmt.body)
-        settings = None
-        return With(domain, body, settings)
+        return With(domain, body)
 
     def _visit_Try(self, stmt):
         # this is a blocking error, since we don't want to convert the try body

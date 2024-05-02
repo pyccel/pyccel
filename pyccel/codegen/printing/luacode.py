@@ -381,10 +381,6 @@ class LuaCodePrinter(CodePrinter):
         _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
         return self._print(_piecewise)
 
-    def _print_Matrix(self, expr):
-        return "%s[%s]" % (expr.parent,
-                           expr.j + expr.i*expr.parent.shape[1])
-
     def _print_MatrixBase(self, A):
         if A.cols == 1:
             return "[%s]" % ", ".join(self._print(a) for a in A)
@@ -392,10 +388,6 @@ class LuaCodePrinter(CodePrinter):
             msg = "Full Matrix Support in Lua need Crates (https://crates.io/keywords/matrix)."
             errors.report(msg, symbol=A,
                 severity='fatal')
-
-    def _print_MatrixElement(self, expr):
-        return "%s[%s]" % (expr.parent,
-                           expr.j + expr.i*expr.parent.shape[1])
 
     # FIXME: Str/CodePrinter could define each of these to call the _print
     # method from higher up the class hierarchy (see _print_NumberSymbol).

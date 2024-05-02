@@ -124,7 +124,7 @@ def test_omp_in_final():
 
     #$ omp parallel
     #$ omp single
-    #$ omp task final (i >= 10)
+    #$ omp task final(i >= 10)
     for i in range(x):
         z = z + i
         if omp_in_final() == 1:
@@ -197,7 +197,7 @@ def test_omp_is_initial_device():
 
 def test_omp_get_initial_device():
     from pyccel.stdlib.internal.openmp import omp_get_initial_device
-    #$ omp target device(deviceid)
+    #$ omp target
     host_device = omp_get_initial_device()
     #$ omp end target
     return host_device
@@ -219,13 +219,12 @@ def test_omp_get_set_schedule():
 def test_omp_get_max_task_priority():
     from pyccel.stdlib.internal.openmp import omp_get_max_task_priority
     result = 0
+    max_task_priority_var = 0
     #$ omp parallel
     #$ omp single
-    #$ omp task priority(i)
-    for i in range(10):
-        result = result + i
-        if i == 5:
-            max_task_priority_var = omp_get_max_task_priority()
+    #$ omp task
+    max_task_priority_var = omp_get_max_task_priority()
+    #$ omp end task
     #$ omp end single
     #$ omp end parallel
     return max_task_priority_var
@@ -238,7 +237,6 @@ def omp_matmul(A, x, out):
         for j in range(len(x[0])):# pylint: disable=C0200
             for k in range(len(x)):# pylint: disable=C0200
                 out[i][j] += A[i][k] * x[k][j]
-    #$ omp end for
     #$ omp end parallel
     #to let the function compile using epyccel issue #468
     "bypass issue #468" # pylint: disable=W0105
@@ -261,9 +259,27 @@ def omp_arraysum(x):
     #$ omp for reduction (+:result)
     for i in range(0, 5):
         result += x[i]
-    #$ omp end for
     #$ omp end parallel
     return result
+
+@types('int[:]')
+def omp_arraysum_combined(x):
+    result = 0
+    #$ omp parallel for reduction (+:result)
+    for i in range(0, 5):
+        result += x[i]
+    return result
+
+@types('int')
+def omp_range_sum_critical(x):
+    result = 0
+    #$ omp parallel for num_threads(4) shared(result)
+    for i in range(0, x):
+        #$ omp critical
+        result += i
+        #$ omp end critical
+    return result
+
 
 @types('int[:]')
 def omp_arraysum_single(x):
@@ -275,3 +291,133 @@ def omp_arraysum_single(x):
     #$ omp end single
     #$ omp end parallel
     return result
+
+def omp_master():
+    result = 30
+    #$omp parallel num_threads(3) reduction(+:result)
+    #$omp master
+    result += 1
+    #$omp end master
+    #$omp end parallel
+    return result
+
+@types('int')
+def omp_taskloop(n):
+    result = 0
+    #$omp parallel num_threads(n)
+    #$omp taskloop
+    for i in range(0, 10): # pylint: disable=unused-variable
+        #$omp atomic
+        result = result + 1
+    #$omp end parallel
+    return result
+
+@types('int')
+def omp_tasks(x):
+    @types('int', results='int')
+    def fib(n):
+        if n < 2:
+            return n
+        #$ omp task shared(i) firstprivate(n)
+        i = fib(n-1)
+        #$ omp end task
+        #$ omp task shared(j) firstprivate(n)
+        j = fib(n-2)
+        #$ omp end task
+        #$ omp taskwait
+        return i + j
+    #$ omp parallel
+    #$ omp single
+    m = fib(x)
+    #$ omp end single
+    #$ omp end parallel
+    return m
+
+@types('int')
+def omp_simd(n):
+    from numpy import zeros
+    result = 0
+    arr = zeros(n, dtype=int)
+    #$ omp parallel num_threads(4)
+    #$ omp simd
+    for i in range(0, n):
+        arr[i] = i
+    #$ omp end parallel
+    for i in range(0, n):
+        result = result + arr[i]
+    return result
+
+def omp_flush():
+    from pyccel.stdlib.internal.openmp import omp_get_thread_num
+    flag = 0
+    #$ omp parallel num_threads(2)
+    if omp_get_thread_num() == 0:
+        #$ omp atomic update
+        flag = flag + 1
+    elif omp_get_thread_num() == 1:
+        #$ omp flush(flag)
+        while flag < 1:
+            pass
+            #$ omp flush(flag)
+        #$ omp atomic update
+        flag = flag + 1
+    #$ omp end parallel
+    return flag
+
+def omp_barrier():
+    from numpy import zeros
+    arr = zeros(1000, dtype=int)
+    result = 0
+    #$ omp parallel num_threads(3)
+    #$ omp for
+    for i in range(0, 1000):
+        arr[i] = i * 2
+
+    #$ omp barrier
+    #$ omp for reduction(+:result)
+    for i in range(0, 1000):
+        result = result + arr[i]
+    #$ omp end parallel
+    return result
+
+def combined_for_simd():
+    import numpy as np
+    x = np.array([1,2,1,2,1,2,1,2])
+    y = np.array([2,1,2,1,2,1,2,1])
+    z = np.zeros(8, dtype = int)
+    result = 0
+    #$ omp parallel for simd
+    for i in range(0, 8):
+        z[i] = x[i] + y[i]
+
+    for i in range(0, 8):
+        result = result + z[i]
+    return result
+
+def omp_sections():
+    n = 8
+    sum1 = 0
+    sum2 = 0
+    sum3 = 0
+    #$ omp parallel num_threads(2)
+    #$ omp sections
+
+    #$ omp section
+    for i in range(0, int(n/3)):
+        sum1 = sum1 + i
+    #$ omp end section
+
+    #$ omp section
+    for i in range(0, int(n/2)):
+        sum2 = sum2 + i
+    #$ omp end section
+
+    #$ omp section
+    for i in range(0, n):
+        sum3 = sum3 + i
+    #$ omp end section
+    #$ omp end sections
+
+    #$ omp end parallel
+
+    return (sum1 + sum2 + sum3)
