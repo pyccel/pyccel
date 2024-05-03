@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 -   #1740 : Add Python support for set method `copy()`.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1743 : Add Python support for set method `discard()`.
+-   #1754 : Add Python support for set method `update()`.
 -   #1787 : Ensure `STC` is installed with Pyccel.
 -   #1656 : Ensure `gFTL` is installed with Pyccel.
 -   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
@@ -42,6 +43,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
 -   \[TESTS\] Filter out cast warnings in cast tests.
@@ -66,9 +68,11 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] All internal classes which can be generated from `FunctionCall`s must inherit from `PyccelFunction`.
 -   \[INTERNALS\] `PyccelFunction` objects which do not represent objects in memory have the type `SymbolicType`.
 -   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
+-   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
 
 ### Deprecated
 
+-   #1820 : Deprecated unused decorator `@lambdify`
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
@@ -79,6 +83,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
 -   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
+-   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 
 ## \[1.11.2\] - 2024-03-05
 
