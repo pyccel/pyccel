@@ -4,7 +4,7 @@ import numpy as np
 from numpy import iinfo, finfo
 from numpy.random import randint, uniform
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from modules        import arrays
 
 RTOL = 1e-12

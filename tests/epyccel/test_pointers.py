@@ -5,7 +5,7 @@ import numpy as np
 
 from modules import pointers as pointers_module
 from modules import return_pointers
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 pointers_funcs = [(f, getattr(pointers_module,f)) for f in pointers_module.__all__ if inspect.isfunction(getattr(pointers_module,f))]
 
