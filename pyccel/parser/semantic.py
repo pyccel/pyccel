@@ -1615,7 +1615,7 @@ class SemanticParser(BasicParser):
             # to remove memory leaks
             new_expressions.append(Deallocate(var))
 
-        elif class_type != var.class_type:
+        elif class_type != var.class_type and not isinstance(class_type.datatype, GenericType):
             if is_augassign:
                 tmp_result = PyccelAdd(var, rhs)
                 result_type = tmp_result.class_type
@@ -1917,7 +1917,6 @@ class SemanticParser(BasicParser):
             else:
                 raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
-            rank = 1
             if len(args) > 0:
                 syntactic_annotation = args[0]
                 if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
@@ -2313,6 +2312,7 @@ class SemanticParser(BasicParser):
                 if len(line) != 1:
                     errors.report(f"Variable {line[0]} cannot have multiple types",
                             severity='error', symbol=line[0])
+                ls.extend(line)
             # ---------------------------- End of if block ------------------------------------------
             else:
                 ls.append(line)

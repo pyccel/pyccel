@@ -825,6 +825,10 @@ class CCodePrinter(CodePrinter):
         self.exit_scope()
         return code
 
+    def _print_PythonList(self, expr):
+        vec_declare = 'vec_' + expr.dtype._name
+        return vec_declare
+
     def _print_Break(self, expr):
         return 'break;\n'
 
