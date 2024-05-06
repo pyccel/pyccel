@@ -7,7 +7,7 @@
 
 from pyccel.ast.basic import PyccelAstNode
 
-from pyccel.ast.core      import Assign, Module, ModuleHeader, Program
+from pyccel.ast.core      import Module, ModuleHeader, Program
 from pyccel.ast.internals import PyccelSymbol
 
 from pyccel.errors.errors     import Errors
