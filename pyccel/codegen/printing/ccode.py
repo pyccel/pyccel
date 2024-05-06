@@ -759,6 +759,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_ModuleHeader(self, expr):
         self.set_scope(expr.module.scope)
+        self._current_module = expr.module
         self._in_header = True
         name = expr.module.name
         if isinstance(name, AsName):
@@ -792,6 +793,7 @@ class CCodePrinter(CodePrinter):
 
         self._in_header = False
         self.exit_scope()
+        self._current_module = None
         return (f"#ifndef {name.upper()}_H\n \
                 #define {name.upper()}_H\n\n \
                 {imports}\n \
@@ -819,6 +821,7 @@ class CCodePrinter(CodePrinter):
                         body      = body)
 
         self.exit_scope()
+        self._current_module = None
         return code
 
     def _print_Break(self, expr):
