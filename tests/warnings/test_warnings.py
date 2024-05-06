@@ -14,7 +14,7 @@ from wrapper import HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors   import Errors
-from pyccel.epyccel         import epyccel
+from pyccel                 import epyccel
 
 def get_files_from_folder(foldername):
     base_dir = os.path.dirname(os.path.realpath(__file__))

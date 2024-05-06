@@ -4,7 +4,7 @@ from numpy.random import randint, uniform
 from numpy import iinfo, finfo
 import numpy as np
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from pyccel.decorators import template
 
 ATOL = 1e-15

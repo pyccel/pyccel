@@ -4,7 +4,7 @@ import sys
 import warnings
 import pytest
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from pyccel.decorators import stack_array
 from pyccel.errors.errors import Errors, PyccelSemanticError
 from pyccel.errors.messages import (ARRAY_REALLOCATION,

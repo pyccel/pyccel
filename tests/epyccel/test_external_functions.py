@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 import scipy.linalg.blas as sp_blas
 import modules.external_functions as mod
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 # ==============================================================================
 @pytest.mark.fortran

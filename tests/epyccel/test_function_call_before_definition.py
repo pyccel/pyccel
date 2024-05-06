@@ -3,7 +3,7 @@ import pytest
 import modules.function_call_before_definition as mod1
 import modules.function_call_before_definition_2 as mod2
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
