@@ -22,6 +22,9 @@ errors = Errors()
 class CodePrinter:
     """
     The base class for code-printing subclasses.
+
+    The base class from which code printers inherit. The sub-classes should define a language
+    and `_print_X` functions.
     """
     language = None
     def __init__(self):
