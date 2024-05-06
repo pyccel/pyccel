@@ -1024,7 +1024,7 @@ class Module(ScopedAstNode):
         scope = None
         ):
         if not isinstance(name, str):
-            raise TypeError('name must be a string or an AsName')
+            raise TypeError('name must be a string')
 
         if not iterable(variables):
             raise TypeError('variables must be an iterable')
