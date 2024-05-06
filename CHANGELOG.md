@@ -85,6 +85,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 -   \[INTERNALS\] Remove function `Module.set_name`.
+-   \[INTERNALS\] Remove unused `assign_to` argument of `CodePrinter.doprint`.
 
 ## \[1.11.2\] - 2024-03-05
 
