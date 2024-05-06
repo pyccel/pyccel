@@ -1190,3 +1190,4 @@ def test_time_execution_flag():
     assert 'Total' in result_lines[-2]
     for l in result_lines[1:-1]:
         assert ' : ' in l
+

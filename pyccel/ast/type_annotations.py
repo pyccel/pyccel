@@ -13,7 +13,7 @@ from .basic import PyccelAstNode
 
 from .core import FunctionDefArgument
 
-from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
+from .datatypes import CharType, PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import VoidType, GenericType, StringType
 
 from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
@@ -313,4 +313,5 @@ typenames_to_dtypes = { 'float'   : PythonNativeFloat(),
                         'void'    : VoidType(),
                         '*'       : GenericType(),
                         'str'     : StringType(),
+                        'char'    : CharType(),
                         }
