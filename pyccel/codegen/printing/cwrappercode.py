@@ -260,6 +260,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_ModuleHeader(self, expr):
         mod = expr.module
+        self._current_module = expr.module
         name = mod.name
 
         # Print imports last to be sure that all additional_imports have been collected
@@ -293,6 +294,7 @@ class CWrapperCodePrinter(CCodePrinter):
         static_import_decs = self._print(Declare(API_var, static=True))
         import_func = self._print(mod.import_func)
 
+        self._current_module = None
         header_id = f'{name.upper()}_WRAPPER'
         header_guard = f'{header_id}_H'
         return (f"#ifndef {header_guard}\n \
@@ -311,6 +313,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyModule(self, expr):
         scope = expr.scope
         self.set_scope(scope)
+        self._current_module = expr
 
         # Insert declared objects into scope
         variables = expr.original_module.variables if isinstance(expr, BindCModule) else expr.variables
@@ -373,6 +376,7 @@ class CWrapperCodePrinter(CCodePrinter):
         imports  = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
+        self._current_module = None
 
         return '\n'.join(['#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API',
                 f'#define {pymod_name.upper()}\n',
