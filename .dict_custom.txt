@@ -21,7 +21,6 @@ deallocated
 deallocation
 deallocations
 deallocating
-devel
 conda
 PyPI
 CentOS
