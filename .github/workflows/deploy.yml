@@ -31,7 +31,8 @@ jobs:
         working-directory: ./ci_tools
         shell: bash
         env:
-          COMMIT: ${{ github.event.ref }}
+          #COMMIT: ${{ github.event.workflow_run.head_sha }}
+          COMMIT: ${{ github.event.after }}
           PEM: ${{ secrets.BOT_PEM }}
 
   deployVersion:
