@@ -952,8 +952,7 @@ class CCodePrinter(CodePrinter):
         if expr.target:
            dtype = expr.target.pop().name
            if source.startswith('stc/'):
-             import_file, *_ = source.split('_')
-             _ = '_'.join(_)
+             import_file, _ = source.split('_', 1)
              dtype_macro = dtype.upper()
              _,container_type = import_file.split("/")
              if container_type in import_stc:
