@@ -190,10 +190,10 @@ class FortranToCWrapper(Wrapper):
         classes = [self._wrap(f) for f in expr.classes]
         variables = [self._wrap(v) for v in expr.variables if not v.is_private]
         variable_getters = [v for v in variables if isinstance(v, BindCArrayVariable)]
-        imports = [Import(expr.name, target = expr, mod=expr)]
+        imports = [Import(self.scope.get_python_name(expr.name), target = expr, mod=expr)]
 
-        name = mod_scope.get_new_name(f'bind_c_{expr.name.target}')
-        self._wrapper_names_dict[expr.name.target] = name
+        name = mod_scope.get_new_name(f'bind_c_{expr.name}')
+        self._wrapper_names_dict[expr.name] = name
 
         self.exit_scope()
 
