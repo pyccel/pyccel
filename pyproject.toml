@@ -50,13 +50,13 @@ artifacts = [
   "*.pyccel",
 ]
 include = [
-  "*.py",
-  "*.pyh",
-  "*.pyccel",
+  "pyccel/**/*.py",
+  "pyccel/**/*.pyh",
+  "pyccel/**/*.pyccel",
   "pyccel/parser/grammar/*.tx",
-  "pyccel/stdlib/*/*.h",
-  "pyccel/stdlib/*/*.c",
-  "pyccel/stdlib/*/*.f90",
+  "pyccel/stdlib/**/*.h",
+  "pyccel/stdlib/**/*.c",
+  "pyccel/stdlib/**/*.f90",
   "pyccel/extensions/STC/include",
   "pyccel/extensions/gFTL/include/v2"
 ]
