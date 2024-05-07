@@ -49,11 +49,11 @@ jobs:
           echo ${{ github.event.workflow_run.head_branch }}
           python3 -m build
           ls dist/*
-          python3 -m twine upload --repository testpypi dist/* --non-interactive
+          python3 -m twine upload --repository pypi dist/* --non-interactive
         shell: bash
         env:
           TWINE_USERNAME: '__token__'
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       - name: Install Pyccel without tests
         run: |
           python -m pip install .
