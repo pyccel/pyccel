@@ -2,7 +2,7 @@ name: Deploy new version to PyPi
 
 on:
   workflow_run:
-    workflows: [Wheel-pickled-installation]
+    workflows: [Windows unit tests]
     types:
       - completed
 
@@ -41,6 +41,7 @@ jobs:
         uses: ./.github/actions/linux_install
       - name: Update build
         run: |
+          python -m pip install --upgrade pip
           python -m pip install --upgrade build
       - name: Build and deploy
         run: |
@@ -52,4 +53,16 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      - name: Install Pyccel without tests
+        run: |
+          python -m pip install .
+      - name: "Get tag name"
+        id: tag_name
+        run: |
+          version=$(python -c "from pyccel import __version__; print(__version__)")
+          echo "TAG_NAME=v${version}" >> $GITHUB_OUTPUT
+      - name: "Update repo tags"
+        uses: EndBug/latest-tag@latest
+        with:
+          ref: ${{ steps.tag_name.outputs.TAG_NAME }}
 
