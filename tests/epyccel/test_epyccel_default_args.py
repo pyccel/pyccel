@@ -2,7 +2,7 @@
 # coding: utf-8
 import numpy as np
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 #------------------------------------------------------------------------------
 def test_f1(language):

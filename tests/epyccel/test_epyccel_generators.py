@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.random import randint
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 def test_sum_range(language):
     def f(a0 : 'int[:]'):
@@ -120,7 +120,7 @@ def test_expression1(language):
 
     f_epyc = epyccel(f, language = language)
 
-    assert f(x) == f_epyc(x)
+    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),

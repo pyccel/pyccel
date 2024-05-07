@@ -7,7 +7,7 @@
 
 from pyccel.ast.basic import PyccelAstNode
 
-from pyccel.ast.core      import Assign
+from pyccel.ast.core      import Module, ModuleHeader, Program
 from pyccel.ast.internals import PyccelSymbol
 
 from pyccel.errors.errors     import Errors
@@ -23,8 +23,8 @@ class CodePrinter:
     """
     The base class for code-printing subclasses.
 
-    The abstract class from which all code-printing subclasses
-    must inherit.
+    The base class from which code printers inherit. The sub-classes should define a language
+    and `_print_X` functions.
     """
     language = None
     def __init__(self):
@@ -44,8 +44,9 @@ class CodePrinter:
         Returns
         -------
         str
-            The code which should be printed.
+            The generated code.
         """
+        assert isinstance(expr, (Module, ModuleHeader, Program))
 
         # Do the actual printing
         lines = self._print(expr).splitlines(True)

@@ -190,10 +190,10 @@ class FortranToCWrapper(Wrapper):
         classes = [self._wrap(f) for f in expr.classes]
         variables = [self._wrap(v) for v in expr.variables if not v.is_private]
         variable_getters = [v for v in variables if isinstance(v, BindCArrayVariable)]
-        imports = [Import(expr.name, target = expr, mod=expr)]
+        imports = [Import(self.scope.get_python_name(expr.name), target = expr, mod=expr)]
 
-        name = mod_scope.get_new_name(f'bind_c_{expr.name.target}')
-        self._wrapper_names_dict[expr.name.target] = name
+        name = mod_scope.get_new_name(f'bind_c_{expr.name}')
+        self._wrapper_names_dict[expr.name] = name
 
         self.exit_scope()
 
@@ -414,8 +414,7 @@ class FortranToCWrapper(Wrapper):
                 scope.insert_variable(ptr_var)
 
                 # Define the additional steps necessary to define and fill ptr_var
-                alloc = Allocate(ptr_var, shape=result.shape,
-                                 order=var.order, status='unallocated')
+                alloc = Allocate(ptr_var, shape=result.shape, status='unallocated')
                 copy = Assign(ptr_var, local_var)
                 self._additional_exprs.extend([alloc, copy])
             else:
@@ -608,7 +607,7 @@ class FortranToCWrapper(Wrapper):
         result = BindCFunctionDefResult(bind_var, local_var, func_scope)
 
         # Define the additional steps necessary to define and fill ptr_var
-        alloc = Allocate(local_var, shape=(), order=None, status='unallocated')
+        alloc = Allocate(local_var, shape=(), status='unallocated')
         c_loc = CLocFunc(local_var, bind_var)
         body = [alloc, c_loc]
 

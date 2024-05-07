@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
-from  pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = [
@@ -174,3 +174,112 @@ def test_remove_float(language):
     python_result = remove_float()
     assert python_result == pyccel_result
 
+def test_Discard_int(language):
+    def Discard_int():
+        se = {2.7, 4.3, 9.2}
+        se.discard(4.3)
+        return se
+    epyccel_remove = epyccel(Discard_int, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = Discard_int()
+    assert python_result == pyccel_result
+
+def test_Discard_complex(language):
+    def Discard_complex():
+        se = {2j, 5j, 3j, 7j}
+        se.discard(5j)
+        return se
+    epyccel_remove = epyccel(Discard_complex, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = Discard_complex()
+    assert python_result == pyccel_result
+
+def test_Discard_wrong_arg(language):
+    def Discard_wrong_arg():
+        se = {4.7, 1.3, 8.2}
+        se.discard(8.6)
+        return se
+    epyccel_remove = epyccel(Discard_wrong_arg, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = Discard_wrong_arg()
+    assert python_result == pyccel_result
+
+def test_update_basic(language):
+    def update_basic():
+        a = {1, 2, 3}
+        b = {4, 5, 6}
+        a.update(b)
+        return a
+
+    epyccel_update = epyccel(update_basic, language=language)
+    pyccel_result = epyccel_update()
+    python_result =  update_basic()
+    assert python_result == pyccel_result
+
+def test_update_multiple(language):
+    def update_multiple():
+        a = {1, 2, 3}
+        a.update({4, 5})
+        a.update({6, 7, 8, 9})
+        a.update({10})
+        return a
+
+    epyccel_update = epyccel(update_multiple, language=language)
+    pyccel_result = epyccel_update()
+    python_result =  update_multiple()
+    assert python_result == pyccel_result
+
+
+def test_update_boolean_tuple(language):
+    def update_boolean_tuple():
+        a = {True}
+        b = (False, True, False)
+        a.update(b)
+        return a
+    epyccel_update = epyccel(update_boolean_tuple, language=language)
+    pyccel_result = epyccel_update()
+    python_result =  update_boolean_tuple()
+    assert python_result == pyccel_result
+
+
+def test_update_complex_list(language):
+    def update_complex_list():
+        a = {1j, 2 + 3j, 0 + 0j}
+        b = {4j, 5j, 1 + 6j}
+        a.update(b)
+        return a
+    epyccel_update = epyccel(update_complex_list, language=language)
+    pyccel_result = epyccel_update()
+    python_result =  update_complex_list()
+    assert python_result == pyccel_result
+
+def test_update_range(language):
+    def update_range():
+        a = {1, 2, 3}
+        a.update(range(4, 9))
+        return a
+    epyccel_update = epyccel(update_range, language=language)
+    pyccel_result = epyccel_update()
+    python_result =  update_range()
+    assert python_result == pyccel_result
+
+def test_update_set_as_arg(language):
+    def update_set_as_arg():
+        a = {1, 2, 3}
+        a.update({4, 5, 6})
+        return a
+
+    epyccel_update = epyccel(update_set_as_arg, language=language)
+    pyccel_result = epyccel_update()
+    python_result =  update_set_as_arg()
+    assert python_result == pyccel_result
+
+def test_update_tuple_as_arg(language):
+    def update_tuple_as_arg():
+        a = {1, 2, 3}
+        a.update((4, 5, 6))
+        return a
+    epyccel_update = epyccel(update_tuple_as_arg, language=language)
+    pyccel_result = epyccel_update()
+    python_result =  update_tuple_as_arg()
+    assert python_result == pyccel_result

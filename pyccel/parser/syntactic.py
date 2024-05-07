@@ -60,13 +60,12 @@ from pyccel.ast.literals import Nil, LiteralEllipsis
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 
-from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
+from pyccel.ast.internals import Slice, PyccelSymbol, PyccelFunction
 
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
-from pyccel.parser.utilities   import read_file
 from pyccel.parser.utilities   import get_default_path
 
 from pyccel.parser.syntax.headers import parse as hdr_parse, types_meta
@@ -130,12 +129,13 @@ class SyntaxParser(BasicParser):
         if os.path.isfile(inputs):
 
             self._filename = inputs
-            errors.set_target(self.filename, 'file')
+            errors.set_target(self.filename)
 
             # we don't use is_valid_filename_py since it uses absolute path
             # file extension
 
-            code = read_file(inputs)
+            with open(inputs, 'r', encoding="utf-8") as file:
+                code = file.read()
 
         self._code    = code
         self._context = []
@@ -356,7 +356,8 @@ class SyntaxParser(BasicParser):
         # Define the name of the module
         # The module name allows it to be correctly referenced from an import command
         mod_name = os.path.splitext(os.path.basename(self._filename))[0]
-        name = AsName(mod_name, self.scope.get_new_name(mod_name))
+        name = self.scope.get_new_name(mod_name)
+        self.scope.python_names[name] = mod_name
 
         body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
         return Module(name, [], functions, init_func = CodeBlock(body), scope = self.scope,
@@ -960,7 +961,7 @@ class SyntaxParser(BasicParser):
         body = CodeBlock(body)
 
         returns = [i.expr for i in body.get_attribute_nodes(Return,
-                    excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction, FunctionDef))]
+                    excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))]
         assert all(len(i) == len(returns[0]) for i in returns)
         if is_inline and len(returns)>1:
             errors.report("Inline functions cannot have multiple return statements",
@@ -1043,17 +1044,10 @@ class SyntaxParser(BasicParser):
 
     def _visit_Subscript(self, stmt):
 
-        ch = stmt
-        args = []
-        while isinstance(ch, ast.Subscript):
-            val = self._visit(ch.slice)
-            if isinstance(val, (PythonTuple, list)):
-                args += val
-            else:
-                args.insert(0, val)
-            ch = ch.value
-        args = tuple(args)
-        var = self._visit(ch)
+        args = self._visit(stmt.slice)
+        if not isinstance(args, (PythonTuple, list)):
+            args = (args,)
+        var = self._visit(stmt.value)
         var = IndexedElement(var, *args)
         return var
 

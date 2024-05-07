@@ -296,7 +296,7 @@ class CCodePrinter(CodePrinter):
 
     def __init__(self, filename, prefix_module = None):
 
-        errors.set_target(filename, 'file')
+        errors.set_target(filename)
 
         super().__init__()
         self.prefix_module = prefix_module
@@ -414,8 +414,9 @@ class CCodePrinter(CodePrinter):
         if order == "F":
             # If the order is F then the data should be copied non-contiguously so a temporary
             # variable is required to pass to array_copy_data
-            temp_var = self.scope.get_temporary_variable(lhs, order='C')
-            operations += self._print(Allocate(temp_var, shape=lhs.shape, order="C", status="unallocated"))
+            new_dtype = lhs.class_type.swap_order()
+            temp_var = self.scope.get_temporary_variable(lhs, class_type=new_dtype)
+            operations += self._print(Allocate(temp_var, shape=lhs.shape, status="unallocated"))
             copy_to = temp_var
         else:
             copy_to = lhs
@@ -754,6 +755,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_ModuleHeader(self, expr):
         self.set_scope(expr.module.scope)
+        self._current_module = expr.module
         self._in_header = True
         name = expr.module.name
         if isinstance(name, AsName):
@@ -787,6 +789,7 @@ class CCodePrinter(CodePrinter):
 
         self._in_header = False
         self.exit_scope()
+        self._current_module = None
         return (f"#ifndef {name.upper()}_H\n \
                 #define {name.upper()}_H\n\n \
                 {imports}\n \
@@ -797,18 +800,19 @@ class CCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
-        self._current_module = expr.name
+        self._current_module = expr
         body    = ''.join(self._print(i) for i in expr.body)
 
         global_variables = ''.join([self._print(d) for d in expr.declarations])
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [Import(expr.name, Module(expr.name,(),())), *self._additional_imports.values()]
+        imports = [Import(self.scope.get_python_name(expr.name), Module(expr.name,(),())), *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)
 
         code = f'{imports}\n{global_variables}\n{body}\n'
 
         self.exit_scope()
+        self._current_module = None
         return code
 
     def _print_Break(self, expr):
@@ -941,7 +945,7 @@ class CCodePrinter(CodePrinter):
         if source in import_dict: # pylint: disable=consider-using-get
             source = import_dict[source]
 
-        if expr.source_module:
+        if expr.source_module and expr.source_module is not self._current_module:
             for classDef in expr.source_module.classes:
                 class_scope = classDef.scope
                 for method in classDef.methods:
@@ -1089,7 +1093,7 @@ class CCodePrinter(CodePrinter):
                 args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)
-            elif f.rank > 0:
+            elif f.rank > 0 and not isinstance(f.class_type, StringType):
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
@@ -1354,7 +1358,20 @@ class CCodePrinter(CodePrinter):
         base = expr.base
         inds = list(expr.indices)
         base_shape = base.shape
-        allow_negative_indexes = True if isinstance(base, PythonTuple) else base.allows_negative_indexes
+        allow_negative_indexes = expr.allows_negative_indexes
+        if isinstance(base.class_type, NumpyNDArrayType):
+            #set dtype to the C struct types
+            dtype = self.find_in_ndarray_type_registry(expr.dtype)
+        elif isinstance(base.class_type, HomogeneousContainerType):
+            dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(expr.dtype.primitive_type, expr.dtype.precision)])
+        else:
+            raise NotImplementedError(f"Don't know how to index {expr.class_type} type")
+
+        if isinstance(base, IndexedElement):
+            while isinstance(base, IndexedElement) and isinstance(base.class_type, HomogeneousContainerType):
+                inds = list(base.indices) + inds
+                base = base.base
+
         for i, ind in enumerate(inds):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0], simplify = True)
@@ -1366,30 +1383,21 @@ class CCodePrinter(CodePrinter):
                         not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
                     inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
                         PyccelAdd(base_shape[i], ind, simplify = True), ind)
-        if isinstance(base.class_type, NumpyNDArrayType):
-            #set dtype to the C struct types
-            dtype = self.find_in_ndarray_type_registry(expr.dtype)
-        elif isinstance(base.class_type, HomogeneousContainerType):
-            dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(expr.dtype.primitive_type, expr.dtype.precision)])
-        else:
-            raise NotImplementedError(f"Don't know how to index {expr.class_type} type")
+
         base_name = self._print(base)
-        if getattr(base, 'is_ndarray', False) or isinstance(base.class_type, HomogeneousContainerType):
-            if expr.rank > 0:
-                #managing the Slice input
-                for i , ind in enumerate(inds):
-                    if isinstance(ind, Slice):
-                        inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArrayShapeElement(base, i),
-                            allow_negative_indexes)
-                    else:
-                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1),
-                            Slice.Element)
-                inds = ', '.join(self._print(i) for i in inds)
-                return f"array_slicing({base_name}, {expr.rank}, {inds})"
-            inds = ', '.join(self._cast_to(i, NumpyInt64Type()).format(self._print(i)) for i in inds)
-        else:
-            raise NotImplementedError(expr)
-        return f"GET_ELEMENT({base_name}, {dtype}, {inds})"
+        if expr.rank > 0:
+            #managing the Slice input
+            for i , ind in enumerate(inds):
+                if isinstance(ind, Slice):
+                    inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArrayShapeElement(base, i),
+                        allow_negative_indexes)
+                else:
+                    inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1),
+                        Slice.Element)
+            indices = ", ".join(self._print(i) for i in inds)
+            return f"array_slicing({base_name}, {expr.rank}, {indices})"
+        indices = ", ".join(self._cast_to(i, NumpyInt64Type()).format(self._print(i)) for i in inds)
+        return f"GET_ELEMENT({base_name}, {dtype}, {indices})"
 
 
     def _cast_to(self, expr, dtype):
@@ -2377,6 +2385,8 @@ class CCodePrinter(CodePrinter):
     #=====================================
 
     def _print_Program(self, expr):
+        mod = expr.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+        self._current_module = mod
         self.set_scope(expr.scope)
         body  = self._print(expr.body)
         variables = self.scope.variables.values()
@@ -2386,6 +2396,7 @@ class CCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
+        self._current_module = None
         return ''.join((imports,
                        'int main()\n{\n',
                        decs,

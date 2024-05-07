@@ -75,7 +75,7 @@ class PythonCodePrinter(CodePrinter):
     }
 
     def __init__(self, filename):
-        errors.set_target(filename, 'file')
+        errors.set_target(filename)
         super().__init__()
         self._additional_imports = {}
         self._aliases = {}
@@ -168,7 +168,7 @@ class PythonCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelInternalFunction
+        expr : PyccelFunction
             A Pyccel node describing a NumPy function.
 
         Returns
@@ -274,11 +274,7 @@ class PythonCodePrinter(CodePrinter):
             if len(indices) == 1 and isinstance(indices[0], (tuple, list)):
                 indices = indices[0]
 
-            indices = [self._print(i) for i in indices]
-            if expr.pyccel_staging != 'syntactic' and isinstance(expr.base.class_type, (HomogeneousTupleType, HomogeneousListType)):
-                indices = ']['.join(i for i in indices)
-            else:
-                indices = ','.join(i for i in indices)
+            indices = ','.join(self._print(i) for i in indices)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
@@ -394,7 +390,10 @@ class PythonCodePrinter(CodePrinter):
     def _print_Program(self, expr):
         mod_scope = self.scope
         self.set_scope(expr.scope)
-        imports  = ''.join(self._print(i) for i in expr.imports)
+        modules = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))
+        assert len(modules) == 1
+        module = modules[0]
+        imports = ''.join(self._print(i) for i in expr.imports if i.source_module is not module)
         body     = self._print(expr.body)
         imports += ''.join(self._print(i) for i in self.get_additional_imports())
 
@@ -771,7 +770,7 @@ class PythonCodePrinter(CodePrinter):
                           dtype] if a != '')
         return f"{name}({args})"
 
-    def _print_PyccelInternalFunction(self, expr):
+    def _print_PyccelFunction(self, expr):
         name = self._aliases.get(type(expr),expr.name)
         args = ', '.join(self._print(a) for a in expr.args)
         return f"{name}({args})"

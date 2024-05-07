@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
 import numpy as np
-from  pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = [
@@ -472,6 +472,33 @@ def test_extend_function_return(language):
 
         lst = [1, 2, 3]
         lst.extend(g())
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_sort_basic(language):
+    def f():
+        a = [4, 0, 1, -1]
+        a.sort()
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_sort_bool(language):
+    def f():
+        a = [True, False, False, True, False]
+        a.sort()
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_sort_float(language):
+    def f():
+        a = [3.4, 1.0, -4.5, 0.0, 2.1]
+        a.sort()
+        return a
 
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()

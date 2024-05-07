@@ -6,7 +6,7 @@ import pytest
 from numpy.random import rand, randint, uniform
 from numpy import isclose
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from pyccel.decorators import template
 
 
@@ -23,7 +23,7 @@ def test_fabs_call(language):
 
     f1 = epyccel(fabs_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  fabs_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  fabs_call(x), rtol=RTOL, atol=ATOL)
 
 def test_fabs_phrase(language):
     def fabs_phrase(x : 'float', y : 'float'):
@@ -34,7 +34,7 @@ def test_fabs_phrase(language):
     f2 = epyccel(fabs_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  fabs_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  fabs_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 def test_fabs_return_type(language):
     def fabs_return_type(x : 'int'):
@@ -44,7 +44,7 @@ def test_fabs_return_type(language):
 
     f1 = epyccel(fabs_return_type, language = language)
     x = randint(100)
-    assert(isclose(f1(x) ,  fabs_return_type(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  fabs_return_type(x), rtol=RTOL, atol=ATOL)
     assert(type(f1(x))  == type(fabs_return_type(x))) # pylint: disable=unidiomatic-typecheck
 
 def test_sqrt_call(language):
@@ -54,7 +54,7 @@ def test_sqrt_call(language):
 
     f1 = epyccel(sqrt_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  sqrt_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  sqrt_call(x), rtol=RTOL, atol=ATOL)
 
 def test_sqrt_phrase(language):
     def sqrt_phrase(x : 'float', y : 'float'):
@@ -65,7 +65,7 @@ def test_sqrt_phrase(language):
     f2 = epyccel(sqrt_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  sqrt_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  sqrt_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 def test_sqrt_return_type(language):
     def sqrt_return_type_real(x : 'float'):
@@ -75,7 +75,7 @@ def test_sqrt_return_type(language):
 
     f1 = epyccel(sqrt_return_type_real, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  sqrt_return_type_real(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  sqrt_return_type_real(x), rtol=RTOL, atol=ATOL)
     assert(type(f1(x))  == type(sqrt_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
 
 def test_sin_call(language):
@@ -85,7 +85,7 @@ def test_sin_call(language):
 
     f1 = epyccel(sin_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  sin_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  sin_call(x), rtol=RTOL, atol=ATOL)
 
 def test_sin_phrase(language):
     def sin_phrase(x : 'float', y : 'float'):
@@ -96,7 +96,7 @@ def test_sin_phrase(language):
     f2 = epyccel(sin_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  sin_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  sin_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 def test_cos_call(language):
     def cos_call(x : 'float'):
@@ -105,7 +105,7 @@ def test_cos_call(language):
 
     f1 = epyccel(cos_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  cos_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  cos_call(x), rtol=RTOL, atol=ATOL)
 
 def test_cos_phrase(language):
     def cos_phrase(x : 'float', y : 'float'):
@@ -116,7 +116,7 @@ def test_cos_phrase(language):
     f2 = epyccel(cos_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  cos_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  cos_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 
 def test_tan_call(language):
@@ -126,7 +126,7 @@ def test_tan_call(language):
 
     f1 = epyccel(tan_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  tan_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  tan_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_tan_phrase(language):
@@ -138,7 +138,7 @@ def test_tan_phrase(language):
     f2 = epyccel(tan_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  tan_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  tan_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 def test_exp_call(language):
     def exp_call(x : 'float'):
@@ -147,7 +147,7 @@ def test_exp_call(language):
 
     f1 = epyccel(exp_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  exp_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  exp_call(x), rtol=RTOL, atol=ATOL)
 
 def test_exp_phrase(language):
     def exp_phrase(x : 'float', y : 'float'):
@@ -158,7 +158,7 @@ def test_exp_phrase(language):
     f2 = epyccel(exp_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  exp_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  exp_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 def test_log_call(language):
     def log_call(x : 'float'):
@@ -167,7 +167,7 @@ def test_log_call(language):
 
     f1 = epyccel(log_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  log_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  log_call(x), rtol=RTOL, atol=ATOL)
 
 def test_log_phrase(language):
     def log_phrase(x : 'float', y : 'float'):
@@ -178,7 +178,7 @@ def test_log_phrase(language):
     f2 = epyccel(log_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  log_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  log_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 def test_asin_call(language):
     def asin_call(x : 'float'):
@@ -187,7 +187,7 @@ def test_asin_call(language):
 
     f1 = epyccel(asin_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  asin_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  asin_call(x), rtol=RTOL, atol=ATOL)
 
 def test_asin_phrase(language):
     def asin_phrase(x : 'float', y : 'float'):
@@ -198,7 +198,7 @@ def test_asin_phrase(language):
     f2 = epyccel(asin_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  asin_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  asin_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 def test_acos_call(language):
     def acos_call(x : 'float'):
@@ -207,7 +207,7 @@ def test_acos_call(language):
 
     f1 = epyccel(acos_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  acos_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  acos_call(x), rtol=RTOL, atol=ATOL)
 
 def test_acos_phrase(language):
     def acos_phrase(x : 'float', y : 'float'):
@@ -218,7 +218,7 @@ def test_acos_phrase(language):
     f2 = epyccel(acos_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  acos_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  acos_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 def test_atan_call(language):
     def atan_call(x : 'float'):
@@ -227,7 +227,7 @@ def test_atan_call(language):
 
     f1 = epyccel(atan_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  atan_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  atan_call(x), rtol=RTOL, atol=ATOL)
 
 def test_atan_phrase(language):
     def atan_phrase(x : 'float', y : 'float'):
@@ -238,7 +238,7 @@ def test_atan_phrase(language):
     f2 = epyccel(atan_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  atan_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  atan_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 def test_sinh_call(language):
     def sinh_call(x : 'float'):
@@ -247,7 +247,7 @@ def test_sinh_call(language):
 
     f1 = epyccel(sinh_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  sinh_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  sinh_call(x), rtol=RTOL, atol=ATOL)
 
 def test_sinh_phrase(language):
     def sinh_phrase(x : 'float', y : 'float'):
@@ -258,7 +258,7 @@ def test_sinh_phrase(language):
     f2 = epyccel(sinh_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  sinh_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  sinh_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 def test_cosh_call(language):
     def cosh_call(x : 'float'):
@@ -267,7 +267,7 @@ def test_cosh_call(language):
 
     f1 = epyccel(cosh_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  cosh_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  cosh_call(x), rtol=RTOL, atol=ATOL)
 
 def test_cosh_phrase(language):
     def cosh_phrase(x : 'float', y : 'float'):
@@ -278,7 +278,7 @@ def test_cosh_phrase(language):
     f2 = epyccel(cosh_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  cosh_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  cosh_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 def test_tanh_call(language):
     def tanh_call(x : 'float'):
@@ -287,7 +287,7 @@ def test_tanh_call(language):
 
     f1 = epyccel(tanh_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  tanh_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  tanh_call(x), rtol=RTOL, atol=ATOL)
 
 def test_tanh_phrase(language):
     def tanh_phrase(x : 'float', y : 'float'):
@@ -298,7 +298,7 @@ def test_tanh_phrase(language):
     f2 = epyccel(tanh_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  tanh_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  tanh_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 def test_atan2_call(language):
     def atan2_call(x : 'float', y : 'float'):
@@ -308,7 +308,7 @@ def test_atan2_call(language):
     f1 = epyccel(atan2_call, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f1(x, y), atan2_call(x, y), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x, y), atan2_call(x, y), rtol=RTOL, atol=ATOL)
 
 def test_atan2_phrase(language):
     def atan2_phrase(x : 'float', y : 'float', z : 'float'):
@@ -320,7 +320,7 @@ def test_atan2_phrase(language):
     x = rand()
     y = rand()
     z = rand()
-    assert(isclose(f2(x, y, z), atan2_phrase(x, y, z), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x, y, z), atan2_phrase(x, y, z), rtol=RTOL, atol=ATOL)
 
 #------------------------------- Floor function ------------------------------#
 def test_floor_call(language):
@@ -331,8 +331,8 @@ def test_floor_call(language):
     fflags = "-Werror -Wconversion"
     f1 = epyccel(floor_call, language = language, fflags=fflags)
     x = rand()
-    assert(isclose(f1(x) ,  floor_call(x), rtol=RTOL, atol=ATOL))
-    assert(isclose(f1(-x) ,  floor_call(-x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  floor_call(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(-x) ,  floor_call(-x), rtol=RTOL, atol=ATOL)
 
 def test_floor_phrase(language):
     def floor_phrase(x : 'float', y : 'float'):
@@ -344,10 +344,10 @@ def test_floor_phrase(language):
     f2 = epyccel(floor_phrase, language = language, fflags=fflags)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  floor_phrase(x,y), rtol=RTOL, atol=ATOL))
-    assert(isclose(f2(-x,y) ,  floor_phrase(-x,y), rtol=RTOL, atol=ATOL))
-    assert(isclose(f2(x,-y) ,  floor_phrase(x,-y), rtol=RTOL, atol=ATOL))
-    assert(isclose(f2(-x,-y) ,  floor_phrase(-x,-y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  floor_phrase(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,y) ,  floor_phrase(-x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,-y) ,  floor_phrase(x,-y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,-y) ,  floor_phrase(-x,-y), rtol=RTOL, atol=ATOL)
 
 def test_floor_return_type(language):
     def floor_return_type_int(x : 'int'):
@@ -364,16 +364,16 @@ def test_floor_return_type(language):
     f1 = epyccel(floor_return_type_int, language = language, fflags=fflags)
 
     x = randint(100)
-    assert(isclose(f1(x) ,  floor_return_type_int(x), rtol=RTOL, atol=ATOL))
-    assert(isclose(f1(-x) ,  floor_return_type_int(-x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  floor_return_type_int(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(-x) ,  floor_return_type_int(-x), rtol=RTOL, atol=ATOL)
     assert(type(f1(x))  == type(floor_return_type_int(x))) # pylint: disable=unidiomatic-typecheck
 
     fflags = "-Werror -Wconversion"
     f1 = epyccel(floor_return_type_real, language = language, fflags=fflags)
 
     x = uniform(100)
-    assert(isclose(f1(x) ,  floor_return_type_real(x), rtol=RTOL, atol=ATOL))
-    assert(isclose(f1(-x) ,  floor_return_type_real(-x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  floor_return_type_real(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(-x) ,  floor_return_type_real(-x), rtol=RTOL, atol=ATOL)
     assert(type(f1(x))  == type(floor_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
 
 #------------------------------- Ceil function -------------------------------#
@@ -386,8 +386,8 @@ def test_ceil_call_r(language):
     f1 = epyccel(ceil_call, language = language, fflags=fflags)
 
     x = rand()
-    assert(ceil_call(x) == f1(x))
-    assert(ceil_call(-x) == f1(-x))
+    assert ceil_call(x) == f1(x)
+    assert ceil_call(-x) == f1(-x)
 
     assert isinstance(ceil_call(x), type(f1(x)))
 
@@ -400,8 +400,8 @@ def test_ceil_call_i(language):
     f1 = epyccel(ceil_call, language = language, fflags=fflags)
 
     x = randint(10)
-    assert(ceil_call(x) == f1(x))
-    assert(ceil_call(-x) == f1(-x))
+    assert ceil_call(x) == f1(x)
+    assert ceil_call(-x) == f1(-x)
 
     assert isinstance(ceil_call(x), type(f1(x)))
 
@@ -416,10 +416,10 @@ def test_ceil_phrase(language):
 
     x = rand()
     y = rand()
-    assert(isclose(ceil_phrase(x, y), f2(x, y), rtol=RTOL, atol=ATOL))
-    assert(isclose(ceil_phrase(-x, y), f2(-x, y), rtol=RTOL, atol=ATOL))
-    assert(isclose(ceil_phrase(x, -y), f2(x, -y), rtol=RTOL, atol=ATOL))
-    assert(isclose(ceil_phrase(-x, -y), f2(-x, -y), rtol=RTOL, atol=ATOL))
+    assert isclose(ceil_phrase(x, y), f2(x, y), rtol=RTOL, atol=ATOL)
+    assert isclose(ceil_phrase(-x, y), f2(-x, y), rtol=RTOL, atol=ATOL)
+    assert isclose(ceil_phrase(x, -y), f2(x, -y), rtol=RTOL, atol=ATOL)
+    assert isclose(ceil_phrase(-x, -y), f2(-x, -y), rtol=RTOL, atol=ATOL)
 #------------------------------- copysign function -------------------------------#
 
 def test_copysign_call(language):
@@ -431,14 +431,14 @@ def test_copysign_call(language):
     x = rand()
     y = rand()
     # Same sign
-    assert(isclose(copysign_call(x, y), f1(x, y), rtol=RTOL, atol=ATOL))
-    assert(isclose(copysign_call(-x, -y), f1(-x, -y), rtol=RTOL, atol=ATOL))
+    assert isclose(copysign_call(x, y), f1(x, y), rtol=RTOL, atol=ATOL)
+    assert isclose(copysign_call(-x, -y), f1(-x, -y), rtol=RTOL, atol=ATOL)
     # Different sign
-    assert(isclose(copysign_call(-x, y), f1(-x, y), rtol=RTOL, atol=ATOL))
-    assert(isclose(copysign_call(x, -y), f1(x, -y), rtol=RTOL, atol=ATOL))
+    assert isclose(copysign_call(-x, y), f1(-x, y), rtol=RTOL, atol=ATOL)
+    assert isclose(copysign_call(x, -y), f1(x, -y), rtol=RTOL, atol=ATOL)
     # x =/= 0, y = 0 and x = 0, y =/= 0
-    assert(isclose(copysign_call(x, 0.0), f1(x, 0.0), rtol=RTOL, atol=ATOL))
-    assert(isclose(copysign_call(0.0, y), f1(0.0, y), rtol=RTOL, atol=ATOL))
+    assert isclose(copysign_call(x, 0.0), f1(x, 0.0), rtol=RTOL, atol=ATOL)
+    assert isclose(copysign_call(0.0, y), f1(0.0, y), rtol=RTOL, atol=ATOL)
 
 def test_copysign_call_zero_case(language):
     def copysign_zero_case(x : 'int', y : 'int'):
@@ -449,11 +449,11 @@ def test_copysign_call_zero_case(language):
     x = 0
     y = 0
     # Same sign
-    assert(isclose(copysign_zero_case(x, y), f1(x, y), rtol=RTOL, atol=ATOL))
-    assert(isclose(copysign_zero_case(-x, -y), f1(-x, -y), rtol=RTOL, atol=ATOL))
+    assert isclose(copysign_zero_case(x, y), f1(x, y), rtol=RTOL, atol=ATOL)
+    assert isclose(copysign_zero_case(-x, -y), f1(-x, -y), rtol=RTOL, atol=ATOL)
     # Different sign
-    assert(isclose(copysign_zero_case(-x, y), f1(-x, y), rtol=RTOL, atol=ATOL))
-    assert(isclose(copysign_zero_case(x, -y), f1(x, -y), rtol=RTOL, atol=ATOL))
+    assert isclose(copysign_zero_case(-x, y), f1(-x, y), rtol=RTOL, atol=ATOL)
+    assert isclose(copysign_zero_case(x, -y), f1(x, -y), rtol=RTOL, atol=ATOL)
 
 def test_copysign_return_type_1(language): # copysign
     '''test type copysign(real, real) => should return real number'''
@@ -467,11 +467,11 @@ def test_copysign_return_type_1(language): # copysign
     y = rand() # real
 
     # Same sign
-    assert(type(f1(x, y)) == type(copysign_return_type(x, y)))
-    assert(type(f1(-x, -y)) == type(copysign_return_type(-x, -y)))
+    assert isinstance(f1(x, y), type(copysign_return_type(x, y)))
+    assert isinstance(f1(-x, -y), type(copysign_return_type(-x, -y)))
     # Different sign
-    assert(type(f1(-x, y)) == type(copysign_return_type(-x, y)))
-    assert(type(f1(x, -y)) == type(copysign_return_type(x, -y)))
+    assert isinstance(f1(-x, y), type(copysign_return_type(-x, y)))
+    assert isinstance(f1(x, -y), type(copysign_return_type(x, -y)))
 
 def test_copysign_return_type_2(language): # copysign
     '''test type copysign(int, int) => should return real type'''
@@ -486,11 +486,11 @@ def test_copysign_return_type_2(language): # copysign
     y = randint(high)   # int
 
     # Same sign
-    assert(type(f1(x, y)) == type(copysign_return_type(x, y)))
-    assert(type(f1(-x, -y)) == type(copysign_return_type(-x, -y)))
+    assert isinstance(f1(x, y), type(copysign_return_type(x, y)))
+    assert isinstance(f1(-x, -y), type(copysign_return_type(-x, -y)))
     # Different sign
-    assert(type(f1(-x, y)) == type(copysign_return_type(-x, y)))
-    assert(type(f1(x, -y)) == type(copysign_return_type(x, -y)))
+    assert isinstance(f1(-x, y), type(copysign_return_type(-x, y)))
+    assert isinstance(f1(x, -y), type(copysign_return_type(x, -y)))
 
 def test_copysign_return_type_3(language): # copysign
     '''test type copysign(int, real) => should return real type'''
@@ -505,11 +505,11 @@ def test_copysign_return_type_3(language): # copysign
     y = rand()          # real
 
     # Same sign
-    assert(type(f1(x, y)) == type(copysign_return_type(x, y)))
-    assert(type(f1(-x, -y)) == type(copysign_return_type(-x, -y)))
+    assert isinstance(f1(x, y), type(copysign_return_type(x, y)))
+    assert isinstance(f1(-x, -y), type(copysign_return_type(-x, -y)))
     # Different sign
-    assert(type(f1(-x, y)) == type(copysign_return_type(-x, y)))
-    assert(type(f1(x, -y)) == type(copysign_return_type(x, -y)))
+    assert isinstance(f1(-x, y), type(copysign_return_type(-x, y)))
+    assert isinstance(f1(x, -y), type(copysign_return_type(x, -y)))
 
 def test_copysign_return_type_4(language): # copysign
     '''test type copysign(real, int) => should return real type'''
@@ -524,11 +524,11 @@ def test_copysign_return_type_4(language): # copysign
     y = randint(high)   # int
 
     # Same sign
-    assert(type(f1(x, y)) == type(copysign_return_type(x, y)))
-    assert(type(f1(-x, -y)) == type(copysign_return_type(-x, -y)))
+    assert isinstance(f1(x, y), type(copysign_return_type(x, y)))
+    assert isinstance(f1(-x, -y), type(copysign_return_type(-x, -y)))
     # Different sign
-    assert(type(f1(-x, y)) == type(copysign_return_type(-x, y)))
-    assert(type(f1(x, -y)) == type(copysign_return_type(x, -y)))
+    assert isinstance(f1(-x, y), type(copysign_return_type(-x, y)))
+    assert isinstance(f1(x, -y), type(copysign_return_type(x, -y)))
 
 
 #----------------------------- isfinite function -----------------------------#
@@ -550,14 +550,14 @@ def test_isfinite_call(language): # isfinite
     f1 = epyccel(isfinite_call, language = language)
     x = rand()
 
-    assert(isfinite_call(x) == f1(x))
+    assert isfinite_call(x) == f1(x)
 
     # Test not a number
-    assert(isfinite_call(nan) == f1(nan))
+    assert isfinite_call(nan) == f1(nan)
     # Test infinite number
-    assert(isfinite_call(inf) == f1(inf))
+    assert isfinite_call(inf) == f1(inf)
     # Test negative infinite number
-    assert(isfinite_call(-inf) == f1(-inf))
+    assert isfinite_call(-inf) == f1(-inf)
 
 #------------------------------- isinf function ------------------------------#
 @pytest.mark.parametrize( 'language', (
@@ -577,14 +577,14 @@ def test_isinf_call(language): # isinf
     f1 = epyccel(isinf_call, language = language)
     x = rand()
 
-    assert(isinf_call(x) == f1(x))
+    assert isinf_call(x) == f1(x)
 
     # Test not a number
-    assert(isinf_call(nan) == f1(nan))
+    assert isinf_call(nan) == f1(nan)
     # Test infinite number
-    assert(isinf_call(inf) == f1(inf))
+    assert isinf_call(inf) == f1(inf)
     # Test negative infinite number
-    assert(isinf_call(-inf) == f1(-inf))
+    assert isinf_call(-inf) == f1(-inf)
 
 #------------------------------- isnan function ------------------------------#
 
@@ -596,14 +596,14 @@ def test_isnan_call(language): # isnan
     f1 = epyccel(isnan_call, language = language)
     x = rand()
 
-    assert(isnan_call(x) == f1(x))
+    assert isnan_call(x) == f1(x)
 
     # Test not a number
-    assert(isnan_call(nan) == f1(nan))
+    assert isnan_call(nan) == f1(nan)
     # Test infinite number
-    assert(isnan_call(inf) == f1(inf))
+    assert isnan_call(inf) == f1(inf)
     # Test negative infinite number
-    assert(isnan_call(-inf) == f1(-inf))
+    assert isnan_call(-inf) == f1(-inf)
 
 #------------------------------- ldexp function ------------------------------#
 @pytest.mark.parametrize( 'language', (
@@ -625,13 +625,13 @@ def test_ldexp_call(language): # ldexp
     x = rand()
     exp = randint(high)
 
-    assert(isclose(ldexp_call(x, exp), f1(x, exp), rtol=RTOL, atol=ATOL))
+    assert isclose(ldexp_call(x, exp), f1(x, exp), rtol=RTOL, atol=ATOL)
     # Negative exponent
-    assert(isclose(ldexp_call(x, -exp), f1(x, -exp), rtol=RTOL, atol=ATOL))
+    assert isclose(ldexp_call(x, -exp), f1(x, -exp), rtol=RTOL, atol=ATOL)
     # Negative value
-    assert(isclose(ldexp_call(-x, exp), f1(-x, exp), rtol=RTOL, atol=ATOL))
+    assert isclose(ldexp_call(-x, exp), f1(-x, exp), rtol=RTOL, atol=ATOL)
     # Negative value and negative exponent
-    assert(isclose(ldexp_call(-x, -exp), f1(-x, -exp), rtol=RTOL, atol=ATOL))
+    assert isclose(ldexp_call(-x, -exp), f1(-x, -exp), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
@@ -652,13 +652,13 @@ def test_ldexp_return_type(language): # ldexp
     x = rand()
     exp = randint(high)
 
-    assert(type(ldexp_type(x, exp)) == type(f1(x, exp)))
+    assert isinstance(ldexp_type(x, exp), type(f1(x, exp)))
     # Negative exponent
-    assert(type(ldexp_type(x, -exp)) == type(f1(x, -exp)))
+    assert isinstance(ldexp_type(x, -exp), type(f1(x, -exp)))
     # Negative value
-    assert(type(ldexp_type(-x, exp)) == type(f1(-x, exp)))
+    assert isinstance(ldexp_type(-x, exp), type(f1(-x, exp)))
     # Negative value and negative exponent
-    assert(type(ldexp_type(-x, -exp)) == type(f1(-x, -exp)))
+    assert isinstance(ldexp_type(-x, -exp), type(f1(-x, -exp)))
 
 #--------------------------- remainder function ------------------------------#
 
@@ -681,12 +681,12 @@ def test_remainder_call(language): # remainder
     x = rand()
     y = rand() + 1
     # Same sign
-    assert(isclose(remainder_call(x, y), f1(x, y), rtol=RTOL, atol=ATOL))
-    assert(isclose(remainder_call(-x, -y), f1(-x, -y), rtol=RTOL, atol=ATOL))
+    assert isclose(remainder_call(x, y), f1(x, y), rtol=RTOL, atol=ATOL)
+    assert isclose(remainder_call(-x, -y), f1(-x, -y), rtol=RTOL, atol=ATOL)
 
     # Different sign
-    assert(isclose(remainder_call(x, -y), f1(x, -y), rtol=RTOL, atol=ATOL))
-    assert(isclose(remainder_call(-x, y), f1(-x, y), rtol=RTOL, atol=ATOL))
+    assert isclose(remainder_call(x, -y), f1(x, -y), rtol=RTOL, atol=ATOL)
+    assert isclose(remainder_call(-x, y), f1(-x, y), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher")
 @pytest.mark.parametrize( 'language', (
@@ -708,12 +708,12 @@ def test_remainder_return_type(language): # remainder
     y = rand()
 
     # Same sign
-    assert(type(remainder_type(x, y)) == type(f1(x, y)))
-    assert(type(remainder_type(-x, -y)) == type(f1(-x, -y)))
+    assert isinstance(remainder_type(x, y), type(f1(x, y)))
+    assert isinstance(remainder_type(-x, -y), type(f1(-x, -y)))
 
     # Different sign
-    assert(type(remainder_type(x, -y)) == type(f1(x, -y)))
-    assert(type(remainder_type(-x, y)) == type(f1(-x, y)))
+    assert isinstance(remainder_type(x, -y), type(f1(x, -y)))
+    assert isinstance(remainder_type(-x, y), type(f1(-x, y)))
 
 #----------------------------- trunc function --------------------------------#
 
@@ -726,9 +726,9 @@ def test_trunc_call(language): # trunc
     x = uniform(high = 10000.0)
 
     # positive number
-    assert(trunc_call(x) == f1(x))
+    assert trunc_call(x) == f1(x)
     # Negative number
-    assert(trunc_call(-x) == f1(-x))
+    assert trunc_call(-x) == f1(-x)
 
 def test_trunc_call_int(language): # trunc
     def trunc_call(x : 'int'):
@@ -740,9 +740,9 @@ def test_trunc_call_int(language): # trunc
     x = randint(high)
 
     # positive number
-    assert(trunc_call(x) == f1(x))
+    assert trunc_call(x) == f1(x)
     # Negative number
-    assert(trunc_call(-x) == f1(-x))
+    assert trunc_call(-x) == f1(-x)
 
 def test_trunc_return_type(language): # trunc
     def trunc_type(x : 'float'):
@@ -752,8 +752,8 @@ def test_trunc_return_type(language): # trunc
     f1 = epyccel(trunc_type, language = language)
     x = uniform(high = 10000.0)
 
-    assert(type(trunc_type((x))) == type(f1((x))))
-    assert(type(trunc_type(-x)) == type(f1(-x)))
+    assert isinstance(trunc_type((x)), type(f1((x))))
+    assert isinstance(trunc_type(-x), type(f1(-x)))
 
 #--------------------------- expm1 function ------------------------------#
 @pytest.mark.parametrize( 'language', (
@@ -772,7 +772,7 @@ def test_expm1_call(language): # expm1
 
     f1 = epyccel(expm1_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  expm1_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  expm1_call(x), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
@@ -790,7 +790,7 @@ def test_expm1_call_special_case(language): # expm1
     # should give result accurate to full precision better than exp()
     x = 1e-5
     f1 = epyccel(expm1_call, language = language)
-    assert(isclose(f1(x), expm1_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x), expm1_call(x), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
@@ -810,7 +810,7 @@ def test_expm1_phrase(language): # expm1
     f2 = epyccel(expm1_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  expm1_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  expm1_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
@@ -829,8 +829,8 @@ def test_expm1_return_type(language): # expm1 # expm1
     f1 = epyccel(expm1_type, language = language)
     x = uniform(high = 700.0)
 
-    assert(type(expm1_type(x)) == type(f1(x)))
-    assert(type(expm1_type(-x)) == type(f1(-x)))
+    assert isinstance(expm1_type(x), type(f1(x)))
+    assert isinstance(expm1_type(-x), type(f1(-x)))
 
 #--------------------------- log1p function ------------------------------#
 
@@ -850,7 +850,7 @@ def test_log1p_call(language):
 
     f1 = epyccel(log1p_call, language = language)
     x = rand()
-    assert(isclose(f1(x) ,  log1p_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  log1p_call(x), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x), type(log1p_call(x)))
 
 @pytest.mark.parametrize( 'language', (
@@ -871,7 +871,7 @@ def test_log1p_phrase(language):
     f2 = epyccel(log1p_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y) ,  log1p_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  log1p_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 #--------------------------- log2 function ------------------------------#
 @pytest.mark.parametrize( 'language', (
@@ -892,7 +892,7 @@ def test_log2_call(language):
     low = min_float
     high = max_float
     x = uniform(low=low, high=high)
-    assert(isclose(f1(x) ,  log2_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  log2_call(x), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x), type(log2_call(x)))
 
 @pytest.mark.parametrize( 'language', (
@@ -915,7 +915,7 @@ def test_log2_phrase(language):
     high = max_float
     x = uniform(low=low, high=high)
     y = uniform(low=low, high=high)
-    assert(isclose(f2(x,y) ,  log2_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  log2_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 #--------------------------- log10 function ------------------------------#
 
@@ -928,7 +928,7 @@ def test_log10_call(language):
     low = min_float
     high = max_float
     x = uniform(low=low, high=high)
-    assert(isclose(f1(x) ,  log10_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  log10_call(x), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x), type(log10_call(x)))
 
 def test_log10_phrase(language):
@@ -942,7 +942,7 @@ def test_log10_phrase(language):
     high = max_float
     x = uniform(low=low, high=high)
     y = uniform(low=low, high=high)
-    assert(isclose(f2(x,y) ,  log10_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) ,  log10_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 #--------------------------------- Pow function ------------------------------#
 
@@ -957,18 +957,18 @@ def test_pow_call(language):
     # case 1: x > 0
     x = uniform(low=min_float)
     y = uniform(low=-high, high=high)
-    assert(isclose(f1(x, y) , pow_call(x, y), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x, y) , pow_call(x, y), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x, y), type(pow_call(x, y)))
 
     # case 2: x = 0 and y > 0
     x = 0.0
     y = uniform(high=high)
-    assert(isclose(f1(x, y), pow_call(x, y), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x, y), pow_call(x, y), rtol=RTOL, atol=ATOL)
 
     # case 3: x < 0 and y is integer
     x = uniform(low=-high, high=0)
     y = randint(high)
-    assert(isclose(f1(x, y), pow_call(x, y), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x, y), pow_call(x, y), rtol=RTOL, atol=ATOL)
 
 #------------------------------- Hypot function ------------------------------#
 
@@ -981,7 +981,7 @@ def test_hypot_call(language):
     high = 10
     x = uniform(low=-high, high=high)
     y = uniform(low=-high, high=high)
-    assert(isclose(f1(x, y), hypot_call(x, y), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x, y), hypot_call(x, y), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x, y), type(hypot_call(x, y)))
 
 #------------------------------- Acosh function ------------------------------#
@@ -994,7 +994,7 @@ def test_acosh_call(language):
     f1 = epyccel(acosh_call, language = language)
 
     x = uniform(low=1, high=max_float)
-    assert(isclose(f1(x) ,  acosh_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) ,  acosh_call(x), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x), type(acosh_call(x)))
 
 def test_acosh_phrase(language):
@@ -1007,7 +1007,7 @@ def test_acosh_phrase(language):
 
     x = uniform(low=1, high=max_float)
     y = uniform(low=1, high=max_float)
-    assert(isclose(f2(x,y) , acosh_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y) , acosh_phrase(x,y), rtol=RTOL, atol=ATOL)
 
 
 #------------------------------- Asinh function ------------------------------#
@@ -1020,11 +1020,11 @@ def test_asinh_call(language):
     f1 = epyccel(asinh_call, language = language)
 
     x = uniform(high=max_float)
-    assert(isclose(f1(x) , asinh_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) , asinh_call(x), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x), type(asinh_call(x)))
 
     # Negative value
-    assert(isclose(f1(-x) , asinh_call(-x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(-x) , asinh_call(-x), rtol=RTOL, atol=ATOL)
 
 def test_asinh_phrase(language):
     def asinh_phrase(x : 'float', y : 'float'):
@@ -1035,9 +1035,9 @@ def test_asinh_phrase(language):
     f2 = epyccel(asinh_phrase, language = language)
     x = uniform(high=max_float)
     y = uniform(high=max_float)
-    assert(isclose(f2(x,y), asinh_phrase(x,y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x,y), asinh_phrase(x,y), rtol=RTOL, atol=ATOL)
     # Negative value
-    assert(isclose(f2(-x,-y), asinh_phrase(-x,-y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(-x,-y), asinh_phrase(-x,-y), rtol=RTOL, atol=ATOL)
 
 #------------------------------- Atanh function ------------------------------#
 
@@ -1050,7 +1050,7 @@ def test_atanh_call(language):
     low = -1 + min_float
     high = 1 - min_float
     x = uniform(low=low, high=high)
-    assert(isclose(f1(x) , atanh_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) , atanh_call(x), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x), type(atanh_call(x)))
 
 def test_atanh_phrase(language):
@@ -1066,7 +1066,7 @@ def test_atanh_phrase(language):
     high = 1 - min_float
     x = uniform(low=low, high=high)
     y = uniform(low=low, high=high)
-    assert(isclose(f2(x, y), atanh_phrase(x, y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x, y), atanh_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 #--------------------------------- Erf function ------------------------------#
 
@@ -1079,8 +1079,8 @@ def test_erf_call(language):
 
     # Domain ]-inf, +inf[
     x = uniform(high=max_float)
-    assert(isclose(f1(x) , erf_call(x), rtol=RTOL, atol=ATOL))
-    assert(isclose(f1(-x) , erf_call(-x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) , erf_call(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(-x) , erf_call(-x), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x), type(erf_call(x)))
 
 def test_erf_phrase(language):
@@ -1094,8 +1094,8 @@ def test_erf_phrase(language):
     # Domain ]-inf, +inf[
     x = uniform(high=max_float)
     y = uniform(high=max_float)
-    assert(isclose(f2(x, y), erf_phrase(x, y), rtol=RTOL, atol=ATOL))
-    assert(isclose(f2(-x, -y), erf_phrase(-x, -y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x, y), erf_phrase(x, y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x, -y), erf_phrase(-x, -y), rtol=RTOL, atol=ATOL)
 
 #-------------------------------- Erfc function ------------------------------#
 
@@ -1108,8 +1108,8 @@ def test_erfc_call(language):
 
     # Domain ]-inf, +inf[
     x = uniform(high=max_float)
-    assert(isclose(f1(x) , erfc_call(x), rtol=RTOL, atol=ATOL))
-    assert(isclose(f1(-x) , erfc_call(-x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) , erfc_call(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(-x) , erfc_call(-x), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x), type(erfc_call(x)))
 
 def test_erfc_phrase(language):
@@ -1123,8 +1123,8 @@ def test_erfc_phrase(language):
     # Domain ]-inf, +inf[
     x = uniform(high=max_float)
     y = uniform(high=max_float)
-    assert(isclose(f2(x, y), erfc_phrase(x, y), rtol=RTOL, atol=ATOL))
-    assert(isclose(f2(-x, -y), erfc_phrase(-x, -y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x, y), erfc_phrase(x, y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x, -y), erfc_phrase(-x, -y), rtol=RTOL, atol=ATOL)
 
 #-------------------------------- gamma function -----------------------------#
 
@@ -1137,11 +1137,11 @@ def test_gamma_call(language):
 
     # Domain ]0, +inf[ || (x < 0 and x.fraction not null)
     x = uniform(low=min_float)
-    assert(isclose(f1(x) , gamma_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) , gamma_call(x), rtol=RTOL, atol=ATOL)
     # make fractional part different from zero to test negative case
     if modf(x)[0] == 0:
         x += - 0.1
-    assert(isclose(f1(-x) , gamma_call(-x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(-x) , gamma_call(-x), rtol=RTOL, atol=ATOL)
 
     assert isinstance(f1(x), type(gamma_call(x)))
 
@@ -1156,7 +1156,7 @@ def test_gamma_phrase(language):
     # Domain ]0, +inf[ || (x < 0 and fractional part of x not null)
     x = uniform(low=min_float)
     y = uniform(low=min_float)
-    assert(isclose(f2(x, y), gamma_phrase(x, y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x, y), gamma_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 #------------------------------- lgamma function -----------------------------#
 
@@ -1169,12 +1169,12 @@ def test_lgamma_call(language):
 
     # Domain ]0, +inf[ || (x < 0 and x.fraction not null)
     x = uniform(low=min_float)
-    assert(isclose(f1(x) , lgamma_call(x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(x) , lgamma_call(x), rtol=RTOL, atol=ATOL)
     _, f = modf(x)
     # make fractional part different from zero to test negative case
     if f == 0:
         x += - 0.1
-    assert(isclose(f1(-x) , lgamma_call(-x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(-x) , lgamma_call(-x), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x), type(lgamma_call(x)))
 
 def test_lgamma_phrase(language):
@@ -1188,4 +1188,4 @@ def test_lgamma_phrase(language):
     # Domain ]0, +inf[ || (x < 0 and fractional part of x not null)
     x = uniform(low=min_float)
     y = uniform(low=min_float)
-    assert(isclose(f2(x, y), lgamma_phrase(x, y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(x, y), lgamma_phrase(x, y), rtol=RTOL, atol=ATOL)
