@@ -2,7 +2,7 @@ name: Deploy new version to PyPi
 
 on:
   workflow_run:
-    workflows: [Windows]
+    workflows: [Wheel-pickled-installation]
     types:
       - pickle_wheel
 
