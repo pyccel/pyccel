@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 -   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
 -   #1821 : Ensure an error is raised when creating an ambiguous interface.
 -   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
+-   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
 
 ### Changed
 
@@ -78,6 +79,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
+-   \[INTERNALS\] Remove function `Module.set_name`.
+-   \[INTERNALS\] Remove unused `assign_to` argument of `CodePrinter.doprint`.
 
 ## \[1.12.1\] - 2024-10-01
 
