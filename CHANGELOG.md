@@ -18,7 +18,6 @@ All notable changes to this project will be documented in this file.
 -   #1754 : Add Python support for set method `update()`.
 -   #1787 : Ensure `STC` is installed with Pyccel.
 -   #1656 : Ensure `gFTL` is installed with Pyccel.
--   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
@@ -26,27 +25,20 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
--   #1762 : Fix array copy between different data types.
 -   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
 -   Fix some cases where a Python built-in type is returned in place of a NumPy type.
 -   Stop printing numbers with more decimal digits than their precision.
 -   Allow printing the result of a function returning multiple objects of different types.
--   #1792 : Fix array unpacking.
--   #1795 : Fix bug when returning slices in C.
 -   #1732 : Fix multidimensional list indexing in Python.
 -   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
--   #1218 : Fix bug when assigning an array to a slice in Fortran.
--   #1830 : Fix missing allocation when returning an annotated array expression.
 -   #1821 : Ensure an error is raised when creating an ambiguous interface.
 -   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
--   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
 
 ### Changed
 
 -   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
--   \[TESTS\] Filter out cast warnings in cast tests.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -56,8 +48,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Moved order from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
 -   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
--   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
--   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
 -   \[INTERNALS\] Stop storing `FunctionDef`, `ClassDef`, and `Import` objects inside `CodeBlock`s.
 -   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
 -   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
@@ -72,18 +62,42 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
--   #1820 : Deprecated unused decorator `@lambdify`
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
 -   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
--   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 -   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
 -   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
+
+## \[1.12.0\] - 2024-05-07
+
+### Added
+
+-   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
+
+### Fixed
+
+-   #1762 : Fix array copy between different data types.
+-   #1792 : Fix array unpacking.
+-   #1795 : Fix bug when returning slices in C.
+-   #1218 : Fix bug when assigning an array to a slice in Fortran.
+-   #1830 : Fix missing allocation when returning an annotated array expression.
+-   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
+
+### Changed
+
+-   \[TESTS\] Filter out cast warnings in cast tests.
+-   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
+-   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
+
+### Deprecated
+
+-   #1820 : Deprecated unused decorator `@lambdify`
+-   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 -   \[INTERNALS\] Remove function `Module.set_name`.
 -   \[INTERNALS\] Remove unused `assign_to` argument of `CodePrinter.doprint`.
 
