@@ -16,7 +16,7 @@ on:
         required: false
         type: string
   push:
-    branches: devel
+    branches: [devel, main]
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -69,6 +69,7 @@ jobs:
         with:
           mpi_type: msmpi
       - name: "Setup"
+        if: github.event_name != 'push'
         id: token
         run: |
           python -m pip install jwt requests
@@ -88,7 +89,7 @@ jobs:
         with:
           shell_cmd: 'bash -l -eo pipefail {0}'
       - name: "Post completed"
-        if: always()
+        if: always() && github.event_name != 'push'
         run: |
           which python
           python --version

@@ -16,7 +16,7 @@ on:
         required: false
         type: string
   push:
-    branches: devel
+    branches: [devel, main]
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -69,6 +69,7 @@ jobs:
         with:
           mpi_type: openmpi
       - name: "Setup"
+        if: github.event_name != 'push'
         id: token
         run: |
           pip install jwt requests
@@ -108,7 +109,7 @@ jobs:
           path: .coverage
           retention-days: 1
       - name: "Post completed"
-        if: always()
+        if: always() && github.event_name != 'push'
         run:
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }}
         shell: bash -l {0}
