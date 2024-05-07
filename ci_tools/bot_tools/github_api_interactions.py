@@ -819,3 +819,12 @@ class GitHubAPIInteractions:
         return {"Accept": "application/vnd.github+json",
                  "Authorization": f"Bearer {self._install_token}",
                  "X-GitHub-Api-Version": "2022-11-28"}
+
+    def wait_for_runs(self, commit_sha):
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/runs"
+        j = self._post_request("GET", url, {'head_sha': commit_sha}).json()
+        status = [j['workflow_runs'][i]['status'] for i in range(j['total_count'])]
+        name = [j['workflow_runs'][i]['name'] for i in range(j['total_count'])]
+        success = [j['workflow_runs'][i]['conclusion'] for i in range(j['total_count'])]
+        print(name, status, success)
+
