@@ -124,8 +124,8 @@ Such type annotations are compatible with mypy and as such are recommended for u
 ### Installation
 
 Pyccel's official releases can be downloaded from PyPI (the Python Package Index) using `pip`.
-To get the latest (trunk) version of Pyccel, one can clone the `git` repository from GitHub and checkout the `master` branch.
-Detailed installation instructions are found in the [README](https://github.com/pyccel/pyccel/blob/master/README.rst) file.
+To get the latest (trunk) version of Pyccel, one can clone the `git` repository from GitHub and checkout the `devel` branch.
+Detailed installation instructions are found in the [README](https://github.com/pyccel/pyccel/blob/devel/README.md) file.
 
 ### Command Line Usage
 
@@ -484,7 +484,7 @@ Then finally, it imports this function and returns it to the caller.
 
 ## Other Features
 
-Pyccel's generated code can use parallel multi-threading through [OpenMP](https://en.wikipedia.org/wiki/OpenMP); please read [our documentation](https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md) for more details.
+Pyccel's generated code can use parallel multi-threading through [OpenMP](https://en.wikipedia.org/wiki/OpenMP); please read [our documentation](https://github.com/pyccel/pyccel/blob/devel/docs/openmp.md) for more details.
 
 We are also working on supporting [MPI](https://en.wikipedia.org/wiki/Open_MPI), [LAPACK](https://en.wikipedia.org/wiki/LAPACK)/[BLAS](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms), and [OpenACC](https://en.wikipedia.org/wiki/OpenACC).
 
@@ -499,7 +499,7 @@ This tool removes all folders whose name begins with `__pyccel__` or `__epyccel_
 
 If you face problems with Pyccel, please take the following steps:
 
-1.  Consult our documentation in the tutorial directory;
+1.  Consult our documentation in the docs directory;
 2.  Send an email message to pyccel@googlegroups.com;
 3.  Open an issue on GitHub.
 
