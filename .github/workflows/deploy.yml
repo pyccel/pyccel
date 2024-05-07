@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: [Wheel-pickled-installation]
     types:
-      - pickle_wheel
+      - completed
 
 jobs:
   waitForWorklows:
