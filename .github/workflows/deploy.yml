@@ -20,11 +20,9 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
-      - name: "Generate token"
-        id: token
-        uses: ./.github/actions/generate_bot_token
-        with:
-          bot_pem: "${{ secrets.BOT_PEM }}"
+      - name: Install python dependencies
+        run: |
+          python -m pip install requests
       - name: Wait for workflows
         run: |
           python3 wait_for_main_workflows.py
@@ -33,7 +31,6 @@ jobs:
         env:
           #COMMIT: ${{ github.event.workflow_run.head_sha }}
           COMMIT: ${{ github.event.after }}
-          PEM: ${{ secrets.BOT_PEM }}
 
   deployVersion:
     runs-on: ubuntu-latest
