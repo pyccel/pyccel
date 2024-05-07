@@ -799,6 +799,57 @@ class GitHubAPIInteractions:
 
         self._post_request("POST", url, review_requests)
 
+    def wait_for_runs(self, commit_sha, run_names, max_time=15*60, wait_time=15):
+        """
+        Wait for the specified workflow runs associated with the commit.
+
+        Use the API to find workflow runs associated with a commit as described here:
+        https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#list-workflow-runs-for-a-repository
+
+        If the workflows are not finished then wait before trying again. Keep trying until the
+        timeout is reached.
+
+        Parameters
+        ----------
+        commit_sha : str
+            The SHA of the commit for which the workflows are run.
+
+        run_names : tuple[str,...]
+            The names of the workflows which should finish before this method terminates.
+
+        max_time : int, default=15*60
+            The maximum number of seconds which should be spent in this method.
+
+        wait_time : int, default=15
+            The time in seconds that the method should wait for before rechecking the workflow
+            results.
+
+        Returns
+        -------
+        bool
+            True if all workflows succeeded, False otherwise.
+        """
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/runs"
+        completed = False
+        # Run for 15 mins maximum
+        timeout = time.time() + max_time
+
+        request_result = self._post_request("GET", url, params={'head_sha': commit_sha}).json()
+        workflow_runs = [j for j in request_result['workflow_runs'] if j['name'] in run_names]
+        completed = all(j['status'] == 'completed' for j in workflow_runs)
+
+        while not completed and time.time() < timeout:
+            time.sleep(15)
+            request_result = self._post_request("GET", url, params={'head_sha': commit_sha}).json()
+            workflow_runs = [j for j in request_result['workflow_runs'] if j['name'] in run_names]
+            completed = all(j['status'] == 'completed' for j in workflow_runs)
+
+        assert completed
+
+        success = all(j['conclusion'] == 'success' for j in workflow_runs)
+
+        return success
+
     def get_headers(self):
         """
         Get the header which is always passed to the API.
@@ -819,12 +870,3 @@ class GitHubAPIInteractions:
         return {"Accept": "application/vnd.github+json",
                  "Authorization": f"Bearer {self._install_token}",
                  "X-GitHub-Api-Version": "2022-11-28"}
-
-    def wait_for_runs(self, commit_sha):
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/runs"
-        j = self._post_request("GET", url, {'head_sha': commit_sha}).json()
-        status = [j['workflow_runs'][i]['status'] for i in range(j['total_count'])]
-        name = [j['workflow_runs'][i]['name'] for i in range(j['total_count'])]
-        success = [j['workflow_runs'][i]['conclusion'] for i in range(j['total_count'])]
-        print(name, status, success)
-
