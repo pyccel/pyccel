@@ -38,7 +38,7 @@ Please open a pull request to add or change anything in the docs.
 
 ## Reviewing a pull request
 
-There are many pull requests and reviewing them is a great way to help things get to the devel branch faster.
+There are many pull requests and reviewing them is a great way to help things get to the `devel` branch faster.
 This is also a really good way to get to grips with the code base as you will see examples of many different areas of the code.
 It's incredibly helpful to have pull requests go through as many reviews as possible, to make sure the code change makes sense, is documented, and is efficient and clear.
 As the clarity is subjective, more eyes can only improve the code base.
