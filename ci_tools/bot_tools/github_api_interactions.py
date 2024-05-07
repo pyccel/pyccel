@@ -838,11 +838,21 @@ class GitHubAPIInteractions:
         workflow_runs = [j for j in request_result['workflow_runs'] if j['name'] in run_names]
         completed = all(j['status'] == 'completed' for j in workflow_runs)
 
+        print(commit_sha)
+        print(workflow_runs)
+        print([j['name'] for j in workflow_runs])
+        print([j['status'] for j in workflow_runs])
+        print([j['conclusion'] for j in workflow_runs])
+
         while not completed and time.time() < timeout:
             time.sleep(15)
             request_result = self._post_request("GET", url, params={'head_sha': commit_sha}).json()
             workflow_runs = [j for j in request_result['workflow_runs'] if j['name'] in run_names]
             completed = all(j['status'] == 'completed' for j in workflow_runs)
+            print(workflow_runs)
+            print([j['name'] for j in workflow_runs])
+            print([j['status'] for j in workflow_runs])
+            print([j['conclusion'] for j in workflow_runs])
 
         assert completed
 
