@@ -54,12 +54,12 @@ jobs:
     needs: Python_version_picker
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
       - name: Set up Python ${{ needs.Python_version_picker.outputs.python_version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ needs.Python_version_picker.outputs.python_version }}
       - name: "Setup"
