@@ -31,7 +31,6 @@ env:
 jobs:
   Python_version_picker:
     runs-on: ubuntu-latest
-    if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
     outputs:
       python_version: ${{ steps.set-matrix.outputs.python_version }}
       matrix: ${{ steps.set-matrix.outputs.matrix }}
