@@ -952,9 +952,8 @@ class CCodePrinter(CodePrinter):
         if expr.target:
            dtype = expr.target.pop().name
            if source.startswith('stc/'):
-             import_file, _ = source.split('_', 1)
              dtype_macro = dtype.upper()
-             _,container_type = import_file.split("/")
+             _,container_type = source.split("/")
              if container_type in import_stc:
                 class_type_macro = import_stc[container_type]
              additional_defines = '#define i_use_cmp\n' if class_type_macro == 'VEC' else ''
@@ -962,7 +961,7 @@ class CCodePrinter(CodePrinter):
                                f'#define _{class_type_macro}_{dtype_macro}',
                                f'#define i_key {dtype}',
                                additional_defines,
-                               f'#include "{import_file}.h"',
+                               f'#include "{source}.h"',
                                f'#endif\n'))
 
         # Get with a default value is not used here as it is
@@ -1184,7 +1183,7 @@ class CCodePrinter(CodePrinter):
             container_type = 'hset_' if dtype._name == 'set' else 'vec_'
             vec_dtype = self.find_in_dtype_registry(dtype.element_type)
             key = container_type + vec_dtype
-            source = 'stc/'+ container_type + vec_dtype
+            source = 'stc/'+ container_type[:-1]
             self.add_import(Import(source, Module(vec_dtype, (), ())))
             return key
         else:
