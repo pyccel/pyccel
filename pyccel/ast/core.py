@@ -1060,8 +1060,8 @@ class Module(ScopedAstNode):
         imports=(),
         scope = None
         ):
-        if not isinstance(name, (str, AsName)):
-            raise TypeError('name must be a string or an AsName')
+        if not isinstance(name, str):
+            raise TypeError('name must be a string')
 
         if not iterable(variables):
             raise TypeError('variables must be an iterable')
@@ -1214,11 +1214,6 @@ class Module(ScopedAstNode):
         in the module
         """
         return self.interfaces + self.funcs + self.classes
-
-    def set_name(self, new_name):
-        """ Function for changing the name of a module
-        """
-        self._name = new_name
 
     def __getitem__(self, arg):
         assert isinstance(arg, str)
@@ -3598,6 +3593,10 @@ class Import(PyccelAstNode):
         self._target = set()
         self._source_mod      = mod
         self._ignore_at_print = ignore_at_print
+
+        if mod is None and isinstance(target, Module):
+            self._source_mod = target
+
         if target is None:
             if pyccel_stage == "syntactic":
                 target = []

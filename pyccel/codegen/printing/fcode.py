@@ -602,7 +602,7 @@ class FCodePrinter(CodePrinter):
             return ''
 
         if expr.source_module:
-            source = expr.source_module.scope.get_expected_name(source)
+            source = expr.source_module.name
 
         if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return 'use mpi\n' + 'use mpiext\n'

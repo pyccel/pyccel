@@ -7,7 +7,7 @@
 
 from pyccel.ast.basic import PyccelAstNode
 
-from pyccel.ast.core      import Assign
+from pyccel.ast.core      import Module, ModuleHeader, Program
 from pyccel.ast.internals import PyccelSymbol
 
 from pyccel.errors.errors     import Errors
@@ -22,31 +22,31 @@ errors = Errors()
 class CodePrinter:
     """
     The base class for code-printing subclasses.
+
+    The base class from which code printers inherit. The sub-classes should define a language
+    and `_print_X` functions.
     """
     language = None
     def __init__(self):
         self._scope = None
 
-    def doprint(self, expr, assign_to=None):
+    def doprint(self, expr):
         """
         Print the expression as code.
 
+        Print the expression as code.
+
+        Parameters
+        ----------
         expr : Expression
             The expression to be printed.
 
-        assign_to : PyccelSymbol, MatrixSymbol, or string (optional)
-            If provided, the printed code will set the expression to a
-            variable with name ``assign_to``.
+        Returns
+        -------
+        str
+            The generated code.
         """
-
-        if isinstance(assign_to, str):
-            assign_to = PyccelSymbol(assign_to)
-        elif not isinstance(assign_to, (PyccelAstNode, type(None))):
-            raise TypeError("{0} cannot assign to object of type {1}".format(
-                    type(self).__name__, type(assign_to)))
-
-        if assign_to:
-            expr = Assign(assign_to, expr)
+        assert isinstance(expr, (Module, ModuleHeader, Program))
 
         # Do the actual printing
         lines = self._print(expr).splitlines(True)

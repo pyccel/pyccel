@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 -   #1795 : Fix bug when returning slices in C.
 -   #1218 : Fix bug when assigning an array to a slice in Fortran.
 -   #1830 : Fix missing allocation when returning an annotated array expression.
+-   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
 
 ### Changed
 
@@ -25,6 +26,8 @@ All notable changes to this project will be documented in this file.
 
 -   #1820 : Deprecated unused decorator `@lambdify`
 -   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
+-   \[INTERNALS\] Remove function `Module.set_name`.
+-   \[INTERNALS\] Remove unused `assign_to` argument of `CodePrinter.doprint`.
 
 ## \[1.11.2\] - 2024-03-05
 

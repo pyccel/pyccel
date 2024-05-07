@@ -344,7 +344,8 @@ class SyntaxParser(BasicParser):
         # Define the name of the module
         # The module name allows it to be correctly referenced from an import command
         mod_name = os.path.splitext(os.path.basename(self._filename))[0]
-        name = AsName(mod_name, self.scope.get_new_name(mod_name))
+        name = self.scope.get_new_name(mod_name)
+        self.scope.python_names[name] = mod_name
 
         body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
         return Module(name, [], [], program = CodeBlock(body), scope=self.scope)
