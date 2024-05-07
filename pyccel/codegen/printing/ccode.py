@@ -318,9 +318,6 @@ class CCodePrinter(CodePrinter):
     def _get_statement(self, codestring):
         return "%s;\n" % codestring
 
-    def _get_comment(self, text):
-        return "// {0}\n".format(text)
-
     def _format_code(self, lines):
         return self.indent_code(lines)
 

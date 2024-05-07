@@ -231,9 +231,6 @@ class LuaCodePrinter(CodePrinter):
     def _get_statement(self, codestring):
         return "%s" % codestring
 
-    def _get_comment(self, text):
-        return "-- %s" % text
-
     def _declare_number_const(self, name, value):
         return "const %s: f64 = %s" % (name, value)
 
