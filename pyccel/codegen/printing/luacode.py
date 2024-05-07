@@ -228,9 +228,6 @@ class LuaCodePrinter(CodePrinter):
     def _rate_index_position(self, p):
         return p*5
 
-    def _get_statement(self, codestring):
-        return "%s" % codestring
-
     def _declare_number_const(self, name, value):
         return "const %s: f64 = %s" % (name, value)
 
@@ -453,9 +450,9 @@ class LuaCodePrinter(CodePrinter):
         local_vars = [str(x) for x in local_vars]
 
         if lhs_code in local_vars:
-            return ("local %s = %s" % (lhs_code, rhs_code))
+            return f"local {lhs_code} = {rhs_code}"
         else:
-            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+            return f"{lhs_code} = {rhs_code}"
 
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)
