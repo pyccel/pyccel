@@ -77,7 +77,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
+-   #1830 : Add a `pyccel.lambdify` function to accelerate SymPy expressions.
 
 ### Fixed
 
