@@ -4008,6 +4008,7 @@ class SemanticParser(BasicParser):
                     bound_class.add_new_method(func)
 
             new_semantic_funcs += [func]
+            func.set_current_ast(expr.python_ast)
 
         if function_call_args is not None and len(new_semantic_funcs) == 0:
             for args in annotated_args[:-1]:
@@ -4026,6 +4027,7 @@ class SemanticParser(BasicParser):
                 self.insert_function(f)
 
             new_semantic_funcs = Interface(interface_name, new_semantic_funcs, syntactic_node=expr)
+            new_semantic_funcs.set_current_ast(expr.python_ast)
             if cls_name:
                 bound_class.add_new_interface(new_semantic_funcs)
             self.insert_function(new_semantic_funcs)
