@@ -1882,9 +1882,22 @@ class FCodePrinter(CodePrinter):
         return ' // '.join(formatted_str)
 
     def _print_Interface(self, expr):
+        interface_funcs = expr.functions
+
+        example_func = interface_funcs[0]
+
         # ... we don't print 'hidden' functions
-        if expr.functions[0].is_inline:
+        if example_func.is_inline:
             return ''
+
+        if len(example_func.results) == 1:
+            if len(set(f.results[0].var.rank == 0 for f in interface_funcs)) != 1:
+                message = ("Fortran cannot yet handle a templated function returning either a scalar or an array. "
+                           "If you are using the terminal interface, please pass --language c, "
+                           "if you are using the interactive interfaces epyccel or lambdify, please pass language='c'. "
+                           "See https://github.com/pyccel/pyccel/issues/1339 to monitor the advancement of this issue.")
+                errors.report(message,
+                        severity='error', symbol=expr)
 
         name = self._print(expr.name)
         if all(isinstance(f, FunctionAddress) for f in interface_funcs):
