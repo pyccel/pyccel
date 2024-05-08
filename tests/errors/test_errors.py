@@ -133,8 +133,8 @@ def test_semantic_non_blocking_developer_errors(f):
     error_mode.set_mode('user')
     assert(errors.has_errors())
 
-@pytest.mark.parametrize("f",get_files_from_folder("codegen/fortran"))
-def test_codegen_errors(f):
+@pytest.mark.parametrize("f",get_files_from_folder("codegen/fortran_blocking"))
+def test_codegen_blocking_errors(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
@@ -153,6 +153,26 @@ def test_codegen_errors(f):
         codegen.printer.doprint(codegen.ast)
 
     assert(errors.has_errors())
+
+@pytest.mark.parametrize("f",get_files_from_folder("codegen/fortran_non_blocking"))
+def test_codegen_non_blocking_errors(f):
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f)
+    ast = pyccel.parse()
+
+    settings = {}
+    ast = pyccel.annotate(**settings)
+
+    name = os.path.basename(f)
+    name = os.path.splitext(name)[0]
+
+    codegen = Codegen(ast, name, 'fortran')
+    codegen.printer.doprint(codegen.ast)
+
+    assert errors.has_errors()
 
 @pytest.mark.parametrize("f",get_files_from_folder("known_bugs"))
 def test_neat_errors_for_known_bugs(f):
