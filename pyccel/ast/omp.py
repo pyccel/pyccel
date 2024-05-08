@@ -1,13 +1,13 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 OpenMP has several constructs and directives, and this file contains the OpenMP types that are supported.
 We represent some types with the OmpAnnotatedComment type.
 These types are detailed on our documentation:
-https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md
+https://github.com/pyccel/pyccel/blob/devel/docs/openmp.md
 """
 
 from .basic import PyccelAstNode
