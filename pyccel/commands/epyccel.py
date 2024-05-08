@@ -359,11 +359,11 @@ def epyccel( python_function_or_module, **kwargs ):
                 fun_name = python_function_or_module.__name__ if fun else None
                 success  = True
             # error handling carried out after broadcast to prevent deadlocks
+            except  PyccelError as e:
+                raise type(e)(str(e)) from None
             except BaseException as e: # pylint: disable=broad-except
                 exc_info = e
                 success  = False
-            except  PyccelError as e:
-                raise type(e)(str(e)) from None
 
         # Non-master processes initialize empty variables
         else:
