@@ -72,17 +72,33 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
         raise TypeError("Argument 'result_type': Expected a string type annotation.")
 
     expr = NumPyPrinter().doprint(expr)
-    args = ', '.join(f'{a} : "{annot}"' for a, annot in args.items())
+    args_code = ', '.join(f'{a} : "{annot}"' for a, annot in args.items())
     func_name = 'func_'+random_string(8)
+
+    docstring = " \n".join(('    """',
+            "    Expression evaluation created with `pyccel.lambdify`.",
+            "",
+            "    Function evaluating the expression:",
+           f"    {expr}",
+            "",
+            "    Parameters",
+            "    ----------\n"))
+    docstring += '\n'.join(f"    {a} : {type_annot}" for a, type_annot in args.items())
+
     if collect_result_in_arg:
         if not result_type:
             raise TypeError("The reult_type must be provided if collect_result_in_arg is used.")
         else:
-            signature = f'def {func_name}({args}, out : "{result_type}"):'
+            signature = f'def {func_name}({args_code}, out : "{result_type}"):'
+            docstring += f"\n    out : {result_type}"
     elif result_type:
-        signature = f'def {func_name}({args}) -> "{result_type}":'
+        signature = f'def {func_name}({args_code}) -> "{result_type}":'
+        docstring += "\n".join(("\n",
+                    "     Returns",
+                    "     -------",
+                   f"     {result_type}"))
     else:
-        signature = f'def {func_name}({args}):'
+        signature = f'def {func_name}({args_code}):'
     if templates:
         if not (isinstance(templates, dict) and all(isinstance(k, str) and hasattr(v, '__iter__') for k,v in templates.items()) \
                 and all(all(isinstance(type_annot, str) for type_annot in v) for v in templates.values())):
@@ -97,8 +113,10 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
     else:
         code = f'    return {expr}'
     numpy_import = 'import numpy\n'
-    func = '\n'.join((numpy_import, decorators, signature, code))
-    print(func)
+
+    docstring += '\n    """'
+
+    func = '\n'.join((numpy_import, decorators, signature, docstring, code))
     package = epyccel(func, **kwargs)
     return getattr(package, func_name)
 
