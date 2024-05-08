@@ -72,6 +72,33 @@ def test_lambdify(language):
         assert np.allclose(sp_x(r[0,:], p[0,:]), pyc_x(r[0,:], p[0,:]), rtol=RTOL, atol=ATOL)
         assert np.allclose(sp_y(r[0,:], p[0,:]), pyc_y(r[0,:], p[0,:]), rtol=RTOL, atol=ATOL)
 
+def test_lambdify_out_arg(language):
+    r1 = np.linspace(0.0, 1.0, 100)
+    p1 = np.linspace(0.0, 2*np.pi, 100)
+    r,p = np.meshgrid(r1, p1)
+    x,y = sp.symbols('x1,x2')
+    for m in (mappings.PolarMapping, mappings.TargetMapping, mappings.CzarnyMapping):
+        expr_x = sp.sympify(m.expressions['x']).subs(m.constants)
+        expr_y = sp.sympify(m.expressions['y']).subs(m.constants)
+        sp_x = sp.lambdify([x, y], expr_x)
+        sp_y = sp.lambdify([x, y], expr_y)
+        pyc_x = pyc_lambdify(expr_x, {x : 'float[:,:]', y : 'float[:,:]'}, result_type = 'float[:,:]',
+                    collect_result_in_arg = True, language = language)
+        pyc_y = pyc_lambdify(expr_y, {x : 'float[:,:]', y : 'float[:,:]'}, result_type = 'float[:,:]',
+                    collect_result_in_arg = True, language = language)
+
+        sp_out_x = np.empty_like(r)
+        sp_out_y = np.empty_like(r)
+        pyc_out_x = np.empty_like(r)
+        pyc_out_y = np.empty_like(r)
+        sp_out_x = sp_x(r, p)
+        sp_out_y = sp_y(r, p)
+        pyc_x(r, p, pyc_out_x)
+        pyc_y(r, p, out = pyc_out_y)
+
+        assert np.allclose(sp_out_x, pyc_out_x, rtol=RTOL, atol=ATOL)
+        assert np.allclose(sp_out_y, pyc_out_y, rtol=RTOL, atol=ATOL)
+
 ######################
 if __name__ == '__main__':
     print('*********************************')
