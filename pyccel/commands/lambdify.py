@@ -45,7 +45,7 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
         are valid types for the symbol. See
         <https://github.com/pyccel/pyccel/blob/devel/docs/templates.md>
         for more details.
-    use_out : bool, False
+    use_out : bool, default=False
         If true the function will modify an argument called 'out' instead
         of returning a newly allocated array. If this argument is set then
         result_type must be provided. This only works if the result is an
