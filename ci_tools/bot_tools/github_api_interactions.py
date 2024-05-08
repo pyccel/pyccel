@@ -68,14 +68,14 @@ class GitHubAPIInteractions:
     def __init__(self):
         repo = os.environ["GITHUB_REPOSITORY"]
         self._org, self._repo = repo.split('/')
-        if "PEM" in os.environ:
+        if "installation_token" in os.environ:
             self._authenticated = True
-            if "installation_token" in os.environ:
-                self._install_token = os.environ["installation_token"]
-                self._install_token_exp = time.strptime(os.environ["installation_token_exp"], "%Y-%m-%dT%H:%M:%SZ")
-            else:
-                self._install_token, expiry = get_authorization()
-                self._install_token_exp = time.strptime(expiry, "%Y-%m-%dT%H:%M:%SZ")
+            self._install_token = os.environ["installation_token"]
+            self._install_token_exp = time.strptime(os.environ["installation_token_exp"], "%Y-%m-%dT%H:%M:%SZ")
+        elif "PEM" in os.environ:
+            self._authenticated = True
+            self._install_token, expiry = get_authorization()
+            self._install_token_exp = time.strptime(expiry, "%Y-%m-%dT%H:%M:%SZ")
         else:
             self._authenticated = False
 
