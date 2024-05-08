@@ -83,9 +83,11 @@ def test_lambdify_out_arg(language):
         sp_x = sp.lambdify([x, y], expr_x)
         sp_y = sp.lambdify([x, y], expr_y)
         pyc_x = pyc_lambdify(expr_x, {x : 'float[:,:]', y : 'float[:,:]'}, result_type = 'float[:,:]',
-                    collect_result_in_arg = True, language = language)
+                    use_out = True, language = language)
         pyc_y = pyc_lambdify(expr_y, {x : 'float[:,:]', y : 'float[:,:]'}, result_type = 'float[:,:]',
-                    collect_result_in_arg = True, language = language)
+                    use_out = True, language = language)
+
+        print(pyc_x.__doc__)
 
         sp_out_x = np.empty_like(r)
         sp_out_y = np.empty_like(r)
