@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 -   #1656 : Ensure `gFTL` is installed with Pyccel.
 -   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
+-   #1868 : Hide traceback for `epyccel` and `lambdify` errors.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
