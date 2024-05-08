@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 
@@ -27,8 +27,8 @@ INCOMPATIBLE_REDEFINITION_STACK_ARRAY = 'Cannot change shape of stack array, bec
 STACK_ARRAY_DEFINITION_IN_LOOP = 'Cannot create stack array in loop, because if does not support memory reallocation. Create array before loop, or use standard heap array.'
 STACK_ARRAY_UNKNOWN_SHAPE = 'Cannot create stack array from a shape which is unknown at function entry'
 STACK_ARRAY_SHAPE_UNPURE_FUNC = 'Cannot create stack array from a shape created with an impure function'
-INCOMPATIBLE_ARGUMENT = 'Argument {} : {}, passed to function {} is incompatible (expected {}). Please cast the argument explicitly or overload the function (see https://github.com/pyccel/pyccel/blob/master/tutorial/headers.md for details)'
-INCOMPATIBLE_ORDERING = "Argument {idx} : {arg}, passed to function {func} is incompatible as it has the wrong ordering (expected '{order}'). Please use an argument with '{order}' ordering, explicitly transpose {arg}, or overload the function (see https://github.com/pyccel/pyccel/blob/master/tutorial/headers.md for details)"
+INCOMPATIBLE_ARGUMENT = 'Argument {} : {}, passed to function {} is incompatible (expected {}). Please cast the argument explicitly or overload the function (see https://github.com/pyccel/pyccel/blob/devel/docs/type_annotations.md for details)'
+INCOMPATIBLE_ORDERING = "Argument {idx} : {arg}, passed to function {func} is incompatible as it has the wrong ordering (expected '{order}'). Please use an argument with '{order}' ordering, explicitly transpose {arg}, or overload the function (see https://github.com/pyccel/pyccel/blob/devel/docs/type_annotations.md for details)"
 UNRECOGNISED_FUNCTION_CALL = 'Function call cannot be processed. Please ensure that your code runs correctly in python. If this is the case then you may be using function arguments which are not currently supported by pyccel. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
 
 UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS = "Empty classes are not supported"

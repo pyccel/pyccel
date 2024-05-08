@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 -   #1218 : Fix bug when assigning an array to a slice in Fortran.
 -   #1830 : Fix missing allocation when returning an annotated array expression.
 -   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
+-   Link and mention `devel` branch, not `master`.
 
 ### Changed
 
