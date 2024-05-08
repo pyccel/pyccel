@@ -14,7 +14,7 @@ else:
     from sympy.printing.pycode import NumPyPrinter
 
 def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str = None,
-             templates : 'dict[str,list[str]]' = None, collect_result_in_arg = False,
+             templates : 'dict[str,list[str]]' = None, use_out = False,
              **kwargs):
     """
     Convert a SymPy expression into a Pyccel-accelerated function.
@@ -45,7 +45,7 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
         are valid types for the symbol. See
         <https://github.com/pyccel/pyccel/blob/devel/docs/templates.md>
         for more details.
-    collect_result_in_arg : bool, False
+    use_out : bool, False
         If true the function will modify an argument called 'out' instead
         of returning a newly allocated array. If this argument is set then
         result_type must be provided. This only works if the result is an
@@ -85,9 +85,9 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
             "    ----------\n"))
     docstring += '\n'.join(f"    {a} : {type_annot}" for a, type_annot in args.items())
 
-    if collect_result_in_arg:
+    if use_out:
         if not result_type:
-            raise TypeError("The reult_type must be provided if collect_result_in_arg is used.")
+            raise TypeError("The reult_type must be provided if use_out is used.")
         else:
             signature = f'def {func_name}({args_code}, out : "{result_type}"):'
             docstring += f"\n    out : {result_type}"
@@ -108,7 +108,7 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
                 for key, annotations in templates.items())
     else:
         decorators = ''
-    if collect_result_in_arg:
+    if use_out:
         code = f'    out[:] = {expr}'
     else:
         code = f'    return {expr}'
