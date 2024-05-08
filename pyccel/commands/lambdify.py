@@ -14,7 +14,7 @@ else:
     from sympy.printing.pycode import NumPyPrinter
 
 def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str = None,
-             templates : 'dict[str,list[str]]' = None, use_out = False,
+             templates : 'dict[str, list[str]]' = None, use_out = False,
              **kwargs):
     """
     Convert a SymPy expression into a Pyccel-accelerated function.
@@ -38,7 +38,7 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
         expressions do not always evaluate to the expected type. For
         example if the SymPy expression simplifies to 0 then the default
         type will be int even if the arguments are floats.
-    templates : dict[str,list[str]], optional
+    templates : dict[str, list[str]], optional
         A description of any templates that should be added to the
         function. The keys are the symbols which can be used as type
         specifiers, the values are a list of the type annotations which
@@ -87,7 +87,7 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
 
     if use_out:
         if not result_type:
-            raise TypeError("The reult_type must be provided if use_out is used.")
+            raise TypeError("The result_type must be provided if use_out is true.")
         else:
             signature = f'def {func_name}({args_code}, out : "{result_type}"):'
             docstring += f"\n    out : {result_type}"
