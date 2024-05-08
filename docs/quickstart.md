@@ -482,6 +482,22 @@ In practice `lambdify` uses SymPy's `NumPyPrinter` to generate code which is pas
 Once the file has been copied, `epyccel` calls the `pyccel` command to generate a Python C extension module that contains a single pyccelised function.
 Then finally, it imports this function and returns it to the caller.
 
+In order to make functions even faster it may be desirable to avoid unnecessary allocations inside the function. This functionality is similar to using an `out` argument in NumPy. Pyccel makes this functionality possible through the use of the `use_out` argument.
+For example:
+```python
+import numpy as np
+import sympy as sp
+from pyccel import lambdify
+
+x = sp.Symbol('x')
+expr = x**2 + x*5
+f = lambdify(expr, {x : 'float[:,:]'}, result_type = 'float[:,:]')
+x_2d = np.ones((4,2))
+y_2d = np.empty_like(x_2d)
+f(x_2d, y_2d)
+print(y_2d)
+```
+
 ## Other Features
 
 Pyccel's generated code can use parallel multi-threading through [OpenMP](https://en.wikipedia.org/wiki/OpenMP); please read [our documentation](https://github.com/pyccel/pyccel/blob/devel/docs/openmp.md) for more details.
