@@ -34,6 +34,7 @@ All notable changes to this project will be documented in this file.
 -   #1821 : Ensure an error is raised when creating an ambiguous interface.
 -   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
 -   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
+-   Link and mention `devel` branch, not `master`.
 
 ### Changed
 
