@@ -14,7 +14,8 @@ else:
     from sympy.printing.pycode import NumPyPrinter
 
 def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str = None,
-             templates : 'dict[str,list[str]]' = None, **kwargs):
+             templates : 'dict[str,list[str]]' = None, collect_result_in_arg = False,
+             **kwargs):
     """
     Convert a SymPy expression into a Pyccel-accelerated function.
 
@@ -44,6 +45,11 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
         are valid types for the symbol. See
         <https://github.com/pyccel/pyccel/blob/devel/docs/templates.md>
         for more details.
+    collect_result_in_arg : bool, False
+        If true the function will modify an argument called 'out' instead
+        of returning a newly allocated array. If this argument is set then
+        result_type must be provided. This only works if the result is an
+        array type.
     **kwargs : dict
         Additional arguments that are passed to epyccel.
 
@@ -62,13 +68,18 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
     """
     if not (isinstance(args, dict) and all(isinstance(k, sp.Symbol) and isinstance(v, str) for k,v in args.items())):
         raise TypeError("Argument 'args': Expected a dictionary mapping SymPy symbols to string type annotations.")
+    if result_type is not None and not isinstance(result_type, str):
+        raise TypeError("Argument 'result_type': Expected a string type annotation.")
 
     expr = NumPyPrinter().doprint(expr)
     args = ', '.join(f'{a} : "{annot}"' for a, annot in args.items())
     func_name = 'func_'+random_string(8)
-    if result_type:
-        if not isinstance(result_type, str):
-            raise TypeError("Argument 'result_type': Expected a string type annotation.")
+    if collect_result_in_arg:
+        if not result_type:
+            raise TypeError("The reult_type must be provided if collect_result_in_arg is used.")
+        else:
+            signature = f'def {func_name}({args}, out : "{result_type}"):'
+    elif result_type:
         signature = f'def {func_name}({args}) -> "{result_type}":'
     else:
         signature = f'def {func_name}({args}):'
@@ -81,9 +92,13 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
                 for key, annotations in templates.items())
     else:
         decorators = ''
-    code = f'    return {expr}'
+    if collect_result_in_arg:
+        code = f'    out[:] = {expr}'
+    else:
+        code = f'    return {expr}'
     numpy_import = 'import numpy\n'
     func = '\n'.join((numpy_import, decorators, signature, code))
+    print(func)
     package = epyccel(func, **kwargs)
     return getattr(package, func_name)
 
