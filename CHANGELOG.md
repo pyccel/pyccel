@@ -20,6 +20,8 @@ All notable changes to this project will be documented in this file.
 -   #1656 : Ensure `gFTL` is installed with Pyccel.
 -   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
+-   #1867 : Add a `use_out` parameter to `pyccel.lambdify` to avoid unnecessary memory allocation.
+-   #1867 : Auto-generate a docstring for functions generated via calls to `pyccel.lambdify`.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
@@ -39,12 +41,15 @@ All notable changes to this project will be documented in this file.
 -   #1830 : Fix missing allocation when returning an annotated array expression.
 -   #1821 : Ensure an error is raised when creating an ambiguous interface.
 -   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
+-   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
+-   Link and mention `devel` branch, not `master`.
 
 ### Changed
 
 -   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
+-   #1866 : Raise a more informative error when mixing scalar and array return types.
 -   \[TESTS\] Filter out cast warnings in cast tests.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
@@ -83,6 +88,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
+-   \[INTERNALS\] Remove function `Module.set_name`.
+-   \[INTERNALS\] Remove unused `assign_to` argument of `CodePrinter.doprint`.
 
 ## \[1.11.2\] - 2024-03-05
 
