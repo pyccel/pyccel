@@ -1994,7 +1994,7 @@ class CCodePrinter(CodePrinter):
         else:
             return call_code
 
-    def list_to_vector(self, expr):
+    def list_to_vector(self, expr, lhs):
         """
         Print the initialization of a python assignment using STC init() method
         """
@@ -2003,7 +2003,7 @@ class CCodePrinter(CodePrinter):
             return f'vec_{vec_dtype}_init()'
 
         list_var = self._print(expr.current_user_node.lhs)
-        init = f'vec_{vec_dtype}_with_capacity({len(expr.args)});\n'
+        init = f'{lhs} = vec_{vec_dtype}_with_capacity({len(expr.args)});\n'
         keyraw = '[' + ', '.join([self._print(a) for a in expr.args]) + ']'
         emplace = f'vec_{vec_dtype}_emplace_n({list_var}, 0, {keyraw}, {len(expr.args)});\n'
 
@@ -2172,9 +2172,9 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
-        if isinstance(rhs, PythonList):
-            return prefix_code+self.list_to_vector(rhs)
         lhs = self._print(expr.lhs)
+        if isinstance(rhs, PythonList):
+            return prefix_code+self.list_to_vector(rhs, lhs)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
 
