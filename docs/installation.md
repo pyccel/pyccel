@@ -242,7 +242,7 @@ Most of the unit tests can also be run in parallel.
 
 To test your Pyccel installation please run the script `tests/run\_tests\_py3.sh` (Unix), or `tests/run\_tests.bat` (Windows).
 
-Continuous testing runs on GitHub actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
+Continuous testing runs on GitHub actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Adevel>
 
 ## Pyccel Container Images
 
