@@ -1203,3 +1203,15 @@ def test_time_execution_flag():
     assert 'Total' in result_lines[-2]
     for l in result_lines[1:-1]:
         assert ' : ' in l
+
+#------------------------------------------------------------------------------
+def test_module_name_containing_conflict(language):
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, "scripts")
+    compile_pyccel(path_dir, get_abs_path("scripts/endif.py"), options = f"--language={language}")
+
+    test_file = get_abs_path("scripts/runtest_badly_named_module.py")
+    out1 = get_python_output(test_file)
+    out2 = get_python_output(test_file)
+
+    assert out1 == out2

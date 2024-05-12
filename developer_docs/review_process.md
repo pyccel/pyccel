@@ -1,8 +1,8 @@
 # Review Process
 
-The review process is the process through which a branch which solves an issue is merged into the master branch.
+The review process is the process through which a branch which solves an issue is merged into the `devel` branch.
 
-When you believe your branch is ready to merge you should create a pull request. Be sure to add a description which allows other developers to understand what your changes aim to do. You may also want to include a commit summary as the pull request description forms the basis of the commit message shown on the master branch. In addition you should make sure that your pull request links to the issue that it is solving so that issue is automatically closed when the pull request is merged.
+When you believe your branch is ready to merge you should create a pull request. Be sure to add a description which allows other developers to understand what your changes aim to do. You may also want to include a commit summary as the pull request description forms the basis of the commit message shown on the `devel` branch. In addition you should make sure that your pull request links to the issue that it is solving so that issue is automatically closed when the pull request is merged.
 
 Once the pull request is opened 9 tests should be triggered they are: 
 
@@ -52,4 +52,4 @@ Once the senior developer is happy with the branch they should accept the pull r
 
 Once the code has been accepted by both a junior and a senior developer it should be ready to merge. This flag therefore indicates that one of our developers with merge permissions can review the code. They will look for anything missed by the previous two reviews.
 
-Anyone can make silly mistakes so Pyccel aims to have all pull requests be reviewed by at least 2 developers before being merged to master.
+Anyone can make silly mistakes so Pyccel aims to have all pull requests be reviewed by at least 2 developers before being merged to `devel`.

@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 import functools
 from itertools import chain
@@ -759,6 +759,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_ModuleHeader(self, expr):
         self.set_scope(expr.module.scope)
+        self._current_module = expr.module
         self._in_header = True
         name = expr.module.name
         if isinstance(name, AsName):
@@ -792,6 +793,7 @@ class CCodePrinter(CodePrinter):
 
         self._in_header = False
         self.exit_scope()
+        self._current_module = None
         return (f"#ifndef {name.upper()}_H\n \
                 #define {name.upper()}_H\n\n \
                 {imports}\n \
@@ -802,13 +804,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
-        self._current_module = expr.name
+        self._current_module = expr
         body    = ''.join(self._print(i) for i in expr.body)
 
         global_variables = ''.join([self._print(d) for d in expr.declarations])
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [Import(expr.name, Module(expr.name,(),())), *self._additional_imports.values()]
+        imports = [Import(self.scope.get_python_name(expr.name), Module(expr.name,(),())), *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)
 
         code = ('{imports}\n'
@@ -819,6 +821,7 @@ class CCodePrinter(CodePrinter):
                         body      = body)
 
         self.exit_scope()
+        self._current_module = None
         return code
 
     def _print_Break(self, expr):
@@ -951,7 +954,7 @@ class CCodePrinter(CodePrinter):
         if source in import_dict: # pylint: disable=consider-using-get
             source = import_dict[source]
 
-        if expr.source_module:
+        if expr.source_module and expr.source_module is not self._current_module:
             for classDef in expr.source_module.classes:
                 class_scope = classDef.scope
                 for method in classDef.methods:
@@ -2409,6 +2412,8 @@ class CCodePrinter(CodePrinter):
     #=====================================
 
     def _print_Program(self, expr):
+        mod = expr.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+        self._current_module = mod
         self.set_scope(expr.scope)
         body  = self._print(expr.body)
         variables = self.scope.variables.values()
@@ -2418,6 +2423,7 @@ class CCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
+        self._current_module = None
         return ('{imports}'
                 'int main()\n{{\n'
                 '{decs}'
