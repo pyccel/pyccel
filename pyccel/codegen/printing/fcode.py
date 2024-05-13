@@ -1077,7 +1077,6 @@ class FCodePrinter(CodePrinter):
             else:
                 #Since the expr.rank == 1, we modify the last element in the array.
                 if isinstance(lhs, IndexedElement):
-                    print(lhs)
                     arr = lhs.base
                     indices = lhs.indices
                     if indices[0].step:
@@ -1090,7 +1089,7 @@ class FCodePrinter(CodePrinter):
                     indx = self._print(IndexedElement(lhs,
                                                 PyccelMinus(expr.num, LiteralInteger(1),
                                                 simplify = True)))
-                    lhs = self._print(indx)
+                lhs = self._print(indx)
 
             if isinstance(expr.endpoint, LiteralTrue):
                 cond_template = lhs + ' = {stop}'
