@@ -120,7 +120,7 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
     func = '\n'.join((numpy_import, decorators, signature, docstring, code))
     try:
         package = epyccel(func, **kwargs)
-    except  PyccelError as e:
+    except PyccelError as e:
         raise type(e)(str(e)) from None
 
     return getattr(package, func_name)
