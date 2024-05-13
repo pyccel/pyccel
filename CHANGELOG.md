@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 -   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
 -   #1867 : Add a `use_out` parameter to `pyccel.lambdify` to avoid unnecessary memory allocation.
 -   #1867 : Auto-generate a docstring for functions generated via calls to `pyccel.lambdify`.
+-   #1868 : Hide traceback for `epyccel` and `lambdify` errors.
 
 ### Fixed
 
