@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 from pyccel.utilities.stage import PyccelStage
 
-from .basic import PyccelAstNode
+from .basic import TypedAstNode
 
 pyccel_stage = PyccelStage()
 
@@ -20,24 +20,26 @@ __all__ = (
 )
 
 #==============================================================================
-class FunctionalFor(PyccelAstNode):
+class FunctionalFor(TypedAstNode):
 
     """
+    Represents a generator expression.
+
     Represents any generator expression e.g:
     a = [i for i in range(10)]
 
     Parameters
     ----------
-    loops   : CodeBlock/For
-              The loops contained in the expression
-    expr    : Basic
+    loops : CodeBlock/For
+              The loops contained in the expression.
+    expr : PyccelAstNode
               The expression at the origin of the expression
-              E.g. 'i' for '[i for i in range(10)]'
-    lhs     : Variable
-              The variable to which the result is assigned
+              E.g. 'i' for '[i for i in range(10)]'.
+    lhs : Variable
+              The variable to which the result is assigned.
     indices : list of Variable
-              All iterator targets for the for loops
-    index   : Variable
+              All iterator targets for the for loops.
+    index : Variable
               Index of result in rhs
               E.g.:
               ```
@@ -50,10 +52,10 @@ class FunctionalFor(PyccelAstNode):
                   a[Dummy_0]=i
                   Dummy_0 += 1
               ```
-              Index is `Dummy_0`
+              Index is `Dummy_0`.
     """
     __slots__ = ('_loops','_expr', '_lhs', '_indices','_index',
-            '_dtype','_precision','_rank','_shape','_order')
+            '_shape','_class_type')
     _attribute_nodes = ('_loops','_expr', '_lhs', '_indices','_index')
 
     def __init__(
@@ -72,11 +74,8 @@ class FunctionalFor(PyccelAstNode):
         super().__init__()
 
         if pyccel_stage != 'syntactic':
-            self._dtype     = lhs.dtype
-            self._precision = lhs.precision
-            self._rank      = lhs.rank
-            self._shape     = lhs.shape
-            self._order     = lhs.order
+            self._shape      = lhs.shape
+            self._class_type = lhs.class_type
 
     @property
     def loops(self):

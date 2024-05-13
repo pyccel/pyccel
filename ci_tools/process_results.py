@@ -52,8 +52,9 @@ if __name__ == '__main__':
             else:
                 level = None
                 parsing_errors.append(line)
-            print(code, msg)
+            print(code)
             if level == 'failure':
+                print(msg)
                 file, start, end = get_code_file_and_lines(file_name, pyccel_folder = pyccel_folder)
                 # if code isn't "The object does not have a docstring"
                 if code != 'GL08':

@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """ Module containing script to pyccelize internal files
 """
@@ -22,8 +22,11 @@ def pyccel_init():
         parser.parse(verbose=False)
 
 def pyccel_init_command():
-    """ Wrapper around the pyccel_init function removing the need
-    for ArgumentParser
+    """
+    Wrapper around the pyccel_init function removing the need for ArgumentParser.
+
+    Wrapper around the pyccel_init function removing the need for ArgumentParser.
     """
     parser = ArgumentParser(description='Pickle internal pyccel files')
     parser.parse_args()
+    pyccel_init()

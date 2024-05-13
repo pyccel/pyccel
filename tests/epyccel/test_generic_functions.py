@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import modules.generic_functions as mod
 import modules.generic_functions_2 as mod2
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 @pytest.fixture(scope="module")
 def modnew(language):

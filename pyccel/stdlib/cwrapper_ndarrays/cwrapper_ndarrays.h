@@ -1,7 +1,7 @@
-/* --------------------------------------------------------------------------------------- */
-/* This file is part of Pyccel which is released under MIT License. See the LICENSE file   */
-/* or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. */
-/* --------------------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------------------- */
+/* This file is part of Pyccel which is released under MIT License. See the LICENSE file  */
+/* or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details. */
+/* -------------------------------------------------------------------------------------- */
 
 /*
  * File containing functions useful for the cwrapper which require ndarrays.
@@ -35,12 +35,12 @@
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html
  */
-enum NPY_TYPES get_numpy_type(t_ndarray *o);
+enum NPY_TYPES get_numpy_type(t_ndarray o);
 enum e_types get_ndarray_type(PyArrayObject *a);
 t_ndarray	pyarray_to_ndarray(PyObject *o);
-PyObject* ndarray_to_pyarray(t_ndarray *o);
-PyObject* c_ndarray_to_pyarray(t_ndarray *o);
-PyObject* fortran_ndarray_to_pyarray(t_ndarray *o);
+PyObject* ndarray_to_pyarray(t_ndarray o);
+PyObject* c_ndarray_to_pyarray(t_ndarray o);
+PyObject* fortran_ndarray_to_pyarray(t_ndarray o);
 
 
 /* arrays checkers and helpers */

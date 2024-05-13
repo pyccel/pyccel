@@ -1,9 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
-from pyccel.decorators import types
 
-@types('int')
-def f(k):
+def f(k : 'int'):
     a = np.ones(k)
     c = a[1:] + a[2:]
     return c[0]

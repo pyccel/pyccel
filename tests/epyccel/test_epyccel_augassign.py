@@ -4,9 +4,11 @@ from numpy.random import random
 import pytest
 
 import modules.augassign as mod
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 # += tests
+RTOL = 1e-12
+ATOL = 1e-16
 
 def test_augassign_add_1d(language):
     f_int     = mod.augassign_add_1d_int
@@ -230,7 +232,7 @@ def test_augassign_func(language):
     z = func(x,y)
     z_epyc = func_epyc(x,y)
 
-    assert z == z_epyc
+    assert np.isclose(z, z_epyc, rtol=RTOL, atol=ATOL)
     assert isinstance(z, type(z_epyc))
 
 @pytest.mark.parametrize( 'language', (
@@ -253,4 +255,4 @@ def test_augassign_array_func(language):
     func(x,y)
     func_epyc(x_epyc,y)
 
-    assert np.array_equal(x, x_epyc)
+    assert np.allclose(x, x_epyc, rtol=RTOL, atol=ATOL)

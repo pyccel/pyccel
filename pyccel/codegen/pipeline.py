@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Contains the execute_pyccel function which carries out the main steps required to execute pyccel
@@ -10,6 +10,7 @@ Contains the execute_pyccel function which carries out the main steps required t
 import os
 import sys
 import shutil
+import time
 from pathlib import Path
 
 from pyccel.errors.errors          import Errors, PyccelError
@@ -45,6 +46,7 @@ def execute_pyccel(fname, *,
                    semantic_only = False,
                    convert_only  = False,
                    verbose       = False,
+                   show_timings  = False,
                    folder        = None,
                    language      = None,
                    compiler      = None,
@@ -80,6 +82,8 @@ def execute_pyccel(fname, *,
         Indicates whether the pipeline should stop after the codegen stage. Default is False.
     verbose : bool, optional
         Indicates whether debugging messages should be printed. Default is False.
+    show_timings : bool, default=False
+        Show the time spent in each of Pyccel's internal stages.
     folder : str, optional
         Path to the working directory. Default is the folder containing the file to be translated.
     language : str, optional
@@ -110,6 +114,8 @@ def execute_pyccel(fname, *,
     conda_warnings : str, optional
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
     """
+    start = time.time()
+    timers = {}
     if fname.endswith('.pyh'):
         syntax_only = True
         if verbose:
@@ -167,9 +173,6 @@ def execute_pyccel(fname, *,
     if not (syntax_only or semantic_only):
         os.makedirs(pyccel_dirpath, exist_ok=True)
 
-    # Change working directory to 'folder'
-    os.chdir(folder)
-
     if conda_warnings not in ('off', 'basic', 'verbose'):
         raise ValueError("conda warnings accept {off, basic,verbose}")
 
@@ -178,7 +181,7 @@ def execute_pyccel(fname, *,
 
     # Choose Fortran compiler
     if compiler is None:
-        compiler = 'GNU'
+        compiler = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
 
     fflags = [] if fflags is None else fflags.split()
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
@@ -196,6 +199,11 @@ def execute_pyccel(fname, *,
 
     Scope.name_clash_checker = name_clash_checkers[language]
 
+    # Change working directory to 'folder'
+    os.chdir(folder)
+
+    start_syntax = time.time()
+    timers["Initialisation"] = start_syntax-start
     # Parse Python file
     try:
         parser = Parser(pymod_filepath)
@@ -212,14 +220,18 @@ def execute_pyccel(fname, *,
         handle_error('parsing (syntax)')
         raise PyccelSyntaxError('Syntax step failed')
 
+    timers["Syntactic Stage"] = time.time() - start_syntax
+
     if syntax_only:
         pyccel_stage.pyccel_finished()
+        if show_timings:
+            print_timers(start, timers)
         return
 
+    start_semantic = time.time()
     # Annotate abstract syntax Tree
     try:
-        settings = {'verbose':verbose}
-        parser.annotate(**settings)
+        parser.annotate(verbose = verbose)
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
@@ -234,18 +246,23 @@ def execute_pyccel(fname, *,
         handle_error('annotation (semantic)')
         raise PyccelSemanticError('Semantic step failed')
 
+    timers["Semantic Stage"] = time.time() - start_semantic
+
     if semantic_only:
         pyccel_stage.pyccel_finished()
+        if show_timings:
+            print_timers(start, timers)
         return
 
     # -------------------------------------------------------------------------
 
     semantic_parser = parser.semantic_parser
+    start_codegen = time.time()
     # Generate .f90 file
     try:
-        codegen = Codegen(semantic_parser, module_name)
+        codegen = Codegen(semantic_parser, module_name, language)
         fname = os.path.join(pyccel_dirpath, module_name)
-        fname, prog_name = codegen.export(fname, language=language)
+        fname, prog_name = codegen.export(fname)
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
@@ -260,6 +277,8 @@ def execute_pyccel(fname, *,
         handle_error('code generation')
         raise PyccelCodegenError('Code generation failed')
 
+    timers["Codegen Stage"] = time.time() - start_codegen
+
     if language == 'python':
         output_file = (output_name + '.py') if output_name else os.path.basename(fname)
         new_location = os.path.join(folder, output_file)
@@ -270,6 +289,8 @@ def execute_pyccel(fname, *,
         # Change working directory back to starting point
         os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
+        if show_timings:
+            print_timers(start, timers)
         return
 
     compile_libs = [*libs, parser.metavars['libraries']] \
@@ -317,6 +338,8 @@ def execute_pyccel(fname, *,
         # Change working directory back to starting point
         os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
+        if show_timings:
+            print_timers(start, timers)
         return
 
     deps = dict()
@@ -349,6 +372,7 @@ def execute_pyccel(fname, *,
         get_module_dependencies(son, deps)
     mod_obj.add_dependencies(*deps.values())
 
+    start_compile_target_language = time.time()
     # Compile code to modules
     try:
         src_compiler.compile_module(compile_obj=mod_obj,
@@ -368,8 +392,11 @@ def execute_pyccel(fname, *,
             generated_program_filepath = src_compiler.compile_program(compile_obj=prog_obj,
                     output_folder=pyccel_dirpath,
                     verbose=verbose)
+
+        timers["Compilation without wrapper"] = time.time() - start_compile_target_language
+
         # Create shared library
-        generated_filepath = create_shared_library(codegen,
+        generated_filepath, shared_lib_timers = create_shared_library(codegen,
                                                mod_obj,
                                                language,
                                                wrapper_flags,
@@ -391,6 +418,8 @@ def execute_pyccel(fname, *,
     except Exception:
         handle_error('shared library generation')
         raise
+
+    timers.update(shared_lib_timers)
 
     if errors.has_errors():
         handle_error('code generation (wrapping)')
@@ -421,3 +450,24 @@ def execute_pyccel(fname, *,
     # Change working directory back to starting point
     os.chdir(base_dirpath)
     pyccel_stage.pyccel_finished()
+
+    if show_timings:
+        print_timers(start, timers)
+
+def print_timers(start, timers):
+    """
+    Print the timers measured during the execution.
+
+    Print the timers measured during the execution.
+
+    Parameters
+    ----------
+    start : float
+        The start time for the execution.
+    timers : dict
+        A dictionary containing the times measured.
+    """
+    timers['Total'] = time.time()-start
+    print("-------------------- Timers -------------------------")
+    for n,t in timers.items():
+        print(f'{n:<30}: ',t)

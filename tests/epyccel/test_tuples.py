@@ -3,7 +3,7 @@ import inspect
 import pytest
 import numpy as np
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from modules import tuples as tuples_module
 
 def is_func_with_0_args(f):
@@ -17,10 +17,11 @@ tuple_funcs = [(f, getattr(tuples_module,f)) for f in tuples_module.__all__
                                             if is_func_with_0_args(f)]
 
 failing_tests = {
-        'homogenous_tuple_string':'String has no precision',
+        'homogeneous_tuple_string':"Can't save a list of strings (#459)",
         'tuple_homogeneous_return':"Can't return a tuple",
         'tuple_inhomogeneous_return':"Can't return a tuple",
         'tuple_visitation_inhomogeneous':"Can't iterate over an inhomogeneous tuple",
+        'tuple_homogeneous_string':"Can't save a list of strings (#459)",
         }
 
 failing_c_tests = {
@@ -31,26 +32,29 @@ failing_c_tests = {
 
 def compare_python_pyccel( p_output, f_output ):
     if p_output is None:
-        assert(f_output is None)
+        assert f_output is None
         return
     if not hasattr(p_output, '__len__'):
         p_output = [p_output]
     if not hasattr(f_output, '__len__'):
         f_output = [f_output]
-    assert(len(p_output) == len(f_output))
+    assert len(p_output) == len(f_output)
 
     for pth, pycc in zip(p_output, f_output):
 
-        if isinstance(pth, bool):
+        if isinstance(pth, np.ndarray):
+            assert np.allclose(pth,pycc)
+
+        elif isinstance(pth, bool):
             pycc_bool = (pycc == 1)
-            assert(pth == pycc_bool)
+            assert pth == pycc_bool
 
         elif isinstance(pth, (int, str)):
-            assert(isinstance(pycc,type(pth)))
-            assert(pth==pycc)
+            assert isinstance(pycc,type(pth))
+            assert pth==pycc
 
         else:
-            assert(np.isclose(pth,pycc))
+            assert np.isclose(pth,pycc)
 
 marks = [f[1] if f[0] not in failing_tests else
         pytest.param(f[1], marks = pytest.mark.xfail(reason=failing_tests[f[0]])) \

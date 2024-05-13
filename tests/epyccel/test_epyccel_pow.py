@@ -3,8 +3,8 @@ import sys
 from numpy.random import rand, randint, uniform
 from numpy import isclose
 
-from pyccel.decorators import types
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
+from pyccel.decorators import template
 
 RTOL = 2e-14
 ATOL = 1e-15
@@ -13,8 +13,7 @@ ATOL = 1e-15
 min_float = sys.float_info.min
 
 def test_pow_int_int(language):
-    @types(int, int)
-    def f_call(x, y):
+    def f_call(x : int, y : int):
         return x ** y
 
     f = epyccel(f_call, language=language)
@@ -28,106 +27,98 @@ def test_pow_int_int(language):
     assert isinstance(f(x, y), type(f_call(x, y)))
 
 def test_pow_real_real(language):
-    @types('real', 'real')
-    def pow_r_r(x, y):
+    def pow_r_r(x : 'float', y : 'float'):
         return x ** y
 
     f = epyccel(pow_r_r, language=language)
     x = uniform(low=min_float, high=50)
     y = uniform(high=5)
 
-    assert(isclose(f(x, y), pow_r_r(x, y), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(x, -y), pow_r_r(x, -y), rtol=RTOL, atol=ATOL))
+    assert isclose(f(x, y), pow_r_r(x, y), rtol=RTOL, atol=ATOL)
+    assert isclose(f(x, -y), pow_r_r(x, -y), rtol=RTOL, atol=ATOL)
     assert isinstance(f(x, y), type(pow_r_r(x, y)))
 
 def test_pow_real_int(language):
-    @types('real', 'int')
-    def pow_r_i(x, y):
+    def pow_r_i(x : 'float', y : 'int'):
         return x ** y
 
     f = epyccel(pow_r_i, language=language)
     x = uniform(low=min_float, high=50)
     y = randint(5)
 
-    assert(isclose(f(x, y), pow_r_i(x, y), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(-x, y), pow_r_i(-x, y), rtol=RTOL, atol=ATOL))
+    assert isclose(f(x, y), pow_r_i(x, y), rtol=RTOL, atol=ATOL)
+    assert isclose(f(-x, y), pow_r_i(-x, y), rtol=RTOL, atol=ATOL)
     assert isinstance(f(x, y), type(pow_r_i(x, y)))
 
 def test_pow_int_real(language):
-    @types('int', 'real')
-    def pow_i_r(x, y):
+    def pow_i_r(x : 'int', y : 'float'):
         return x ** y
 
     f = epyccel(pow_i_r, language=language)
     x = randint(40)
     y = uniform()
 
-    assert(isclose(f(x, y), pow_i_r(x, y), rtol=RTOL, atol=ATOL))
+    assert isclose(f(x, y), pow_i_r(x, y), rtol=RTOL, atol=ATOL)
     assert isinstance(f(x, y), type(pow_i_r(x, y)))
 
 def test_pow_special_cases(language):
-    @types('real', 'real')
-    def pow_sp(x, y):
+    def pow_sp(x : 'float', y : 'float'):
         return x ** y
 
     f = epyccel(pow_sp, language=language)
     e = uniform(high=1e6)
-    assert(isclose(f(0.0, e), pow_sp(0.0, e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(0.0, e), pow_sp(0.0, e), rtol=RTOL, atol=ATOL))
+    assert isclose(f(0.0, e), pow_sp(0.0, e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(0.0, e), pow_sp(0.0, e), rtol=RTOL, atol=ATOL)
 
 # ---------------------------- Complex numbers ----------------------------- #
 
 def test_pow_c_c(language):
-    @types('complex', 'complex')
-    def pow_c_c(x, y):
+    def pow_c_c(x : 'complex', y : 'complex'):
         return x ** y
 
     f = epyccel(pow_c_c, language=language)
     b = complex(rand(), rand())
     e = complex(rand(), rand())
-    assert(isclose(f(b, e), pow_c_c(b, e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(-b, e), pow_c_c(-b, e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(b, -e), pow_c_c(b, -e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(-b, -e), pow_c_c(-b, -e), rtol=RTOL, atol=ATOL))
+    assert isclose(f(b, e), pow_c_c(b, e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(-b, e), pow_c_c(-b, e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(b, -e), pow_c_c(b, -e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(-b, -e), pow_c_c(-b, -e), rtol=RTOL, atol=ATOL)
 
 def test_pow_c_i(language):
-    @types('complex', 'int')
-    def pow_c_i(x, y):
+    def pow_c_i(x : 'complex', y : 'int'):
         return x ** y
 
     f = epyccel(pow_c_i, language=language)
     b = complex(rand(), rand())
     e = randint(10)
-    assert(isclose(f(b, e), pow_c_i(b, e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(-b, e), pow_c_i(-b, e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(b, -e), pow_c_i(b, -e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(-b, -e), pow_c_i(-b, -e), rtol=RTOL, atol=ATOL))
+    assert isclose(f(b, e), pow_c_i(b, e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(-b, e), pow_c_i(-b, e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(b, -e), pow_c_i(b, -e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(-b, -e), pow_c_i(-b, -e), rtol=RTOL, atol=ATOL)
 
 def test_pow_c_r(language):
-    @types('complex', 'real')
-    def pow_c_r(x, y):
+    def pow_c_r(x : 'complex', y : 'float'):
         return x ** y
 
     f = epyccel(pow_c_r, language=language)
     b = complex(rand(), rand())
     e = rand()
-    assert(isclose(f(b, e), pow_c_r(b, e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(-b, e), pow_c_r(-b, e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(b, -e), pow_c_r(b, -e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(-b, -e), pow_c_r(-b, -e), rtol=RTOL, atol=ATOL))
+    assert isclose(f(b, e), pow_c_r(b, e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(-b, e), pow_c_r(-b, e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(b, -e), pow_c_r(b, -e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(-b, -e), pow_c_r(-b, -e), rtol=RTOL, atol=ATOL)
 
 def test_pow_r_c(language):
-    @types('real', 'complex')
-    def pow_r_c(x, y):
+    def pow_r_c(x : 'float', y : 'complex'):
         return x ** y
 
     f = epyccel(pow_r_c, language=language)
     b = rand()
     e = complex(rand(), rand())
-    assert(isclose(f(b, e), pow_r_c(b, e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(-b, e), pow_r_c(-b, e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(b, -e), pow_r_c(b, -e), rtol=RTOL, atol=ATOL))
-    assert(isclose(f(-b, -e), pow_r_c(-b, -e), rtol=RTOL, atol=ATOL))
+    assert isclose(f(b, e), pow_r_c(b, e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(-b, e), pow_r_c(-b, e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(b, -e), pow_r_c(b, -e), rtol=RTOL, atol=ATOL)
+    assert isclose(f(-b, -e), pow_r_c(-b, -e), rtol=RTOL, atol=ATOL)
 
 def test_pow_chain(language):
     def chain_pow1(x : float, y : float, z : float):
@@ -143,13 +134,12 @@ def test_pow_chain(language):
 
     for c in (chain_pow1, chain_pow2, chain_pow3):
         f = epyccel(c, language=language)
-        assert(isclose(f(x, y, z), c(x, y, z), rtol=RTOL, atol=ATOL))
+        assert isclose(f(x, y, z), c(x, y, z), rtol=RTOL, atol=ATOL)
         assert isinstance(f(x, y, z), type(c(x, y, z)))
 
 def test_square(language):
-    @types('float')
-    @types('int')
-    def square(x):
+    @template('T', ['float', 'int'])
+    def square(x : 'T'):
         return x**2
 
     f = epyccel(square, language=language)
@@ -162,9 +152,8 @@ def test_square(language):
     assert isinstance(f(y), type(square(y)))
 
 def test_sqrt(language):
-    @types('float')
-    @types('int')
-    def sqrt(x):
+    @template('T', ['float', 'int'])
+    def sqrt(x : 'T'):
         return x**0.5
 
     f = epyccel(sqrt, language=language)
@@ -177,9 +166,8 @@ def test_sqrt(language):
     assert isinstance(f(y), type(sqrt(y)))
 
 def test_fabs(language):
-    @types('float')
-    @types('int')
-    def fabs(x):
+    @template('T', ['float', 'int'])
+    def fabs(x : 'T'):
         return (x*x)**0.5
 
     f = epyccel(fabs, language=language)
@@ -192,8 +180,7 @@ def test_fabs(language):
     assert isinstance(f(y), type(fabs(y)))
 
 def test_abs(language):
-    @types('complex')
-    def norm(x):
+    def norm(x : 'complex'):
         return (x*x.conjugate())**0.5
 
     f = epyccel(norm, language=language)
@@ -206,8 +193,7 @@ def test_abs(language):
     assert isinstance(f(y), type(norm(y)))
 
 def test_complicated_abs(language):
-    @types('complex')
-    def norm(x):
+    def norm(x : 'complex'):
         return ((x*x.conjugate()).real**2)**0.5
 
     f = epyccel(norm, language=language)

@@ -3,8 +3,8 @@
 
 import pytest
 import numpy as np
-from pyccel.epyccel import epyccel
-from pyccel.decorators import private, inline
+from pyccel import epyccel
+from pyccel.decorators import private, inline, template
 
 @pytest.mark.parametrize( 'lang', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -146,3 +146,26 @@ def test_nested_inline_call(language):
     g = epyccel(f, language=language)
 
     assert f() == g()
+
+def test_indexed_template(language):
+    @template(name='T', types=[float, complex])
+    def my_sum(v: 'T[:]'):
+        return v.sum()
+
+    pyccel_sum = epyccel(my_sum, language=language)
+
+    x = np.ones(4, dtype=float)
+
+    python_fl = my_sum(x)
+    pyccel_fl = pyccel_sum(x)
+
+    assert python_fl == pyccel_fl
+    assert isinstance(python_fl, type(pyccel_fl))
+
+    y = np.full(4, 1 + 3j)
+
+    python_cmplx = my_sum(y)
+    pyccel_cmplx = pyccel_sum(y)
+
+    assert python_cmplx == pyccel_cmplx
+    assert isinstance(python_cmplx, type(pyccel_cmplx))

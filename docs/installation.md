@@ -201,7 +201,7 @@ for a system-wide installation.
 -   **Standard mode**:
 
     ```sh
-    git clone git@github.com:pyccel/pyccel.git
+    git clone --recurse-submodules git@github.com:pyccel/pyccel.git
     cd pyccel
     pip3 install --user .
     ```
@@ -209,7 +209,7 @@ for a system-wide installation.
 -   **Development mode**:
 
     ```sh
-    git clone git@github.com:pyccel/pyccel.git
+    git clone --recurse-submodules git@github.com:pyccel/pyccel.git
     cd pyccel
     pip3 install --user -e ".[test]"
     ```
@@ -224,8 +224,8 @@ If the folder where Pyccel is saved is read only, it may be necessary to run an 
 sudo pyccel-init
 ```
 
-This step is necessary in order to [pickle header files](./tutorial/header-files.md#Pickling-header-files).
-If this command is not run then Pyccel will still run correctly but may be slower when using [OpenMP](./tutorial/openmp.md) or other supported external packages.
+This step is necessary in order to [pickle header files](./header-files.md#Pickling-header-files).
+If this command is not run then Pyccel will still run correctly but may be slower when using [OpenMP](./openmp.md) or other supported external packages.
 A warning, reminding the user to execute this command, will be printed to the screen when pyccelising files which rely on these packages if the pickling step has not been executed.
 
 ## Additional packages
@@ -242,7 +242,7 @@ Most of the unit tests can also be run in parallel.
 
 To test your Pyccel installation please run the script `tests/run\_tests\_py3.sh` (Unix), or `tests/run\_tests.bat` (Windows).
 
-Continuous testing runs on GitHub actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
+Continuous testing runs on GitHub actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Adevel>
 
 ## Pyccel Container Images
 

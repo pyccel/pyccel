@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """ Module containing objects from the math module understood by pyccel
 """
@@ -8,8 +8,8 @@
 import math
 
 from pyccel.ast.core      import PyccelFunctionDef, Module
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat
-from pyccel.ast.internals import PyccelInternalFunction
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
+from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.variable  import Constant
 
 __all__ = (
@@ -75,218 +75,826 @@ __all__ = (
 #==============================================================================
 # Base classes
 #==============================================================================
-class MathFunctionBase(PyccelInternalFunction):
-    """Abstract base class for the Math Functions"""
+class MathFunctionBase(PyccelFunction):
+    """
+    Abstract base class for the Math Functions.
+
+    A super-class from which all functions in the `math` library
+    should inherit.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
+    """
     __slots__ = ()
     _shape = None
-    _rank  = 0
-    _order = None
+
 
 class MathFunctionFloat(MathFunctionBase):
+    """
+    Super-class from which functions returning a float inherit.
+
+    A super-class from which functions in the `math` library which
+    return a float should inherit.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
+    """
     __slots__ = ()
     name = 'float'
-    _dtype = NativeFloat()
-    _precision = -1
+    _class_type = PythonNativeFloat()
+
 
 class MathFunctionInt(MathFunctionBase):
+    """
+    Super-class from which functions returning an integer inherit.
+
+    A super-class from which functions in the `math` library which
+    return an integer should inherit.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
+    """
     __slots__ = ()
     name = 'int'
-    _dtype = NativeInteger()
-    _precision = -1
+    _class_type = PythonNativeInt()
+
 
 class MathFunctionBool(MathFunctionBase):
+    """
+    Super-class from which functions returning a boolean inherit.
+
+    A super-class from which functions in the `math` library which
+    return a boolean should inherit.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
+    """
     __slots__ = ()
     name = 'bool'
-    _dtype = NativeBool()
-    _precision = -1
+    _class_type = PythonNativeBool()
 
 #==============================================================================
 # Functions that return one value
 #==============================================================================
 
 # Floating-point result
-class MathAcos    (MathFunctionFloat):
-    """Represent a call to the acos function in the Math library"""
+class MathAcos(MathFunctionFloat):
+    """
+    Class representing a call to the `math.acos` function.
+
+    A class which represents a call to the `acos` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'acos'
-class MathAcosh   (MathFunctionFloat):
-    """Represent a call to the acosh function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathAcosh(MathFunctionFloat):
+    """
+    Class representing a call to the `math.acosh` function.
+
+    A class which represents a call to the `acosh` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'acosh'
-class MathAsin    (MathFunctionFloat):
-    """Represent a call to the asin function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathAsin(MathFunctionFloat):
+    """
+    Class representing a call to the `math.asin` function.
+
+    A class which represents a call to the `asin` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'asin'
-class MathAsinh   (MathFunctionFloat):
-    """Represent a call to the asinh function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathAsinh(MathFunctionFloat):
+    """
+    Class representing a call to the `math.asinh` function.
+
+    A class which represents a call to the `asinh` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'asinh'
-class MathAtan    (MathFunctionFloat):
-    """Represent a call to the atan function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathAtan(MathFunctionFloat):
+    """
+    Class representing a call to the `math.atan` function.
+
+    A class which represents a call to the `atan` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'atan'
+    def __init__(self, x):
+        super().__init__(x)
+
+
 class MathAtan2   (MathFunctionFloat):
-    """Represent a call to the atan2 function in the Math library"""
+    """
+    Class representing a call to the `math.atan2` function.
+
+    A class which represents a call to the `atan2` function from the `math` library.
+
+    Parameters
+    ----------
+    y : TypedAstNode
+        The first expression passed as argument to the function.
+    x : TypedAstNode
+        The second expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'atan2'
-class MathAtanh   (MathFunctionFloat):
-    """Represent a call to the atanh function in the Math library"""
+    def __init__(self, y, x):
+        super().__init__(y, x)
+
+class MathAtanh(MathFunctionFloat):
+    """
+    Class representing a call to the `math.atanh` function.
+
+    A class which represents a call to the `atanh` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'atanh'
+    def __init__(self, x):
+        super().__init__(x)
+
+
 class MathCopysign(MathFunctionFloat):
-    """Represent a call to the copysign function in the Math library"""
+    """
+    Class representing a call to the `math.copysign` function.
+
+    A class which represents a call to the `copysign` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The first expression passed as argument to the function.
+    y : TypedAstNode
+        The second expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'copysign'
-class MathCos     (MathFunctionFloat):
-    """Represent a call to the cos function in the Math library"""
+    def __init__(self, x, y):
+        super().__init__(x, y)
+
+
+class MathCos(MathFunctionFloat):
+    """
+    Class representing a call to the `math.cos` function.
+
+    A class which represents a call to the `cos` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'cos'
-class MathCosh    (MathFunctionFloat):
-    """Represent a call to the cosh function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathCosh(MathFunctionFloat):
+    """
+    Class representing a call to the `math.cosh` function.
+
+    A class which represents a call to the `cosh` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'cosh'
-class MathErf     (MathFunctionFloat):
-    """Represent a call to the erf function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathErf(MathFunctionFloat):
+    """
+    Class representing a call to the `math.erf` function.
+
+    A class which represents a call to the `erf` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'erf'
-class MathErfc    (MathFunctionFloat):
-    """Represent a call to the erfc function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathErfc(MathFunctionFloat):
+    """
+    Class representing a call to the `math.erfc` function.
+
+    A class which represents a call to the `erfc` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'erfc'
-class MathExp     (MathFunctionFloat):
-    """Represent a call to the exp function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathExp(MathFunctionFloat):
+    """
+    Class representing a call to the `math.exp` function.
+
+    A class which represents a call to the `exp` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'exp'
+    def __init__(self, x):
+        super().__init__(x)
+
+
 class MathExpm1   (MathFunctionFloat):
-    """Represent a call to the expm1 function in the Math library"""
+    """
+    Class representing a call to the `math.expm1` function.
+
+    A class which represents a call to the `expm1` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'expm1'
-class MathFabs    (MathFunctionFloat):
-    """Represent a call to the fabs function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathFabs(MathFunctionFloat):
+    """
+    Class representing a call to the `math.fabs` function.
+
+    A class which represents a call to the `fabs` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'fabs'
-class MathFmod    (MathFunctionFloat):
-    """Represent a call to the fmod function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathFmod(MathFunctionFloat):
+    """
+    Class representing a call to the `math.fmod` function.
+
+    A class which represents a call to the `fmod` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'fmod'
-class MathFsum    (MathFunctionFloat):
-    """Represent a call to the fsum function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathFsum(MathFunctionFloat):
+    """
+    Class representing a call to the `math.fsum` function.
+
+    A class which represents a call to the `fsum` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'fsum'
-class MathGamma   (MathFunctionFloat):
-    """Represent a call to the gamma function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathGamma(MathFunctionFloat):
+    """
+    Class representing a call to the `math.gamma` function.
+
+    A class which represents a call to the `gamma` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'gamma'
-class MathHypot   (MathFunctionFloat):
-    """Represent a call to the hypot function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathHypot(MathFunctionFloat):
+    """
+    Class representing a call to the `math.hypot` function.
+
+    A class which represents a call to the `hypot` function from the `math` library.
+
+    Parameters
+    ----------
+    *args : TypedAstNode
+        The arguments passed to the function.
+    """
     __slots__ = ()
     name = 'hypot'
-class MathLdexp   (MathFunctionFloat):
-    """Represent a call to the ldexp function in the Math library"""
+
+
+class MathLdexp(MathFunctionFloat):
+    """
+    Class representing a call to the `math.ldexp` function.
+
+    A class which represents a call to the `ldexp` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The first expression passed as argument to the function.
+    i : TypedAstNode
+        The second expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'ldexp'
-class MathLgamma  (MathFunctionFloat):
-    """Represent a call to the lgamma function in the Math library"""
+    def __init__(self, x, i):
+        super().__init__(x, i)
+
+
+class MathLgamma(MathFunctionFloat):
+    """
+    Class representing a call to the `math.lgamma` function.
+
+    A class which represents a call to the `lgamma` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'lgamma'
-class MathLog     (MathFunctionFloat):
-    """Represent a call to the log function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathLog(MathFunctionFloat):
+    """
+    Class representing a call to the `math.log` function.
+
+    A class which represents a call to the `log` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'log'
+    def __init__(self, x):
+        super().__init__(x)
+
+
 class MathLog10   (MathFunctionFloat):
-    """Represent a call to the log10 function in the Math library"""
+    """
+    Class representing a call to the `math.log10` function.
+
+    A class which represents a call to the `log10` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'log10'
+    def __init__(self, x):
+        super().__init__(x)
+
+
 class MathLog1p   (MathFunctionFloat):
-    """Represent a call to the log1p function in the Math library"""
+    """
+    Class representing a call to the `math.log1p` function.
+
+    A class which represents a call to the `log1p` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'log1p'
+    def __init__(self, x):
+        super().__init__(x)
+
+
 class MathLog2    (MathFunctionFloat):
-    """Represent a call to the log2 function in the Math library"""
+    """
+    Class representing a call to the `math.log2` function.
+
+    A class which represents a call to the `log2` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'log2'
-class MathPow     (MathFunctionFloat):
-    """Represent a call to the pow function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathPow(MathFunctionFloat):
+    """
+    Class representing a call to the `math.pow` function.
+
+    A class which represents a call to the `pow` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The first expression passed as argument to the function.
+    y : TypedAstNode
+        The second expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'pow'
-class MathSin     (MathFunctionFloat):
-    """Represent a call to the sin function in the Math library"""
+    def __init__(self, x, y):
+        super().__init__(x, y)
+
+
+class MathSin(MathFunctionFloat):
+    """
+    Class representing a call to the `math.sin` function.
+
+    A class which represents a call to the `sin` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'sin'
-class MathSinh    (MathFunctionFloat):
-    """Represent a call to the sinh function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathSinh(MathFunctionFloat):
+    """
+    Class representing a call to the `math.sinh` function.
+
+    A class which represents a call to the `sinh` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'sinh'
-class MathSqrt    (MathFunctionFloat):
-    """Represent a call to the sqrt function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathSqrt(MathFunctionFloat):
+    """
+    Class representing a call to the `math.sqrt` function.
+
+    A class which represents a call to the `sqrt` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'sqrt'
-class MathTan     (MathFunctionFloat):
-    """Represent a call to the tan function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathTan(MathFunctionFloat):
+    """
+    Class representing a call to the `math.tan` function.
+
+    A class which represents a call to the `tan` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'tan'
-class MathTanh    (MathFunctionFloat):
-    """Represent a call to the tanh function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathTanh(MathFunctionFloat):
+    """
+    Class representing a call to the `math.tanh` function.
+
+    A class which represents a call to the `tanh` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'tanh'
-class MathRemainder (MathFunctionFloat):
-    """Represent a call to the remainder function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathRemainder(MathFunctionFloat):
+    """
+    Class representing a call to the `math.remainder` function.
+
+    A class which represents a call to the `remainder` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The first expression passed as argument to the function.
+    y : TypedAstNode
+        The second expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'remainder'
+    def __init__(self, x, y):
+        super().__init__(x, y)
 
-class MathRadians (MathFunctionFloat):
-    """Represent a call to the radians function in the Math library"""
+class MathRadians(MathFunctionFloat):
+    """
+    Class representing a call to the `math.radians` function.
+
+    A class which represents a call to the `radians` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'radians'
-class MathDegrees (MathFunctionFloat):
-    """Represent a call to the degrees function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathDegrees(MathFunctionFloat):
+    """
+    Class representing a call to the `math.degrees` function.
+
+    A class which represents a call to the `degrees` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'degrees'
+    def __init__(self, x):
+        super().__init__(x)
 
 # Integer result
 class MathFactorial(MathFunctionInt):
-    """Represent a call to the factorial function in the Math library"""
+    """
+    Class representing a call to the `math.factorial` function.
+
+    A class which represents a call to the `factorial` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'factorial'
-class MathGcd      (MathFunctionInt):
-    """Represent a call to the gcd function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathGcd(MathFunctionInt):
+    """
+    Class representing a call to the `math.gcd` function.
+
+    A class which represents a call to the `gcd` function from the `math` library.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
+    """
     __slots__ = ()
     name = 'gcd'
-class MathLcm      (MathFunctionInt):
-    """Represent a call to the lcm function in the Math library"""
+
+
+class MathLcm(MathFunctionInt):
+    """
+    Class representing a call to the `math.lcm` function.
+
+    A class which represents a call to the `lcm` function from the `math` library.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
+    """
     __slots__ = ()
     name = 'lcm'
 
-class MathCeil     (MathFunctionInt):
-    """Represent a call to the ceil function in the Math library"""
+class MathCeil(MathFunctionInt):
+    """
+    Class representing a call to the `math.ceil` function.
+
+    A class which represents a call to the `ceil` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'ceil'
-class MathFloor    (MathFunctionInt):
-    """Represent a call to the floor function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathFloor(MathFunctionInt):
+    """
+    Class representing a call to the `math.floor` function.
+
+    A class which represents a call to the `floor` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'floor'
-class MathTrunc    (MathFunctionInt):
-    """Represent a call to the trunc function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathTrunc(MathFunctionInt):
+    """
+    Class representing a call to the `math.trunc` function.
+
+    A class which represents a call to the `trunc` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'trunc'
+    def __init__(self, x):
+        super().__init__(x)
 
 # Boolean result
-class MathIsclose (MathFunctionBool):
-    """Represent a call to the isclose function in the Math library"""
+class MathIsclose(MathFunctionBool):
+    """
+    Class representing a call to the `math.isclose` function.
+
+    A class which represents a call to the `isclose` function from the `math` library.
+
+    Parameters
+    ----------
+    a : TypedAstNode
+        The first expression passed as argument to the function.
+    b : TypedAstNode
+        The second expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'isclose'
+    def __init__(self, a, b):
+        super().__init__(a, b)
+
+
 class MathIsfinite(MathFunctionBool):
-    """Represent a call to the isfinite function in the Math library"""
+    """
+    Class representing a call to the `math.isfinite` function.
+
+    A class which represents a call to the `isfinite` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'isfinite'
-class MathIsinf   (MathFunctionBool):
-    """Represent a call to the isinf function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathIsinf(MathFunctionBool):
+    """
+    Class representing a call to the `math.isinf` function.
+
+    A class which represents a call to the `isinf` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'isinf'
-class MathIsnan   (MathFunctionBool):
-    """Represent a call to the isnan function in the Math library"""
+    def __init__(self, x):
+        super().__init__(x)
+
+
+class MathIsnan(MathFunctionBool):
+    """
+    Class representing a call to the `math.isnan` function.
+
+    A class which represents a call to the `isnan` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'isnan'
+    def __init__(self, x):
+        super().__init__(x)
 
 #==============================================================================
 # Functions that return two values
@@ -333,11 +941,11 @@ math_functions = [PyccelFunctionDef(v.name, v) for k, v in globals().copy().item
 # Constants
 #==============================================================================
 math_constants = {
-    'e'  : Constant('float', 'e'  , value=math.e  ),
-    'pi' : Constant('float', 'pi' , value=math.pi ),
-    'inf': Constant('float', 'inf', value=math.inf),
-    'nan': Constant('float', 'nan', value=math.nan),
-    'tau': Constant('float', 'tau', value=2.*math.pi),
+    'e'  : Constant(PythonNativeFloat(), 'e'  , value=math.e  ),
+    'pi' : Constant(PythonNativeFloat(), 'pi' , value=math.pi ),
+    'inf': Constant(PythonNativeFloat(), 'inf', value=math.inf),
+    'nan': Constant(PythonNativeFloat(), 'nan', value=math.nan),
+    'tau': Constant(PythonNativeFloat(), 'tau', value=2.*math.pi),
 }
 
 math_mod = Module('math',

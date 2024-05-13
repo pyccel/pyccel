@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Module describing the base code-wrapping class : Wrapper.
@@ -67,12 +67,12 @@ class Wrapper:
 
         Parameters
         ----------
-        expr : pyccel.ast.basic.Basic
+        expr : pyccel.ast.basic.PyccelAstNode
             The expression that should be wrapped.
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             The AST which describes the object that lets you
             access the expression.
         """
@@ -87,12 +87,12 @@ class Wrapper:
 
         Parameters
         ----------
-        expr : pyccel.ast.basic.Basic
+        expr : pyccel.ast.basic.PyccelAstNode
             The expression that should be wrapped.
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             The AST which describes the object that lets you
             access the expression.
         """

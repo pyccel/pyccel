@@ -113,7 +113,7 @@ def allow_untested_debug_code(untested):
         for l in line_nums:
             line = f_lines[l-1]
             n = len(line)-len(line.lstrip())
-            i = l
+            i = l-1
             func_found = ''
             while i >= 0 and not func_found:
                 line = f_lines[i]
@@ -137,8 +137,8 @@ def allow_untested_error_calls(untested):
     Takes a dictionary describing untested lines and returns an
     equivalent dictionary without lines designed to raise errors.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     untested : dict
             A dictionary whose keys are the files in pyccel with
             untested lines which have been added in this branch
@@ -156,7 +156,10 @@ def allow_untested_error_calls(untested):
         with open(f, encoding="utf-8") as filename:
             f_lines = filename.readlines()
         untested_lines = [(i, f_lines[i-1].strip()) for i in line_nums]
-        lines = [i for i,l in untested_lines if not (l.startswith('raise ') or l.startswith('errors.report(') or l.startswith('return errors.report('))]
+        lines = [i for i,l in untested_lines if not (l.startswith('raise ') or \
+                                                     l.startswith('errors.report(') or \
+                                                     l.startswith('return errors.report(') or \
+                                                     l.startswith('except'))]
         if len(lines):
             reduced_untested[f] = lines
 
@@ -196,7 +199,7 @@ def print_markdown_summary(untested, commit, output, repo):
     with open(output, "a", encoding="utf-8") as out_file:
         print(md_string, file=out_file)
 
-def get_json_summary(untested, content_lines, existing_comments):
+def get_json_summary(untested, content_lines, existing_comments, diff):
     """
     Print the results neatly in json in a provided file.
 
@@ -217,6 +220,12 @@ def get_json_summary(untested, content_lines, existing_comments):
     existing_comments : list of dict
         A list describing all comments previously left about the
         coverage results.
+    diff : dict
+        A dictionary whose keys are files which have been
+        changed in this branch and whose values are a dictionary.
+        The dictionary must contain a key 'addition' whose value
+        is a list containing the line numbers of lines which have
+        been changed/added.
 
     Returns
     -------
@@ -248,7 +257,15 @@ def get_json_summary(untested, content_lines, existing_comments):
             if j < n_code_lines-1:
                 end_line = line_indices[j]-1
             else:
-                end_line = line_indices[j]
+                end_line = line_indices[-1]
+            last_valid_line = start_line
+            last_valid_line_idx = next(i for i in diff[f]['addition'] if i == last_valid_line)
+            for i in diff[f]['addition'][last_valid_line_idx:]:
+                if i-last_valid_line < 6:
+                    last_valid_line = i
+                else:
+                    break
+            end_line = min(end_line, last_valid_line)
             output = {'path':f, 'line':end_line, 'body':message}
             if start_line != end_line:
                 output['start_line'] = start_line

@@ -1,15 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types
 
 
-@types('real [:]')
-def f(x):
+def f(x : 'float [:]'):
     x[0] = 2.
 
-@types('real [:]')
-def g(x):
+def g(x : 'float [:]'):
     x[1] = 4.
 
-@types('real [:]')
-def h(x):
+def h(x : 'float [:]'):
     x[2] = 8.

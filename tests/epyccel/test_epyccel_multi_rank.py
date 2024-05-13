@@ -4,7 +4,7 @@ import numpy as np
 from numpy.random import rand, randint
 
 from modules        import multi_rank
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 @pytest.mark.parametrize('f1',[multi_rank.add_mixed_order,
     multi_rank.mul_mixed_order,
@@ -13,7 +13,8 @@ from pyccel.epyccel import epyccel
     multi_rank.augadd_mixed_order,
     multi_rank.augmul_mixed_order,
     multi_rank.augsub_mixed_order,
-    multi_rank.augdiv_mixed_order])
+    multi_rank.augdiv_mixed_order,
+    multi_rank.add_mixed_order_ellipsis])
 def test_add_mixed_order(f1, language):
     f2 = epyccel( f1, language = language )
 

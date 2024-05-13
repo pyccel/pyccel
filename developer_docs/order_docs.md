@@ -393,8 +393,8 @@ for i in range(2):
 
 is translated to the following efficient indexing:
 ```fortran
-do i = 0_i64, 1_i64, 1_i64
-  do j = 0_i64, 2_i64, 1_i64
+do i = 0_i64, 1_i64
+  do j = 0_i64, 2_i64
     a(j, i) = i * 3_i64 + j
   end do
 end do
@@ -435,13 +435,13 @@ This will be translated to:
     write(stdout, '(A I0 A I0 A)', advance="no") '(' , size(f_array, &
           1_i64, i64) , ', ' , size(f_array, 2_i64, i64) , ')'
     write(stdout, '()', advance="yes")
-    do row = 0_i64, size(c_array, 2_i64, i64) - 1_i64, 1_i64
-      do col = 0_i64, size(c_array, 1_i64, i64) - 1_i64, 1_i64
+    do row = 0_i64, size(c_array, 2_i64, i64) - 1_i64
+      do col = 0_i64, size(c_array, 1_i64, i64) - 1_i64
         c_array(col, row) = ...
       end do
     end do
-    do col = 0_i64, size(f_array, 2_i64, i64) - 1_i64, 1_i64
-      do row = 0_i64, size(f_array, 1_i64, i64) - 1_i64, 1_i64
+    do col = 0_i64, size(f_array, 2_i64, i64) - 1_i64
+      do row = 0_i64, size(f_array, 1_i64, i64) - 1_i64
         f_array(row, col) = ...
       end do
     end do

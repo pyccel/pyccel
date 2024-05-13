@@ -12,11 +12,12 @@ from .github_api_interactions import GitHubAPIInteractions
 default_python_versions = {
         'anaconda_linux': '3.10',
         'anaconda_windows': '3.10',
-        'coverage': '3.7',
+        'coverage': '3.8',
         'docs': '3.8',
-        'linux': '3.7',
-        'macosx': '3.10',
-        'pickle_wheel': '3.7',
+        'intel': '3.10',
+        'linux': '3.8',
+        'macosx': '3.12',
+        'pickle_wheel': '3.8',
         'pickle': '3.8',
         'editable_pickle': '3.8',
         'pyccel_lint': '3.8',
@@ -30,6 +31,7 @@ test_names = {
         'anaconda_windows': "Unit tests on Windows with anaconda",
         'coverage': "Coverage verification",
         'docs': "Check documentation",
+        'intel': "Unit tests on Linux with Intel compiler",
         'linux': "Unit tests on Linux",
         'macosx': "Unit tests on MacOSX",
         'pickle_wheel': "Test pickling during wheel installation",
@@ -43,7 +45,7 @@ test_names = {
 
 test_dependencies = {'coverage':['linux']}
 
-tests_with_base = ('coverage', 'docs', 'pyccel_lint')
+tests_with_base = ('coverage', 'docs', 'pyccel_lint', 'pylint')
 
 pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
                 'pyccel_lint', 'spelling')
@@ -119,7 +121,7 @@ class Bot:
         if commit:
             self._ref = commit
             if '/' in self._ref:
-                _, _, branch = self._ref.split('/')
+                _, _, branch = self._ref.split('/',2)
                 branch_info = self._GAI.get_branch_details(branch)
                 self._ref = branch_info['commit']['sha']
         else:
@@ -286,10 +288,13 @@ class Bot:
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
             return []
         else:
-            check_runs = self._GAI.get_check_runs(self._ref)['check_runs']
-            already_triggered = [c["name"] for c in check_runs if c['status'] in ('completed', 'in_progress')]
+            check_runs = {self.get_name_key(c["name"]): c for c in self._GAI.get_check_runs(self._ref)['check_runs']}
+            already_triggered = [c["name"] for n,c in check_runs.items() if c['status'] in ('completed', 'in_progress') and \
+                                                                            c['conclusion'] != 'cancelled' and \
+                                                                            n != 'coverage']
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
-            already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
+            already_programmed = {c["name"]:c for c in check_runs.values() if c['status'] == 'queued'}
+            success_names = [n for n,c in check_runs.items() if c['status'] == 'completed' and c['conclusion'] == 'success']
             print(already_triggered)
             states = []
 
@@ -310,6 +315,7 @@ class Bot:
                 pv = python_version or default_python_versions[t]
                 key = f"({t}, {pv})"
                 if any(key in a for a in already_triggered):
+                    states.append(check_runs[t]['conclusion'])
                     continue
                 name = f"{test_names[t]} {key}"
                 if not force_run and not self.is_test_required(commit_log, name, t, states):
@@ -322,11 +328,11 @@ class Bot:
 
                 deps = test_dependencies.get(t, ())
                 print(already_triggered_names, deps)
-                if all(d in already_triggered_names for d in deps):
+                if all(d in success_names for d in deps):
                     workflow_ids = None
                     if t == 'coverage':
-                        print([r['details_url'] for r in check_runs if r['conclusion'] == "success"])
-                        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs if r['conclusion'] == "success" and '(' in r['name']]
+                        print([r['details_url'] for r in check_runs.values() if r['conclusion'] == "success"])
+                        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs.values() if r['conclusion'] == "success" and '(' in r['name']]
                     print("Running test")
                     self.run_test(t, pv, posted["id"], workflow_ids)
             return states
@@ -369,12 +375,14 @@ class Bot:
             possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
             print("possible_artifacts : ", possible_artifacts)
             acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
-            while len(acceptable_urls) == 0:
+            ntests = 0
+            while len(acceptable_urls) == 0 and ntests < 10:
                 # Occasionally artifacts are not available immediately after linux concludes
                 time.sleep(10)
                 possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
                 print("possible_artifacts : ", possible_artifacts)
                 acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
+                ntests += 1
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
             inputs['pr_id'] = str(self._pr_id)
@@ -411,25 +419,31 @@ class Bot:
         bool
             True if the test should be run, False otherwise.
         """
-        print("Checking : ", name)
-        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'coverage'):
-            has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) \
-                                                    and f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
-        elif key in ('pyccel_lint'):
-            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
-        elif key in ('pylint'):
-            has_relevant_change = lambda diff: any(f.endswith('parser/semantic.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
-        elif key in ('docs'):
+        print("Checking : ", name, key)
+        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'intel'):
+            has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) #pylint: disable=unnecessary-lambda-assignment
+                                                    and f.endswith('.py') and f != 'pyccel/version.py'
+                                                    for f in diff)
+        elif key in ('pylint',):
             has_relevant_change = lambda diff: any(f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
-        elif key in ('spelling'):
-            has_relevant_change = lambda diff: any(f.endswith('.md') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+        elif key in ('pyccel_lint','docs'):
+            has_relevant_change = lambda diff: any(f.endswith('.py') and f != 'pyccel/version.py' #pylint: disable=unnecessary-lambda-assignment
+                                                    for f in diff)
+        elif key in ('spelling',):
+            has_relevant_change = lambda diff: any(f.endswith('.md') or f == '.dict_custom.txt' for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('pickle', 'pickle_wheel', 'editable_pickle'):
-            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+            has_relevant_change = lambda diff: any((f.startswith('pyccel/') and f.endswith('.py') #pylint: disable=unnecessary-lambda-assignment
+                                                    and f != 'pyccel/version.py') or f == 'pyproject.toml'
+                                                    or f.startswith('install_scripts/')
+                                                    for f in diff)
+        elif key in ('coverage',):
+            has_relevant_change = lambda diff: True #pylint: disable=unnecessary-lambda-assignment
         else:
             raise NotImplementedError(f"Please update for new has_relevant_change : {key}")
 
         for c in commit_log:
             diff = self.get_diff(c)
+            print("Diff found : ", diff)
             if has_relevant_change(diff):
                 print("Contains relevant change : ", c)
                 return True
@@ -516,7 +530,13 @@ class Bot:
             self.mark_as_draft()
             return False
 
-        welcome_comment = next(c for c in self._GAI.get_comments(self._pr_id) if c['user']['type'] == 'Bot' and c['body'].startswith('Hello'))
+        try:
+            welcome_comment = next(c for c in self._GAI.get_comments(self._pr_id) if c['body'].startswith('Here is your checklist.'))
+        except StopIteration:
+            self._GAI.create_comment(self._pr_id, message_from_file('missing_checklist.txt'))
+            self.mark_as_draft()
+            return False
+
         if '- [ ]' in welcome_comment['body']:
             self._GAI.create_comment(self._pr_id, message_from_file('set_draft_checklist_incomplete.txt').format(url = welcome_comment['html_url']))
             self.mark_as_draft()
@@ -534,6 +554,7 @@ class Bot:
                 _, err = p.communicate()
             print(err)
 
+            print(states)
             if all(s == 'success' for s in states):
                 self.mark_as_ready(False)
 
@@ -647,8 +668,8 @@ class Bot:
         """
         print("Trusted?")
         in_team = self._GAI.check_for_user_in_team(user, 'pyccel-dev')
-        if in_team["message"] != "Not found":
-            print("In team")
+        if "message" not in in_team:
+            print("In team: ", in_team)
             return True
         print("User not in team")
         merged_prs = self._GAI.get_prs('all')
@@ -804,24 +825,8 @@ class Bot:
         if self._pr_id:
             return self._pr_id
         else:
-            cmds = [git, 'branch', '-a', '--contains', self._ref]
-            with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
-                out, err = p.communicate()
-                print(err)
-                assert p.returncode == 0
-            branches = out.split('\n')
-            if len(branches) == 1:
-                branch = branches[0].split('/')[-1]
-                cmds = [github_cli, 'pr', 'list', '--head', branch, '--json', 'number']
-                with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
-                    out, err = p.communicate()
-                    print(err)
-                    assert p.returncode == 0
-                self._pr_id = json.loads(out)[0]['number']
-            else:
-                possible_prs = self._GAI.get_prs()
-                print(possible_prs)
-                self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
+            possible_prs = self._GAI.get_prs()
+            self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
             self._pr_details = self._GAI.get_pr_details(self._pr_id)
             self._base = self._pr_details["base"]["sha"]
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
@@ -852,17 +857,19 @@ class Bot:
             base_commit = self._base
         assert bool(base_commit)
         cmd = [git, 'diff', f"{base_commit}..{self._ref}"]
-        print(cmd)
+        print(' '.join(cmd))
         with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
             out, _ = p.communicate()
         diff = {f: None for f in out.strip().split('\n')}
         for f in diff:
-            with subprocess.Popen(cmd + [f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
+            with subprocess.Popen(cmd + ['--', f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
                 out, err = p.communicate()
             if not err:
                 lines = out.split('\n')
                 n = next((i for i,l in enumerate(lines) if '@@' in l), len(lines))
                 diff[f] = lines[n:]
+            else:
+                print(err)
         return {f:l for f,l in diff.items() if l is not None}
 
     def accept_coverage_fix(self, comment_thread):
@@ -889,6 +896,27 @@ class Bot:
                                  reply_to = comment_id)
         print(reply.text)
 
+    def fill_checklist(self, comment_url, user):
+        """
+        Create the PR checklist for the user.
+
+        Create the PR checklist for the user.
+
+        Parameters
+        ----------
+        comment_url : str
+            The url where the comment was left.
+
+        user : str
+            The username of the person who left the comment.
+        """
+        body = message_from_file('checklist.txt')
+        merged_prs = self._GAI.get_prs('all')
+        has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user and pr['merged_at'])
+        if not has_merged_pr:
+            body += message_from_file('first_checklist.txt')
+        self._GAI.modify_comment(comment_url, body)
+
     def is_pr_draft(self):
         """
         Indicate whether the pull request is a draft.
@@ -901,6 +929,19 @@ class Bot:
             True if draft, False otherwise.
         """
         return self._pr_details['draft']
+
+    def is_pr_fork(self):
+        """
+        Indicate whether the pull request is created from a fork.
+
+        Indicate whether the pull request is created from a fork.
+
+        Returns
+        -------
+        bool
+            True if fork, False otherwise.
+        """
+        return self._pr_details['head']['repo']['full_name'] != 'pyccel/pyccel'
 
     def leave_comment(self, comment):
         """
