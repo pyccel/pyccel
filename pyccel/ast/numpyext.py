@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """ Module containing objects from the numpy module understood by pyccel
 """
@@ -613,13 +613,31 @@ class NumpyNewArray(PyccelInternalFunction):
     #--------------------------------------------------------------------------
     @staticmethod
     def _process_order(rank, order):
+        """
+        Treat the order to get an order in the format expected by Pyccel.
+
+        Process the order passed to the array creation function to get an order
+        in the format expected by Pyccel. The final format should be a string
+        containing either 'C' or 'F'.
+
+        Parameters
+        ----------
+        rank : int
+            The rank of the array being created.
+        order : str | LiteralString
+            The order of the array as specified by the user or the subclass.
+
+        Returns
+        -------
+        str | None
+            The order in the format expected by Pyccel.
+        """
 
         if rank < 2:
             return None
 
         order = str(order).strip('\'"')
-        if order not in ('C', 'F'):
-            raise ValueError('unrecognized order = {}'.format(order))
+        assert order in ('C', 'F')
         return order
 
 #==============================================================================
@@ -651,7 +669,7 @@ class NumpyArray(NumpyNewArray):
     def __init__(self, arg, dtype=None, order='K', ndmin=None):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of  {type(arg)}')
 
         is_homogeneous_tuple = isinstance(arg.class_type, NativeHomogeneousTuple)
         # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
@@ -711,8 +729,7 @@ class NumpyArray(NumpyNewArray):
             # ... Determine ordering
             order = str(order).strip("\'")
 
-            if order not in ('K', 'A', 'C', 'F'):
-                raise ValueError(f"Cannot recognize '{order}' order")
+            assert order in ('K', 'A', 'C', 'F')
 
             if order in ('K', 'A'):
                 order = arg.order or 'C'
@@ -823,7 +840,7 @@ class NumpySum(PyccelInternalFunction):
 
     def __init__(self, arg):
         if not isinstance(arg, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of {type(arg)}.')
         super().__init__(arg)
         if isinstance(arg.dtype, NativeBool):
             self._dtype = NativeInteger()
@@ -856,7 +873,7 @@ class NumpyProduct(PyccelInternalFunction):
 
     def __init__(self, arg):
         if not isinstance(arg, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of {type(arg)}.')
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
         self._arg = NumpyInt(self._arg) if (isinstance(arg.dtype, NativeBool) or \
@@ -894,9 +911,9 @@ class NumpyMatmul(PyccelInternalFunction):
             return
 
         if not isinstance(a, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(a))
+            raise TypeError(f'Unknown type of {type(a)}.')
         if not isinstance(b, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(a))
+            raise TypeError(f'Unknown type of {type(a)}.')
 
         args      = (a, b)
         type_info = NumpyResultType(*args)

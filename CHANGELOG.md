@@ -1,15 +1,38 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## \[UNRELEASED\]
+## \[1.12.0\] - 2024-05-08
 
 ### Added
 
+-   #1830 : Add a `pyccel.lambdify` function to accelerate SymPy expressions.
+-   #1867 : Add a `use_out` parameter to `pyccel.lambdify` to avoid unnecessary memory allocation.
+-   #1867 : Auto-generate a docstring for functions generated via calls to `pyccel.lambdify`.
+-   #1868 : Hide traceback for `epyccel` and `lambdify` errors.
+
 ### Fixed
+
+-   #1762 : Fix array copy between different data types.
+-   #1792 : Fix array unpacking.
+-   #1795 : Fix bug when returning slices in C.
+-   #1218 : Fix bug when assigning an array to a slice in Fortran.
+-   #1830 : Fix missing allocation when returning an annotated array expression.
+-   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
+-   Link and mention `devel` branch, not `master`.
 
 ### Changed
 
+-   #1866 : Raise a more informative error when mixing scalar and array return types.
+-   \[TESTS\] Filter out cast warnings in cast tests.
+-   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
+-   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
+
 ### Deprecated
+
+-   #1820 : Deprecated unused decorator `@lambdify`
+-   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
+-   \[INTERNALS\] Remove function `Module.set_name`.
+-   \[INTERNALS\] Remove unused `assign_to` argument of `CodePrinter.doprint`.
 
 ## \[1.11.2\] - 2024-03-05
 

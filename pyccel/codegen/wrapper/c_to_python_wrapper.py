@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Module describing the code-wrapping class : CToPythonWrapper
@@ -11,13 +11,13 @@ import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
 from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
-from pyccel.ast.builtins      import PythonTuple, PythonRange
+from pyccel.ast.builtins      import PythonTuple
 from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
-from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, For, AsName
+from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, AsName
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
@@ -26,7 +26,7 @@ from pyccel.ast.cwrapper      import PyAttributeError
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
-from pyccel.ast.cwrapper      import PyList_New, PyList_Append, PyList_Size, PyList_GetItem, PyList_SetItem
+from pyccel.ast.cwrapper      import PyList_New, PyList_Append, PyList_GetItem, PyList_SetItem
 from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, PyCapsule_Import
 from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString, PyGetSetDefElement
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray
@@ -601,7 +601,7 @@ class CToPythonWrapper(Wrapper):
             The initialisation function.
         """
 
-        mod_name = getattr(expr, 'original_module', expr).name
+        mod_name = self.scope.get_python_name(getattr(expr, 'original_module', expr).name)
         # Initialise the scope
         func_name = self.scope.get_new_name(f'PyInit_{mod_name}')
         func_scope = self.scope.new_child_scope(func_name)
@@ -637,7 +637,7 @@ class CToPythonWrapper(Wrapper):
         ok_code = LiteralInteger(0)
 
         # Save Capsule describing types (needed for dependent modules)
-        body.append(AliasAssign(capsule_obj, PyCapsule_New(API_var, self.scope.get_python_name(mod_name))))
+        body.append(AliasAssign(capsule_obj, PyCapsule_New(API_var, mod_name)))
         body.extend(self._add_object_to_mod(module_var, capsule_obj, '_C_API', initialised))
 
         body.append(FunctionCall(import_array, ()))
@@ -1056,9 +1056,10 @@ class CToPythonWrapper(Wrapper):
 
         imports += cwrapper_ndarray_imports if self._wrapping_arrays else []
         if not isinstance(expr, BindCModule):
-            imports.append(Import(expr.name, expr))
+            imports.append(Import(mod_scope.get_python_name(expr.name), expr))
         original_mod = getattr(expr, 'original_module', expr)
-        return PyModule(original_mod.name, [API_var], funcs, imports = imports,
+        original_mod_name = mod_scope.get_python_name(original_mod.name)
+        return PyModule(original_mod_name, [API_var], funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
                         init_func = init_func, import_func = import_func)
 
@@ -2126,7 +2127,7 @@ class CToPythonWrapper(Wrapper):
 
         if import_wrapper:
             wrapper_name = f'{expr.source}_wrapper'
-            mod_spoof = PyModule(expr.source_module.name.name, (), (), scope = Scope())
+            mod_spoof = PyModule(expr.source_module.name, (), (), scope = Scope())
             return Import(wrapper_name, AsName(mod_spoof, expr.source), mod = mod_spoof)
         else:
             return None

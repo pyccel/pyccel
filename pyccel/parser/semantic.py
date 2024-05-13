@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """ File containing SemanticParser. This class handles the semantic stage of the translation.
 See the developer docs for more details
@@ -73,7 +73,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, get_final_precision
+from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, get_final_precision, PyccelArrayShapeElement
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -2168,6 +2168,9 @@ class SemanticParser(BasicParser):
         container['imports'][mod_name] = Import(mod_name, mod)
 
         if program_body:
+            container = self._program_namespace.imports
+            container['imports'][mod_name] = Import(self.scope.get_python_name(mod_name), mod)
+
             if init_func:
                 import_init  = FunctionCall(init_func,[],[])
                 program_body = [import_init, *program_body]
@@ -3217,7 +3220,7 @@ class SemanticParser(BasicParser):
                         new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs, new_expressions, isinstance(expr, AugAssign)) )
                 lhs = PythonTuple(*new_lhs)
 
-            elif d_var['shape'][0]==n:
+            elif d_var['shape'][0]==n or isinstance(d_var['shape'][0], PyccelArrayShapeElement):
                 new_lhs = []
                 new_rhs = []
 
@@ -3226,7 +3229,7 @@ class SemanticParser(BasicParser):
                     new_rhs.append(r)
 
                 lhs = PythonTuple(*new_lhs)
-                rhs = new_rhs
+                rhs = PythonTuple(*new_rhs)
             else:
                 errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr, severity='error')
                 return None
@@ -3749,6 +3752,9 @@ class SemanticParser(BasicParser):
         for o,r in zip(return_objs, results):
             v = o.var
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
+                # Create a syntactic object to visit
+                if isinstance(v, Variable):
+                    v = PyccelSymbol(v.name)
                 a = self._visit(Assign(v, r, python_ast=expr.python_ast))
                 assigns.append(a)
                 if isinstance(a, ConstructorCall):

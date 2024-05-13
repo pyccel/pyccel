@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """Print to F90 standard. Trying to follow the information provided at
 www.fortran90.org as much as possible."""
@@ -602,7 +602,7 @@ class FCodePrinter(CodePrinter):
             return ''
 
         if expr.source_module:
-            source = expr.source_module.scope.get_expected_name(source)
+            source = expr.source_module.name
 
         if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return 'use mpi\n' + 'use mpiext\n'
@@ -1799,12 +1799,24 @@ class FCodePrinter(CodePrinter):
         return ' // '.join(formatted_str)
 
     def _print_Interface(self, expr):
-        # ... we don't print 'hidden' functions
+        interface_funcs = expr.functions
+
+        example_func = interface_funcs[0]
+
+        if len(example_func.results) == 1:
+            if len(set(f.results[0].var.rank == 0 for f in interface_funcs)) != 1:
+                message = ("Fortran cannot yet handle a templated function returning either a scalar or an array. "
+                           "If you are using the terminal interface, please pass --language c, "
+                           "if you are using the interactive interfaces epyccel or lambdify, please pass language='c'. "
+                           "See https://github.com/pyccel/pyccel/issues/1339 to monitor the advancement of this issue.")
+                errors.report(message,
+                        severity='error', symbol=expr)
+
         name = self._print(expr.name)
-        if all(isinstance(f, FunctionAddress) for f in expr.functions):
-            funcs = expr.functions
+        if all(isinstance(f, FunctionAddress) for f in interface_funcs):
+            funcs = interface_funcs
         else:
-            funcs = [f for f in expr.functions if f is \
+            funcs = [f for f in interface_funcs if f is \
                     expr.point([FunctionCallArgument(a.var.clone('arg_'+str(i))) \
                         for i,a in enumerate(f.arguments)], use_final_precision = True)]
 
@@ -3198,27 +3210,3 @@ class FCodePrinter(CodePrinter):
                  *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes]]
         sep = f'\n{self._print(SeparatorComment(40))}\n'
         return '', sep.join(self._print(f) for f in funcs)
-
-
-def fcode(expr, filename, assign_to=None, **settings):
-    """Converts an expr to a string of Fortran code
-
-    expr : Expr
-        A pyccel expression to be converted.
-    filename : str
-        The name of the file being translated. Used in error printing
-    assign_to : optional
-        When given, the argument is used as the name of the variable to which
-        the expression is assigned. Can be a string, ``Symbol``,
-        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
-        line-wrapping, or for expressions that generate multi-line statements.
-    precision : integer, optional
-        The precision for numbers such as pi [default=15].
-    user_functions : dict, optional
-        A dictionary where keys are ``FunctionClass`` instances and values are
-        their string representations. Alternatively, the dictionary value can
-        be a list of tuples i.e. [(argument_test, cfunction_string)]. See below
-        for examples.
-    """
-
-    return FCodePrinter(filename, **settings).doprint(expr, assign_to)

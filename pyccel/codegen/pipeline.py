@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Contains the execute_pyccel function which carries out the main steps required to execute pyccel
@@ -260,9 +260,9 @@ def execute_pyccel(fname, *,
     start_codegen = time.time()
     # Generate .f90 file
     try:
-        codegen = Codegen(semantic_parser, module_name)
+        codegen = Codegen(semantic_parser, module_name, language)
         fname = os.path.join(pyccel_dirpath, module_name)
-        fname, prog_name = codegen.export(fname, language=language)
+        fname, prog_name = codegen.export(fname)
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,

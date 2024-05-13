@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 """
@@ -13,7 +13,6 @@ __all__ = (
     'bypass',
     'elemental',
     'inline',
-    'lambdify',
     'private',
     'pure',
     'stack_array',
@@ -22,16 +21,6 @@ __all__ = (
     'types',
 )
 
-def lambdify(f):
-
-    args = f.__code__.co_varnames
-    from sympy import symbols
-    args = symbols(args)
-    expr = f(*args)
-    def wrapper(*vals):
-        return  expr.subs(zip(args,vals)).doit()
-
-    return wrapper
 
 def sympy(f):
     return f

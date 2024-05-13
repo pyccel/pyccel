@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 import warnings
 
@@ -239,7 +239,7 @@ class PythonCodePrinter(CodePrinter):
         return 'complex'
 
     def _print_Variable(self, expr):
-        return self._print(expr.name)
+        return expr.name
 
     def _print_DottedVariable(self, expr):
         rhs_code = self._print_Variable(expr)
@@ -410,7 +410,10 @@ class PythonCodePrinter(CodePrinter):
     def _print_Program(self, expr):
         mod_scope = self.scope
         self.set_scope(expr.scope)
-        imports  = ''.join(self._print(i) for i in expr.imports)
+        modules = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))
+        assert len(modules) == 1
+        module = modules[0]
+        imports = ''.join(self._print(i) for i in expr.imports if i.source_module is not module)
         body     = self._print(expr.body)
         imports += ''.join(self._print(i) for i in self.get_additional_imports())
 
@@ -1170,22 +1173,3 @@ class PythonCodePrinter(CodePrinter):
     def _print_TypingFinal(self, expr):
         annotation = self._print(expr.arg)
         return f'const {annotation}'
-
-#==============================================================================
-def pycode(expr, assign_to=None, **settings):
-    """ Converts an expr to a string of Python code
-    Parameters
-    ==========
-    expr : Expr
-        A SymPy expression.
-    fully_qualified_modules : bool
-        Whether or not to write out full module names of functions
-        (``math.sin`` vs. ``sin``). default: ``True``.
-    Examples
-    ========
-    >>> from sympy import tan, Symbol
-    >>> from sympy.printing.pycode import pycode
-    >>> pycode(tan(Symbol('x')) + 1)
-    'math.tan(x) + 1'
-    """
-    return PythonCodePrinter(settings).doprint(expr, assign_to)

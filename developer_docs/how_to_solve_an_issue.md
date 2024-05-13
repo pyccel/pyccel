@@ -15,6 +15,6 @@ To add a new function:
 ## Language Specific Bug Fixes
 
 -   Use the issue description to reproduce the bug
--   Add a test targeting this specific problem (which fails in the master branch but will pass after your fix)
+-   Add a test targeting this specific problem (which fails in the `devel` branch but will pass after your fix)
 -   By comparing the original Python code and the generated code, try to locate the problematic line and therefore the print function in the corresponding code generation file
 -   Try to fix the problem

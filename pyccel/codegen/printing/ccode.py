@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 import functools
 from itertools import chain
@@ -739,6 +739,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_ModuleHeader(self, expr):
         self.set_scope(expr.module.scope)
+        self._current_module = expr.module
         self._in_header = True
         name = expr.module.name
         if isinstance(name, AsName):
@@ -772,6 +773,7 @@ class CCodePrinter(CodePrinter):
 
         self._in_header = False
         self.exit_scope()
+        self._current_module = None
         return (f"#ifndef {name.upper()}_H\n \
                 #define {name.upper()}_H\n\n \
                 {imports}\n \
@@ -782,13 +784,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
-        self._current_module = expr.name
+        self._current_module = expr
         body    = ''.join(self._print(i) for i in expr.body)
 
         global_variables = ''.join([self._print(d) for d in expr.declarations])
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [Import(expr.name, Module(expr.name,(),())), *self._additional_imports.values()]
+        imports = [Import(self.scope.get_python_name(expr.name), Module(expr.name,(),())), *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)
 
         code = ('{imports}\n'
@@ -799,6 +801,7 @@ class CCodePrinter(CodePrinter):
                         body      = body)
 
         self.exit_scope()
+        self._current_module = None
         return code
 
     def _print_Break(self, expr):
@@ -935,7 +938,7 @@ class CCodePrinter(CodePrinter):
         if source in import_dict: # pylint: disable=consider-using-get
             source = import_dict[source]
 
-        if expr.source_module:
+        if expr.source_module and expr.source_module is not self._current_module:
             for classDef in expr.source_module.classes:
                 class_scope = classDef.scope
                 for method in classDef.methods:
@@ -2097,8 +2100,7 @@ class CCodePrinter(CodePrinter):
 
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
-        if not self.is_c_pointer(lhs_var) and \
-                isinstance(lhs_var, Variable) and lhs_var.is_ndarray:
+        if isinstance(lhs_var, Variable) and lhs_var.is_ndarray and not lhs_var.is_optional:
             rhs = self._print(rhs_var)
 
             if isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
@@ -2109,12 +2111,12 @@ class CCodePrinter(CodePrinter):
                     return 'transpose_alias_assign({}, {});\n'.format(lhs, rhs)
             else:
                 lhs = self._print(lhs_var)
-                return '{} = {};\n'.format(lhs, rhs)
+                return f'{lhs} = {rhs};\n'
         else:
             lhs = self._print(lhs_address)
             rhs = self._print(rhs_address)
 
-            return '{} = {};\n'.format(lhs, rhs)
+            return f'{lhs} = {rhs};\n'
 
     def _print_For(self, expr):
         self.set_scope(expr.scope)
@@ -2388,6 +2390,8 @@ class CCodePrinter(CodePrinter):
     #=====================================
 
     def _print_Program(self, expr):
+        mod = expr.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+        self._current_module = mod
         self.set_scope(expr.scope)
         body  = self._print(expr.body)
         variables = self.scope.variables.values()
@@ -2397,6 +2401,7 @@ class CCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
+        self._current_module = None
         return ('{imports}'
                 'int main()\n{{\n'
                 '{decs}'
@@ -2481,29 +2486,3 @@ class CCodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
-def ccode(expr, filename, assign_to=None, **settings):
-    """Converts an expr to a string of c code
-
-    expr : Expr
-        A pyccel expression to be converted.
-    filename : str
-        The name of the file being translated. Used in error printing
-    assign_to : optional
-        When given, the argument is used as the name of the variable to which
-        the expression is assigned. Can be a string, ``Symbol``,
-        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
-        line-wrapping, or for expressions that generate multi-line statements.
-    precision : integer, optional
-        The precision for numbers such as pi [default=15].
-    user_functions : dict, optional
-        A dictionary where keys are ``FunctionClass`` instances and values are
-        their string representations. Alternatively, the dictionary value can
-        be a list of tuples i.e. [(argument_test, cfunction_string)]. See below
-        for examples.
-    dereference : iterable, optional
-        An iterable of symbols that should be dereferenced in the printed code
-        expression. These would be values passed by address to the function.
-        For example, if ``dereference=[a]``, the resulting code would print
-        ``(*a)`` instead of ``a``.
-    """
-    return CCodePrinter(filename, **settings).doprint(expr, assign_to)

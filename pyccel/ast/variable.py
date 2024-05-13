@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """ This module contains all classes which are used to handle memory block labels at
 different stages of pyccel. Memory block labels are usually either Variables or Indexed
@@ -155,7 +155,7 @@ class Variable(TypedAstNode):
             raise ValueError("Variable name can't be empty")
 
         if not isinstance(name, (str, DottedName)):
-            raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
+            raise TypeError(f'Expecting a string or DottedName, given {type(name)}')
         self._name = name
 
         if memory_handling not in ('heap', 'stack', 'alias'):
@@ -821,9 +821,7 @@ class Constant(Variable):
         return self._value
 
     def __str__(self):
-        name = str(self.name)
-        value = str(self.value)
-        return '{0}={1}'.format(name, value)
+        return f'{self.name}={self.value}'
 
 
 
@@ -939,10 +937,12 @@ class IndexedElement(TypedAstNode):
         return self._indices
 
     def __str__(self):
-        return '{}[{}]'.format(self.base, ','.join(str(i) for i in self.indices))
+        indices = ','.join(str(i) for i in self.indices)
+        return f'{self.base}[{indices}]'
 
     def __repr__(self):
-        return '{}[{}]'.format(repr(self.base), ','.join(repr(i) for i in self.indices))
+        indices = ','.join(repr(i) for i in self.indices)
+        return f'{repr(self.base)}[{indices}]'
 
     def __getitem__(self, *args):
 

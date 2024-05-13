@@ -124,8 +124,8 @@ Such type annotations are compatible with mypy and as such are recommended for u
 ### Installation
 
 Pyccel's official releases can be downloaded from PyPI (the Python Package Index) using `pip`.
-To get the latest (trunk) version of Pyccel, one can clone the `git` repository from GitHub and checkout the `master` branch.
-Detailed installation instructions are found in the [README](https://github.com/pyccel/pyccel/blob/master/README.rst) file.
+To get the latest (trunk) version of Pyccel, one can clone the `git` repository from GitHub and checkout the `devel` branch.
+Detailed installation instructions are found in the [README](https://github.com/pyccel/pyccel/blob/devel/README.md) file.
 
 ### Command Line Usage
 
@@ -453,9 +453,54 @@ Out[9]: 210.99245283018868
 ```
 After subtracting the amount of time required to create an array copy from the given times, we can conclude that the pyccelised function is approximately 210 times faster than the original Python function.
 
+### Interactive Usage with `lambdify`
+
+While Pyccel is usually used to accelerate Python code, it is also possible to accelerate other expressions. The Pyccel library provides the `lambdify` Python function. This function is similar to SymPy's [`lambdify`](https://docs.sympy.org/latest/modules/utilities/lambdify.html) function, given a SymPy expression `f` and type annotations, `lambdify` returns a "pyccelised" function `f_fast` that can be used in the same Python session.
+For example:
+```python
+import numpy as np
+import sympy as sp
+from pyccel import lambdify
+
+x = sp.Symbol('x')
+expr = x**2 + x*5
+f = lambdify(expr, {x : 'float'})
+print(f(3.0))
+
+expr2 = x-x
+f2 = lambdify(expr, {x : 'float'}, result_type = 'float')
+print(f2(3.0))
+
+expr = x**2 + x*5 + 4.5
+f3 = lambdify(expr, {x : 'T'}, templates = {'T': ['float[:]', 'float[:,:]']})
+x_1d = np.ones(4)
+x_2d = np.ones((4,2))
+print(f3(x_1d))
+print(f3(x_2d))
+```
+In practice `lambdify` uses SymPy's `NumPyPrinter` to generate code which is passed to the `epyccel` function. The `epyccel` function copies the code into a temporary Python file in the `__epyccel__` directory.
+Once the file has been copied, `epyccel` calls the `pyccel` command to generate a Python C extension module that contains a single pyccelised function.
+Then finally, it imports this function and returns it to the caller.
+
+In order to make functions even faster it may be desirable to avoid unnecessary allocations inside the function. This functionality is similar to using an `out` argument in NumPy. Pyccel makes this functionality possible through the use of the `use_out` argument.
+For example:
+```python
+import numpy as np
+import sympy as sp
+from pyccel import lambdify
+
+x = sp.Symbol('x')
+expr = x**2 + x*5
+f = lambdify(expr, {x : 'float[:,:]'}, result_type = 'float[:,:]')
+x_2d = np.ones((4,2))
+y_2d = np.empty_like(x_2d)
+f(x_2d, y_2d)
+print(y_2d)
+```
+
 ## Other Features
 
-Pyccel's generated code can use parallel multi-threading through [OpenMP](https://en.wikipedia.org/wiki/OpenMP); please read [our documentation](https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md) for more details.
+Pyccel's generated code can use parallel multi-threading through [OpenMP](https://en.wikipedia.org/wiki/OpenMP); please read [our documentation](https://github.com/pyccel/pyccel/blob/devel/docs/openmp.md) for more details.
 
 We are also working on supporting [MPI](https://en.wikipedia.org/wiki/Open_MPI), [LAPACK](https://en.wikipedia.org/wiki/LAPACK)/[BLAS](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms), and [OpenACC](https://en.wikipedia.org/wiki/OpenACC).
 
@@ -470,7 +515,7 @@ This tool removes all folders whose name begins with `__pyccel__` or `__epyccel_
 
 If you face problems with Pyccel, please take the following steps:
 
-1.  Consult our documentation in the tutorial directory;
+1.  Consult our documentation in the  [`docs/`](https://github.com/pyccel/pyccel/blob/devel/docs) directory;
 2.  Send an email message to pyccel@googlegroups.com;
 3.  Open an issue on GitHub.
 

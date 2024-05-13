@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 from pyccel.codegen.printing.ccode import CCodePrinter
@@ -260,6 +260,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_ModuleHeader(self, expr):
         mod = expr.module
+        self._current_module = expr.module
         name = mod.name
 
         # Print imports last to be sure that all additional_imports have been collected
@@ -293,6 +294,7 @@ class CWrapperCodePrinter(CCodePrinter):
         static_import_decs = self._print(Declare(API_var, static=True))
         import_func = self._print(mod.import_func)
 
+        self._current_module = None
         header_id = f'{name.upper()}_WRAPPER'
         header_guard = f'{header_id}_H'
         return (f"#ifndef {header_guard}\n \
@@ -311,6 +313,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyModule(self, expr):
         scope = expr.scope
         self.set_scope(scope)
+        self._current_module = expr
 
         # Insert declared objects into scope
         variables = expr.original_module.variables if isinstance(expr, BindCModule) else expr.variables
@@ -322,7 +325,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         funcs = []
 
-        self._module_name  = self.get_python_name(scope, expr)
+        self._module_name  = expr.name
         sep = self._print(SeparatorComment(40))
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
@@ -373,6 +376,7 @@ class CWrapperCodePrinter(CCodePrinter):
         imports  = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
+        self._current_module = None
 
         return '\n'.join(['#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API',
                 f'#define {pymod_name.upper()}\n',
@@ -515,31 +519,3 @@ class CWrapperCodePrinter(CCodePrinter):
             return f'{base}{idxs}'
         else:
             return CCodePrinter._print_IndexedElement(self, expr)
-
-def cwrappercode(expr, filename, target_language, assign_to=None, **settings):
-    """Converts an expr to a string of c wrapper code
-
-    expr : Expr
-        A pyccel expression to be converted.
-    filename : str
-        The name of the file being translated. Used in error printing
-    assign_to : optional
-        When given, the argument is used as the name of the variable to which
-        the expression is assigned. Can be a string, ``Symbol``,
-        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
-        line-wrapping, or for expressions that generate multi-line statements.
-    precision : integer, optional
-        The precision for numbers such as pi [default=15].
-    user_functions : dict, optional
-        A dictionary where keys are ``FunctionClass`` instances and values are
-        their string representations. Alternatively, the dictionary value can
-        be a list of tuples i.e. [(argument_test, cfunction_string)]. See below
-        for examples.
-    dereference : iterable, optional
-        An iterable of symbols that should be dereferenced in the printed code
-        expression. These would be values passed by address to the function.
-        For example, if ``dereference=[a]``, the resulting code would print
-        ``(*a)`` instead of ``a``.
-    """
-
-    return CWrapperCodePrinter(filename, target_language, **settings).doprint(expr, assign_to)

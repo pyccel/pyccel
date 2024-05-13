@@ -1,25 +1,25 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 import os
 import time
 
-from pyccel.ast.core                        import ModuleHeader
-from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
-from pyccel.codegen.printing.fcode          import fcode
-from pyccel.codegen.printing.cwrappercode   import CWrapperCodePrinter
-from pyccel.codegen.wrapper.fortran_to_c_wrapper   import FortranToCWrapper
-from pyccel.codegen.wrapper.c_to_python_wrapper    import CToPythonWrapper
-from pyccel.codegen.utilities      import recompile_object
-from pyccel.codegen.utilities      import copy_internal_library
-from pyccel.codegen.utilities      import internal_libs
-from pyccel.naming                 import name_clash_checkers
-from pyccel.parser.scope           import Scope
-from pyccel.utilities.stage        import PyccelStage
-from .compiling.basic     import CompileObj
+from pyccel.ast.core                             import ModuleHeader
+from pyccel.ast.numpy_wrapper                    import get_numpy_max_acceptable_version_file
+from pyccel.codegen.printing.cwrappercode        import CWrapperCodePrinter
+from pyccel.codegen.printing.fcode               import FCodePrinter
+from pyccel.codegen.wrapper.fortran_to_c_wrapper import FortranToCWrapper
+from pyccel.codegen.wrapper.c_to_python_wrapper  import CToPythonWrapper
+from pyccel.codegen.utilities                    import recompile_object
+from pyccel.codegen.utilities                    import copy_internal_library
+from pyccel.codegen.utilities                    import internal_libs
+from pyccel.naming                               import name_clash_checkers
+from pyccel.parser.scope                         import Scope
+from pyccel.utilities.stage                      import PyccelStage
+from .compiling.basic                            import CompileObj
 
 from pyccel.errors.errors import Errors
 
@@ -126,7 +126,7 @@ def create_shared_library(codegen,
         timings['Bind C wrapping'] = time.time() - start_bind_c_wrapping
 
         start_bind_c_printing = time.time()
-        bind_c_code = fcode(bind_c_mod, bind_c_mod.name)
+        bind_c_code = FCodePrinter(bind_c_mod.name).doprint(bind_c_mod)
         bind_c_filename = f'{bind_c_mod.name}.f90'
 
         with open(bind_c_filename, 'w') as f:
@@ -170,7 +170,6 @@ def create_shared_library(codegen,
     #      Print code specific cwrapper
     #---------------------------------------
     module_old_name = codegen.ast.name
-    codegen.ast.set_name(sharedlib_modname)
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
     Scope.name_clash_checker = name_clash_checkers['c']
     wrapper = CToPythonWrapper(base_dirpath)
@@ -184,8 +183,6 @@ def create_shared_library(codegen,
     #wrapper_code = wrapper_codegen.doprint(c_ast)
     if errors.has_errors():
         return
-
-    codegen.ast.set_name(module_old_name)
 
     with open(wrapper_filename, 'w', encoding="utf-8") as f:
         f.writelines(wrapper_code)
