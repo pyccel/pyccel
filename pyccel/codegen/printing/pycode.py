@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 import warnings
 
@@ -389,7 +389,10 @@ class PythonCodePrinter(CodePrinter):
     def _print_Program(self, expr):
         mod_scope = self.scope
         self.set_scope(expr.scope)
-        imports  = ''.join(self._print(i) for i in expr.imports)
+        modules = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))
+        assert len(modules) == 1
+        module = modules[0]
+        imports = ''.join(self._print(i) for i in expr.imports if i.source_module is not module)
         body     = self._print(expr.body)
         imports += ''.join(self._print(i) for i in self.get_additional_imports())
 
