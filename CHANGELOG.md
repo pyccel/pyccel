@@ -78,6 +78,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 -   #1830 : Add a `pyccel.lambdify` function to accelerate SymPy expressions.
+-   #1867 : Add a `use_out` parameter to `pyccel.lambdify` to avoid unnecessary memory allocation.
+-   #1867 : Auto-generate a docstring for functions generated via calls to `pyccel.lambdify`.
 
 ### Fixed
 
@@ -91,6 +93,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   #1866 : Raise a more informative error when mixing scalar and array return types.
 -   \[TESTS\] Filter out cast warnings in cast tests.
 -   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
 -   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.

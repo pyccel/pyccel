@@ -14,7 +14,8 @@ else:
     from sympy.printing.pycode import NumPyPrinter
 
 def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str = None,
-             templates : 'dict[str,list[str]]' = None, **kwargs):
+             templates : 'dict[str, list[str]]' = None, use_out = False,
+             **kwargs):
     """
     Convert a SymPy expression into a Pyccel-accelerated function.
 
@@ -37,13 +38,18 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
         expressions do not always evaluate to the expected type. For
         example if the SymPy expression simplifies to 0 then the default
         type will be int even if the arguments are floats.
-    templates : dict[str,list[str]], optional
+    templates : dict[str, list[str]], optional
         A description of any templates that should be added to the
         function. The keys are the symbols which can be used as type
         specifiers, the values are a list of the type annotations which
         are valid types for the symbol. See
         <https://github.com/pyccel/pyccel/blob/devel/docs/templates.md>
         for more details.
+    use_out : bool, default=False
+        If true the function will modify an argument called 'out' instead
+        of returning a newly allocated array. If this argument is set then
+        result_type must be provided. This only works if the result is an
+        array type.
     **kwargs : dict
         Additional arguments that are passed to epyccel.
 
@@ -62,16 +68,37 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
     """
     if not (isinstance(args, dict) and all(isinstance(k, sp.Symbol) and isinstance(v, str) for k,v in args.items())):
         raise TypeError("Argument 'args': Expected a dictionary mapping SymPy symbols to string type annotations.")
+    if result_type is not None and not isinstance(result_type, str):
+        raise TypeError("Argument 'result_type': Expected a string type annotation.")
 
     expr = NumPyPrinter().doprint(expr)
-    args = ', '.join(f'{a} : "{annot}"' for a, annot in args.items())
+    args_code = ', '.join(f'{a} : "{annot}"' for a, annot in args.items())
     func_name = 'func_'+random_string(8)
-    if result_type:
-        if not isinstance(result_type, str):
-            raise TypeError("Argument 'result_type': Expected a string type annotation.")
-        signature = f'def {func_name}({args}) -> "{result_type}":'
+
+    docstring = " \n".join(('    """',
+            "    Expression evaluation created with `pyccel.lambdify`.",
+            "",
+            "    Function evaluating the expression:",
+           f"    {expr}",
+            "",
+            "    Parameters",
+            "    ----------\n"))
+    docstring += '\n'.join(f"    {a} : {type_annot}" for a, type_annot in args.items())
+
+    if use_out:
+        if not result_type:
+            raise TypeError("The result_type must be provided if use_out is true.")
+        else:
+            signature = f'def {func_name}({args_code}, out : "{result_type}"):'
+            docstring += f"\n    out : {result_type}"
+    elif result_type:
+        signature = f'def {func_name}({args_code}) -> "{result_type}":'
+        docstring += "\n".join(("\n",
+                    "     Returns",
+                    "     -------",
+                   f"     {result_type}"))
     else:
-        signature = f'def {func_name}({args}):'
+        signature = f'def {func_name}({args_code}):'
     if templates:
         if not (isinstance(templates, dict) and all(isinstance(k, str) and hasattr(v, '__iter__') for k,v in templates.items()) \
                 and all(all(isinstance(type_annot, str) for type_annot in v) for v in templates.values())):
@@ -81,9 +108,15 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
                 for key, annotations in templates.items())
     else:
         decorators = ''
-    code = f'    return {expr}'
+    if use_out:
+        code = f'    out[:] = {expr}'
+    else:
+        code = f'    return {expr}'
     numpy_import = 'import numpy\n'
-    func = '\n'.join((numpy_import, decorators, signature, code))
+
+    docstring += '\n    """'
+
+    func = '\n'.join((numpy_import, decorators, signature, docstring, code))
     package = epyccel(func, **kwargs)
     return getattr(package, func_name)
 
