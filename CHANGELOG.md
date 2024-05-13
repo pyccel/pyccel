@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
 -   #1867 : Add a `use_out` parameter to `pyccel.lambdify` to avoid unnecessary memory allocation.
 -   #1867 : Auto-generate a docstring for functions generated via calls to `pyccel.lambdify`.
+-   #1868 : Hide traceback for `epyccel` and `lambdify` errors.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
