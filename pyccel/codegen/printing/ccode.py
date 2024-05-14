@@ -47,6 +47,7 @@ from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyCompl
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.utilities import expand_to_loops, get_expression_sign
+from pyccel.ast.utilities import get_new_slice_with_processed_arguments
 
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
@@ -1398,7 +1399,7 @@ class CCodePrinter(CodePrinter):
             #managing the Slice input
             for i , ind in enumerate(inds):
                 if isinstance(ind, Slice):
-                    inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArrayShapeElement(base, i),
+                    inds[i] = get_new_slice_with_processed_arguments(ind, PyccelArrayShapeElement(base, i),
                         allow_negative_indexes)
                 else:
                     inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1),
@@ -1514,9 +1515,9 @@ class CCodePrinter(CodePrinter):
             return f'free({variable_address});\n'
 
     def _print_Slice(self, expr):
-        start = self._print(expr.start)
-        stop = self._print(expr.stop)
-        step = self._print(expr.step)
+        start = self._print(expr.start) if expr.start else self._print(LiteralInteger(0))
+        stop = self._print(expr.stop) if expr.stop else self._print(array_size)
+        step = self._print(expr.step) if expr.step else self._print(LiteralInteger(1))
         slice_type = 'RANGE' if expr.slice_type == Slice.Range else 'ELEMENT'
         return f'new_slice({start}, {stop}, {step}, {slice_type})'
 
