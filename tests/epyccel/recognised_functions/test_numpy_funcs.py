@@ -6,7 +6,7 @@ from numpy.random import rand, randn, randint, uniform
 from numpy import isclose, iinfo, finfo, complex64, complex128
 import numpy as np
 
-from pyccel.decorators import template, types
+from pyccel.decorators import template, types, allow_negative_index
 from pyccel import epyccel
 
 min_int8 = iinfo('int8').min
@@ -5785,8 +5785,19 @@ def test_linspace_slice_assign(language):
         arr[p+1:n-p] = linspace(0, 1, p)
         return arr
 
+    @allow_negative_index('arr')
+    def linspace_assign_neg_slice(n : int):
+        from numpy import zeros, linspace
+        p = n//3
+        arr = zeros(n)
+        arr[-p:] = linspace(0, 1, p)
+        return arr
+
     epyccel_func = epyccel(linspace_assign, language=language)
     assert np.allclose(linspace_assign(10), epyccel_func(10))
+
+    epyccel_func = epyccel(linspace_assign_neg_slice, language=language)
+    assert np.allclose(linspace_assign_neg_slice(10), epyccel_func(10))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
