@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Module describing the code-wrapping class : FortranToCWrapper
@@ -190,10 +190,10 @@ class FortranToCWrapper(Wrapper):
         classes = [self._wrap(f) for f in expr.classes]
         variables = [self._wrap(v) for v in expr.variables if not v.is_private]
         variable_getters = [v for v in variables if isinstance(v, BindCArrayVariable)]
-        imports = [Import(expr.name, target = expr, mod=expr)]
+        imports = [Import(self.scope.get_python_name(expr.name), target = expr, mod=expr)]
 
-        name = mod_scope.get_new_name(f'bind_c_{expr.name.target}')
-        self._wrapper_names_dict[expr.name.target] = name
+        name = mod_scope.get_new_name(f'bind_c_{expr.name}')
+        self._wrapper_names_dict[expr.name] = name
 
         self.exit_scope()
 

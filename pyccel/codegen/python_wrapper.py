@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 import os
@@ -170,7 +170,6 @@ def create_shared_library(codegen,
     #      Print code specific cwrapper
     #---------------------------------------
     module_old_name = codegen.ast.name
-    codegen.ast.set_name(sharedlib_modname)
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
     Scope.name_clash_checker = name_clash_checkers['c']
     wrapper = CToPythonWrapper(base_dirpath)
@@ -184,8 +183,6 @@ def create_shared_library(codegen,
     #wrapper_code = wrapper_codegen.doprint(c_ast)
     if errors.has_errors():
         return
-
-    codegen.ast.set_name(module_old_name)
 
     with open(wrapper_filename, 'w', encoding="utf-8") as f:
         f.writelines(wrapper_code)
