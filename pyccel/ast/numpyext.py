@@ -29,7 +29,7 @@ from .internals      import PyccelFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
 
 from .literals       import LiteralInteger, LiteralString, convert_to_literal
-from .literals       import LiteralTrue, LiteralFalse
+from .literals       import LiteralTrue, LiteralFalse, LiteralFloat
 from .literals       import Nil
 from .mathext        import MathCeil
 from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
