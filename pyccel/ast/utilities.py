@@ -12,8 +12,7 @@ from collections import namedtuple
 import pyccel.decorators as pyccel_decorators
 from pyccel.errors.errors import Errors, PyccelError
 
-from .builtins      import (builtin_functions_dict, PythonLen, PythonAbs,
-                            PythonRange, PythonList, PythonTuple)
+from .builtins      import PythonLen, PythonAbs, PythonRange, PythonList, PythonTuple
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
                             Concatenate, Module, PyccelFunctionDef)
