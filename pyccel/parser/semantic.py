@@ -705,7 +705,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, Duplicate):
             d = self._infer_type(expr.val)
-            if d.get('on_stack', False) and isinstance(expr.length, LiteralInteger):
+            if d.get('on_stack', False) and is_literal_integer(expr.length):
                 d_var['memory_handling'] = 'stack'
             else:
                 d_var['memory_handling'] = 'heap'
@@ -2713,7 +2713,7 @@ class SemanticParser(BasicParser):
                         return a.args
                     elif isinstance(a.class_type, HomogeneousTupleType):
                         n_vars = a.shape[0]
-                        if not isinstance(a.shape[0], (LiteralInteger, int)):
+                        if not is_literal_integer(a.shape[0]):
                             errors.report("Can't create an inhomogeneous tuple using a homogeneous tuple of unknown size",
                                     symbol=expr, severity='fatal')
                         return [a[i] for i in range(n_vars)]
@@ -2742,8 +2742,8 @@ class SemanticParser(BasicParser):
         base, exponent = [self._visit(a) for a in expr.args]
 
         exp_val = exponent
-        if isinstance(exponent, LiteralInteger):
-            exp_val = exponent.python_value
+        if is_literal_integer(exponent):
+            exp_val = int(exponent)
         elif isinstance(exponent, PyccelAssociativeParenthesis):
             exp = exponent.args[0]
             # Handle (1/2)
