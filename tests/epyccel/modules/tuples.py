@@ -75,6 +75,7 @@ __all__ = [
         'test_tuple_homogeneous',
         'test_tuple_inhomogeneous',
         'tuple_different_ranks',
+        'constant_inhomogeneous_index',
         ]
 
 def homogeneous_tuple_int():
@@ -493,3 +494,10 @@ def homogeneous_tuple_of_arrays():
             b[1,j,k] = a[1][j,k]
             b[2,j,k] = a[2][j,k]
     return b
+
+def constant_inhomogeneous_index():
+    a = (0, False, 3.0)
+    integer_index : 'const int' = 0
+    bool_index : 'const int' = 1
+    float_index : 'const int' = -1
+    return a[integer_index], a[bool_index], a[float_index]
