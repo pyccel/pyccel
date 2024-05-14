@@ -761,7 +761,10 @@ class Constant(Variable):
         return self.value.__index__()
 
     def __eq__(self, other):
-        return self.value == other
+        if isinstance(other, Constant):
+            return self.value == other.value and super().__eq__(other)
+        else:
+            return self.value == other
 
     def __hash__(self):
         return hash((type(self).__name__, self._name))
