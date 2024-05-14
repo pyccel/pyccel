@@ -1,6 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## \[1.12.1\] - 2024-09-XX
+
+### Fixed
+
+-   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
+-   #1047 : Print the value of an unrecognised constant.
+
 ## \[1.12.0\] - 2024-05-08
 
 ### Added

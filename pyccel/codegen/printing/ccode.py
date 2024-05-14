@@ -37,7 +37,7 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, DtypePrecisionToCastFunction
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
 
 from pyccel.ast.utilities import expand_to_loops
@@ -1925,28 +1925,6 @@ class CCodePrinter(CodePrinter):
         else:
             return call_code
 
-    def _print_Constant(self, expr):
-        """ Convert a Python expression with a math constant call to C
-        function call
-
-        Parameters
-        ----------
-            expr : Pyccel ast node
-                Python expression with a Math constant
-
-        Returns
-        -------
-            string
-                String represent the value of the constant
-
-        Example
-        -------
-            math.pi ==> 3.14159265358979
-
-        """
-        val = LiteralFloat(expr.value)
-        return self._print(val)
-
     def _print_Return(self, expr):
         code = ''
         args = [ObjectAddress(a) if isinstance(a, Variable) and self.is_c_pointer(a) else a for a in expr.expr]
@@ -2290,6 +2268,9 @@ class CCodePrinter(CodePrinter):
         if expr == math_constants['inf']:
             self.add_import(c_imports['math'])
             return 'HUGE_VAL'
+        elif expr == math_constants['nan']:
+            self.add_import(c_imports['math'])
+            return 'NAN'
         elif expr == math_constants['pi']:
             self.add_import(c_imports['math'])
             return 'M_PI'
@@ -2297,7 +2278,9 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['math'])
             return 'M_E'
         else:
-            raise NotImplementedError("Constant not implemented")
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
+            return self._print(cast_func(expr.value))
+
 
     def _print_Variable(self, expr):
         if self.is_c_pointer(expr):

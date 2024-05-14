@@ -76,6 +76,7 @@ booleans
 quicksort
 iterm
 textx
+traceback
 tracebacks
 pytest
 docstring

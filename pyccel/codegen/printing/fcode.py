@@ -896,6 +896,9 @@ class FCodePrinter(CodePrinter):
             return '{}'.format(self._print(expr.value))
 
     def _print_Constant(self, expr):
+        if expr == math_constants['nan']:
+            errors.report("Can't print nan in Fortran",
+                    severity='error', symbol=expr)
         val = LiteralFloat(expr.value)
         return self._print(val)
 
