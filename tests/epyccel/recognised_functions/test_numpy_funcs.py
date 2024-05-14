@@ -5777,6 +5777,17 @@ def test_numpy_linspace_array_like_2d(language):
     epyccel_func4(cmplx, cmplx2, out, True)
     assert np.allclose(arr, out)
 
+def test_linspace_slice_assign(language):
+    def linspace_assign(n : int):
+        from numpy import zeros, linspace
+        p = n//3
+        arr = zeros(n)
+        arr[p+1:n-p] = linspace(0, 1, p)
+        return arr
+
+    epyccel_func = epyccel(linspace_assign, language=language)
+    assert np.allclose(linspace_assign(10), epyccel_func(10))
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
