@@ -49,7 +49,7 @@ from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 from pyccel.ast.utilities import expand_to_loops, get_expression_sign
 from pyccel.ast.utilities import get_new_slice_with_processed_arguments
 
-from pyccel.ast.variable import IndexedElement
+from pyccel.ast.variable import IndexedElement, Constant
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
@@ -1280,13 +1280,17 @@ class CCodePrinter(CodePrinter):
             return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         declaration_type = self.get_declare_type(expr.variable)
-        variable = self._print(expr.variable.name)
+        variable = expr.variable
+        name = self._print(variable.name)
 
-        if expr.variable.is_stack_array:
-            preface, init = self._init_stack_array(expr.variable,)
+        if variable.is_stack_array:
+            preface, init = self._init_stack_array(variable,)
         elif declaration_type == 't_ndarray' and not self._in_header:
             preface = ''
             init    = ' = {.shape = NULL}'
+        elif expr.value:
+            preface = 'const ' if isinstance(variable, Constant) else ''
+            init    = f' = {self._print(expr.value)}'
         else:
             preface = ''
             init    = ''
@@ -1294,7 +1298,7 @@ class CCodePrinter(CodePrinter):
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
 
-        declaration = f'{static}{external}{declaration_type} {variable}{init};\n'
+        declaration = f'{static}{external}{declaration_type} {name}{init};\n'
 
         return preface + declaration
 
@@ -2258,8 +2262,7 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['math'])
             return 'M_E'
         else:
-            cast_func = DtypePrecisionToCastFunction[expr.dtype]
-            return self._print(cast_func(expr.value))
+            return self._print_Variable(expr)
 
 
     def _print_Variable(self, expr):
