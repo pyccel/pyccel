@@ -259,15 +259,10 @@ class Slice(PyccelAstNode):
         return self._slice_type
 
     def __str__(self):
-        if self.start is None:
-            start = ''
-        else:
-            start = str(self.start)
-        if self.stop is None:
-            stop = ''
-        else:
-            stop = str(self.stop)
-        return f'{start} : {stop}'
+        start = '' if self.start is None else str(self.start)
+        stop = '' if self.stop is None else str(self.stop)
+        step = '' if self.step is None else str(self.step)
+        return f'{start} : {stop} : {step}'
 
 
 class PyccelSymbol(str, Immutable):

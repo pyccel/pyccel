@@ -10,6 +10,7 @@ import math
 from pyccel.ast.core      import PyccelFunctionDef, Module
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from pyccel.ast.internals import PyccelFunction
+from pyccel.ast.literals  import LiteralFloat
 from pyccel.ast.variable  import Constant
 
 __all__ = (
@@ -941,11 +942,11 @@ math_functions = [PyccelFunctionDef(v.name, v) for k, v in globals().copy().item
 # Constants
 #==============================================================================
 math_constants = {
-    'e'  : Constant(PythonNativeFloat(), 'e'  , value=math.e  ),
-    'pi' : Constant(PythonNativeFloat(), 'pi' , value=math.pi ),
-    'inf': Constant(PythonNativeFloat(), 'inf', value=math.inf),
-    'nan': Constant(PythonNativeFloat(), 'nan', value=math.nan),
-    'tau': Constant(PythonNativeFloat(), 'tau', value=2.*math.pi),
+    'e'  : Constant(PythonNativeFloat(), 'e'  , value=LiteralFloat(math.e)  ),
+    'pi' : Constant(PythonNativeFloat(), 'pi' , value=LiteralFloat(math.pi) ),
+    'inf': Constant(PythonNativeFloat(), 'inf', value=LiteralFloat(math.inf)),
+    'nan': Constant(PythonNativeFloat(), 'nan', value=LiteralFloat(math.nan)),
+    'tau': Constant(PythonNativeFloat(), 'tau', value=LiteralFloat(2.*math.pi)),
 }
 
 math_mod = Module('math',
