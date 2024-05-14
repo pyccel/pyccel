@@ -3094,27 +3094,33 @@ class SemanticParser(BasicParser):
             semantic_lhs_var = semantic_lhs[0]
 
             # Check that types match
-            self._ensure_inferred_type_matches_existing(d_var.pop('class_type'), d_var, semantic_lhs_var, False, new_expressions, rhs)
+            self._ensure_inferred_type_matches_existing(d_var['class_type'], d_var, semantic_lhs_var, False, new_expressions, rhs)
 
-            if semantic_lhs_var.is_const and (isinstance(rhs, Literal) or
-                    (isinstance(rhs, UnarySub) and isinstance(rhs.args[0], Literal))):
-                lhs = semantic_lhs_var.clone(lhs.name, new_class = Constant, value=rhs)
+            if semantic_lhs_var.is_const:
+                try:
+                    literal_rhs = convert_to_literal(rhs)
+                    is_literal_rhs = True
+                except TypeError as e:
+                    is_literal_rhs = False
+                if is_literal_rhs:
+                    semantic_lhs_var = semantic_lhs_var.clone(lhs.name, new_class = Constant, value=literal_rhs)
 
-            if isinstance(lhs, DottedVariable):
-                cls_def = lhs.lhs.cls_base
+            if isinstance(semantic_lhs_var, DottedVariable):
+                cls_def = semantic_lhs_var.lhs.cls_base
                 insert_scope = cls_def.scope
-                cls_def.add_new_attribute(lhs)
+                cls_def.add_new_attribute(semantic_lhs_var)
             else:
                 insert_scope = self.scope
             try:
-                insert_scope.insert_variable(lhs)
+                insert_scope.insert_variable(semantic_lhs_var)
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
 
-            if isinstance(lhs, Constant):
+            lhs = lhs.name
+            if isinstance(semantic_lhs_var, Constant):
                 return EmptyNode()
 
-        elif isinstance(lhs, (PyccelSymbol, DottedName)):
+        if isinstance(lhs, (PyccelSymbol, DottedName)):
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign))
         elif isinstance(lhs, PythonTuple):
             n = len(lhs)
