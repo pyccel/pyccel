@@ -744,7 +744,8 @@ class Constant(Variable):
     _attribute_nodes = ()
 
     def __init__(self, *args, value, **kwargs):
-        assert isinstance(value, Literal)
+        assert isinstance(value, Literal) or \
+                (isinstance(value, PyccelUnarySub) and isinstance(value.args[0], Literal))
         self._value = value
         super().__init__(*args, **kwargs)
 
