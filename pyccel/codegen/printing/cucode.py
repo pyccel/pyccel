@@ -52,19 +52,7 @@ class CudaCodePrinter(CCodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [Import(expr.name, Module(expr.name,(),())), *self._additional_imports.values()]
-        c_headers_imports = ''
-        local_imports = ''
-
-        for imp in imports:
-            if imp.source in c_library_headers:
-                c_headers_imports += self._print(imp)
-            else:
-                local_imports += self._print(imp)
-
-        imports = f'{c_headers_imports}\
-                    extern "C"{{\n\
-                    {local_imports}\
-                    }}'
+        imports = ''.join(self._print(i) for i in imports)
 
         code = f'{imports}\n\
                  {global_variables}\n\
@@ -72,3 +60,34 @@ class CudaCodePrinter(CCodePrinter):
 
         self.exit_scope()
         return code
+
+    def _print_ModuleHeader(self, expr):
+        self.set_scope(expr.module.scope)
+        self._in_header = True
+        name = expr.module.name
+
+        funcs = ""
+        cuda_headers = ""
+        for f in expr.module.funcs:
+            if not f.is_inline:
+                if 'kernel' in f.decorators:  # Checking for 'kernel' decorator
+                    cuda_headers += self.function_signature(f) + ';\n'
+                else:
+                    funcs += self.function_signature(f) + ';\n'
+        global_variables = ''.join('extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private)
+        # Print imports last to be sure that all additional_imports have been collected
+        imports = [*expr.module.imports, *self._additional_imports.values()]
+        imports = ''.join(self._print(i) for i in imports)
+
+        self._in_header = False
+        self.exit_scope()
+        function_declaration = f'{cuda_headers}\n\
+                    extern "C"{{\n\
+                    {funcs}\
+                    }}\n'
+        return '\n'.join((f"#ifndef {name.upper()}_H",
+                          f"#define {name.upper()}_H",
+                          global_variables,
+                          function_declaration,
+                          "#endif // {name.upper()}_H\n"))
+
