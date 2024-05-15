@@ -11,7 +11,7 @@ from pyccel.ast.basic     import ScopedAstNode
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
-from pyccel.ast.builtins  import PythonList, PythonTuple
+from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
@@ -1994,16 +1994,17 @@ class CCodePrinter(CodePrinter):
         else:
             return call_code
 
-    def list_to_vector(self, expr, list_var):
+    def init_lists_or_sets(self, expr, list_var):
         """
         Print the initialization of a python assignment using STC init() method
         """
-        vec_dtype = self.find_in_dtype_registry(expr.current_user_node.lhs.dtype)
+        dtype = self.find_in_dtype_registry(expr.current_user_node.lhs.dtype)
+        container_type = "hset_"if isinstance(expr.class_type, HomogeneousSetType) else "vec_"
         if (len(expr.args) == 0):
-            return f'vec_{vec_dtype}_init()'
+            return f'{container_type}{dtype}_init()'
 
         keyraw = '{' + ', '.join([self._print(a) for a in expr.args]) + '}'
-        init = f'{list_var} = c_init(vec_{vec_dtype}, {keyraw});\n'
+        init = f'{list_var} = c_init({container_type}{dtype}, {keyraw});\n'
 
         return init
 
@@ -2171,8 +2172,8 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
         lhs = self._print(expr.lhs)
-        if isinstance(rhs, PythonList):
-            return prefix_code+self.list_to_vector(rhs, lhs)
+        if isinstance(rhs, (PythonList, PythonSet)):
+            return prefix_code+self.init_lists_or_sets(rhs, lhs)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
 
