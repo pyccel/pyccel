@@ -2002,10 +2002,11 @@ class CCodePrinter(CodePrinter):
         if (len(expr.args) == 0):
             return f'vec_{vec_dtype}_init()'
 
+        # c_init(hset_str, {"This", "is", "the", "story"});
         list_var = self._print(expr.current_user_node.lhs)
-        init = f'{lhs} = vec_{vec_dtype}_with_capacity({len(expr.args)});\n'
-        keyraw = '[' + ', '.join([self._print(a) for a in expr.args]) + ']'
-        emplace = f'vec_{vec_dtype}_emplace_n({list_var}, 0, {keyraw}, {len(expr.args)});\n'
+        # init = f'{lhs} = vec_{vec_dtype}_with_capacity({len(expr.args)});\n'
+        keyraw = '{' + ', '.join([self._print(a) for a in expr.args]) + '}'
+        init = f'c_init({list_var}, {keyraw})'
 
         return init+emplace
 
