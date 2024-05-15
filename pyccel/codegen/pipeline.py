@@ -338,10 +338,10 @@ def execute_pyccel(fname, *,
 
     # Iterate over the external_libs list and determine if the printer
     # requires an internal lib to be included.
-    for lib_name, (src_folder, external) in external_libs.items():
-        if lib_name in codegen.get_printer_imports():
+    for ext_lib_name, (ext_src_folder, external) in external_libs.items():
+        if ext_lib_name in codegen.get_printer_imports():
 
-            lib_dest_path = copy_internal_library(src_folder, pyccel_dirpath)
+            lib_dest_path = copy_internal_library(ext_src_folder, pyccel_dirpath)
 
             
 
