@@ -200,3 +200,16 @@ def test_awkward_names(language):
     assert mod.function() == modnew.function()
     assert mod.pure() == modnew.pure()
     assert mod.allocate(1) == modnew.allocate(1)
+
+def test_cuda_module(language_with_cuda):
+    import modules.cuda_module as mod
+
+    modnew = epyccel(mod, language=language_with_cuda)
+
+    atts = ('g', 'r0', 'rmin', 'rmax', 'skip_centre',
+            'method', 'tiny')
+    for att in atts:
+        mod_att = getattr(mod, att)
+        modnew_att = getattr(modnew, att)
+        assert mod_att == modnew_att
+        assert type(mod_att) is type(modnew_att)
