@@ -343,7 +343,7 @@ def execute_pyccel(fname, *,
 
             lib_dest_path = copy_internal_library(ext_src_folder, pyccel_dirpath)
 
-            
+
 
     if convert_only:
         # Change working directory back to starting point
