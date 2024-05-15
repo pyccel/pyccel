@@ -13,6 +13,7 @@ from pyccel.codegen.printing.cwrappercode        import CWrapperCodePrinter
 from pyccel.codegen.printing.fcode               import FCodePrinter
 from pyccel.codegen.wrapper.fortran_to_c_wrapper import FortranToCWrapper
 from pyccel.codegen.wrapper.c_to_python_wrapper  import CToPythonWrapper
+from pyccel.codegen.wrapper.cuda_to_c_wrapper    import CudaToCWrapper
 from pyccel.codegen.utilities                    import recompile_object
 from pyccel.codegen.utilities                    import copy_internal_library
 from pyccel.codegen.utilities                    import internal_libs
@@ -144,6 +145,9 @@ def create_shared_library(codegen,
                 verbose=verbose)
         timings['Bind C wrapping'] = time.time() - start_bind_c_compiling
         c_ast = bind_c_mod
+    elif language == 'cuda':
+        wrapper = CudaToCWrapper()
+        c_ast = wrapper.wrap(codegen.ast)
     else:
         c_ast = codegen.ast
 
