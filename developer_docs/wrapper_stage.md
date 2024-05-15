@@ -20,7 +20,7 @@ The entry point for the class `Wrapper` is the function `wrap`.
 The `_wrap` function internally calls a function named `_wrap_X`, where `X` is the type of the object.
 These functions must have the form:
 ```python
-def _print_ClassName(self, stmt):
+def _wrap_ClassName(self, stmt):
     ...
     return Y
 ```
