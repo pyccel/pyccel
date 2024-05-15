@@ -1994,7 +1994,7 @@ class CCodePrinter(CodePrinter):
         else:
             return call_code
 
-    def list_to_vector(self, expr, lhs):
+    def list_to_vector(self, expr, list_var):
         """
         Print the initialization of a python assignment using STC init() method
         """
@@ -2002,13 +2002,10 @@ class CCodePrinter(CodePrinter):
         if (len(expr.args) == 0):
             return f'vec_{vec_dtype}_init()'
 
-        # c_init(hset_str, {"This", "is", "the", "story"});
-        list_var = self._print(expr.current_user_node.lhs)
-        # init = f'{lhs} = vec_{vec_dtype}_with_capacity({len(expr.args)});\n'
         keyraw = '{' + ', '.join([self._print(a) for a in expr.args]) + '}'
-        init = f'c_init({list_var}, {keyraw})'
+        init = f'{list_var} = c_init(vec_{vec_dtype}, {keyraw});\n'
 
-        return init+emplace
+        return init
 
     def _print_Constant(self, expr):
         """ Convert a Python expression with a math constant call to C
