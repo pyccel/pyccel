@@ -104,7 +104,7 @@ jobs:
         with:
           name: coverage-artifact
           path: .coverage
-          retention-days: 1
+          retention-days: 3
       - name: "Post completed"
         if: always() && github.event_name != 'push'
         run:
