@@ -940,7 +940,6 @@ class CCodePrinter(CodePrinter):
         code = 'pow({}, {})'.format(b, e)
         return self._cast_to(expr, expr.dtype).format(code)
 
-
     def _print_Import(self, expr):
         if expr.ignore:
             return ''
