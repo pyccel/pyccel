@@ -2001,7 +2001,7 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_dtype_registry(expr.current_user_node.lhs.dtype)
         container_type = "hset_"if isinstance(expr.class_type, HomogeneousSetType) else "vec_"
         if (len(expr.args) == 0):
-            return f'{list_var} = c_init({container_type}{dtype}, {"{}"});\n'
+            return f'{list_var} = c_init({container_type}{dtype},{"{}"});\n'
 
         keyraw = '{' + ', '.join([self._print(a) for a in expr.args]) + '}'
         init = f'{list_var} = c_init({container_type}{dtype}, {keyraw});\n'
