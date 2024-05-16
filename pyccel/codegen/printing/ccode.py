@@ -2008,7 +2008,6 @@ class CCodePrinter(CodePrinter):
 
         return init
 
-
     def _print_Return(self, expr):
         code = ''
         args = [ObjectAddress(a) if isinstance(a, Variable) and self.is_c_pointer(a) else a for a in expr.expr]
