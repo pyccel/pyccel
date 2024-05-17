@@ -2366,6 +2366,7 @@ class CCodePrinter(CodePrinter):
             cast_func = DtypePrecisionToCastFunction[expr.dtype]
             return self._print(cast_func(expr.value))
 
+
     def _print_Variable(self, expr):
         if self.is_c_pointer(expr):
             return '(*{0})'.format(expr.name)
