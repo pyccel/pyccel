@@ -20,6 +20,7 @@ from .datatypes import GenericType, PythonNativeComplex, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
+from .datatypes import DictType
 from .internals import PyccelFunction, Slice, PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
@@ -824,30 +825,30 @@ class PythonDict(PyccelFunction):
         return zip(self._keys, self._values)
 
     def __str__(self):
-￼        args = ', '.join(f'{k}: {v}' for k,v in self)
-￼        return f'({args})'
-￼
-￼    def __repr__(self):
-￼        args = ', '.join(f'{repr(k)}: {repr(v)}' for k,v in self)
-￼        return f'PythonDict({args})'
-￼
-￼    @property
-￼    def keys(self):
-￼        """
-￼        The keys of the new dictionary.
-￼
-￼        The keys of the new dictionary.
-￼        """
-￼        return self._keys
-￼
-￼    @property
-￼    def values(self):
-￼        """
-￼        The values of the new dictionary.
-￼
-￼        The values of the new dictionary.
-￼        """
-￼        return self._values
+        args = ', '.join(f'{k}: {v}' for k,v in self)
+        return f'({args})'
+
+    def __repr__(self):
+        args = ', '.join(f'{repr(k)}: {repr(v)}' for k,v in self)
+        return f'PythonDict({args})'
+
+    @property
+    def keys(self):
+        """
+        The keys of the new dictionary.
+
+        The keys of the new dictionary.
+        """
+        return self._keys
+
+    @property
+    def values(self):
+        """
+        The values of the new dictionary.
+
+        The values of the new dictionary.
+        """
+        return self._values
 
 #==============================================================================
 class PythonMap(PyccelFunction):
