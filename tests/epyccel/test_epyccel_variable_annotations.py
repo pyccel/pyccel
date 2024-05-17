@@ -178,7 +178,7 @@ def test_homogeneous_tuple_2_annotation_str(language):
 
 def test_homogeneous_set_annotation_int(language):
     def homogeneous_set_annotation ():
-        a : set[int]
+        a : set[int] #pylint: disable=unused-variable
         a = {1, 2, 3, 4}
     epyc_homogeneous_set_annotation =  epyccel(homogeneous_set_annotation, language=language)
     assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
