@@ -38,6 +38,7 @@ __all__ = (
     'PythonComplex',
     'PythonComplexProperty',
     'PythonConjugate',
+    'PythonDict',
     'PythonEnumerate',
     'PythonFloat',
     'PythonImag',
