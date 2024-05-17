@@ -878,7 +878,7 @@ class PythonDictFunction(TypedAstNode):
         elif len(args) == 1 and isinstance(args[0], PythonDict):
             return args[0]
         else:
-            raise NotImplementedError(f"Unrecognised dict calling convention")
+            raise NotImplementedError("Unrecognised dict calling convention")
 
 
 #==============================================================================
