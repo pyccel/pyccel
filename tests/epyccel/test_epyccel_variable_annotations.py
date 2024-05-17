@@ -170,7 +170,7 @@ def test_homogeneous_tuple_2_annotation_str(language):
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="append() not implemented in fortran"),
+            pytest.mark.skip(reason="Variable declaration not implemented in fortran"),
             pytest.mark.fortran]),
         pytest.param("python", marks = pytest.mark.python)
     ]
