@@ -851,6 +851,35 @@ class PythonDict(PyccelFunction):
         """
         return self._values
 
+#==============================================================================
+class PythonDictFunction(TypedAstNode):
+    """
+    Class representing a call to the `dict` function.
+
+    Class representing a call to the `dict` function. This is
+    different to the `{}` syntax as it is either a cast function or it
+    uses arguments to create the dictionary.
+
+    Parameters
+    ----------
+    *args : TypedAstNode
+        The arguments passed to the function call.
+    **kwargs : dict[TypedAstNode]
+        The keyword arguments passed to the function call.
+    """
+    __slots__ = ()
+    _attribute_nodes = ()
+
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 0:
+            keys = [LiteralString(k) for k in kwargs]
+            values = list(kwargs.values())
+            return PythonDict(keys, values)
+        elif len(args) == 1 and isinstance(args[0], PythonDict):
+            return args[0]
+        else:
+            raise NotImplementedError(f"Unrecognised dict calling convention")
+
 
 #==============================================================================
 class PythonMap(PyccelFunction):
@@ -1295,21 +1324,21 @@ DtypePrecisionToCastFunction = {
 builtin_functions_dict = {
     'abs'      : PythonAbs,
     'bool'     : PythonBool,
-    'range'    : PythonRange,
-    'zip'      : PythonZip,
-    'enumerate': PythonEnumerate,
-    'int'      : PythonInt,
-    'float'    : PythonFloat,
     'complex'  : PythonComplex,
-    'bool'     : PythonBool,
-    'sum'      : PythonSum,
+    'dict'     : PythonDictFunction,
+    'enumerate': PythonEnumerate,
+    'float'    : PythonFloat,
+    'int'      : PythonInt,
     'len'      : PythonLen,
     'list'     : PythonList,
+    'map'      : PythonMap,
     'max'      : PythonMax,
     'min'      : PythonMin,
     'not'      : PyccelNot,
-    'map'      : PythonMap,
+    'range'    : PythonRange,
     'str'      : LiteralString,
-    'type'     : PythonType,
+    'sum'      : PythonSum,
     'tuple'    : PythonTupleFunction,
+    'type'     : PythonType,
+    'zip'      : PythonZip,
 }
