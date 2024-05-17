@@ -29,7 +29,8 @@ language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 
 #==============================================================================
 # map external libraries to their folders inside pyccel/extensions
-external_libs = {"stc/vec"      : ("stc", "stc/vec.h")}
+external_libs = {"stc/vec"      : ("stc", "stc/vec.h"),
+                 "stc/hset"     : ("stc", "stc/hvec.h")}
 
 #==============================================================================
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
