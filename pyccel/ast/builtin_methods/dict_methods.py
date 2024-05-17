@@ -77,9 +77,9 @@ class DictPop(DictMethod):
         dict_type = dict_obj.class_type
         self._class_type = dict_type.value_type
         if k.class_type != dict_type.key_type:
-            raise TypeError("Key passed to pop method has type {k.class_type}. Expected {dict_type.key_type}")
+            raise TypeError(f"Key passed to pop method has type {k.class_type}. Expected {dict_type.key_type}")
         if d and d.class_type != dict_type.value_type:
-            raise TypeError("Default value passed to pop method has type {d.class_type}. Expected {dict_type.value_type}")
+            raise TypeError(f"Default value passed to pop method has type {d.class_type}. Expected {dict_type.value_type}")
         super().__init__(dict_obj, k, d)
 
     @property
