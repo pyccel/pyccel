@@ -10,6 +10,14 @@ from pyccel import epyccel
 from pyccel.errors.errors import PyccelSemanticError, Errors
 from pyccel.decorators import allow_negative_index, stack_array
 
+def parametrize_languages():
+    return pytest.mark.parametrize('language', [
+        pytest.param("c", marks=pytest.mark.c),
+        pytest.param("fortran", marks=[
+            pytest.mark.skip(reason="Variable declaration not implemented in fortran"),
+            pytest.mark.fortran]),
+        pytest.param("python", marks=pytest.mark.python)
+    ])
 
 def test_local_type_annotation(language):
     def local_type_annotation():
@@ -175,7 +183,6 @@ def test_homogeneous_tuple_2_annotation_str(language):
         pytest.param("python", marks = pytest.mark.python)
     ]
 )
-
 def test_homogeneous_set_annotation_int(language):
     def homogeneous_set_annotation ():
         a : set[int] #pylint: disable=unused-variable
@@ -183,3 +190,66 @@ def test_homogeneous_set_annotation_int(language):
     epyc_homogeneous_set_annotation =  epyccel(homogeneous_set_annotation, language=language)
     assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
     assert isinstance(epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation()))
+
+@parametrize_languages()
+def test_homogeneous_set_annotation_float(language):
+    def homogeneous_set_annotation ():
+        a : set[float] #pylint: disable=unused-variable
+        a = {1.5, 2.5, 3.3, 4.3}
+    epyc_homogeneous_set_annotation =  epyccel(homogeneous_set_annotation, language=language)
+    assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
+    assert isinstance(epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation()))
+
+@parametrize_languages()
+def test_homogeneous_set_annotation_bool(language):
+    def homogeneous_set_annotation ():
+        a : set[bool] #pylint: disable=unused-variable
+        a = {False, True, True, False}
+    epyc_homogeneous_set_annotation =  epyccel(homogeneous_set_annotation, language=language)
+    assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
+    assert isinstance(epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation()))
+
+@parametrize_languages()
+def test_homogeneous_set_annotation_complex(language):
+    def homogeneous_set_annotation():
+        a: set[complex]  # pylint: disable=unused-variable
+        a = {1+1j, 2+2j, 3+3j, 4+4j}
+    epyc_homogeneous_set_annotation = epyccel(homogeneous_set_annotation, language=language)
+    assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
+    assert isinstance(epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation()))
+
+@parametrize_languages()
+def test_homogeneous_list_annotation_int(language):
+    def homogeneous_list_annotation():
+        a: list[int]  # pylint: disable=unused-variable
+        a = [1, 2, 3, 4]
+    epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
+    assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
+    assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
+
+@parametrize_languages()
+def test_homogeneous_list_annotation_float(language):
+    def homogeneous_list_annotation():
+        a: list[float]  # pylint: disable=unused-variable
+        a = [1.1, 2.2, 3.3, 4.4]
+    epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
+    assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
+    assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
+
+@parametrize_languages()
+def test_homogeneous_list_annotation_bool(language):
+    def homogeneous_list_annotation():
+        a: list[bool]  # pylint: disable=unused-variable
+        a = [False, True, True, False]
+    epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
+    assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
+    assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
+
+@parametrize_languages()
+def test_homogeneous_list_annotation_complex(language):
+    def homogeneous_list_annotation():
+        a: list[complex]  # pylint: disable=unused-variable
+        a = [1+1j, 2+2j, 3+3j, 4+4j]
+    epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
+    assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
+    assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
