@@ -2243,8 +2243,7 @@ class SemanticParser(BasicParser):
         try:
             expr = PythonDict(keys, vals)
         except TypeError as e:
-            message = str(e)
-            errors.report(message, symbol=expr,
+            errors.report(str(e), symbol=expr,
                 severity='fatal')
         return expr
 
