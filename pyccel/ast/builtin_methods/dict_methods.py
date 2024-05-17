@@ -10,7 +10,7 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from ..internals import PyccelFunction
+from pyccel.ast.internals import PyccelFunction
 
 __all__ = ('DictMethod',
            'DictPop',
