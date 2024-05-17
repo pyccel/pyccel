@@ -775,6 +775,81 @@ class PythonSet(TypedAstNode):
         return True
 
 #==============================================================================
+class PythonDict(PyccelFunction):
+    """
+    Class representing a call to Python's `{}` function.
+
+    Class representing a call to Python's `{}` function which generates a
+    literal Python dict. This operator does not handle `**a` expressions.
+
+    Parameters
+    ----------
+    keys : iterable[TypedAstNode]
+        The keys of the new dictionary.
+    values : iterable[TypedAstNode]
+        The values of the new dictionary.
+    """
+    __slots__ = ('_keys', '_values', '_shape', '_class_type')
+    _attribute_nodes = ('_keys', '_values')
+    _rank = 1
+
+    def __init__(self, keys, values):
+        self._keys = keys
+        self._values = values
+        super().__init__()
+        if pyccel_stage == 'syntactic':
+            return
+        elif len(keys) != len(values):
+            raise TypeError("Unpacking values in a dictionary is not yet supported.")
+        elif len(keys) == 0:
+            self._shape = (LiteralInteger(0),)
+            self._class_type = DictType(GenericType(), GenericType())
+            return
+
+        key0 = keys[0]
+        val0 = values[0]
+        homogeneous_keys = all(k.class_type is not GenericType() for k in keys) and \
+                           all(key0.class_type == k.class_type for k in keys[1:])
+        homogeneous_vals = all(v.class_type is not GenericType() for v in values) and \
+                           all(val0.class_type == v.class_type for v in values[1:])
+
+        if homogeneous_keys and homogeneous_vals:
+            self._class_type = DictType(key0.class_type, val0.class_type)
+
+            self._shape = (LiteralInteger(len(keys)), )
+        else:
+            raise TypeError("Can't create an inhomogeneous dict")
+
+    def __iter__(self):
+        return zip(self._keys, self._values)
+
+    def __str__(self):
+￼        args = ', '.join(f'{k}: {v}' for k,v in self)
+￼        return f'({args})'
+￼
+￼    def __repr__(self):
+￼        args = ', '.join(f'{repr(k)}: {repr(v)}' for k,v in self)
+￼        return f'PythonDict({args})'
+￼
+￼    @property
+￼    def keys(self):
+￼        """
+￼        The keys of the new dictionary.
+￼
+￼        The keys of the new dictionary.
+￼        """
+￼        return self._keys
+￼
+￼    @property
+￼    def values(self):
+￼        """
+￼        The values of the new dictionary.
+￼
+￼        The values of the new dictionary.
+￼        """
+￼        return self._values
+
+#==============================================================================
 class PythonMap(PyccelFunction):
     """
     Class representing a call to Python's builtin map function.
