@@ -166,3 +166,23 @@ def test_homogeneous_tuple_2_annotation_str(language):
 
     assert epyc_homogeneous_tuple_annotation() == homogeneous_tuple_annotation()
     assert isinstance(epyc_homogeneous_tuple_annotation(), type(homogeneous_tuple_annotation()))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Dict not yet implemented in Fortran"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Dict not yet implemented in C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dict_annotation(language):
+    def empty_dict():
+        a : 'dict[str,int]' = {}
+        return len(a)
+
+    epyc_empty_dict = epyccel(empty_dict, language=language)
+    assert epyc_empty_dict() == empty_dict()
