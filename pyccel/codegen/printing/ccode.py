@@ -2353,6 +2353,9 @@ class CCodePrinter(CodePrinter):
         if expr == math_constants['inf']:
             self.add_import(c_imports['math'])
             return 'HUGE_VAL'
+        elif expr == math_constants['nan']:
+            self.add_import(c_imports['math'])
+            return 'NAN'
         elif expr == math_constants['pi']:
             self.add_import(c_imports['math'])
             return 'M_PI'
@@ -2360,7 +2363,8 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['math'])
             return 'M_E'
         else:
-            raise NotImplementedError("Constant not implemented")
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
+            return self._print(cast_func(expr.value))
 
     def _print_Variable(self, expr):
         if self.is_c_pointer(expr):
