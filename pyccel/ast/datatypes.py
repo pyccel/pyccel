@@ -647,7 +647,6 @@ class HomogeneousContainerType(ContainerType):
         return self._order # pylint: disable=no-member
 
     def __eq__(self, other):
-        print(other, self, self.element_type, other.element_type, self.element_type == other.element_type)
         return isinstance(other, self.__class__) and self.element_type == other.element_type
 
     def __hash__(self):
