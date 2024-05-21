@@ -38,7 +38,7 @@ def test_dict_str_keys(language):
 
 def test_dict_empty_init(language):
     def dict_empty_init():
-        a : dict[int, float] = {}
+        a : 'dict[int, float]' = {}
         return a
     epyc_dict_empty_init = epyccel(dict_empty_init, language = language)
     pyccel_result = epyc_dict_empty_init()
