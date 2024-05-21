@@ -204,7 +204,7 @@ def test_homogeneous_set_annotation_float(language):
 def test_homogeneous_set_annotation_bool(language):
     def homogeneous_set_annotation ():
         a : set[bool] #pylint: disable=unused-variable
-        a = {False, True}
+        a = {False, True, False, True} #pylint: disable=error-code
     epyc_homogeneous_set_annotation =  epyccel(homogeneous_set_annotation, language=language)
     assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
     assert isinstance(epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation()))
