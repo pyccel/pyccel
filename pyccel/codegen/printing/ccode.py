@@ -954,15 +954,15 @@ class CCodePrinter(CodePrinter):
         if expr.target:
            dtype = expr.target.pop().name
            if source.startswith('stc/'):
-             dtype_macro = dtype.upper()
+             dtype_macro = dtype.upper().replace(" ", "_")
              _,container_type = source.split("/")
              if container_type in import_stc:
                 class_type_macro = import_stc[container_type]
-             additional_defines = '#define i_use_cmp\n' if class_type_macro == 'VEC' else ''
+             i_type_arg = f"{container_type}_{dtype.replace(' ', '_')}"
              return '\n'.join((f'#ifndef _{class_type_macro}_{dtype_macro}',
                                f'#define _{class_type_macro}_{dtype_macro}',
+                               f'#define i_type {i_type_arg}',
                                f'#define i_key {dtype}',
-                               additional_defines,
                                f'#include "{source}.h"',
                                f'#endif\n'))
 
@@ -1184,10 +1184,10 @@ class CCodePrinter(CodePrinter):
         elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
             container_type = 'hset_' if dtype._name == 'set' else 'vec_'
             vec_dtype = self.find_in_dtype_registry(dtype.element_type)
-            key = container_type + vec_dtype
+            i_type = container_type + vec_dtype.replace(' ', '_')
             source = 'stc/'+ container_type[:-1]
             self.add_import(Import(source, Module(vec_dtype, (), ())))
-            return key
+            return i_type
         else:
             key = dtype
 
@@ -1997,7 +1997,7 @@ class CCodePrinter(CodePrinter):
         """
         Print the initialization of a python assignment using STC init() method
         """
-        dtype = self.find_in_dtype_registry(expr.current_user_node.lhs.dtype)
+        dtype = self.find_in_dtype_registry(expr.current_user_node.lhs.dtype).replace(" ", "_")
         container_type = "hset_"if isinstance(expr.class_type, HomogeneousSetType) else "vec_"
         if (len(expr.args) == 0):
             return f'{list_var} = c_init({container_type}{dtype},{"{}"});\n'
