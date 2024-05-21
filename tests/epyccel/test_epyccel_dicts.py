@@ -16,7 +16,7 @@ from pyccel import epyccel
 def language(request):
     return request.param
 
-def test_dict_init(language) :
+def test_dict_init(language):
     def dict_init():
         a = {1:1.0, 2:2.0}
         return a
@@ -26,7 +26,7 @@ def test_dict_init(language) :
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_dict_str_keys(language) :
+def test_dict_str_keys(language):
     def dict_str_keys():
         a = {'a':1, 'b':2}
         return a
