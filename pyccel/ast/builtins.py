@@ -883,8 +883,6 @@ class PythonDictFunction(PyccelFunction):
             keys = [LiteralString(k) for k in kwargs]
             values = list(kwargs.values())
             return PythonDict(keys, values)
-        elif len(args) == 1 and isinstance(args[0], PythonDict):
-            return args[0]
         elif len(args) != 1:
             raise NotImplementedError("Unrecognised dict calling convention")
         else:
