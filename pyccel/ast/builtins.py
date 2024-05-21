@@ -853,23 +853,30 @@ class PythonDict(PyccelFunction):
         return self._values
 
 #==============================================================================
-class PythonDictFunction(TypedAstNode):
+class PythonDictFunction(PyccelFunction):
     """
     Class representing a call to the `dict` function.
 
     Class representing a call to the `dict` function. This is
     different to the `{}` syntax as it is either a cast function or it
-    uses arguments to create the dictionary.
+    uses arguments to create the dictionary. In the case of a cast function
+    an instance of PythonDict is returned to express this concept. In the
+    case of a copy this class stores the description of the copy operator.
 
     Parameters
     ----------
     *args : TypedAstNode
-        The arguments passed to the function call.
+        The arguments passed to the function call. If args are provided
+        then only one argument should be provided. This object is copied
+        unless it is a temporary PythonDict in which case it is returned
+        directly.
     **kwargs : dict[TypedAstNode]
-        The keyword arguments passed to the function call.
+        The keyword arguments passed to the function call. If kwargs are
+        provided then no args should be provided and a PythonDict object
+        will be created.
     """
-    __slots__ = ()
-    _attribute_nodes = ()
+    __slots__ = ('_shape', '_class_type')
+    name = 'dict'
 
     def __new__(cls, *args, **kwargs):
         if len(args) == 0:
@@ -878,9 +885,24 @@ class PythonDictFunction(TypedAstNode):
             return PythonDict(keys, values)
         elif len(args) == 1 and isinstance(args[0], PythonDict):
             return args[0]
-        else:
+        elif len(args) != 1:
             raise NotImplementedError("Unrecognised dict calling convention")
+        else:
+            return super().__new__(cls)
 
+    def __init__(self, copied_obj):
+        self._class_type = copied_obj.class_type
+        self._shape = copied_obj.shape
+        super().__init__(copied_obj)
+
+    @property
+    def copied_obj(self):
+        """
+        The object being copied.
+
+        The object being copied to create a new dict instance.
+        """
+        return self._args[0]
 
 #==============================================================================
 class PythonMap(PyccelFunction):
