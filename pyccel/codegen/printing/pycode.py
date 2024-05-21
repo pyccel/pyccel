@@ -847,6 +847,22 @@ class PythonCodePrinter(CodePrinter):
 
         return f"{list_obj}.{method_name}({method_args})\n"
 
+    def _print_DictMethod(self, expr):
+        method_name = expr.name
+        dict_obj = self._print(expr.dict_obj)
+        method_args = ', '.join(self._print(a) for a in expr.args)
+
+        return f"{dict_obj}.{method_name}({method_args})\n"
+
+    def _print_DictPop(self, expr):
+        dict_obj = self._print(expr.dict_obj)
+        key = self._print(expr.key)
+        if expr.default_value:
+            val = self._print(expr.default_value)
+            return f"{dict_obj}.pop({key}, {val})\n"
+        else:
+            return f"{dict_obj}.pop({key})\n"
+
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
         stop  = self._print(expr.stop)  if expr.stop  else ''

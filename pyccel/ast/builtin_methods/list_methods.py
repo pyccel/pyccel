@@ -41,7 +41,7 @@ class ListMethod(PyccelFunction):
         The arguments passed to list methods.
     """
     __slots__ = ("_list_obj",)
-    _attribute_nodes = ("_list_obj",)
+    _attribute_nodes = PyccelFunction._attribute_nodes + ("_list_obj",)
     name = None
     def __init__(self, list_obj, *args):
         self._list_obj = list_obj
