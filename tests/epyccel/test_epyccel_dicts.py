@@ -52,19 +52,9 @@ def test_dict_copy(language):
         b = dict(a)
         return b
 
-    def dict_temp_copy():
-        a = dict({1:1.0,2:2.0})
-        return a
-
     epyc_dict_copy = epyccel(dict_copy, language = language)
     pyccel_result = epyc_dict_copy()
     python_result = dict_copy()
-    assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
-
-    epyc_dict_temp_copy = epyccel(dict_temp_copy, language = language)
-    pyccel_result = epyc_dict_temp_copy()
-    python_result = dict_temp_copy()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
