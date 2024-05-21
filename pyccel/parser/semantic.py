@@ -21,7 +21,7 @@ from sympy import ceiling
 from pyccel.utilities.strings import random_string
 from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
 
-from pyccel.ast.builtins import PythonPrint, PythonTupleFunction
+from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonListFunction
 from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
@@ -1928,7 +1928,7 @@ class SemanticParser(BasicParser):
                 type_annotations = []
                 if dtype_cls is PythonTupleFunction:
                     class_type = HomogeneousTupleType
-                elif dtype_cls is PythonList:
+                elif dtype_cls is PythonListFunction:
                     class_type = HomogeneousListType
                 else:
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
