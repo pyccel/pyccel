@@ -78,15 +78,15 @@ Python contains a limited number of builtin functions defined [here](https://doc
 
 | Method | Supported |
 |----------|-----------|
-| clear | No |
-| copy | No |
-| get | No |
-| items | No |
-| keys | No |
-| pop | Python-only |
-| popitem | No |
-| reversed | No |
-| setdefault | No |
-| update | No |
-| values | No |
+| `clear` | No |
+| `copy` | No |
+| `get` | No |
+| `items` | No |
+| `keys` | No |
+| `pop` | Python-only |
+| `popitem` | No |
+| `reversed` | No |
+| `setdefault` | No |
+| `update` | No |
+| `values` | No |
 
