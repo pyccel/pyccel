@@ -70,7 +70,7 @@ def test_dict_copy(language):
 
 def test_dict_kwarg_init(language):
     def kwarg_init():
-        b = dict(a=1, b=2)
+        b = dict(a=1, b=2) #pylint: disable=use-dict-literal
         return b
 
     epyc_kwarg_init = epyccel(kwarg_init, language = language)
