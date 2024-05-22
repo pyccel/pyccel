@@ -103,7 +103,7 @@ jobs:
         with:
           shell_cmd: "bash -l {0}"
       - name: Save code coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-artifact
           path: .coverage
