@@ -1,9 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import inspect
 import pytest
-
-from pyccel import epyccel
 from modules import lists as lists_module
+from pyccel import epyccel
 
 list_funcs = [(f, getattr(lists_module,f)) for f in lists_module.__all__ if inspect.isfunction(getattr(lists_module,f))]
 
