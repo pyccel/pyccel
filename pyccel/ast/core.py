@@ -561,7 +561,6 @@ class CodeBlock(PyccelAstNode):
     __slots__ = ('_body','_unravelled')
     _attribute_nodes = ('_body',)
 
-
     def __init__(self, body, unravelled = False):
         ls = []
         for i in body:
@@ -705,15 +704,21 @@ class AliasAssign(PyccelAstNode):
 
 
 class SymbolicAssign(PyccelAstNode):
+    """
+    Represents symbolic aliasing for code generation.
 
-    """Represents symbolic aliasing for code generation. An alias is any statement of the
+    Represents symbolic aliasing for code generation. An alias is any statement of the
     form `lhs := rhs` where
+
+    This code needs investigating to find out if it is still useful.
 
     Parameters
     ----------
     lhs : PyccelSymbol
+        Why not a Variable? To be investigated.
 
     rhs : Range
+        Apparently a range.
 
     Examples
     --------
@@ -723,7 +728,6 @@ class SymbolicAssign(PyccelAstNode):
     >>> r = Range(0, 3)
     >>> y = PyccelSymbol('y')
     >>> SymbolicAssign(y, r)
-
     """
     __slots__ = ('_lhs', '_rhs')
     _attribute_nodes = ('_lhs', '_rhs')
@@ -734,7 +738,7 @@ class SymbolicAssign(PyccelAstNode):
         super().__init__()
 
     def __str__(self):
-        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
+        return f'{self.lhs} := {self.rhs}'
 
     @property
     def lhs(self):
@@ -3714,7 +3718,7 @@ class Import(PyccelAstNode):
 
         self._source = source
         self._target = set()
-        self._source_mod      = mod
+        self._source_mod = mod
         self._ignore_at_print = ignore_at_print
 
         if mod is None and isinstance(target, Module):
@@ -3796,7 +3800,7 @@ class Import(PyccelAstNode):
         if len(self.target) == 0:
             return f'import {source}'
         else:
-            target = ', '.join([str(i) for i in self.target])
+            target = ', '.join(str(i) for i in self.target)
             return f'from {source} import {target}'
 
     def define_target(self, new_target):
@@ -4036,13 +4040,15 @@ class Raise(PyccelAstNode):
 
 
 class SymbolicPrint(PyccelAstNode):
+    """
+    Represents a print function of symbolic expressions in the code.
 
-    """Represents a print function of symbolic expressions in the code.
+    Represents a print function of symbolic expressions in the code.
 
     Parameters
     ----------
     expr : TypedAstNode
-        The expression to print
+        The expression to print.
 
     Examples
     --------
@@ -4062,7 +4068,7 @@ class SymbolicPrint(PyccelAstNode):
         for i in expr:
             if not isinstance(i, (Lambda, SymbolicAssign,
                               SympyFunction)):
-                raise TypeError('Expecting Lambda, SymbolicAssign, SympyFunction for {}'.format(i))
+                raise TypeError(f'Expecting Lambda, SymbolicAssign, SympyFunction for {i}')
 
         self._expr = expr
 
