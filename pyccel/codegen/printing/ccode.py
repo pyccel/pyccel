@@ -1994,9 +1994,9 @@ class CCodePrinter(CodePrinter):
 
     def init_lists_or_sets(self, expr, container_var):
         """
-        Prints the initialization of an STC vector in C.
+        Generate the initialization of an STC container in C.
 
-        This method generates and prints the C code for initializing a vector using the STC `init()` method.
+        This method generates and prints the C code for initializing a container using the STC `init()` method.
 
         Parameters
         ----------
