@@ -1992,17 +1992,32 @@ class CCodePrinter(CodePrinter):
         else:
             return call_code
 
-    def init_lists_or_sets(self, expr, list_var):
+    def init_lists_or_sets(self, expr, container_var):
         """
-        Print the initialization of a python assignment using STC init() method
+        Prints the initialization of an STC vector in C.
+
+        This method generates and prints the C code for initializing a vector using the STC `init()` method.
+
+        Parameters
+        ----------
+        expr : TypedAstNode
+            The object representing the container being printed (e.g., PythonList, PythonSet).
+    
+        container_var : str
+            The variable name to which the container is being assigned.
+        
+        Returns
+        -------
+        str
+            The generated C code for the container initialization.
         """
         dtype = self.find_in_dtype_registry(expr.current_user_node.lhs.dtype).replace(" ", "_")
         container_type = "hset_"if isinstance(expr.class_type, HomogeneousSetType) else "vec_"
         if (len(expr.args) == 0):
-            return f'{list_var} = c_init({container_type}{dtype},{"{}"});\n'
+            return f'{container_var} = c_init({container_type}{dtype},{"{}"});\n'
 
         keyraw = '{' + ', '.join([self._print(a) for a in expr.args]) + '}'
-        init = f'{list_var} = c_init({container_type}{dtype}, {keyraw});\n'
+        init = f'{container_var} = c_init({container_type}{dtype}, {keyraw});\n'
 
         return init
 
