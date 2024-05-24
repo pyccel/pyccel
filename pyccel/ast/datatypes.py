@@ -488,6 +488,16 @@ class HomogeneousContainerType(ContainerType):
     This is the case for objects such as arrays, lists, etc.
     """
     __slots__ = ()
+    _name = None
+
+    @property
+    def name(self):
+        """
+        Get the name of the container.
+        
+        Get the name of the container.
+        """
+        return self._name
 
     @property
     def datatype(self):
