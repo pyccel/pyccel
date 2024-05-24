@@ -952,19 +952,18 @@ class CCodePrinter(CodePrinter):
         else:
             source = self._print(source)
         if expr.target:
-           dtype = expr.target.pop().name
-           if source.startswith('stc/'):
-             dtype_macro = dtype.upper().replace(" ", "_")
-             _,container_type = source.split("/")
-             if container_type in import_stc:
-                class_type_macro = import_stc[container_type]
-             i_type_arg = f"{container_type}_{dtype.replace(' ', '_')}"
-             return '\n'.join((f'#ifndef _{class_type_macro}_{dtype_macro}',
-                               f'#define _{class_type_macro}_{dtype_macro}',
-                               f'#define i_type {i_type_arg}',
-                               f'#define i_key {dtype}',
-                               f'#include "{source}.h"',
-                               f'#endif\n'))
+            dtype = expr.target.pop().name
+            if source.startswith('stc/'):
+                dtype_macro = dtype.upper().replace(" ", "_")
+                _,container_type = source.split("/")
+                class_type_macro = import_stc.get(container_type)
+                i_type_arg = f"{container_type}_{dtype.replace(' ', '_')}"
+                return '\n'.join((f'#ifndef _{class_type_macro}_{dtype_macro}',
+                                  f'#define _{class_type_macro}_{dtype_macro}',
+                                  f'#define i_type {i_type_arg}',
+                                  f'#define i_key {dtype}',
+                                  f'#include "{source}.h"',
+                                  '#endif\n'))
 
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
