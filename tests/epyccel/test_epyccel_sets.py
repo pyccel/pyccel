@@ -283,3 +283,50 @@ def test_update_tuple_as_arg(language):
     pyccel_result = epyccel_update()
     python_result =  update_tuple_as_arg()
     assert python_result == pyccel_result
+
+def test_set_with_list(language):
+    def set_With_list():
+        a = [1.6, 6.3, 7.2]
+        b = set(a)
+        return b
+
+    epyc_set_With_list = epyccel(set_With_list, language = language)
+    pyccel_result = epyc_set_With_list()
+    python_result = set_With_list()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_set_with_tuple(language):
+    def set_With_tuple():
+        a = (1j, 6j, 7j)
+        b = set(a)
+        return b
+
+    epyc_set_With_tuple = epyccel(set_With_tuple, language = language)
+    pyccel_result = epyc_set_With_tuple()
+    python_result = set_With_tuple()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_set_with_set(language):
+    def set_With_set():
+        a = {True, False, True}  #pylint: disable=duplicate-value
+        b = set(a)
+        return b
+
+    epyc_set_With_set = epyccel(set_With_set, language = language)
+    pyccel_result = epyc_set_With_set()
+    python_result = set_With_set()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_set_kwarg_init(language):
+    def kwarg_init():
+        b = set({4.6, 7.9, 2.5}) 
+        return b
+
+    epyc_kwarg_init = epyccel(kwarg_init, language = language)
+    pyccel_result = epyc_kwarg_init()
+    python_result = kwarg_init()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result

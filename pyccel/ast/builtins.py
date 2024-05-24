@@ -50,6 +50,7 @@ __all__ = (
     'PythonRange',
     'PythonReal',
     'PythonSet',
+    'PythonSetFunction',
     'PythonSum',
     'PythonTuple',
     'PythonTupleFunction',
@@ -774,6 +775,33 @@ class PythonSet(TypedAstNode):
         """
         return True
 
+
+class PythonSetFunction(TypedAstNode):
+    """
+    Class representing a call to the `set` function.
+
+    Class representing a call to the `set` function. This is
+    different to the `{,}` syntax as it only takes one argument
+    and unpacks any variables.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function call.
+    """
+    __slots__ = ()
+    _attribute_nodes = ()
+
+    def __new__(cls, arg):
+        if isinstance(arg.class_type, HomogeneousSetType):
+            return arg
+        elif isinstance(arg, PythonList):
+            return PythonSet(*arg)
+        elif isinstance(arg.shape[0], LiteralInteger):
+            return PythonSet(*[arg[i] for i in range(arg.shape[0])])
+        else:
+            raise TypeError(f"Can't unpack {arg} into a Set")
+
 #==============================================================================
 class PythonMap(PyccelFunction):
     """
@@ -1234,4 +1262,5 @@ builtin_functions_dict = {
     'str'      : LiteralString,
     'type'     : PythonType,
     'tuple'    : PythonTupleFunction,
+    'set'      : PythonSetFunction
 }
