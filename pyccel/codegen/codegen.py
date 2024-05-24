@@ -216,14 +216,22 @@ class Codegen:
         header_filename = f'{filename}.{header_ext}'
         filename = f'{filename}.{ext}'
 
+        check = set()
+        # print module header
+        if header_ext is not None:
+            code = self._printer.doprint(ModuleHeader(self.ast))
+            with open(header_filename, 'w', encoding="utf-8") as f:
+                for line in code:
+                    check.add(line)
+                    f.write(line)
+
         # print module
         code = self._printer.doprint(self.ast)
         with open(filename, 'w', encoding="utf-8") as f:
             for line in code:
                 f.write(line)
 
-        # print module header
-        if header_ext is not None:
+        if header_ext is not None and self.ast:
             code = self._printer.doprint(ModuleHeader(self.ast))
             with open(header_filename, 'w', encoding="utf-8") as f:
                 for line in code:
