@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """Print to F90 standard. Trying to follow the information provided at
 www.fortran90.org as much as possible."""
@@ -641,7 +641,7 @@ class FCodePrinter(CodePrinter):
             return ''
 
         if expr.source_module:
-            source = expr.source_module.scope.get_expected_name(source)
+            source = expr.source_module.name
 
         if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return 'use mpi\n' + 'use mpiext\n'
@@ -963,6 +963,9 @@ class FCodePrinter(CodePrinter):
             return '{}'.format(self._print(expr.value))
 
     def _print_Constant(self, expr):
+        if expr == math_constants['nan']:
+            errors.report("Can't print nan in Fortran",
+                    severity='error', symbol=expr)
         val = LiteralFloat(expr.value)
         return self._print(val)
 
@@ -1875,15 +1878,28 @@ class FCodePrinter(CodePrinter):
         return ' // '.join(formatted_str)
 
     def _print_Interface(self, expr):
+        interface_funcs = expr.functions
+
+        example_func = interface_funcs[0]
+
         # ... we don't print 'hidden' functions
-        if expr.functions[0].is_inline:
+        if example_func.is_inline:
             return ''
 
+        if len(example_func.results) == 1:
+            if len(set(f.results[0].var.rank == 0 for f in interface_funcs)) != 1:
+                message = ("Fortran cannot yet handle a templated function returning either a scalar or an array. "
+                           "If you are using the terminal interface, please pass --language c, "
+                           "if you are using the interactive interfaces epyccel or lambdify, please pass language='c'. "
+                           "See https://github.com/pyccel/pyccel/issues/1339 to monitor the advancement of this issue.")
+                errors.report(message,
+                        severity='error', symbol=expr)
+
         name = self._print(expr.name)
-        if all(isinstance(f, FunctionAddress) for f in expr.functions):
-            funcs = expr.functions
+        if all(isinstance(f, FunctionAddress) for f in interface_funcs):
+            funcs = interface_funcs
         else:
-            funcs = [f for f in expr.functions if f is \
+            funcs = [f for f in interface_funcs if f is \
                     expr.point([FunctionCallArgument(a.var.clone('arg_'+str(i))) \
                         for i,a in enumerate(f.arguments)])]
 

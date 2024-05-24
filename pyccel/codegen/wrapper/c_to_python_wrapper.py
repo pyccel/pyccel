@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Module describing the code-wrapping class : CToPythonWrapper
@@ -597,7 +597,7 @@ class CToPythonWrapper(Wrapper):
             The initialisation function.
         """
 
-        mod_name = getattr(expr, 'original_module', expr).name
+        mod_name = self.scope.get_python_name(getattr(expr, 'original_module', expr).name)
         # Initialise the scope
         func_name = self.scope.get_new_name(f'PyInit_{mod_name}')
         func_scope = self.scope.new_child_scope(func_name)
@@ -633,7 +633,7 @@ class CToPythonWrapper(Wrapper):
         ok_code = LiteralInteger(0)
 
         # Save Capsule describing types (needed for dependent modules)
-        body.append(AliasAssign(capsule_obj, PyCapsule_New(API_var, self.scope.get_python_name(mod_name))))
+        body.append(AliasAssign(capsule_obj, PyCapsule_New(API_var, mod_name)))
         body.extend(self._add_object_to_mod(module_var, capsule_obj, '_C_API', initialised))
 
         body.append(FunctionCall(import_array, ()))
@@ -1052,9 +1052,10 @@ class CToPythonWrapper(Wrapper):
 
         imports += cwrapper_ndarray_imports if self._wrapping_arrays else []
         if not isinstance(expr, BindCModule):
-            imports.append(Import(expr.name, expr))
+            imports.append(Import(mod_scope.get_python_name(expr.name), expr))
         original_mod = getattr(expr, 'original_module', expr)
-        return PyModule(original_mod.name, [API_var], funcs, imports = imports,
+        original_mod_name = mod_scope.get_python_name(original_mod.name)
+        return PyModule(original_mod_name, [API_var], funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
                         init_func = init_func, import_func = import_func)
 
@@ -2127,7 +2128,7 @@ class CToPythonWrapper(Wrapper):
 
         if import_wrapper:
             wrapper_name = f'{expr.source}_wrapper'
-            mod_spoof = PyModule(expr.source_module.name.name, (), (), scope = Scope())
+            mod_spoof = PyModule(expr.source_module.name, (), (), scope = Scope())
             return Import(wrapper_name, AsName(mod_spoof, expr.source), mod = mod_spoof)
         else:
             return None

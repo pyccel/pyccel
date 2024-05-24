@@ -1,7 +1,7 @@
-/* --------------------------------------------------------------------------------------- */
-/* This file is part of Pyccel which is released under MIT License. See the LICENSE file   */
-/* or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. */
-/* --------------------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------------------- */
+/* This file is part of Pyccel which is released under MIT License. See the LICENSE file  */
+/* or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details. */
+/* -------------------------------------------------------------------------------------- */
 
 #ifndef         PYC_MATH_C_H
 #define         PYC_MATH_C_H
