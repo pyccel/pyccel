@@ -43,6 +43,7 @@ __all__ = (
     'PythonInt',
     'PythonLen',
     'PythonList',
+    'PythonListFunction',
     'PythonMap',
     'PythonMax',
     'PythonMin',
@@ -715,6 +716,32 @@ class PythonList(TypedAstNode):
         """
         return True
 
+
+class PythonListFunction(TypedAstNode):
+    """
+    Class representing a call to the `list` function.
+
+    Class representing a call to the `list` function. This is
+    different to the `[,]' syntax as it only takes one argument
+    and unpacks any variables.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function call.
+    """
+    __slots__ = ()
+    _attribute_nodes = ()
+
+    def __new__(cls, arg):
+        if isinstance(arg, PythonList):
+            return arg
+        elif isinstance(arg.shape[0], LiteralInteger):
+            return PythonList(*[arg[i] for i in range(arg.shape[0])])
+        else:
+            raise TypeError(f"Can't unpack {arg} into a list")
+
+
 #==============================================================================
 class PythonSet(TypedAstNode):
     """
@@ -1226,7 +1253,7 @@ builtin_functions_dict = {
     'bool'     : PythonBool,
     'sum'      : PythonSum,
     'len'      : PythonLen,
-    'list'     : PythonList,
+    'list'     : PythonListFunction,
     'max'      : PythonMax,
     'min'      : PythonMin,
     'not'      : PyccelNot,
