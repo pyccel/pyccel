@@ -776,18 +776,11 @@ class CCodePrinter(CodePrinter):
                 classes += self._print(classDef.docstring)
             classes += f"struct {classDef.name} {{\n"
             classes += ''.join(self._print(Declare(var)) for var in classDef.attributes)
-            class_scope = classDef.scope
             for method in classDef.methods:
-                if not method.is_inline:
-                    if method.name.startswith(classDef.name) == False:
-                        class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
                     funcs += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
-                    if not func.is_inline:
-                        if method.name.startswith(classDef.name) == False:
-                            class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
-                        funcs += f"{self.function_signature(func)};\n"
+                    funcs += f"{self.function_signature(func)};\n"
             classes += "};\n"
         funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs if not f.is_inline)
 
@@ -811,6 +804,15 @@ class CCodePrinter(CodePrinter):
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
         self._current_module = expr
+        for classDef in  expr.classes: 
+            class_scope = classDef.scope
+            for method in classDef.methods:
+                if not method.is_inline:
+                    class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
+            for interface in classDef.interfaces:
+                for func in interface.functions:
+                    if not func.is_inline:
+                        class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
         body    = ''.join(self._print(i) for i in expr.body)
 
         global_variables = ''.join([self._print(d) for d in expr.declarations])
