@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
 -   #1886 : Add Python support for dict method `pop()`.
 -   #1887 : Add Python support for dict method `popitem()`.
+-   #1885 : Add Python support for dict method `get()`.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
