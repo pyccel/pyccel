@@ -457,6 +457,10 @@ class CharType(FixedSizeType):
     _primitive_type = PrimitiveCharacterType
 
 #==============================================================================
+class TypeAlias(SymbolicType):
+    __slots__ = ()
+
+#==============================================================================
 
 class ContainerType(PyccelType):
     """
