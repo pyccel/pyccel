@@ -65,7 +65,7 @@ from pyccel.ast.datatypes import PrimitiveIntegerType, HomogeneousListType, Stri
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from pyccel.ast.datatypes import DataTypeFactory, PrimitiveFloatingPointType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType
-from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType
+from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType, TypeAlias
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
@@ -2535,7 +2535,10 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
-                cls_base = get_cls_base(class_type) or self.scope.find(class_type.name, 'classes')
+                if isinstance(class_type, SymbolicType):
+                    cls_base = None
+                else:
+                    cls_base = get_cls_base(class_type) or self.scope.find(class_type.name, 'classes')
                 v = var_class(class_type, name, cls_base = cls_base,
                         shape = None,
                         is_const = t.is_const, is_optional = False,
@@ -2943,11 +2946,21 @@ class SemanticParser(BasicParser):
                 cls_def.add_new_attribute(semantic_lhs_var)
             else:
                 insert_scope = self.scope
+
+            lhs = lhs.name
+            if semantic_lhs_var.class_type is TypeAlias():
+                pyccel_stage.set_stage('syntactic')
+                type_annot = SyntacticTypeAnnotation(rhs)
+                pyccel_stage.set_stage('semantic')
+                rhs = self._visit(type_annot)
+                self.scope.insert_symbolic_alias(lhs, rhs)
+                return EmptyNode()
+
             try:
                 insert_scope.insert_variable(semantic_lhs_var)
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
-            lhs = lhs.name
+
 
         # Steps before visiting
         if isinstance(rhs, GeneratorComprehension):
