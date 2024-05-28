@@ -2931,6 +2931,24 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
 
+        if isinstance(lhs, AnnotatedPyccelSymbol):
+            semantic_lhs = self._visit(lhs)
+            if len(semantic_lhs) != 1:
+                errors.report("Cannot declare variable with multiple types",
+                        symbol=expr, severity='error')
+            semantic_lhs_var = semantic_lhs[0]
+            if isinstance(semantic_lhs_var, DottedVariable):
+                cls_def = semantic_lhs_var.lhs.cls_base
+                insert_scope = cls_def.scope
+                cls_def.add_new_attribute(semantic_lhs_var)
+            else:
+                insert_scope = self.scope
+            try:
+                insert_scope.insert_variable(semantic_lhs_var)
+            except RuntimeError as e:
+                errors.report(e, symbol=expr, severity='error')
+            lhs = lhs.name
+
         # Steps before visiting
         if isinstance(rhs, GeneratorComprehension):
             rhs.substitute(rhs.lhs, lhs)
@@ -2975,10 +2993,12 @@ class SemanticParser(BasicParser):
                 d_m_args = {arg.value.name:arg.value for arg in macro.master_arguments
                                   if isinstance(arg.value, Variable)}
 
-                if not sympy_iterable(lhs):
-                    lhs = [lhs]
+                lhs_iter = lhs
+
+                if not sympy_iterable(lhs_iter):
+                    lhs_iter = [lhs]
                 results_shapes = macro.get_results_shapes(args)
-                for m_result, shape, result in zip(macro.results, results_shapes, lhs):
+                for m_result, shape, result in zip(macro.results, results_shapes, lhs_iter):
                     if m_result in d_m_args and not result in args_names:
                         d_result = self._infer_type(d_m_args[m_result])
                         d_result['shape'] = shape
@@ -3098,25 +3118,6 @@ class SemanticParser(BasicParser):
                 if isinstance(rhs, Variable) and rhs.is_target:
                     # case of rhs is a target variable the lhs must be a pointer
                     d['memory_handling'] = 'alias'
-
-        lhs = expr.lhs
-        if isinstance(lhs, AnnotatedPyccelSymbol):
-            semantic_lhs = self._visit(lhs)
-            if len(semantic_lhs) != 1:
-                errors.report("Cannot declare variable with multiple types",
-                        symbol=expr, severity='error')
-            semantic_lhs_var = semantic_lhs[0]
-            if isinstance(semantic_lhs_var, DottedVariable):
-                cls_def = semantic_lhs_var.lhs.cls_base
-                insert_scope = cls_def.scope
-                cls_def.add_new_attribute(semantic_lhs_var)
-            else:
-                insert_scope = self.scope
-            try:
-                insert_scope.insert_variable(semantic_lhs_var)
-            except RuntimeError as e:
-                errors.report(e, symbol=expr, severity='error')
-            lhs = lhs.name
 
         if isinstance(lhs, (PyccelSymbol, DottedName)):
             if isinstance(d_var, list):
