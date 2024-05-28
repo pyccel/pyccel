@@ -7,8 +7,9 @@
 """ Module containing objects from the typing module understood by pyccel
 """
 
-from .basic     import TypedAstNode
+from .basic     import PyccelAstNode, TypedAstNode
 from .core      import Module, PyccelFunctionDef
+from .datatypes import TypeAlias
 
 __all__ = (
     'TypingFinal',
@@ -46,9 +47,14 @@ class TypingFinal(TypedAstNode):
         return self._arg
 
 #==============================================================================
+class TypingTypeAlias(TypedAstNode):
+    _static_type = TypeAlias()
+
+#==============================================================================
 
 typing_funcs = {
         'Final': PyccelFunctionDef('Final', TypingFinal),
+        'TypeAlias': PyccelFunctionDef('TypeAlias', TypingTypeAlias),
     }
 
 typing_mod = Module('typing',
