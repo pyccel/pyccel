@@ -2588,6 +2588,8 @@ class SemanticParser(BasicParser):
             raise errors.report(PYCCEL_RESTRICTION_TODO + ' Could not deduce type information',
                     severity='fatal', symbol=expr)
 
+    def _visit_VariableTypeAnnotation(self, expr):
+        return expr
 
     def _visit_DottedName(self, expr):
 
@@ -2955,11 +2957,12 @@ class SemanticParser(BasicParser):
 
             lhs = lhs.name
             if semantic_lhs_var.class_type is TypeAlias():
-                pyccel_stage.set_stage('syntactic')
-                type_annot = SyntacticTypeAnnotation(rhs)
-                pyccel_stage.set_stage('semantic')
-                rhs = self._visit(type_annot)
-                self.scope.insert_symbolic_alias(lhs, rhs)
+                if not isinstance(rhs, SyntacticTypeAnnotation):
+                    pyccel_stage.set_stage('syntactic')
+                    rhs = SyntacticTypeAnnotation(rhs)
+                    pyccel_stage.set_stage('semantic')
+                type_annot = self._visit(rhs)
+                self.scope.insert_symbolic_alias(lhs, type_annot)
                 return EmptyNode()
 
             try:
