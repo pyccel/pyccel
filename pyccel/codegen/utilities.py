@@ -27,10 +27,6 @@ __all__ = ['copy_internal_library','recompile_object']
 #==============================================================================
 language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 
-#==============================================================================
-# map external libraries to their folders inside pyccel/extensions
-external_libs = {"stc/vec"      : "stc",
-                 "stc/hset"     : "stc",}
 
 #==============================================================================
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
