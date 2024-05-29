@@ -965,7 +965,7 @@ class CCodePrinter(CodePrinter):
                                   f'#define _{container_type.upper()}',
                                   f'#define i_type {container_type}',
                                   f'#define i_key {container_type[index:]}',
-                                  f'#include "{_ + "/" +container[0]}.h"',
+                                  f'#include "{"extensions/STC/include/"+ _ + "/" +container[0]}.h"',
                                   '#endif\n'))
 
         # Get with a default value is not used here as it is
