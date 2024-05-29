@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 -   #1787 : Ensure `STC` is installed with Pyccel.
 -   #1656 : Ensure `gFTL` is installed with Pyccel.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
+-   #1544 : Add support for `typing.TypeAlias`.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
