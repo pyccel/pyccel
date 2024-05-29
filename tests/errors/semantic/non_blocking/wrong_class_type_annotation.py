@@ -11,4 +11,3 @@ class A:
 if __name__ == '__main__':
     myA : int = A()
 
-    print(myA.x)
