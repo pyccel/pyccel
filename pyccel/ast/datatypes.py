@@ -38,6 +38,7 @@ __all__ = (
         'GenericType',
         'SymbolicType',
         'CharType',
+        'TypeAlias',
         # ------------ Container types ------------
         'TupleType',
         'HomogeneousContainerType',

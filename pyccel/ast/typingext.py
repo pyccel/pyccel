@@ -13,6 +13,7 @@ from .datatypes import TypeAlias
 
 __all__ = (
     'TypingFinal',
+    'TypingTypeAlias',
     'typing_mod'
 )
 
@@ -55,6 +56,8 @@ class TypingTypeAlias(TypedAstNode):
     is only used for type annotations. It is useful for creating a PyccelFunctionDef
     but instances should not be created.
     """
+    __slots__ = ()
+    _attribute_nodes = ()
     _static_type = TypeAlias()
 
 #==============================================================================
