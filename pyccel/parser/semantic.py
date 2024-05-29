@@ -683,6 +683,9 @@ class SemanticParser(BasicParser):
         dict
             Dictionary containing all the type information which was inferred.
         """
+        if not isinstance(expr, TypedAstNode):
+            return {'class_type' : SymbolicType()}
+
         d_var = {
                 'class_type' : expr.class_type,
                 'shape'      : expr.shape,
@@ -1403,6 +1406,10 @@ class SemanticParser(BasicParser):
                 else:
                     var = None
             else:
+                symbolic_var = self.scope.find(lhs, 'symbolic_alias')
+                if symbolic_var:
+                    errors.report(f"{lhs} variable represents a symbolic concept. Its value cannot be changed.",
+                            severity='fatal')
                 var = self.scope.find(lhs)
 
             # Variable not yet declared (hence array not yet allocated)
@@ -2535,10 +2542,7 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
-                if isinstance(class_type, SymbolicType):
-                    cls_base = None
-                else:
-                    cls_base = get_cls_base(class_type) or self.scope.find(class_type.name, 'classes')
+                cls_base = self.scope.find(class_type.name, 'classes') or get_cls_base(class_type)
                 v = var_class(class_type, name, cls_base = cls_base,
                         shape = None,
                         is_const = t.is_const, is_optional = False,
@@ -3054,14 +3058,6 @@ class SemanticParser(BasicParser):
             isinstance(rhs.body[0], (ListMethod, SetMethod))):
             return rhs
         if isinstance(rhs, ConstructorCall):
-            return rhs
-        elif isinstance(rhs, FunctionDef):
-
-            # case of lambdify
-
-            rhs = rhs.rename(expr.lhs.name)
-            for i in rhs.body:
-                i.set_current_ast(python_ast)
             return rhs
 
         elif isinstance(rhs, CodeBlock) and len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
