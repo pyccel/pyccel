@@ -19,7 +19,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `compile` | No |
 | **`complex`** | **Yes** |
 | `delattr` | No |
-| `dict` | No |
+| *`dict`* | Preliminary Python support |
 | `dir` | No |
 | `divmod` | No |
 | **`enumerate`** | as a loop iterable |
@@ -42,12 +42,12 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `issubclass` | No |
 | `iter` | No |
 | **`len`** | **Yes** |
-| *`list`* | implemented as a tuple |
+| *`list`* | Python-only |
 | `locals` | No |
 | **`map`** | as a loop iterable |
-| **`max`** | Fortran-only |
+| **`max`** | Full Fortran support and C support for 2 arguments |
 | `memoryview` | No |
-| **`min`** | Fortran-only |
+| **`min`** | Full Fortran support and C support for 2 arguments |
 | `next` | No |
 | `object` | No |
 | `oct` | No |
@@ -60,13 +60,13 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `repr` | No |
 | `reversed` | No |
 | `round` | No |
-| `set` | No |
+| *`set`* | Python-only |
 | `setattr` | No  |
 | `slice` | No |
 | `sorted` | No |
 | `staticmethod` | No |
 | `str` | No |
-| **`sum`** | Fortran-only |
+| **`sum`** | **Yes** |
 | `super` | No |
 | **`tuple`** | **Yes** |
 | **`type`** | **Yes** |

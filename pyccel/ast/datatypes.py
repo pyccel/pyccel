@@ -433,6 +433,12 @@ class GenericType(FixedSizeType):
     def __add__(self, other):
         return other
 
+    def __eq__(self, other):
+        return True
+
+    def __hash__(self):
+        return hash(self.__class__)
+
 class SymbolicType(FixedSizeType):
     """
     Class representing the datatype of a placeholder symbol.
@@ -640,6 +646,12 @@ class HomogeneousContainerType(ContainerType):
         """
         return self._order # pylint: disable=no-member
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.element_type == other.element_type
+
+    def __hash__(self):
+        return hash((self.__class__, self.element_type))
+
 class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
     Class representing Python's native string type.
@@ -698,6 +710,12 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
         this is equal to 0.
         """
         return 1
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__)
+
+    def __hash__(self):
+        return hash(self.__class__)
 
 class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = ArgumentSingleton):
     """
@@ -1039,6 +1057,13 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
         this function returns None.
         """
         return None
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.key_type == other.key_type \
+                and self.value_type == other.value_type
+
+    def __hash__(self):
+        return hash((self.__class__, self._key_type, self._value_type))
 
 #==============================================================================
 

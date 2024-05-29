@@ -166,3 +166,18 @@ def test_homogeneous_tuple_2_annotation_str(language):
 
     assert epyc_homogeneous_tuple_annotation() == homogeneous_tuple_annotation()
     assert isinstance(epyc_homogeneous_tuple_annotation(), type(homogeneous_tuple_annotation()))
+
+@pytest.mark.parametrize('lang',
+        [pytest.param("python", marks = pytest.mark.python)])
+def test_dict_empty_init(lang):
+    def dict_empty_init():
+        # Not valid in Python 3.8
+        a : dict[int, float] #pylint: disable=unsubscriptable-object
+        a = {1:1.0, 2:2.0}
+        return a
+
+    epyc_dict_empty_init = epyccel(dict_empty_init, language = lang)
+    pyccel_result = epyc_dict_empty_init()
+    python_result = dict_empty_init()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
