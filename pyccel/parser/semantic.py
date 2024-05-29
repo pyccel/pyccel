@@ -362,7 +362,7 @@ class SemanticParser(BasicParser):
                 class_def = prefix.cls_base
             except AttributeError:
                 class_def = get_cls_base(prefix.class_type) or \
-                            self.scope.find(prefix.class_type.name, 'classes')
+                            self.scope.find(str(prefix.class_type), 'classes')
 
             attr_name = name.name[-1]
             class_scope = class_def.scope
@@ -1903,6 +1903,8 @@ class SemanticParser(BasicParser):
             for t in annotation.type_list:
                 t.is_const = True
             return annotation
+        elif isinstance(base, UnionTypeAnnotation):
+            return UnionTypeAnnotation(*[self._get_indexed_type(t, args, expr) for t in base.type_list])
 
         if all(isinstance(a, Slice) for a in args):
             rank = len(args)
@@ -2430,7 +2432,7 @@ class SemanticParser(BasicParser):
     def _visit_IndexedElement(self, expr):
         var = self._visit(expr.base)
 
-        if isinstance(var, (PyccelFunctionDef, VariableTypeAnnotation)):
+        if isinstance(var, (PyccelFunctionDef, VariableTypeAnnotation, UnionTypeAnnotation)):
             return self._get_indexed_type(var, expr.indices, expr)
 
         # TODO check consistency of indices with shape/rank
@@ -2542,7 +2544,7 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
-                cls_base = self.scope.find(class_type.name, 'classes') or get_cls_base(class_type)
+                cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
                 v = var_class(class_type, name, cls_base = cls_base,
                         shape = None,
                         is_const = t.is_const, is_optional = False,
@@ -2656,7 +2658,7 @@ class SemanticParser(BasicParser):
         class_type = d_var['class_type']
         cls_base = get_cls_base(class_type)
         if cls_base is None:
-            cls_base = self.scope.find(class_type.name, 'classes')
+            cls_base = self.scope.find(str(class_type), 'classes')
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
@@ -3282,12 +3284,9 @@ class SemanticParser(BasicParser):
                     # it is then treated as a def node
 
                     F = self.scope.find(l, 'symbolic_functions')
-                    if F is None:
-                        self.insert_symbolic_function(new_expr)
-                    else:
-                        errors.report(PYCCEL_RESTRICTION_TODO,
-                                      bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                                      severity='fatal')
+                    errors.report(PYCCEL_RESTRICTION_TODO,
+                                  bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                                  severity='fatal')
 
             new_expressions.append(new_expr)
 
