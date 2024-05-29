@@ -192,15 +192,6 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
     __slots__ = ()
 
     @property
-    def name(self):
-        """
-        The name of the class type.
-
-        The name of the class type.
-        """
-        return self._name # pylint: disable=no-member
-
-    @property
     def datatype(self):
         """
         The datatype of the object.
