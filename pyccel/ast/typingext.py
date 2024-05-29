@@ -7,7 +7,7 @@
 """ Module containing objects from the typing module understood by pyccel
 """
 
-from .basic     import PyccelAstNode, TypedAstNode
+from .basic     import TypedAstNode
 from .core      import Module, PyccelFunctionDef
 from .datatypes import TypeAlias
 
