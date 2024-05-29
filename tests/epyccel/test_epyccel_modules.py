@@ -185,6 +185,7 @@ def test_awkward_names(language):
     assert mod.pure() == modnew.pure()
     assert mod.allocate(1) == modnew.allocate(1)
 
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="PEP613 (TypeAlias) implemented in Python 3.10")
 def test_module_type_alias(language):
     import modules.Module_9 as mod
 
