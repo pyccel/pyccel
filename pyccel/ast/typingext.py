@@ -48,6 +48,13 @@ class TypingFinal(TypedAstNode):
 
 #==============================================================================
 class TypingTypeAlias(TypedAstNode):
+    """
+    Class representing a call to the typing.TypeAlias construct.
+
+    Class representing a call to the typing.TypeAlias construct. This object
+    is only used for type annotations. It is useful for creating a PyccelFunctionDef
+    but instances should not be created.
+    """
     _static_type = TypeAlias()
 
 #==============================================================================
