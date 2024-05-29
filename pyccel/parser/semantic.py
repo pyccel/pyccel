@@ -1683,7 +1683,9 @@ class SemanticParser(BasicParser):
 
                     new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
 
-                    if status != 'unallocated':
+                    if status == 'unallocated':
+                        self._allocs[-1].add(var)
+                    else:
                         errors.report(ARRAY_REALLOCATION, symbol=var.name,
                             severity='warning',
                             bounding_box=(self.current_ast_node.lineno,
