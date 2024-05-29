@@ -458,6 +458,16 @@ class CharType(FixedSizeType):
 
 #==============================================================================
 class TypeAlias(SymbolicType):
+    """
+    Class representing the type of a symbolic object describing a type descriptor.
+
+    Class representing the type of a symbolic object describing a type descriptor.
+    This type is equivalent to Python's built-in typing.TypeAlias.
+
+    See Also
+    --------
+    typing.TypeAlias : <https://docs.python.org/3/library/typing.html#typing.TypeAlias>
+    """
     __slots__ = ()
     _name = 'TypeAlias'
 
