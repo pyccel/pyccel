@@ -25,7 +25,7 @@ from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, Py
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType, GenericType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
@@ -958,15 +958,14 @@ class CCodePrinter(CodePrinter):
         if expr.target:
             dtype = expr.target.pop().name
             if source.startswith('stc/'):
-                dtype_macro = dtype.upper().replace(" ", "_")
                 _,container_type = source.split("/")
-                class_type_macro = import_stc.get(container_type)
-                i_type_arg = f"{container_type}_{dtype.replace(' ', '_')}"
-                return '\n'.join((f'#ifndef _{class_type_macro}_{dtype_macro}',
-                                  f'#define _{class_type_macro}_{dtype_macro}',
-                                  f'#define i_type {i_type_arg}',
-                                  f'#define i_key {dtype}',
-                                  f'#include "{source}.h"',
+                container = container_type.split("_")
+                index = len(container[0]) + 1
+                return '\n'.join((f'#ifndef _{container_type.upper()}',
+                                  f'#define _{container_type.upper()}',
+                                  f'#define i_type {container_type}',
+                                  f'#define i_key {container_type[index:]}',
+                                  f'#include "{_ + "/" +container[0]}.h"',
                                   '#endif\n'))
 
         # Get with a default value is not used here as it is
@@ -1186,10 +1185,10 @@ class CCodePrinter(CodePrinter):
             key = (primitive_type, dtype.precision)
         elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
             container_type = 'hset_' if dtype.name == 'set' else 'vec_'
-            vec_dtype = self.find_in_dtype_registry(dtype.element_type)
+            if not isinstance(dtype.element_type, GenericType):
+                vec_dtype = self.find_in_dtype_registry(dtype.element_type)
             i_type = container_type + vec_dtype.replace(' ', '_')
-            source = 'stc/'+ container_type[:-1]
-            self.add_import(Import(source, Module(vec_dtype, (), ())))
+            self.add_import(Import('stc/' + i_type, Module('stc/' + i_type, (), ())))
             return i_type
         else:
             key = dtype
@@ -1325,7 +1324,6 @@ class CCodePrinter(CodePrinter):
         static = 'static ' if expr.static else ''
 
         declaration = f'{static}{external}{declaration_type} {variable}{init};\n'
-
         return preface + declaration
 
     def function_signature(self, expr, print_arg_names = True):
@@ -2015,14 +2013,10 @@ class CCodePrinter(CodePrinter):
         str
             The generated C code for the container initialization.
         """
-        dtype = self.find_in_dtype_registry(expr.current_user_node.lhs.dtype).replace(" ", "_")
-        container_type = "hset_"if isinstance(expr.class_type, HomogeneousSetType) else "vec_"
-        if (len(expr.args) == 0):
-            return f'{container_var} = c_init({container_type}{dtype},{"{}"});\n'
 
+        dtype = self.find_in_dtype_registry(container_var.lhs.class_type)
         keyraw = '{' + ', '.join([self._print(a) for a in expr.args]) + '}'
-        init = f'{container_var} = c_init({container_type}{dtype}, {keyraw});\n'
-
+        init = f'{container_var.lhs.name} = c_init({dtype}, {keyraw});\n'
         return init
 
     def _print_Return(self, expr):
@@ -2158,6 +2152,7 @@ class CCodePrinter(CodePrinter):
         prefix_code = ''
         lhs = expr.lhs
         rhs = expr.rhs
+
         if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, TupleType):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
             return prefix_code+'{};\n'.format(self._print(rhs))
@@ -2168,7 +2163,7 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.arrayFill(expr)
         lhs = self._print(expr.lhs)
         if isinstance(rhs, (PythonList, PythonSet)):
-            return prefix_code+self.init_lists_or_sets(rhs, lhs)
+            return prefix_code+self.init_lists_or_sets(rhs, expr)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
 
