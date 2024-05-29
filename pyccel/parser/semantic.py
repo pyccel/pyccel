@@ -1682,13 +1682,14 @@ class SemanticParser(BasicParser):
                         status = 'unallocated'
 
                     new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
-                    self._allocs[-1].add(var)
 
                     if status != 'unallocated':
                         errors.report(ARRAY_REALLOCATION, symbol=var.name,
                             severity='warning',
                             bounding_box=(self.current_ast_node.lineno,
                                 self.current_ast_node.col_offset))
+                    elif status == 'unallocated':
+                        self._allocs[-1].add(var)
             elif previous_allocations and previous_allocations[-1].get_user_nodes(IfSection) \
                         and not previous_allocations[-1].get_user_nodes((If)):
                 # If previously allocated in If still under construction
