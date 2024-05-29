@@ -1690,6 +1690,8 @@ class SemanticParser(BasicParser):
                             severity='warning',
                             bounding_box=(self.current_ast_node.lineno,
                                 self.current_ast_node.col_offset))
+                    elif status == 'unallocated':
+                        self._allocs[-1].add(var)
             elif previous_allocations and previous_allocations[-1].get_user_nodes(IfSection) \
                         and not previous_allocations[-1].get_user_nodes((If)):
                 # If previously allocated in If still under construction
