@@ -21,7 +21,7 @@ All notable changes to this project will be documented in this file.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
-
+-   #1847 : Support `list()` and `set()` declarations in c.
 ### Fixed
 
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
