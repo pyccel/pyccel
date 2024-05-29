@@ -191,6 +191,13 @@ def test_homogeneous_set_annotation_int(language):
     assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
     assert isinstance(epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation()))
 
+def test_homogeneous_set_without_annotation(language):
+    def homogeneous_set():
+        a = {1, 2, 3, 4} #pylint: disable=unused-variable
+    epyc_homogeneous_set =  epyccel(homogeneous_set, language=language)
+    assert epyc_homogeneous_set() == homogeneous_set()
+    assert isinstance(epyc_homogeneous_set(), type(homogeneous_set()))
+
 @parametrize_languages()
 def test_homogeneous_set_annotation_float(language):
     def homogeneous_set_annotation ():
@@ -226,6 +233,14 @@ def test_homogeneous_list_annotation_int(language):
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
+
+@parametrize_languages()
+def test_homogeneous_list_without_annotation(language):
+    def homogeneous_list():
+        a = [1, 2, 3, 4] # pylint: disable=unused-variable
+    epyc_homogeneous_list = epyccel(homogeneous_list, language=language)
+    assert epyc_homogeneous_list() == homogeneous_list()
+    assert isinstance(epyc_homogeneous_list(), type(homogeneous_list()))
 
 @parametrize_languages()
 def test_homogeneous_list_annotation_float(language):
