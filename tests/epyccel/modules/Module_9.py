@@ -3,7 +3,7 @@ from typing import TypeAlias
 
 MyType : TypeAlias = float
 
-def set_i(x : 'MyType[:]', i : 'int', val : 'float'):
+def set_i(x : 'MyType[:]', i : 'int', val : MyType):
     x[i] = val
 
 def swap(x : 'MyType[:]', i : 'int', j : 'int'):
