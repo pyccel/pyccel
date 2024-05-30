@@ -191,6 +191,7 @@ def test_homogeneous_set_annotation_int(language):
     assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
     assert isinstance(epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation()))
 
+@parametrize_languages()
 def test_homogeneous_set_without_annotation(language):
     def homogeneous_set():
         a = {1, 2, 3, 4} #pylint: disable=unused-variable
