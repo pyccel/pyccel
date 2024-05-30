@@ -1324,6 +1324,7 @@ class CCodePrinter(CodePrinter):
         static = 'static ' if expr.static else ''
 
         declaration = f'{static}{external}{declaration_type} {variable}{init};\n'
+
         return preface + declaration
 
     def function_signature(self, expr, print_arg_names = True):
@@ -2157,7 +2158,6 @@ class CCodePrinter(CodePrinter):
         prefix_code = ''
         lhs = expr.lhs
         rhs = expr.rhs
-
         if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, TupleType):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
             return prefix_code+'{};\n'.format(self._print(rhs))
