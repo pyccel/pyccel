@@ -956,16 +956,14 @@ class CCodePrinter(CodePrinter):
         else:
             source = self._print(source)
         if expr.target:
-            dtype = expr.target.pop().name
             if source.startswith('stc/'):
-                _,container_type = source.split("/")
+                stc_name, container_type, container_key = source.split("/")
                 container = container_type.split("_")
-                index = len(container[0]) + 1
                 return '\n'.join((f'#ifndef _{container_type.upper()}',
                                   f'#define _{container_type.upper()}',
                                   f'#define i_type {container_type}',
-                                  f'#define i_key {container_type[index:]}',
-                                  f'#include "{_ + "/" +container[0]}.h"',
+                                  f'#define i_key {container_key}',
+                                  f'#include "{stc_name + "/" + container[0]}.h"',
                                   '#endif\n'))
 
         # Get with a default value is not used here as it is
@@ -1188,7 +1186,7 @@ class CCodePrinter(CodePrinter):
             if not isinstance(dtype.element_type, GenericType):
                 vec_dtype = self.find_in_dtype_registry(dtype.element_type)
             i_type = container_type + vec_dtype.replace(' ', '_')
-            self.add_import(Import('stc/' + i_type, Module('stc/' + i_type, (), ())))
+            self.add_import(Import('stc/' + i_type + "/" + vec_dtype, Module('stc/' + i_type, (), ())))
             return i_type
         else:
             key = dtype
