@@ -269,3 +269,12 @@ def test_homogeneous_list_annotation_complex(language):
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
+
+@parametrize_languages()
+def test_homogeneous_list_annotation_embedded_complex(language):
+    def homogeneous_list_annotation():
+        a : 'list[complex]' = [1j, 2j]
+        b = [a] # pylint: disable=unused-variable
+    epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
+    assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
+    assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
