@@ -776,7 +776,7 @@ class PythonSet(TypedAstNode):
         return True
 
 
-class PythonSetFunction(TypedAstNode):
+class PythonSetFunction(PyccelFunction):
     """
     Class representing a call to the `set` function.
 
@@ -789,9 +789,9 @@ class PythonSetFunction(TypedAstNode):
     arg : TypedAstNode
         The argument passed to the function call.
     """
-    __slots__ = ()
-    _attribute_nodes = ()
 
+    __slots__ = ('_shape', '_class_type')
+    name = 'set'
     def __new__(cls, arg):
         if isinstance(arg.class_type, HomogeneousSetType):
             return arg
@@ -799,8 +799,15 @@ class PythonSetFunction(TypedAstNode):
             return PythonSet(*arg)
         elif isinstance(arg.shape[0], LiteralInteger):
             return PythonSet(*[arg[i] for i in range(arg.shape[0])])
+        elif isinstance(arg.shape[0], PyccelArrayShapeElement):
+            return super().__new__(cls)
         else:
             raise TypeError(f"Can't unpack {arg} into a Set")
+    
+    def __init__(self, copied_obj):
+        self._class_type = copied_obj.class_type 
+        self._shape = copied_obj.shape
+        super().__init__(copied_obj)
 
 #==============================================================================
 class PythonMap(PyccelFunction):

@@ -330,3 +330,25 @@ def test_set_kwarg_init(language):
     python_result = kwarg_init()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
+
+def test_set_copie_from_arg1(language):
+    def copie_from_arg1(a : 'list[float]'):
+        b = set(a)
+        return b
+    a = [2.5, 1.4, 9.2]
+    epyc_copie_from_arg = epyccel(copie_from_arg1, language = language)
+    pyccel_result = epyc_copie_from_arg(a)
+    python_result = copie_from_arg1(a)
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_set_copie_from_arg2(language):
+    def copie_from_arg2(a : 'set[float]'):
+        b = set(a)
+        return b
+    a = {2.5, 1.4, 9.2}
+    epyc_copie_from_arg = epyccel(copie_from_arg2, language = language)
+    pyccel_result = epyc_copie_from_arg(a)
+    python_result = copie_from_arg2(a)
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
