@@ -322,7 +322,7 @@ def test_set_with_set(language):
 
 def test_set_kwarg_init(language):
     def kwarg_init():
-        b = set({4.6, 7.9, 2.5}) 
+        b = set({4.6, 7.9, 2.5})
         return b
 
     epyc_kwarg_init = epyccel(kwarg_init, language = language)
