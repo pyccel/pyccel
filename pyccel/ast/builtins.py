@@ -803,9 +803,9 @@ class PythonSetFunction(PyccelFunction):
             return super().__new__(cls)
         else:
             raise TypeError(f"Can't unpack {arg} into a Set")
-    
+
     def __init__(self, copied_obj):
-        self._class_type = copied_obj.class_type 
+        self._class_type = copied_obj.class_type
         self._shape = copied_obj.shape
         super().__init__(copied_obj)
 
