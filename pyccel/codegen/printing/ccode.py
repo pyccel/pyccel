@@ -818,7 +818,7 @@ class CCodePrinter(CodePrinter):
         global_variables = ''.join([self._print(d) for d in expr.declarations])
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = Import(expr.name, Module(expr.name,(),()))
+        imports = Import(self.scope.get_python_name(expr.name), Module(expr.name,(),()))
         imports = self._print(imports)
 
         code = ('{imports}\n'
