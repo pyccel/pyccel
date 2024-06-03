@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import pytest
 import numpy as np
 from pyccel import epyccel
 
@@ -129,6 +130,15 @@ def test_module_6(language):
         assert mod_att == modnew_att
         assert type(mod_att) is type(modnew_att)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="List indexing is not yet supported in C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_module_7(language):
     import modules.array_consts as mod
 
