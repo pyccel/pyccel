@@ -800,10 +800,24 @@ class CCodePrinter(CodePrinter):
                 {classes}\n \
                 {funcs}\n \
                 #endif // {name}_H\n")
+    
+    def rename_imported_methods(self, expr):
+         if expr.source_module and expr.source_module is not self._current_module:
+            for classDef in expr.source_module.classes:
+                class_scope = classDef.scope
+                for method in classDef.methods:
+                    if not method.is_inline:
+                        class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
+                for interface in classDef.interfaces:
+                    for func in interface.functions:
+                        if not func.is_inline:
+                            class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
         self._current_module = expr
+        for item in expr.imports:
+            self.rename_imported_methods(item)
         for classDef in  expr.classes: 
             class_scope = classDef.scope
             for method in classDef.methods:
@@ -972,16 +986,6 @@ class CCodePrinter(CodePrinter):
         if source in import_dict: # pylint: disable=consider-using-get
             source = import_dict[source]
 
-        if expr.source_module and expr.source_module is not self._current_module:
-            for classDef in expr.source_module.classes:
-                class_scope = classDef.scope
-                for method in classDef.methods:
-                    if not method.is_inline:
-                        class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
-                for interface in classDef.interfaces:
-                    for func in interface.functions:
-                        if not func.is_inline:
-                            class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
 
         if source is None:
             return ''
