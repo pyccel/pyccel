@@ -830,7 +830,7 @@ class CCodePrinter(CodePrinter):
         self._current_module = expr
         for item in expr.imports:
             self.rename_imported_methods(item)
-        for classDef in  expr.classes: 
+        for classDef in  expr.classes:
             class_scope = classDef.scope
             for method in classDef.methods:
                 if not method.is_inline:
