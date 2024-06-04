@@ -337,7 +337,6 @@ def execute_pyccel(fname, *,
 
     # Iterate over the external_libs list and determine if the printer
     # requires an external lib to be included.
-    
     if [key for key in codegen.get_printer_imports() if key.startswith('stc')] :
         lib_dest_path = copy_internal_library('stc', pyccel_dirpath)
 

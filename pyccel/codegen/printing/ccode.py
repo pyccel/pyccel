@@ -800,7 +800,7 @@ class CCodePrinter(CodePrinter):
                 {classes}\n \
                 {funcs}\n \
                 #endif // {name}_H\n")
-    
+
     def rename_imported_methods(self, expr):
          if expr.source_module and expr.source_module is not self._current_module:
             for classDef in expr.source_module.classes:
