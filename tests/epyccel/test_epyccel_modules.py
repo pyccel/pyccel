@@ -171,7 +171,10 @@ def test_module_7(language):
     mod.reset_e()
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="List wrapper is not implemented yet."),
+            pytest.mark.fortran]
+            ),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="List indexing is not yet supported in C"),
             pytest.mark.c]
@@ -180,7 +183,7 @@ def test_module_7(language):
     )
 )
 def test_module_8(language):
-    import modules.array_consts as mod
+    import modules.list_comprehension as mod
 
     modnew = epyccel(mod, language=language)
 
