@@ -151,8 +151,6 @@ def test_module_7(language):
         assert np.array_equal(mod_att, modnew_att)
         assert mod_att.dtype == modnew_att.dtype
 
-    assert np.array_equal(mod.F, modnew.F)
-
     modnew.update_a()
     mod.update_a()
 
@@ -180,6 +178,13 @@ def test_module_7(language):
     mod.reset_a()
     mod.reset_c()
     mod.reset_e()
+
+def test_module_8(language):
+    import modules.array_consts as mod
+
+    modnew = epyccel(mod, language=language)
+
+    assert np.array_equal(mod.F, modnew.F)
 
 def test_awkward_names(language):
     import modules.awkward_names as mod
