@@ -187,7 +187,7 @@ def test_module_8(language):
 
     modnew = epyccel(mod, language=language)
 
-    assert np.array_equal(mod.F, modnew.F)
+    assert np.array_equal(mod.A, modnew.A)
 
 def test_awkward_names(language):
     import modules.awkward_names as mod
