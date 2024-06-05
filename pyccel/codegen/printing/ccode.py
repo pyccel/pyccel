@@ -225,10 +225,6 @@ c_library_headers = (
 
 import_dict = {'omp_lib' : 'omp' }
 
-import_stc = {'hset' : 'SET',
-              'vec'  : 'VEC'
-              }
-
 c_imports = {n : Import(n, Module(n, (), ())) for n in
                 ['stdlib',
                  'math',
