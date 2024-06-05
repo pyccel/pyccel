@@ -800,9 +800,21 @@ class CCodePrinter(CodePrinter):
                 {classes}\n \
                 {funcs}\n \
                 #endif // {name}_H\n")
-    
+
     def rename_imported_methods(self, expr):
-         if expr.source_module and expr.source_module is not self._current_module:
+        """
+        Rename Imported Methods.
+
+        This function is responsible for renaming methods of classes from
+        the imported modules, ensuring that the names are correct 
+        by prefixing them with their class names.
+
+        Parameters
+        ----------
+        expr : Import
+            The import found in the module being renamed.
+        """
+        if expr.source_module and expr.source_module is not self._current_module:
             for classDef in expr.source_module.classes:
                 class_scope = classDef.scope
                 for method in classDef.methods:
@@ -818,7 +830,7 @@ class CCodePrinter(CodePrinter):
         self._current_module = expr
         for item in expr.imports:
             self.rename_imported_methods(item)
-        for classDef in  expr.classes: 
+        for classDef in  expr.classes:
             class_scope = classDef.scope
             for method in classDef.methods:
                 if not method.is_inline:
