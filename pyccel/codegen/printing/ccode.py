@@ -1195,8 +1195,7 @@ class CCodePrinter(CodePrinter):
             key = (primitive_type, dtype.precision)
         elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
             container_type = 'hset_' if dtype.name == 'set' else 'vec_'
-            if not isinstance(dtype.element_type, GenericType):
-                vec_dtype = self.find_in_dtype_registry(dtype.element_type)
+            vec_dtype = self.find_in_dtype_registry(dtype.element_type)
             i_type = container_type + vec_dtype.replace(' ', '_')
             self.add_import(Import('stc/' + i_type + "/" + vec_dtype, Module('stc/' + i_type, (), ())))
             return i_type
