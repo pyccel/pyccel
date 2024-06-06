@@ -485,8 +485,7 @@ class FortranToCWrapper(Wrapper):
             return expr.clone(expr.name, new_class = BindCArrayVariable, wrapper_function = func,
                                 original_variable = expr)
         else:
-            raise NotImplementedError("Containers cannot be wrapped yet")
-
+            raise NotImplementedError(f"Objects of type {expr.class_type} cannot be wrapped yet")
     def _wrap_DottedVariable(self, expr):
         """
         Create all objects necessary to expose a class attribute to C.
