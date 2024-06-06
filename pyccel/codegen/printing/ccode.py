@@ -2010,7 +2010,7 @@ class CCodePrinter(CodePrinter):
         else:
             return call_code
 
-    def init_lists_or_sets(self, expr, container_var):
+    def init_stc_container(self, expr, container_var):
         """
         Generate the initialization of an STC container in C.
 
@@ -2178,7 +2178,7 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.arrayFill(expr)
         lhs = self._print(expr.lhs)
         if isinstance(rhs, (PythonList, PythonSet)):
-            return prefix_code+self.init_lists_or_sets(rhs, expr)
+            return prefix_code+self.init_stc_container(rhs, expr)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
 
