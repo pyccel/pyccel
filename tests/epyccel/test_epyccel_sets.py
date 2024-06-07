@@ -320,47 +320,47 @@ def test_set_with_set(language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_set_kwarg_init(language):
-    def kwarg_init():
+def test_init_with_set(language):
+    def init_with_set():
         b = set({4.6, 7.9, 2.5})
         return b
 
-    epyc_kwarg_init = epyccel(kwarg_init, language = language)
-    pyccel_result = epyc_kwarg_init()
-    python_result = kwarg_init()
+    epyc_init_with_set = epyccel(init_with_set, language = language)
+    pyccel_result = epyc_init_with_set()
+    python_result = init_with_set()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_set_kwarg_init_list(language):
-    def kwarg_init():
+def test_set_init_with_list(language):
+    def init_with_list():
         b = set([4.6, 7.9, 2.5])
         return b
 
-    epyc_kwarg_init = epyccel(kwarg_init, language = language)
-    pyccel_result = epyc_kwarg_init()
-    python_result = kwarg_init()
+    epyc_init_with_list = epyccel(init_with_list, language = language)
+    pyccel_result = epyc_init_with_list()
+    python_result = init_with_list()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_set_copie_from_arg1(language):
-    def copie_from_arg1(a : 'list[float]'):
+def test_set_copy_from_arg1(language):
+    def copy_from_arg1(a : 'list[float]'):
         b = set(a)
         return b
     a = [2.5, 1.4, 9.2]
-    epyc_copie_from_arg = epyccel(copie_from_arg1, language = language)
-    pyccel_result = epyc_copie_from_arg(a)
-    python_result = copie_from_arg1(a)
+    epyc_copy_from_arg = epyccel(copy_from_arg1, language = language)
+    pyccel_result = epyc_copy_from_arg(a)
+    python_result = copy_from_arg1(a)
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_set_copie_from_arg2(language):
-    def copie_from_arg2(a : 'set[float]'):
+def test_set_copy_from_arg2(language):
+    def copy_from_arg2(a : 'set[float]'):
         b = set(a)
         return b
     a = {2.5, 1.4, 9.2}
-    epyc_copie_from_arg = epyccel(copie_from_arg2, language = language)
-    pyccel_result = epyc_copie_from_arg(a)
-    python_result = copie_from_arg2(a)
+    epyc_copy_from_arg = epyccel(copy_from_arg2, language = language)
+    pyccel_result = epyc_copy_from_arg(a)
+    python_result = copy_from_arg2(a)
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
