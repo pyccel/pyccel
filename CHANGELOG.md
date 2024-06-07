@@ -19,10 +19,10 @@ All notable changes to this project will be documented in this file.
 -   #1787 : Ensure `STC` is installed with Pyccel.
 -   #1656 : Ensure `gFTL` is installed with Pyccel.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
+-   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the `STC` library.
+-   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the `STC` library. 
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
--   #1655 : \[LISTS\] Support variable declarations in C
--   #1659 : \[SETS\] Support variable declarations in C
 
 ### Fixed
 
