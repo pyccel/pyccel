@@ -1269,7 +1269,6 @@ class CCodePrinter(CodePrinter):
             if isinstance(class_type, NumpyNDArrayType):
                 if rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
-                    return dtype
                 self.add_import(c_imports['ndarrays'])
                 dtype = 't_ndarray'
             elif isinstance(class_type, (HomogeneousSetType, HomogeneousListType)):
