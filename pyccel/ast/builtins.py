@@ -795,10 +795,8 @@ class PythonSetFunction(PyccelFunction):
     def __new__(cls, arg):
         if isinstance(arg.class_type, HomogeneousSetType):
             return arg
-        elif isinstance(arg, PythonList):
+        elif isinstance(arg, (PythonList, PythonSet, PythonTuple)):
             return PythonSet(*arg)
-        elif isinstance(arg.shape[0], LiteralInteger):
-            return PythonSet(*[arg[i] for i in range(arg.shape[0])])
         elif isinstance(arg.shape[0], PyccelArrayShapeElement):
             return super().__new__(cls)
         else:
