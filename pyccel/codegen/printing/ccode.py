@@ -645,6 +645,29 @@ class CCodePrinter(CodePrinter):
 
         return code
 
+    def rename_imported_methods(self, expr):
+        """
+        Rename class methods from user-defined imports.
+
+        This function is responsible for renaming methods of classes from
+        the imported modules, ensuring that the names are correct 
+        by prefixing them with their class names.
+
+        Parameters
+        ----------
+        expr : Tuple of ClassDef objects
+            The ClassDef objects found in the module being renamed.
+        """
+        for classDef in expr:
+            class_scope = classDef.scope
+        for method in classDef.methods:
+            if not method.is_inline:
+                class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
+        for interface in classDef.interfaces:
+            for func in interface.functions:
+                if not func.is_inline:
+                    class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
+
     # ============ Elements ============ #
 
     def _print_PythonAbs(self, expr):
@@ -797,44 +820,13 @@ class CCodePrinter(CodePrinter):
                 {funcs}\n \
                 #endif // {name}_H\n")
 
-    def rename_imported_methods(self, expr):
-        """
-        Rename Imported Methods.
-
-        This function is responsible for renaming methods of classes from
-        the imported modules, ensuring that the names are correct 
-        by prefixing them with their class names.
-
-        Parameters
-        ----------
-        expr : Import
-            The import found in the module being renamed.
-        """
-        if expr.source_module and expr.source_module is not self._current_module:
-            for classDef in expr.source_module.classes:
-                class_scope = classDef.scope
-                for method in classDef.methods:
-                    if not method.is_inline:
-                        class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
-                for interface in classDef.interfaces:
-                    for func in interface.functions:
-                        if not func.is_inline:
-                            class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
-
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
         self._current_module = expr
         for item in expr.imports:
-            self.rename_imported_methods(item)
-        for classDef in  expr.classes:
-            class_scope = classDef.scope
-            for method in classDef.methods:
-                if not method.is_inline:
-                    class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
-            for interface in classDef.interfaces:
-                for func in interface.functions:
-                    if not func.is_inline:
-                        class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
+            if item.source_module and item.source_module is not self._current_module:
+                self.rename_imported_methods(item.source_module.classes)
+        self.rename_imported_methods(expr.classes)
         body    = ''.join(self._print(i) for i in expr.body)
 
         global_variables = ''.join([self._print(d) for d in expr.declarations])
