@@ -4030,7 +4030,7 @@ def test_array_float_nested_C_array_initialization_3(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="List indexing is not yet supported in C"),
+            pytest.mark.xfail(reason="List indexing is not yet supported in C, related issue #1876"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
