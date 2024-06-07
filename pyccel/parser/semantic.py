@@ -146,6 +146,12 @@ import pyccel.decorators as def_decorators
 errors = Errors()
 pyccel_stage = PyccelStage()
 
+type_container = {
+                   PythonTupleFunction : HomogeneousTupleType,
+                   PythonList : HomogeneousListType,
+                   PythonSetFunction : HomogeneousSetType
+                  }
+
 #==============================================================================
 
 def _get_name(var):
@@ -1928,12 +1934,8 @@ class SemanticParser(BasicParser):
                     pyccel_stage.set_stage('semantic')
                 internal_datatypes = self._visit(syntactic_annotation)
                 type_annotations = []
-                if dtype_cls is PythonTupleFunction:
-                    class_type = HomogeneousTupleType
-                elif dtype_cls is PythonList:
-                    class_type = HomogeneousListType
-                elif dtype_cls is PythonSetFunction:
-                    class_type = HomogeneousSetType
+                if dtype_cls in type_container :
+                    class_type = type_container[dtype_cls]
                 else:
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                             severity='fatal', symbol=expr)
