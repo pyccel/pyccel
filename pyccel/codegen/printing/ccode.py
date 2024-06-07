@@ -645,6 +645,31 @@ class CCodePrinter(CodePrinter):
 
         return code
 
+    def init_stc_container(self, expr, container_var):
+        """
+        Generate the initialization of an STC container in C.
+
+        This method generates and prints the C code for initializing a container using the STC `init()` method.
+
+        Parameters
+        ----------
+        expr : TypedAstNode
+            The object representing the container being printed (e.g., PythonList, PythonSet).
+    
+        container_var : str
+            The variable name to which the container is being assigned.
+        
+        Returns
+        -------
+        str
+            The generated C code for the container initialization.
+        """
+
+        dtype = self.find_in_type_registry(container_var.lhs.class_type)
+        keyraw = '{' + ', '.join(self._print(a) for a in expr.args) + '}'
+        init = f'{container_var.lhs.name} = c_init({dtype}, {keyraw});\n'
+        return init
+
     def rename_imported_methods(self, expr):
         """
         Rename class methods from user-defined imports.
@@ -2010,31 +2035,6 @@ class CCodePrinter(CodePrinter):
             return f'{call_code};\n'
         else:
             return call_code
-
-    def init_stc_container(self, expr, container_var):
-        """
-        Generate the initialization of an STC container in C.
-
-        This method generates and prints the C code for initializing a container using the STC `init()` method.
-
-        Parameters
-        ----------
-        expr : TypedAstNode
-            The object representing the container being printed (e.g., PythonList, PythonSet).
-    
-        container_var : str
-            The variable name to which the container is being assigned.
-        
-        Returns
-        -------
-        str
-            The generated C code for the container initialization.
-        """
-
-        dtype = self.find_in_type_registry(container_var.lhs.class_type)
-        keyraw = '{' + ', '.join([self._print(a) for a in expr.args]) + '}'
-        init = f'{container_var.lhs.name} = c_init({dtype}, {keyraw});\n'
-        return init
 
     def _print_Return(self, expr):
         code = ''
