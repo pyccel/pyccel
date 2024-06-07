@@ -442,7 +442,7 @@ class GenericType(FixedSizeType):
     @lru_cache
     def __add__(self, other):
         return other
-    
+
     def __eq__(self, other):
         return True
 
