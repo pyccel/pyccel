@@ -797,10 +797,8 @@ class PythonSetFunction(PyccelFunction):
             return arg
         elif isinstance(arg, (PythonList, PythonSet, PythonTuple)):
             return PythonSet(*arg)
-        elif isinstance(arg.shape[0], PyccelArrayShapeElement):
-            return super().__new__(cls)
         else:
-            raise TypeError(f"Can't unpack {arg} into a Set")
+            return super().__new__(cls)
 
     def __init__(self, copied_obj):
         self._class_type = copied_obj.class_type
