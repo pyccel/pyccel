@@ -1621,7 +1621,7 @@ class SemanticParser(BasicParser):
             # to remove memory leaks
             new_expressions.append(Deallocate(var))
 
-        elif class_type != var.class_type and not isinstance(class_type.datatype, GenericType):
+        elif class_type != var.class_type:
             if is_augassign:
                 tmp_result = PyccelAdd(var, rhs)
                 result_type = tmp_result.class_type
