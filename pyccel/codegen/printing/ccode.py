@@ -1605,9 +1605,8 @@ class CCodePrinter(CodePrinter):
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType)):
             variable_address = self._print(ObjectAddress(expr.variable))
-            dtype = self.find_in_type_registry(expr.variable.class_type.element_type).replace(" ", "_")
-            container_type = "hset_"if isinstance(expr.variable.class_type, HomogeneousSetType) else "vec_"
-            return f'{container_type}{dtype}_drop({variable_address});\n'
+            container_type = self.find_in_type_registry(expr.variable.class_type)
+            return f'{container_type}_drop({variable_address});\n'
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
         variable_address = self._print(ObjectAddress(expr.variable))
