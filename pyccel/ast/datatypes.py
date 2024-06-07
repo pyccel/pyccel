@@ -760,10 +760,10 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
         self._element_type = element_type
         self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
         super().__init__()
-
+    
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self._element_type == other._element_type \
-              and self._order == other._order  
+                and self._order == other._order  
 
     def __hash__(self):
         return hash((self.__class__, self._element_type, self._order))
@@ -789,7 +789,7 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
         super().__init__()
-    
+
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self._element_type == other._element_type
 
