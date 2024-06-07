@@ -149,6 +149,16 @@ class PyccelType:
     is expected when calling a bitwise comparison operator on objects of these types.
     """
     __slots__ = ()
+    _name = None
+
+    @property
+    def name(self):
+        """
+        Get the name of the pyccel type.
+        
+        Get the name of the pyccel type.
+        """
+        return self._name
 
     def __init__(self): #pylint: disable=useless-parent-delegation
         # This __init__ function is required so the ArgumentSingleton can
@@ -488,16 +498,6 @@ class HomogeneousContainerType(ContainerType):
     This is the case for objects such as arrays, lists, etc.
     """
     __slots__ = ()
-    _name = None
-
-    @property
-    def name(self):
-        """
-        Get the name of the container.
-        
-        Get the name of the container.
-        """
-        return self._name
 
     @property
     def datatype(self):
