@@ -1189,7 +1189,7 @@ class CCodePrinter(CodePrinter):
             container_type = 'hset_' if dtype.name == 'set' else 'vec_'
             element_type = self.find_in_dtype_registry(dtype.element_type)
             i_type = container_type + element_type.replace(' ', '_')
-            self.add_import(Import('stc/' + i_type + "/" + element_type, Module('stc/' + i_type, (), ())))
+            self.add_import(Import(f'stc/{i_type}/{element_type}', Module(f'stc/{i_type}', (), ())))
             return i_type
         else:
             key = dtype
