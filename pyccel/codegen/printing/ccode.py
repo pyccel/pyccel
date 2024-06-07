@@ -1302,14 +1302,14 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
 
         if rank > 0:
-            if isinstance(class_type, NumpyNDArrayType):
-                if rank > 15:
+            if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType)):
+                    dtype = self.find_in_type_registry(expr.class_type)
+                    return dtype
+            if expr.is_ndarray or isinstance(expr.class_type, HomogeneousContainerType):
+                if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
                 dtype = 't_ndarray'
-            elif isinstance(class_type, (HomogeneousSetType, HomogeneousListType)):
-                dtype = self.find_in_type_registry(expr.class_type)
-                return dtype
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
         elif not isinstance(class_type, CustomDataType):
