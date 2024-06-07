@@ -660,13 +660,13 @@ class CCodePrinter(CodePrinter):
         """
         for classDef in expr:
             class_scope = classDef.scope
-        for method in classDef.methods:
-            if not method.is_inline:
-                class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
-        for interface in classDef.interfaces:
-            for func in interface.functions:
-                if not func.is_inline:
-                    class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
+            for method in classDef.methods:
+                if not method.is_inline:
+                    class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
+            for interface in classDef.interfaces:
+                for func in interface.functions:
+                    if not func.is_inline:
+                        class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
 
     # ============ Elements ============ #
 
