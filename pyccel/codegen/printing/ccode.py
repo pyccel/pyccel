@@ -31,7 +31,7 @@ from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleTyp
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType
 
-from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
+from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement, PyccelSymbol
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
@@ -45,6 +45,8 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
 from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
+
+from pyccel.ast.type_annotations import VariableTypeAnnotation
 
 from pyccel.ast.utilities import expand_to_loops
 
@@ -314,6 +316,8 @@ class CCodePrinter(CodePrinter):
     def add_import(self, import_obj):
         if import_obj.source not in self._additional_imports:
             self._additional_imports[import_obj.source] = import_obj
+        else:
+            self._additional_imports[import_obj.source].define_target(import_obj.target)
 
     def _get_statement(self, codestring):
         return "%s;\n" % codestring
@@ -994,15 +998,28 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1]
         else:
             source = self._print(source)
-        if expr.target:
-            if source.startswith('stc/'):
-                stc_name, container_type, container_key = source.split("/")
-                container = container_type.split("_")
+        if source == 'stc/cspan':
+            code = '#include <stc/cspan.h>\n'
+            for t in expr.target:
+                ctype = t.object.class_type
+                dtype = self.find_in_type_registry(ctype.element_type)
+                macro_name = t.target.upper()
+                code += '\n'.join((f'#ifndef _{macro_name}',
+                                   f'#define _{macro_name}',
+                                   f'using_cspan({t.target}, {dtype}, {ctype.rank});\n'
+                                   '#endif\n'))
+            return code
+
+        elif source.startswith('stc/'):
+            for t in expr.target:
+                dtype = t.object.class_type
+                container_type = t.target
+                container_key = self.find_in_type_registry(dtype.element_type)
                 return '\n'.join((f'#ifndef _{container_type.upper()}',
                                   f'#define _{container_type.upper()}',
                                   f'#define i_type {container_type}',
                                   f'#define i_key {container_key}',
-                                  f'#include "{stc_name + "/" + container[0]}.h"',
+                                  f'#include <{source}.h>',
                                   '#endif\n'))
 
         # Get with a default value is not used here as it is
@@ -1221,10 +1238,16 @@ class CCodePrinter(CodePrinter):
 
             key = (primitive_type, dtype.precision)
         elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
-            container_type = 'hset_' if dtype.name == 'set' else 'vec_'
+            container_type = 'hset' if dtype.name == 'set' else 'vec'
+            element_type = self.find_in_type_registry(dtype.element_type).replace(' ', '_')
+            i_type = f'{container_type}_{element_type}'
+            self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
+            return i_type
+        elif isinstance(dtype, NumpyNDArrayType):
+            container_type = 'cspan_'
             element_type = self.find_in_type_registry(dtype.element_type)
             i_type = container_type + element_type.replace(' ', '_')
-            self.add_import(Import(f'stc/{i_type}/{element_type}', Module(f'stc/{i_type}', (), ())))
+            self.add_import(Import(f'stc/cspan', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
         else:
             key = dtype
@@ -1301,19 +1324,8 @@ class CCodePrinter(CodePrinter):
         class_type = expr.class_type
         rank  = expr.rank
 
-        if rank > 0:
-            if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType)):
-                    dtype = self.find_in_type_registry(expr.class_type)
-                    return dtype
-            if expr.is_ndarray or isinstance(expr.class_type, HomogeneousContainerType):
-                if expr.rank > 15:
-                    errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
-                self.add_import(c_imports['ndarrays'])
-                dtype = 't_ndarray'
-            else:
-                errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
-        elif not isinstance(class_type, CustomDataType):
-            dtype = self.find_in_type_registry(expr.dtype)
+        if not isinstance(class_type, CustomDataType):
+            dtype = self.find_in_type_registry(expr.class_type)
         else:
             dtype = self._print(expr.class_type)
 
