@@ -1244,7 +1244,9 @@ class CCodePrinter(CodePrinter):
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
         elif isinstance(dtype, NumpyNDArrayType):
-            container_type = 'cspan_'
+            container_type = f'cspan{dtype.rank}_'
+            if dtype.order:
+                container_type += f'{dtype.order}_'
             element_type = self.find_in_type_registry(dtype.element_type)
             i_type = container_type + element_type.replace(' ', '_')
             self.add_import(Import(f'stc/cspan', AsName(VariableTypeAnnotation(dtype), i_type)))
@@ -1362,9 +1364,15 @@ class CCodePrinter(CodePrinter):
 
         if expr.variable.is_stack_array:
             preface, init = self._init_stack_array(expr.variable,)
-        elif declaration_type == 't_ndarray' and not self._in_header:
+        elif isinstance(expr.variable.class_type, NumpyNDArrayType) and not self._in_header:
+            shape = expr.variable.shape
             preface = ''
-            init    = ' = {.shape = NULL}'
+            if not any(isinstance(s, PyccelArrayShapeElement) for s in shape):
+                shape_code = ', '.join(self._print(s) for s in shape)
+            else:
+                shape_code = ', '.join('0' for _ in range(expr.variable.rank))
+            order = 'c_COLMAJOR' if expr.variable.order == 'F' else 'c_ROWMAJOR'
+            init = f' = cspan_md_layout({order}, NULL, {shape_code})'
         else:
             preface = ''
             init    = ''
@@ -1604,25 +1612,38 @@ class CCodePrinter(CodePrinter):
     def _print_Allocate(self, expr):
         free_code = ''
         variable = expr.variable
-        if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType)):
+        class_type = variable.class_type
+        if isinstance(class_type, (HomogeneousListType, HomogeneousSetType)):
             return ''
+        if isinstance(class_type, NumpyNDArrayType):
+            data_var = DottedVariable(VoidType(), 'data', lhs = variable)
+            shape_vars = [self._print(s) for s in expr.shape]
+            size = ' * '.join(shape_vars)
+            shape_code = ', '.join(shape_vars)
+            elem_type = self.find_in_type_registry(class_type.element_type)
+            var_code = self._print(variable)
+            code = f'{data_var} = malloc(sizeof({elem_type})*{size});\n'
+            if expr.status != 'unallocated':
+                if expr.status == 'unknown':
+                    free_code = f'if ({self._print(data_var)} != NULL)\n'
+                    free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
+                elif expr.status == 'allocated':
+                    free_code += self._print(Deallocate(variable))
+                for i,s in enumerate(shape_vars):
+                    s_var = self._print(PyccelArrayShapeElement(variable, i))
+                    code += f'{s_var} = {s};\n'
+            return free_code + code
         if variable.rank > 0:
             #free the array if its already allocated and checking if its not null if the status is unknown
-            if  (expr.status == 'unknown'):
-                shape_var = DottedVariable(VoidType(), 'shape', lhs = variable)
-                free_code = f'if ({self._print(shape_var)} != NULL)\n'
-                free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
-            elif (expr.status == 'allocated'):
-                free_code += self._print(Deallocate(variable))
             self.add_import(c_imports['ndarrays'])
             shape = ", ".join(self._print(i) for i in expr.shape)
-            if isinstance(variable.class_type, NumpyNDArrayType):
+            if isinstance(class_type, NumpyNDArrayType):
                 #set dtype to the C struct types
                 dtype = self.find_in_ndarray_type_registry(variable.dtype)
-            elif isinstance(variable.class_type, HomogeneousContainerType):
+            elif isinstance(class_type, HomogeneousContainerType):
                 dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(variable.dtype.primitive_type, variable.dtype.precision)])
             else:
-                raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
+                raise NotImplementedError(f"Don't know how to index {class_type} type")
             shape_dtype = self.find_in_type_registry(NumpyInt64Type())
             shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
             is_view = 'false' if variable.on_heap else 'true'
@@ -1652,9 +1673,10 @@ class CCodePrinter(CodePrinter):
             return f"{Pyccel__del}({variable_address});\n"
         elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousContainerType)):
             if expr.variable.is_alias:
-                return f'free_pointer({variable_address});\n'
+                return ''
             else:
-                return f'free_array({variable_address});\n'
+                data_var = DottedVariable(VoidType(), 'data', lhs = expr.variable)
+                return f'free({data_var});\n';
         else:
             return f'free({variable_address});\n'
 
