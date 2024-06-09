@@ -32,6 +32,7 @@ from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, Pri
 from pyccel.ast.datatypes import HomogeneousContainerType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement, PyccelSymbol
+from pyccel.ast.internals import PyccelArraySize
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
@@ -408,14 +409,6 @@ class CCodePrinter(CodePrinter):
         order = lhs.order
         lhs_dtype = lhs.dtype
         declare_dtype = self.find_in_type_registry(lhs_dtype)
-        if isinstance(lhs.class_type, NumpyNDArrayType):
-            #set dtype to the C struct types
-            dtype = self.find_in_ndarray_type_registry(lhs_dtype)
-        elif isinstance(lhs.class_type, HomogeneousTupleType):
-            dtype = self.find_in_ndarray_type_registry(numpy_precision_map[
-                        (lhs_dtype.primitive_type, lhs_dtype.precision)])
-        else:
-            raise NotImplementedError(f"Don't know how to index {lhs.class_type} type")
 
         flattened_list = self._flatten_list(arg)
         operations = ""
@@ -430,7 +423,6 @@ class CCodePrinter(CodePrinter):
             copy_to = temp_var
         else:
             copy_to = lhs
-        copy_to_data_var = DottedVariable(lhs.dtype, dtype, lhs=copy_to)
 
         num_elements = len(flattened_list)
         # Get the offset variable if it is needed
@@ -469,9 +461,9 @@ class CCodePrinter(CodePrinter):
                 dummy_array_name = self.scope.get_new_name()
                 operations += f"{declare_dtype} {dummy_array_name}[] = {subset_str};\n"
 
-                copy_to_data = self._print(copy_to_data_var)
-                type_size = self._print(DottedVariable(VoidType(), 'type_size', lhs=copy_to))
-                operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * {type_size});\n"
+                copy_to_data = self._print(ObjectAddress(copy_to))
+                type_size = self._print(PyccelArraySize(copy_to))
+                operations += f"memcpy(cspan_front({copy_to_data}), {dummy_array_name}, {lenSubset} * {type_size});\n"
 
                 i += lenSubset
                 if i < num_elements:
@@ -541,17 +533,9 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.find_in_type_registry(NumpyInt64Type())
 
         dummy_array_name = self.scope.get_new_name('array_dummy')
-        buffer_array = "{dtype} {name}[{size}];\n".format(
-                dtype = dtype,
-                name  = dummy_array_name,
-                size  = tot_shape)
-        shape_init = "({declare_dtype}[]){{{shape}}}".format(declare_dtype=declare_dtype, shape=shape)
-        strides_init = "({declare_dtype}[{length}]){{0}}".format(declare_dtype=declare_dtype, length=len(var.shape))
-        array_init = ' = (t_ndarray){{\n.{0}={1},\n .shape={2},\n .strides={3},\n '
-        array_init += '.nd={4},\n .type={0},\n .is_view={5}\n}};\n'
-        array_init = array_init.format(np_dtype, dummy_array_name,
-                    shape_init, strides_init, len(var.shape), 'false')
-        array_init += 'stack_array_init(&{})'.format(self._print(var))
+        buffer_array = f"{dtype} {dummy_array_name}[{tot_shape}];\n"
+        order = 'c_COLMAJOR' if var.order == 'F' else 'c_ROWMAJOR'
+        array_init = f' = cspan_md_layout({order}, {dummy_array_name}, {shape})'
         self.add_import(c_imports['ndarrays'])
         return buffer_array, array_init
 
@@ -1480,7 +1464,7 @@ class CCodePrinter(CodePrinter):
                     inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
                         PyccelAdd(base_shape[i], ind, simplify = True), ind)
 
-        base_name = self._print(base)
+        base_name = self._print(ObjectAddress(base))
         if expr.rank > 0:
             #managing the Slice input
             for i , ind in enumerate(inds):
@@ -1493,7 +1477,7 @@ class CCodePrinter(CodePrinter):
             indices = ", ".join(self._print(i) for i in inds)
             return f"array_slicing({base_name}, {expr.rank}, {indices})"
         indices = ", ".join(self._cast_to(i, NumpyInt64Type()).format(self._print(i)) for i in inds)
-        return f"GET_ELEMENT({base_name}, {dtype}, {indices})"
+        return f"*cspan_at({base_name}, {indices})"
 
 
     def _cast_to(self, expr, dtype):
@@ -1599,9 +1583,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelArraySize(self, expr):
         arg = expr.arg
-        if self.is_c_pointer(arg):
-            return '{}->length'.format(self._print(ObjectAddress(arg)))
-        return '{}.length'.format(self._print(arg))
+        arg_code = self._print(ObjectAddress(arg))
+        return f'cspan_size({arg_code})'
 
     def _print_PyccelArrayShapeElement(self, expr):
         arg = expr.arg
