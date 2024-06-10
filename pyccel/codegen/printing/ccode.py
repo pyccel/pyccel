@@ -1305,7 +1305,7 @@ class CCodePrinter(CodePrinter):
             if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType)):
                     dtype = self.find_in_type_registry(expr.class_type)
                     return dtype
-            if expr.is_ndarray or isinstance(expr.class_type, HomogeneousContainerType):
+            if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
