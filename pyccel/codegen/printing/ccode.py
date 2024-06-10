@@ -25,7 +25,7 @@ from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, Py
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType, GenericType
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
@@ -1303,8 +1303,8 @@ class CCodePrinter(CodePrinter):
 
         if rank > 0:
             if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType)):
-                    dtype = self.find_in_type_registry(expr.class_type)
-                    return dtype
+                dtype = self.find_in_type_registry(expr.class_type)
+                return dtype
             if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
