@@ -172,11 +172,11 @@ def test_module_7(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="List wrapper is not implemented yet."),
+            pytest.mark.xfail(reason="List wrapper is not implemented yet, related issue #1911"),
             pytest.mark.fortran]
             ),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="List indexing is not yet supported in C"),
+            ppytest.mark.xfail(reason="List indexing is not yet supported in C, related issue #1876"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
