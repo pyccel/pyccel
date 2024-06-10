@@ -176,7 +176,7 @@ def test_module_7(language):
             pytest.mark.fortran]
             ),
         pytest.param("c", marks = [
-            ppytest.mark.xfail(reason="List indexing is not yet supported in C, related issue #1876"),
+            pytest.mark.xfail(reason="List indexing is not yet supported in C, related issue #1876"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
