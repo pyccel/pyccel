@@ -19,6 +19,9 @@ All notable changes to this project will be documented in this file.
 -   #1787 : Ensure `STC` is installed with Pyccel.
 -   #1656 : Ensure `gFTL` is installed with Pyccel.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
+-   #1867 : Add a `use_out` parameter to `pyccel.lambdify` to avoid unnecessary memory allocation.
+-   #1867 : Auto-generate a docstring for functions generated via calls to `pyccel.lambdify`.
+-   #738 : Add support for homogeneous tuples with scalar elements as arguments.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 -   #1893 : Add Python support for set initialisation with `set()`.
