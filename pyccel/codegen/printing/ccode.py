@@ -1207,7 +1207,7 @@ class CCodePrinter(CodePrinter):
 
         Raises
         ------
-        PYCCEL_RESTRICTION_TODO
+        PyccelCodegenError
             If the dtype is not found in the dtype_registry.
         """
         if isinstance(dtype, FixedSizeNumericType):
