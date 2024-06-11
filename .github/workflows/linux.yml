@@ -102,7 +102,7 @@ jobs:
       - name: Save code coverage report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-artifact
+          name: coverage-artifact-${{ matrix.python_version }}
           path: .coverage
           retention-days: 3
       - name: "Post completed"
