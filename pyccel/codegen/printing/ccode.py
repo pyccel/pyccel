@@ -668,7 +668,8 @@ class CCodePrinter(CodePrinter):
 
         dtype = self.get_c_type(assignment_var.lhs.class_type)
         keyraw = '{' + ', '.join(self._print(a) for a in expr.args) + '}'
-        init = f'{assignment_var.lhs.name} = c_init({dtype}, {keyraw});\n'
+        container_name = self._print(assignment_var.lhs)
+        init = f'{container_name} = c_init({dtype}, {keyraw});\n'
         return init
 
     def rename_imported_methods(self, expr):
