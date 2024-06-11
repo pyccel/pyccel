@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
+-   #1893 : Add Python support for set initialisation with `set()`.
 
 ### Fixed
 
@@ -36,6 +37,7 @@ All notable changes to this project will be documented in this file.
 -   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
 -   Link and mention `devel` branch, not `master`.
 -   #1047 : Print the value of an unrecognised constant.
+-   #1903 : Fix memory leak when using type annotations on local variables.
 
 ### Changed
 
