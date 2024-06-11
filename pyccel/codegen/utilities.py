@@ -12,16 +12,24 @@ import os
 import shutil
 from filelock import FileLock
 import pyccel.stdlib as stdlib_folder
+import pyccel.extensions as ext_folder
 
 from .compiling.basic     import CompileObj
 
 # get path to pyccel/stdlib/lib_name
 stdlib_path = os.path.dirname(stdlib_folder.__file__)
 
+# get path to pyccel/extensions/lib_name
+ext_path = os.path.dirname(ext_folder.__file__)
+
 __all__ = ['copy_internal_library','recompile_object']
 
 #==============================================================================
 language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
+
+#==============================================================================
+# map external libraries inside pyccel/extensions with their path
+external_libs = {"stc"  : "STC/include"}
 
 #==============================================================================
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
@@ -101,8 +109,12 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     str
         The location that the files were copied to.
     """
-    # get lib path (stdlib_path/lib_name)
-    lib_path = os.path.join(stdlib_path, lib_folder)
+    # get lib path (stdlib_path/lib_name or ext_path/lib_name)
+    if lib_folder in external_libs:
+        lib_path = os.path.join(ext_path, external_libs[lib_folder], lib_folder)
+    else:
+        lib_path = os.path.join(stdlib_path, lib_folder)
+
     # remove library folder to avoid missing files and copy
     # new one from pyccel stdlib
     lib_dest_path = os.path.join(pyccel_dirpath, lib_folder)

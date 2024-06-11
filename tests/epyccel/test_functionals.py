@@ -1,9 +1,23 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy.random import randint
 from numpy import equal
+import pytest
+
 
 from pyccel import epyccel
 from modules import functionals
+
+@pytest.fixture( params=[
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="C does not support list indexing yet, related issue #1876"),
+            pytest.mark.c]),
+        pytest.param("python", marks = pytest.mark.python)
+    ],
+    scope = "module"
+)
+def language(request):
+    return request.param
 
 def compare_epyccel(f, language, *args):
     f2 = epyccel(f, language=language)

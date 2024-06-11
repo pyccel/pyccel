@@ -77,6 +77,15 @@ def test_double_loop_on_2d_array_F(language):
     f2( y )
     assert np.array_equal( x, y )
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="C does not support list indexing yet, related issue #1876"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_product_loop_on_2d_array_C(language):
 
     f1 = loops.product_loop_on_2d_array_C
@@ -89,6 +98,15 @@ def test_product_loop_on_2d_array_C(language):
     f2( y )
     assert np.array_equal( x, y )
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="C does not support list indexing yet, related issue #1876"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_product_loop_on_2d_array_F(language):
 
     f1 = loops.product_loop_on_2d_array_F
@@ -101,6 +119,15 @@ def test_product_loop_on_2d_array_F(language):
     f2( y )
     assert np.array_equal( x, y )
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="C does not support list indexing yet, related issue #1876"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_product_loop(language):
 
     f1 = loops.product_loop
@@ -150,6 +177,15 @@ def test_enumerate_on_1d_array_with_start(language):
     assert np.array_equal( f1(z, 5), f2(z, 5) )
     assert np.array_equal( f1(z,-2), f2(z,-2) )
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="C does not support list indexing yet, related issue #1876"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_zip_prod(language):
 
     f1 = loops.zip_prod
