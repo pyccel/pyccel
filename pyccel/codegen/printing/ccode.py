@@ -403,7 +403,7 @@ class CCodePrinter(CodePrinter):
 
         order = lhs.order
         lhs_dtype = lhs.dtype
-        declare_dtype = self.find_in_type_registry(lhs_dtype)
+        declare_dtype = self.get_c_type(lhs_dtype)
         if isinstance(lhs.class_type, NumpyNDArrayType):
             #set dtype to the C struct types
             dtype = self.find_in_ndarray_type_registry(lhs_dtype)
@@ -496,7 +496,7 @@ class CCodePrinter(CodePrinter):
         rhs = expr.rhs
         lhs = expr.lhs
         code_init = ''
-        declare_dtype = self.find_in_type_registry(rhs.dtype)
+        declare_dtype = self.get_c_type(rhs.dtype)
 
         if rhs.fill_value is not None:
             if isinstance(rhs.fill_value, Literal):
@@ -524,7 +524,7 @@ class CCodePrinter(CodePrinter):
             String containing the rhs of the initialization of a stack array.
         """
         var = expr
-        dtype = self.find_in_type_registry(var.dtype)
+        dtype = self.get_c_type(var.dtype)
         if isinstance(var.class_type, NumpyNDArrayType):
             np_dtype = self.find_in_ndarray_type_registry(var.dtype)
         elif isinstance(var.class_type, HomogeneousContainerType):
@@ -534,7 +534,7 @@ class CCodePrinter(CodePrinter):
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
         tot_shape = self._print(functools.reduce(
             lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
-        declare_dtype = self.find_in_type_registry(NumpyInt64Type())
+        declare_dtype = self.get_c_type(NumpyInt64Type())
 
         dummy_array_name = self.scope.get_new_name('array_dummy')
         buffer_array = "{dtype} {name}[{size}];\n".format(
@@ -645,19 +645,20 @@ class CCodePrinter(CodePrinter):
 
         return code
 
-    def init_stc_container(self, expr, container_var):
+    def init_stc_container(self, expr, assignment_var):
         """
         Generate the initialization of an STC container in C.
 
-        This method generates and prints the C code for initializing a container using the STC `init()` method.
+        This method generates and prints the C code for initializing a container using the STC `c_init()` method.
 
         Parameters
         ----------
         expr : TypedAstNode
             The object representing the container being printed (e.g., PythonList, PythonSet).
     
-        container_var : str
-            The variable name to which the container is being assigned.
+        assignment_var : Assign
+            The assignment node where the Python container (rhs) is being initialized 
+            and saved into a variable (lhs).
         
         Returns
         -------
@@ -665,9 +666,9 @@ class CCodePrinter(CodePrinter):
             The generated C code for the container initialization.
         """
 
-        dtype = self.find_in_type_registry(container_var.lhs.class_type)
+        dtype = self.get_c_type(assignment_var.lhs.class_type)
         keyraw = '{' + ', '.join(self._print(a) for a in expr.args) + '}'
-        init = f'{container_var.lhs.name} = c_init({dtype}, {keyraw});\n'
+        init = f'{assignment_var.lhs.name} = c_init({dtype}, {keyraw});\n'
         return init
 
     def rename_imported_methods(self, expr):
@@ -680,7 +681,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : Tuple of ClassDef objects
+        expr : iterable[ClassDef]
             The ClassDef objects found in the module being renamed.
         """
         for classDef in expr:
@@ -755,13 +756,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        type_name = self.find_in_type_registry(expr.dtype)
+        type_name = self.get_c_type(expr.dtype)
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonInt(self, expr):
         self.add_import(c_imports['stdint'])
         value = self._print(expr.arg)
-        type_name = self.find_in_type_registry(expr.dtype)
+        type_name = self.get_c_type(expr.dtype)
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonBool(self, expr):
@@ -795,7 +796,7 @@ class CCodePrinter(CodePrinter):
         else:
             value = self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
                             PyccelMul(expr.imag, LiteralImaginaryUnit()))))
-        type_name = self.find_in_type_registry(expr.dtype)
+        type_name = self.get_c_type(expr.dtype)
         return '({0})({1})'.format(type_name, value)
 
     def _print_LiteralImaginaryUnit(self, expr):
@@ -1181,19 +1182,20 @@ class CCodePrinter(CodePrinter):
             code += formatted_args_to_printf(args_format, args, end)
         return code
 
-    def find_in_type_registry(self, dtype):
+    def get_c_type(self, dtype):
         """
-        Find the corresponding C dtype in the dtype_registry or the STC container type.
+        Find the corresponding C type of the PyccelType.
 
-        This function searches for the corresponding C data type in the `dtype_registry`.
-        If the provided dtype is a container (like `HomogeneousSetType` or
-        `HomogeneousListType`), it identifies the scalar type of the container and returns
-        the appropriate type for the `STC` container.
-        It raises a `PYCCEL_RESTRICTION_TODO` error if the dtype is not found in the registry.
+        For scalar types, this function searches for the corresponding C data type
+        in the `dtype_registry`.  If the provided type is a container (like
+        `HomogeneousSetType` or `HomogeneousListType`),  it recursively identifies
+        the type of an element of the container and uses it to calculate the
+        appropriate type for the `STC` container.
+        A `PYCCEL_RESTRICTION_TODO` error is raised if the dtype is not found in the registry.
 
         Parameters
         ----------
-        dtype : DataType or ContainerType
+        dtype : PyccelType
             The data type of the expression. This can be a fixed-size numeric type,
             a primitive type, or a container type.
 
@@ -1212,7 +1214,7 @@ class CCodePrinter(CodePrinter):
             primitive_type = dtype.primitive_type
             if isinstance(primitive_type, PrimitiveComplexType):
                 self.add_import(c_imports['complex'])
-                return f'{self.find_in_type_registry(dtype.element_type)} complex'
+                return f'{self.get_c_type(dtype.element_type)} complex'
             elif isinstance(primitive_type, PrimitiveIntegerType):
                 self.add_import(c_imports['stdint'])
             elif isinstance(dtype, PythonNativeBool):
@@ -1222,7 +1224,7 @@ class CCodePrinter(CodePrinter):
             key = (primitive_type, dtype.precision)
         elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
             container_type = 'hset_' if dtype.name == 'set' else 'vec_'
-            element_type = self.find_in_type_registry(dtype.element_type)
+            element_type = self.get_c_type(dtype.element_type)
             i_type = container_type + element_type.replace(' ', '_')
             self.add_import(Import(f'stc/{i_type}/{element_type}', Module(f'stc/{i_type}', (), ())))
             return i_type
@@ -1235,7 +1237,6 @@ class CCodePrinter(CodePrinter):
             raise errors.report(PYCCEL_RESTRICTION_TODO, #pylint: disable=raise-missing-from
                     symbol = dtype,
                     severity='fatal')
-
 
     def find_in_ndarray_type_registry(self, dtype):
         """
@@ -1303,7 +1304,7 @@ class CCodePrinter(CodePrinter):
 
         if rank > 0:
             if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType)):
-                dtype = self.find_in_type_registry(expr.class_type)
+                dtype = self.get_c_type(expr.class_type)
                 return dtype
             if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
@@ -1313,7 +1314,7 @@ class CCodePrinter(CodePrinter):
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
         elif not isinstance(class_type, CustomDataType):
-            dtype = self.find_in_type_registry(expr.dtype)
+            dtype = self.get_c_type(expr.dtype)
         else:
             dtype = self._print(expr.class_type)
 
@@ -1397,11 +1398,11 @@ class CCodePrinter(CodePrinter):
         if n_results == 1:
             ret_type = self.get_declare_type(result_vars[0])
         elif n_results > 1:
-            ret_type = self.find_in_type_registry(PythonNativeInt())
+            ret_type = self.get_c_type(PythonNativeInt())
             arg_vars.extend(result_vars)
             self._additional_args.append(result_vars) # Ensure correct result for is_c_pointer
         else:
-            ret_type = self.find_in_type_registry(VoidType())
+            ret_type = self.get_c_type(VoidType())
 
         name = expr.name
         if not arg_vars:
@@ -1499,7 +1500,7 @@ class CCodePrinter(CodePrinter):
             after using this function.
         """
         if expr.dtype != dtype:
-            cast=self.find_in_type_registry(dtype)
+            cast=self.get_c_type(dtype)
             return '({}){{}}'.format(cast)
         return '{}'
 
@@ -1611,7 +1612,7 @@ class CCodePrinter(CodePrinter):
                 dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(variable.dtype.primitive_type, variable.dtype.precision)])
             else:
                 raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
-            shape_dtype = self.find_in_type_registry(NumpyInt64Type())
+            shape_dtype = self.get_c_type(NumpyInt64Type())
             shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
             is_view = 'false' if variable.on_heap else 'true'
             order = "order_f" if expr.order == "F" else "order_c"
@@ -1630,7 +1631,7 @@ class CCodePrinter(CodePrinter):
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType)):
             variable_address = self._print(ObjectAddress(expr.variable))
-            container_type = self.find_in_type_registry(expr.variable.class_type)
+            container_type = self.get_c_type(expr.variable.class_type)
             return f'{container_type}_drop({variable_address});\n'
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
@@ -1802,7 +1803,7 @@ class CCodePrinter(CodePrinter):
                     args.append(self._print(arg))
         code_args = ', '.join(args)
         if expr.dtype.primitive_type is PrimitiveIntegerType():
-            cast_type = self.find_in_type_registry(expr.dtype)
+            cast_type = self.get_c_type(expr.dtype)
             return f'({cast_type}){func_name}({code_args})'
         return f'{func_name}({code_args})'
 
@@ -2114,7 +2115,7 @@ class CCodePrinter(CodePrinter):
         code = ' / '.join(self._print(a if a.dtype.primitive_type is PrimitiveFloatingPointType()
                                         else NumpyFloat(a)) for a in expr.args)
         if (need_to_cast):
-            cast_type = self.find_in_type_registry(expr.dtype)
+            cast_type = self.get_c_type(expr.dtype)
             return "({})floor({})".format(cast_type, code)
         return "floor({})".format(code)
 
