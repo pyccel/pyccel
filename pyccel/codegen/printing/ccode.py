@@ -995,16 +995,15 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1]
         else:
             source = self._print(source)
-        if expr.target:
-            if source.startswith('stc/'):
-                stc_name, container_type, container_key = source.split("/")
-                container = container_type.split("_")
-                return '\n'.join((f'#ifndef _{container_type.upper()}',
-                                  f'#define _{container_type.upper()}',
-                                  f'#define i_type {container_type}',
-                                  f'#define i_key {container_key}',
-                                  f'#include "{stc_name + "/" + container[0]}.h"',
-                                  '#endif\n'))
+        if source.startswith('stc/'):
+            stc_name, container_type, container_key = source.split("/")
+            container = container_type.split("_")
+            return '\n'.join((f'#ifndef _{container_type.upper()}',
+                              f'#define _{container_type.upper()}',
+                              f'#define i_type {container_type}',
+                              f'#define i_key {container_key}',
+                              f'#include "{stc_name + "/" + container[0]}.h"',
+                              '#endif\n'))
 
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
