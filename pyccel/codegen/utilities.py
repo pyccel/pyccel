@@ -27,6 +27,9 @@ __all__ = ['copy_internal_library','recompile_object']
 #==============================================================================
 language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 
+#==============================================================================
+# map external libraries inside pyccel/extensions with their path
+external_libs = {"stc"  : "STC/include"}
 
 #==============================================================================
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
@@ -107,8 +110,8 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
         The location that the files were copied to.
     """
     # get lib path (stdlib_path/lib_name or ext_path/lib_name)
-    if lib_folder == "stc":
-        lib_path = os.path.join(ext_path, "STC", "include", lib_folder)
+    if lib_folder in external_libs:
+        lib_path = os.path.join(ext_path, external_libs[lib_folder], lib_folder)
     else:
         lib_path = os.path.join(stdlib_path, lib_folder)
 

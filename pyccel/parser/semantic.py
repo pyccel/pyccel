@@ -21,7 +21,7 @@ from sympy import ceiling
 from pyccel.utilities.strings import random_string
 from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
 
-from pyccel.ast.builtins import PythonPrint, PythonTupleFunction
+from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
 from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
@@ -61,10 +61,10 @@ from pyccel.ast.core import Assert
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
-from pyccel.ast.datatypes import PrimitiveIntegerType, HomogeneousListType, StringType, SymbolicType, HomogeneousSetType
+from pyccel.ast.datatypes import PrimitiveIntegerType, StringType, SymbolicType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from pyccel.ast.datatypes import DataTypeFactory, PrimitiveFloatingPointType
-from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType
+from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType, HomogeneousSetType, HomogeneousListType
 from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
@@ -145,6 +145,12 @@ import pyccel.decorators as def_decorators
 
 errors = Errors()
 pyccel_stage = PyccelStage()
+
+type_container = {
+                   PythonTupleFunction : HomogeneousTupleType,
+                   PythonList : HomogeneousListType,
+                   PythonSetFunction : HomogeneousSetType
+                  }
 
 #==============================================================================
 
@@ -1615,7 +1621,7 @@ class SemanticParser(BasicParser):
             # to remove memory leaks
             new_expressions.append(Deallocate(var))
 
-        elif class_type != var.class_type and not isinstance(class_type.datatype, GenericType):
+        elif class_type != var.class_type:
             if is_augassign:
                 tmp_result = PyccelAdd(var, rhs)
                 result_type = tmp_result.class_type
@@ -1919,7 +1925,7 @@ class SemanticParser(BasicParser):
             else:
                 raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
-            if len(args) > 0:
+            if len(args) == 2 and args[1] is LiteralEllipsis() or len(args) == 1:
                 syntactic_annotation = args[0]
                 if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
                     pyccel_stage.set_stage('syntactic')
@@ -1927,12 +1933,8 @@ class SemanticParser(BasicParser):
                     pyccel_stage.set_stage('semantic')
                 internal_datatypes = self._visit(syntactic_annotation)
                 type_annotations = []
-                if dtype_cls is PythonTupleFunction:
-                    class_type = HomogeneousTupleType
-                elif dtype_cls is PythonList:
-                    class_type = HomogeneousListType
-                elif dtype_cls is PythonSet:
-                    class_type = HomogeneousSetType
+                if dtype_cls in type_container :
+                    class_type = type_container[dtype_cls]
                 else:
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                             severity='fatal', symbol=expr)
