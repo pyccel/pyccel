@@ -1007,7 +1007,7 @@ class CCodePrinter(CodePrinter):
                               '#endif\n'))
         elif source.startswith('Set_pop'):
             name , i_type, i_key = source.split('/')
-            return f'\n\n{name}({i_type}, {i_key});\n\n'
+            return f'\n\n{name}({i_type}, {i_key})\n\n'
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
