@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
 -   Link and mention `devel` branch, not `master`.
 -   #1047 : Print the value of an unrecognised constant.
 -   #1903 : Fix memory leak when using type annotations on local variables.
+-   #1913 : Fix function calls to renamed functions.
 
 ### Changed
 
