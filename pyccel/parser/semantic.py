@@ -1214,8 +1214,9 @@ class SemanticParser(BasicParser):
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
         self._scope = sc
         self._visit_FunctionDef(old_func, function_call_args=function_call_args)
+        new_name = self.scope.get_expected_name(old_func.name)
         # Retreive the annotated function
-        func = self.scope.find(old_func.name, 'functions')
+        func = self.scope.find(new_name, 'functions')
         # Add the Module of the imported function to the new function
         if old_func.is_imported:
             mod = old_func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
@@ -1227,12 +1228,12 @@ class SemanticParser(BasicParser):
         # Remove the old_func from the imports dict and Assign the new annotated one
         if old_func.is_imported:
             scope = self.scope
-            while old_func.name not in scope.imports['functions']:
+            while new_name not in scope.imports['functions']:
                 scope = scope.parent_scope
-            assert old_func is scope.imports['functions'].get(old_func.name)
-            func = func.clone(old_func.name, is_imported=True)
+            assert old_func is scope.imports['functions'].get(new_name)
+            func = func.clone(new_name, is_imported=True)
             func.set_current_user_node(mod)
-            scope.imports['functions'][old_func.name] = func
+            scope.imports['functions'][new_name] = func
         return func
 
     def _create_variable(self, name, class_type, rhs, d_lhs, arr_in_multirets=False):
@@ -2816,6 +2817,10 @@ class SemanticParser(BasicParser):
             pass
 
         func = self.scope.find(name, 'functions')
+
+        if func is None:
+            # Look for a syntactic FunctionDef in case of a function renamed due to name collisions
+            func = self.scope.find(expr.funcdef, 'functions')
 
         if func is None:
             name = str(expr.funcdef)
