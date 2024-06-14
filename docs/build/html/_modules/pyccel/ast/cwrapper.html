@@ -1,0 +1,760 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.ast.cwrapper &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.ast.cwrapper</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.ast.cwrapper</h1><div class="highlight"><pre>
+<span></span><span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module representing objects (functions/variables etc) required for the interface</span>
+<span class="sd">between python code and C code (using Python/C Api and cwrapper.c).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">..errors.errors</span> <span class="kn">import</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">..errors.messages</span> <span class="kn">import</span> <span class="n">PYCCEL_RESTRICTION_TODO</span>
+
+<span class="kn">from</span> <span class="nn">.basic</span>     <span class="kn">import</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">PyccelAstNode</span>
+
+<span class="kn">from</span> <span class="nn">.datatypes</span> <span class="kn">import</span> <span class="n">DataType</span><span class="p">,</span> <span class="n">default_precision</span>
+<span class="kn">from</span> <span class="nn">.datatypes</span> <span class="kn">import</span> <span class="n">NativeInteger</span><span class="p">,</span> <span class="n">NativeFloat</span><span class="p">,</span> <span class="n">NativeComplex</span>
+<span class="kn">from</span> <span class="nn">.datatypes</span> <span class="kn">import</span> <span class="n">NativeBool</span><span class="p">,</span> <span class="n">NativeString</span><span class="p">,</span> <span class="n">NativeGeneric</span>
+
+<span class="kn">from</span> <span class="nn">.core</span>      <span class="kn">import</span> <span class="n">FunctionDefArgument</span>
+<span class="kn">from</span> <span class="nn">.core</span>      <span class="kn">import</span> <span class="n">FunctionCall</span><span class="p">,</span> <span class="n">FunctionDef</span><span class="p">,</span> <span class="n">FunctionAddress</span>
+
+<span class="kn">from</span> <span class="nn">.internals</span> <span class="kn">import</span> <span class="n">get_final_precision</span>
+
+<span class="kn">from</span> <span class="nn">.variable</span>  <span class="kn">import</span> <span class="n">Variable</span>
+
+<span class="kn">from</span> <span class="nn">.c_concepts</span> <span class="kn">import</span> <span class="n">ObjectAddress</span>
+
+
+<span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+<span class="c1">#</span>
+<span class="c1"># --------- CLASSES -----------</span>
+<span class="c1">#</span>
+    <span class="s1">&#39;PyccelPyObject&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PyccelPyArrayObject&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PyArgKeywords&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PyArg_ParseTupleNode&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PyBuildValueNode&#39;</span><span class="p">,</span>
+<span class="c1">#--------- CONSTANTS ----------</span>
+    <span class="s1">&#39;Py_True&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Py_False&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Py_None&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;flags_registry&#39;</span><span class="p">,</span>
+<span class="c1">#----- C / PYTHON FUNCTIONS ---</span>
+    <span class="s1">&#39;Py_DECREF&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PyErr_SetString&#39;</span><span class="p">,</span>
+<span class="c1">#----- CHECK FUNCTIONS ---</span>
+    <span class="s1">&#39;generate_datatype_error&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;scalar_object_check&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1">#-------------------------------------------------------------------</span>
+<span class="c1">#                        Python DataTypes</span>
+<span class="c1">#-------------------------------------------------------------------</span>
+<div class="viewcode-block" id="PyccelPyObject"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.cwrapper.PyccelPyObject">[docs]</a><span class="k">class</span> <span class="nc">PyccelPyObject</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Datatype representing a PyObject which is the</span>
+<span class="sd">    class used to hold python objects&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;pyobject&#39;</span></div>
+
+<div class="viewcode-block" id="PyccelPyArrayObject"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.cwrapper.PyccelPyArrayObject">[docs]</a><span class="k">class</span> <span class="nc">PyccelPyArrayObject</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Datatype representing a PyArrayObject which is the</span>
+<span class="sd">    class used to hold numpy objects&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;pyarrayobject&#39;</span></div>
+
+<span class="n">PyArray_Type</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">NativeGeneric</span><span class="p">(),</span> <span class="s1">&#39;PyArray_Type&#39;</span><span class="p">)</span>
+
+<span class="c1">#-------------------------------------------------------------------</span>
+<span class="c1">#                  Parsing and Building Classes</span>
+<span class="c1">#-------------------------------------------------------------------</span>
+
+<span class="c1">#TODO: Is there an equivalent to static so this can be a static list of strings?</span>
+<div class="viewcode-block" id="PyArgKeywords"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.cwrapper.PyArgKeywords">[docs]</a><span class="k">class</span> <span class="nc">PyArgKeywords</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents the list containing the names of all arguments to a function.</span>
+<span class="sd">    This information allows the function to be called by keyword</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        The name of the variable in which the list is stored</span>
+<span class="sd">    arg_names : list of str</span>
+<span class="sd">        A list of the names of the function arguments</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_name&#39;</span><span class="p">,</span><span class="s1">&#39;_arg_names&#39;</span><span class="p">)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">arg_names</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_arg_names</span> <span class="o">=</span> <span class="n">arg_names</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The name of the variable in which the list of</span>
+<span class="sd">        all arguments to the function is stored</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">arg_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The names of the arguments to the function which are</span>
+<span class="sd">        contained in the PyArgKeywords list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arg_names</span></div>
+
+<span class="c1">#using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html</span>
+<span class="n">pytype_parse_registry</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>       <span class="p">:</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>       <span class="p">:</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span>       <span class="p">:</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>       <span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>         <span class="p">:</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>         <span class="p">:</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>       <span class="p">:</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>       <span class="p">:</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeBool</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>          <span class="p">:</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeString</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>        <span class="p">:</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>      <span class="p">:</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">PyccelPyArrayObject</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span> <span class="p">:</span> <span class="s1">&#39;O!&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+<div class="viewcode-block" id="PyArg_ParseTupleNode"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.cwrapper.PyArg_ParseTupleNode">[docs]</a><span class="k">class</span> <span class="nc">PyArg_ParseTupleNode</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a call to the function from Python.h which collects the expected arguments</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    python_func_args: Variable</span>
+<span class="sd">        Args provided to the function in python</span>
+<span class="sd">    python_func_kwargs: Variable</span>
+<span class="sd">        Kwargs provided to the function in python</span>
+<span class="sd">    c_func_args: list of Variable</span>
+<span class="sd">        List of expected arguments. This helps determine the expected output types</span>
+<span class="sd">    parse_args: list of Variable</span>
+<span class="sd">        List of arguments into which the result will be collected</span>
+<span class="sd">    arg_names : list of str</span>
+<span class="sd">        A list of the names of the function arguments</span>
+<span class="sd">    is_interface : boolean</span>
+<span class="sd">        Default value False and True when working with interface functions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_pyarg&#39;</span><span class="p">,</span><span class="s1">&#39;_pykwarg&#39;</span><span class="p">,</span><span class="s1">&#39;_parse_args&#39;</span><span class="p">,</span><span class="s1">&#39;_arg_names&#39;</span><span class="p">,</span><span class="s1">&#39;_flags&#39;</span><span class="p">)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_pyarg&#39;</span><span class="p">,</span><span class="s1">&#39;_pykwarg&#39;</span><span class="p">,</span><span class="s1">&#39;_parse_args&#39;</span><span class="p">,</span><span class="s1">&#39;_arg_names&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">python_func_args</span><span class="p">,</span>
+                        <span class="n">python_func_kwargs</span><span class="p">,</span>
+                        <span class="n">c_func_args</span><span class="p">,</span> <span class="n">parse_args</span><span class="p">,</span>
+                        <span class="n">arg_names</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">python_func_args</span><span class="p">,</span> <span class="n">Variable</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Python func args should be a Variable&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">python_func_kwargs</span><span class="p">,</span> <span class="n">Variable</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Python func kwargs should be a Variable&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">FunctionDefArgument</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">c_func_args</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;C func args should be a list of Arguments&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parse_args</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">Variable</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">parse_args</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Parse args should be a list of Variables&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_names</span><span class="p">,</span> <span class="n">PyArgKeywords</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Parse args should be a list of Variables&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parse_args</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">c_func_args</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;There should be the same number of c_func_args and parse_args&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span>      <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">c_func_args</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">c_func_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">has_default</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pytype</span><span class="p">(</span><span class="n">c_func_args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">parse_args</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">c_func_args</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span> <span class="o">+=</span> <span class="s1">&#39;|&#39;</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">c_func_args</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pytype</span><span class="p">(</span><span class="n">c_func_args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">parse_args</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="c1"># Restriction as of python 3.8</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">Variable</span><span class="p">,</span> <span class="n">FunctionAddress</span><span class="p">))</span> <span class="ow">and</span> <span class="n">a</span><span class="o">.</span><span class="n">is_kwonly</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">c_func_args</span><span class="p">]):</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Kwarg only arguments without default values will not raise an error if they are not passed&#39;</span><span class="p">,</span>
+                          <span class="n">symbol</span><span class="o">=</span><span class="n">c_func_args</span><span class="p">,</span> <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;warning&#39;</span><span class="p">)</span>
+
+        <span class="n">parse_args</span> <span class="o">=</span> <span class="p">[[</span><span class="n">PyArray_Type</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">Variable</span><span class="p">)</span> <span class="ow">and</span> <span class="n">a</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="n">PyccelPyArrayObject</span><span class="p">()</span>
+                <span class="k">else</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">parse_args</span><span class="p">]</span>
+        <span class="n">parse_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">parse_args</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pyarg</span>      <span class="o">=</span> <span class="n">python_func_args</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pykwarg</span>    <span class="o">=</span> <span class="n">python_func_kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_args</span> <span class="o">=</span> <span class="n">parse_args</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_arg_names</span>  <span class="o">=</span> <span class="n">arg_names</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PyArg_ParseTupleNode.get_pytype"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.cwrapper.PyArg_ParseTupleNode.get_pytype">[docs]</a>    <span class="k">def</span> <span class="nf">get_pytype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c_arg</span><span class="p">,</span> <span class="n">parse_arg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the needed flag to parse or build value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c_arg</span><span class="p">,</span> <span class="n">FunctionAddress</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s1">&#39;O&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">pytype_parse_registry</span><span class="p">[(</span><span class="n">parse_arg</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">get_final_precision</span><span class="p">(</span><span class="n">parse_arg</span><span class="p">))]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Type not implemented for argument collection : &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">parse_arg</span><span class="p">)))</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pyarg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The  variable containing all positional arguments</span>
+<span class="sd">        passed to the function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pyarg</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pykwarg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The  variable containing all keyword arguments</span>
+<span class="sd">        passed to the function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pykwarg</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The flags indicating the types of the objects to</span>
+<span class="sd">        be collected from the python arguments passed to the</span>
+<span class="sd">        function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The arguments into which the python args and kwargs</span>
+<span class="sd">        are collected</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_args</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">arg_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The PyArgKeywords object which contains all the</span>
+<span class="sd">        names of the function&#39;s arguments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arg_names</span></div>
+
+<div class="viewcode-block" id="PyBuildValueNode"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.cwrapper.PyBuildValueNode">[docs]</a><span class="k">class</span> <span class="nc">PyBuildValueNode</span><span class="p">(</span><span class="n">PyccelAstNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a call to the function from Python.h which create a new value based on a format string</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    parse_args: list of Variable</span>
+<span class="sd">        List of arguments which the result will be buit from</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_flags&#39;</span><span class="p">,</span><span class="s1">&#39;_result_args&#39;</span><span class="p">)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_result_args&#39;</span><span class="p">,)</span>
+    <span class="n">_dtype</span> <span class="o">=</span> <span class="n">PyccelPyObject</span>
+    <span class="n">_rank</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">_precision</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">_shape</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_order</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_args</span> <span class="o">=</span> <span class="p">()):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_result_args</span> <span class="o">=</span> <span class="n">result_args</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">result_args</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span> <span class="o">+=</span> <span class="n">pytype_parse_registry</span><span class="p">[(</span><span class="n">i</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">get_final_precision</span><span class="p">(</span><span class="n">i</span><span class="p">))]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result_args</span></div>
+
+<span class="c1">#-------------------------------------------------------------------</span>
+<span class="k">class</span> <span class="nc">PyModule_AddObject</span><span class="p">(</span><span class="n">PyccelAstNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a call to the function from Python.h which adds a</span>
+<span class="sd">    PythonObject to a module</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    mod_name : str</span>
+<span class="sd">                The name of the variable containing the module</span>
+<span class="sd">    name : str</span>
+<span class="sd">                The name of the variable being added to the module</span>
+<span class="sd">    variable : Variable</span>
+<span class="sd">                The variable containing the PythonObject</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_mod_name&#39;</span><span class="p">,</span><span class="s1">&#39;_name&#39;</span><span class="p">,</span><span class="s1">&#39;_var&#39;</span><span class="p">)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_name&#39;</span><span class="p">,</span><span class="s1">&#39;_var&#39;</span><span class="p">)</span>
+    <span class="n">_dtype</span> <span class="o">=</span> <span class="n">NativeInteger</span><span class="p">()</span>
+    <span class="n">_precision</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">_rank</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">_shape</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mod_name</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">variable</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Name must be a string&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">Variable</span><span class="p">)</span> <span class="ow">or</span> \
+                <span class="n">variable</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="n">PyccelPyArrayObject</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Variable must be a PyObject Variable&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mod_name</span> <span class="o">=</span> <span class="n">mod_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="o">=</span> <span class="n">ObjectAddress</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mod_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The name of the variable containing the module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mod_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The name of the variable being added to the module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">variable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The variable containing the PythonObject</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span>
+
+<span class="c1">#-------------------------------------------------------------------</span>
+<span class="c1">#                      Python.h Constants</span>
+<span class="c1">#-------------------------------------------------------------------</span>
+
+<span class="c1"># Python.h object  representing Booleans True and False</span>
+<span class="n">Py_True</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="s1">&#39;Py_True&#39;</span><span class="p">,</span> <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;alias&#39;</span><span class="p">)</span>
+<span class="n">Py_False</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="s1">&#39;Py_False&#39;</span><span class="p">,</span> <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;alias&#39;</span><span class="p">)</span>
+
+<span class="c1"># Python.h object representing None</span>
+<span class="n">Py_None</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="s1">&#39;Py_None&#39;</span><span class="p">,</span> <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;alias&#39;</span><span class="p">)</span>
+
+<span class="c1"># https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF</span>
+<span class="n">Py_DECREF</span> <span class="o">=</span> <span class="n">FunctionDef</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Py_DECREF&#39;</span><span class="p">,</span>
+                        <span class="n">body</span> <span class="o">=</span> <span class="p">[],</span>
+                        <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;alias&#39;</span><span class="p">)],</span>
+                        <span class="n">results</span> <span class="o">=</span> <span class="p">[])</span>
+
+<span class="c1">#-------------------------------------------------------------------</span>
+<span class="c1">#                      cwrapper.h functions</span>
+<span class="c1">#-------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="nf">Python_to_C</span><span class="p">(</span><span class="n">c_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create FunctionDef responsible for casting python argument to C</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    ----------</span>
+<span class="sd">    c_object  : Variable</span>
+<span class="sd">        The variable needed for the generation of the cast_function</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    FunctionDef : cast type FunctionDef</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">c_object</span><span class="o">.</span><span class="n">dtype</span>
+    <span class="n">prec</span>  <span class="o">=</span> <span class="n">get_final_precision</span><span class="p">(</span><span class="n">c_object</span><span class="p">)</span>
+    <span class="k">try</span> <span class="p">:</span>
+        <span class="n">cast_function</span> <span class="o">=</span> <span class="n">py_to_c_registry</span><span class="p">[(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">prec</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span><span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+    <span class="n">cast_func</span> <span class="o">=</span> <span class="n">FunctionDef</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="n">cast_function</span><span class="p">,</span>
+                       <span class="n">body</span>      <span class="o">=</span> <span class="p">[],</span>
+                       <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;alias&#39;</span><span class="p">)],</span>
+                       <span class="n">results</span>   <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="n">prec</span><span class="p">)])</span>
+
+    <span class="k">return</span> <span class="n">cast_func</span>
+
+<span class="c1"># Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c</span>
+<span class="n">py_to_c_registry</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">(</span><span class="n">NativeBool</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>      <span class="p">:</span> <span class="s1">&#39;PyBool_to_Bool&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;PyInt8_to_Int8&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;PyInt16_to_Int16&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;PyInt32_to_Int32&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;PyInt64_to_Int64&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>     <span class="p">:</span> <span class="s1">&#39;PyFloat_to_Float&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>     <span class="p">:</span> <span class="s1">&#39;PyDouble_to_Double&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;PyComplex_to_Complex64&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;PyComplex_to_Complex128&#39;</span><span class="p">}</span>
+
+<span class="k">def</span> <span class="nf">C_to_Python</span><span class="p">(</span><span class="n">c_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create FunctionDef responsible for casting c argument to python</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    ----------</span>
+<span class="sd">    c_object  : Variable</span>
+<span class="sd">        The variable needed for the generation of the cast_function</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    FunctionDef : cast type FunctionDef</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">c_object</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">c_object</span><span class="o">.</span><span class="n">order</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
+            <span class="n">cast_function</span> <span class="o">=</span> <span class="s1">&#39;c_ndarray_to_pyarray&#39;</span>
+        <span class="k">elif</span> <span class="n">c_object</span><span class="o">.</span><span class="n">order</span> <span class="o">==</span> <span class="s1">&#39;F&#39;</span><span class="p">:</span>
+            <span class="n">cast_function</span> <span class="o">=</span> <span class="s1">&#39;fortran_ndarray_to_pyarray&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cast_function</span> <span class="o">=</span> <span class="s1">&#39;ndarray_to_pyarray&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span> <span class="p">:</span>
+            <span class="n">cast_function</span> <span class="o">=</span> <span class="n">c_to_py_registry</span><span class="p">[(</span><span class="n">c_object</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">c_object</span><span class="o">.</span><span class="n">precision</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">c_object</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span><span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+    <span class="n">cast_func</span> <span class="o">=</span> <span class="n">FunctionDef</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="n">cast_function</span><span class="p">,</span>
+                       <span class="n">body</span>      <span class="o">=</span> <span class="p">[],</span>
+                       <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">c_object</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="n">c_object</span><span class="o">.</span><span class="n">precision</span><span class="p">)],</span>
+                       <span class="n">results</span>   <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;alias&#39;</span><span class="p">)])</span>
+
+    <span class="k">return</span> <span class="n">cast_func</span>
+
+<span class="c1"># Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c</span>
+<span class="n">c_to_py_registry</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">(</span><span class="n">NativeBool</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>     <span class="p">:</span> <span class="s1">&#39;Bool_to_PyBool&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeBool</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>      <span class="p">:</span> <span class="s1">&#39;Bool_to_PyBool&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="p">:</span> <span class="s1">&#39;Int&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">default_precision</span><span class="p">[</span><span class="s1">&#39;int&#39;</span><span class="p">]</span><span class="o">*</span><span class="mi">8</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_to_PyLong&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;Int8_to_NumpyLong&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;Int16_to_NumpyLong&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;Int32_to_NumpyLong&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;Int64_to_NumpyLong&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>     <span class="p">:</span> <span class="s1">&#39;Float_to_NumpyDouble&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>     <span class="p">:</span> <span class="s1">&#39;Double_to_NumpyDouble&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>    <span class="p">:</span> <span class="s1">&#39;Double_to_PyDouble&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;Complex64_to_NumpyComplex&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;Complex128_to_NumpyComplex&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="p">:</span> <span class="s1">&#39;Complex128_to_PyComplex&#39;</span><span class="p">}</span>
+
+
+<span class="c1">#-------------------------------------------------------------------</span>
+<span class="c1">#              errors and check functions</span>
+<span class="c1">#-------------------------------------------------------------------</span>
+
+<span class="c1"># https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred</span>
+<span class="n">PyErr_Occurred</span> <span class="o">=</span> <span class="n">FunctionDef</span><span class="p">(</span><span class="n">name</span>      <span class="o">=</span> <span class="s1">&#39;PyErr_Occurred&#39;</span><span class="p">,</span>
+                             <span class="n">arguments</span> <span class="o">=</span> <span class="p">[],</span>
+                             <span class="n">results</span>   <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">memory_handling</span> <span class="o">=</span> <span class="s1">&#39;alias&#39;</span><span class="p">)],</span>
+                             <span class="n">body</span>      <span class="o">=</span> <span class="p">[])</span>
+
+<div class="viewcode-block" id="PyErr_SetString"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.cwrapper.PyErr_SetString">[docs]</a><span class="k">def</span> <span class="nf">PyErr_SetString</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate function Call of c/python api PyErr_SetString</span>
+<span class="sd">    https://docs.python.org/3/c-api/exceptions.html#c.PyErr_SetString</span>
+<span class="sd">    with a defined error message used to set the error indicator.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ----------</span>
+<span class="sd">    exception  : str</span>
+<span class="sd">        The exception type</span>
+<span class="sd">    message    : str</span>
+<span class="sd">        Error message</span>
+<span class="sd">    Returns</span>
+<span class="sd">    FunctionCall : raise error FunctionCall</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">FunctionDef</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;PyErr_SetString&#39;</span><span class="p">,</span>
+                  <span class="n">body</span>      <span class="o">=</span> <span class="p">[],</span>
+                  <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;o&#39;</span><span class="p">),</span>
+                               <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">NativeString</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;s&#39;</span><span class="p">)],</span>
+                  <span class="n">results</span>   <span class="o">=</span> <span class="p">[])</span>
+
+    <span class="n">exception</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="n">exception</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="p">[</span><span class="n">exception</span><span class="p">,</span> <span class="n">message</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="generate_datatype_error"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.cwrapper.generate_datatype_error">[docs]</a><span class="k">def</span> <span class="nf">generate_datatype_error</span><span class="p">(</span><span class="n">variable</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate TypeError exception from the variable information (datatype, precision)</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    ----------</span>
+<span class="sd">    variable : Variable</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    -------</span>
+<span class="sd">    func     : FunctionCall</span>
+<span class="sd">        call to PyErr_SetString with TypeError as exception and custom message</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dtype</span>     <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">precision</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="s1">&#39;native &#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeBool</span><span class="p">):</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeComplex</span><span class="p">):</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> bit &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">precision</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> bit &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">precision</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span>
+
+    <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;&quot;Argument must be </span><span class="si">{precision}{dtype}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">precision</span> <span class="o">=</span> <span class="n">precision</span><span class="p">,</span>
+            <span class="n">dtype</span>     <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">PyErr_SetString</span><span class="p">(</span><span class="s1">&#39;PyExc_TypeError&#39;</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span></div>
+
+
+<span class="c1"># Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c</span>
+<span class="n">check_type_registry</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">(</span><span class="n">NativeBool</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>     <span class="p">:</span> <span class="s1">&#39;PyIs_Bool&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeBool</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>      <span class="p">:</span> <span class="s1">&#39;PyIs_Bool&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="p">:</span> <span class="s1">&#39;PyIs_NativeInt&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;PyIs_Int8&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;PyIs_Int16&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;PyIs_Int32&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;PyIs_Int64&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>    <span class="p">:</span> <span class="s1">&#39;PyIs_NativeFloat&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>     <span class="p">:</span> <span class="s1">&#39;PyIs_Float&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>     <span class="p">:</span> <span class="s1">&#39;PyIs_Double&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="p">:</span> <span class="s1">&#39;PyIs_NativeComplex&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;PyIs_Complex64&#39;</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>   <span class="p">:</span> <span class="s1">&#39;PyIs_Complex128&#39;</span><span class="p">}</span>
+
+<div class="viewcode-block" id="scalar_object_check"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.cwrapper.scalar_object_check">[docs]</a><span class="k">def</span> <span class="nf">scalar_object_check</span><span class="p">(</span><span class="n">py_object</span><span class="p">,</span> <span class="n">c_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create FunctionCall responsible for checking python argument data type</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    ----------</span>
+<span class="sd">    py_object  : Variable</span>
+<span class="sd">        The python argument of the check function</span>
+<span class="sd">    c_object   : Variable</span>
+<span class="sd">        The variable needed for the generation of the type check</span>
+<span class="sd">    precision_check : Boolean</span>
+<span class="sd">        True if checking the exact precision is needed</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    FunctionCall : Check type FunctionCall</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">try</span> <span class="p">:</span>
+        <span class="n">check_type</span> <span class="o">=</span> <span class="n">check_type_registry</span><span class="p">[</span><span class="n">c_object</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">c_object</span><span class="o">.</span><span class="n">precision</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">c_object</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span><span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+    <span class="n">check_func</span> <span class="o">=</span> <span class="n">FunctionDef</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="n">check_type</span><span class="p">,</span>
+                    <span class="n">body</span>      <span class="o">=</span> <span class="p">[],</span>
+                    <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">memory_handling</span> <span class="o">=</span> <span class="s1">&#39;alias&#39;</span><span class="p">)],</span>
+                    <span class="n">results</span>   <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeBool</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;r&#39;</span><span class="p">)])</span>
+
+    <span class="k">return</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">check_func</span><span class="p">,</span> <span class="p">[</span><span class="n">py_object</span><span class="p">])</span></div>
+
+<span class="c1"># This registry is used for interface management,</span>
+<span class="c1"># mapping each data type to a given flag</span>
+<span class="c1"># Those flags are used in a bitset #TODO</span>
+<span class="n">flags_registry</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>       <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>       <span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span>       <span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>       <span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>      <span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>         <span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>         <span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>        <span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>       <span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>       <span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>      <span class="p">:</span> <span class="mi">11</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeBool</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>          <span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeBool</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>         <span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeString</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>        <span class="p">:</span> <span class="mi">13</span>
+<span class="p">}</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

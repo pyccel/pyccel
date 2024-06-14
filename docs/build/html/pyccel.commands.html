@@ -1,0 +1,330 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.commands package &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pyccel.compilers package" href="pyccel.compilers.html" />
+    <link rel="prev" title="pyccel.codegen.printing package" href="pyccel.codegen.printing.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">docBranck</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pyccel.html">pyccel package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="pyccel.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pyccel.ast.html">pyccel.ast package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.codegen.html">pyccel.codegen package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pyccel.commands package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.compilers.html">pyccel.compilers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.complexity.html">pyccel.complexity package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.errors.html">pyccel.errors package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.naming.html">pyccel.naming package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.parser.html">pyccel.parser package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.stdlib.html">pyccel.stdlib package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.symbolic.html">pyccel.symbolic package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.utilities.html">pyccel.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel.decorators">pyccel.decorators module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel.epyccel">pyccel.epyccel module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel.version">pyccel.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">setup module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">docBranck</a> &raquo;</li>
+        
+          <li><a href="pyccel.html">pyccel package</a> &raquo;</li>
+        
+      <li>pyccel.commands package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/pyccel.commands.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pyccel-commands-package">
+<h1>pyccel.commands package<a class="headerlink" href="#pyccel-commands-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pyccel.commands.console">
+<span id="pyccel-commands-console-module"></span><h2>pyccel.commands.console module<a class="headerlink" href="#module-pyccel.commands.console" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyccel.commands.console.MyParser">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyccel.commands.console.</span></span><span class="sig-name descname"><span class="pre">MyParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prog=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usage=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epilog=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formatter_class=&lt;class</span> <span class="pre">'argparse.HelpFormatter'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix_chars='-'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fromfile_prefix_chars=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">argument_default=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflict_handler='error'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_help=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_abbrev=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_on_error=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/commands/console.html#MyParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.commands.console.MyParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">argparse.ArgumentParser</span></code></p>
+<p>Custom argument parser for printing help message in case of an error.
+See <a class="reference external" href="http://stackoverflow.com/questions/4042452/display-help-message-with-python-argparse-when-script-is-called-without-any-argu">http://stackoverflow.com/questions/4042452/display-help-message-with-python-argparse-when-script-is-called-without-any-argu</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.commands.console.MyParser.error">
+<span class="sig-name descname"><span class="pre">error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/commands/console.html#MyParser.error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.commands.console.MyParser.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints a usage message incorporating the message to stderr and
+exits.</p>
+<p>If you override this in a subclass, it should not return – it
+should either exit or raise an exception.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyccel.commands.console.pyccel">
+<span class="sig-prename descclassname"><span class="pre">pyccel.commands.console.</span></span><span class="sig-name descname"><span class="pre">pyccel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">openmp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">openacc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compiler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/commands/console.html#pyccel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.commands.console.pyccel" title="Permalink to this definition">¶</a></dt>
+<dd><p>pyccel console command.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyccel.commands.pyccel_clean">
+<span id="pyccel-commands-pyccel-clean-module"></span><h2>pyccel.commands.pyccel_clean module<a class="headerlink" href="#module-pyccel.commands.pyccel_clean" title="Permalink to this headline">¶</a></h2>
+<p>Module containing scripts to remove pyccel generated objects</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyccel.commands.pyccel_clean.pyccel_clean">
+<span class="sig-prename descclassname"><span class="pre">pyccel.commands.pyccel_clean.</span></span><span class="sig-name descname"><span class="pre">pyccel_clean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_shared_libs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_programs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/commands/pyccel_clean.html#pyccel_clean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.commands.pyccel_clean.pyccel_clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove __pyccel__ and __epyccel__ folders as well
+as any python shared libraries from the directory path_dir</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_dir</strong> (<em>str</em>) – The path to the folder which should be cleaned
+Default : current working directory</p></li>
+<li><p><strong>recursive</strong> (<em>bool</em>) – Indicates whether the function should recurse
+into sub-folders
+Default : True</p></li>
+<li><p><strong>remove_shared_libs</strong> (<em>bool</em>) – Indicates whether shared libraries generated
+by python should also be removed from the
+directory path_dir</p></li>
+<li><p><strong>remove_programs</strong> (<em>bool</em>) – Indicates whether programs should also be
+removed from the directory path_dir</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyccel.commands.pyccel_clean.pyccel_clean_command">
+<span class="sig-prename descclassname"><span class="pre">pyccel.commands.pyccel_clean.</span></span><span class="sig-name descname"><span class="pre">pyccel_clean_command</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/commands/pyccel_clean.html#pyccel_clean_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.commands.pyccel_clean.pyccel_clean_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper around the pyccel_clean function allowing
+command line arguments to be passed to the function</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyccel.commands.pyccel_init">
+<span id="pyccel-commands-pyccel-init-module"></span><h2>pyccel.commands.pyccel_init module<a class="headerlink" href="#module-pyccel.commands.pyccel_init" title="Permalink to this headline">¶</a></h2>
+<p>Module containing script to pyccelize internal files</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyccel.commands.pyccel_init.pyccel_init">
+<span class="sig-prename descclassname"><span class="pre">pyccel.commands.pyccel_init.</span></span><span class="sig-name descname"><span class="pre">pyccel_init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/commands/pyccel_init.html#pyccel_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.commands.pyccel_init.pyccel_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pickle internal pyccel files</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyccel.commands.pyccel_init.pyccel_init_command">
+<span class="sig-prename descclassname"><span class="pre">pyccel.commands.pyccel_init.</span></span><span class="sig-name descname"><span class="pre">pyccel_init_command</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/commands/pyccel_init.html#pyccel_init_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.commands.pyccel_init.pyccel_init_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper around the pyccel_init function removing the need
+for ArgumentParser</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyccel.commands">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pyccel.commands" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="pyccel.compilers.html" class="btn btn-neutral float-right" title="pyccel.compilers package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pyccel.codegen.printing.html" class="btn btn-neutral float-left" title="pyccel.codegen.printing package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

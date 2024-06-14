@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.codegen.utilities &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.codegen.utilities</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.codegen.utilities</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This file contains some useful functions to compile the generated fortran code</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">filelock</span> <span class="kn">import</span> <span class="n">FileLock</span>
+<span class="kn">import</span> <span class="nn">pyccel.stdlib</span> <span class="k">as</span> <span class="nn">stdlib_folder</span>
+
+<span class="kn">from</span> <span class="nn">.compiling.basic</span>     <span class="kn">import</span> <span class="n">CompileObj</span>
+
+<span class="c1"># get path to pyccel/stdlib/lib_name</span>
+<span class="n">stdlib_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">stdlib_folder</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;copy_internal_library&#39;</span><span class="p">,</span><span class="s1">&#39;recompile_object&#39;</span><span class="p">]</span>
+
+<span class="c1">#==============================================================================</span>
+<span class="n">language_extension</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;fortran&#39;</span><span class="p">:</span><span class="s1">&#39;f90&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;python&#39;</span><span class="p">:</span><span class="s1">&#39;py&#39;</span><span class="p">}</span>
+
+<span class="c1">#==============================================================================</span>
+<span class="c1"># map internal libraries to their folders inside pyccel/stdlib and their compile objects</span>
+<span class="c1"># The compile object folder will be in the pyccel dirpath</span>
+<span class="n">internal_libs</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;ndarrays&quot;</span>     <span class="p">:</span> <span class="p">(</span><span class="s2">&quot;ndarrays&quot;</span><span class="p">,</span> <span class="n">CompileObj</span><span class="p">(</span><span class="s2">&quot;ndarrays.c&quot;</span><span class="p">,</span><span class="n">folder</span><span class="o">=</span><span class="s2">&quot;ndarrays&quot;</span><span class="p">)),</span>
+    <span class="s2">&quot;pyc_math_f90&quot;</span> <span class="p">:</span> <span class="p">(</span><span class="s2">&quot;math&quot;</span><span class="p">,</span> <span class="n">CompileObj</span><span class="p">(</span><span class="s2">&quot;pyc_math_f90.f90&quot;</span><span class="p">,</span><span class="n">folder</span><span class="o">=</span><span class="s2">&quot;math&quot;</span><span class="p">)),</span>
+    <span class="s2">&quot;pyc_math_c&quot;</span>   <span class="p">:</span> <span class="p">(</span><span class="s2">&quot;math&quot;</span><span class="p">,</span> <span class="n">CompileObj</span><span class="p">(</span><span class="s2">&quot;pyc_math_c.c&quot;</span><span class="p">,</span><span class="n">folder</span><span class="o">=</span><span class="s2">&quot;math&quot;</span><span class="p">)),</span>
+    <span class="s2">&quot;cwrapper&quot;</span>     <span class="p">:</span> <span class="p">(</span><span class="s2">&quot;cwrapper&quot;</span><span class="p">,</span> <span class="n">CompileObj</span><span class="p">(</span><span class="s2">&quot;cwrapper.c&quot;</span><span class="p">,</span><span class="n">folder</span><span class="o">=</span><span class="s2">&quot;cwrapper&quot;</span><span class="p">,</span> <span class="n">accelerators</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;python&#39;</span><span class="p">,))),</span>
+    <span class="s2">&quot;numpy_f90&quot;</span>    <span class="p">:</span> <span class="p">(</span><span class="s2">&quot;numpy&quot;</span><span class="p">,</span> <span class="n">CompileObj</span><span class="p">(</span><span class="s2">&quot;numpy_f90.f90&quot;</span><span class="p">,</span><span class="n">folder</span><span class="o">=</span><span class="s2">&quot;numpy&quot;</span><span class="p">)),</span>
+    <span class="s2">&quot;numpy_c&quot;</span>      <span class="p">:</span> <span class="p">(</span><span class="s2">&quot;numpy&quot;</span><span class="p">,</span> <span class="n">CompileObj</span><span class="p">(</span><span class="s2">&quot;numpy_c.c&quot;</span><span class="p">,</span><span class="n">folder</span><span class="o">=</span><span class="s2">&quot;numpy&quot;</span><span class="p">)),</span>
+<span class="p">}</span>
+<span class="n">internal_libs</span><span class="p">[</span><span class="s2">&quot;cwrapper_ndarrays&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;cwrapper_ndarrays&quot;</span><span class="p">,</span> <span class="n">CompileObj</span><span class="p">(</span><span class="s2">&quot;cwrapper_ndarrays.c&quot;</span><span class="p">,</span><span class="n">folder</span><span class="o">=</span><span class="s2">&quot;cwrapper_ndarrays&quot;</span><span class="p">,</span>
+                                                             <span class="n">accelerators</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;python&#39;</span><span class="p">,),</span>
+                                                             <span class="n">dependencies</span> <span class="o">=</span> <span class="p">(</span><span class="n">internal_libs</span><span class="p">[</span><span class="s2">&quot;ndarrays&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                                                                             <span class="n">internal_libs</span><span class="p">[</span><span class="s2">&quot;cwrapper&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">])))</span>
+
+<span class="c1">#==============================================================================</span>
+
+<span class="k">def</span> <span class="nf">not_a_copy</span><span class="p">(</span><span class="n">src_folder</span><span class="p">,</span> <span class="n">dst_folder</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Check if the file filename present in src_folder</span>
+<span class="sd">    is a copy of the file filename present in dst_folder</span>
+<span class="sd">    or if the source file has been updated since the last</span>
+<span class="sd">    copy</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">abs_src_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">src_folder</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">abs_dst_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dst_folder</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">src_mod_time</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getatime</span><span class="p">(</span><span class="n">abs_src_file</span><span class="p">)</span>
+    <span class="n">dst_mod_time</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getatime</span><span class="p">(</span><span class="n">abs_dst_file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">src_mod_time</span> <span class="o">&gt;</span> <span class="n">dst_mod_time</span>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="copy_internal_library"><a class="viewcode-back" href="../../../pyccel.codegen.html#pyccel.codegen.utilities.copy_internal_library">[docs]</a><span class="k">def</span> <span class="nf">copy_internal_library</span><span class="p">(</span><span class="n">lib_folder</span><span class="p">,</span> <span class="n">pyccel_dirpath</span><span class="p">,</span> <span class="n">extra_files</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Copy an internal library from its specified stdlib folder to the pyccel</span>
+<span class="sd">    directory. The copy is only done if the files are not already present or</span>
+<span class="sd">    if the files have changed since they were last copied. Extra files can be</span>
+<span class="sd">    added to the folder if and when the copy occurs (e.g. for specifying</span>
+<span class="sd">    the numpy version compatibility)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lib_folder     : str</span>
+<span class="sd">                     The name of the folder to be copied, relative to the stdlib folder</span>
+<span class="sd">    pyccel_dirpath : str</span>
+<span class="sd">                     The location that the folder should be copied to</span>
+<span class="sd">    extra_files    : dict</span>
+<span class="sd">                     A dictionary whose keys are the names of any files to be created</span>
+<span class="sd">                     in the folder and whose values are the contents of the file</span>
+
+<span class="sd">    Results</span>
+<span class="sd">    -------</span>
+<span class="sd">    lib_dest_path  : str</span>
+<span class="sd">                     The location that the files were copied to</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># get lib path (stdlib_path/lib_name)</span>
+    <span class="n">lib_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stdlib_path</span><span class="p">,</span> <span class="n">lib_folder</span><span class="p">)</span>
+    <span class="c1"># remove library folder to avoid missing files and copy</span>
+    <span class="c1"># new one from pyccel stdlib</span>
+    <span class="n">lib_dest_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pyccel_dirpath</span><span class="p">,</span> <span class="n">lib_folder</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">FileLock</span><span class="p">(</span><span class="n">lib_dest_path</span> <span class="o">+</span> <span class="s1">&#39;.lock&#39;</span><span class="p">):</span>
+        <span class="c1"># Check if folder exists</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">lib_dest_path</span><span class="p">):</span>
+            <span class="n">to_create</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">to_update</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">to_create</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1"># If folder exists check if it needs updating</span>
+            <span class="n">src_files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">lib_path</span><span class="p">)</span>
+            <span class="n">dst_files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">lib_dest_path</span><span class="p">)</span>
+            <span class="c1"># Check if all files are present in destination</span>
+            <span class="n">to_update</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dst_files</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">src_files</span><span class="p">)</span>
+
+            <span class="c1"># Check if original files have been modified</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">to_update</span><span class="p">:</span>
+                <span class="n">to_update</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">not_a_copy</span><span class="p">(</span><span class="n">lib_path</span><span class="p">,</span> <span class="n">lib_dest_path</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">src_files</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">to_create</span><span class="p">:</span>
+            <span class="c1"># Copy all files from the source to the destination</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">lib_path</span><span class="p">,</span> <span class="n">lib_dest_path</span><span class="p">)</span>
+            <span class="c1"># Create any requested extra files</span>
+            <span class="k">if</span> <span class="n">extra_files</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">contents</span> <span class="ow">in</span> <span class="n">extra_files</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lib_dest_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">to_update</span><span class="p">:</span>
+            <span class="n">locks</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">src_files</span><span class="p">:</span>
+                <span class="n">base</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ext</span> <span class="o">!=</span> <span class="s1">&#39;.h&#39;</span><span class="p">:</span>
+                    <span class="n">locks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FileLock</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lib_dest_path</span><span class="p">,</span> <span class="n">base</span><span class="o">+</span><span class="s1">&#39;.o.lock&#39;</span><span class="p">)))</span>
+            <span class="c1"># Acquire locks to avoid compilation problems</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">locks</span><span class="p">:</span>
+                <span class="n">l</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+            <span class="c1"># Remove all files in destination directory</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dst_files</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lib_dest_path</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span>
+            <span class="c1"># Copy all files from the source to the destination</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">src_files</span><span class="p">:</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lib_path</span><span class="p">,</span> <span class="n">s</span><span class="p">),</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lib_dest_path</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+            <span class="c1"># Create any requested extra files</span>
+            <span class="k">if</span> <span class="n">extra_files</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">contents</span> <span class="ow">in</span> <span class="n">extra_files</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lib_dest_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+            <span class="c1"># Release the locks</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">locks</span><span class="p">:</span>
+                <span class="n">l</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">lib_dest_path</span></div>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="recompile_object"><a class="viewcode-back" href="../../../pyccel.codegen.html#pyccel.codegen.utilities.recompile_object">[docs]</a><span class="k">def</span> <span class="nf">recompile_object</span><span class="p">(</span><span class="n">compile_obj</span><span class="p">,</span>
+                   <span class="n">compiler</span><span class="p">,</span>
+                   <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compile the provided file.</span>
+<span class="sd">    If the file has already been compiled then it will only be recompiled</span>
+<span class="sd">    if the source has been modified</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    compile_obj : CompileObj</span>
+<span class="sd">                  The object to compile</span>
+<span class="sd">    compiler    : str</span>
+<span class="sd">                  The compiler used</span>
+<span class="sd">    verbose     : bool</span>
+<span class="sd">                  Indicates whethere additional information should be printed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># compile library source files</span>
+    <span class="n">compile_obj</span><span class="o">.</span><span class="n">acquire_simple_lock</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">module_target</span><span class="p">):</span>
+        <span class="c1"># Check if source file has changed since last compile</span>
+        <span class="n">o_file_age</span>   <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">module_target</span><span class="p">)</span>
+        <span class="n">src_file_age</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">outdated</span>     <span class="o">=</span> <span class="n">o_file_age</span> <span class="o">&lt;</span> <span class="n">src_file_age</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">outdated</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">compile_obj</span><span class="o">.</span><span class="n">release_simple_lock</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">outdated</span><span class="p">:</span>
+        <span class="n">compiler</span><span class="o">.</span><span class="n">compile_module</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">=</span><span class="n">compile_obj</span><span class="p">,</span>
+                <span class="n">output_folder</span><span class="o">=</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">source_folder</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

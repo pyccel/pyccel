@@ -1,0 +1,415 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.ast.sympy_helper &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.ast.sympy_helper</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.ast.sympy_helper</h1><div class="highlight"><pre>
+<span></span><span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module containing functions which allow us to treat expressions expressed as pyccel nodes with sympy,</span>
+<span class="sd">by providing translations between the sympy representation and the pyccel nodes</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sympy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">One</span><span class="p">,</span> <span class="n">NegativeOne</span><span class="p">,</span> <span class="n">Zero</span><span class="p">,</span> <span class="n">Half</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.utilities.strings</span> <span class="kn">import</span> <span class="n">create_incremented_string</span>
+
+<span class="kn">from</span> <span class="nn">.operators</span> <span class="kn">import</span> <span class="n">PyccelAdd</span><span class="p">,</span> <span class="n">PyccelMul</span><span class="p">,</span> <span class="n">PyccelPow</span><span class="p">,</span> <span class="n">PyccelUnarySub</span>
+<span class="kn">from</span> <span class="nn">.operators</span> <span class="kn">import</span> <span class="n">PyccelDiv</span><span class="p">,</span> <span class="n">PyccelMinus</span><span class="p">,</span> <span class="n">PyccelAssociativeParenthesis</span>
+<span class="kn">from</span> <span class="nn">.core</span>      <span class="kn">import</span> <span class="n">Iterable</span>
+
+<span class="kn">from</span> <span class="nn">.builtins</span>  <span class="kn">import</span> <span class="n">PythonRange</span><span class="p">,</span> <span class="n">PythonTuple</span>
+
+<span class="kn">from</span> <span class="nn">.mathext</span>   <span class="kn">import</span> <span class="n">MathCeil</span>
+
+<span class="kn">from</span> <span class="nn">.literals</span>  <span class="kn">import</span> <span class="n">LiteralInteger</span><span class="p">,</span> <span class="n">LiteralFloat</span><span class="p">,</span> <span class="n">LiteralComplex</span>
+
+<span class="kn">from</span> <span class="nn">.datatypes</span> <span class="kn">import</span> <span class="n">NativeInteger</span>
+
+<span class="kn">from</span> <span class="nn">.variable</span>  <span class="kn">import</span> <span class="n">Variable</span><span class="p">,</span> <span class="n">PyccelArraySize</span>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="sympy_to_pyccel"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.sympy_helper.sympy_to_pyccel">[docs]</a><span class="k">def</span> <span class="nf">sympy_to_pyccel</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a sympy expression to a pyccel expression replacing sympy symbols with</span>
+<span class="sd">    pyccel expressions provided in a symbol_map</span>
+
+<span class="sd">      Parameters</span>
+<span class="sd">      ----------</span>
+<span class="sd">      expr       : PyccelAstNode</span>
+<span class="sd">                   The pyccel node to be translated</span>
+<span class="sd">      symbol_map : dict</span>
+<span class="sd">                   Dictionary mapping sympy symbols to pyccel objects</span>
+
+<span class="sd">      Returns</span>
+<span class="sd">      ----------</span>
+<span class="sd">      expr       : pyccel Object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#Constants</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Integer</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">p</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PyccelUnarySub</span><span class="p">(</span><span class="n">LiteralInteger</span><span class="p">(</span><span class="o">-</span><span class="n">expr</span><span class="o">.</span><span class="n">p</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">One</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">NegativeOne</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Zero</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Float</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LiteralFloat</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Half</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LiteralFloat</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Rational</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LiteralFloat</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">)</span> <span class="ow">and</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">symbol_map</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">symbol_map</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span>
+
+    <span class="c1">#Operators</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Mul</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">sympy_to_pyccel</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+
+        <span class="c1"># Handle priority</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">PyccelAdd</span><span class="p">,</span> <span class="n">PyccelMinus</span><span class="p">)):</span>
+                <span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">PyccelAssociativeParenthesis</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">PyccelMul</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Add</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">sympy_to_pyccel</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Find positive and negative elements</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">PyccelUnarySub</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">PyccelMinus</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">PyccelAdd</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Pow</span><span class="p">):</span>
+        <span class="c1"># Recognise division</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">NegativeOne</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelDiv</span><span class="p">(</span><span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">sympy_to_pyccel</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">symbol_map</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PyccelPow</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">sympy_to_pyccel</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">ceiling</span><span class="p">):</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">sympy_to_pyccel</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">symbol_map</span><span class="p">)</span>
+        <span class="c1"># Only apply ceiling where appropriate</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="n">NativeInteger</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">arg</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MathCeil</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">sympy_to_pyccel</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">expr</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">PythonTuple</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">expr</span><span class="p">)))</span></div>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="pyccel_to_sympy"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.sympy_helper.pyccel_to_sympy">[docs]</a><span class="k">def</span> <span class="nf">pyccel_to_sympy</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a pyccel expression to a sympy expression saving any pyccel objects</span>
+<span class="sd">    converted to sympy symbols in a dictionary to allow the reverse conversion</span>
+<span class="sd">    to be carried out later</span>
+
+<span class="sd">      Parameters</span>
+<span class="sd">      ----------</span>
+<span class="sd">      expr       : PyccelAstNode</span>
+<span class="sd">                   The pyccel node to be translated</span>
+<span class="sd">      symbol_map : dict</span>
+<span class="sd">                   Dictionary containing any pyccel objects converted to sympy symbols</span>
+<span class="sd">      used_names : Set</span>
+<span class="sd">                   A set of all the names which already exist and therefore cannot</span>
+<span class="sd">                   be used to create new symbols</span>
+
+<span class="sd">      Returns</span>
+<span class="sd">      ----------</span>
+<span class="sd">      expr       : sympy Object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#Constants</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">LiteralInteger</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">Integer</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">python_value</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">LiteralFloat</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">Float</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">python_value</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">LiteralComplex</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">Float</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">+</span> <span class="n">sp</span><span class="o">.</span><span class="n">Float</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span>
+
+    <span class="c1">#Operators</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">PyccelDiv</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">PyccelMul</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">PyccelMinus</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">PyccelUnarySub</span><span class="p">):</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">arg</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">PyccelAdd</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">PyccelPow</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">PyccelAssociativeParenthesis</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">MathCeil</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">ceiling</span><span class="p">(</span><span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">symbol_map</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">symbol_map</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="nb">list</span><span class="p">(</span><span class="n">symbol_map</span><span class="o">.</span><span class="n">values</span><span class="p">())</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">expr</span><span class="p">)]</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Variable</span><span class="p">):</span>
+        <span class="n">sym</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">symbol_map</span><span class="p">[</span><span class="n">sym</span><span class="p">]</span> <span class="o">=</span> <span class="n">expr</span>
+        <span class="k">return</span> <span class="n">sym</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">PyccelArraySize</span><span class="p">):</span>
+        <span class="n">sym_name</span><span class="p">,</span><span class="n">_</span> <span class="o">=</span> <span class="n">create_incremented_string</span><span class="p">(</span><span class="n">used_names</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="s1">&#39;tmp_size&#39;</span><span class="p">)</span>
+        <span class="n">used_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sym_name</span><span class="p">)</span>
+        <span class="n">sym</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="n">sym_name</span><span class="p">)</span>
+        <span class="n">symbol_map</span><span class="p">[</span><span class="n">sym</span><span class="p">]</span> <span class="o">=</span> <span class="n">expr</span>
+        <span class="k">return</span> <span class="n">sym</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">iterable</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">PythonRange</span><span class="p">):</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span>
+        <span class="n">stop</span>  <span class="o">=</span> <span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">stop</span> <span class="p">,</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span>
+        <span class="n">step</span>  <span class="o">=</span> <span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">step</span> <span class="p">,</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">Range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">PythonTuple</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">expr</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">Atom</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">operations</span><span class="o">.</span><span class="n">AssocOp</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Set</span><span class="p">)):</span>
+        <span class="c1"># Already translated</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">expr</span><span class="p">)))</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

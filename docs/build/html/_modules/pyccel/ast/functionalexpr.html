@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.ast.functionalexpr &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.ast.functionalexpr</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.ast.functionalexpr</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.utilities.stage</span> <span class="kn">import</span> <span class="n">PyccelStage</span>
+
+<span class="kn">from</span> <span class="nn">.basic</span> <span class="kn">import</span> <span class="n">PyccelAstNode</span>
+
+<span class="n">pyccel_stage</span> <span class="o">=</span> <span class="n">PyccelStage</span><span class="p">()</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;FunctionalFor&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;FunctionalMax&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;FunctionalMin&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;FunctionalSum&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GeneratorComprehension&#39;</span>
+<span class="p">)</span>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="FunctionalFor"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.functionalexpr.FunctionalFor">[docs]</a><span class="k">class</span> <span class="nc">FunctionalFor</span><span class="p">(</span><span class="n">PyccelAstNode</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents any generator expression e.g:</span>
+<span class="sd">    a = [i for i in range(10)]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    loops   : CodeBlock/For</span>
+<span class="sd">              The loops contained in the expression</span>
+<span class="sd">    expr    : Basic</span>
+<span class="sd">              The expression at the origin of the expression</span>
+<span class="sd">              E.g. &#39;i&#39; for &#39;[i for i in range(10)]&#39;</span>
+<span class="sd">    lhs     : Variable</span>
+<span class="sd">              The variable to which the result is assigned</span>
+<span class="sd">    indices : list of Variable</span>
+<span class="sd">              All iterator targets for the for loops</span>
+<span class="sd">    index   : Variable</span>
+<span class="sd">              Index of result in rhs</span>
+<span class="sd">              E.g.:</span>
+<span class="sd">              ```</span>
+<span class="sd">              a = [i in range(1,10,2)]</span>
+<span class="sd">              ```</span>
+<span class="sd">              is translated to:</span>
+<span class="sd">              ```</span>
+<span class="sd">              Dummy_0 = 0</span>
+<span class="sd">              for i in range(1,10,2):</span>
+<span class="sd">                  a[Dummy_0]=i</span>
+<span class="sd">                  Dummy_0 += 1</span>
+<span class="sd">              ```</span>
+<span class="sd">              Index is `Dummy_0`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_loops&#39;</span><span class="p">,</span><span class="s1">&#39;_expr&#39;</span><span class="p">,</span> <span class="s1">&#39;_lhs&#39;</span><span class="p">,</span> <span class="s1">&#39;_indices&#39;</span><span class="p">,</span><span class="s1">&#39;_index&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;_dtype&#39;</span><span class="p">,</span><span class="s1">&#39;_precision&#39;</span><span class="p">,</span><span class="s1">&#39;_rank&#39;</span><span class="p">,</span><span class="s1">&#39;_shape&#39;</span><span class="p">,</span><span class="s1">&#39;_order&#39;</span><span class="p">)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_loops&#39;</span><span class="p">,</span><span class="s1">&#39;_expr&#39;</span><span class="p">,</span> <span class="s1">&#39;_lhs&#39;</span><span class="p">,</span> <span class="s1">&#39;_indices&#39;</span><span class="p">,</span><span class="s1">&#39;_index&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">loops</span><span class="p">,</span>
+        <span class="n">expr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">lhs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">index</span><span class="o">=</span><span class="kc">None</span>
+        <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loops</span>   <span class="o">=</span> <span class="n">loops</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span>    <span class="o">=</span> <span class="n">expr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lhs</span>     <span class="o">=</span> <span class="n">lhs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_indices</span> <span class="o">=</span> <span class="n">indices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index</span>   <span class="o">=</span> <span class="n">index</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">pyccel_stage</span> <span class="o">!=</span> <span class="s1">&#39;syntactic&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span>     <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_precision</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">precision</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span>      <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">rank</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span>     <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">shape</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_order</span>     <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">order</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">loops</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loops</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lhs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lhs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indices</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index</span></div>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="GeneratorComprehension"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.functionalexpr.GeneratorComprehension">[docs]</a><span class="k">class</span> <span class="nc">GeneratorComprehension</span><span class="p">(</span><span class="n">FunctionalFor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Super class for all functions which reduce generator expressions to scalars</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span></div>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="FunctionalSum"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.functionalexpr.FunctionalSum">[docs]</a><span class="k">class</span> <span class="nc">FunctionalSum</span><span class="p">(</span><span class="n">GeneratorComprehension</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents a call to sum for a list argument</span>
+<span class="sd">    &gt;&gt;&gt; sum([i in range(5)])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;sum&#39;</span></div>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="FunctionalMax"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.functionalexpr.FunctionalMax">[docs]</a><span class="k">class</span> <span class="nc">FunctionalMax</span><span class="p">(</span><span class="n">GeneratorComprehension</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents a call to max for a list argument</span>
+<span class="sd">    &gt;&gt;&gt; max([i in range(5)])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;max&#39;</span></div>
+<span class="c1">#==============================================================================</span>
+
+<div class="viewcode-block" id="FunctionalMin"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.functionalexpr.FunctionalMin">[docs]</a><span class="k">class</span> <span class="nc">FunctionalMin</span><span class="p">(</span><span class="n">GeneratorComprehension</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents a call to min for a list argument</span>
+<span class="sd">    &gt;&gt;&gt; min([i in range(5)])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;min&#39;</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,531 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.stdlib.internal.openmp &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.stdlib.internal.openmp</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.stdlib.internal.openmp</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">File providing functions to mimic OpenMP Runtime library routines to allow files to run</span>
+<span class="sd">in pure python mode</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="omp_set_num_threads"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_set_num_threads">[docs]</a><span class="k">def</span> <span class="nf">omp_set_num_threads</span><span class="p">(</span><span class="n">num_threads</span> <span class="p">:</span> <span class="s1">&#39;int32&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_set_num_threads routine affects the number of threads</span>
+<span class="sd">    to be used for subsequent parallel regions that do not specify</span>
+<span class="sd">    a num_threads clause, by setting the value of the first element</span>
+<span class="sd">    of the nthreads-var ICV of the current task.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    num_threads : int32</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="omp_get_num_threads"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_num_threads">[docs]</a><span class="k">def</span> <span class="nf">omp_get_num_threads</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_num_threads routine returns the number of threads</span>
+<span class="sd">    in the current team.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_max_threads"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_max_threads">[docs]</a><span class="k">def</span> <span class="nf">omp_get_max_threads</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_max_threads routine returns an upper bound on the</span>
+<span class="sd">    number of threads that could be used to form a new team if a</span>
+<span class="sd">    parallel construct without a num_threads clause were encountered</span>
+<span class="sd">    after execution returns from this routine.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_thread_num"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_thread_num">[docs]</a><span class="k">def</span> <span class="nf">omp_get_thread_num</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_thread_num routine returns the thread number,</span>
+<span class="sd">    within the current team, of the calling thread</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_num_procs"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_num_procs">[docs]</a><span class="k">def</span> <span class="nf">omp_get_num_procs</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_num_procs routine returns the number of processors</span>
+<span class="sd">    available to the device.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_in_parallel"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_in_parallel">[docs]</a><span class="k">def</span> <span class="nf">omp_in_parallel</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_in_parallel routine returns true if the active-levels-var</span>
+<span class="sd">    ICV is greater than zero; otherwise, it returns false</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="omp_set_dynamic"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_set_dynamic">[docs]</a><span class="k">def</span> <span class="nf">omp_set_dynamic</span><span class="p">(</span><span class="n">dynamic_threads</span> <span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_set_dynamic routine enables or disables dynamic</span>
+<span class="sd">    adjustment of the number of threads available for the execution</span>
+<span class="sd">    of subsequent parallel regions by setting the value of the</span>
+<span class="sd">    dyn-var ICV</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">     : bool</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="omp_get_dynamic"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_dynamic">[docs]</a><span class="k">def</span> <span class="nf">omp_get_dynamic</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_dynamic routine returns the value of the dyn-var</span>
+<span class="sd">    ICV, which determines whether dynamic adjustment of the number</span>
+<span class="sd">    of threads is enabled or disabled.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="omp_get_cancellation"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_cancellation">[docs]</a><span class="k">def</span> <span class="nf">omp_get_cancellation</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_cancellation routine returns the value of the</span>
+<span class="sd">    cancel-var ICV, which determines if cancellation is enabled</span>
+<span class="sd">    or disabled.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="omp_set_nested"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_set_nested">[docs]</a><span class="k">def</span> <span class="nf">omp_set_nested</span><span class="p">(</span><span class="n">nested</span> <span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The deprecated omp_set_nested routine enables or disables</span>
+<span class="sd">    nested parallelism by setting the max-active-levels-var ICV.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nested : bool</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="omp_get_nested"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_nested">[docs]</a><span class="k">def</span> <span class="nf">omp_get_nested</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The deprecated omp_get_nested routine returns whether nested</span>
+<span class="sd">    parallelism is enabled or disabled, according to the value</span>
+<span class="sd">    of the max-active-levels-var ICV.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="omp_set_schedule"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_set_schedule">[docs]</a><span class="k">def</span> <span class="nf">omp_set_schedule</span><span class="p">(</span><span class="n">kind</span> <span class="p">:</span> <span class="s1">&#39;int32&#39;</span><span class="p">,</span> <span class="n">chunk_size</span> <span class="p">:</span> <span class="s1">&#39;int32&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_set_schedule routine affects the schedule that is</span>
+<span class="sd">    applied when runtime is used as schedule kind, by setting</span>
+<span class="sd">    the value of the run-sched-var ICV.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    kind : int32</span>
+<span class="sd">    chunk_size : int32</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="omp_get_schedule"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_schedule">[docs]</a><span class="k">def</span> <span class="nf">omp_get_schedule</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_schedule routine returns the schedule that is</span>
+<span class="sd">    applied when the runtime schedule is used.</span>
+
+<span class="sd">    Results</span>
+<span class="sd">    -------</span>
+<span class="sd">    kind : int32</span>
+<span class="sd">    chunk_size : int32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_thread_limit"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_thread_limit">[docs]</a><span class="k">def</span> <span class="nf">omp_get_thread_limit</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_thread_limit routine returns the maximum number</span>
+<span class="sd">    of OpenMP threads available to participate in the current</span>
+<span class="sd">    contention group.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_set_max_active_levels"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_set_max_active_levels">[docs]</a><span class="k">def</span> <span class="nf">omp_set_max_active_levels</span><span class="p">(</span><span class="n">max_levels</span> <span class="p">:</span> <span class="s1">&#39;int32&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_set_max_active_levels routine limits the number of</span>
+<span class="sd">    nested active parallel regions on the device, by setting the</span>
+<span class="sd">    max-active-levels-var ICV</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    max_levels : int32</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="omp_get_max_active_levels"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_max_active_levels">[docs]</a><span class="k">def</span> <span class="nf">omp_get_max_active_levels</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_max_active_levels routine returns the value of</span>
+<span class="sd">    the max-active-levels-var ICV, which determines the maximum</span>
+<span class="sd">    number of nested active parallel regions on the device.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_level"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_level">[docs]</a><span class="k">def</span> <span class="nf">omp_get_level</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_level routine returns the value of the levels-var ICV.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_ancestor_thread_num"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_ancestor_thread_num">[docs]</a><span class="k">def</span> <span class="nf">omp_get_ancestor_thread_num</span><span class="p">(</span><span class="n">level</span> <span class="p">:</span> <span class="s1">&#39;int32&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_ancestor_thread_num routine returns, for a given</span>
+<span class="sd">    nested level of the current thread, the thread number of the</span>
+<span class="sd">    ancestor of the current thread.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    level : int32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_team_size"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_team_size">[docs]</a><span class="k">def</span> <span class="nf">omp_get_team_size</span><span class="p">(</span><span class="n">level</span> <span class="p">:</span> <span class="s1">&#39;int32&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_team_size routine returns, for a given nested</span>
+<span class="sd">    level of the current thread, the size of the thread team to</span>
+<span class="sd">    which the ancestor or the current thread belongs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    level : int32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_active_level"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_active_level">[docs]</a><span class="k">def</span> <span class="nf">omp_get_active_level</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_active_level routine returns the value of the</span>
+<span class="sd">    active-level-vars ICV.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_in_final"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_in_final">[docs]</a><span class="k">def</span> <span class="nf">omp_in_final</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_in_final routine returns true if the routine is</span>
+<span class="sd">    executed in a final task region; otherwise, it returns false.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="omp_get_proc_bind"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_proc_bind">[docs]</a><span class="k">def</span> <span class="nf">omp_get_proc_bind</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_proc_bind routine returns the thread affinity</span>
+<span class="sd">    policy to be used for the subsequent nested parallel regions</span>
+<span class="sd">    that do not specify a proc_bind clause.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_num_places"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_num_places">[docs]</a><span class="k">def</span> <span class="nf">omp_get_num_places</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_num_places routine returns the number of places</span>
+<span class="sd">    available to the execution environment in the place list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_place_num_procs"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_place_num_procs">[docs]</a><span class="k">def</span> <span class="nf">omp_get_place_num_procs</span><span class="p">(</span><span class="n">place_num</span> <span class="p">:</span> <span class="s1">&#39;int32&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_place_num_procs routine returns the number of</span>
+<span class="sd">    processors available to the execution environment in the</span>
+<span class="sd">    specified place.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    place_num : int32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_place_proc_ids"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_place_proc_ids">[docs]</a><span class="k">def</span> <span class="nf">omp_get_place_proc_ids</span><span class="p">(</span><span class="n">place_num</span> <span class="p">:</span> <span class="s1">&#39;int32&#39;</span><span class="p">,</span> <span class="n">ids</span> <span class="p">:</span> <span class="s1">&#39;int32[:]&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_place_proc_ids routine returns the numerical</span>
+<span class="sd">    identifiers of the processors available to the execution</span>
+<span class="sd">    environment in the specified place.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    place_num : int32</span>
+<span class="sd">    ids : array of int32s</span>
+<span class="sd">            To be filled by the function</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="omp_get_place_num"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_place_num">[docs]</a><span class="k">def</span> <span class="nf">omp_get_place_num</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_place_num routine returns the place number of</span>
+<span class="sd">    the place to which the encountering thread is bound.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_partition_num_places"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_partition_num_places">[docs]</a><span class="k">def</span> <span class="nf">omp_get_partition_num_places</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_partition_num_places routine returns the number</span>
+<span class="sd">    of places in the place partition of the innermost implicit task.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_partition_place_nums"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_partition_place_nums">[docs]</a><span class="k">def</span> <span class="nf">omp_get_partition_place_nums</span><span class="p">(</span><span class="n">place_nums</span> <span class="p">:</span> <span class="s1">&#39;int32[:]&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_partition_place_nums routine returns the list of</span>
+<span class="sd">    place numbers corresponding to the places in the</span>
+<span class="sd">    place-partition-var ICV of the innermost implicit task.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    place_nums : array of int32s</span>
+<span class="sd">            To be filled by the function</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="omp_set_default_device"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_set_default_device">[docs]</a><span class="k">def</span> <span class="nf">omp_set_default_device</span><span class="p">(</span><span class="n">device_num</span> <span class="p">:</span> <span class="s1">&#39;int32&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_set_default_device routine controls the default</span>
+<span class="sd">    target device by assigning the value of the</span>
+<span class="sd">    default-device-var ICV.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="omp_get_default_device"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_default_device">[docs]</a><span class="k">def</span> <span class="nf">omp_get_default_device</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_default_device routine returns the default</span>
+<span class="sd">    target device.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_num_devices"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_num_devices">[docs]</a><span class="k">def</span> <span class="nf">omp_get_num_devices</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_num_devices routine returns the number of</span>
+<span class="sd">    target devices.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_num_teams"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_num_teams">[docs]</a><span class="k">def</span> <span class="nf">omp_get_num_teams</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_num_teams routine returns the number of initial</span>
+<span class="sd">    teams in the current teams region.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_team_num"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_team_num">[docs]</a><span class="k">def</span> <span class="nf">omp_get_team_num</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_team_num routine returns the initial team number</span>
+<span class="sd">    of the calling thread.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_is_initial_device"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_is_initial_device">[docs]</a><span class="k">def</span> <span class="nf">omp_is_initial_device</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_is_initial_device routine returns true if the current</span>
+<span class="sd">    task is executing on the host device; otherwise, it returns</span>
+<span class="sd">    false.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="omp_get_initial_device"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_initial_device">[docs]</a><span class="k">def</span> <span class="nf">omp_get_initial_device</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_initial_device routine returns a device number</span>
+<span class="sd">    that represents the host device.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="omp_get_max_task_priority"><a class="viewcode-back" href="../../../../pyccel.stdlib.internal.html#pyccel.stdlib.internal.openmp.omp_get_max_task_priority">[docs]</a><span class="k">def</span> <span class="nf">omp_get_max_task_priority</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The omp_get_max_task_priority routine returns the maximum</span>
+<span class="sd">    value that can be specified in the priority clause.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

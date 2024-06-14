@@ -1,0 +1,669 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.ast.basic &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.ast.basic</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.ast.basic</h1><div class="highlight"><pre>
+<span></span><span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains classes from which all pyccel nodes inherit.</span>
+<span class="sd">They are:</span>
+<span class="sd">- Basic, which provides a python AST</span>
+<span class="sd">- PyccelAstNode which describes each PyccelAstNode</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">ast</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Basic&#39;</span><span class="p">,</span> <span class="s1">&#39;PyccelAstNode&#39;</span><span class="p">)</span>
+
+<span class="n">dict_keys</span>   <span class="o">=</span> <span class="nb">type</span><span class="p">({}</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="n">dict_values</span> <span class="o">=</span> <span class="nb">type</span><span class="p">({}</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+<span class="n">iterable_types</span> <span class="o">=</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">dict_keys</span><span class="p">,</span> <span class="n">dict_values</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span>
+<span class="n">iterable</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span> <span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">iterable_types</span><span class="p">)</span>
+
+<span class="c1">#==============================================================================</span>
+<span class="k">class</span> <span class="nc">Immutable</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Superclass for classes which cannot inherit</span>
+<span class="sd">    from Basic &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="Basic"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic">[docs]</a><span class="k">class</span> <span class="nc">Basic</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Basic class for Pyccel AST.&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_user_nodes&#39;</span><span class="p">,</span> <span class="s1">&#39;_fst&#39;</span><span class="p">,</span> <span class="s1">&#39;_recursion_in_progress&#39;</span><span class="p">)</span>
+    <span class="n">_ignored_types</span> <span class="o">=</span> <span class="p">(</span><span class="n">Immutable</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fst</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_my_attribute_nodes</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c_name</span><span class="p">)</span>
+
+            <span class="kn">from</span> <span class="nn">pyccel.ast.literals</span> <span class="kn">import</span> <span class="n">convert_to_literal</span>
+
+            <span class="k">if</span> <span class="n">Basic</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)):</span>
+                <span class="c1"># Convert basic types to literal types</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">convert_to_literal</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c_name</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">iterable</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ci</span> <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">))</span> \
+                                 <span class="ow">or</span> <span class="n">Basic</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">ci</span><span class="p">))</span> \
+                        <span class="k">else</span> <span class="n">convert_to_literal</span><span class="p">(</span><span class="n">ci</span><span class="p">)</span> <span class="k">for</span> <span class="n">ci</span> <span class="ow">in</span> <span class="n">c</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">iterable</span><span class="p">(</span><span class="n">ci</span><span class="p">))</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">!=</span> <span class="n">size</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Basic child cannot be a tuple of tuples&quot;</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c_name</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Basic child must be a Basic or a tuple not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">c</span><span class="p">)))</span>
+
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">ci</span> <span class="ow">in</span> <span class="n">c</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">Basic</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">ci</span><span class="p">):</span>
+                        <span class="n">ci</span><span class="o">.</span><span class="n">set_current_user_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">c</span><span class="o">.</span><span class="n">set_current_user_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Basic._ignore"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic._ignore">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_ignore</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates if a node should be ignored when recursing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">c</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_ignored_types</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Basic.invalidate_node"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.invalidate_node">[docs]</a>    <span class="k">def</span> <span class="nf">invalidate_node</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicate that this node is temporary.</span>
+<span class="sd">        This will allow it to remove itself from its attributes&#39; users.</span>
+<span class="sd">        If an attribute subsequently has no users, invalidate_node is called recursively</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_my_attribute_nodes</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c_name</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">_</span> <span class="o">=</span> <span class="p">[</span><span class="n">ci</span><span class="o">.</span><span class="n">remove_user_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="k">for</span> <span class="n">ci</span> <span class="ow">in</span> <span class="n">c</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">ci</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">c</span><span class="o">.</span><span class="n">remove_user_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Basic.get_user_nodes"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.get_user_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">get_user_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">search_type</span><span class="p">,</span> <span class="n">excluded_nodes</span> <span class="o">=</span> <span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot; Returns all objects of the requested type</span>
+<span class="sd">        which use the current object</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        search_type : ClassType or tuple of ClassTypes</span>
+<span class="sd">                      The types which we are looking for</span>
+<span class="sd">        excluded_nodes : tuple of types</span>
+<span class="sd">                      Types for which get_user_nodes should not be called</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list : List containing all objects of the</span>
+<span class="sd">               requested type which contain self</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="n">results</span>  <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span> <span class="k">if</span>     <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">search_type</span><span class="p">)</span> <span class="ow">and</span> \
+                                                       <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">excluded_nodes</span><span class="p">)]</span>
+
+            <span class="n">results</span> <span class="o">+=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="ow">and</span> \
+                                                       <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="n">search_type</span><span class="p">,</span> <span class="n">excluded_nodes</span><span class="p">))</span> \
+                          <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">get_user_nodes</span><span class="p">(</span><span class="n">search_type</span><span class="p">,</span> <span class="n">excluded_nodes</span> <span class="o">=</span> <span class="n">excluded_nodes</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="Basic.get_attribute_nodes"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.get_attribute_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">get_attribute_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">search_type</span><span class="p">,</span> <span class="n">excluded_nodes</span> <span class="o">=</span> <span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot; Returns all objects of the requested type</span>
+<span class="sd">        in the current object</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        search_type : ClassType or tuple of ClassTypes</span>
+<span class="sd">                      The types which we are looking for</span>
+<span class="sd">        excluded_nodes : tuple of types</span>
+<span class="sd">                      Types for which get_attribute_nodes should not be called</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list : List containing all objects of the</span>
+<span class="sd">               requested type which exist in self</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_my_attribute_nodes</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">excluded_nodes</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">search_type</span><span class="p">):</span>
+                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">vi</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vi</span><span class="p">,</span> <span class="n">excluded_nodes</span><span class="p">):</span>
+                        <span class="k">continue</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vi</span><span class="p">,</span> <span class="n">search_type</span><span class="p">):</span>
+                        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vi</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">vi</span><span class="p">):</span>
+                        <span class="n">results</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">vi</span><span class="o">.</span><span class="n">get_attribute_nodes</span><span class="p">(</span>
+                            <span class="n">search_type</span><span class="p">,</span> <span class="n">excluded_nodes</span><span class="o">=</span><span class="n">excluded_nodes</span><span class="p">))</span>
+
+            <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                <span class="n">results</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">get_attribute_nodes</span><span class="p">(</span>
+                    <span class="n">search_type</span><span class="p">,</span> <span class="n">excluded_nodes</span> <span class="o">=</span> <span class="n">excluded_nodes</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="Basic.is_attribute_of"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.is_attribute_of">[docs]</a>    <span class="k">def</span> <span class="nf">is_attribute_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Identifies whether this object is an attribute of node.</span>
+<span class="sd">        The function searches recursively down the attribute tree.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node : Basic</span>
+<span class="sd">               The object whose attributes we are interested in</span>
+
+<span class="sd">        Results</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">is_user_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Basic.is_user_of"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.is_user_of">[docs]</a>    <span class="k">def</span> <span class="nf">is_user_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">excluded_nodes</span> <span class="o">=</span> <span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot; Identifies whether this object is a user of node.</span>
+<span class="sd">        The function searches recursively up the user tree</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node           : Basic</span>
+<span class="sd">                      The object whose users we are interested in</span>
+<span class="sd">        excluded_nodes : tuple of types</span>
+<span class="sd">                      Types for which is_user_of should not be called</span>
+
+<span class="sd">        Results</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">recursion_in_progress</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">toggle_recursion</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">get_all_user_nodes</span><span class="p">():</span>
+
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">toggle_recursion</span><span class="p">()</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">excluded_nodes</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_user_of</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">excluded_nodes</span><span class="o">=</span><span class="n">excluded_nodes</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">toggle_recursion</span><span class="p">()</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">node</span><span class="o">.</span><span class="n">toggle_recursion</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Basic.substitute"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.substitute">[docs]</a>    <span class="k">def</span> <span class="nf">substitute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">original</span><span class="p">,</span> <span class="n">replacement</span><span class="p">,</span> <span class="n">excluded_nodes</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">invalidate</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Substitute object &#39;original&#39; for object &#39;replacement&#39; in the code.</span>
+<span class="sd">        Any types in excluded_nodes will not be visited</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        original    : object or tuple of objects</span>
+<span class="sd">                      The original object to be replaced</span>
+<span class="sd">        replacement : object or tuple of objects</span>
+<span class="sd">                      The object which will be inserted instead</span>
+<span class="sd">        excluded_nodes : tuple of types</span>
+<span class="sd">                      Types for which substitute should not be called</span>
+<span class="sd">        invalidate : bool</span>
+<span class="sd">                    Indicates whether the removed object should</span>
+<span class="sd">                    be invalidated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">iterable</span><span class="p">(</span><span class="n">original</span><span class="p">):</span>
+            <span class="k">assert</span><span class="p">(</span><span class="n">iterable</span><span class="p">(</span><span class="n">replacement</span><span class="p">))</span>
+            <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">original</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">replacement</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">original</span> <span class="o">=</span> <span class="p">(</span><span class="n">original</span><span class="p">,)</span>
+            <span class="n">replacement</span> <span class="o">=</span> <span class="p">(</span><span class="n">replacement</span><span class="p">,)</span>
+
+        <span class="k">def</span> <span class="nf">prepare_sub</span><span class="p">(</span><span class="n">found_node</span><span class="p">):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">found_node</span><span class="p">)</span>
+            <span class="n">rep</span> <span class="o">=</span> <span class="n">replacement</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">iterable</span><span class="p">(</span><span class="n">rep</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rep</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+                        <span class="n">r</span><span class="o">.</span><span class="n">set_current_user_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">rep</span><span class="p">):</span>
+                    <span class="n">rep</span><span class="o">.</span><span class="n">set_current_user_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">found_node</span><span class="p">):</span>
+                <span class="n">found_node</span><span class="o">.</span><span class="n">remove_user_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">invalidate</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">rep</span>
+
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_my_attribute_nodes</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">excluded_nodes</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="ow">is</span> <span class="n">oi</span> <span class="k">for</span> <span class="n">oi</span> <span class="ow">in</span> <span class="n">original</span><span class="p">):</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">prepare_sub</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">new_v</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">vi</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="n">new_vi</span> <span class="o">=</span> <span class="n">vi</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vi</span><span class="p">,</span> <span class="n">excluded_nodes</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">vi</span> <span class="ow">is</span> <span class="n">oi</span> <span class="k">for</span> <span class="n">oi</span> <span class="ow">in</span> <span class="n">original</span><span class="p">):</span>
+                            <span class="n">new_vi</span> <span class="o">=</span> <span class="n">prepare_sub</span><span class="p">(</span><span class="n">vi</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">vi</span><span class="p">):</span>
+                            <span class="n">vi</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">replacement</span><span class="p">,</span> <span class="n">excluded_nodes</span><span class="p">,</span> <span class="n">invalidate</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">iterable</span><span class="p">(</span><span class="n">new_vi</span><span class="p">):</span>
+                        <span class="n">new_v</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new_vi</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">new_v</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_vi</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_v</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">replacement</span><span class="p">,</span> <span class="n">excluded_nodes</span><span class="p">,</span> <span class="n">invalidate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_atomic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the object has any attribute nodes.</span>
+<span class="sd">        Returns true if it is an atom (no attribute nodes) and</span>
+<span class="sd">        false otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_my_attribute_nodes</span>
+
+<div class="viewcode-block" id="Basic.set_fst"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.set_fst">[docs]</a>    <span class="k">def</span> <span class="nf">set_fst</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fst</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the python.ast fst.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fst</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Fst must be an AST object, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">fst</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fst</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fst</span><span class="p">,</span> <span class="s1">&#39;lineno&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">lineno</span> <span class="o">!=</span> <span class="n">fst</span><span class="o">.</span><span class="n">lineno</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">col_offset</span> <span class="o">!=</span> <span class="n">fst</span><span class="o">.</span><span class="n">col_offset</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_fst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fst</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fst</span><span class="p">,</span> <span class="s1">&#39;lineno&#39;</span><span class="p">):</span>
+                <span class="c1"># Handle module object</span>
+                <span class="n">fst</span><span class="o">.</span><span class="n">lineno</span>     <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">fst</span><span class="o">.</span><span class="n">col_offset</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fst</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fst</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fst</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Basic.toggle_recursion"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.toggle_recursion">[docs]</a>    <span class="k">def</span> <span class="nf">toggle_recursion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Change the recursion state</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">recursion_in_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Recursion state used to avoid infinite loops</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recursion_in_progress</span>
+
+<div class="viewcode-block" id="Basic.get_all_user_nodes"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.get_all_user_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_user_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns all the objects user nodes.</span>
+<span class="sd">        This function should only be called in Basic</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span></div>
+
+<div class="viewcode-block" id="Basic.get_direct_user_nodes"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.get_direct_user_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">get_direct_user_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; For an object with multiple user nodes</span>
+<span class="sd">        Get the objects which satisfy a given</span>
+<span class="sd">        condition</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        condition : lambda</span>
+<span class="sd">                    The condition which the user nodes</span>
+<span class="sd">                    must satisfy to be returned</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span> <span class="k">if</span> <span class="n">condition</span><span class="p">(</span><span class="n">p</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="Basic.set_current_user_node"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.set_current_user_node">[docs]</a>    <span class="k">def</span> <span class="nf">set_current_user_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_nodes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Inform the class about the most recent user of the node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user_nodes</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_user_node</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the user node for an object with only one user node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Basic.clear_user_nodes"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.clear_user_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">clear_user_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Delete all information about user nodes. This is useful</span>
+<span class="sd">        if the same node is used for the syntactic and semantic</span>
+<span class="sd">        stages, and it should only have 1 user.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="Basic.remove_user_node"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.Basic.remove_user_node">[docs]</a>    <span class="k">def</span> <span class="nf">remove_user_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_node</span><span class="p">,</span> <span class="n">invalidate</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicate that the current node is no longer used</span>
+<span class="sd">        by the user_node. This function is usually called by</span>
+<span class="sd">        the substitute method</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        user_node : Basic</span>
+<span class="sd">                    Node which previously used the current node</span>
+<span class="sd">        invalidate : bool</span>
+<span class="sd">                    Indicates whether the removed object should</span>
+<span class="sd">                    be invalidated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">user_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">user_node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_unused</span> <span class="ow">and</span> <span class="n">invalidate</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">invalidate_node</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_unused</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the class has any users</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_nodes</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_my_attribute_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Getter for _attribute_nodes to avoid codacy warnings</span>
+<span class="sd">        about no-member. This attribute must be instantiated in</span>
+<span class="sd">        the subclasses and this ensures that an error is raised</span>
+<span class="sd">        if it isn&#39;t</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute_nodes</span> <span class="c1"># pylint: disable=no-member</span></div>
+
+<div class="viewcode-block" id="PyccelAstNode"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.PyccelAstNode">[docs]</a><span class="k">class</span> <span class="nc">PyccelAstNode</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class from which all nodes containing objects inherit</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span>  <span class="o">=</span> <span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Tuple containing the length of each dimension</span>
+<span class="sd">        of the object &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="c1"># pylint: disable=no-member</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rank</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Number of dimensions of the object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span> <span class="c1"># pylint: disable=no-member</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Datatype of the object &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="c1"># pylint: disable=no-member</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">precision</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Precision of the datatype of the object &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_precision</span> <span class="c1"># pylint: disable=no-member</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the data is stored in</span>
+<span class="sd">        row-major (&#39;C&#39;) or column-major (&#39;F&#39;) format.</span>
+<span class="sd">        This is only relevant if rank &gt; 1 &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_order</span> <span class="c1"># pylint: disable=no-member</span>
+
+<div class="viewcode-block" id="PyccelAstNode.copy_attributes"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.basic.PyccelAstNode.copy_attributes">[docs]</a>    <span class="k">def</span> <span class="nf">copy_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span>     <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span>      <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">rank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span>     <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_precision</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">precision</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_order</span>     <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">order</span></div></div>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<span class="k">class</span> <span class="nc">ScopedNode</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Class from which all objects with a scope inherit</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_scope&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="o">=</span> <span class="n">scope</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Local scope of the current object</span>
+<span class="sd">        This contains all available objects in this part of the code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
