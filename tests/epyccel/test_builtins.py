@@ -375,7 +375,7 @@ def test_len_inhomog_tuple(language):
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="len() function is not implemented in fortran."),
             pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python),
     ],
     scope = "module"
 )
