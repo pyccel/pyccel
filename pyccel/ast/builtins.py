@@ -639,7 +639,7 @@ class PythonLen(PyccelFunction):
     shape = None
 
     def __new__(cls, arg):
-        if isinstance(arg.class_type, HomogeneousListType):
+        if isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType)):
             return super().__new__(cls)
         return arg.shape[0]
 
