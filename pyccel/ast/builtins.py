@@ -645,8 +645,8 @@ class PythonLen(PyccelFunction):
         return super().__new__(cls)
 
     def __init__(self, arg):
-            self._class_type = PythonNativeInt()
-            super().__init__(arg)
+        self._class_type = PythonNativeInt()
+        super().__init__(arg)
 
 #==============================================================================
 class PythonList(TypedAstNode):
