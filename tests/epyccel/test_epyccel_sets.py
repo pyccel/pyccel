@@ -359,7 +359,7 @@ def test_Pop_int(language):
 
 def test_Pop_float(language):
     def Pop_float():
-        se = {2.3 , 4.1, 9.5} 
+        se = {2.3 , 4.1, 9.5}
         el1 = se.pop()
         el2 = se.pop()
         el3 = se.pop()
@@ -371,7 +371,7 @@ def test_Pop_float(language):
 
 def test_Pop_complex(language):
     def Pop_complex():
-        se = {4j , 1j, 7j} 
+        se = {4j , 1j, 7j}
         el1 = se.pop()
         el2 = se.pop()
         el3 = se.pop()
