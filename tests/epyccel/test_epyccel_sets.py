@@ -338,7 +338,7 @@ def test_set_copy_from_arg2(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran",marks = [
-            pytest.mark.skip(reason="set methods not implemented in fortran"),
+            pytest.mark.skip(reason="pop method not implemented in fortran"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)

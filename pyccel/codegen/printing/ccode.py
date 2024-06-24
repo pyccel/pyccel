@@ -1006,7 +1006,7 @@ class CCodePrinter(CodePrinter):
                               f'#include "{stc_name + "/" + container[0]}.h"',
                               '#endif\n'))
         elif source.startswith('Set_pop'):
-            name , i_type, i_key = source.split('/')
+            _ , i_type, i_key = source.split('/')
             return '\n'.join((f'#define i_type {i_type}',
                    f'#define i_key {i_key}\n',))
         # Get with a default value is not used here as it is
@@ -2188,8 +2188,8 @@ class CCodePrinter(CodePrinter):
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
 
     def _print_SetPop(self, expr):
-        self.add_import(Import(f'Set_pop_macro/hset_int64_t/int64_t', Module(f'Set_pop_macro/hset_int64_t/int64_t', (), ())))
-        self.add_import(Import(f'STC_Extensions/Set_extensions', Module(f'STC_Extensions/Set_extensions', (), ())))
+        self.add_import(Import('Set_pop_macro/hset_int64_t/int64_t', Module('Set_pop_macro/hset_int64_t/int64_t', (), ())))
+        self.add_import(Import('STC_Extensions/Set_extensions', Module('STC_Extensions/Set_extensions', (), ())))
         set_var = expr.set_variable.name
         vat_type = self.get_declare_type(expr.set_variable)
         return f'{vat_type}_pop(&{set_var})'
