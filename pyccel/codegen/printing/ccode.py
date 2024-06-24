@@ -698,6 +698,9 @@ class CCodePrinter(CodePrinter):
     # ============ Elements ============ #
 
     def _print_PythonLen(self, expr):
+        if not isinstance(expr.args[0].classtype, (HomogeneousListType, HomogeneousSetType)):
+            return errors.report("Unsupported argument provided to the len() function.", symbol=expr,
+                        severity='fatal')
         dtype = self.get_c_type(expr.args[0].class_type)
         variable_address = self._print(ObjectAddress(expr.args[0]))
         stc_len = f'{dtype}_size({variable_address})'
