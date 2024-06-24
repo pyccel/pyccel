@@ -637,6 +637,7 @@ class PythonLen(PyccelFunction):
     """
     __slots__ = ('_class_type',)
     shape = None
+    name = 'len'
 
     def __new__(cls, arg):
         if isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType)):

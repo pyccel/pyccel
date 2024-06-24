@@ -373,11 +373,9 @@ def test_len_inhomog_tuple(language):
 @pytest.fixture( params=[
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="len() function is not implemented in fortran, related issues #"),
+            pytest.mark.xfail(reason="len() function is not implemented in fortran."),
             pytest.mark.fortran]),
-        pytest.param("python", marks = [
-            pytest.mark.xfail(reason="len() function is not implemented in python, related issues #"),
-            pytest.mark.python]),
+        pytest.param("c", marks = pytest.mark.c),
     ],
     scope = "module"
 )
@@ -410,6 +408,7 @@ def test_len_list_complex(stc_language):
     epyc_f = epyccel(f, language=stc_language)
 
     assert epyc_f() == f()
+
 def test_len_set_int(stc_language):
     def f():
         a = {1, 2, 3}
@@ -418,6 +417,7 @@ def test_len_set_int(stc_language):
     epyc_f = epyccel(f, language=stc_language)
 
     assert epyc_f() == f()
+
 def test_len_set_float(stc_language):
     def f():
         a = {1.4, 2.6, 3.5}
@@ -426,6 +426,7 @@ def test_len_set_float(stc_language):
     epyc_f = epyccel(f, language=stc_language)
 
     assert epyc_f() == f()
+
 def test_len_set_complex(stc_language):
     def f():
         a = {1j, 2 + 1j, 3 + 1j}
