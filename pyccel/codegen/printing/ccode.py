@@ -1007,7 +1007,8 @@ class CCodePrinter(CodePrinter):
                               '#endif\n'))
         elif source.startswith('Set_pop'):
             name , i_type, i_key = source.split('/')
-            return f'\n\n{name}({i_type}, {i_key})\n\n'
+            return '\n'.join((f'#define i_type {i_type}',
+                   f'#define i_key {i_key}\n',))
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
@@ -2187,10 +2188,11 @@ class CCodePrinter(CodePrinter):
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
 
     def _print_SetPop(self, expr):
-        self.add_import(Import(f'STC_Extensions/Set_extensions', Module(f'STC_Extensions/Set_extensions', (), ())))
         self.add_import(Import(f'Set_pop_macro/hset_int64_t/int64_t', Module(f'Set_pop_macro/hset_int64_t/int64_t', (), ())))
+        self.add_import(Import(f'STC_Extensions/Set_extensions', Module(f'STC_Extensions/Set_extensions', (), ())))
         set_var = expr.set_variable.name
-        return f'Set_pop(&{set_var})'
+        vat_type = self.get_declare_type(expr.set_variable)
+        return f'{vat_type}_pop(&{set_var})'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
