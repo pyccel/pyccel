@@ -629,6 +629,12 @@ class PythonLen(PyccelFunction):
     (aka the first element of the shape) of an object. This can usually
     be calculated in the generated code, but in an inhomogeneous object
     the integer value of the shape must be returned.
+    However, when dealing with variables that are passed to `len()` and
+    contain lists or sets, the shape is unknown and cannot be determined
+    directly. In this case, we create an instance of the `PythonLen`
+    class, which stores all the necessary information about the object.
+    This instance is then used to generate the equivalent C code using 
+    the STC library. 
 
     Parameters
     ----------
@@ -640,7 +646,7 @@ class PythonLen(PyccelFunction):
     name = 'len'
 
     def __new__(cls, arg):
-        if isinstance(arg.shape, tuple):
+        if isinstance(arg.shape[0], Literal):
             return arg.shape[0]
         return super().__new__(cls)
 
