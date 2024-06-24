@@ -698,9 +698,9 @@ class CCodePrinter(CodePrinter):
     # ============ Elements ============ #
 
     def _print_PythonLen(self, expr):
-        dtype = self.get_c_type(expr.class_type)
-        container_name = self._print(expr.args[0])
-        stc_len = f'{dtype}_size({container_name})'
+        dtype = self.get_c_type(expr.args[0].class_type)
+        variable_address = self._print(ObjectAddress(expr.args[0]))
+        stc_len = f'{dtype}_size({variable_address})'
         return stc_len
 
     def _print_PythonAbs(self, expr):
