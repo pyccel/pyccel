@@ -369,3 +369,68 @@ def test_len_inhomog_tuple(language):
     epyc_f = epyccel(f, language=language)
 
     assert epyc_f() == f()
+
+@pytest.fixture( params=[
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="len() function is not implemented in fortran, related issues #"),
+            pytest.mark.fortran]),
+        pytest.param("python", marks = [
+            pytest.mark.xfail(reason="len() function is not implemented in python, related issues #"),
+            pytest.mark.python]),
+    ],
+    scope = "module"
+)
+def stc_language(request):
+    return request.param
+
+def test_len_list_int(stc_language):
+    def f():
+        a = [1, 2, 3]
+        return len(a)
+
+    epyc_f = epyccel(f, language=stc_language)
+
+    assert epyc_f() == f()
+
+def test_len_list_float(stc_language):
+    def f():
+        a = [1.4, 2.6, 3.5]
+        return len(a)
+
+    epyc_f = epyccel(f, language=stc_language)
+
+    assert epyc_f() == f()
+
+def test_len_list_complex(stc_language):
+    def f():
+        a = [1j, 2 + 1j, 3 + 1j]
+        return len(a)
+
+    epyc_f = epyccel(f, language=stc_language)
+
+    assert epyc_f() == f()
+def test_len_set_int(stc_language):
+    def f():
+        a = {1, 2, 3}
+        return len(a)
+
+    epyc_f = epyccel(f, language=stc_language)
+
+    assert epyc_f() == f()
+def test_len_set_float(stc_language):
+    def f():
+        a = {1.4, 2.6, 3.5}
+        return len(a)
+
+    epyc_f = epyccel(f, language=stc_language)
+
+    assert epyc_f() == f()
+def test_len_set_complex(stc_language):
+    def f():
+        a = {1j, 2 + 1j, 3 + 1j}
+        return len(a)
+
+    epyc_f = epyccel(f, language=stc_language)
+
+    assert epyc_f() == f()
