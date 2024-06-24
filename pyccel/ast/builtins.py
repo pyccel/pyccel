@@ -635,10 +635,17 @@ class PythonLen(PyccelFunction):
     arg : TypedAstNode
         The argument whose length is being examined.
     """
-    __slots__ = ()
+    __slots__ = ('_class_type',)
+    shape = None
 
     def __new__(cls, arg):
+        if isinstance(arg.class_type, HomogeneousListType):
+            return super().__new__(cls)
         return arg.shape[0]
+
+    def __init__(self, arg):
+            self._class_type = PythonNativeInt()
+            super().__init__(arg)
 
 #==============================================================================
 class PythonList(TypedAstNode):
