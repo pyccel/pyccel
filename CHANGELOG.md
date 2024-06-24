@@ -24,6 +24,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 -   #1893 : Add Python support for set initialisation with `set()`.
+-   #1874 : Add the appropriate C language equivalent of `len()` for the `list` container using the `STC` library.
+-   #1875 : Add the appropriate C language equivalent of `len()` for the `set` container using the `STC` library.
 
 ### Fixed
 
