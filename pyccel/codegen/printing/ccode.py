@@ -2462,6 +2462,12 @@ class CCodePrinter(CodePrinter):
 
     def _print_EmptyNode(self, expr):
         return ''
+    
+    def _print_SetAdd(self, expr):
+        var_type = self.get_declare_type(expr.set_variable)
+        set_var = expr.set_variable.name
+        arg = expr.args[0]
+        return f'{var_type}_push(&{set_var}, {arg});\n'
 
     #=================== OMP ==================
 
