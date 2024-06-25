@@ -646,9 +646,9 @@ class PythonLen(PyccelFunction):
     name = 'len'
 
     def __new__(cls, arg):
-        if isinstance(arg.shape[0], Literal):
-            return arg.shape[0]
-        return super().__new__(cls)
+        if isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType)):
+            return super().__new__(cls)
+        return arg.shape[0]
 
     def __init__(self, arg):
         self._class_type = PythonNativeInt()
