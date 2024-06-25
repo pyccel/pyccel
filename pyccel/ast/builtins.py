@@ -650,8 +650,7 @@ class PythonLen(PyccelFunction):
         is_homogeneous_type = isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType))
         if has_alloc_shape:
             return arg.shape[0]
-        is_unknown_shape = not isinstance(arg.shape[0], Literal)
-        if is_homogeneous_type and is_unknown_shape:
+        if is_homogeneous_type and not isinstance(arg.shape[0], Literal):
             return super().__new__(cls)
         return arg.shape[0]
 
