@@ -2188,11 +2188,12 @@ class CCodePrinter(CodePrinter):
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
 
     def _print_SetPop(self, expr):
-        self.add_import(Import('Set_pop_macro/hset_int64_t/int64_t', Module('Set_pop_macro/hset_int64_t/int64_t', (), ())))
+        var_type = self.get_declare_type(expr.set_variable)
+        element_type = self.get_c_type(expr.set_variable.class_type.element_type)
+        self.add_import(Import(f'Set_pop_macro/{var_type}/{element_type}', Module(f'Set_pop_macro/{var_type}/{element_type}', (), ())))
         self.add_import(Import('STC_Extensions/Set_extensions', Module('STC_Extensions/Set_extensions', (), ())))
         set_var = expr.set_variable.name
-        vat_type = self.get_declare_type(expr.set_variable)
-        return f'{vat_type}_pop(&{set_var})'
+        return f'{var_type}_pop(&{set_var})'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
