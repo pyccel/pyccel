@@ -1,16 +1,13 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+
 def f():
-    return g() + do()
+    do_0001 = 5
+    return g() + do() + do_0001
 
 def g():
     return 2
 
 def do():
-    return 3
-
-def do_0001():
     return 4
 
-
 a = f()
-

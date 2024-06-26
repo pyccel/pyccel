@@ -21,7 +21,7 @@ RECURSIVE_RESULTS_REQUIRED = ("A results type must be provided for recursive fun
                               "#$ header function FUNC_NAME(ARG_TYPES) results(RESULT_TYPES)\n")
 
 INCOMPATIBLE_TYPES = 'Incompatible types'
-INCOMPATIBLE_TYPES_IN_ASSIGNMENT = "Variable has already been defined with type '{}'. Type '{}' in assignment is incompatible"
+INCOMPATIBLE_TYPES_IN_ASSIGNMENT = "Object has already been defined with type '{}'. Type '{}' in assignment is incompatible"
 INCOMPATIBLE_REDEFINITION = 'Incompatible redefinition'
 INCOMPATIBLE_REDEFINITION_STACK_ARRAY = 'Cannot change shape of stack array, because it does not support memory reallocation. Avoid redefinition, or use standard heap array.'
 STACK_ARRAY_DEFINITION_IN_LOOP = 'Cannot create stack array in loop, because if does not support memory reallocation. Create array before loop, or use standard heap array.'
