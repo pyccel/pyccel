@@ -631,29 +631,20 @@ class PythonLen(PyccelFunction):
     the integer value of the shape must be returned.
     However, when dealing with variables that are passed to `len()` and
     contain lists or sets, the shape is unknown and cannot be determined
-    directly. In this case, we create an instance of the `PythonLen`
-    class, which stores all the necessary information about the object.
-    This instance is then used to generate the equivalent C code using 
-    the STC library. 
+    directly. In this case, the printer for `PyccelArrayShapeElement` 
+    checks whether this object is an instance of `list` or `set`. 
+    It is then used to generate the equivalent C code using the `STC` 
+    library.
 
     Parameters
     ----------
     arg : TypedAstNode
         The argument whose length is being examined.
     """
-    __slots__ = ('_class_type',)
-    shape = None
-    name = 'len'
+    __slots__ = ()
 
     def __new__(cls, arg):
-        is_homogeneous_type = isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType))
-        if is_homogeneous_type :
-            return super().__new__(cls)
         return arg.shape[0]
-
-    def __init__(self, arg):
-        self._class_type = PythonNativeInt()
-        super().__init__(arg)
 
 #==============================================================================
 class PythonList(TypedAstNode):

@@ -414,11 +414,6 @@ class PythonCodePrinter(CodePrinter):
         else:
             return '{name} as {target}'.format(name = name, target = target)
 
-    def _print_PythonLen(self, expr):
-        func_name = expr.name
-        func_arg = self._print(expr.args[0])
-        return f'{func_name}({func_arg})'
-
     def _print_PythonTuple(self, expr):
         args = ', '.join(self._print(i) for i in expr.args)
         if len(expr.args) == 1:

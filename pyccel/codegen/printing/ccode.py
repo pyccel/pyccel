@@ -697,11 +697,6 @@ class CCodePrinter(CodePrinter):
 
     # ============ Elements ============ #
 
-    def _print_PythonLen(self, expr):
-        dtype = self.get_c_type(expr.args[0].class_type)
-        variable_address = self._print(ObjectAddress(expr.args[0]))
-        return f'{dtype}_size({variable_address})'
-
     def _print_PythonAbs(self, expr):
         if expr.arg.dtype.primitive_type is PrimitiveFloatingPointType():
             self.add_import(c_imports['math'])
@@ -1591,6 +1586,11 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelArrayShapeElement(self, expr):
         arg = expr.arg
+        is_homogeneous_type = isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType))
+        if is_homogeneous_type :
+            dtype = self.get_c_type(arg.class_type)
+            variable_address = self._print(ObjectAddress(arg))
+            return f'{dtype}_size({variable_address})'
         if self.is_c_pointer(arg):
             return '{}->shape[{}]'.format(self._print(ObjectAddress(arg)), self._print(expr.index))
         return '{}.shape[{}]'.format(self._print(arg), self._print(expr.index))
