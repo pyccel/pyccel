@@ -13,13 +13,14 @@ from pyccel.errors.errors   import Errors
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
-from .datatypes import PyccelType
+from .datatypes import PyccelType, InhomogeneousTupleType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .internals import apply_pickle
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
 from .numpytypes import NumpyNDArrayType
+from pyccel.ast.c_concepts import CStackArray
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -237,7 +238,9 @@ class Variable(TypedAstNode):
         bool
             Whether or not the variable shape can change in the i-th dimension.
         """
-        return self.is_alias
+        if isinstance(self.class_type, (CStackArray, InhomogeneousTupleType)):
+            return self.is_alias
+        return True
 
     def set_changeable_shape(self):
         """
