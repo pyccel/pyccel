@@ -364,3 +364,37 @@ def test_set_copy_from_arg2(language):
     python_result = copy_from_arg2(a)
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran",marks = [
+            pytest.mark.skip(reason="pop method not implemented in fortran"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+
+def test_add_int(language):
+    def add_int():
+        a = {1, 2, 1}
+        size_1 = len(a)
+        a.add(5)
+        size_2 = len(a)
+        return size_1, size_2
+    epyccel_remove = epyccel(add_int, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = add_int()
+    assert python_result == pyccel_result
+
+def test_add_float(language):
+    def add_float():
+        a = {4.6, 2.8, 8.4}
+        size_1 = len(a)
+        a.add(5)
+        size_2 = len(a)
+        return size_1, size_2
+    epyccel_remove = epyccel(add_float, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = add_float()
+    assert python_result == pyccel_result
+
