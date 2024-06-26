@@ -295,7 +295,17 @@ class BasicParser(object):
         return self._blocking
 
     def insert_function(self, func):
-        """."""
+        """
+        Insert a function into the current scope.
+
+        Insert a function into the current scope under the final name by which it
+        will be known in the generated code.
+
+        Parameters
+        ----------
+        func : FunctionDef | SympyFunction
+            The function to be inserted into the scope.
+        """
 
         if isinstance(func, SympyFunction):
             self.insert_symbolic_function(func)
