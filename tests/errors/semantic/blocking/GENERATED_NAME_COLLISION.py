@@ -1,3 +1,5 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
+
 def f():
     do_0001 = 5
     return g() + do() + do_0001
