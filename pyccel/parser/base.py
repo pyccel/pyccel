@@ -301,7 +301,10 @@ class BasicParser(object):
             self.insert_symbolic_function(func)
         elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
             container = self.scope.functions
-            container[func.name] = func
+            if func.pyccel_staging == 'syntactic':
+                container[self.scope.get_expected_name(func.name)] = func
+            else:
+                container[func.name] = func
         else:
             raise TypeError('Expected a Function definition')
 

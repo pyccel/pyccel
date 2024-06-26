@@ -2054,8 +2054,7 @@ class SemanticParser(BasicParser):
 
             self.scope = mod_scope
 
-        for f in self.scope.functions.copy():
-            f = self.scope.functions[f]
+        for f in self.scope.functions.copy().values():
             if not f.is_semantic and not isinstance(f, InlineFunctionDef):
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
@@ -2817,10 +2816,6 @@ class SemanticParser(BasicParser):
             pass
 
         func = self.scope.find(name, 'functions')
-
-        if func is None:
-            # Look for a syntactic FunctionDef in case of a function renamed due to name collisions
-            func = self.scope.find(expr.funcdef, 'functions')
 
         if func is None:
             name = str(expr.funcdef)
@@ -3736,7 +3731,7 @@ class SemanticParser(BasicParser):
 
         existing_semantic_funcs = []
         if not expr.is_semantic:
-            self.scope.functions.pop(expr.name, None)
+            self.scope.functions.pop(self.scope.get_expected_name(expr.name), None)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
             expr                    = expr.syntactic_node
