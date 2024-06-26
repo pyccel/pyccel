@@ -1,0 +1,11 @@
+def f():
+    do_0001 = 5
+    return g() + do() + do_0001
+
+def g():
+    return 2
+
+def do():
+    return 4
+
+a = f()
