@@ -303,7 +303,7 @@ class BasicParser(object):
 
         Parameters
         ----------
-        func : FunctionDef | SympyFunction
+        func : FunctionDef | SympyFunction | Interface | FunctionAddress
             The function to be inserted into the scope.
         """
 
