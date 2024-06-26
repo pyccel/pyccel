@@ -1593,7 +1593,14 @@ class SemanticParser(BasicParser):
         # TODO improve check type compatibility
         if not isinstance(var, Variable):
             name = var.name
-            errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(type(var), class_type),
+            message = INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(type(var), class_type)
+            if var.pyccel_staging == "syntactic":
+                new_name = self.scope.get_expected_name(name)
+                if new_name != name:
+                    message += '\nThis error may be due to object renaming to avoid name clashes (language-specific or otherwise).'
+                    message += f'The conflict is with "{name}".'
+                    name = new_name
+            errors.report(message,
                     symbol=f'{name}={class_type}',
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='fatal')
