@@ -394,7 +394,8 @@ def test_len_list_int(stc_language):
 def test_len_list_float(stc_language):
     def f():
         a = [1.4, 2.6, 3.5]
-        return len(a)
+        b = len(a)
+        return b
 
     epyc_f = epyccel(f, language=stc_language)
 
@@ -403,7 +404,8 @@ def test_len_list_float(stc_language):
 def test_len_list_complex(stc_language):
     def f():
         a = [1j, 2 + 1j, 3 + 1j]
-        return len(a)
+        b = len(a)
+        return b
 
     epyc_f = epyccel(f, language=stc_language)
 
@@ -421,7 +423,8 @@ def test_len_set_int(stc_language):
 def test_len_set_float(stc_language):
     def f():
         a = {1.4, 2.6, 3.5}
-        return len(a)
+        b = len(a)
+        return b
 
     epyc_f = epyccel(f, language=stc_language)
 
@@ -430,7 +433,8 @@ def test_len_set_float(stc_language):
 def test_len_set_complex(stc_language):
     def f():
         a = {1j, 2 + 1j, 3 + 1j}
-        return len(a)
+        b = len(a)
+        return b
 
     epyc_f = epyccel(f, language=stc_language)
 
