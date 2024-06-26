@@ -646,11 +646,8 @@ class PythonLen(PyccelFunction):
     name = 'len'
 
     def __new__(cls, arg):
-        has_alloc_shape = getattr(arg, 'alloc_shape', [None])[0] is not None
         is_homogeneous_type = isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType))
-        if has_alloc_shape:
-            return arg.shape[0]
-        if is_homogeneous_type and not isinstance(arg.shape[0], Literal):
+        if is_homogeneous_type :
             return super().__new__(cls)
         return arg.shape[0]
 
