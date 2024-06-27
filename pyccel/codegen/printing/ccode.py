@@ -2463,6 +2463,11 @@ class CCodePrinter(CodePrinter):
     def _print_EmptyNode(self, expr):
         return ''
 
+    def _print_SetClear(self, expr):
+        var_type = self.get_declare_type(expr.set_variable)
+        set_var = expr.set_variable.name
+        return f'{var_type}_clear(&{set_var});\n'
+
     #=================== OMP ==================
 
     def _print_OmpAnnotatedComment(self, expr):

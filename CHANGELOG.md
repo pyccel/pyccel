@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 -   #1893 : Add Python support for set initialisation with `set()`.
+-   #1918 : Add C Support for set method `clear()`.
 
 ### Fixed
 
