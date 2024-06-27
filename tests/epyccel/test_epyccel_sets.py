@@ -376,7 +376,7 @@ def test_set_copy_from_arg2(language):
 
 def test_add_int(language):
     def add_int():
-        a = {1, 2, 1}
+        a = {1, 2, 1} #pylint: disable=duplicate-value
         size_1 = len(a)
         a.add(5)
         size_2 = len(a)
