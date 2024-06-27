@@ -20,7 +20,6 @@ from .literals  import LiteralInteger, Nil, LiteralEllipsis
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
 from .numpytypes import NumpyNDArrayType
-from pyccel.ast.c_concepts import CStackArray
 
 errors = Errors()
 pyccel_stage = PyccelStage()
