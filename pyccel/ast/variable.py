@@ -238,8 +238,6 @@ class Variable(TypedAstNode):
         bool
             Whether or not the variable shape can change in the i-th dimension.
         """
-        if self.is_ndarray:
-            return False
         if isinstance(self.class_type, (HomogeneousListType, HomogeneousSetType)):
             return True
         return self.is_alias
