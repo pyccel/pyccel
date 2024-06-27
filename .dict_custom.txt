@@ -118,3 +118,4 @@ datatyping
 datatypes
 indexable
 traceback
+GPUs

@@ -294,7 +294,7 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float, language=None):
 #------------------------------------------------------------------------------
 def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         cwd = None, pyccel_commands = "", output_dtype = float,
-        language = None, output_dir = None):
+        language = None, output_dir = None, execute_code = True):
     """
     Run pyccel and compare the output to ensure that the results
     are equivalent
@@ -394,13 +394,14 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
             compile_fortran(cwd, output_test_file, dependencies)
         elif language == 'c':
             compile_c(cwd, output_test_file, dependencies)
-
-    lang_out = get_lang_output(output_test_file, language)
-    compare_pyth_fort_output(pyth_out, lang_out, output_dtype, language)
+    if  execute_code:
+        lang_out = get_lang_output(output_test_file, language)
+        compare_pyth_fort_output(pyth_out, lang_out, output_dtype, language)
 
 #==============================================================================
 # UNIT TESTS
 #==============================================================================
+
 def test_relative_imports_in_project(language):
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -727,6 +728,19 @@ def test_multiple_results(language):
 #------------------------------------------------------------------------------
 def test_elemental(language):
     pyccel_test("scripts/decorators_elemental.py", language = language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.cuda
+def test_hello_kernel(gpu_available):
+    types = str
+    pyccel_test("scripts/kernel/hello_kernel.py",
+            language="cuda", output_dtype=types , execute_code=gpu_available)
+
+#------------------------------------------------------------------------------
+@pytest.mark.cuda
+def test_kernel_collision(gpu_available):
+    pyccel_test("scripts/kernel/kernel_name_collision.py",
+            language="cuda", execute_code=gpu_available)
 
 #------------------------------------------------------------------------------
 def test_print_strings(language):

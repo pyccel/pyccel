@@ -64,6 +64,8 @@ from pyccel.ast.internals import Slice, PyccelSymbol, PyccelFunction
 
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation
 
+from pyccel.ast.core import IndexedFunctionCall
+
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.utilities   import get_default_path
@@ -1102,6 +1104,8 @@ class SyntaxParser(BasicParser):
         elif isinstance(func, DottedName):
             func_attr = FunctionCall(func.name[-1], args)
             func = DottedName(*func.name[:-1], func_attr)
+        elif isinstance(func,IndexedElement):
+            func = IndexedFunctionCall(func.base, args, func.indices)
         else:
             raise NotImplementedError(f' Unknown function type {type(func)}')
 
