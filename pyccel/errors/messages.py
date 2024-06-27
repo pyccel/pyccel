@@ -162,3 +162,11 @@ INVALID_MACRO_COMPOSITION = 'Invalid macro composition'
 WRONG_LINSPACE_ENDPOINT = 'endpoint argument must be boolean'
 NON_LITERAL_KEEP_DIMS = 'keep_dims argument must be a literal, otherwise rank is unknown'
 NON_LITERAL_AXIS = 'axis argument must be a literal, otherwise pyccel cannot determine which dimension to operate on'
+MISSING_KERNEL_CONFIGURATION = 'Kernel launch configuration not specified'
+INVALID_KERNEL_LAUNCH_CONFIG = 'Expected exactly 2 parameters for kernel launch'
+INVALID_KERNEL_CALL_BP_GRID = 'Invalid Block per grid parameter for Kernel call'
+INVALID_KERNEL_CALL_TP_BLOCK = 'Invalid Thread per Block parameter for Kernel call'
+
+
+
+

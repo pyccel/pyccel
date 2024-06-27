@@ -9,11 +9,12 @@ This module is designed to interface Pyccel's Abstract Syntax Tree (AST) with CU
 enabling the direct translation of high-level Pyccel expressions into CUDA code.
 """
 
-from pyccel.codegen.printing.ccode import CCodePrinter, c_library_headers
+from pyccel.codegen.printing.ccode  import CCodePrinter
 
-from pyccel.ast.core        import Import, Module
+from pyccel.ast.core                import Import, Module
+from pyccel.ast.literals            import Nil
 
-from pyccel.errors.errors   import Errors
+from pyccel.errors.errors           import Errors
 
 
 errors = Errors()
@@ -61,6 +62,44 @@ class CudaCodePrinter(CCodePrinter):
         self.exit_scope()
         return code
 
+    def function_signature(self, expr, print_arg_names = True):
+        """
+        Get the Cuda representation of the function signature.
+
+        Extract from the function definition `expr` all the
+        information (name, input, output) needed to create the
+        function signature and return a string describing the
+        function.
+        This is not a declaration as the signature does not end
+        with a semi-colon.
+
+        Parameters
+        ----------
+        expr : FunctionDef
+            The function definition for which a signature is needed.
+
+        print_arg_names : bool, default : True
+            Indicates whether argument names should be printed.
+
+        Returns
+        -------
+        str
+            Signature of the function.
+        """
+        cuda_decorater = '__global__' if 'kernel' in expr.decorators else ''
+        c_function_signature = super().function_signature(expr, print_arg_names)
+        return f'{cuda_decorater} {c_function_signature}'
+
+    def _print_KernelCall(self, expr):
+        func = expr.funcdef
+        args = [a.value or Nil() for a in expr.args]
+
+        args = ', '.join(self._print(a) for a in args)
+        return f"{func.name}<<<{expr.num_blocks}, {expr.tp_block}>>>({args});\n"
+
+    def _print_CudaSynchronize(self, expr):
+        return 'cudaDeviceSynchronize();\n'
+
     def _print_ModuleHeader(self, expr):
         self.set_scope(expr.module.scope)
         self._in_header = True
@@ -87,6 +126,7 @@ class CudaCodePrinter(CCodePrinter):
                     }}\n'
         return '\n'.join((f"#ifndef {name.upper()}_H",
                           f"#define {name.upper()}_H",
+                          imports,
                           global_variables,
                           function_declaration,
                           "#endif // {name.upper()}_H\n"))

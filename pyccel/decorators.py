@@ -19,6 +19,7 @@ __all__ = (
     'sympy',
     'template',
     'types',
+    'kernel'
 )
 
 
@@ -109,3 +110,34 @@ def allow_negative_index(f,*args):
     def identity(f):
         return f
     return identity
+
+def kernel(f):
+    """
+    Decorator for marking a Python function as a kernel.
+
+    This class serves as a decorator to mark a Python function
+    as a kernel function, typically used for GPU computations.
+    This allows the function to be indexed with the number of blocks and threads.
+
+    Parameters
+    ----------
+    f : function
+        The function to which the decorator is applied.
+
+    Returns
+    -------
+    KernelAccessor
+        A class representing the kernel function.
+    """
+    class KernelAccessor:
+        """
+        Class representing the kernel function.
+
+        Class representing the kernel function.
+        """
+        def __init__(self, f):
+            self._f = f
+        def __getitem__(self, args):
+            return self._f
+
+    return KernelAccessor(f)

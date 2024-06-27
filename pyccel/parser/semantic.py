@@ -116,6 +116,8 @@ from pyccel.ast.variable import InhomogeneousTupleVariable
 from pyccel.ast.variable import IndexedElement, AnnotatedPyccelSymbol
 from pyccel.ast.variable import DottedName, DottedVariable
 
+from pyccel.ast.cuda import     KernelCall
+
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
 
@@ -133,7 +135,9 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
         UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
-        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC)
+        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC, PYCCEL_RESTRICTION_INHOMOG_SET,
+        MISSING_KERNEL_CONFIGURATION,
+        INVALID_KERNEL_LAUNCH_CONFIG, INVALID_KERNEL_CALL_BP_GRID, INVALID_KERNEL_CALL_TP_BLOCK)
 
 from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
@@ -1138,6 +1142,67 @@ class SemanticParser(BasicParser):
                             func, func.is_elemental)
 
             return new_expr
+
+    def _handle_kernel(self, expr, func, args):
+        """
+        Create the node representing the kernel function call.
+
+        Create a FunctionCall or an instance of a PyccelInternalFunction
+        from the function information and arguments.
+
+        Parameters
+        ----------
+        expr : IndexedFunctionCall
+               Node has all the information about the function call.
+
+        func : FunctionDef | Interface | PyccelInternalFunction type
+               The function being called.
+
+        args : iterable of FunctionCallArgument
+               The arguments passed to the function.
+
+        Returns
+        -------
+        Pyccel.ast.cuda.KernelCall
+            The semantic representation of the kernel call.
+        """
+        if len(expr.indexes) != 2:
+            errors.report(INVALID_KERNEL_LAUNCH_CONFIG,
+                    symbol=expr,
+                    severity='fatal')
+        if len(func.results):
+            errors.report(f"cuda kernel function '{func.name}' returned a value in violation of the laid-down specification",
+                         symbol=expr,
+                         severity='fatal')
+        if isinstance(func, FunctionDef) and len(args) != len(func.arguments):
+            errors.report(f"{len(args)} argument types given, but function takes {len(func.arguments)} arguments",
+                symbol=expr,
+                severity='fatal')
+        if not isinstance(expr.indexes[0], (LiteralInteger)):
+            if isinstance(expr.indexes[0], PyccelSymbol):
+                num_blocks = self.get_variable(expr.indexes[0])
+
+                if not isinstance(num_blocks.dtype, PythonNativeInt):
+                    errors.report(INVALID_KERNEL_CALL_BP_GRID,
+                    symbol = expr,
+                    severity='fatal')
+            else:
+                errors.report(INVALID_KERNEL_CALL_BP_GRID,
+                    symbol = expr,
+                    severity='fatal')
+        if not isinstance(expr.indexes[1], (LiteralInteger)):
+            if isinstance(expr.indexes[1], PyccelSymbol):
+                tp_block = self.get_variable(expr.indexes[1])
+                if not isinstance(tp_block.dtype, PythonNativeInt):
+                    errors.report(INVALID_KERNEL_CALL_TP_BLOCK,
+                    symbol = expr,
+                    severity='fatal')
+            else:
+                errors.report(INVALID_KERNEL_CALL_TP_BLOCK,
+                    symbol = expr,
+                    severity='fatal')
+        new_expr = KernelCall(func, args, expr.indexes[0], expr.indexes[1])
+        return new_expr
 
     def _sort_function_call_args(self, func_args, args):
         """
@@ -2852,6 +2917,23 @@ class SemanticParser(BasicParser):
                 expr = Lambda(tuple(expr.variables), expr_new)
         return expr
 
+    def _visit_IndexedFunctionCall(self, expr):
+        name     = expr.funcdef
+        name = self.scope.get_expected_name(name)
+        func     = self.scope.find(name, 'functions')
+        args = self._handle_function_args(expr.args)
+
+        if func is None:
+            return errors.report(UNDEFINED_FUNCTION, symbol=expr.funcdef,
+                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                    severity='fatal')
+
+        func = self._annotate_the_called_function_def(func)
+        if 'kernel' in func.decorators :
+            return self._handle_kernel(expr, func, args)
+        else:
+            return errors.report("Unknown function type",
+                symbol=expr, severity='fatal')
     def _visit_FunctionCall(self, expr):
         name     = expr.funcdef
         try:
