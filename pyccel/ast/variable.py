@@ -238,7 +238,7 @@ class Variable(TypedAstNode):
         bool
             Whether or not the variable shape can change in the i-th dimension.
         """
-        if isinstance(self.class_type, (CStackArray, TupleType)):
+        if self.on_stack or isinstance(self.class_type, TupleType):
             return self.is_alias
         return True
 
