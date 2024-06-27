@@ -376,7 +376,7 @@ def test_set_copy_from_arg2(language):
 
 def test_clear_int_elem(language):
     def clear_int_elem():
-        a = {1, 2, 1}
+        a = {1, 2, 1} #pylint: disable=duplicate-value
         a.clear()
         size_1 = len(a)
         return size_1
