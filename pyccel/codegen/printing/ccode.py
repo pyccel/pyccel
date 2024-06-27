@@ -2192,8 +2192,8 @@ class CCodePrinter(CodePrinter):
         element_type = self.get_c_type(expr.set_variable.class_type.element_type)
         self.add_import(Import(f'Set_pop_macro/{var_type}/{element_type}', Module(f'Set_pop_macro/{var_type}/{element_type}', (), ())))
         self.add_import(Import('STC_Extensions/Set_extensions', Module('STC_Extensions/Set_extensions', (), ())))
-        set_var = expr.set_variable.name
-        return f'{var_type}_pop(&{set_var})'
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        return f'{var_type}_pop({set_var})'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
