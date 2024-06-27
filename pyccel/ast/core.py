@@ -73,6 +73,7 @@ __all__ = (
     'If',
     'IfSection',
     'Import',
+    'IndexedFunctionCall',
     'InProgram',
     'InlineFunctionDef',
     'Interface',
@@ -2064,6 +2065,42 @@ class FunctionCall(TypedAstNode):
         """ Indicates if a node should be ignored when recursing
         """
         return c is None or isinstance(c, (FunctionDef, *cls._ignored_types))
+
+class IndexedFunctionCall(FunctionCall):
+    """
+    Represents an indexed function call in the code.
+
+    Class representing indexed function calls, encapsulating all
+    relevant information for such calls within the code base.
+
+    Parameters
+    ----------
+    func : FunctionDef
+        The function being called.
+
+    args : iterable of FunctionCallArgument
+        The arguments passed to the function.
+
+    indexes : iterable of TypedAstNode
+        The indexes of the function call.
+
+    current_function : FunctionDef, optional
+        The function where the call takes place.
+    """
+    __slots__ = ('_indexes',)
+    _attribute_nodes = FunctionCall._attribute_nodes + ('_indexes',)
+    def __init__(self, func, args, indexes, current_function = None):
+        self._indexes = indexes
+        super().__init__(func, args, current_function)
+
+    @property
+    def indexes(self):
+        """
+        Indexes of function call.
+
+        Represents the indexes of the function call
+        """
+        return self._indexes
 
 class ConstructorCall(FunctionCall):
 

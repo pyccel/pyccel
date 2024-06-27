@@ -59,6 +59,15 @@ def pytest_runtest_teardown(item, nextitem):
 
 def pytest_addoption(parser):
     parser.addoption("--developer-mode", action="store_true", default=github_debugging, help="Show tracebacks when pyccel errors are raised")
+    parser.addoption("--gpu_available", action="store_true",
+                default=False, help="enable GPU tests")
+
+def pytest_generate_tests(metafunc):
+    if "gpu_available" in metafunc.fixturenames:
+        if metafunc.config.getoption("gpu_available"):
+            metafunc.parametrize("gpu_available", [True])
+        else:
+            metafunc.parametrize("gpu_available", [False])
 
 def pytest_sessionstart(session):
     # setup_stuff
