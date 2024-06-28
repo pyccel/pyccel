@@ -11,6 +11,7 @@ import warnings
 __all__ = (
     'allow_negative_index',
     'bypass',
+    'device',
     'elemental',
     'inline',
     'private',
@@ -141,3 +142,20 @@ def kernel(f):
             return self._f
 
     return KernelAccessor(f)
+
+def device(f):
+    """
+    This decorator is used to mark a Python function as a GPU device function.
+
+    Parameters
+    ----------
+    f : Function
+        The function to be marked as a device.
+
+    Returns
+    -------
+    f
+        The function marked as a device.
+
+    """
+    return f

@@ -136,8 +136,9 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
         FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC, PYCCEL_RESTRICTION_INHOMOG_SET,
-        MISSING_KERNEL_CONFIGURATION,
+        MISSING_KERNEL_CONFIGURATION,INVAlID_DEVICE_CALL,
         INVALID_KERNEL_LAUNCH_CONFIG, INVALID_KERNEL_CALL_BP_GRID, INVALID_KERNEL_CALL_TP_BLOCK)
+
 
 from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
@@ -1061,6 +1062,10 @@ class SemanticParser(BasicParser):
         FunctionCall/PyccelFunction
             The semantic representation of the call.
         """
+
+        if isinstance(func, FunctionDef) and 'device' in func.decorators:
+            if 'kernel' not in self.scope.decorators and 'device' not in self.scope.decorators:
+                errors.report(INVAlID_DEVICE_CALL,symbol=expr, severity='fatal')
         if isinstance(func, PyccelFunctionDef):
             if use_build_functions:
                 annotation_method = '_build_' + func.cls_name.__name__
