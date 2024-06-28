@@ -19,7 +19,7 @@ files = sorted(os.listdir(path_dir))
 files = [
     pytest.param(
         os.path.join(path_dir, f),
-        marks=pytest.mark.xfail(reason="Pyccel crash due to list Initialization with the use of `len()`, related issue #1924.")
+        marks=pytest.mark.xfail(reason="Pyccel crash due to list initialization with the use of `len()`, related issue #1924.")
     ) if f in failed_tests else os.path.join(path_dir, f)
     for f in files if f.endswith(".py")
 ]
