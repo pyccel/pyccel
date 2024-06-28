@@ -373,7 +373,7 @@ def test_len_inhomog_tuple(language):
 @pytest.fixture( params=[
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Set declaration in Fortran is not yet implemented. related issue #1658"),
+            pytest.mark.xfail(reason="list & set declaration in Fortran are not yet implemented. related issues #1657 #1658"),
             pytest.mark.fortran])
     ],
     scope = "module"
