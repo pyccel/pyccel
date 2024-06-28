@@ -630,7 +630,7 @@ class PythonLen(PyccelFunction):
     be calculated in the generated code, but in an inhomogeneous object
     the integer value of the shape must be returned.
     However, when dealing with variables that are passed to `len()` and
-    contain lists or sets, the shape is unknown and cannot be determined
+    reference lists or sets, the shape is unknown and cannot be determined
     directly. In this case, the printer for `PyccelArrayShapeElement` 
     checks whether this object is an instance of `list` or `set`. 
     It is then used to generate the equivalent C code using the `STC` 
