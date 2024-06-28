@@ -13,7 +13,7 @@ from pyccel.errors.errors   import Errors
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
-from .datatypes import PyccelType
+from .datatypes import PyccelType, HomogeneousListType, HomogeneousSetType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .internals import apply_pickle
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
@@ -237,6 +237,8 @@ class Variable(TypedAstNode):
         bool
             Whether or not the variable shape can change in the i-th dimension.
         """
+        if isinstance(self.class_type, (HomogeneousListType, HomogeneousSetType)):
+            return True
         return self.is_alias
 
     def set_changeable_shape(self):
