@@ -1439,6 +1439,14 @@ class CCodePrinter(CodePrinter):
         if isinstance(base.class_type, NumpyNDArrayType):
             #set dtype to the C struct types
             dtype = self.find_in_ndarray_type_registry(expr.dtype)
+        elif isinstance(base.class_type, HomogeneousListType):
+            rhs = expr.current_user_node.rhs
+            index = self._print(inds[0])
+            list_var = self._print(ObjectAddress(base))
+            container_type = self.get_c_type(base.class_type)
+            if rhs == expr:
+                return f"*{container_type}_at({list_var},{index})"
+            return f"*{container_type}_at_mut({list_var},{index})"
         elif isinstance(base.class_type, HomogeneousContainerType):
             dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(expr.dtype.primitive_type, expr.dtype.precision)])
         else:
