@@ -1008,7 +1008,8 @@ class CCodePrinter(CodePrinter):
         elif source.startswith('Set_pop'):
             _ , i_type, i_key = source.split('/')
             return '\n'.join((f'#define i_type {i_type}',
-                   f'#define i_key {i_key}\n',))
+                   f'#define i_key {i_key}\n',
+                   f'#include "STC_Extensions/Set_extensions.h"'))
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
@@ -2191,7 +2192,6 @@ class CCodePrinter(CodePrinter):
         var_type = self.get_declare_type(expr.set_variable)
         element_type = self.get_c_type(expr.set_variable.class_type.element_type)
         self.add_import(Import(f'Set_pop_macro/{var_type}/{element_type}', Module(f'Set_pop_macro/{var_type}/{element_type}', (), ())))
-        self.add_import(Import('STC_Extensions/Set_extensions', Module('STC_Extensions/Set_extensions', (), ())))
         set_var = self._print(ObjectAddress(expr.set_variable))
         return f'{var_type}_pop({set_var})'
 
