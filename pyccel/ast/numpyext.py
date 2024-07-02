@@ -620,6 +620,7 @@ class NumpyNewArray(PyccelFunction):
     init_dtype : PythonType, PyccelFunctionDef, LiteralString, str
         The actual dtype passed to the NumPy function.
     """
+    print(123)
     __slots__ = ('_init_dtype','_class_type')
 
     def __init__(self, *args, class_type, init_dtype = None):
@@ -671,6 +672,7 @@ class NumpyNewArray(PyccelFunction):
 
 #==============================================================================
 class NumpyArray(NumpyNewArray):
+    print(1234)
     """
     Represents a call to `numpy.array` for code generation.
 
@@ -1312,15 +1314,20 @@ class NumpyFull(NumpyNewArray):
     def __init__(self, shape, fill_value, dtype=None, order='C'):
 
         # Convert shape to PythonTuple
+        print(shape)
+        print(type(shape))
         shape = process_shape(False, shape)
+        print(shape)
+        print(type(shape))
 
         init_dtype = dtype
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
         if dtype is None:
             dtype = fill_value.dtype
+   
         dtype = process_dtype(dtype)
-
+        
         # Cast fill_value to correct type
         if fill_value:
             if fill_value.dtype != dtype:

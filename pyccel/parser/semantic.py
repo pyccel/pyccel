@@ -3127,7 +3127,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(rhs, CodeBlock) and len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
             return rhs
-
+        
         elif isinstance(rhs, FunctionCall):
             func = rhs.funcdef
             results = func.results
@@ -3160,7 +3160,7 @@ class SemanticParser(BasicParser):
                     d_var['memory_handling'] = arg.memory_handling
                     d_var['class_type'     ] = arg.class_type
                     d_var['cls_base'       ] = arg.cls_base
-
+        
         elif isinstance(rhs, NumpyTranspose):
             d_var  = self._infer_type(rhs)
             if d_var['memory_handling'] == 'alias' and not isinstance(lhs, IndexedElement):
@@ -3169,6 +3169,7 @@ class SemanticParser(BasicParser):
             if expr.lhs.is_temp:
                 return rhs
             else:
+                
                 raise NotImplementedError("Cannot assign result of a function without a return")
 
         else:
