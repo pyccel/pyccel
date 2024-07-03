@@ -166,7 +166,7 @@ MISSING_KERNEL_CONFIGURATION = 'Kernel launch configuration not specified'
 INVALID_KERNEL_LAUNCH_CONFIG = 'Expected exactly 2 parameters for kernel launch'
 INVALID_KERNEL_CALL_BP_GRID = 'Invalid Block per grid parameter for Kernel call'
 INVALID_KERNEL_CALL_TP_BLOCK = 'Invalid Thread per Block parameter for Kernel call'
-
+INVAlID_DEVICE_CALL = 'A function decorated with "device" should be called only from a "kernel" or another "device" function.'
 
 
 
