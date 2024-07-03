@@ -9,13 +9,14 @@ CUDA Extension Module
 Provides CUDA functionality for code generation.
 """
 from .internals      import PyccelFunction
+from .literals       import Nil
 
 from .datatypes      import VoidType
 from .core           import Module, PyccelFunctionDef
 from .internals      import PyccelFunction
 from .internals      import LiteralInteger
 from .numpyext       import process_dtype, process_shape , DtypePrecisionToCastFunction
-from .numpytypes     import NumpyNDArrayType
+from .cudatypes      import CudaArrayType
 
 
 
@@ -42,14 +43,14 @@ class CudaNewarray(PyccelFunction):
     memory_location : str
         The memory location of the new array ('host' or 'device').
     """
-    __slots__ = ('class_type', 'init_dtype', 'memory_location')
+    __slots__ = ('_class_type', '_init_dtype', '_memory_location')
 
-    def __init__(self, class_type, init_dtype, memory_location):
-        self.class_type = class_type
-        self.init_dtype = init_dtype
-        self.memory_location = memory_location
+    def __init__(self, *arg,class_type, init_dtype, memory_location):
+        self._class_type = class_type
+        self._init_dtype = init_dtype
+        self._memory_location = memory_location
 
-        super().__init__()
+        super().__init__(*arg)
     @staticmethod
     def _process_order(rank, order):
 
@@ -62,6 +63,7 @@ class CudaNewarray(PyccelFunction):
 class CudaFull(CudaNewarray):
   
     __slots__ = ('_fill_value','_shape')
+    name = 'full'
 
     def __init__(self, shape, fill_value, dtype='float', order='C'):
         shape = process_shape(False, shape)
@@ -71,15 +73,11 @@ class CudaFull(CudaNewarray):
 
         dtype = process_dtype(dtype)
 
-        # if fill_value and fill_value.dtype != dtype:
-        #     cast_func = DtypePrecisionToCastFunction[dtype]
-        #     fill_value = cast_func(fill_value)
-        self.shape = shape
-        rank = len(shape)
+        self._shape = shape
+        rank = len(self._shape)
         order = CudaNewarray._process_order(rank, order)
-        class_type = NumpyNDArrayType(dtype, shape, order)
-
-        super().__init__(fill_value, class_type = class_type, init_dtype = init_dtype)
+        class_type = CudaArrayType(dtype, rank, order, 'device')
+        super().__init__(fill_value, class_type = class_type, init_dtype = init_dtype, memory_location = 'device')
 
 
 class CudaAutoFill(CudaFull):
@@ -88,11 +86,9 @@ class CudaAutoFill(CudaFull):
     """
     __slots__ = ()
     def __init__(self, shape, dtype='float', order='C'):
-        if not dtype:
-            raise TypeError("Data type must be provided")
-        super().__init__(shape, None, dtype, order)
+        super().__init__(shape, Nil(), dtype, order)
 
-class CudaEmpty(CudaNewarray):
+class CudaEmpty(CudaAutoFill):
     """
     Represents a call to  Cuda.host_empty for code generation.
 
@@ -109,10 +105,19 @@ class CudaEmpty(CudaNewarray):
     order : str , LiteralString
         The order passed to the function defoulting to 'C'.
     """
-    __slots__ = ()
-
+    __slots__ = ('_shape', '_dtype', '_order')
+    name = 'empty'
     def __init__(self, shape, dtype='float', order='C'):
         super().__init__(shape, dtype, order)
+    
+    @property
+    def fill_value(self):
+        """
+        The value with which the array will be filled on initialisation.
+
+        The value with which the array will be filled on initialisation.
+        """
+        return None
 
 
 class CudaSynchronize(PyccelFunction):

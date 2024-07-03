@@ -626,7 +626,7 @@ class NumpyNewArray(PyccelFunction):
         assert isinstance(class_type, NumpyNDArrayType)
         self._init_dtype = init_dtype
         self._class_type = class_type # pylint: disable=no-member
-
+        print(*args)
         super().__init__(*args)
 
     @property
@@ -1312,20 +1312,15 @@ class NumpyFull(NumpyNewArray):
     def __init__(self, shape, fill_value, dtype=None, order='C'):
 
         # Convert shape to PythonTuple
-        print(shape)
-        print(type(shape))
         shape = process_shape(False, shape)
-        print(shape)
-        print(type(shape))
-
         init_dtype = dtype
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
         if dtype is None:
             dtype = fill_value.dtype
-   
+
         dtype = process_dtype(dtype)
-        
+
         # Cast fill_value to correct type
         if fill_value:
             if fill_value.dtype != dtype:
