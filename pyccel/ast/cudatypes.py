@@ -30,7 +30,7 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     memory_location : str
         The memory location of the new cuda array.
     """
-    __slots__ = ('_dtype', '_rank', '_order', '_memory_location')
+    __slots__ = ('_element_type', '_container_rank', '_order', '_memory_location')
 
     # def __new__(cls, dtype, rank, order, memory_location):
     #     if rank == 0:
@@ -41,8 +41,8 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         assert isinstance(rank, int)
         assert order in (None, 'C', 'F')
 
-        self._dtype = dtype
-        self._rank = rank
+        self._element_type = dtype
+        self._container_rank = rank
         self._order = order
         self._memory_location = memory_location
         super().__init__()

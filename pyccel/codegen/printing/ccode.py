@@ -45,6 +45,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
 from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
+from pyccel.ast.cudatypes  import CudaArrayType
 
 from pyccel.ast.utilities import expand_to_loops
 
@@ -1311,6 +1312,9 @@ class CCodePrinter(CodePrinter):
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
                 dtype = 't_ndarray'
+            elif isinstance(expr.class_type, CudaArrayType):
+                dtype = 't_cuda'
+             
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
         elif not isinstance(class_type, CustomDataType):

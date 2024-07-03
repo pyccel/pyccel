@@ -23,6 +23,8 @@ from .cudatypes      import CudaArrayType
 __all__ = (
     'CudaSynchronize',
     'CudaNewarray'
+    'CudaFull'
+    'CudaEmpty'
 )
 
 class CudaNewarray(PyccelFunction):
@@ -44,6 +46,16 @@ class CudaNewarray(PyccelFunction):
         The memory location of the new array ('host' or 'device').
     """
     __slots__ = ('_class_type', '_init_dtype', '_memory_location')
+
+    property
+    def init_dtype(self):
+        """
+        The dtype provided to the function when it was initialised in Python.
+
+        The dtype provided to the function when it was initialised in Python.
+        If no dtype was provided then this should equal `None`.
+        """
+        return self._init_dtype
 
     def __init__(self, *arg,class_type, init_dtype, memory_location):
         self._class_type = class_type
@@ -78,7 +90,9 @@ class CudaFull(CudaNewarray):
         order = CudaNewarray._process_order(rank, order)
         class_type = CudaArrayType(dtype, rank, order, 'device')
         super().__init__(fill_value, class_type = class_type, init_dtype = init_dtype, memory_location = 'device')
-
+    @property
+    def fill_value(self):
+        return self._args[0]
 
 class CudaAutoFill(CudaFull):
     """ Abstract class for all classes which inherit from NumpyFull but
@@ -105,7 +119,7 @@ class CudaEmpty(CudaAutoFill):
     order : str , LiteralString
         The order passed to the function defoulting to 'C'.
     """
-    __slots__ = ('_shape', '_dtype', '_order')
+    __slots__ = ()
     name = 'empty'
     def __init__(self, shape, dtype='float', order='C'):
         super().__init__(shape, dtype, order)
@@ -118,7 +132,6 @@ class CudaEmpty(CudaAutoFill):
         The value with which the array will be filled on initialisation.
         """
         return None
-
 
 class CudaSynchronize(PyccelFunction):
     """
