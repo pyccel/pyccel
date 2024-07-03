@@ -30,5 +30,16 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             return dtype
         else:
             return super().__new__(cls, dtype, rank, order)
+    def __init__(self, dtype, rank, order, memory_location):
+        assert isinstance(rank, int)
+        assert order in (None, 'C', 'F')
+
+        self._dtype = dtype
+        self._rank = rank
+        self._order = order
+        self._memory_location = memory_location
+        super().__init__()
     
+    @lru_cache
+    def __add__(self, other)
     

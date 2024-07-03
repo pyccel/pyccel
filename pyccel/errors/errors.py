@@ -345,7 +345,7 @@ class Errors(metaclass = Singleton):
                 traceback = ''.join(tb.format_stack(limit=5))
         else:
             traceback = None
-
+        print(pyccel_stage.current_stage)
         info = ErrorInfo(stage=pyccel_stage.current_stage,
                          filename=filename,
                          message=message,

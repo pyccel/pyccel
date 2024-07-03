@@ -620,7 +620,6 @@ class NumpyNewArray(PyccelFunction):
     init_dtype : PythonType, PyccelFunctionDef, LiteralString, str
         The actual dtype passed to the NumPy function.
     """
-    print(123)
     __slots__ = ('_init_dtype','_class_type')
 
     def __init__(self, *args, class_type, init_dtype = None):
@@ -672,7 +671,6 @@ class NumpyNewArray(PyccelFunction):
 
 #==============================================================================
 class NumpyArray(NumpyNewArray):
-    print(1234)
     """
     Represents a call to `numpy.array` for code generation.
 
