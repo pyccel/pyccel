@@ -21,3 +21,26 @@ threadsperblock = 1
 my_kernel[blockspergrid, threadsperblock]()
 
 ```
+
+### device
+
+Device functions are similar to kernels, but are executed within the context of a kernel. They can be called only from kernels or device functions, and are typically used for operations that are too small to justify launching a separate kernel, or for operations that need to be performed repeatedly within the context of a kernel.
+
+```python
+from pyccel.decorators import device, kernel
+
+@device
+def add(x, y):
+    return x + y
+
+@kernel
+def my_kernel():
+    x = 1
+    y = 2
+    z = add(x, y)
+    print(z)
+
+my_kernel[1, 1]()
+
+```
+
