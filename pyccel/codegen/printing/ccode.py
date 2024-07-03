@@ -1008,9 +1008,12 @@ class CCodePrinter(CodePrinter):
         elif source.startswith('Set_pop'):
             _ , i_type, i_key = source.split('/')
             self.add_import(Import('STC_Extensions', Module('STC_Extensions', (), ())))
-            return '\n'.join((f'#define i_type {i_type}',
+            return '\n'.join((
+                   f'#ifndef TOOLS_SET_{str(i_key).upper()}\n'
+                   f'#define TOOLS_SET_{str(i_key).upper()}\n'           
+                   f'#define i_type {i_type}',
                    f'#define i_key {i_key}\n',
-                   f'#include "STC_Extensions/Set_extensions.h"\n'))
+                   f'#include "STC_Extensions/Set_extensions.h"\n#endif\n'))
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
