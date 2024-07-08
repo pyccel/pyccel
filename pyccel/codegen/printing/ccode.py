@@ -1313,7 +1313,7 @@ class CCodePrinter(CodePrinter):
                 self.add_import(c_imports['ndarrays'])
                 dtype = 't_ndarray'
             elif isinstance(expr.class_type, CudaArrayType):
-                dtype = 't_cuda'
+                dtype = 'int *'
              
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
