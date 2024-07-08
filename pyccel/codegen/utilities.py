@@ -36,6 +36,7 @@ external_libs = {"stc"  : "STC/include"}
 # The compile object folder will be in the pyccel dirpath
 internal_libs = {
     "ndarrays"     : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
+    "cuda_ndarrays": ("cuda_ndarrays", CompileObj("cuda_ndarrays.cu",folder="ndarrays")),
     "pyc_math_f90" : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
     "pyc_math_c"   : ("math", CompileObj("pyc_math_c.c",folder="math")),
     "cwrapper"     : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
