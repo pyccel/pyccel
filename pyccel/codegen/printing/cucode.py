@@ -15,11 +15,16 @@ from pyccel.ast.core                import Import, Module
 from pyccel.ast.literals            import Nil
 
 from pyccel.errors.errors           import Errors
+from pyccel.ast.core                import Allocate, Deallocate
+
 
 
 errors = Errors()
 
 __all__ = ["CudaCodePrinter"]
+
+c_imports = {n : Import(n, Module(n, (), ())) for n in
+                ['cuda_ndarrays',]}
 
 class CudaCodePrinter(CCodePrinter):
     """
@@ -133,4 +138,21 @@ class CudaCodePrinter(CCodePrinter):
                           global_variables,
                           function_declaration,
                           "#endif // {name.upper()}_H\n"))
+    def _print_Allocate(self, expr):
+        self.add_import('cuda_ndarrays')
+        free_code = ''
+        
+        
+        #free the array if its already allocated and checking if its not null if the status is unknown
+        # if  (expr.status == 'unknown'):
+        #     free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
+        #     free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
+        # elif  (expr.status == 'allocated'):
+        #     free_code += self._print(Deallocate(expr.variable))
+    
+        alloc_code = f"{self._print(expr.variable)} = cuda_array_create();\n"
+        return f'{alloc_code}'
+        # print(shape)
+        
+        # return "hjsjkahsjkajskasjkasj"
 

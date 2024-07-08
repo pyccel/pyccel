@@ -137,8 +137,8 @@ class Compiler:
         os.environ['PATH'] = current_path
 
         
-        errors.report(f"Could not find compiler ({exec_cmd})",
-                severity='fatal')
+        # errors.report(f"Could not find compiler ({exec_cmd})",
+        #         severity='fatal')
 
         return exec_loc
 
