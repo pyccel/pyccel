@@ -58,8 +58,7 @@ include = [
   "pyccel/stdlib/**/*.c",
   "pyccel/stdlib/**/*.f90",
   "pyccel/extensions/STC/include",
-  "pyccel/extensions/gFTL/include/v2",
-  "pyccel/extensions",
+  "pyccel/extensions/gFTL/include/v2"
 ]
 exclude = [
     "pyccel/extensions/STC/src",
