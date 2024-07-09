@@ -13,7 +13,6 @@ from pyccel import epyccel
     ],
     scope = "module"
 )
-
 def language(request):
     return request.param
 
@@ -345,7 +344,6 @@ def test_set_copy_from_arg2(language):
     ],
     scope = "module"
 )
-
 def language_without_fortran(request):
     return request.param
 
