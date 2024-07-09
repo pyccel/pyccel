@@ -112,7 +112,7 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     """
     # get lib path (stdlib_path/lib_name or ext_path/lib_name)
     if lib_folder in external_libs:
-            lib_path = os.path.join(ext_path, external_libs[lib_folder], lib_folder)
+        lib_path = os.path.join(ext_path, external_libs[lib_folder], lib_folder)
     else:
         lib_path = os.path.join(stdlib_path, lib_folder)
 

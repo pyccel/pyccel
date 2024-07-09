@@ -1013,7 +1013,7 @@ class CCodePrinter(CodePrinter):
                    f'#define TOOLS_SET_{str(i_key).upper()}\n'           
                    f'#define i_type {i_type}',
                    f'#define i_key {i_key}\n',
-                   f'#include "Set_extensions.h"\n#endif\n'))
+                   '#include "Set_extensions.h"\n#endif\n'))
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
