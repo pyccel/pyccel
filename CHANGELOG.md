@@ -21,9 +21,10 @@ All notable changes to this project will be documented in this file.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
 -   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the `STC` library.
 -   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the `STC` library. 
+-   #1893 : Add Python support for set initialisation with `set()`.
+-   #1877 : Add C Support for set method `pop()`.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
--   #1893 : Add Python support for set initialisation with `set()`.
 
 ### Fixed
 

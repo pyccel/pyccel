@@ -29,7 +29,7 @@ language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 
 #==============================================================================
 # map external libraries inside pyccel/extensions with their path
-external_libs = {"stc"  : "STC/include"}
+external_libs = {"stc"  : "STC/include",}
 
 #==============================================================================
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
@@ -41,6 +41,7 @@ internal_libs = {
     "cwrapper"     : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
     "numpy_f90"    : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
     "numpy_c"      : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
+    "STC_Extensions" : ("STC_Extensions", CompileObj("Set_Extensions.h",folder="STC_Extensions", has_target_file = False)),
 }
 internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_ndarrays.c",folder="cwrapper_ndarrays",
                                                              accelerators = ('python',),
