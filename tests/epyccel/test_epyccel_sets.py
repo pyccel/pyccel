@@ -385,4 +385,3 @@ def test_Pop_complex(language_without_fortran):
     pyccel_result = set(epyccel_remove())
     python_result = set(Pop_complex())
     assert python_result == pyccel_result
-
