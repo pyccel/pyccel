@@ -3,6 +3,7 @@
 
 # include <cuda_runtime.h>
 # include <iostream>
+#include "../ndarrays/ndarrays.h"
 
 using namespace std;
 

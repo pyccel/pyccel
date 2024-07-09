@@ -16,6 +16,14 @@ from pyccel.ast.literals            import Nil
 
 from pyccel.errors.errors           import Errors
 from pyccel.ast.core                import Allocate, Deallocate
+from pyccel.ast.numpytypes          import   NumpyInt64Type
+from pyccel.ast.cudatypes           import CudaArrayType
+from pyccel.ast.datatypes           import HomogeneousContainerType
+from pyccel.ast.numpytypes          import NumpyNDArrayType, numpy_precision_map
+
+
+
+
 
 
 
@@ -24,7 +32,9 @@ errors = Errors()
 __all__ = ["CudaCodePrinter"]
 
 c_imports = {n : Import(n, Module(n, (), ())) for n in
-                ['cuda_ndarrays',]}
+                ['cuda_ndarrays',
+                 'ndarrays',
+                 ]}
 
 class CudaCodePrinter(CCodePrinter):
     """
@@ -139,11 +149,32 @@ class CudaCodePrinter(CCodePrinter):
                           function_declaration,
                           "#endif // {name.upper()}_H\n"))
     def _print_Allocate(self, expr):
- 
+        variable = expr.variable
+        shape = ", ".join(self._print(i) for i in expr.shape)
+        if isinstance(variable.class_type, CudaArrayType):
+            dtype = self.find_in_ndarray_type_registry(variable.dtype)
+        elif isinstance(variable.class_type, HomogeneousContainerType):
+            dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(variable.dtype.primitive_type, variable.dtype.precision)])
+        else:
+            raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
+        shape_dtype = self.get_c_type(NumpyInt64Type())
+        shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
+        is_view = 'false' if variable.on_heap else 'true'
+        memory_location = expr.variable.memory_location
+        if memory_location in ('device', 'host'):
+            memory_location = 'allocateMemoryOn' + str(memory_location).capitalize()
+        else:
+            memory_location = 'managedMemory'
         self.add_import(c_imports['cuda_ndarrays'])
-        alloc_code = f"{self._print(expr.variable)} = cuda_array_create();\n"
+        self.add_import(c_imports['ndarrays'])
+        alloc_code = f"{self._print(expr.variable)} = cuda_array_create({variable.rank},  {shape_Assign}, {dtype}, {is_view},{memory_location});\n"
         return f'{alloc_code}'
-        # print(shape)
-        
-        # return "hjsjkahsjkajskasjkasj"
+
+    def _print_Deallocate(self, expr):
+        var_code = self._print(expr.variable)
+
+        if expr.variable.memory_location == 'host':
+            return f"cuda_free_host({var_code});\n"
+        else:
+            return f"cuda_free({var_code});\n"
 

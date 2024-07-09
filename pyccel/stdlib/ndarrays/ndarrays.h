@@ -80,6 +80,13 @@ typedef enum e_order
     order_c,
 } t_order;
 
+enum e_memory_locations
+{
+        managedMemory,
+        allocateMemoryOnHost,
+        allocateMemoryOnDevice
+};
+
 typedef struct  s_ndarray
 {
     /* raw data buffer*/
