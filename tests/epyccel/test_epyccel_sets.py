@@ -114,36 +114,6 @@ def test_copy_complex(language):
     assert python_result == pyccel_result
     assert all(isinstance(elem, type(pyccel_result.pop())) for elem in python_result)
 
-def test_Pop_int(language):
-    def Pop_int():
-        se = {2, 4, 9}
-        se.pop()
-        return se
-    epyccel_remove = epyccel(Pop_int, language = language)
-    pyccel_result = epyccel_remove()
-    python_result = Pop_int()
-    assert python_result == pyccel_result
-
-def test_Pop_float(language):
-    def Pop_float():
-        se = {2.7, 4.3, 9.2}
-        se.pop()
-        return se
-    epyccel_remove = epyccel(Pop_float, language = language)
-    pyccel_result = epyccel_remove()
-    python_result = Pop_float()
-    assert python_result == pyccel_result
-
-def test_Pop_complex(language):
-    def Pop_complex():
-        se = {1j, 3j, 6j}
-        se.pop()
-        return se
-    epyccel_remove = epyccel(Pop_complex, language = language)
-    pyccel_result = epyccel_remove()
-    python_result = Pop_complex()
-    assert python_result == pyccel_result
-
 def test_remove_complex(language):
     def remove_complex():
         se = {1j, 3j, 8j}
@@ -363,4 +333,53 @@ def test_set_copy_from_arg2(language):
     pyccel_result = epyc_copy_from_arg(a)
     python_result = copy_from_arg2(a)
     assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+@pytest.fixture( params=[
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="set methods not implemented in fortran"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks =  pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    ],
+    scope = "module"
+)
+def language_without_fortran(request):
+    return request.param
+
+def test_Pop_int(language_without_fortran):
+    def Pop_int():
+        se = {2, 4, 9}
+        el1 = se.pop()
+        el2 = se.pop()
+        el3 = se.pop()
+        return el1, el2, el3
+    epyccel_remove = epyccel(Pop_int, language = language_without_fortran)
+    pyccel_result = set(epyccel_remove())
+    python_result = set(Pop_int())
+    assert python_result == pyccel_result
+
+def test_Pop_float(language_without_fortran):
+    def Pop_float():
+        se = {2.3 , 4.1, 9.5}
+        el1 = se.pop()
+        el2 = se.pop()
+        el3 = se.pop()
+        return el1, el2, el3
+    epyccel_remove = epyccel(Pop_float, language = language_without_fortran)
+    pyccel_result = set(epyccel_remove())
+    python_result = set(Pop_float())
+    assert python_result == pyccel_result
+
+
+def test_Pop_complex(language_without_fortran):
+    def Pop_complex():
+        se = {4j , 1j, 7j}
+        el1 = se.pop()
+        el2 = se.pop()
+        el3 = se.pop()
+        return el1, el2, el3
+    epyccel_remove = epyccel(Pop_complex, language = language_without_fortran)
+    pyccel_result = set(epyccel_remove())
+    python_result = set(Pop_complex())
     assert python_result == pyccel_result

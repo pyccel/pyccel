@@ -1005,7 +1005,15 @@ class CCodePrinter(CodePrinter):
                               f'#define i_key {container_key}',
                               f'#include "{stc_name + "/" + container[0]}.h"',
                               '#endif\n'))
-
+        elif source.startswith('Set_pop'):
+            _ , i_type, i_key = source.split('/')
+            self.add_import(Import('STC_Extensions', Module('STC_Extensions', (), ())))
+            return '\n'.join((
+                   f'#ifndef TOOLS_SET_{str(i_key).upper()}\n'
+                   f'#define TOOLS_SET_{str(i_key).upper()}\n'           
+                   f'#define i_type {i_type}',
+                   f'#define i_key {i_key}\n',
+                   '#include "Set_extensions.h"\n#endif\n'))
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
@@ -2183,6 +2191,13 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.init_stc_container(rhs, expr)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
+
+    def _print_SetPop(self, expr):
+        var_type = self.get_declare_type(expr.set_variable)
+        element_type = self.get_c_type(expr.set_variable.class_type.element_type)
+        self.add_import(Import(f'Set_pop_macro/{var_type}/{element_type}', Module(f'Set_pop_macro/{var_type}/{element_type}', (), ())))
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        return f'{var_type}_pop({set_var})'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
