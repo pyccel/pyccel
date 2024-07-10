@@ -32,11 +32,6 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     """
     __slots__ = ('_element_type', '_container_rank', '_order', '_memory_location')
 
-    # def __new__(cls, dtype, rank, order, memory_location):
-    #     if rank == 0:
-    #         return dtype
-    #     else:
-    #         return super().__new__(cls, dtype, rank, order)
     def __init__(self, dtype, rank, order, memory_location):
         assert isinstance(rank, int)
         assert order in (None, 'C', 'F')

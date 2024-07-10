@@ -14,10 +14,10 @@ void    host_memory(void** devPtr, size_t size)
 {
     cudaMallocHost(devPtr, size);
 }
-t_ndarray   cuda_array_create(enum e_memory_locations location, int32_t nd, int64_t *shape,
+t_cuda_ndarray   cuda_array_create(enum e_memory_locations location, int32_t nd, int64_t *shape,
         enum e_types type, bool is_view)
 {
-    t_ndarray arr;
+    t_cuda_ndarray arr;
     void (*fun_ptr_arr[])(void**, size_t) = {managed_memory, host_memory, device_memory};
 
     arr.nd = nd;
@@ -61,7 +61,7 @@ t_ndarray   cuda_array_create(enum e_memory_locations location, int32_t nd, int6
     return (arr);
 }
 
-int32_t cuda_free_host(t_ndarray arr)
+int32_t cuda_free_host(t_cuda_ndarray arr)
 {
     if (arr.shape == NULL)
         return (0);
@@ -75,7 +75,7 @@ int32_t cuda_free_host(t_ndarray arr)
 }
 
 __host__ __device__
-int32_t cuda_free(t_ndarray arr)
+int32_t cuda_free(t_cuda_ndarray arr)
 {
     if (arr.shape == NULL)
         return (0);
@@ -87,7 +87,7 @@ int32_t cuda_free(t_ndarray arr)
 }
 
 __host__ __device__
-int32_t cuda_free_pointer(t_ndarray arr)
+int32_t cuda_free_pointer(t_cuda_ndarray arr)
 {
     if (arr.is_view == false || arr.shape == NULL)
         return (0);

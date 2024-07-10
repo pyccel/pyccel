@@ -163,7 +163,6 @@ class CudaCodePrinter(CCodePrinter):
         else:
             memory_location = 'managedMemory'
         self.add_import(c_imports['cuda_ndarrays'])
-        self.add_import(c_imports['ndarrays'])
         alloc_code = f"{self._print(expr.variable)} = cuda_array_create({variable.rank},  shape_Assign, {dtype}, {is_view},{memory_location});\n"
         return f'{shape_Assign} {alloc_code}'
 
