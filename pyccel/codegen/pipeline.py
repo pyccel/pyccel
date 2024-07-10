@@ -379,7 +379,7 @@ def execute_pyccel(fname, *,
                 output_folder=pyccel_dirpath,
                 verbose=verbose)
     except Exception:
-        handle_error('Fortran compilation')
+        handle_error('compilation')
         raise
 
 

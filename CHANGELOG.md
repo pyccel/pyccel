@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 -   #1047 : Print the value of an unrecognised constant.
 -   #1951 : Fix return type for class whose argument cannot be wrapped.
 -   #1903 : Fix memory leak when using type annotations on local variables.
+-   #1927 : Improve error Message for missing target language compiler in Pyccel
 
 ## \[1.12.0\] - 2024-05-08
 
