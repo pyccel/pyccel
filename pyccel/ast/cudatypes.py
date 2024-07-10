@@ -42,6 +42,10 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         self._memory_location = memory_location
         super().__init__()
 
+    @property
+    def memory_location(self):
+        return self._memory_location
+
     @lru_cache
     def __add__(self, other):
         test_type = np.zeros(1, dtype = pyccel_type_to_original_type[self.element_type])

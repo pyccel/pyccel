@@ -20,7 +20,6 @@ typedef enum e_types
 
 enum e_memory_locations
 {
-        managedMemory,
         allocateMemoryOnHost,
         allocateMemoryOnDevice
 };
@@ -39,8 +38,6 @@ typedef struct  s_cuda_ndarray
     /* shape 'size of each dimension' */
     int64_t                 *shape;
     /* strides 'number of elements to skip to get the next element' */
-    int64_t                 *strides;
-    /* type of the array elements */
     t_types            type;
     /* type size of the array elements */
     int32_t                 type_size;

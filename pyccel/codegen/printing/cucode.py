@@ -157,7 +157,7 @@ class CudaCodePrinter(CCodePrinter):
             raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
         shape_Assign = "int64_t shape_Assign [] = {" + shape + "};\n"
         is_view = 'false' if variable.on_heap else 'true'
-        memory_location = expr.variable.memory_location
+        memory_location = variable.class_type.memory_location
         if memory_location in ('device', 'host'):
             memory_location = 'allocateMemoryOn' + str(memory_location).capitalize()
         else:
