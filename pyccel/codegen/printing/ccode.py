@@ -2182,9 +2182,6 @@ class CCodePrinter(CodePrinter):
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return prefix_code+self.copy_NumpyArray_Data(expr)
-        if(isinstance(rhs, (CudaFull))):
-            # TODO add support for CudaFull
-            return " \n"
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
         lhs = self._print(expr.lhs)

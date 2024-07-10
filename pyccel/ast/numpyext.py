@@ -626,7 +626,6 @@ class NumpyNewArray(PyccelFunction):
         assert isinstance(class_type, NumpyNDArrayType)
         self._init_dtype = init_dtype
         self._class_type = class_type # pylint: disable=no-member
-        print(*args)
         super().__init__(*args)
 
     @property

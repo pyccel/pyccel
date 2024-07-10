@@ -15,11 +15,10 @@ from pyccel.ast.core                import Import, Module
 from pyccel.ast.literals            import Nil
 
 from pyccel.errors.errors           import Errors
-from pyccel.ast.core                import Allocate, Deallocate
-from pyccel.ast.numpytypes          import   NumpyInt64Type
 from pyccel.ast.cudatypes           import CudaArrayType
 from pyccel.ast.datatypes           import HomogeneousContainerType
-from pyccel.ast.numpytypes          import NumpyNDArrayType, numpy_precision_map
+from pyccel.ast.numpytypes          import numpy_precision_map
+from pyccel.ast.cudaext             import CudaFull
 
 
 
@@ -147,6 +146,8 @@ class CudaCodePrinter(CCodePrinter):
                           "#endif // {name.upper()}_H\n"))
     def _print_Allocate(self, expr):
         variable = expr.variable
+        if not isinstance(variable.class_type, CudaArrayType):
+            return super()._print_Allocate(expr)
         shape = ", ".join(self._print(i) for i in expr.shape)
         if isinstance(variable.class_type, CudaArrayType):
             dtype = self.find_in_ndarray_type_registry(variable.dtype)
@@ -154,7 +155,6 @@ class CudaCodePrinter(CCodePrinter):
             dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(variable.dtype.primitive_type, variable.dtype.precision)])
         else:
             raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
-        shape_dtype = self.get_c_type(NumpyInt64Type())
         shape_Assign = "int64_t shape_Assign [] = {" + shape + "};\n"
         is_view = 'false' if variable.on_heap else 'true'
         memory_location = expr.variable.memory_location
@@ -169,8 +169,19 @@ class CudaCodePrinter(CCodePrinter):
     def _print_Deallocate(self, expr):
         var_code = self._print(expr.variable)
 
+        if not isinstance(expr.variable.class_type, CudaArrayType):
+            return super()._print_Deallocate(expr)
+
         if expr.variable.memory_location == 'host':
             return f"cuda_free_host({var_code});\n"
         else:
             return f"cuda_free({var_code});\n"
+
+    def _print_Assign(self, expr):
+        rhs = expr.rhs
+        if not isinstance(rhs.class_type, CudaArrayType):
+                return super()._print_Assign(expr)
+        if(isinstance(rhs, (CudaFull))):
+            # TODO add support for CudaFull
+            return " \n"
 
