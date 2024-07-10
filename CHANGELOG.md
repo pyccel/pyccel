@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
 -   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
 -   Link and mention `devel` branch, not `master`.
 -   #1913 : Fix function calls to renamed functions.
+-   #1927 : Improve error Message for missing target language compiler in Pyccel
 
 ### Changed
 
