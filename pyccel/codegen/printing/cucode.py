@@ -116,8 +116,7 @@ class CudaCodePrinter(CCodePrinter):
         return 'cudaDeviceSynchronize();\n'
 
     def _print_CudaEmpty(self, expr):
-        print(expr)
-        return 'cudaDeviceSynchronize();\n'
+        return 'cuda_array_create(1,  (int64_t[]){INT64_C(10)}, nd_double, false,allocateMemoryOnHost);\n'
     def _print_ModuleHeader(self, expr):
         self.set_scope(expr.module.scope)
         self._in_header = True
@@ -158,7 +157,7 @@ class CudaCodePrinter(CCodePrinter):
         else:
             raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
         shape_dtype = self.get_c_type(NumpyInt64Type())
-        shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
+        shape_Assign = "int64_t shape_Assign [] = {" + shape + "};\n"
         is_view = 'false' if variable.on_heap else 'true'
         memory_location = expr.variable.memory_location
         if memory_location in ('device', 'host'):
@@ -167,8 +166,8 @@ class CudaCodePrinter(CCodePrinter):
             memory_location = 'managedMemory'
         self.add_import(c_imports['cuda_ndarrays'])
         self.add_import(c_imports['ndarrays'])
-        alloc_code = f"{self._print(expr.variable)} = cuda_array_create({variable.rank},  {shape_Assign}, {dtype}, {is_view},{memory_location});\n"
-        return f'{alloc_code}'
+        alloc_code = f"{self._print(expr.variable)} = cuda_array_create({variable.rank},  shape_Assign, {dtype}, {is_view},{memory_location});\n"
+        return f'{shape_Assign} {alloc_code}'
 
     def _print_Deallocate(self, expr):
         var_code = self._print(expr.variable)

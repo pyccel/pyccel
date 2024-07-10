@@ -46,6 +46,7 @@ from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type,
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 from pyccel.ast.cudatypes  import CudaArrayType
+from pyccel.ast.cudaext    import CudaFull
 
 from pyccel.ast.utilities import expand_to_loops
 
@@ -58,6 +59,7 @@ from pyccel.ast.variable import InhomogeneousTupleVariable
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
+
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
@@ -2181,6 +2183,9 @@ class CCodePrinter(CodePrinter):
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return prefix_code+self.copy_NumpyArray_Data(expr)
+        if(isinstance(rhs, (CudaFull))):
+            # TODO add support for CudaFull
+            return " \n"
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
         lhs = self._print(expr.lhs)
