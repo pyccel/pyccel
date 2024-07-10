@@ -115,8 +115,6 @@ class CudaCodePrinter(CCodePrinter):
     def _print_CudaSynchronize(self, expr):
         return 'cudaDeviceSynchronize();\n'
 
-    def _print_CudaEmpty(self, expr):
-        return 'cuda_array_create(1,  (int64_t[]){INT64_C(10)}, nd_double, false,allocateMemoryOnHost);\n'
     def _print_ModuleHeader(self, expr):
         self.set_scope(expr.module.scope)
         self._in_header = True
