@@ -4,18 +4,18 @@
 # include <cuda_runtime.h>
 # include <iostream>
 
-typedef enum e_types
+typedef enum cu_types
 {
-        nd_bool     = 0,
-        nd_int8     = 1,
-        nd_int16    = 3,
-        nd_int32    = 5,
-        nd_int64    = 7,
-        nd_float    = 11,
-        nd_double   = 12,
-        nd_cfloat   = 14,
-        nd_cdouble  = 15
-} t_types;
+        cu_bool     = 0,
+        cu_int8     = 1,
+        cu_int16    = 3,
+        cu_int32    = 5,
+        cu_int64    = 7,
+        cu_float    = 11,
+        cu_double   = 12,
+        cu_cfloat   = 14,
+        cu_cdouble  = 15
+} t_cu_types;
 
 
 enum e_memory_locations
@@ -38,7 +38,7 @@ typedef struct  s_cuda_ndarray
     /* shape 'size of each dimension' */
     int64_t                 *shape;
     /* strides 'number of elements to skip to get the next element' */
-    t_types            type;
+    cu_types            type;
     /* type size of the array elements */
     int32_t                 type_size;
     /* number of element in the array */
@@ -52,13 +52,13 @@ typedef struct  s_cuda_ndarray
 }               t_cuda_ndarray;
 
 
-t_cuda_ndarray  cuda_array_create(int32_t nd, int64_t *shape, enum e_types type, bool is_view ,
+t_cuda_ndarray  cuda_array_create(int32_t nd, int64_t *shape, enum cu_types type, bool is_view ,
 enum e_memory_locations location);
 int32_t cuda_free_host(t_cuda_ndarray arr);
-
+__host__ __device__
+int32_t cuda_free(t_cuda_ndarray arr);
 
 
 using namespace std;
-
 
 #endif

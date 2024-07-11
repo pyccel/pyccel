@@ -15,7 +15,7 @@ void    host_memory(void** devPtr, size_t size)
     cudaMallocHost(devPtr, size);
 }
 t_cuda_ndarray   cuda_array_create(enum e_memory_locations location, int32_t nd, int64_t *shape,
-        enum e_types type, bool is_view)
+        enum cu_types type, bool is_view)
 {
     t_cuda_ndarray arr;
     void (*fun_ptr_arr[])(void**, size_t) = {managed_memory, host_memory, device_memory};
@@ -24,25 +24,25 @@ t_cuda_ndarray   cuda_array_create(enum e_memory_locations location, int32_t nd,
     arr.type = type;
     switch (type)
     {
-        case nd_int8:
+        case cu_int8:
             arr.type_size = sizeof(int8_t);
             break;
-        case nd_int16:
+        case cu_int16:
             arr.type_size = sizeof(int16_t);
             break;
-        case nd_int32:
+        case cu_int32:
             arr.type_size = sizeof(int32_t);
             break;
-        case nd_int64:
+        case cu_int64:
             arr.type_size = sizeof(int64_t);
             break;
-        case nd_float:
+        case cu_float:
             arr.type_size = sizeof(float);
             break;
-        case nd_double:
+        case cu_double:
             arr.type_size = sizeof(double);
             break;
-        case nd_bool:
+        case cu_bool:
             arr.type_size = sizeof(bool);
             break;
     }
@@ -69,8 +69,6 @@ int32_t cuda_free_host(t_cuda_ndarray arr)
     arr.raw_data = NULL;
     cudaFree(arr.shape);
     arr.shape = NULL;
-    cudaFree(arr.strides);
-    arr.strides = NULL;
     return (1);
 }
 

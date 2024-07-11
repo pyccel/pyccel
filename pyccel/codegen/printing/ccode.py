@@ -1260,7 +1260,7 @@ class CCodePrinter(CodePrinter):
             The code which declares the datatype in C.
         """
         try :
-            return self.ndarray_type_registry[dtype]
+            return self.cuda_ndarray_type_registry[dtype]
         except KeyError:
             raise errors.report(PYCCEL_RESTRICTION_TODO, #pylint: disable=raise-missing-from
                     symbol = dtype,

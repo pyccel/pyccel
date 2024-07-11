@@ -282,7 +282,6 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             return super().__new__(cls)
 
     def __init__(self, dtype, rank, order):
-        # print("reank", rank)
         assert isinstance(rank, int)
         assert order in (None, 'C', 'F')
         assert rank < 2 or order is not None
@@ -320,7 +319,6 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
 
     @lru_cache
     def __and__(self, other):
-        print("jouj draham diyali aba jalal")
         elem_type = self.element_type
         if isinstance(other, FixedSizeNumericType):
             return NumpyNDArrayType(elem_type and other)

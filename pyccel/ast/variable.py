@@ -98,7 +98,7 @@ class Variable(TypedAstNode):
     >>> Variable(PythonNativeInt(), DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
-    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_memory_location', '_is_const', '_is_target',
+    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const', '_is_target',
             '_is_optional', '_allows_negative_indexes', '_cls_base', '_is_argument', '_is_temp',
             '_shape','_is_private','_class_type')
     _attribute_nodes = ()

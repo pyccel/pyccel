@@ -12,6 +12,7 @@ import numpy as np
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
 from pyccel.utilities.metaclasses import ArgumentSingleton
 from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
+from .numpytypes import NumpyNDArrayType
 
 
 class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
@@ -51,11 +52,13 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         test_type = np.zeros(1, dtype = pyccel_type_to_original_type[self.element_type])
         if isinstance(other, FixedSizeNumericType):
             comparison_type = pyccel_type_to_original_type[other]()
-        elif isinstance(other, CudaArrayType):
+        elif isinstance(other, CudaArrayType) or isinstance(other, NumpyNDArrayType):
             comparison_type = np.zeros(1, dtype = pyccel_type_to_original_type[other.element_type])
         else:
             return NotImplemented
-        # Todo need to check for memory location as well
+        if(isinstance(other, CudaArrayType)):
+            assert self.memory_location == other.memory_location
+
         result_type = original_type_to_pyccel_type[np.result_type(test_type, comparison_type).type]
         rank = max(other.rank, self.rank)
         if rank < 2:

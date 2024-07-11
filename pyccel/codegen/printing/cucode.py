@@ -16,15 +16,11 @@ from pyccel.ast.literals            import Nil
 
 from pyccel.errors.errors           import Errors
 from pyccel.ast.cudatypes           import CudaArrayType
-from pyccel.ast.datatypes           import HomogeneousContainerType
+from pyccel.ast.datatypes           import HomogeneousContainerType, PythonNativeBool
 from pyccel.ast.numpytypes          import numpy_precision_map
 from pyccel.ast.cudaext             import CudaFull
-
-
-
-
-
-
+from pyccel.ast.numpytypes          import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
+from pyccel.ast.numpytypes          import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 
 errors = Errors()
 
@@ -52,6 +48,16 @@ class CudaCodePrinter(CCodePrinter):
     """
     language = "cuda"
 
+    cuda_ndarray_type_registry = {
+                    NumpyFloat64Type()    : 'cu_double',
+                    NumpyFloat32Type()    : 'cu_float',
+                    NumpyComplex128Type() : 'cu_cdouble',
+                    NumpyComplex64Type()  : 'cu_cfloat',
+                    NumpyInt64Type()      : 'cu_int64',
+                    NumpyInt32Type()      : 'cu_int32',
+                    NumpyInt16Type()      : 'cu_int16',
+                    NumpyInt8Type()       : 'cu_int8',
+                    PythonNativeBool()    : 'cu_bool'}
     def __init__(self, filename, prefix_module = None):
 
         errors.set_target(filename)
@@ -172,10 +178,18 @@ class CudaCodePrinter(CCodePrinter):
         if not isinstance(expr.variable.class_type, CudaArrayType):
             return super()._print_Deallocate(expr)
 
-        if expr.variable.memory_location == 'host':
+        if expr.variable.class_type.memory_location == 'host':
             return f"cuda_free_host({var_code});\n"
         else:
             return f"cuda_free({var_code});\n"
+    def get_declare_type(self, expr):
+        class_type = expr.class_type
+        rank  = expr.rank
+        if not isinstance(class_type, CudaArrayType ) or rank <= 0:
+            return super().get_declare_type(expr)
+
+        dtype = 't_cuda_ndarray'
+        return dtype
 
     def _print_Assign(self, expr):
         rhs = expr.rhs
