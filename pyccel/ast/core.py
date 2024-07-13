@@ -164,7 +164,7 @@ class AsName(PyccelAstNode):
         return self._obj
 
     def __repr__(self):
-        return f'{self.name} as {self.target}'
+        return f'{self.object} as {self.target}'
 
     def __eq__(self, string):
         if isinstance(string, str):
