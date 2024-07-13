@@ -70,6 +70,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] `PyccelFunction` objects which do not represent objects in memory have the type `SymbolicType`.
 -   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
 -   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
+-   \[INTERNALS\] Handle STC imports with Pyccel objects.
 
 ### Deprecated
 
