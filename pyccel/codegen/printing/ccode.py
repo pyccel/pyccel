@@ -323,8 +323,8 @@ class CCodePrinter(CodePrinter):
         at the compiling/linking stage. If the source of the import is not new then any
         new targets are added to the Import object.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         import_obj : Import
             The AST node describing the import.
         """
