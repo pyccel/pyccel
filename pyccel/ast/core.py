@@ -3775,6 +3775,9 @@ class Import(PyccelAstNode):
 
     @property
     def target(self):
+        """
+        Get the objects that are being imported.
+        """
         return self._target.keys()
 
     @property
@@ -3801,7 +3804,9 @@ class Import(PyccelAstNode):
 
     def define_target(self, new_target):
         """
-        Add an additional target to the imports
+        Add an additional target to the imports.
+
+        Add an additional target to the imports.
         I.e. if imp is an Import defined as:
         >>> from numpy import ones
 
@@ -3809,9 +3814,9 @@ class Import(PyccelAstNode):
         then it becomes:
         >>> from numpy import ones, cos
 
-        Parameter
-        ---------
-        new_target: str/AsName/iterable of str/AsName
+        Parameters
+        ----------
+        new_target: str | AsName | iterable[str | AsName]
                     The new import target
         """
         if iterable(new_target):
