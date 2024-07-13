@@ -241,6 +241,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'assert',
                  'numpy_c']}
 
+import_header_guard_prefix = {'Set_extensions' : '_TOOLS_SET'}
+
 class CCodePrinter(CodePrinter):
     """
     A printer for printing code in C.
@@ -998,29 +1000,19 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1]
         else:
             source = self._print(source)
-        if source.startswith('stc/'):
+        if source.startswith('stc/') or source in import_header_guard_prefix:
             for t in expr.target:
                 dtype = t.object.class_type
                 container_type = t.target
                 container_key = self.get_c_type(dtype.element_type)
-                return '\n'.join((f'#ifndef _{container_type.upper()}',
-                                  f'#define _{container_type.upper()}',
-                                  f'#define i_type {container_type}',
-                                  f'#define i_key {container_key}',
-                                  f'#include <{source}.h>',
-                                  '#endif\n'))
-        elif source == 'Set_extensions':
-            import_type = expr.target.pop()
-            class_type = import_type.object.class_type
-            i_type = import_type.target
-            i_key = self.get_c_type(class_type.element_type)
-            return '\n'.join((
-                   f'#ifndef TOOLS_SET_{i_key.upper()}',
-                   f'#define TOOLS_SET_{i_key.upper()}',
-                   f'#define i_type {i_type}',
-                   f'#define i_key {i_key}',
-                   f'#include "{source}.h"',
-                   '#endif\n'))
+                header_guard_prefix = import_header_guard_prefix.get(source, '')
+                header_guard = f'{header_guard_prefix}_{container_type.upper()}'
+                return (f'#ifndef {header_guard}\n'
+                        f'#define {header_guard}\n'
+                        f'#define i_type {container_type}\n'
+                        f'#define i_key {container_key}\n'
+                        f'#include <{source}.h>\n'
+                        f'#endif // {header_guard}\n\n')
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
