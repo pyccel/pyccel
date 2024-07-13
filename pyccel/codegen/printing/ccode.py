@@ -1015,18 +1015,20 @@ class CCodePrinter(CodePrinter):
         else:
             source = self._print(source)
         if source.startswith('stc/') or source in import_header_guard_prefix:
+            code = ''
             for t in expr.target:
                 dtype = t.object.class_type
                 container_type = t.target
                 container_key = self.get_c_type(dtype.element_type)
                 header_guard_prefix = import_header_guard_prefix.get(source, '')
                 header_guard = f'{header_guard_prefix}_{container_type.upper()}'
-                return (f'#ifndef {header_guard}\n'
+                code += (f'#ifndef {header_guard}\n'
                         f'#define {header_guard}\n'
                         f'#define i_type {container_type}\n'
                         f'#define i_key {container_key}\n'
                         f'#include <{source}.h>\n'
                         f'#endif // {header_guard}\n\n')
+            return code
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
