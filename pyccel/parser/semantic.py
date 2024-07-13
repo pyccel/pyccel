@@ -4367,7 +4367,7 @@ class SemanticParser(BasicParser):
             __module_name__ = p.metavars.get('module_name', None)
 
             if source_target in container['imports']:
-                targets = list(container['imports'][source_target].target.union(targets))
+                targets.extend(container['imports'][source_target].target)
 
             if import_init:
                 old_name = import_init.name
