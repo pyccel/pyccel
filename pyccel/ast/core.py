@@ -3713,7 +3713,7 @@ class Import(PyccelAstNode):
             source = Import._format(source)
 
         self._source = source
-        self._target = dict() # Dict is used as Python doesn't have an ordered set
+        self._target = {} # Dict is used as Python doesn't have an ordered set
         self._source_mod      = mod
         self._ignore_at_print = ignore_at_print
 
