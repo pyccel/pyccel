@@ -130,8 +130,9 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
             # If folder exists check if it needs updating
             src_files = [os.path.relpath(os.path.join(root, f), lib_path) \
                     for root, dirs, files in os.walk(lib_path) for f in files]
-            dst_files = [os.path.join(root, f) for root, dirs, files in os.walk(lib_dest_path) \
-                                               for f in files if not f.endswith('.lock')]
+            dst_files = [os.path.relpath(os.path.join(root, f), lib_dest_path) \
+                    for root, dirs, files in os.walk(lib_dest_path) \
+                    for f in files if not f.endswith('.lock')]
             # Check if all files are present in destination
             to_update = any(s not in dst_files for s in src_files)
 
