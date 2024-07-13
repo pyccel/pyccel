@@ -43,6 +43,7 @@ All notable changes to this project will be documented in this file.
 -   #1903 : Fix memory leak when using type annotations on local variables.
 -   #1913 : Fix function calls to renamed functions.
 -   #1927 : Improve error Message for missing target language compiler in Pyccel
+-   #1930 : Preserve ordering of import targets.
 
 ### Changed
 
