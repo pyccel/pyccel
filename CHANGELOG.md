@@ -7,8 +7,10 @@ All notable changes to this project will be documented in this file.
 
 -   #32 : Add support for `nvcc` Compiler and `cuda` language as a possible option.
 -   #48 : Fix incorrect handling of imports in `cuda`.
+-   #59 : Updated `cuda` clash checker.
 -   #42 : Add support for custom kernel in`cuda`.
 -   #42 : Add Cuda module to Pyccel. Add support for `cuda.synchronize` function.
+-   #41 : Add support for custom device in`cuda`.
 
 ## \[UNRELEASED\]
 
@@ -30,9 +32,10 @@ All notable changes to this project will be documented in this file.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
 -   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the `STC` library.
 -   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the `STC` library. 
+-   #1893 : Add Python support for set initialisation with `set()`.
+-   #1877 : Add C Support for set method `pop()`.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
--   #1893 : Add Python support for set initialisation with `set()`.
 
 ### Fixed
 
@@ -50,6 +53,7 @@ All notable changes to this project will be documented in this file.
 -   #1047 : Print the value of an unrecognised constant.
 -   #1903 : Fix memory leak when using type annotations on local variables.
 -   #1913 : Fix function calls to renamed functions.
+-   #1927 : Improve error Message for missing target language compiler in Pyccel
 
 ### Changed
 

@@ -19,6 +19,11 @@ class LanguageNameClashChecker(metaclass = Singleton):
     """
     keywords = None
 
+    def __init__(self): #pylint: disable=useless-parent-delegation
+        # This __init__ function is required so the ArgumentSingleton can
+        # always detect a signature
+        super().__init__()
+
     def _get_collisionless_name(self, name, symbols):
         """
         Get a name which doesn't collision with keywords or symbols.

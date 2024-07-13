@@ -106,9 +106,10 @@ class CudaCodePrinter(CCodePrinter):
         str
             Signature of the function.
         """
-        cuda_decorater = '__global__' if 'kernel' in expr.decorators else ''
+        cuda_decorator = '__global__' if 'kernel' in expr.decorators else \
+        '__device__' if 'device' in expr.decorators else ''
         c_function_signature = super().function_signature(expr, print_arg_names)
-        return f'{cuda_decorater} {c_function_signature}'
+        return f'{cuda_decorator} {c_function_signature}'
 
     def _print_KernelCall(self, expr):
         func = expr.funcdef
@@ -129,7 +130,7 @@ class CudaCodePrinter(CCodePrinter):
         cuda_headers = ""
         for f in expr.module.funcs:
             if not f.is_inline:
-                if 'kernel' in f.decorators:  # Checking for 'kernel' decorator
+                if 'kernel' in f.decorators or 'device' in f.decorators:
                     cuda_headers += self.function_signature(f) + ';\n'
                 else:
                     funcs += self.function_signature(f) + ';\n'

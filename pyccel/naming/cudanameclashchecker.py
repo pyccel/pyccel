@@ -37,7 +37,40 @@ class CudaNameClashChecker(LanguageNameClashChecker):
         'GET_INDEX_FUNC_H2', 'GET_INDEX_FUNC', 'GET_INDEX',
         'INDEX', 'GET_ELEMENT', 'free_array', 'free_pointer',
         'get_index', 'numpy_to_ndarray_strides',
-        'numpy_to_ndarray_shape', 'get_size', 'order_f', 'order_c', 'array_copy_data'])
+        'numpy_to_ndarray_shape', 'get_size', 'order_f', 'order_c', 'array_copy_data'
+        '__global__', '__device__', '__host__','__constant__', '__shared__',
+        '__managed__','threadIdx', 'blockIdx', 'blockDim', 'gridDim',
+        'warpSize', 'cudaMalloc', 'cudaFree', 'cudaMemcpy', 'cudaMemset',
+        'cudaMallocHost', 'cudaFreeHost', 'cudaMallocPitch',
+        'cudaMallocArray', 'cudaFreeArray', 'cudaHostAlloc',
+        'cudaHostRegister', 'cudaHostUnregister', 'cudaHostGetDevicePointer',
+        'cudaHostGetFlags', 'cudaDeviceSynchronize', 'cudaDeviceReset',
+        'cudaSetDevice', 'cudaGetDeviceCount', 'cudaGetDeviceProperties',
+        'cudaChooseDevice', 'cudaSetDeviceFlags', 'cudaGetDevice',
+        'cudaStreamCreate', 'cudaStreamDestroy', 'cudaStreamSynchronize',
+        'cudaStreamWaitEvent', 'cudaEventCreate', 'cudaEventDestroy', 'cudaEventRecord',
+        'cudaEventSynchronize', 'cudaEventElapsedTime', 'cuInit', 'cuDeviceGet',
+        'cuDeviceGetCount', 'cuDeviceGetName',
+        'cuDeviceComputeCapability', 'cuCtxCreate', 'cuCtxDestroy',
+        'cuCtxSynchronize', 'cuModuleLoad', 'cuModuleUnload',
+        'cuModuleGetFunction', 'cuModuleGetGlobal', 'cuModuleGetTexRef',
+        'cuMemAlloc', 'cuMemFree', 'cuMemcpyHtoD', 'cuMemcpyDtoH',
+        'cuMemcpyDtoD', 'cuMemcpyHtoDAsync', 'cuMemcpyDtoHAsync',
+        'cuMemcpyDtoDAsync', 'cuMemsetD8', 'cuMemsetD16', 'cuMemsetD32',
+        'cuMemsetD2D8', 'cuMemsetD2D16', 'cuMemsetD2D32', 'cuParamSetSize',
+        'cuParamSeti', 'cuParamSetf', 'cuParamSetv', 'cuLaunch', 'cuLaunchGrid',
+        'cuLaunchGridAsync', 'cuEventCreate', 'cuEventRecord', 'cuEventQuery',
+        'cuEventSynchronize', 'cuEventDestroy', 'cuEventElapsedTime',
+        'cuStreamCreate', 'cuStreamQuery', 'cuStreamSynchronize',
+        'cuStreamDestroy', 'cuFuncSetBlockShape', 'cuFuncSetSharedSize',
+        'cuFuncGetAttribute', 'cuTexRefCreate', 'cuTexRefDestroy',
+        'cuTexRefSetArray', 'cuTexRefSetAddress', 'cuTexRefSetAddress2D',
+        'cuTexRefSetFormat', 'cuTexRefSetAddressMode', 'cuTexRefSetFilterMode',
+        'cuTexRefSetFlags', 'cuTexRefGetAddress', 'cuTexRefGetArray',
+        'cuTexRefGetAddressMode', 'cuTexRefGetFilterMode', 'cuTexRefGetFormat',
+        'cuTexRefGetFlags', 'cuLaunchKernel', 'cuOccupancyMaxActiveBlocksPerMultiprocessor',
+        'cuOccupancyMaxPotentialBlockSize', 'cuOccupancyMaxPotentialBlockSizeWithFlags'
+    ])
 
     def has_clash(self, name, symbols):
         """
