@@ -3777,6 +3777,8 @@ class Import(PyccelAstNode):
     def target(self):
         """
         Get the objects that are being imported.
+
+        Get the objects that are being imported.
         """
         return self._target.keys()
 
@@ -3816,8 +3818,8 @@ class Import(PyccelAstNode):
 
         Parameters
         ----------
-        new_target: str | AsName | iterable[str | AsName]
-                    The new import target
+        new_target : str | AsName | iterable[str | AsName]
+            The new import target.
         """
         if iterable(new_target):
             self._target.update({t: None for t in new_target})
