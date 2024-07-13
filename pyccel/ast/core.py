@@ -3713,7 +3713,7 @@ class Import(PyccelAstNode):
             source = Import._format(source)
 
         self._source = source
-        self._target = set()
+        self._target = dict() # Dict is used as Python doesn't have an ordered set
         self._source_mod      = mod
         self._ignore_at_print = ignore_at_print
 
@@ -3729,14 +3729,14 @@ class Import(PyccelAstNode):
             target = [target]
         if pyccel_stage == "syntactic":
             for i in target:
-                self._target.add(Import._format(i))
+                self._target[Import._format(i)] = None
         else:
             for i in target:
                 assert isinstance(i, (AsName, Module))
                 if isinstance(i, Module):
-                    self._target.add(AsName(i,source))
+                    self._target[AsName(i,source)] = None
                 else:
-                    self._target.add(i)
+                    self._target[i] = None
         super().__init__()
 
     @staticmethod
@@ -3775,7 +3775,7 @@ class Import(PyccelAstNode):
 
     @property
     def target(self):
-        return self._target
+        return self._target.keys()
 
     @property
     def source(self):
@@ -3815,9 +3815,9 @@ class Import(PyccelAstNode):
                     The new import target
         """
         if iterable(new_target):
-            self._target.update(new_target)
+            self._target.update({t: None for t in new_target})
         else:
-            self._target.add(new_target)
+            self._target[new_target] = None
 
     def find_module_target(self, new_target):
         for t in self._target:
