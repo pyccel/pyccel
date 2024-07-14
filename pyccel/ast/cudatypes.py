@@ -52,7 +52,7 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         test_type = np.zeros(1, dtype = pyccel_type_to_original_type[self.element_type])
         if isinstance(other, FixedSizeNumericType):
             comparison_type = pyccel_type_to_original_type[other]()
-        elif isinstance(other, CudaArrayType) or isinstance(other, NumpyNDArrayType):
+        elif isinstance(other, CudaArrayType) or (isinstance(other, NumpyNDArrayType) and self.memory_location == "host"):
             comparison_type = np.zeros(1, dtype = pyccel_type_to_original_type[other.element_type])
         else:
             return NotImplemented
@@ -68,24 +68,6 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             self_f_contiguous = self.order in (None, 'F')
             order = 'F' if other_f_contiguous and self_f_contiguous else 'C'
         return CudaArrayType(result_type, rank, order, self.memory_location)
-
-    @lru_cache
-    def __radd__(self, other):
-        return self.__add__(other)
-
-    @lru_cache
-    def __and__(self, other):
-        elem_type = self.element_type
-        if isinstance(other, FixedSizeNumericType):
-            return CudaArrayType(elem_type and other)
-        elif isinstance(other, CudaArrayType):
-            return CudaArrayType(elem_type+other.element_type)
-        else:
-            return NotImplemented
-
-    @lru_cache
-    def __rand__(self, other):
-        return self.__and__(other)
 
     @property
     def rank(self):
