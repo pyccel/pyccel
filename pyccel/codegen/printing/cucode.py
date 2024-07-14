@@ -48,16 +48,7 @@ class CudaCodePrinter(CCodePrinter):
     """
     language = "cuda"
 
-    cuda_ndarray_type_registry = {
-                    NumpyFloat64Type()    : 'cu_double',
-                    NumpyFloat32Type()    : 'cu_float',
-                    NumpyComplex128Type() : 'cu_cdouble',
-                    NumpyComplex64Type()  : 'cu_cfloat',
-                    NumpyInt64Type()      : 'cu_int64',
-                    NumpyInt32Type()      : 'cu_int32',
-                    NumpyInt16Type()      : 'cu_int16',
-                    NumpyInt8Type()       : 'cu_int8',
-                    PythonNativeBool()    : 'cu_bool'}
+    
     def __init__(self, filename, prefix_module = None):
 
         errors.set_target(filename)
