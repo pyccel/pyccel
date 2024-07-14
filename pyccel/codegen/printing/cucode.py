@@ -179,8 +179,9 @@ class CudaCodePrinter(CCodePrinter):
         rank  = expr.rank
         if not isinstance(class_type, CudaArrayType ) or rank <= 0:
             return super().get_declare_type(expr)
+        self.add_import(c_imports['ndarrays'])
 
-        dtype = 't_cuda_ndarray'
+        dtype = 't_ndarray '
         return dtype
 
     def _print_Assign(self, expr):

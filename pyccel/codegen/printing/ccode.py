@@ -287,16 +287,6 @@ class CCodePrinter(CodePrinter):
                       NumpyInt16Type()      : 'nd_int16',
                       NumpyInt8Type()       : 'nd_int8',
                       PythonNativeBool()    : 'nd_bool'}
-    cuda_ndarray_type_registry = {
-                    NumpyFloat64Type()    : 'cu_double',
-                    NumpyFloat32Type()    : 'cu_float',
-                    NumpyComplex128Type() : 'cu_cdouble',
-                    NumpyComplex64Type()  : 'cu_cfloat',
-                    NumpyInt64Type()      : 'cu_int64',
-                    NumpyInt32Type()      : 'cu_int32',
-                    NumpyInt16Type()      : 'cu_int16',
-                    NumpyInt8Type()       : 'cu_int8',
-                    PythonNativeBool()    : 'cu_bool'}
 
     type_to_format = {(PrimitiveFloatingPointType(),8) : '%.15lf',
                       (PrimitiveFloatingPointType(),4) : '%.6f',
@@ -1283,30 +1273,6 @@ class CCodePrinter(CodePrinter):
             raise errors.report(PYCCEL_RESTRICTION_TODO, #pylint: disable=raise-missing-from
                     symbol = dtype,
                     severity='fatal')
-    def find_in_cuarray_type_registry(self, dtype):
-        """
-        Find the descriptor for the datatype in the ndarray_type_registry.
-
-        Find the tag which allows the user to access data of the specified
-        type within a ndarray.
-        Raise PYCCEL_RESTRICTION_TODO if not found.
-
-        Parameters
-        ----------
-        dtype : DataType
-            The data type of the expression.
-
-        Returns
-        -------
-        str
-            The code which declares the datatype in C.
-        """
-        try :
-            return self.cuda_ndarray_type_registry[dtype]
-        except KeyError:
-            raise errors.report(PYCCEL_RESTRICTION_TODO, #pylint: disable=raise-missing-from
-                    symbol = dtype,
-                    severity='fatal')
 
     def get_declare_type(self, expr):
         """
@@ -1356,9 +1322,6 @@ class CCodePrinter(CodePrinter):
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
                 dtype = 't_ndarray'
-            elif isinstance(expr.class_type, CudaArrayType):
-                dtype = 't_cuda_ndarray'
-             
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
         elif not isinstance(class_type, CustomDataType):
@@ -1488,8 +1451,6 @@ class CCodePrinter(CodePrinter):
         if isinstance(base.class_type, NumpyNDArrayType):
             #set dtype to the C struct types
             dtype = self.find_in_ndarray_type_registry(expr.dtype)
-        if isinstance(base.class_type, CudaArrayType):
-            dtype = self.find_in_cuarray_type_registry(expr.dtype)
         elif isinstance(base.class_type, HomogeneousContainerType):
             dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(expr.dtype.primitive_type, expr.dtype.precision)])
         else:

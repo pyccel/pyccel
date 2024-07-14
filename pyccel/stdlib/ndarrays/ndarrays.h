@@ -80,12 +80,6 @@ typedef enum e_order
     order_c,
 } t_order;
 
-enum e_memory_locations
-{
-        managedMemory,
-        allocateMemoryOnHost,
-        allocateMemoryOnDevice
-};
 
 typedef struct  s_ndarray
 {
@@ -135,8 +129,10 @@ void        _array_fill_int64(int64_t c, t_ndarray arr);
 void        _array_fill_float(float c, t_ndarray arr);
 void        _array_fill_double(double c, t_ndarray arr);
 void        _array_fill_bool(bool c, t_ndarray arr);
+#ifndef __NVCC__
 void        _array_fill_cfloat(float complex c, t_ndarray arr);
 void        _array_fill_cdouble(double complex c, t_ndarray arr);
+#endif
 
 /* slicing */
                 /* creating a Slice object */
@@ -156,6 +152,7 @@ int32_t         free_pointer(t_ndarray* dump);
 int64_t         get_index(t_ndarray arr, ...);
 
 /* data converting between numpy and ndarray */
+
 int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd);
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
 void print_ndarray_memory(t_ndarray nd);
@@ -171,8 +168,10 @@ int64_t            numpy_sum_int32(t_ndarray arr);
 int64_t            numpy_sum_int64(t_ndarray arr);
 float              numpy_sum_float32(t_ndarray arr);
 double             numpy_sum_float64(t_ndarray arr);
+#ifndef __NVCC__
 float complex      numpy_sum_complex64(t_ndarray arr);
 double complex     numpy_sum_complex128(t_ndarray arr);
+#endif
 
 /*numpy max/amax */
 
@@ -183,8 +182,10 @@ int64_t            numpy_amax_int32(t_ndarray arr);
 int64_t            numpy_amax_int64(t_ndarray arr);
 float              numpy_amax_float32(t_ndarray arr);
 double             numpy_amax_float64(t_ndarray arr);
+#ifndef __NVCC__
 float complex      numpy_amax_complex64(t_ndarray arr);
 double complex     numpy_amax_complex128(t_ndarray arr);
+#endif
 
 /* numpy min/amin */
 
@@ -195,7 +196,9 @@ int64_t            numpy_amin_int32(t_ndarray arr);
 int64_t            numpy_amin_int64(t_ndarray arr);
 float              numpy_amin_float32(t_ndarray arr);
 double             numpy_amin_float64(t_ndarray arr);
+#ifndef __NVCC__
 float complex      numpy_amin_complex64(t_ndarray arr);
 double complex     numpy_amin_complex128(t_ndarray arr);
+#endif
 
 #endif

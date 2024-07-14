@@ -14,35 +14,35 @@ void    host_memory(void** devPtr, size_t size)
 {
     cudaMallocHost(devPtr, size);
 }
-t_cuda_ndarray   cuda_array_create(enum e_memory_locations location, int32_t nd, int64_t *shape,
-        enum cu_types type, bool is_view)
+t_ndarray    cuda_array_create(enum e_memory_locations location, int32_t nd, int64_t *shape,
+        enum e_types type, bool is_view)
 {
-    t_cuda_ndarray arr;
+    t_ndarray  arr;
     void (*fun_ptr_arr[])(void**, size_t) = {managed_memory, host_memory, device_memory};
 
     arr.nd = nd;
     arr.type = type;
     switch (type)
     {
-        case cu_int8:
+        case nd_int8:
             arr.type_size = sizeof(int8_t);
             break;
-        case cu_int16:
+        case nd_int16:
             arr.type_size = sizeof(int16_t);
             break;
-        case cu_int32:
+        case nd_int32:
             arr.type_size = sizeof(int32_t);
             break;
-        case cu_int64:
+        case nd_int64:
             arr.type_size = sizeof(int64_t);
             break;
-        case cu_float:
+        case nd_float:
             arr.type_size = sizeof(float);
             break;
-        case cu_double:
+        case nd_double:
             arr.type_size = sizeof(double);
             break;
-        case cu_bool:
+        case nd_bool:
             arr.type_size = sizeof(bool);
             break;
     }
@@ -61,7 +61,7 @@ t_cuda_ndarray   cuda_array_create(enum e_memory_locations location, int32_t nd,
     return (arr);
 }
 
-int32_t cuda_free_host(t_cuda_ndarray arr)
+int32_t cuda_free_host(t_ndarray  arr)
 {
     if (arr.shape == NULL)
         return (0);
@@ -73,7 +73,7 @@ int32_t cuda_free_host(t_cuda_ndarray arr)
 }
 
 __host__ __device__
-int32_t cuda_free(t_cuda_ndarray arr)
+int32_t cuda_free(t_ndarray  arr)
 {
     if (arr.shape == NULL)
         return (0);
@@ -85,7 +85,7 @@ int32_t cuda_free(t_cuda_ndarray arr)
 }
 
 __host__ __device__
-int32_t cuda_free_pointer(t_cuda_ndarray arr)
+int32_t cuda_free_pointer(t_ndarray  arr)
 {
     if (arr.is_view == false || arr.shape == NULL)
         return (0);
