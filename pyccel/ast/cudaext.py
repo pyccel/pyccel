@@ -88,7 +88,7 @@ class CudaFull(CudaNewarray):
         self._shape = shape
         rank = len(self._shape)
         order = CudaNewarray._process_order(rank, order)
-        class_type = CudaArrayType(dtype, rank, order, 'device')
+        class_type = CudaArrayType(dtype, rank, order, 'host')
         super().__init__(fill_value, class_type = class_type, init_dtype = init_dtype, memory_location = 'device')
     @property
     def fill_value(self):
@@ -102,7 +102,7 @@ class CudaAutoFill(CudaFull):
     def __init__(self, shape, dtype='float', order='C'):
         super().__init__(shape, Nil(), dtype, order)
 
-class CudaEmpty(CudaAutoFill):
+class CudaHostEmpty(CudaAutoFill):
     """
     Represents a call to  Cuda.host_empty for code generation.
 
@@ -149,7 +149,7 @@ class CudaSynchronize(PyccelFunction):
 cuda_funcs = {
     'synchronize'       : PyccelFunctionDef('synchronize' , CudaSynchronize),
     'full'              : PyccelFunctionDef('full' , CudaFull),
-    'empty'             : PyccelFunctionDef('empty' , CudaEmpty),
+    'host_empty'             : PyccelFunctionDef('host_empty' , CudaHostEmpty),
 }
 
 cuda_mod = Module('cuda',
