@@ -14,7 +14,8 @@ from filelock import FileLock
 import pyccel.stdlib as stdlib_folder
 import pyccel.extensions as ext_folder
 
-from .compiling.basic     import CompileObj
+from .compiling.basic      import CompileObj
+from .compiling.file_locks import FileLockSet
 
 # get path to pyccel/stdlib/lib_name
 stdlib_path = os.path.dirname(stdlib_folder.__file__)
@@ -127,8 +128,11 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
         else:
             to_create = False
             # If folder exists check if it needs updating
-            src_files = os.listdir(lib_path)
-            dst_files = [f for f in os.listdir(lib_dest_path) if not f.endswith('.lock')]
+            src_files = [os.path.relpath(os.path.join(root, f), lib_path) \
+                    for root, dirs, files in os.walk(lib_path) for f in files]
+            dst_files = [os.path.relpath(os.path.join(root, f), lib_dest_path) \
+                    for root, dirs, files in os.walk(lib_dest_path) \
+                    for f in files if not f.endswith('.lock')]
             # Check if all files are present in destination
             to_update = any(s not in dst_files for s in src_files)
 
@@ -145,36 +149,32 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
                     with open(os.path.join(lib_dest_path, filename), 'w') as f:
                         f.writelines(contents)
         elif to_update:
-            locks = []
+            locks = FileLockSet()
             for s in src_files:
                 base, ext = os.path.splitext(s)
                 if ext != '.h':
                     locks.append(FileLock(os.path.join(lib_dest_path, base+'.o.lock')))
             # Acquire locks to avoid compilation problems
-            for l in locks:
-                l.acquire()
-            # Remove all files in destination directory
-            for d in dst_files:
-                d_file = os.path.join(lib_dest_path, d)
-                try:
-                    os.remove(d_file)
-                except FileNotFoundError:
-                    # Don't call error in case of temporary compilation file that has disappeared
-                    # since reading the folder
-                    pass
-            # Copy all files from the source to the destination
-            for s in src_files:
-                shutil.copyfile(os.path.join(lib_path, s),
-                        os.path.join(lib_dest_path, s))
-            # Create any requested extra files
-            if extra_files:
-                for filename, contents in extra_files.items():
-                    extra_file = os.path.join(lib_dest_path, filename)
-                    with open(extra_file, 'w', encoding="utf-8") as f:
-                        f.writelines(contents)
-            # Release the locks
-            for l in locks:
-                l.release()
+            with locks:
+                # Remove all files in destination directory
+                for d in dst_files:
+                    d_file = os.path.join(lib_dest_path, d)
+                    try:
+                        os.remove(d_file)
+                    except FileNotFoundError:
+                        # Don't call error in case of temporary compilation file that has disappeared
+                        # since reading the folder
+                        pass
+                # Copy all files from the source to the destination
+                for s in src_files:
+                    shutil.copyfile(os.path.join(lib_path, s),
+                            os.path.join(lib_dest_path, s))
+                # Create any requested extra files
+                if extra_files:
+                    for filename, contents in extra_files.items():
+                        extra_file = os.path.join(lib_dest_path, filename)
+                        with open(extra_file, 'w', encoding="utf-8") as f:
+                            f.writelines(contents)
     return lib_dest_path
 
 #==============================================================================
