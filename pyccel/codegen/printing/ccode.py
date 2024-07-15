@@ -1354,6 +1354,7 @@ class CCodePrinter(CodePrinter):
         return f'{ret_type} (*{name})({arg_code});\n'
 
     def _print_Declare(self, expr):
+        print("1")
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 

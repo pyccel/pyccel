@@ -180,7 +180,6 @@ class CudaCodePrinter(CCodePrinter):
         if not isinstance(class_type, CudaArrayType ) or rank <= 0:
             return super().get_declare_type(expr)
         self.add_import(c_imports['ndarrays'])
-
         dtype = 't_ndarray '
         return dtype
 
