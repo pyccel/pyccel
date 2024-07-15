@@ -30,8 +30,9 @@ class FileLockSet:
             l.acquire()
 
     def __exit__(self, *args):
-        for l in self._locks:
-            l.acquire()
+        # Release the locks
+        for l in reversed(self._locks):
+            l.release()
 
     def append(self, new_lock):
         """
