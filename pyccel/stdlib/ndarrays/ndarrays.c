@@ -46,6 +46,7 @@ void print_ndarray_memory(t_ndarray nd)
             case nd_bool:
                 printf("[%d]", nd.nd_bool[i]);
                 break;
+            #ifndef __NVCC__
             case nd_cfloat:
             {
                 double real = creal(nd.nd_cfloat[i]);
@@ -60,6 +61,8 @@ void print_ndarray_memory(t_ndarray nd)
                 printf("[%lf%+lfj]", real, imag);
                 break;
             }
+            #endif
+
         }
         ++i;
     }
@@ -248,7 +251,7 @@ void   _array_fill_double(double c, t_ndarray arr)
         for (int32_t i = 0; i < arr.length; i++)
             arr.nd_double[i] = c;
 }
-
+#ifndef __NVCC__
 void   _array_fill_cfloat(float complex c, t_ndarray arr)
 {
     if (c == 0)
@@ -267,6 +270,7 @@ void   _array_fill_cdouble(double complex c, t_ndarray arr)
         for (int32_t i = 0; i < arr.length; i++)
             arr.nd_cdouble[i] = c;
 }
+#endif
 
 /*
 ** deallocation
@@ -584,24 +588,24 @@ bool is_same_shape(t_ndarray a, t_ndarray b)
                 if(elem_wise_cp == false)\
                 { \
                     for(int64_t i = 0; i < src.length; i++) \
-                        dest->nd_cfloat[i + offset] = (float complex)src.nd_##SRC_TYPE[i]; \
+                        dest->nd_cfloat[i + offset] = src.nd_cfloat[i]; \
                 }\
                 else \
                 {\
                     for(int64_t i = 0; i < src.length; i++) \
-                        dest->nd_cfloat[element_index(*dest, i, dest->nd) + offset] = (float complex)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                        dest->nd_cfloat[element_index(*dest, i, dest->nd) + offset] = src.nd_cfloat[element_index(src, i, src.nd)]; \
                 }\
                 break; \
             case nd_cdouble: \
                 if(elem_wise_cp == false)\
                 { \
                     for(int64_t i = 0; i < src.length; i++) \
-                        dest->nd_cdouble[i + offset] = (double complex)src.nd_##SRC_TYPE[i]; \
+                        dest->nd_cdouble[i + offset] = src.nd_cdouble[i]; \
                 }\
                 else \
                 {\
                     for(int64_t i = 0; i < src.length; i++) \
-                        dest->nd_cdouble[element_index(*dest, i, dest->nd) + offset] = (double complex)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                        dest->nd_cdouble[element_index(*dest, i, dest->nd) + offset] = src.nd_cdouble[element_index(src, i, src.nd)]; \
                 }\
                 break; \
         } \
@@ -614,8 +618,10 @@ COPY_DATA_FROM_(int32)
 COPY_DATA_FROM_(int64)
 COPY_DATA_FROM_(float)
 COPY_DATA_FROM_(double)
+#ifndef __NVCC__
 COPY_DATA_FROM_(cfloat)
 COPY_DATA_FROM_(cdouble)
+#endif
 
 void copy_data(t_ndarray **ds, t_ndarray src, uint32_t offset, bool elem_wise_cp)
 {
@@ -648,7 +654,7 @@ void copy_data(t_ndarray **ds, t_ndarray src, uint32_t offset, bool elem_wise_cp
         case nd_double:
             copy_data_from_double(ds, src, offset, elem_wise_cp);
             break;
-
+        #ifndef __NVCC__
         case nd_cfloat:
             copy_data_from_cfloat(ds, src, offset, elem_wise_cp);
             break;
@@ -656,6 +662,7 @@ void copy_data(t_ndarray **ds, t_ndarray src, uint32_t offset, bool elem_wise_cp
         case nd_cdouble:
             copy_data_from_cdouble(ds, src, offset, elem_wise_cp);
             break;
+        #endif
     }
 }
 
@@ -747,8 +754,10 @@ NUMPY_SUM_(int32, int64_t, int32)
 NUMPY_SUM_(int64, int64_t, int64)
 NUMPY_SUM_(float32, float, float)
 NUMPY_SUM_(float64, double, double)
+#ifndef __NVCC__
 NUMPY_SUM_(complex64, float complex, cfloat)
 NUMPY_SUM_(complex128, double complex, cdouble)
+#endif
 
 #define NUMPY_AMAX_(NAME, TYPE, CTYPE) \
     TYPE numpy_amax_##NAME(t_ndarray arr) \
@@ -782,8 +791,10 @@ NUMPY_AMAX_(int32, int64_t, int32)
 NUMPY_AMAX_(int64, int64_t, int64)
 NUMPY_AMAX_(float32, float, float)
 NUMPY_AMAX_(float64, double, double)
+#ifndef __NVCC__
 NUMPY_AMAX_(complex64, float complex, cfloat)
 NUMPY_AMAX_(complex128, double complex, cdouble)
+#endif
 
 #define NUMPY_AMIN_(NAME, TYPE, CTYPE) \
     TYPE numpy_amin_##NAME(t_ndarray arr) \
@@ -817,6 +828,8 @@ NUMPY_AMIN_(int32, int64_t, int32)
 NUMPY_AMIN_(int64, int64_t, int64)
 NUMPY_AMIN_(float32, float, float)
 NUMPY_AMIN_(float64, double, double)
+#ifndef __NVCC__
 NUMPY_AMIN_(complex64, float complex, cfloat)
 NUMPY_AMIN_(complex128, double complex, cdouble)
+#endif
 

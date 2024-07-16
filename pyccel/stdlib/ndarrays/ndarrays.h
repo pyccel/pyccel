@@ -10,6 +10,7 @@
 # include <stdbool.h>
 # include <stdint.h>
 # include <math.h>
+#include <cuComplex.h>
 
 /* mapping the function array_fill to the correct type */
 # define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
@@ -93,8 +94,14 @@ typedef struct  s_ndarray
             float           *nd_float;
             double          *nd_double;
             bool            *nd_bool;
+        #ifndef __NVCC__
             double complex  *nd_cdouble;
             float  complex  *nd_cfloat;
+        #endif
+        #ifdef __NVCC__
+            cuDoubleComplex         *nd_cdouble;
+            cuFloatComplex          *nd_cfloat;
+        #endif
             };
     /* number of dimensions */
     int32_t                 nd;

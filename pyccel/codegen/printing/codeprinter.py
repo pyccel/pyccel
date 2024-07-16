@@ -82,7 +82,6 @@ class CodePrinter:
 
         classes = type(expr).__mro__
         for cls in classes:
-            print('_print_' + cls.__name__)
             print_method = '_print_' + cls.__name__
             if hasattr(self, print_method):
                 obj = getattr(self, print_method)(expr)
