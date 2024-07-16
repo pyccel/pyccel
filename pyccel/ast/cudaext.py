@@ -77,7 +77,7 @@ class CudaFull(CudaNewarray):
     __slots__ = ('_fill_value','_shape')
     name = 'full'
 
-    def __init__(self, shape, fill_value, dtype='float', order='C'):
+    def __init__(self, shape, fill_value, dtype, order, memory_location):
         shape = process_shape(False, shape)
         init_dtype = dtype
         if(dtype is None):
@@ -88,8 +88,8 @@ class CudaFull(CudaNewarray):
         self._shape = shape
         rank = len(self._shape)
         order = CudaNewarray._process_order(rank, order)
-        class_type = CudaArrayType(dtype, rank, order, 'host')
-        super().__init__(fill_value, class_type = class_type, init_dtype = init_dtype, memory_location = 'device')
+        class_type = CudaArrayType(dtype, rank, order, memory_location)
+        super().__init__(fill_value, class_type = class_type, init_dtype = init_dtype, memory_location = memory_location)
     @property
     def fill_value(self):
         return self._args[0]
@@ -99,8 +99,8 @@ class CudaAutoFill(CudaFull):
         the fill_value is implicitly specified
     """
     __slots__ = ()
-    def __init__(self, shape, dtype='float', order='C'):
-        super().__init__(shape, Nil(), dtype, order)
+    def __init__(self, shape, dtype, order, memory_location):
+        super().__init__(shape, Nil(), dtype, order, memory_location = memory_location)
 
 class CudaHostEmpty(CudaAutoFill):
     """
@@ -122,7 +122,8 @@ class CudaHostEmpty(CudaAutoFill):
     __slots__ = ()
     name = 'empty'
     def __init__(self, shape, dtype='float', order='C'):
-        super().__init__(shape, dtype, order)
+        memory_location = 'host'
+        super().__init__(shape, dtype, order , memory_location)
     
     @property
     def fill_value(self):
