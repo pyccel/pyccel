@@ -34,6 +34,9 @@ class CudaNewarray(PyccelFunction):
 
     Parameters
     ----------
+    *args : tuple of TypedAstNode
+        The arguments of the superclass PyccelFunction.
+
     class_type : NumpyNDArrayType
         The type of the new array.
 
@@ -56,7 +59,7 @@ class CudaNewarray(PyccelFunction):
         """
         return self._init_dtype
 
-    def __init__(self, *arg,class_type, init_dtype, memory_location):
+    def __init__(self, *arg ,class_type, init_dtype, memory_location):
         self._class_type = class_type
         self._init_dtype = init_dtype
         self._memory_location = memory_location
@@ -107,18 +110,8 @@ class CudaFull(CudaNewarray):
         class_type = CudaArrayType(dtype, rank, order, memory_location)
         super().__init__(fill_value, class_type = class_type, init_dtype = init_dtype, memory_location = memory_location)
 
-class CudaAutoFill(CudaFull):
-    """
-    Abstract class for all classes which inherit from CudaFull.
 
-    Abstract class for all classes which inherit from CudaFull.
-    """
-    __slots__ = ()
-    name = 'auto_fill'
-    def __init__(self, shape, dtype, order, memory_location):
-        super().__init__(shape, Nil(), dtype, order, memory_location = memory_location)
-
-class CudaHostEmpty(CudaAutoFill):
+class CudaHostEmpty(CudaFull):
     """
     Represents a call to  Cuda.host_empty for code generation.
 
@@ -139,7 +132,7 @@ class CudaHostEmpty(CudaAutoFill):
     name = 'empty'
     def __init__(self, shape, dtype='float', order='C'):
         memory_location = 'host'
-        super().__init__(shape, dtype, order , memory_location)
+        super().__init__(shape, Nil(), dtype, order , memory_location)
     @property
     def fill_value(self):
         """
