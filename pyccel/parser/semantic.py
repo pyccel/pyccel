@@ -21,7 +21,7 @@ from sympy import ceiling
 from pyccel.utilities.strings import random_string
 from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
 
-from pyccel.ast.builtins import PythonPrint, PythonTupleFunction
+from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
 from pyccel.ast.builtins import PythonComplex, PythonDict
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
@@ -61,10 +61,10 @@ from pyccel.ast.core import Assert
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
-from pyccel.ast.datatypes import PrimitiveIntegerType, HomogeneousListType, StringType, SymbolicType
+from pyccel.ast.datatypes import PrimitiveIntegerType, StringType, SymbolicType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from pyccel.ast.datatypes import DataTypeFactory, PrimitiveFloatingPointType
-from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType
+from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType, HomogeneousSetType, HomogeneousListType
 from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
@@ -145,6 +145,12 @@ import pyccel.decorators as def_decorators
 
 errors = Errors()
 pyccel_stage = PyccelStage()
+
+type_container = {
+                   PythonTupleFunction : HomogeneousTupleType,
+                   PythonList : HomogeneousListType,
+                   PythonSetFunction : HomogeneousSetType
+                  }
 
 #==============================================================================
 
@@ -1208,8 +1214,9 @@ class SemanticParser(BasicParser):
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
         self._scope = sc
         self._visit_FunctionDef(old_func, function_call_args=function_call_args)
+        new_name = self.scope.get_expected_name(old_func.name)
         # Retreive the annotated function
-        func = self.scope.find(old_func.name, 'functions')
+        func = self.scope.find(new_name, 'functions')
         # Add the Module of the imported function to the new function
         if old_func.is_imported:
             mod = old_func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
@@ -1221,12 +1228,12 @@ class SemanticParser(BasicParser):
         # Remove the old_func from the imports dict and Assign the new annotated one
         if old_func.is_imported:
             scope = self.scope
-            while old_func.name not in scope.imports['functions']:
+            while new_name not in scope.imports['functions']:
                 scope = scope.parent_scope
-            assert old_func is scope.imports['functions'].get(old_func.name)
-            func = func.clone(old_func.name, is_imported=True)
+            assert old_func is scope.imports['functions'].get(new_name)
+            func = func.clone(new_name, is_imported=True)
             func.set_current_user_node(mod)
-            scope.imports['functions'][old_func.name] = func
+            scope.imports['functions'][new_name] = func
         return func
 
     def _create_variable(self, name, class_type, rhs, d_lhs, arr_in_multirets=False):
@@ -1586,7 +1593,14 @@ class SemanticParser(BasicParser):
         # TODO improve check type compatibility
         if not isinstance(var, Variable):
             name = var.name
-            errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(type(var), class_type),
+            message = INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(type(var), class_type)
+            if var.pyccel_staging == "syntactic":
+                new_name = self.scope.get_expected_name(name)
+                if new_name != name:
+                    message += '\nThis error may be due to object renaming to avoid name clashes (language-specific or otherwise).'
+                    message += f'The conflict is with "{name}".'
+                    name = new_name
+            errors.report(message,
                     symbol=f'{name}={class_type}',
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='fatal')
@@ -1919,8 +1933,7 @@ class SemanticParser(BasicParser):
             else:
                 raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
-            rank = 1
-            if len(args) == 2 and args[1] is LiteralEllipsis():
+            if len(args) == 2 and args[1] is LiteralEllipsis() or len(args) == 1:
                 syntactic_annotation = args[0]
                 if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
                     pyccel_stage.set_stage('syntactic')
@@ -1928,10 +1941,8 @@ class SemanticParser(BasicParser):
                     pyccel_stage.set_stage('semantic')
                 internal_datatypes = self._visit(syntactic_annotation)
                 type_annotations = []
-                if dtype_cls is PythonTupleFunction:
-                    class_type = HomogeneousTupleType
-                elif dtype_cls is PythonList:
-                    class_type = HomogeneousListType
+                if dtype_cls in type_container :
+                    class_type = type_container[dtype_cls]
                 else:
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                             severity='fatal', symbol=expr)
@@ -2050,8 +2061,7 @@ class SemanticParser(BasicParser):
 
             self.scope = mod_scope
 
-        for f in self.scope.functions.copy():
-            f = self.scope.functions[f]
+        for f in self.scope.functions.copy().values():
             if not f.is_semantic and not isinstance(f, InlineFunctionDef):
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
@@ -3738,7 +3748,7 @@ class SemanticParser(BasicParser):
 
         existing_semantic_funcs = []
         if not expr.is_semantic:
-            self.scope.functions.pop(expr.name, None)
+            self.scope.functions.pop(self.scope.get_expected_name(expr.name), None)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
             expr                    = expr.syntactic_node

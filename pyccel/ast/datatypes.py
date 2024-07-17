@@ -149,6 +149,16 @@ class PyccelType:
     is expected when calling a bitwise comparison operator on objects of these types.
     """
     __slots__ = ()
+    _name = None
+
+    @property
+    def name(self):
+        """
+        Get the name of the pyccel type.
+        
+        Get the name of the pyccel type.
+        """
+        return self._name
 
     def __init__(self): #pylint: disable=useless-parent-delegation
         # This __init__ function is required so the ArgumentSingleton can
@@ -432,6 +442,12 @@ class GenericType(FixedSizeType):
     @lru_cache
     def __add__(self, other):
         return other
+
+    def __eq__(self, other):
+        return True
+
+    def __hash__(self):
+        return hash(self.__class__)
 
 class SymbolicType(FixedSizeType):
     """
@@ -745,6 +761,13 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
         self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
         super().__init__()
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self._element_type == other._element_type \
+                and self._order == other._order
+
+    def __hash__(self):
+        return hash((self.__class__, self._element_type, self._order))
+
 class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous set type.
@@ -766,6 +789,12 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
         super().__init__()
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self._element_type == other._element_type
+
+    def __hash__(self):
+        return hash((self.__class__, self._element_type))
 
 #==============================================================================
 
