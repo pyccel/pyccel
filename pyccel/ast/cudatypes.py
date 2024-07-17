@@ -9,10 +9,12 @@
 from functools import lru_cache
 import numpy as np
 
-from .datatypes import FixedSizeNumericType, HomogeneousContainerType
 from pyccel.utilities.metaclasses import ArgumentSingleton
-from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
-from .numpytypes import NumpyNDArrayType
+
+from .datatypes     import FixedSizeNumericType, HomogeneousContainerType
+from .datatypes     import pyccel_type_to_original_type, original_type_to_pyccel_type
+
+from .numpytypes    import NumpyNDArrayType
 
 
 class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
