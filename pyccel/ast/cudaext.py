@@ -14,8 +14,7 @@ from .literals       import Nil
 from .datatypes      import VoidType
 from .core           import Module, PyccelFunctionDef
 from .internals      import PyccelFunction
-from .internals      import LiteralInteger
-from .numpyext       import process_dtype, process_shape , DtypePrecisionToCastFunction
+from .numpyext       import process_dtype, process_shape
 from .cudatypes      import CudaArrayType
 
 
@@ -46,6 +45,7 @@ class CudaNewarray(PyccelFunction):
         The memory location of the new array ('host' or 'device').
     """
     __slots__ = ('_class_type', '_init_dtype', '_memory_location')
+    name = 'newarray'
 
     property
     def init_dtype(self):
@@ -63,17 +63,34 @@ class CudaNewarray(PyccelFunction):
         self._memory_location = memory_location
 
         super().__init__(*arg)
-    @staticmethod
-    def _process_order(rank, order):
-
-        if rank < 2:
-            return None
-        order = str(order).strip('\'"')
-        assert order in ('C', 'F')
-        return order
 
 class CudaFull(CudaNewarray):
-  
+    """
+    Represents a call to `cuda.full` for code generation.
+    
+    Represents a call to the Cuda function `full` which creates an array
+    of a specified size and shape filled with a specified value.
+    Parameters
+    ----------
+    shape : TypedAstNode
+        Shape of the new array, e.g., ``(2, 3)`` or ``2``.
+        For a 1D array this is either a `LiteralInteger` or an expression.
+        For a ND array this is a `TypedAstNode` with the class type HomogeneousTupleType.
+
+    fill_value : TypedAstNode
+        Fill value.
+
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
+        Datatype for the constructed array.
+        If `None` the dtype of the fill value is used.
+
+    order : {'C', 'F'}, optional
+        Whether to store multidimensional data in C- or Fortran-contiguous
+        (row- or column-wise) order in memory.
+
+    memory_location : str
+        The memory location of the new array ('host' or 'device').
+    """
     __slots__ = ('_fill_value','_shape')
     name = 'full'
 
@@ -87,7 +104,6 @@ class CudaFull(CudaNewarray):
 
         self._shape = shape
         rank = len(self._shape)
-        order = CudaNewarray._process_order(rank, order)
         class_type = CudaArrayType(dtype, rank, order, memory_location)
         super().__init__(fill_value, class_type = class_type, init_dtype = init_dtype, memory_location = memory_location)
     @property
@@ -99,6 +115,7 @@ class CudaAutoFill(CudaFull):
         the fill_value is implicitly specified
     """
     __slots__ = ()
+    name = 'auto_fill'
     def __init__(self, shape, dtype, order, memory_location):
         super().__init__(shape, Nil(), dtype, order, memory_location = memory_location)
 

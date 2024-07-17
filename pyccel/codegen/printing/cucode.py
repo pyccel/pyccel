@@ -16,11 +16,9 @@ from pyccel.ast.literals            import Nil
 
 from pyccel.errors.errors           import Errors
 from pyccel.ast.cudatypes           import CudaArrayType
-from pyccel.ast.datatypes           import HomogeneousContainerType, PythonNativeBool
+from pyccel.ast.datatypes           import HomogeneousContainerType
 from pyccel.ast.numpytypes          import numpy_precision_map
 from pyccel.ast.cudaext             import CudaFull
-from pyccel.ast.numpytypes          import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
-from pyccel.ast.numpytypes          import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 
 errors = Errors()
 
