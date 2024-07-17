@@ -44,3 +44,28 @@ my_kernel[1, 1]()
 
 ```
 
+## Cuda Arrays
+
+Pyccel provides support for CUDA arrays, enabling efficient data transfer between the host and the GPU device. Here are some of the key functions you can use:
+
+### cuda+host_empty
+
+The cuda+host_empty function allocates an empty array on the host.
+
+```python
+from  pyccel import cuda
+
+a = cuda.host_empty(10, 'int')
+
+for i in range(10):
+    a[i] = 1
+
+if __name__ == '__main__':
+    print(a)
+```
+
+
+
+
+
+
