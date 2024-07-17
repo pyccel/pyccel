@@ -33,7 +33,7 @@ class CudaNewarray(PyccelFunction):
     to `Allocate` should inherit.
 
     Parameters
-
+    ----------
     class_type : NumpyNDArrayType
         The type of the new array.
 
@@ -46,7 +46,7 @@ class CudaNewarray(PyccelFunction):
     __slots__ = ('_class_type', '_init_dtype', '_memory_location')
     name = 'newarray'
 
-    @property
+    property
     def init_dtype(self):
         """
         The dtype provided to the function when it was initialised in Python.
@@ -69,6 +69,7 @@ class CudaFull(CudaNewarray):
     
     Represents a call to the Cuda function `full` which creates an array
     of a specified size and shape filled with a specified value.
+
     Parameters
     ----------
     shape : TypedAstNode
@@ -107,8 +108,10 @@ class CudaFull(CudaNewarray):
         super().__init__(fill_value, class_type = class_type, init_dtype = init_dtype, memory_location = memory_location)
 
 class CudaAutoFill(CudaFull):
-    """ Abstract class for all classes which inherit from NumpyFull but
-        the fill_value is implicitly specified
+    """
+    Abstract class for all classes which inherit from CudaFull.
+
+    Abstract class for all classes which inherit from CudaFull.
     """
     __slots__ = ()
     name = 'auto_fill'
