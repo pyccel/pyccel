@@ -3821,6 +3821,7 @@ class Import(PyccelAstNode):
         new_target : str | AsName | iterable[str | AsName]
             The new import target.
         """
+        assert pyccel_stage != "syntactic"
         if iterable(new_target):
             self._target.update({t: None for t in new_target})
         else:
