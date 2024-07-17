@@ -744,10 +744,12 @@ def test_kernel_collision(gpu_available):
 
 #------------------------------------------------------------------------------
 @pytest.mark.cuda
-def test_device_array(gpu_available):
-    types = str
+def test_host_array(gpu_available):
+    types = float
     pyccel_test("scripts/kernel/host_array.py",
             language="cuda", output_dtype=types, execute_code=gpu_available)
+
+#------------------------------------------------------------------------------
 
 @pytest.mark.cuda
 def test_device_call(gpu_available):
