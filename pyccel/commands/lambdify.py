@@ -5,8 +5,9 @@ SymPy expression into a Pyccel-accelerated function.
 import sympy as sp
 from packaging import version
 
-from pyccel.commands.epyccel import epyccel
+from pyccel.commands.epyccel  import epyccel
 from pyccel.utilities.strings import random_string
+from pyccel.errors.errors     import PyccelError
 
 if version.parse(sp.__version__) >= version.parse('1.8'):
     from sympy.printing.numpy import NumPyPrinter
@@ -117,6 +118,10 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
     docstring += '\n    """'
 
     func = '\n'.join((numpy_import, decorators, signature, docstring, code))
-    package = epyccel(func, **kwargs)
+    try:
+        package = epyccel(func, **kwargs)
+    except PyccelError as e:
+        raise type(e)(str(e)) from None
+
     return getattr(package, func_name)
 
