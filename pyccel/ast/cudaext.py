@@ -105,9 +105,6 @@ class CudaFull(CudaNewarray):
         rank = len(self._shape)
         class_type = CudaArrayType(dtype, rank, order, memory_location)
         super().__init__(fill_value, class_type = class_type, init_dtype = init_dtype, memory_location = memory_location)
-    @property
-    def fill_value(self):
-        return self._args[0]
 
 class CudaAutoFill(CudaFull):
     """ Abstract class for all classes which inherit from NumpyFull but

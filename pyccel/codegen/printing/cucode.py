@@ -173,6 +173,23 @@ class CudaCodePrinter(CCodePrinter):
         else:
             return f"cuda_free({var_code});\n"
     def get_declare_type(self, expr):
+        """
+        Get the string which describes the type in a declaration.
+
+        This function returns the code which describes the type
+        of the `expr` object such that the declaration can be written as:
+        `f"{self.get_declare_type(expr)} {expr.name}"`
+
+        Parameters
+        ----------
+        expr : Variable
+            The variable whose type should be described.
+
+        Returns
+        -------
+        str
+            The code describing the type.
+        """
         class_type = expr.class_type
         rank  = expr.rank
         if not isinstance(class_type, CudaArrayType ) or rank <= 0:
