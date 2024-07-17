@@ -109,7 +109,6 @@ class Variable(TypedAstNode):
         name,
         *,
         memory_handling='stack',
-        memory_location='host',
         is_const=False,
         is_target=False,
         is_optional=False,

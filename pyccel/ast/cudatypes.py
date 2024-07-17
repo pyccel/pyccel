@@ -21,6 +21,8 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
 
     Class representing the Cuda array type
 
+    Parameters
+    ----------
     dtype : NumpyNumericType | PythonNativeBool | GenericType
         The internal datatype of the object (GenericType is allowed for external
         libraries, e.g. MPI).

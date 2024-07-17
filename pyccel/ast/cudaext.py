@@ -54,17 +54,17 @@ class CudaNewarray(PyccelFunction):
         """
         The dtype provided to the function when it was initialised in Python.
 
-        The dtype provided to the function when it was initialised in Python.
-        If no dtype was provided then this should equal `None`.
+        The dtype provided to the function when it was initialised in Python
+        if no dtype was provided then this should equal `None`.
         """
         return self._init_dtype
 
-    def __init__(self, *arg ,class_type, init_dtype, memory_location):
+    def __init__(self, *args ,class_type, init_dtype, memory_location):
         self._class_type = class_type
         self._init_dtype = init_dtype
         self._memory_location = memory_location
 
-        super().__init__(*arg)
+        super().__init__(*args)
 
 class CudaFull(CudaNewarray):
     """
