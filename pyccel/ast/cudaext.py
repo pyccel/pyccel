@@ -22,7 +22,7 @@ __all__ = (
     'CudaSynchronize',
     'CudaNewarray',
     'CudaFull',
-    'CudaEmpty',
+    'CudaHostEmpty'
 )
 
 class CudaNewarray(PyccelFunction):
@@ -46,7 +46,7 @@ class CudaNewarray(PyccelFunction):
     __slots__ = ('_class_type', '_init_dtype', '_memory_location')
     name = 'newarray'
 
-    property
+    @property
     def init_dtype(self):
         """
         The dtype provided to the function when it was initialised in Python.
