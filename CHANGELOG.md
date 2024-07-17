@@ -16,11 +16,11 @@ All notable changes to this project will be documented in this file.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1743 : Add Python support for set method `discard()`.
 -   #1754 : Add Python support for set method `update()`.
--   #1787 : Ensure `STC` is installed with Pyccel.
--   #1656 : Ensure `gFTL` is installed with Pyccel.
+-   #1787 : Ensure STC is installed with Pyccel.
+-   #1656 : Ensure gFTL is installed with Pyccel.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
--   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the `STC` library.
--   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the `STC` library. 
+-   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the STC library.
+-   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
 -   #1893 : Add Python support for set initialisation with `set()`.
 -   #1877 : Add C Support for set method `pop()`.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
@@ -41,6 +41,7 @@ All notable changes to this project will be documented in this file.
 -   Link and mention `devel` branch, not `master`.
 -   #1913 : Fix function calls to renamed functions.
 -   #1927 : Improve error Message for missing target language compiler in Pyccel
+-   #1930 : Preserve ordering of import targets.
 
 ### Changed
 
@@ -72,6 +73,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] `PyccelFunction` objects which do not represent objects in memory have the type `SymbolicType`.
 -   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
 -   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
+-   \[INTERNALS\] Handle STC imports with Pyccel objects.
 
 
 ### Deprecated

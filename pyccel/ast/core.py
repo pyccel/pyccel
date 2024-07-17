@@ -164,7 +164,7 @@ class AsName(PyccelAstNode):
         return self._obj
 
     def __repr__(self):
-        return f'{self.name} as {self.target}'
+        return f'{self.object} as {self.target}'
 
     def __eq__(self, string):
         if isinstance(string, str):
@@ -3713,7 +3713,7 @@ class Import(PyccelAstNode):
             source = Import._format(source)
 
         self._source = source
-        self._target = set()
+        self._target = {} # Dict is used as Python doesn't have an ordered set
         self._source_mod      = mod
         self._ignore_at_print = ignore_at_print
 
@@ -3729,14 +3729,14 @@ class Import(PyccelAstNode):
             target = [target]
         if pyccel_stage == "syntactic":
             for i in target:
-                self._target.add(Import._format(i))
+                self._target[Import._format(i)] = None
         else:
             for i in target:
                 assert isinstance(i, (AsName, Module))
                 if isinstance(i, Module):
-                    self._target.add(AsName(i,source))
+                    self._target[AsName(i,source)] = None
                 else:
-                    self._target.add(i)
+                    self._target[i] = None
         super().__init__()
 
     @staticmethod
@@ -3775,7 +3775,12 @@ class Import(PyccelAstNode):
 
     @property
     def target(self):
-        return self._target
+        """
+        Get the objects that are being imported.
+
+        Get the objects that are being imported.
+        """
+        return self._target.keys()
 
     @property
     def source(self):
@@ -3801,7 +3806,9 @@ class Import(PyccelAstNode):
 
     def define_target(self, new_target):
         """
-        Add an additional target to the imports
+        Add an additional target to the imports.
+
+        Add an additional target to the imports.
         I.e. if imp is an Import defined as:
         >>> from numpy import ones
 
@@ -3809,15 +3816,16 @@ class Import(PyccelAstNode):
         then it becomes:
         >>> from numpy import ones, cos
 
-        Parameter
-        ---------
-        new_target: str/AsName/iterable of str/AsName
-                    The new import target
+        Parameters
+        ----------
+        new_target : str | AsName | iterable[str | AsName]
+            The new import target.
         """
+        assert pyccel_stage != "syntactic"
         if iterable(new_target):
-            self._target.update(new_target)
+            self._target.update({t: None for t in new_target})
         else:
-            self._target.add(new_target)
+            self._target[new_target] = None
 
     def find_module_target(self, new_target):
         for t in self._target:
