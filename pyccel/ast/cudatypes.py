@@ -29,7 +29,7 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     order : str
         The order of the memory layout for the new NumPy array.
     memory_location : str
-        The memory location of the new cuda array.
+        The memory location of the new cuda array ('host' or 'device').
     """
     __slots__ = ('_element_type', '_container_rank', '_order', '_memory_location')
 
@@ -45,6 +45,11 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
 
     @property
     def memory_location(self):
+        """
+        The memory location of the new array ('host' or 'device').
+
+        The memory location of the new array ('host' or 'device').
+        """
         return self._memory_location
 
     @lru_cache

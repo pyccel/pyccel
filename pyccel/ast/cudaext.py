@@ -13,7 +13,6 @@ from .literals       import Nil
 
 from .datatypes      import VoidType
 from .core           import Module, PyccelFunctionDef
-from .internals      import PyccelFunction
 from .numpyext       import process_dtype, process_shape
 from .cudatypes      import CudaArrayType
 
@@ -21,9 +20,9 @@ from .cudatypes      import CudaArrayType
 
 __all__ = (
     'CudaSynchronize',
-    'CudaNewarray'
-    'CudaFull'
-    'CudaEmpty'
+    'CudaNewarray',
+    'CudaFull',
+    'CudaEmpty',
 )
 
 class CudaNewarray(PyccelFunction):
@@ -141,7 +140,6 @@ class CudaHostEmpty(CudaAutoFill):
     def __init__(self, shape, dtype='float', order='C'):
         memory_location = 'host'
         super().__init__(shape, dtype, order , memory_location)
-    
     @property
     def fill_value(self):
         """
