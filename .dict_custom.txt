@@ -111,6 +111,7 @@ variadic
 subclasses
 oneAPI
 Cuda
+cuda
 getter
 setter
 bitwise

@@ -19,7 +19,7 @@ def host_empty(shape):
 
     Returns
     -------
-    a : array
+    array
         The empty array on the host.
     """
     import numpy as np
