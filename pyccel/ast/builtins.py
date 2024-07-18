@@ -858,7 +858,7 @@ class PythonDict(PyccelFunction):
 
     def __str__(self):
         args = ', '.join(f'{k}: {v}' for k,v in self)
-        return f'({args})'
+        return f'{{{args}}}'
 
     def __repr__(self):
         args = ', '.join(f'{repr(k)}: {repr(v)}' for k,v in self)
