@@ -69,7 +69,7 @@ def compile_pyccel(path_dir, test_file, options = ""):
         print(f"Command failed with return code {p.returncode}")
         print(f"Standard Output:\n{stdout}")
         print(f"Standard Error:\n{stderr}")
-    # assert p.returncode==0
+    assert p.returncode==0
 
 #------------------------------------------------------------------------------
 def compile_c(path_dir, test_file, dependencies, is_mod=False):
