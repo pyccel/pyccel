@@ -62,13 +62,20 @@ def compile_pyccel(path_dir, test_file, options = ""):
     cmd = [shutil.which("pyccel"), test_file]
     if options != "":
         cmd += options.strip().split()
-    print(path_dir)
-    print("-------------------------------------------")
-    print(cmd)
-    exit(0)
-    p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir)
-    p.wait()
-    assert p.returncode==0
+    try:
+        p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        if out:
+            print("Output:\n", out)
+        if err:
+            print("Error:\n", err)
+
+        assert p.returncode == 0, f"Command failed with return code {p.returncode}"
+
+    except AssertionError as e:
+        print(e)
+    except Exception as e:
+        print("An error occurred:", e)
 
 #------------------------------------------------------------------------------
 def compile_c(path_dir, test_file, dependencies, is_mod=False):
