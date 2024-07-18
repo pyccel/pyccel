@@ -62,8 +62,13 @@ def compile_pyccel(path_dir, test_file, options = ""):
     cmd = [shutil.which("pyccel"), test_file]
     if options != "":
         cmd += options.strip().split()
-    p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir)
+    p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir , stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.wait()
+    err , msg = p.communicate()
+    if p.returncode != 0:
+        print(err)
+    else:
+        print(msg)
     assert p.returncode==0
 
 #------------------------------------------------------------------------------
