@@ -4455,7 +4455,7 @@ class SemanticParser(BasicParser):
             __module_name__ = p.metavars.get('module_name', None)
 
             if source_target in container['imports']:
-                targets = list(container['imports'][source_target].target.union(targets))
+                targets.extend(container['imports'][source_target].target)
 
             if import_init:
                 old_name = import_init.name
@@ -4751,10 +4751,11 @@ class SemanticParser(BasicParser):
                 fabs_name = self.scope.get_new_name('fabs')
                 imp_name = AsName('fabs', fabs_name)
                 new_import = Import('math',imp_name)
-                self._visit(new_import)
                 new_call = FunctionCall(fabs_name, [mul1])
 
                 pyccel_stage.set_stage('semantic')
+
+                self._visit(new_import)
 
                 return self._visit(new_call)
         elif isinstance(arg.value, PyccelPow):
@@ -4765,10 +4766,11 @@ class SemanticParser(BasicParser):
                 fabs_name = self.scope.get_new_name('fabs')
                 imp_name = AsName('fabs', fabs_name)
                 new_import = Import('math',imp_name)
-                self._visit(new_import)
                 new_call = FunctionCall(fabs_name, [base])
 
                 pyccel_stage.set_stage('semantic')
+
+                self._visit(new_import)
 
                 return self._visit(new_call)
 
@@ -4811,10 +4813,11 @@ class SemanticParser(BasicParser):
                 abs_name = self.scope.get_new_name('abs')
                 imp_name = AsName('abs', abs_name)
                 new_import = Import('numpy',imp_name)
-                self._visit(new_import)
                 new_call = FunctionCall(abs_name, [abs_arg])
 
                 pyccel_stage.set_stage('semantic')
+
+                self._visit(new_import)
 
                 # Cast to preserve final dtype
                 return PythonComplex(self._visit(new_call))

@@ -46,7 +46,6 @@ class CudaCodePrinter(CCodePrinter):
     """
     language = "cuda"
 
-
     def __init__(self, filename, prefix_module = None):
 
         errors.set_target(filename)
