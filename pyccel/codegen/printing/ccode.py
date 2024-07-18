@@ -1462,7 +1462,7 @@ class CCodePrinter(CodePrinter):
         inds = list(expr.indices)
         base_shape = base.shape
         allow_negative_indexes = expr.allows_negative_indexes
-        
+
         if isinstance(base.class_type, NumpyNDArrayType):
             #set dtype to the C struct types
             dtype = self.find_in_ndarray_type_registry(expr.dtype)

@@ -199,9 +199,10 @@ class CudaCodePrinter(CCodePrinter):
 
     def _print_Assign(self, expr):
         rhs = expr.rhs
-        if not isinstance(rhs.class_type, CudaArrayType):
-                return super()._print_Assign(expr)
-        if(isinstance(rhs, (CudaFull))):
+        if isinstance(rhs.class_type, CudaArrayType):
+            if(isinstance(rhs, (CudaFull))):
             # TODO add support for CudaFull
-            return " \n"
+                return " \n"
+
+        return super()._print_Assign(expr)
 

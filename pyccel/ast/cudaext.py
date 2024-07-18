@@ -55,7 +55,6 @@ class CudaNewarray(PyccelFunction):
         The dtype provided to the function when it was initialised in Python.
 
         The dtype provided to the function when it was initialised in Python.
-        If no dtype was provided then this should equal `None`.
         """
         return self._init_dtype
 
