@@ -56,27 +56,12 @@ def get_python_output(abs_path, cwd = None):
     return out
 
 #------------------------------------------------------------------------------
-def cat_file(file_path):
-    try:
-        with open(file_path, 'r') as file:
-            content = file.read()
-            print(content)
-    except FileNotFoundError:
-        print(f"Error: The file {file_path} does not exist.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-# Path to the file you want to display
-
 def compile_pyccel(path_dir, test_file, options = ""):
     if "python" in options and "--output" not in options:
         options += " --output=__pyccel__"
     cmd = [shutil.which("pyccel"), test_file]
     if options != "":
         cmd += options.strip().split()
-    file_path = "/__w/pyccel-cuda/pyccel-cuda/tests/pyccel/scripts/kernel/__pyccel__/cuda_ndarrays/cuda_ndarrays.cu"
-    cat_file(file_path)
-    exit(0)
     p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir)
     p.wait()
     assert p.returncode==0
