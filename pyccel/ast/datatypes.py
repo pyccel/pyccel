@@ -977,23 +977,23 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
 
     Parameters
     ----------
-    index_type : PyccelType
+    key_type : PyccelType
         The type of the keys of the homogeneous dictionary.
     value_type : PyccelType
         The type of the values of the homogeneous dictionary.
     """
-    __slots__ = ('_index_type', '_value_type')
-    _name = 'map'
+    __slots__ = ('_key_type', '_value_type')
+    _name = 'dict'
     _container_rank = 1
     _order = None
 
-    def __init__(self, index_type, value_type):
-        self._index_type = index_type
+    def __init__(self, key_type, value_type):
+        self._key_type = key_type
         self._value_type = value_type
         super().__init__()
 
     def __str__(self):
-        return f'map[{self._index_type.name}, {self._value_type.name}]'
+        return f'dict[{self._key_type}, {self._value_type}]'
 
     def __reduce__(self):
         """
@@ -1009,7 +1009,7 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
         args
             A tuple containing any arguments to be passed to the callable.
         """
-        return (self.__class__, (self._index_type, self._value_type))
+        return (self.__class__, (self._key_type, self._value_type))
 
     @property
     def datatype(self):
@@ -1018,7 +1018,56 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
 
         The datatype of the object.
         """
-        return self._index_type.datatype
+        return self._key_type.datatype
+
+    @property
+    def key_type(self):
+        """
+        The type of the keys of the object.
+
+        The type of the keys of the object.
+        """
+        return self._key_type
+
+    @property
+    def value_type(self):
+        """
+        The type of the values of the object.
+
+        The type of the values of the object.
+        """
+        return self._value_type
+
+    @property
+    def container_rank(self):
+        """
+        Number of dimensions of the container.
+
+        Number of dimensions of the object described by the container. This is
+        equal to the number of values required to index an element of this container.
+        """
+        return 1
+
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+        """
+        return self._container_rank
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return None
 
 #==============================================================================
 
