@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 -   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
 -   #1893 : Add Python support for set initialisation with `set()`.
 -   #1877 : Add C Support for set method `pop()`.
+-   #1895 : Add Python support for dict initialisation with `{}`.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 

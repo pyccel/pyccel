@@ -22,7 +22,7 @@ from pyccel.utilities.strings import random_string
 from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
-from pyccel.ast.builtins import PythonComplex
+from pyccel.ast.builtins import PythonComplex, PythonDict
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
@@ -2246,6 +2246,16 @@ class SemanticParser(BasicParser):
         except TypeError as e:
             message = str(e)
             errors.report(message, symbol=expr,
+                severity='fatal')
+        return expr
+
+    def _visit_PythonDict(self, expr):
+        keys = [self._visit(k) for k in expr.keys]
+        vals = [self._visit(v) for v in expr.values]
+        try:
+            expr = PythonDict(keys, vals)
+        except TypeError as e:
+            errors.report(str(e), symbol=expr,
                 severity='fatal')
         return expr
 

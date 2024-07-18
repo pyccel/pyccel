@@ -430,6 +430,10 @@ class PythonCodePrinter(CodePrinter):
         args = ', '.join(self._print(i) for i in expr.args)
         return '{'+args+'}'
 
+    def _print_PythonDict(self, expr):
+        args = ', '.join(f'{self._print(k)}: {self._print(v)}' for k,v in expr)
+        return '{'+args+'}'
+
     def _print_PythonBool(self, expr):
         return 'bool({})'.format(self._print(expr.arg))
 
