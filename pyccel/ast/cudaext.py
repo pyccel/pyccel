@@ -27,7 +27,7 @@ __all__ = (
 
 class CudaNewarray(PyccelFunction):
     """
-    superclass for nodes representing Cuda array allocation functions.
+    Superclass for nodes representing Cuda array allocation functions.
 
     Class from which all nodes representing a Cuda function which implies a call
     to `Allocate` should inherit.
@@ -55,6 +55,7 @@ class CudaNewarray(PyccelFunction):
         The dtype provided to the function when it was initialised in Python.
 
         The dtype provided to the function when it was initialised in Python.
+        If no dtype was provided then this should equal `None`.
         """
         return self._init_dtype
 
@@ -68,7 +69,7 @@ class CudaNewarray(PyccelFunction):
 class CudaFull(CudaNewarray):
     """
     Represents a call to `cuda.full` for code generation.
-    
+
     Represents a call to the Cuda function `full` which creates an array
     of a specified size and shape filled with a specified value.
 
