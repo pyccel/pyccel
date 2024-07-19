@@ -496,6 +496,7 @@ class Compiler:
 
         with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 universal_newlines=True) as p:
+            p.wait()
             out, err = p.communicate()
 
         if verbose and out:
