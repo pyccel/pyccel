@@ -198,7 +198,20 @@ reserved_words = ['local',
 errors = Errors()
 
 class LuaCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of Lua code"""
+    """
+    A printer for printing code in Lua.
+
+    A printer to convert Pyccel's AST to strings of Python code.
+    As for all printers the navigation of this file is done via _print_X
+    functions.
+
+    This file is entirely untested and should probably be removed.
+
+    Parameters
+    ----------
+    settings : dict
+        The settings.
+    """
     printmethod = "_lua_code"
     language = "Lua"
 
@@ -227,12 +240,6 @@ class LuaCodePrinter(CodePrinter):
 
     def _rate_index_position(self, p):
         return p*5
-
-    def _get_statement(self, codestring):
-        return "%s" % codestring
-
-    def _get_comment(self, text):
-        return "-- %s" % text
 
     def _declare_number_const(self, name, value):
         return "const %s: f64 = %s" % (name, value)
@@ -456,9 +463,9 @@ class LuaCodePrinter(CodePrinter):
         local_vars = [str(x) for x in local_vars]
 
         if lhs_code in local_vars:
-            return ("local %s = %s" % (lhs_code, rhs_code))
+            return f"local {lhs_code} = {rhs_code}"
         else:
-            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+            return f"{lhs_code} = {rhs_code}"
 
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)

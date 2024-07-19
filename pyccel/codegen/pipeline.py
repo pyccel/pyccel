@@ -21,6 +21,7 @@ from pyccel.codegen.codegen        import Codegen
 from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.utilities      import internal_libs
+from pyccel.codegen.utilities      import external_libs
 from pyccel.codegen.python_wrapper import create_shared_library
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
@@ -334,6 +335,14 @@ def execute_pyccel(fname, *,
 
             mod_obj.add_dependencies(stdlib)
 
+
+    # Iterate over the external_libs list and determine if the printer
+    # requires an external lib to be included.
+    for key in codegen.get_printer_imports():
+        lib_name = key.split("/", 1)[0]
+        if lib_name in external_libs:
+            lib_dest_path = copy_internal_library(lib_name, pyccel_dirpath)
+
     if convert_only:
         # Change working directory back to starting point
         os.chdir(base_dirpath)
@@ -379,7 +388,7 @@ def execute_pyccel(fname, *,
                 output_folder=pyccel_dirpath,
                 verbose=verbose)
     except Exception:
-        handle_error('Fortran compilation')
+        handle_error('compilation')
         raise
 
 
