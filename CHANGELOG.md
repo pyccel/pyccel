@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 -   #1877 : Add C Support for set method `pop()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
+-   #1886 : Add Python support for dict method `pop()`.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 

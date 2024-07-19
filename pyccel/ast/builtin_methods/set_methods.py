@@ -40,7 +40,7 @@ class SetMethod(PyccelFunction):
         The arguments passed to the function call.
     """
     __slots__ = ('_set_variable',)
-    _attribute_nodes = ('_set_variable',)
+    _attribute_nodes = PyccelFunction._attribute_nodes + ('_set_variable',)
     def __init__(self,  set_variable, *args):
         self._set_variable = set_variable
         super().__init__(*args)
