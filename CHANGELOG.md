@@ -148,6 +148,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 -   \[INTERNALS\] Remove function `Module.set_name`.
 -   \[INTERNALS\] Remove unused `assign_to` argument of `CodePrinter.doprint`.
+-   \[INTERNALS\] Remove unnecessary functions from `CodePrinter` : `_get_statement`, `_get_comment`.
 
 ## \[1.11.2\] - 2024-03-05
 

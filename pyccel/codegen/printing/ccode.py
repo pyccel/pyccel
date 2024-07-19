@@ -333,12 +333,6 @@ class CCodePrinter(CodePrinter):
         elif import_obj.target:
             self._additional_imports[import_obj.source].define_target(import_obj.target)
 
-    def _get_statement(self, codestring):
-        return "%s;\n" % codestring
-
-    def _get_comment(self, text):
-        return "// {0}\n".format(text)
-
     def _format_code(self, lines):
         return self.indent_code(lines)
 
