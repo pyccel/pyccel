@@ -19,15 +19,13 @@ from pyccel.ast.cudatypes           import CudaArrayType
 from pyccel.ast.datatypes           import HomogeneousContainerType
 from pyccel.ast.numpytypes          import numpy_precision_map
 from pyccel.ast.cudaext             import CudaFull
+from pyccel.codegen.printing.ccode  import c_imports
+
 
 errors = Errors()
 
 __all__ = ["CudaCodePrinter"]
 
-c_imports = {n : Import(n, Module(n, (), ())) for n in
-                ['cuda_ndarrays',
-                 'ndarrays',
-                 ]}
 
 class CudaCodePrinter(CCodePrinter):
     """

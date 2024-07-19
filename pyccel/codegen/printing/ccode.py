@@ -235,6 +235,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'math',
                  'string',
                  'ndarrays',
+                 'cuda_ndarrays',
                  'complex',
                  'stdint',
                  'pyc_math_c',
@@ -1336,6 +1337,7 @@ class CCodePrinter(CodePrinter):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
+                self.add_import(c_imports['cuda_ndarrays'])
                 dtype = 't_ndarray'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
