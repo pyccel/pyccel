@@ -150,7 +150,6 @@ type_container = {
                    PythonTupleFunction : HomogeneousTupleType,
                    PythonList : HomogeneousListType,
                    PythonSetFunction : HomogeneousSetType,
-                   PythonDictFunction : HomogeneousDictType,
                   }
 
 #==============================================================================
