@@ -216,18 +216,16 @@ class Codegen:
         header_filename = f'{filename}.{header_ext}'
         filename = f'{filename}.{ext}'
 
+        # print module
+        code = self._printer.doprint(self.ast)
+        with open(filename, 'w', encoding="utf-8") as f:
+            f.write(code)
+
         # print module header
         if header_ext is not None:
             code = self._printer.doprint(ModuleHeader(self.ast))
-            with open(header_filename, 'w') as f:
-                for line in code:
-                    f.write(line)
-
-        # print module
-        code = self._printer.doprint(self.ast)
-        with open(filename, 'w') as f:
-            for line in code:
-                f.write(line)
+            with open(header_filename, 'w', encoding="utf-8") as f:
+                f.write(code)
 
         # print program
         prog_filename = None
@@ -237,7 +235,6 @@ class Codegen:
             prog_filename = os.path.join(folder,"prog_"+fname)
             code = self._printer.doprint(self.ast.program)
             with open(prog_filename, 'w') as f:
-                for line in code:
-                    f.write(line)
+                f.write(code)
 
         return filename, prog_filename
