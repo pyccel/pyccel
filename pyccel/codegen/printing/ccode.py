@@ -1327,9 +1327,12 @@ class CCodePrinter(CodePrinter):
             if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType)):
                 dtype = self.get_c_type(expr.class_type)
                 return dtype
-            if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType, CudaArrayType)):
+            if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
+                self.add_import(c_imports['ndarrays'])
+                dtype = 't_ndarray'
+            elif isinstance(expr.class_type, CudaArrayType):
                 self.add_import(c_imports['ndarrays'])
                 self.add_import(c_imports['cuda_ndarrays'])
                 dtype = 't_ndarray'
