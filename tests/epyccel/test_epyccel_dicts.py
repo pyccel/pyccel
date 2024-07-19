@@ -35,3 +35,36 @@ def test_dict_str_keys(language):
     python_result = dict_str_keys()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
+
+def test_dict_empty_init(language):
+    def dict_empty_init():
+        a : 'dict[int, float]' = {}
+        return a
+    epyc_dict_empty_init = epyccel(dict_empty_init, language = language)
+    pyccel_result = epyc_dict_empty_init()
+    python_result = dict_empty_init()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_dict_copy(language):
+    def dict_copy():
+        a = {1:1.0,2:2.0}
+        b = dict(a)
+        return b
+
+    epyc_dict_copy = epyccel(dict_copy, language = language)
+    pyccel_result = epyc_dict_copy()
+    python_result = dict_copy()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_dict_kwarg_init(language):
+    def kwarg_init():
+        b = dict(a=1, b=2) #pylint: disable=use-dict-literal
+        return b
+
+    epyc_kwarg_init = epyccel(kwarg_init, language = language)
+    pyccel_result = epyc_kwarg_init()
+    python_result = kwarg_init()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result

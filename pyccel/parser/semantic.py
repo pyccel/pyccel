@@ -22,7 +22,7 @@ from pyccel.utilities.strings import random_string
 from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
-from pyccel.ast.builtins import PythonComplex, PythonDict
+from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
@@ -65,7 +65,7 @@ from pyccel.ast.datatypes import PrimitiveIntegerType, StringType, SymbolicType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from pyccel.ast.datatypes import DataTypeFactory, PrimitiveFloatingPointType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType, HomogeneousSetType, HomogeneousListType
-from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType
+from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType, DictType
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
@@ -149,7 +149,7 @@ pyccel_stage = PyccelStage()
 type_container = {
                    PythonTupleFunction : HomogeneousTupleType,
                    PythonList : HomogeneousListType,
-                   PythonSetFunction : HomogeneousSetType
+                   PythonSetFunction : HomogeneousSetType,
                   }
 
 #==============================================================================
@@ -1640,7 +1640,7 @@ class SemanticParser(BasicParser):
             if raise_error:
                 name = var.name
                 rhs_str = str(rhs)
-                errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(repr(var.class_type), repr(class_type)),
+                errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(var.class_type, class_type),
                     symbol=f'{name}={rhs_str}',
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
@@ -1880,6 +1880,30 @@ class SemanticParser(BasicParser):
 
         return list(parent.values())
 
+    def _convert_syntactic_object_to_type_annotation(self, syntactic_annotation):
+        """
+        Convert an arbitrary syntactic object to a type annotation.
+
+        Convert an arbitrary syntactic object to a type annotation. This means that
+        the syntactic object is wrapped in a SyntacticTypeAnnotation (if necessary).
+        This ensures that a type annotation is obtained instead of e.g. a function.
+
+        Parameters
+        ----------
+        syntactic_annotation : PyccelAstNode
+            A syntactic object that needs to be visited as a type annotation.
+
+        Returns
+        -------
+        SyntacticTypeAnnotation
+            A syntactic object that will be recognised as a type annotation.
+        """
+        if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
+            pyccel_stage.set_stage('syntactic')
+            syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
+            pyccel_stage.set_stage('semantic')
+        return syntactic_annotation
+
     def _get_indexed_type(self, base, args, expr):
         """
         Extract a type annotation from an IndexedElement.
@@ -1933,21 +1957,24 @@ class SemanticParser(BasicParser):
             else:
                 raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
-            if len(args) == 2 and args[1] is LiteralEllipsis() or len(args) == 1:
-                syntactic_annotation = args[0]
-                if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
-                    pyccel_stage.set_stage('syntactic')
-                    syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
-                    pyccel_stage.set_stage('semantic')
+            if (len(args) == 2 and args[1] is LiteralEllipsis()) or len(args) == 1:
+                syntactic_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
                 internal_datatypes = self._visit(syntactic_annotation)
-                type_annotations = []
                 if dtype_cls in type_container :
                     class_type = type_container[dtype_cls]
                 else:
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                             severity='fatal', symbol=expr)
-                for u in internal_datatypes.type_list:
-                    type_annotations.append(VariableTypeAnnotation(class_type(u.class_type), u.is_const))
+                type_annotations = [VariableTypeAnnotation(class_type(u.class_type), u.is_const)
+                                    for u in internal_datatypes.type_list]
+                return UnionTypeAnnotation(*type_annotations)
+            elif len(args) == 2 and dtype_cls is PythonDictFunction:
+                syntactic_key_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
+                syntactic_val_annotation = self._convert_syntactic_object_to_type_annotation(args[1])
+                key_types = self._visit(syntactic_key_annotation)
+                val_types = self._visit(syntactic_val_annotation)
+                type_annotations = [VariableTypeAnnotation(DictType(k.class_type, v.class_type)) \
+                                    for k,v in zip(key_types.type_list, val_types.type_list)]
                 return UnionTypeAnnotation(*type_annotations)
             else:
                 raise errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,
