@@ -39,6 +39,7 @@ __all__ = (
     'PythonComplexProperty',
     'PythonConjugate',
     'PythonDict',
+    'PythonDictFunction',
     'PythonEnumerate',
     'PythonFloat',
     'PythonImag',
@@ -883,6 +884,56 @@ class PythonDict(PyccelFunction):
         return self._values
 
 #==============================================================================
+class PythonDictFunction(PyccelFunction):
+    """
+    Class representing a call to the `dict` function.
+
+    Class representing a call to the `dict` function. This is
+    different to the `{}` syntax as it is either a cast function or it
+    uses arguments to create the dictionary. In the case of a cast function
+    an instance of PythonDict is returned to express this concept. In the
+    case of a copy this class stores the description of the copy operator.
+
+    Parameters
+    ----------
+    *args : TypedAstNode
+        The arguments passed to the function call. If args are provided
+        then only one argument should be provided. This object is copied
+        unless it is a temporary PythonDict in which case it is returned
+        directly.
+    **kwargs : dict[TypedAstNode]
+        The keyword arguments passed to the function call. If kwargs are
+        provided then no args should be provided and a PythonDict object
+        will be created.
+    """
+    __slots__ = ('_shape', '_class_type')
+    name = 'dict'
+
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 0:
+            keys = [LiteralString(k) for k in kwargs]
+            values = list(kwargs.values())
+            return PythonDict(keys, values)
+        elif len(args) != 1:
+            raise NotImplementedError("Unrecognised dict calling convention")
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, copied_obj):
+        self._class_type = copied_obj.class_type
+        self._shape = copied_obj.shape
+        super().__init__(copied_obj)
+
+    @property
+    def copied_obj(self):
+        """
+        The object being copied.
+
+        The object being copied to create a new dict instance.
+        """
+        return self._args[0]
+
+#==============================================================================
 class PythonMap(PyccelFunction):
     """
     Class representing a call to Python's builtin map function.
@@ -1325,22 +1376,22 @@ DtypePrecisionToCastFunction = {
 builtin_functions_dict = {
     'abs'      : PythonAbs,
     'bool'     : PythonBool,
-    'range'    : PythonRange,
-    'zip'      : PythonZip,
-    'enumerate': PythonEnumerate,
-    'int'      : PythonInt,
-    'float'    : PythonFloat,
     'complex'  : PythonComplex,
-    'bool'     : PythonBool,
-    'sum'      : PythonSum,
+    'dict'     : PythonDictFunction,
+    'enumerate': PythonEnumerate,
+    'float'    : PythonFloat,
+    'int'      : PythonInt,
     'len'      : PythonLen,
     'list'     : PythonList,
+    'map'      : PythonMap,
     'max'      : PythonMax,
     'min'      : PythonMin,
     'not'      : PyccelNot,
-    'map'      : PythonMap,
+    'range'    : PythonRange,
+    'set'      : PythonSetFunction,
     'str'      : LiteralString,
-    'type'     : PythonType,
+    'sum'      : PythonSum,
     'tuple'    : PythonTupleFunction,
-    'set'      : PythonSetFunction
+    'type'     : PythonType,
+    'zip'      : PythonZip,
 }

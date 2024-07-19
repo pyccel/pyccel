@@ -425,6 +425,13 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         order_str = f'(order={self._order})' if self._order else ''
         return f'{self.element_type}[{dims}]{order_str}'
 
+    def __hash__(self):
+        return hash((self.element_type, self.rank, self.order))
+
+    def __eq__(self, other):
+        return isinstance(other, NumpyNDArrayType) and self.element_type == other.element_type \
+                and self.rank == other.rank and self.order == other.order
+
 #==============================================================================
 
 numpy_precision_map = {
