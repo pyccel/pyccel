@@ -1957,7 +1957,7 @@ class SemanticParser(BasicParser):
             else:
                 raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
-            if len(args) == 2 and args[1] is LiteralEllipsis():
+            if (len(args) == 2 and args[1] is LiteralEllipsis()) or len(args) == 1:
                 syntactic_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
                 internal_datatypes = self._visit(syntactic_annotation)
                 if dtype_cls in type_container :
