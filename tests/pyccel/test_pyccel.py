@@ -65,7 +65,6 @@ def compile_pyccel(path_dir, test_file, options = ""):
     p = subprocess.run(cmd, capture_output = True, universal_newlines=True, cwd=path_dir)
     print(p.stdout)
     print(p.stderr)
-    p.wait()
     assert p.returncode==0
 
 #------------------------------------------------------------------------------
@@ -748,7 +747,7 @@ def test_kernel_collision(gpu_available):
 @pytest.mark.cuda
 def test_host_array(gpu_available):
     types = float
-    pyccel_test("scripts/kernel/host_array.py", pyccel_commands = '-v',
+    pyccel_test("scripts/kernel/host_array.py", pyccel_commands = '--verbose',
             language="cuda", output_dtype=types, execute_code=gpu_available)
 
 #------------------------------------------------------------------------------
