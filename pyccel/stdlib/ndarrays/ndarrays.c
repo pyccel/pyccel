@@ -493,7 +493,7 @@ bool is_same_shape(t_ndarray a, t_ndarray b)
     }
     return (true);
 }
-
+#ifndef __NVCC__
 #define COPY_DATA_FROM_(SRC_TYPE) \
     void copy_data_from_##SRC_TYPE(t_ndarray **ds, t_ndarray src, uint32_t offset, bool elem_wise_cp) \
     { \
@@ -588,24 +588,24 @@ bool is_same_shape(t_ndarray a, t_ndarray b)
                 if(elem_wise_cp == false)\
                 { \
                     for(int64_t i = 0; i < src.length; i++) \
-                        dest->nd_cfloat[i + offset] = src.nd_cfloat[i]; \
+                        dest->nd_cfloat[i + offset] = (float complex)src.nd_##SRC_TYPE[i]; \
                 }\
                 else \
                 {\
                     for(int64_t i = 0; i < src.length; i++) \
-                        dest->nd_cfloat[element_index(*dest, i, dest->nd) + offset] = src.nd_cfloat[element_index(src, i, src.nd)]; \
+                        dest->nd_cfloat[element_index(*dest, i, dest->nd) + offset] = (float complex)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
                 }\
                 break; \
             case nd_cdouble: \
                 if(elem_wise_cp == false)\
                 { \
                     for(int64_t i = 0; i < src.length; i++) \
-                        dest->nd_cdouble[i + offset] = src.nd_cdouble[i]; \
+                        dest->nd_cdouble[i + offset] = (double complex)src.nd_##SRC_TYPE[i]; \
                 }\
                 else \
                 {\
                     for(int64_t i = 0; i < src.length; i++) \
-                        dest->nd_cdouble[element_index(*dest, i, dest->nd) + offset] = src.nd_cdouble[element_index(src, i, src.nd)]; \
+                        dest->nd_cdouble[element_index(*dest, i, dest->nd) + offset] = (double complex)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
                 }\
                 break; \
         } \
@@ -618,10 +618,8 @@ COPY_DATA_FROM_(int32)
 COPY_DATA_FROM_(int64)
 COPY_DATA_FROM_(float)
 COPY_DATA_FROM_(double)
-#ifndef __NVCC__
 COPY_DATA_FROM_(cfloat)
 COPY_DATA_FROM_(cdouble)
-#endif
 
 void copy_data(t_ndarray **ds, t_ndarray src, uint32_t offset, bool elem_wise_cp)
 {
@@ -666,6 +664,8 @@ void copy_data(t_ndarray **ds, t_ndarray src, uint32_t offset, bool elem_wise_cp
     }
 }
 
+#=
+
 void array_copy_data(t_ndarray *dest, t_ndarray src, uint32_t offset)
 {
     unsigned char *d = (unsigned char*)dest->raw_data;
@@ -682,6 +682,7 @@ void array_copy_data(t_ndarray *dest, t_ndarray src, uint32_t offset)
         copy_data(&dest, src, offset, true);
     }
 }
+#endif
 
 /*
 ** sum of ndarray

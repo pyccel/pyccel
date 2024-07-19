@@ -329,8 +329,6 @@ class Compiler:
         verbose : bool
             Indicates whether additional output should be shown.
         """
-        print("Compiling : ", compile_obj.source)
-        print(os.path.exists(compile_obj.source))
         if not compile_obj.has_target_file:
             return
 
