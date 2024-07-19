@@ -73,3 +73,20 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `vars` | No |
 | **`zip`** | as a loop iterable |
 | \_\_`import`\_\_ | No
+
+## Dictionary methods
+
+| Method | Supported |
+|----------|-----------|
+| `clear` | No |
+| `copy` | No |
+| `get` | No |
+| `items` | No |
+| `keys` | No |
+| `pop` | Python-only |
+| `popitem` | No |
+| `reversed` | No |
+| `setdefault` | No |
+| `update` | No |
+| `values` | No |
+
