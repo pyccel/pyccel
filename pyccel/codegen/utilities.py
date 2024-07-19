@@ -112,6 +112,7 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     str
         The location that the files were copied to.
     """
+    print("copy_internal_library : ", lib_folder)
     # get lib path (stdlib_path/lib_name or ext_path/lib_name)
     if lib_folder in external_libs:
         lib_path = os.path.join(ext_path, external_libs[lib_folder], lib_folder)
@@ -144,6 +145,10 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
         if to_create:
             # Copy all files from the source to the destination
             shutil.copytree(lib_path, lib_dest_path)
+            dst_files = [os.path.relpath(os.path.join(root, f), lib_dest_path) \
+                    for root, dirs, files in os.walk(lib_dest_path) \
+                    for f in files if not f.endswith('.lock')]
+            print("Created : ", dst_files)
             # Create any requested extra files
             if extra_files:
                 for filename, contents in extra_files.items():
