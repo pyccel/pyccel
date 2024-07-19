@@ -231,11 +231,11 @@ c_library_headers = (
 import_dict = {'omp_lib' : 'omp' }
 
 c_imports = {n : Import(n, Module(n, (), ())) for n in
-                ['stdlib',
+                ['cuda_ndarrays',
+                 'stdlib',
                  'math',
                  'string',
                  'ndarrays',
-                 'cuda_ndarrays',
                  'complex',
                  'stdint',
                  'pyc_math_c',
@@ -571,7 +571,6 @@ class CCodePrinter(CodePrinter):
                     shape_init, strides_init, len(var.shape), 'false')
         array_init += 'stack_array_init(&{})'.format(self._print(var))
         self.add_import(c_imports['ndarrays'])
-        self.add_import(c_imports['cuda_ndarrays'])
         return buffer_array, array_init
 
     def _handle_inline_func_call(self, expr):
@@ -1634,7 +1633,6 @@ class CCodePrinter(CodePrinter):
             elif (expr.status == 'allocated'):
                 free_code += self._print(Deallocate(variable))
             self.add_import(c_imports['ndarrays'])
-            self.add_import(c_imports['cuda_ndarrays'])
             shape = ", ".join(self._print(i) for i in expr.shape)
             if isinstance(variable.class_type, NumpyNDArrayType):
                 #set dtype to the C struct types
