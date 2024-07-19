@@ -1634,6 +1634,7 @@ class CCodePrinter(CodePrinter):
             elif (expr.status == 'allocated'):
                 free_code += self._print(Deallocate(variable))
             self.add_import(c_imports['ndarrays'])
+            self.add_import(c_imports['cuda_ndarrays'])
             shape = ", ".join(self._print(i) for i in expr.shape)
             if isinstance(variable.class_type, NumpyNDArrayType):
                 #set dtype to the C struct types
