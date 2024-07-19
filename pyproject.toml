@@ -58,7 +58,7 @@ include = [
   "pyccel/stdlib/**/*.c",
   "pyccel/stdlib/**/*.f90",
   "pyccel/extensions/STC/include",
-  "pyccel/extensions/gFTL/include/v2"
+  "pyccel/extensions/gFTL/include/v2",
   "pyccel/stdlib/cuda_ndarrays/cuda_ndarrays.cu"
 ]
 exclude = [
