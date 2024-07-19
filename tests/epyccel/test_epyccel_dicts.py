@@ -69,7 +69,6 @@ def test_dict_kwarg_init(language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-
 def test_pop_element(language) :
     def pop_element():
         a = {1:1.0, 2:2.0}
