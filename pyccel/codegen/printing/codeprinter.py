@@ -88,16 +88,6 @@ class CodePrinter:
                 return obj
         return self._print_not_supported(expr)
 
-    def _get_statement(self, codestring):
-        """Formats a codestring with the proper line ending."""
-        raise NotImplementedError("This function must be implemented by "
-                                  "subclass of CodePrinter.")
-
-    def _get_comment(self, text):
-        """Formats a text string as a comment."""
-        raise NotImplementedError("This function must be implemented by "
-                                  "subclass of CodePrinter.")
-
     def _declare_number_const(self, name, value):
         """Declare a numeric constant at the top of a function"""
         raise NotImplementedError("This function must be implemented by "

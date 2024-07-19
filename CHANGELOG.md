@@ -34,6 +34,9 @@ All notable changes to this project will be documented in this file.
 -   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
 -   #1893 : Add Python support for set initialisation with `set()`.
 -   #1877 : Add C Support for set method `pop()`.
+-   #1895 : Add Python support for dict initialisation with `{}`.
+-   #1895 : Add Python support for dict initialisation with `dict()`.
+-   #1886 : Add Python support for dict method `pop()`.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
@@ -130,6 +133,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 -   \[INTERNALS\] Remove function `Module.set_name`.
 -   \[INTERNALS\] Remove unused `assign_to` argument of `CodePrinter.doprint`.
+-   \[INTERNALS\] Remove unnecessary functions from `CodePrinter` : `_get_statement`, `_get_comment`.
 
 ## \[1.11.2\] - 2024-03-05
 

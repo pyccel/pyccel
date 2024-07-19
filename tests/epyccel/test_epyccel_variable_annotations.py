@@ -271,3 +271,18 @@ def test_homogeneous_list_annotation_embedded_complex(stc_language):
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=stc_language)
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
+
+@pytest.mark.parametrize('lang',
+        [pytest.param("python", marks = pytest.mark.python)])
+def test_dict_empty_init(lang):
+    def dict_empty_init():
+        # Not valid in Python 3.8
+        a : dict[int, float] #pylint: disable=unsubscriptable-object
+        a = {1:1.0, 2:2.0}
+        return a
+
+    epyc_dict_empty_init = epyccel(dict_empty_init, language = lang)
+    pyccel_result = epyc_dict_empty_init()
+    python_result = dict_empty_init()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result

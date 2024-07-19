@@ -26,7 +26,6 @@ errors = Errors()
 
 __all__ = ["CudaCodePrinter"]
 
-
 class CudaCodePrinter(CCodePrinter):
     """
     Print code in CUDA format.
