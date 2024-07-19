@@ -266,8 +266,6 @@ def get_cls_base(class_type):
         return CudaArrayClass
     elif isinstance(class_type, (NumpyNumericType, NumpyNDArrayType)):
         return NumpyArrayClass
-    
-
     # elif isinstance(class_type, StackArrayType):
     elif isinstance(class_type, TupleType):
         return TupleClass

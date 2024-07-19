@@ -664,7 +664,6 @@ void copy_data(t_ndarray **ds, t_ndarray src, uint32_t offset, bool elem_wise_cp
     }
 }
 
-#=
 
 void array_copy_data(t_ndarray *dest, t_ndarray src, uint32_t offset)
 {
