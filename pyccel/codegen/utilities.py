@@ -48,6 +48,7 @@ internal_libs = {
 internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_ndarrays.c",folder="cwrapper_ndarrays",
                                                              accelerators = ('python',),
                                                              dependencies = (internal_libs["ndarrays"][1],
+                                                                             internal_libs["cuda_ndarrays"][1],
                                                                              internal_libs["cwrapper"][1])))
 
 #==============================================================================

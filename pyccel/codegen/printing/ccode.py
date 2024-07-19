@@ -571,6 +571,7 @@ class CCodePrinter(CodePrinter):
                     shape_init, strides_init, len(var.shape), 'false')
         array_init += 'stack_array_init(&{})'.format(self._print(var))
         self.add_import(c_imports['ndarrays'])
+        self.add_import(c_imports['cuda_ndarrays'])
         return buffer_array, array_init
 
     def _handle_inline_func_call(self, expr):
