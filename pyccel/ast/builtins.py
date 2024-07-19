@@ -53,6 +53,7 @@ __all__ = (
     'PythonRange',
     'PythonReal',
     'PythonSet',
+    'PythonSetFunction',
     'PythonSum',
     'PythonTuple',
     'PythonTupleFunction',
@@ -777,6 +778,36 @@ class PythonSet(TypedAstNode):
         """
         return True
 
+
+class PythonSetFunction(PyccelFunction):
+    """
+    Class representing a call to the `set` function.
+
+    Class representing a call to the `set` function. This is
+    different to the `{,}` syntax as it only takes one argument
+    and unpacks any variables.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function call.
+    """
+
+    __slots__ = ('_shape', '_class_type')
+    name = 'set'
+    def __new__(cls, arg):
+        if isinstance(arg.class_type, HomogeneousSetType):
+            return arg
+        elif isinstance(arg, (PythonList, PythonSet, PythonTuple)):
+            return PythonSet(*arg)
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, copied_obj):
+        self._class_type = copied_obj.class_type
+        self._shape = copied_obj.shape
+        super().__init__(copied_obj)
+
 #==============================================================================
 class PythonDict(PyccelFunction):
     """
@@ -828,7 +859,7 @@ class PythonDict(PyccelFunction):
 
     def __str__(self):
         args = ', '.join(f'{k}: {v}' for k,v in self)
-        return f'({args})'
+        return f'{{{args}}}'
 
     def __repr__(self):
         args = ', '.join(f'{repr(k)}: {repr(v)}' for k,v in self)
@@ -1357,6 +1388,7 @@ builtin_functions_dict = {
     'min'      : PythonMin,
     'not'      : PyccelNot,
     'range'    : PythonRange,
+    'set'      : PythonSetFunction,
     'str'      : LiteralString,
     'sum'      : PythonSum,
     'tuple'    : PythonTupleFunction,
