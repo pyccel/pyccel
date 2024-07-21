@@ -147,7 +147,8 @@ class CudaCodePrinter(CCodePrinter):
             dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(variable.dtype.primitive_type, variable.dtype.precision)])
         else:
             raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
-        shape_Assign = "int64_t shape_Assign [] = {" + shape + "};\n"
+        shape_Assign = f"int64_t shape_Assign_{expr.variable.name} [] = {{{shape}}};\n"
+        
         is_view = 'false' if variable.on_heap else 'true'
         memory_location = variable.class_type.memory_location
         if memory_location in ('device', 'host'):
@@ -155,7 +156,7 @@ class CudaCodePrinter(CCodePrinter):
         else:
             memory_location = 'managedMemory'
         self.add_import(c_imports['cuda_ndarrays'])
-        alloc_code = f"{self._print(expr.variable)} = cuda_array_create({variable.rank},  shape_Assign, {dtype}, {is_view},{memory_location});\n"
+        alloc_code = f"{self._print(expr.variable)} = cuda_array_create({variable.rank},  shape_Assign_{expr.variable.name}, {dtype}, {is_view},{memory_location});\n"
         return f'{shape_Assign} {alloc_code}'
 
     def _print_Deallocate(self, expr):
