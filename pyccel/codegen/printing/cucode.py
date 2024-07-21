@@ -143,12 +143,10 @@ class CudaCodePrinter(CCodePrinter):
         shape = ", ".join(self._print(i) for i in expr.shape)
         if isinstance(variable.class_type, CudaArrayType):
             dtype = self.find_in_ndarray_type_registry(variable.dtype)
-        elif isinstance(variable.class_type, HomogeneousContainerType):
-            dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(variable.dtype.primitive_type, variable.dtype.precision)])
         else:
             raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
         shape_Assign = f"int64_t shape_Assign_{expr.variable.name} [] = {{{shape}}};\n"
-        
+
         is_view = 'false' if variable.on_heap else 'true'
         memory_location = variable.class_type.memory_location
         if memory_location in ('device', 'host'):

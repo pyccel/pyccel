@@ -49,16 +49,6 @@ class CudaNewarray(PyccelFunction):
     __slots__ = ('_class_type', '_init_dtype', '_memory_location')
     name = 'newarray'
 
-    @property
-    def init_dtype(self):
-        """
-        The dtype provided to the function when it was initialised in Python.
-
-        The dtype provided to the function when it was initialised in Python.
-        If no dtype was provided then this should equal `None`.
-        """
-        return self._init_dtype
-
     def __init__(self, *args ,class_type, init_dtype, memory_location):
         self._class_type = class_type
         self._init_dtype = init_dtype

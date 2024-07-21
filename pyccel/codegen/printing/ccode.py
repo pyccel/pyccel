@@ -1332,10 +1332,6 @@ class CCodePrinter(CodePrinter):
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
                 dtype = 't_ndarray'
-            elif isinstance(expr.class_type, CudaArrayType):
-                self.add_import(c_imports['ndarrays'])
-                self.add_import(c_imports['cuda_ndarrays'])
-                dtype = 't_ndarray'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
         elif not isinstance(class_type, CustomDataType):
