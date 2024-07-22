@@ -10,12 +10,13 @@ from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetClear, SetCopy, S
 from pyccel.ast.builtin_methods.list_methods import (ListAppend, ListInsert, ListPop,
                                                      ListClear, ListExtend, ListRemove,
                                                      ListCopy, ListSort)
+from pyccel.ast.builtin_methods.dict_methods  import DictPop
 
 from .builtins   import PythonImag, PythonReal, PythonConjugate
 from .core       import ClassDef, PyccelFunctionDef
 from .datatypes  import (PythonNativeBool, PythonNativeInt, PythonNativeFloat,
                          PythonNativeComplex, StringType, TupleType, CustomDataType,
-                         HomogeneousListType, HomogeneousSetType)
+                         HomogeneousListType, HomogeneousSetType, DictType)
 from .numpyext   import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                          NumpyImag, NumpyReal, NumpyTranspose,
                          NumpyConjugate, NumpySize, NumpyResultType, NumpyArray)
@@ -23,16 +24,17 @@ from .numpytypes import NumpyNumericType, NumpyNDArrayType
 
 __all__ = (
     'BooleanClass',
-    'IntegerClass',
-    'FloatClass',
     'ComplexClass',
+    'DictClass',
+    'FloatClass',
+    'IntegerClass',
+    'ListClass',
+    'NumpyArrayClass',
     'SetClass',
     'StringClass',
-    'NumpyArrayClass',
     'TupleClass',
-    'ListClass',
-    'literal_classes',
     'get_cls_base',
+    'literal_classes',
 )
 
 #=======================================================================================
@@ -166,6 +168,13 @@ SetClass = ClassDef('set',
 
 #=======================================================================================
 
+DictClass = ClassDef('dict',
+        methods=[
+            PyccelFunctionDef('pop', func_class = DictPop),
+        ])
+
+#=======================================================================================
+
 TupleClass = ClassDef('tuple',
         methods=[
             #index
@@ -254,6 +263,8 @@ def get_cls_base(class_type):
         return ListClass
     elif isinstance(class_type, HomogeneousSetType):
         return SetClass
+    elif isinstance(class_type, DictType):
+        return DictClass
     else:
         raise NotImplementedError(f"No class definition found for type {class_type}")
 
