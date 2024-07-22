@@ -98,7 +98,32 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         this function returns None.
         """
         return self._order
+    def switch_rank(self, new_rank, new_order = None):
+        """
+        Get a type which is identical to this type in all aspects except the rank and/or order.
 
+        Get a type which is identical to this type in all aspects except the rank and/or order.
+        The order must be provided if the rank is increased from 1. Otherwise it defaults to the
+        same order as the current type.
+
+        Parameters
+        ----------
+        new_rank : int
+            The rank of the new type.
+
+        new_order : str, optional
+            The order of the new type. This should be provided if the rank is increased from 1.
+
+        Returns
+        -------
+        PyccelType
+            The new type.
+        """
+        if new_rank == 0:
+            return self.element_type
+        else:
+            new_order = (new_order or self._order) if new_rank > 1 else None
+            return CudaArrayType(self.element_type, new_rank, new_order, self.memory_location)
     def __repr__(self):
         dims = ','.join(':'*self._container_rank)
         order_str = f'(order={self._order})' if self._order else ''

@@ -755,6 +755,12 @@ def test_cuda_host_array_addition(gpu_available):
     types = float
     pyccel_test("scripts/kernel/cuda_host_array_addition.py",
             language="cuda", output_dtype=types, execute_code=gpu_available)
+#------------------------------------------------------------------------------
+@pytest.mark.cuda
+def test_cuda_host_2d_array_addition(gpu_available):
+    types = float
+    pyccel_test("scripts/kernel/cuda_host_2d_array_addition.py",
+            language="cuda", output_dtype=types, execute_code=gpu_available)
 
 #------------------------------------------------------------------------------
 @pytest.mark.cuda

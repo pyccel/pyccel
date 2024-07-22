@@ -798,7 +798,7 @@ class IndexedElement(TypedAstNode):
     _attribute_nodes = ('_label', '_indices', '_shape')
 
     def __init__(self, base, *indices):
-
+        
         if not indices:
             raise IndexError('Indexed needs at least one index.')
 

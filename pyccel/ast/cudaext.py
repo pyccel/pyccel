@@ -123,14 +123,6 @@ class CudaHostEmpty(CudaFull):
     def __init__(self, shape, dtype='float', order='C'):
         memory_location = 'host'
         super().__init__(shape, Nil(), dtype, order , memory_location)
-    @property
-    def fill_value(self):
-        """
-        The value with which the array will be filled on initialisation.
-
-        The value with which the array will be filled on initialisation.
-        """
-        return None
 
 class CudaSynchronize(PyccelFunction):
     """
