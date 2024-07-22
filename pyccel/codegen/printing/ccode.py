@@ -46,6 +46,8 @@ from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type,
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
+from pyccel.ast.type_annotations import VariableTypeAnnotation
+
 from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.ast.variable import IndexedElement
@@ -239,6 +241,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'assert',
                  'numpy_c']}
 
+import_header_guard_prefix = {'Set_extensions' : '_TOOLS_SET'}
+
 class CCodePrinter(CodePrinter):
     """
     A printer for printing code in C.
@@ -312,14 +316,22 @@ class CCodePrinter(CodePrinter):
         return self._additional_imports.keys()
 
     def add_import(self, import_obj):
+        """
+        Add a new import to the current context.
+
+        Add a new import to the current context. This allows the import to be recognised
+        at the compiling/linking stage. If the source of the import is not new then any
+        new targets are added to the Import object.
+
+        Parameters
+        ----------
+        import_obj : Import
+            The AST node describing the import.
+        """
         if import_obj.source not in self._additional_imports:
             self._additional_imports[import_obj.source] = import_obj
-
-    def _get_statement(self, codestring):
-        return "%s;\n" % codestring
-
-    def _get_comment(self, text):
-        return "// {0}\n".format(text)
+        elif import_obj.target:
+            self._additional_imports[import_obj.source].define_target(import_obj.target)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -996,16 +1008,21 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1]
         else:
             source = self._print(source)
-        if source.startswith('stc/'):
-            stc_name, container_type, container_key = source.split("/")
-            container = container_type.split("_")
-            return '\n'.join((f'#ifndef _{container_type.upper()}',
-                              f'#define _{container_type.upper()}',
-                              f'#define i_type {container_type}',
-                              f'#define i_key {container_key}',
-                              f'#include "{stc_name + "/" + container[0]}.h"',
-                              '#endif\n'))
-
+        if source.startswith('stc/') or source in import_header_guard_prefix:
+            code = ''
+            for t in expr.target:
+                dtype = t.object.class_type
+                container_type = t.target
+                container_key = self.get_c_type(dtype.element_type)
+                header_guard_prefix = import_header_guard_prefix.get(source, '')
+                header_guard = f'{header_guard_prefix}_{container_type.upper()}'
+                code += (f'#ifndef {header_guard}\n'
+                        f'#define {header_guard}\n'
+                        f'#define i_type {container_type}\n'
+                        f'#define i_key {container_key}\n'
+                        f'#include <{source}.h>\n'
+                        f'#endif // {header_guard}\n\n')
+            return code
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
@@ -1223,10 +1240,10 @@ class CCodePrinter(CodePrinter):
 
             key = (primitive_type, dtype.precision)
         elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
-            container_type = 'hset_' if dtype.name == 'set' else 'vec_'
-            element_type = self.get_c_type(dtype.element_type)
-            i_type = container_type + element_type.replace(' ', '_')
-            self.add_import(Import(f'stc/{i_type}/{element_type}', Module(f'stc/{i_type}', (), ())))
+            container_type = 'hset' if dtype.name == 'set' else 'vec'
+            element_type = self.get_c_type(dtype.element_type).replace(' ', '_')
+            i_type = f'{container_type}_{element_type}'
+            self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
         else:
             key = dtype
@@ -2194,6 +2211,13 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.init_stc_container(rhs, expr)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
+
+    def _print_SetPop(self, expr):
+        dtype = expr.set_variable.class_type
+        var_type = self.get_c_type(dtype)
+        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(dtype), var_type)))
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        return f'{var_type}_pop({set_var})'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs

@@ -329,6 +329,9 @@ class Compiler:
         verbose : bool
             Indicates whether additional output should be shown.
         """
+        if not compile_obj.has_target_file:
+            return
+
         accelerators = compile_obj.accelerators
 
         # Get flags
