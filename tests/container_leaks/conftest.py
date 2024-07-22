@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 import subprocess
 import os
 import pathlib
@@ -25,7 +25,7 @@ def pytest_collect_file(parent, file_path):
 
 class ValgrindTestFile(pytest.File):
     """
-    A custom file handler class for C unit test files.
+    A custom file handler class for test files which should be translated and tested with valgrind.
     """
     def collect(self):
         """
@@ -46,6 +46,11 @@ class ValgrindTestFile(pytest.File):
 
 
 class ValgrindTestItem(pytest.Item):
+    """
+    A custom test handler to test files with valgrind.
+    """
+    language = None
+    _failure_code = None
 
     def runtest(self):
         if self.language == 'fortran' and self.path.stem.split('_')[0] in stc_containers:
@@ -57,7 +62,7 @@ class ValgrindTestItem(pytest.Item):
         test_exe = os.path.splitext(str(self.path))[0]
         test_exe = os.path.relpath(test_exe)
         p = subprocess.run([shutil.which("pyccel"), self.path, "--language", self.language],
-                        capture_output = True, universal_newlines = True)
+                        capture_output = True, universal_newlines = True, check = False)
         if p.returncode:
             self._failure_code = p.stderr
             raise ValgrindTestException(self, self.name)
@@ -65,7 +70,7 @@ class ValgrindTestItem(pytest.Item):
         if sys.platform.startswith("win"):
             test_exe += ".exe"
         p = subprocess.run([shutil.which("valgrind"), "--leak-check=full",
-                                "--error-exitcode=1", f"./{test_exe}"],
+                            "--error-exitcode=1", f"./{test_exe}"], check = False,
                             capture_output = True, universal_newlines = True)
 
         if p.returncode:
