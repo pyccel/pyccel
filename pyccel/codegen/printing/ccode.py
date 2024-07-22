@@ -681,10 +681,10 @@ class CCodePrinter(CodePrinter):
         class_type = assignment_var.lhs.class_type
         dtype = self.get_c_type(class_type)
         if isinstance(expr, PythonDict):
-            keyraw = '{' + ', '.join(self._print(a) for a in expr.args) + '}'
-        else:
             dict_item_strs = [(self._print(k), self._print(v)) for k,v in zip(expr.keys, expr.values)]
             keyraw = '{' + ', '.join(f'{{{k}, {v}}}' for k,v in dict_item_strs) + '}'
+        else:
+            keyraw = '{' + ', '.join(self._print(a) for a in expr.args) + '}'
         container_name = self._print(assignment_var.lhs)
         init = f'{container_name} = c_init({dtype}, {keyraw});\n'
         return init
