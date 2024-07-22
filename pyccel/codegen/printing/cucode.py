@@ -16,8 +16,6 @@ from pyccel.ast.literals            import Nil
 
 from pyccel.errors.errors           import Errors
 from pyccel.ast.cudatypes           import CudaArrayType
-from pyccel.ast.datatypes           import HomogeneousContainerType
-from pyccel.ast.numpytypes          import numpy_precision_map
 from pyccel.ast.cudaext             import CudaFull
 from pyccel.codegen.printing.ccode  import c_imports
 

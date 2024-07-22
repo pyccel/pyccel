@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel import cuda
 
 def addition_cuda_host_2Darrays():
@@ -11,9 +12,8 @@ def addition_cuda_host_2Darrays():
     b+=a
     b+=1
 
-    for i in range(10):
-        for j in range(10):
-            print(b[i][j])
+    print(b)
+
 if __name__ == '__main__':
     addition_cuda_host_2Darrays()
 
