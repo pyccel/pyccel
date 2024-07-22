@@ -9,8 +9,8 @@ def addition_cuda_host_2Darrays():
         for j in range(10):
             a[i][j] = 1
             b[i][j] = 1
-    b+=a
-    b+=1
+    b = b + a
+    b = b + 1
 
     print(b)
 

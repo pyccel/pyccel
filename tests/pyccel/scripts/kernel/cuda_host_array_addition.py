@@ -9,7 +9,7 @@ def addition_cuda_host_arrays():
         b[i] = 1
         a[i] = 1
 
-    b += a
+    b = b + a
     print(b)
 
 if __name__ == '__main__':

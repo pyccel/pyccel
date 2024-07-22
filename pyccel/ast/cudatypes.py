@@ -121,11 +121,8 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         PyccelType
             The new type.
         """
-        if new_rank == 0:
-            return self.element_type
-        else:
-            new_order = (new_order or self._order) if new_rank > 1 else None
-            return CudaArrayType(self.element_type, new_rank, new_order, self.memory_location)
+        new_order = (new_order or self._order) if new_rank > 1 else None
+        return CudaArrayType(self.element_type, new_rank, new_order, self.memory_location)
     def __repr__(self):
         dims = ','.join(':'*self._container_rank)
         order_str = f'(order={self._order})' if self._order else ''
