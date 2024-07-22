@@ -16,6 +16,7 @@ class CudaNameClashChecker(LanguageNameClashChecker):
     verify that they do not cause name clashes. Name clashes may be due to
     new variables, or due to the use of reserved keywords.
     """
+
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
     keywords = set(['isign', 'fsign', 'csign', 'auto', 'break', 'case', 'char', 'const',
         'continue', 'default', 'do', 'double', 'else', 'enum',

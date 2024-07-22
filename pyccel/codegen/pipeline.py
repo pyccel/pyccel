@@ -404,6 +404,7 @@ def execute_pyccel(fname, *,
                     verbose=verbose)
 
         timers["Compilation without wrapper"] = time.time() - start_compile_target_language
+
         # Create shared library
         generated_filepath, shared_lib_timers = create_shared_library(codegen,
                                                mod_obj,

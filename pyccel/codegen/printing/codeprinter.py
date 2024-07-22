@@ -50,6 +50,7 @@ class CodePrinter:
 
         # Do the actual printing
         lines = self._print(expr).splitlines(True)
+
         # Format the output
         return ''.join(self._format_code(lines))
 
