@@ -19,7 +19,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `compile` | No |
 | **`complex`** | **Yes** |
 | `delattr` | No |
-| *`dict`* | Preliminary Python support |
+| *`dict`* | Preliminary Python and C support |
 | `dir` | No |
 | `divmod` | No |
 | **`enumerate`** | as a loop iterable |
