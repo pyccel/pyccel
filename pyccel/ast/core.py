@@ -519,7 +519,7 @@ class Deallocate(PyccelAstNode):
     # ...
     def __init__(self, variable):
 
-        if not isinstance(variable, Variable):
+        if not isinstance(variable, (Variable, IndexedElement)):
             raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
 
         self._variable = variable
