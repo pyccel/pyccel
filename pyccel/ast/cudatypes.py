@@ -37,7 +37,7 @@ class CudaArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         The memory location of the new cuda array ('host' or 'device').
     """
     __slots__ = ('_element_type', '_container_rank', '_order', '_memory_location')
-    
+
 
     def __init__(self, dtype, rank, order, memory_location):
         assert isinstance(rank, int)
