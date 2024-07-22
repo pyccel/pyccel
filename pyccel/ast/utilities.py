@@ -116,7 +116,7 @@ def collect_relevant_imports(module, targets):
     for target in targets:
         if isinstance(target, AsName):
             import_name = target.name
-            code_name = target.target
+            code_name = target.local_alias
         else:
             import_name = target
             code_name = import_name
@@ -157,7 +157,7 @@ def builtin_import(expr):
         if expr.target:
             return collect_relevant_imports(builtin_import_registry[source], expr.target)
         elif isinstance(expr.source, AsName):
-            return [(expr.source.target, builtin_import_registry[source])]
+            return [(expr.source.local_alias, builtin_import_registry[source])]
         else:
             return [(expr.source, builtin_import_registry[source])]
 

@@ -512,7 +512,7 @@ class FCodePrinter(CodePrinter):
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
         if isinstance(expr.name, AsName):
-            name = self._print(expr.name.target)
+            name = self._print(expr.name.local_alias)
         else:
             name = self._print(expr.name)
         name = name.replace('.', '_')
@@ -628,7 +628,7 @@ class FCodePrinter(CodePrinter):
             return ''
 
         if isinstance(expr.source, AsName):
-            source = expr.source.target
+            source = expr.source.local_alias
         else:
             source = expr.source
         if isinstance(source, DottedName):

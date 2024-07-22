@@ -408,7 +408,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_AsName(self, expr):
         name = self._print(expr.name)
-        target = self._print(expr.target)
+        target = self._print(expr.local_alias)
         if name == target:
             return name
         else:

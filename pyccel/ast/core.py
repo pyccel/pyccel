@@ -152,10 +152,10 @@ class AsName(PyccelAstNode):
             return obj.name
 
     @property
-    def target(self):
-        """ The target name of the object
+    def local_alias(self):
+        """ The local_alias name of the object
         """
-        return self._target
+        return self._local_alias
 
     @property
     def object(self):
@@ -164,13 +164,13 @@ class AsName(PyccelAstNode):
         return self._obj
 
     def __repr__(self):
-        return f'{self.name} as {self.target}'
+        return f'{self.name} as {self.local_alias}'
 
     def __eq__(self, string):
         if isinstance(string, str):
-            return string == self.target
+            return string == self.local_alias
         elif isinstance(string, AsName):
-            return string.target == self.target
+            return string.local_alias == self.local_alias
         else:
             return self is string
 
@@ -178,7 +178,7 @@ class AsName(PyccelAstNode):
         return not self == string
 
     def __hash__(self):
-        return hash(self.target)
+        return hash(self.local_alias)
 
 
 class Duplicate(TypedAstNode):
@@ -646,10 +646,10 @@ class CodeBlock(PyccelAstNode):
 
 class AliasAssign(PyccelAstNode):
     """
-    Representing assignment of an alias to its target.
+    Representing assignment of an alias to its local_alias.
 
     Represents aliasing for code generation. An alias is any statement of the
-    form `lhs := rhs` where lhs is a pointer and rhs is a target. In other words
+    form `lhs := rhs` where lhs is a pointer and rhs is a local_alias. In other words
     the contents of `lhs` will change if the contents of `rhs` are modfied.
 
     Parameters
@@ -664,7 +664,7 @@ class AliasAssign(PyccelAstNode):
            Variable.
 
     rhs : PyccelSymbol | Variable, IndexedElement
-        The target of the assignment. A PyccelSymbol in the syntactic stage,
+        The local_alias of the assignment. A PyccelSymbol in the syntactic stage,
         a Variable or a Slice of an array in the semantic stage.
 
     Examples
@@ -3822,7 +3822,7 @@ class Import(PyccelAstNode):
     def find_module_target(self, new_target):
         for t in self._target:
             if isinstance(t, AsName) and new_target == t.name:
-                return t.target
+                return t.local_alias
             elif new_target == t:
                 return t
         return None
