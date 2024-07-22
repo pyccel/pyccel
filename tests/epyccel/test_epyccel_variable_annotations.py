@@ -278,7 +278,7 @@ def test_dict_empty_init(stc_language):
         a : dict[int, float] #pylint: disable=unsubscriptable-object
         a = {1:1.0, 2:2.0}
 
-    epyc_dict_empty_init = epyccel(dict_empty_init, language = lang)
+    epyc_dict_empty_init = epyccel(dict_empty_init, language = stc_language)
     pyccel_result = epyc_dict_empty_init()
     python_result = dict_empty_init()
     assert isinstance(python_result, type(pyccel_result))
