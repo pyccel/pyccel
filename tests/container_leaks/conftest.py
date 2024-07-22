@@ -6,6 +6,8 @@ import sys
 import shutil
 import pytest
 
+stc_containers = ('list', 'set', 'dict')
+
 def pytest_collect_file(parent, file_path):
     """
     A hook to collect test_*.c test files.
@@ -32,8 +34,10 @@ class ValgrindTestFile(pytest.File):
         Overridden collect method to collect the results from each
         C unit test executable.
         """
-        for language in ('c',):
-            test_item = ValgrindTestItem.from_parent(name = str(self.path), parent = self)
+        for language in ('c','fortran'):
+            name = f'{self.path}[{language}]'
+            test_item = ValgrindTestItem.from_parent(name = name, parent = self)
+            test_item.path = self.path
             test_item.language = language
             yield test_item
 
@@ -41,6 +45,11 @@ class ValgrindTestFile(pytest.File):
 class ValgrindTestItem(pytest.Item):
 
     def runtest(self):
+        if self.language == 'fortran' and self.path.stem.split('_')[0] in stc_containers:
+            raise pytest.skip.Exception("Containers not yet implemented in Fortran")
+        if self.language == 'c' and self.path.stem == 'ndarrays_check':
+            raise pytest.skip.Exception("The C translation fails. See #1947")
+
         # Run the exe that corresponds to the .c file and capture the output.
         test_exe = os.path.splitext(str(self.path))[0]
         test_exe = os.path.relpath(test_exe)
