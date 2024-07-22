@@ -873,7 +873,9 @@ class SemanticParser(BasicParser):
             The nodes that deallocate the variable.
         """
         body = []
-        if var.rank > 1:
+        if var.rank == 0:
+            return body
+        elif var.rank > 1 and not isinstance(var.class_type, NumpyNDArrayType):
             scope = self.scope.create_new_loop_scope()
             index = self.scope.get_temporary_variable(PythonNativeInt())
             element = IndexedElement(var, index)
