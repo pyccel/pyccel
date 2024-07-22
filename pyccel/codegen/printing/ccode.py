@@ -46,7 +46,6 @@ from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type,
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 from pyccel.ast.cudatypes  import CudaArrayType
-from pyccel.ast.cudaext    import CudaFull
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
