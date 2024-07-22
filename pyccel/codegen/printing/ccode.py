@@ -10,7 +10,7 @@ import re
 from pyccel.ast.basic     import ScopedAstNode
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
-from pyccel.ast.builtins  import PythonPrint, PythonType
+from pyccel.ast.builtins  import PythonPrint, PythonType, PythonLen
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet
 
 from pyccel.ast.core      import Declare, For, CodeBlock
@@ -19,7 +19,7 @@ from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
-from pyccel.ast.core      import Module, AsName
+from pyccel.ast.core      import Module, AsName, Iterable
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
@@ -59,6 +59,8 @@ from pyccel.ast.variable import InhomogeneousTupleVariable
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
+
+from pyccel.parser.scope import Scope
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
@@ -1456,7 +1458,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(base.class_type, NumpyNDArrayType):
             #set dtype to the C struct types
             dtype = self.find_in_ndarray_type_registry(expr.dtype)
-        elif isinstance(base.class_type, HomogeneousContainerType):
+        elif isinstance(base.class_type, HomogeneousTupleType):
             dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(expr.dtype.primitive_type, expr.dtype.precision)])
         else:
             raise NotImplementedError(f"Don't know how to index {expr.class_type} type")
@@ -1646,18 +1648,19 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(f"Allocate not implemented for {variable}")
 
     def _print_Deallocate(self, expr):
-        if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType)):
-            variable_address = self._print(ObjectAddress(expr.variable))
-            container_type = self.get_c_type(expr.variable.class_type)
+        var = expr.variable
+        if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType)):
+            variable_address = self._print(ObjectAddress(var))
+            container_type = self.get_c_type(var.class_type)
             return f'{container_type}_drop({variable_address});\n'
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print(Deallocate(v)) for v in expr.variable)
-        variable_address = self._print(ObjectAddress(expr.variable))
-        if isinstance(expr.variable.dtype, CustomDataType):
-            Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
+        if isinstance(var, InhomogeneousTupleVariable):
+            return ''.join(self._print(Deallocate(v)) for v in var)
+        variable_address = self._print(ObjectAddress(var))
+        if isinstance(var.dtype, CustomDataType):
+            Pyccel__del = var.cls_base.scope.find('__del__').name
             return f"{Pyccel__del}({variable_address});\n"
-        elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousContainerType)):
-            if expr.variable.is_alias:
+        elif isinstance(var.class_type, (NumpyNDArrayType, HomogeneousContainerType)):
+            if var.is_alias:
                 return f'free_pointer({variable_address});\n'
             else:
                 return f'free_array({variable_address});\n'
@@ -2434,13 +2437,12 @@ class CCodePrinter(CodePrinter):
 
     def _print_ObjectAddress(self, expr):
         obj_code = self._print(expr.obj)
-        if isinstance(expr.obj, ObjectAddress) or not self.is_c_pointer(expr.obj):
+        if obj_code.startswith('(*') and obj_code.endswith(')'):
+            return f'{obj_code[2:-1]}'
+        elif isinstance(expr.obj, ObjectAddress) or not self.is_c_pointer(expr.obj):
             return f'&{obj_code}'
         else:
-            if obj_code.startswith('(*') and obj_code.endswith(')'):
-                return f'{obj_code[2:-1]}'
-            else:
-                return obj_code
+            return obj_code
 
     def _print_PointerCast(self, expr):
         declare_type = self.get_declare_type(expr.cast_type)
