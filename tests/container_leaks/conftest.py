@@ -34,11 +34,14 @@ class ValgrindTestFile(pytest.File):
         Overridden collect method to collect the results from each
         C unit test executable.
         """
+        if not shutil.which('valgrind'):
+            return
         for language in ('c','fortran'):
             name = f'{self.path}[{language}]'
             test_item = ValgrindTestItem.from_parent(name = name, parent = self)
             test_item.path = self.path
             test_item.language = language
+            test_item.add_marker(getattr(pytest.mark, language))
             yield test_item
 
 
