@@ -657,7 +657,7 @@ class CCodePrinter(CodePrinter):
 
         return code
 
-    def init_stc_container(self, expr, assignment_var):
+    def init_stc_container(self, expr, assignment_type):
         """
         Generate the initialization of an STC container in C.
 
@@ -668,9 +668,8 @@ class CCodePrinter(CodePrinter):
         expr : TypedAstNode
             The object representing the container being printed (e.g., PythonList, PythonSet).
     
-        assignment_var : Assign
-            The assignment node where the Python container (rhs) is being initialized 
-            and saved into a variable (lhs).
+        assignment_type : PyccelType
+            The type of the STC container
         
         Returns
         -------
@@ -678,11 +677,12 @@ class CCodePrinter(CodePrinter):
             The generated C code for the container initialization.
         """
 
-        dtype = self.get_c_type(assignment_var.lhs.class_type)
-        keyraw = '{' + ', '.join(self._print(a) for a in expr.args) + '}'
-        container_name = self._print(assignment_var.lhs)
-        init = f'{container_name} = c_init({dtype}, {keyraw});\n'
-        return init
+        dtype = self.get_c_type(assignment_type)
+        element_type = assignment_type.element_type
+        init_args = [self.init_stc_container(a, element_type) if isinstance(a, (PythonList, PythonSet)) \
+                    else self._print(a) for a in expr.args]
+        keyraw = '{' + ', '.join(init_args) + '}'
+        return f'c_init({dtype}, {keyraw})'
 
     def rename_imported_methods(self, expr):
         """
@@ -2197,8 +2197,7 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.arrayFill(expr)
         lhs = self._print(expr.lhs)
         if isinstance(rhs, (PythonList, PythonSet)):
-            return prefix_code+self.init_stc_container(rhs, expr)
-        rhs = self._print(expr.rhs)
+            rhs = self.init_stc_container(rhs, expr.lhs.class_type)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
 
     def _print_SetPop(self, expr):
