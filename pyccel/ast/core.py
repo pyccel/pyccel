@@ -116,7 +116,7 @@ class AsName(PyccelAstNode):
     ----------
     obj : PyccelAstNode or PyccelAstNodeType
         The variable, function, or module being renamed.
-    target : str
+    local_alias : str
         Name of variable or function in this context.
 
     Examples
@@ -129,16 +129,16 @@ class AsName(PyccelAstNode):
     >>> AsName(NumpyFull, 'fill_func')
     full as fill_func
     """
-    __slots__ = ('_obj', '_target')
+    __slots__ = ('_obj', '_local_alias')
     _attribute_nodes = ()
 
-    def __init__(self, obj, target):
+    def __init__(self, obj, local_alias):
         if pyccel_stage != "syntactic":
             assert (isinstance(obj, PyccelAstNode) and \
                     not isinstance(obj, PyccelSymbol)) or \
                    (isinstance(obj, type) and issubclass(obj, PyccelAstNode))
         self._obj = obj
-        self._target = target
+        self._local_alias = local_alias
         super().__init__()
 
     @property
