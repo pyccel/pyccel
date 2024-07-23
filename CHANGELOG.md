@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
 -   #1886 : Add Python support for dict method `pop()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
+-   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 

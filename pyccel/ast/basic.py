@@ -279,6 +279,11 @@ class PyccelAstNode:
             return
         self._recursion_in_progress = True
 
+        if not original:
+            assert not replacement
+            self._recursion_in_progress = False
+            return
+
         if iterable(original):
             assert iterable(replacement)
             assert len(original) == len(replacement)
