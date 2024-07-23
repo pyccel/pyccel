@@ -1479,7 +1479,8 @@ class CCodePrinter(CodePrinter):
             if assign:
                 assert len(assign) == 1
                 assign_node = assign[0]
-                if assign_node is expr or assign_node.lhs.is_user_of(expr):
+                lhs = assign_node.lhs
+                if lhs == expr or lhs.is_user_of(expr):
                     return f"(*{container_type}_at_mut({list_var},{index}))"
             return f"(*{container_type}_at({list_var},{index}))"
 
