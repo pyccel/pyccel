@@ -674,7 +674,7 @@ def test_mutable_indexing(stc_language):
     def f():
         a = [1,2,3,4]
         a[0] = 5
-        a[2] = 6
+        a[2] += 6
         return a[0], a[1], a[2], a[3]
 
     epyc_f = epyccel(f, language=stc_language)
