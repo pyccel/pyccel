@@ -1455,7 +1455,7 @@ class CCodePrinter(CodePrinter):
         allow_negative_indexes = expr.allows_negative_indexes
 
         if isinstance(base, IndexedElement):
-            while isinstance(base, IndexedElement) and isinstance(base.class_type, HomogeneousContainerType):
+            while isinstance(base, IndexedElement) and isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
                 inds = list(base.indices) + inds
                 base = base.base
 
