@@ -1453,24 +1453,6 @@ class CCodePrinter(CodePrinter):
         inds = list(expr.indices)
         base_shape = base.shape
         allow_negative_indexes = expr.allows_negative_indexes
-        if isinstance(base.class_type, NumpyNDArrayType):
-            #set dtype to the C struct types
-            dtype = self.find_in_ndarray_type_registry(expr.dtype)
-        elif isinstance(base.class_type, HomogeneousListType):
-            assign = expr.get_user_nodes(Assign)
-            index = self._print(inds[0])
-            list_var = self._print(ObjectAddress(base))
-            container_type = self.get_c_type(base.class_type)
-            if assign:
-                assert len(assign) == 1
-                assign_node = assign[0]
-                if assign_node is expr or assign_node.lhs.is_user_of(expr):
-                    return f"(*{container_type}_at_mut({list_var},{index}))"
-            return f"(*{container_type}_at({list_var},{index}))"
-        elif isinstance(base.class_type, HomogeneousTupleType):
-            dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(expr.dtype.primitive_type, expr.dtype.precision)])
-        else:
-            raise NotImplementedError(f"Don't know how to index {expr.class_type} type")
 
         if isinstance(base, IndexedElement):
             while isinstance(base, IndexedElement) and isinstance(base.class_type, HomogeneousContainerType):
@@ -1489,7 +1471,26 @@ class CCodePrinter(CodePrinter):
                     inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
                         PyccelAdd(base_shape[i], ind, simplify = True), ind)
 
+        if isinstance(base.class_type, HomogeneousListType):
+            assign = expr.get_user_nodes(Assign)
+            index = self._print(inds[0])
+            list_var = self._print(ObjectAddress(base))
+            container_type = self.get_c_type(base.class_type)
+            if assign:
+                assert len(assign) == 1
+                assign_node = assign[0]
+                if assign_node is expr or assign_node.lhs.is_user_of(expr):
+                    return f"(*{container_type}_at_mut({list_var},{index}))"
+            return f"(*{container_type}_at({list_var},{index}))"
+
         base_name = self._print(base)
+        if isinstance(base.class_type, NumpyNDArrayType):
+            #set dtype to the C struct types
+            dtype = self.find_in_ndarray_type_registry(expr.dtype)
+        elif isinstance(base.class_type, HomogeneousTupleType):
+            dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(expr.dtype.primitive_type, expr.dtype.precision)])
+        else:
+            raise NotImplementedError(f"Don't know how to index {expr.class_type} type")
         if expr.rank > 0:
             #managing the Slice input
             for i , ind in enumerate(inds):
