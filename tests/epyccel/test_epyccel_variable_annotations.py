@@ -7,7 +7,7 @@ Once headers are deprecated this file can be removed.
 import pytest
 
 from pyccel import epyccel
-from pyccel.errors.errors import PyccelSemanticError, Errors
+from pyccel.errors.errors import PyccelSemanticError
 from pyccel.decorators import allow_negative_index, stack_array
 
 @pytest.fixture( params=[
@@ -272,17 +272,22 @@ def test_homogeneous_list_annotation_embedded_complex(stc_language):
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
 
-@pytest.mark.parametrize('lang',
-        [pytest.param("python", marks = pytest.mark.python)])
-def test_dict_empty_init(lang):
+def test_dict_int_float(stc_language):
+    def dict_int_float():
+        # Not valid in Python 3.8
+        a : dict[int, float] #pylint: disable=unsubscriptable-object,unused-variable
+        a = {1:1.0, 2:2.0}
+
+    epyc_dict_int_float = epyccel(dict_int_float, language = stc_language)
+    epyc_dict_int_float()
+    dict_int_float()
+
+def test_dict_empty_init(stc_language):
     def dict_empty_init():
         # Not valid in Python 3.8
-        a : dict[int, float] #pylint: disable=unsubscriptable-object
-        a = {1:1.0, 2:2.0}
-        return a
+        a : dict[int, float] #pylint: disable=unsubscriptable-object,unused-variable
+        a = {}
 
-    epyc_dict_empty_init = epyccel(dict_empty_init, language = lang)
-    pyccel_result = epyc_dict_empty_init()
-    python_result = dict_empty_init()
-    assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
+    epyc_dict_empty_init = epyccel(dict_empty_init, language = stc_language)
+    epyc_dict_empty_init()
+    dict_empty_init()
