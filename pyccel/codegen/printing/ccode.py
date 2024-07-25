@@ -1258,7 +1258,7 @@ class CCodePrinter(CodePrinter):
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
         elif isinstance(dtype, DictType):
-            container_type = 'smap'
+            container_type = 'hmap'
             key_type = self.get_c_type(dtype.key_type).replace(' ', '_')
             val_type = self.get_c_type(dtype.value_type).replace(' ', '_')
             i_type = f'{container_type}_{key_type}_{val_type}'
