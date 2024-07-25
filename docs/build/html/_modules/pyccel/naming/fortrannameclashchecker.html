@@ -1,0 +1,278 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.naming.fortrannameclashchecker &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.naming.fortrannameclashchecker</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.naming.fortrannameclashchecker</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Handles name clash problems in Fortran</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.utilities.metaclasses</span> <span class="kn">import</span> <span class="n">Singleton</span>
+<span class="kn">from</span> <span class="nn">pyccel.utilities.strings</span> <span class="kn">import</span> <span class="n">create_incremented_string</span>
+
+<div class="viewcode-block" id="FortranNameClashChecker"><a class="viewcode-back" href="../../../pyccel.naming.html#pyccel.naming.fortrannameclashchecker.FortranNameClashChecker">[docs]</a><span class="k">class</span> <span class="nc">FortranNameClashChecker</span><span class="p">(</span><span class="n">metaclass</span> <span class="o">=</span> <span class="n">Singleton</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Class containing functions to help avoid problematic names in C</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Keywords as mentioned on https://fortranwiki.org/fortran/show/Keywords</span>
+    <span class="c1"># Intrinsic functions as mentioned on https://pages.mtu.edu/~shene/COURSES/cs201/NOTES/chap02/funct.html</span>
+    <span class="n">keywords</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;assign&#39;</span><span class="p">,</span> <span class="s1">&#39;backspace&#39;</span><span class="p">,</span> <span class="s1">&#39;block&#39;</span><span class="p">,</span> <span class="s1">&#39;blockdata&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;call&#39;</span><span class="p">,</span> <span class="s1">&#39;close&#39;</span><span class="p">,</span> <span class="s1">&#39;common&#39;</span><span class="p">,</span> <span class="s1">&#39;continue&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;dimension&#39;</span><span class="p">,</span> <span class="s1">&#39;do&#39;</span><span class="p">,</span> <span class="s1">&#39;else&#39;</span><span class="p">,</span> <span class="s1">&#39;elseif&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="s1">&#39;endfile&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;endif&#39;</span><span class="p">,</span> <span class="s1">&#39;endfunction&#39;</span><span class="p">,</span> <span class="s1">&#39;endmodule&#39;</span><span class="p">,</span> <span class="s1">&#39;endprogram&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;endsubroutine&#39;</span><span class="p">,</span> <span class="s1">&#39;entry&#39;</span><span class="p">,</span> <span class="s1">&#39;equivalence&#39;</span><span class="p">,</span> <span class="s1">&#39;external&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;format&#39;</span><span class="p">,</span> <span class="s1">&#39;function&#39;</span><span class="p">,</span> <span class="s1">&#39;goto&#39;</span><span class="p">,</span> <span class="s1">&#39;if&#39;</span><span class="p">,</span> <span class="s1">&#39;implicit&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;intrinsic&#39;</span><span class="p">,</span> <span class="s1">&#39;open&#39;</span><span class="p">,</span> <span class="s1">&#39;parameter&#39;</span><span class="p">,</span> <span class="s1">&#39;pause&#39;</span><span class="p">,</span> <span class="s1">&#39;print&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;program&#39;</span><span class="p">,</span> <span class="s1">&#39;read&#39;</span><span class="p">,</span> <span class="s1">&#39;return&#39;</span><span class="p">,</span> <span class="s1">&#39;rewind&#39;</span><span class="p">,</span> <span class="s1">&#39;rewrite&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;save&#39;</span><span class="p">,</span> <span class="s1">&#39;stop&#39;</span><span class="p">,</span> <span class="s1">&#39;subroutine&#39;</span><span class="p">,</span> <span class="s1">&#39;then&#39;</span><span class="p">,</span> <span class="s1">&#39;write&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;allocatable&#39;</span><span class="p">,</span> <span class="s1">&#39;allocate&#39;</span><span class="p">,</span> <span class="s1">&#39;case&#39;</span><span class="p">,</span> <span class="s1">&#39;contains&#39;</span><span class="p">,</span> <span class="s1">&#39;cycle&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;deallocate&#39;</span><span class="p">,</span> <span class="s1">&#39;elsewhere&#39;</span><span class="p">,</span> <span class="s1">&#39;exit&#39;</span><span class="p">,</span> <span class="s1">&#39;include&#39;</span><span class="p">,</span> <span class="s1">&#39;interface&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;intent&#39;</span><span class="p">,</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="s1">&#39;namelist&#39;</span><span class="p">,</span> <span class="s1">&#39;nullify&#39;</span><span class="p">,</span> <span class="s1">&#39;only&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;optional&#39;</span><span class="p">,</span> <span class="s1">&#39;pointer&#39;</span><span class="p">,</span> <span class="s1">&#39;private&#39;</span><span class="p">,</span> <span class="s1">&#39;procedure&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;public&#39;</span><span class="p">,</span> <span class="s1">&#39;recursive&#39;</span><span class="p">,</span> <span class="s1">&#39;result&#39;</span><span class="p">,</span> <span class="s1">&#39;select&#39;</span><span class="p">,</span> <span class="s1">&#39;sequence&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;target&#39;</span><span class="p">,</span> <span class="s1">&#39;use&#39;</span><span class="p">,</span> <span class="s1">&#39;while&#39;</span><span class="p">,</span> <span class="s1">&#39;where&#39;</span><span class="p">,</span> <span class="s1">&#39;elemental&#39;</span><span class="p">,</span> <span class="s1">&#39;forall&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pure&#39;</span><span class="p">,</span> <span class="s1">&#39;abstract&#39;</span><span class="p">,</span> <span class="s1">&#39;associate&#39;</span><span class="p">,</span> <span class="s1">&#39;asynchronous&#39;</span><span class="p">,</span> <span class="s1">&#39;bind&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;class&#39;</span><span class="p">,</span> <span class="s1">&#39;deferred&#39;</span><span class="p">,</span> <span class="s1">&#39;enum&#39;</span><span class="p">,</span> <span class="s1">&#39;enumerator&#39;</span><span class="p">,</span> <span class="s1">&#39;extends&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;final&#39;</span><span class="p">,</span> <span class="s1">&#39;flush&#39;</span><span class="p">,</span> <span class="s1">&#39;generic&#39;</span><span class="p">,</span> <span class="s1">&#39;import&#39;</span><span class="p">,</span> <span class="s1">&#39;non_overrideable&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;nopass&#39;</span><span class="p">,</span> <span class="s1">&#39;pass&#39;</span><span class="p">,</span> <span class="s1">&#39;protected&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;volatile&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;wait&#39;</span><span class="p">,</span> <span class="s1">&#39;codimension&#39;</span><span class="p">,</span> <span class="s1">&#39;concurrent&#39;</span><span class="p">,</span> <span class="s1">&#39;contiguous&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;critical&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="s1">&#39;submodule&#39;</span><span class="p">,</span> <span class="s1">&#39;sync&#39;</span><span class="p">,</span> <span class="s1">&#39;lock&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;unlock&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="s1">&#39;abs&#39;</span><span class="p">,</span> <span class="s1">&#39;sqrt&#39;</span><span class="p">,</span> <span class="s1">&#39;sin&#39;</span><span class="p">,</span> <span class="s1">&#39;cos&#39;</span><span class="p">,</span> <span class="s1">&#39;tan&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;asin&#39;</span><span class="p">,</span> <span class="s1">&#39;acos&#39;</span><span class="p">,</span> <span class="s1">&#39;atan&#39;</span><span class="p">,</span> <span class="s1">&#39;exp&#39;</span><span class="p">,</span> <span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="s1">&#39;int&#39;</span><span class="p">,</span> <span class="s1">&#39;nint&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;floor&#39;</span><span class="p">,</span> <span class="s1">&#39;fraction&#39;</span><span class="p">,</span> <span class="s1">&#39;real&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;mod&#39;</span><span class="p">,</span> <span class="s1">&#39;count&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pack&#39;</span><span class="p">,</span> <span class="s1">&#39;numpy_sign&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="FortranNameClashChecker.has_clash"><a class="viewcode-back" href="../../../pyccel.naming.html#pyccel.naming.fortrannameclashchecker.FortranNameClashChecker.has_clash">[docs]</a>    <span class="k">def</span> <span class="nf">has_clash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">symbols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicate whether the proposed name causes any clashes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">name</span> <span class="o">==</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="p">)</span> <span class="ow">or</span> \
+               <span class="nb">any</span><span class="p">(</span><span class="n">name</span> <span class="o">==</span> <span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FortranNameClashChecker.get_collisionless_name"><a class="viewcode-back" href="../../../pyccel.naming.html#pyccel.naming.fortrannameclashchecker.FortranNameClashChecker.get_collisionless_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_collisionless_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">symbols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the name that will be used in the fortran code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">4</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">name</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">)):</span>
+            <span class="c1"># Ignore magic methods</span>
+            <span class="k">return</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="n">name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;private&#39;</span><span class="o">+</span><span class="n">name</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">coll_symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">coll_symbols</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="n">coll_symbols</span><span class="p">:</span>
+            <span class="n">counter</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">new_name</span><span class="p">,</span> <span class="n">counter</span> <span class="o">=</span> <span class="n">create_incremented_string</span><span class="p">(</span><span class="n">coll_symbols</span><span class="p">,</span>
+                    <span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">counter</span> <span class="o">=</span> <span class="n">counter</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">+</span><span class="n">new_name</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">96</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Name </span><span class="si">{}</span><span class="s2"> is too long for Fortran. This may cause compiler errors&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">name</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

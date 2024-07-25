@@ -1,0 +1,504 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.codegen package &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pyccel.codegen.compiling package" href="pyccel.codegen.compiling.html" />
+    <link rel="prev" title="pyccel.ast package" href="pyccel.ast.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">docBranck</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pyccel.html">pyccel package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="pyccel.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pyccel.ast.html">pyccel.ast package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pyccel.codegen package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.commands.html">pyccel.commands package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.compilers.html">pyccel.compilers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.complexity.html">pyccel.complexity package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.errors.html">pyccel.errors package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.naming.html">pyccel.naming package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.parser.html">pyccel.parser package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.stdlib.html">pyccel.stdlib package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.symbolic.html">pyccel.symbolic package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.utilities.html">pyccel.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel.decorators">pyccel.decorators module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel.epyccel">pyccel.epyccel module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel.version">pyccel.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">setup module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">docBranck</a> &raquo;</li>
+        
+          <li><a href="pyccel.html">pyccel package</a> &raquo;</li>
+        
+      <li>pyccel.codegen package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/pyccel.codegen.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pyccel-codegen-package">
+<h1>pyccel.codegen package<a class="headerlink" href="#pyccel-codegen-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pyccel.codegen.compiling.html">pyccel.codegen.compiling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyccel.codegen.compiling.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyccel.codegen.compiling.html#module-pyccel.codegen.compiling.basic">pyccel.codegen.compiling.basic module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyccel.codegen.compiling.html#module-pyccel.codegen.compiling.compilers">pyccel.codegen.compiling.compilers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyccel.codegen.compiling.html#module-pyccel.codegen.compiling">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pyccel.codegen.printing.html">pyccel.codegen.printing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyccel.codegen.printing.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyccel.codegen.printing.html#module-pyccel.codegen.printing.ccode">pyccel.codegen.printing.ccode module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyccel.codegen.printing.html#module-pyccel.codegen.printing.codeprinter">pyccel.codegen.printing.codeprinter module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyccel.codegen.printing.html#module-pyccel.codegen.printing.cwrappercode">pyccel.codegen.printing.cwrappercode module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyccel.codegen.printing.html#module-pyccel.codegen.printing.fcode">pyccel.codegen.printing.fcode module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyccel.codegen.printing.html#module-pyccel.codegen.printing.luacode">pyccel.codegen.printing.luacode module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyccel.codegen.printing.html#module-pyccel.codegen.printing.pycode">pyccel.codegen.printing.pycode module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyccel.codegen.printing.html#module-pyccel.codegen.printing">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pyccel.codegen.codegen">
+<span id="pyccel-codegen-codegen-module"></span><h2>pyccel.codegen.codegen module<a class="headerlink" href="#module-pyccel.codegen.codegen" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyccel.codegen.codegen.</span></span><span class="sig-name descname"><span class="pre">Codegen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/codegen/codegen.html#Codegen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.codegen.codegen.Codegen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Abstract class for code generator.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen._collect_statements">
+<span class="sig-name descname"><span class="pre">_collect_statements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/codegen/codegen.html#Codegen._collect_statements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.codegen.codegen.Codegen._collect_statements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collects statements and split them into routines, classes, etc.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.ast">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ast</span></span><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.ast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the AST.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.body">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">body</span></span><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.body" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the body of the source code, if it is a Program or Module.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.classes">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">classes</span></span><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.classes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the classes if Module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.doprint">
+<span class="sig-name descname"><span class="pre">doprint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/codegen/codegen.html#Codegen.doprint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.doprint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints the code in the target language.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.export">
+<span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/codegen/codegen.html#Codegen.export"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.export" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export code in filename</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.get_printer_imports">
+<span class="sig-name descname"><span class="pre">get_printer_imports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/codegen/codegen.html#Codegen.get_printer_imports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.get_printer_imports" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the imports of the current codeprinter</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.imports">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">imports</span></span><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.imports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the imports of the source code.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.interfaces">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">interfaces</span></span><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.interfaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the interfaces.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.is_program">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_program</span></span><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.is_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if a Program.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.language">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">language</span></span><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.language" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the used language</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.modules">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modules</span></span><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.modules" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the modules if Program.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name associated to the source code</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.parser">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parser</span></span><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.routines">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">routines</span></span><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.routines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns functions/subroutines.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.set_printer">
+<span class="sig-name descname"><span class="pre">set_printer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/codegen/codegen.html#Codegen.set_printer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.set_printer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the current codeprinter instance</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.codegen.codegen.Codegen.variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">variables</span></span><a class="headerlink" href="#pyccel.codegen.codegen.Codegen.variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the variables of the source code.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyccel.codegen.pipeline">
+<span id="pyccel-codegen-pipeline-module"></span><h2>pyccel.codegen.pipeline module<a class="headerlink" href="#module-pyccel.codegen.pipeline" title="Permalink to this headline">¶</a></h2>
+<p>Contains the execute_pyccel function which carries out the main steps required to execute pyccel</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyccel.codegen.pipeline.execute_pyccel">
+<span class="sig-prename descclassname"><span class="pre">pyccel.codegen.pipeline.</span></span><span class="sig-name descname"><span class="pre">execute_pyccel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">syntax_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">semantic_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compiler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fflags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wrapper_flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">includes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">libdirs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">libs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compiler_export_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/codegen/pipeline.html#execute_pyccel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.codegen.pipeline.execute_pyccel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Carries out the main steps required to execute pyccel
+- Parses the python file (syntactic stage)
+- Annotates the abstract syntax tree (semantic stage)
+- Generates the translated file(s) (codegen stage)
+- Compiles the files to generate an executable and/or a shared library</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> (<em>str</em>) – Name of python file to be translated</p></li>
+<li><p><strong>syntax_only</strong> (<em>bool</em>) – Boolean indicating whether the pipeline should stop
+after the syntax stage
+Default : False</p></li>
+<li><p><strong>semantic_only</strong> (<em>bool</em>) – Boolean indicating whether the pipeline should stop
+after the semantic stage
+Default : False</p></li>
+<li><p><strong>convert_only</strong> (<em>bool</em>) – Boolean indicating whether the pipeline should stop
+after the codegen stage
+Default : False</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – Boolean indicating whether debugging messages should be printed
+Default : False</p></li>
+<li><p><strong>folder</strong> (<em>str</em>) – Path to the working directory
+Default : folder containing the file to be translated</p></li>
+<li><p><strong>language</strong> (<em>str</em>) – The language which pyccel is translating to
+Default : fortran</p></li>
+<li><p><strong>compiler</strong> (<em>str</em>) – The compiler used to compile the generated files
+Default : GNU</p></li>
+<li><p><strong>fflags</strong> (<em>str</em>) – The flags passed to the compiler
+Default : provided by Compiler</p></li>
+<li><p><strong>wrapper_flags</strong> (<em>str</em>) – The flags passed to the compiler to compile the c wrapper
+Default : provided by Compiler</p></li>
+<li><p><strong>includes</strong> (<em>list</em>) – list of include directories paths</p></li>
+<li><p><strong>libdirs</strong> (<em>list</em>) – list of paths to directories containing the required libraries</p></li>
+<li><p><strong>modules</strong> (<em>list</em>) – list of files which must also be compiled in order to compile this module</p></li>
+<li><p><strong>libs</strong> (<em>list</em>) – list of required libraries</p></li>
+<li><p><strong>debug</strong> (<em>bool</em>) – Boolean indicating whether the file should be compiled in debug mode
+(currently this only implies that the flag -fcheck=bounds is added)
+Default : False</p></li>
+<li><p><strong>accelerators</strong> (<em>iterable</em>) – Tool used to accelerate the code (e.g. openmp openacc)</p></li>
+<li><p><strong>output_name</strong> (<em>str</em>) – Name of the generated module
+Default : Same name as the file which was translated</p></li>
+<li><p><strong>export_compile_info</strong> (<em>str</em>) – Name of the json file to which compiler information is exported
+Default : None</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyccel.codegen.python_wrapper">
+<span id="pyccel-codegen-python-wrapper-module"></span><h2>pyccel.codegen.python_wrapper module<a class="headerlink" href="#module-pyccel.codegen.python_wrapper" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyccel.codegen.python_wrapper.create_shared_library">
+<span class="sig-prename descclassname"><span class="pre">pyccel.codegen.python_wrapper.</span></span><span class="sig-name descname"><span class="pre">create_shared_library</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">codegen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">main_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wrapper_flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyccel_dirpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_compiler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wrapper_compiler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sharedlib_modname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/codegen/python_wrapper.html#create_shared_library"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.codegen.python_wrapper.create_shared_library" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-pyccel.codegen.utilities">
+<span id="pyccel-codegen-utilities-module"></span><h2>pyccel.codegen.utilities module<a class="headerlink" href="#module-pyccel.codegen.utilities" title="Permalink to this headline">¶</a></h2>
+<p>This file contains some useful functions to compile the generated fortran code</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyccel.codegen.utilities.copy_internal_library">
+<span class="sig-prename descclassname"><span class="pre">pyccel.codegen.utilities.</span></span><span class="sig-name descname"><span class="pre">copy_internal_library</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lib_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyccel_dirpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/codegen/utilities.html#copy_internal_library"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.codegen.utilities.copy_internal_library" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy an internal library from its specified stdlib folder to the pyccel
+directory. The copy is only done if the files are not already present or
+if the files have changed since they were last copied. Extra files can be
+added to the folder if and when the copy occurs (e.g. for specifying
+the numpy version compatibility)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lib_folder</strong> (<em>str</em>) – The name of the folder to be copied, relative to the stdlib folder</p></li>
+<li><p><strong>pyccel_dirpath</strong> (<em>str</em>) – The location that the folder should be copied to</p></li>
+<li><p><strong>extra_files</strong> (<em>dict</em>) – A dictionary whose keys are the names of any files to be created
+in the folder and whose values are the contents of the file</p></li>
+<li><p><strong>Results</strong> – </p></li>
+<li><p><strong>-------</strong> – </p></li>
+<li><p><strong>lib_dest_path</strong> (<em>str</em>) – The location that the files were copied to</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyccel.codegen.utilities.recompile_object">
+<span class="sig-prename descclassname"><span class="pre">pyccel.codegen.utilities.</span></span><span class="sig-name descname"><span class="pre">recompile_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compile_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compiler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/codegen/utilities.html#recompile_object"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.codegen.utilities.recompile_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compile the provided file.
+If the file has already been compiled then it will only be recompiled
+if the source has been modified</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>compile_obj</strong> (<a class="reference internal" href="pyccel.codegen.compiling.html#pyccel.codegen.compiling.basic.CompileObj" title="pyccel.codegen.compiling.basic.CompileObj"><em>CompileObj</em></a>) – The object to compile</p></li>
+<li><p><strong>compiler</strong> (<em>str</em>) – The compiler used</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – Indicates whethere additional information should be printed</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyccel.codegen.utilities.not_a_copy">
+<span class="sig-prename descclassname"><span class="pre">pyccel.codegen.utilities.</span></span><span class="sig-name descname"><span class="pre">not_a_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/codegen/utilities.html#not_a_copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.codegen.utilities.not_a_copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the file filename present in src_folder
+is a copy of the file filename present in dst_folder
+or if the source file has been updated since the last
+copy</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyccel.codegen">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pyccel.codegen" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="pyccel.codegen.compiling.html" class="btn btn-neutral float-right" title="pyccel.codegen.compiling package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pyccel.ast.html" class="btn btn-neutral float-left" title="pyccel.ast package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

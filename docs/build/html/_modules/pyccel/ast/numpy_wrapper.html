@@ -1,0 +1,489 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.ast.numpy_wrapper &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.ast.numpy_wrapper</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.ast.numpy_wrapper</h1><div class="highlight"><pre>
+<span></span><span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Handling the transitions between python code and C code using (Numpy/C Api).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.datatypes</span>         <span class="kn">import</span> <span class="p">(</span><span class="n">NativeInteger</span><span class="p">,</span> <span class="n">NativeFloat</span><span class="p">,</span> <span class="n">NativeComplex</span><span class="p">,</span>
+                                <span class="n">NativeBool</span><span class="p">,</span> <span class="n">NativeGeneric</span><span class="p">,</span> <span class="n">NativeVoid</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.cwrapper</span>          <span class="kn">import</span> <span class="n">PyccelPyObject</span><span class="p">,</span> <span class="n">PyccelPyArrayObject</span>
+
+<span class="kn">from</span> <span class="nn">.core</span>              <span class="kn">import</span> <span class="n">FunctionDef</span><span class="p">,</span> <span class="n">FunctionCall</span>
+
+<span class="kn">from</span> <span class="nn">.internals</span>         <span class="kn">import</span> <span class="n">get_final_precision</span>
+
+<span class="kn">from</span> <span class="nn">.literals</span>          <span class="kn">import</span> <span class="n">LiteralInteger</span>
+
+<span class="kn">from</span> <span class="nn">.operators</span>         <span class="kn">import</span> <span class="n">PyccelNot</span><span class="p">,</span> <span class="n">PyccelEq</span>
+
+<span class="kn">from</span> <span class="nn">.variable</span>          <span class="kn">import</span> <span class="n">Variable</span>
+
+<span class="kn">from</span> <span class="nn">..errors.errors</span>   <span class="kn">import</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">..errors.messages</span> <span class="kn">import</span> <span class="n">PYCCEL_RESTRICTION_TODO</span>
+
+<span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="c1">#------- CAST FUNCTIONS ------</span>
+    <span class="s1">&#39;pyarray_to_ndarray&#39;</span><span class="p">,</span>
+    <span class="c1">#-------CHECK FUNCTIONS ------</span>
+    <span class="s1">&#39;array_checker&#39;</span><span class="p">,</span>
+    <span class="c1">#-------HELPERS ------</span>
+    <span class="s1">&#39;array_get_dim&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;array_get_data&#39;</span><span class="p">,</span>
+    <span class="c1">#-------OTHERS--------</span>
+    <span class="s1">&#39;get_numpy_max_acceptable_version_file&#39;</span>
+<span class="p">)</span>
+
+<span class="c1">#-------------------------------------------------------------------</span>
+<span class="c1">#                      Numpy functions</span>
+<span class="c1">#-------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="get_numpy_max_acceptable_version_file"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.numpy_wrapper.get_numpy_max_acceptable_version_file">[docs]</a><span class="k">def</span> <span class="nf">get_numpy_max_acceptable_version_file</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the macro specifying the last acceptable numpy version. If numpy is more</span>
+<span class="sd">    recent than this then deprecation warnings are shown.</span>
+
+<span class="sd">    The last acceptable numpy version is 1.19. If the current version is older</span>
+<span class="sd">    than this then the last acceptable numpy version is the current version</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">numpy_max_acceptable_version</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">19</span><span class="p">]</span>
+    <span class="n">numpy_current_version</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]]</span>
+    <span class="n">numpy_api_acceptable_version</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">numpy_max_acceptable_version</span><span class="p">,</span> <span class="n">numpy_current_version</span><span class="p">)</span>
+    <span class="n">numpy_api_macro</span> <span class="o">=</span> <span class="s1">&#39;# define NPY_NO_DEPRECATED_API NPY_</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">_API_VERSION</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="o">*</span><span class="n">numpy_api_acceptable_version</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">&#39;#ifndef NPY_NO_DEPRECATED_API</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">+</span> \
+            <span class="n">numpy_api_macro</span><span class="o">+</span>\
+           <span class="s1">&#39;#endif&#39;</span></div>
+
+<span class="c1"># https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_TYPE</span>
+<span class="n">numpy_get_type</span> <span class="o">=</span> <span class="n">FunctionDef</span><span class="p">(</span><span class="n">name</span>      <span class="o">=</span> <span class="s1">&#39;PyArray_TYPE&#39;</span><span class="p">,</span>
+                             <span class="n">body</span>      <span class="o">=</span> <span class="p">[],</span>
+                             <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">PyccelPyArrayObject</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;alias&#39;</span><span class="p">)],</span>
+                             <span class="n">results</span>   <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)])</span>
+
+<span class="c1"># numpy array to c ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c</span>
+<span class="n">pyarray_to_ndarray</span> <span class="o">=</span> <span class="n">FunctionDef</span><span class="p">(</span>
+                <span class="n">name</span>      <span class="o">=</span> <span class="s1">&#39;pyarray_to_ndarray&#39;</span><span class="p">,</span>
+                <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">PyccelPyArrayObject</span><span class="p">(),</span> <span class="n">memory_handling</span> <span class="o">=</span> <span class="s1">&#39;alias&#39;</span><span class="p">)],</span>
+                <span class="n">body</span>      <span class="o">=</span> <span class="p">[],</span>
+                <span class="n">results</span>   <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;array&#39;</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">NativeGeneric</span><span class="p">())])</span>
+
+<span class="c1"># numpy array check elements : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c</span>
+<span class="n">pyarray_check</span> <span class="o">=</span> <span class="n">FunctionDef</span><span class="p">(</span>
+                <span class="n">name</span>      <span class="o">=</span> <span class="s1">&#39;pyarray_check&#39;</span><span class="p">,</span>
+                <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="n">Variable</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">PyccelPyArrayObject</span><span class="p">(),</span> <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;alias&#39;</span><span class="p">),</span>
+                        <span class="n">Variable</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">NativeInteger</span><span class="p">()),</span>
+                        <span class="n">Variable</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;rank&#39;</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">NativeInteger</span><span class="p">()),</span>
+                        <span class="n">Variable</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;flag&#39;</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">NativeInteger</span><span class="p">())</span>
+                    <span class="p">],</span>
+                <span class="n">body</span>      <span class="o">=</span> <span class="p">[],</span>
+                <span class="n">results</span>   <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">NativeBool</span><span class="p">())])</span>
+
+<span class="c1"># Return the shape of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c</span>
+<span class="n">array_get_dim</span>  <span class="o">=</span> <span class="n">FunctionDef</span><span class="p">(</span><span class="n">name</span>    <span class="o">=</span> <span class="s1">&#39;nd_ndim&#39;</span><span class="p">,</span>
+                           <span class="n">body</span>      <span class="o">=</span> <span class="p">[],</span>
+                           <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeVoid</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;alias&#39;</span><span class="p">),</span>
+                                        <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;idx&#39;</span><span class="p">)],</span>
+                           <span class="n">results</span>   <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;d&#39;</span><span class="p">)])</span>
+
+<span class="c1"># Return the data of ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c</span>
+<span class="n">array_get_data</span>  <span class="o">=</span> <span class="n">FunctionDef</span><span class="p">(</span><span class="n">name</span>   <span class="o">=</span> <span class="s1">&#39;nd_data&#39;</span><span class="p">,</span>
+                           <span class="n">body</span>      <span class="o">=</span> <span class="p">[],</span>
+                           <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeVoid</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;alias&#39;</span><span class="p">)],</span>
+                           <span class="n">results</span>   <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeVoid</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="n">rank</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)])</span>
+
+<span class="c1"># Basic Array Flags</span>
+<span class="c1"># https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_OWNDATA</span>
+<span class="n">numpy_flag_own_data</span>     <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_ARRAY_OWNDATA&#39;</span><span class="p">)</span>
+<span class="c1"># https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_C_CONTIGUOUS</span>
+<span class="n">numpy_flag_c_contig</span>     <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_ARRAY_C_CONTIGUOUS&#39;</span><span class="p">)</span>
+<span class="c1"># https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_F_CONTIGUOUS</span>
+<span class="n">numpy_flag_f_contig</span>     <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_ARRAY_F_CONTIGUOUS&#39;</span><span class="p">)</span>
+
+<span class="c1"># Custom Array Flags defined in pyccel/stdlib/cwrapper/cwrapper_ndarrays.h</span>
+<span class="n">no_type_check</span>           <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NO_TYPE_CHECK&#39;</span><span class="p">)</span>
+<span class="n">no_order_check</span>          <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NO_ORDER_CHECK&#39;</span><span class="p">)</span>
+
+<span class="c1"># https://numpy.org/doc/stable/reference/c-api/dtype.html</span>
+<span class="n">numpy_bool_type</span>         <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_BOOL&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_byte_type</span>         <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_BYTE&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_ubyte_type</span>        <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_UBYTE&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_short_type</span>        <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_SHORT&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_ushort_type</span>       <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_USHORT&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_int_type</span>          <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_INT32&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_uint_type</span>         <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_UINT&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_long_type</span>         <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_LONG&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_ulong_type</span>        <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_ULONG&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_longlong_type</span>     <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_INT64&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_ulonglong_type</span>    <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_ULONGLONG&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_float_type</span>        <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_FLOAT&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_double_type</span>       <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_DOUBLE&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_longdouble_type</span>   <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_LONGDOUBLE&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_cfloat_type</span>       <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_CFLOAT&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_cdouble_type</span>      <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_CDOUBLE&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">numpy_clongdouble_type</span>  <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeInteger</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;NPY_CLONGDOUBLE&#39;</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="n">numpy_num_to_type</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span> <span class="p">:</span> <span class="n">numpy_bool_type</span><span class="p">,</span>
+                     <span class="mi">1</span> <span class="p">:</span> <span class="n">numpy_byte_type</span><span class="p">,</span>
+                     <span class="mi">2</span> <span class="p">:</span> <span class="n">numpy_ubyte_type</span><span class="p">,</span>
+                     <span class="mi">3</span> <span class="p">:</span> <span class="n">numpy_short_type</span><span class="p">,</span>
+                     <span class="mi">4</span> <span class="p">:</span> <span class="n">numpy_ushort_type</span><span class="p">,</span>
+                     <span class="mi">5</span> <span class="p">:</span> <span class="n">numpy_int_type</span><span class="p">,</span>
+                     <span class="mi">6</span> <span class="p">:</span> <span class="n">numpy_uint_type</span><span class="p">,</span>
+                     <span class="mi">7</span> <span class="p">:</span> <span class="n">numpy_long_type</span><span class="p">,</span>
+                     <span class="mi">8</span> <span class="p">:</span> <span class="n">numpy_ulong_type</span><span class="p">,</span>
+                     <span class="mi">9</span> <span class="p">:</span> <span class="n">numpy_longlong_type</span><span class="p">,</span>
+                    <span class="mi">10</span> <span class="p">:</span> <span class="n">numpy_ulonglong_type</span><span class="p">,</span>
+                    <span class="mi">11</span> <span class="p">:</span> <span class="n">numpy_float_type</span><span class="p">,</span>
+                    <span class="mi">12</span> <span class="p">:</span> <span class="n">numpy_double_type</span><span class="p">,</span>
+                    <span class="mi">13</span> <span class="p">:</span> <span class="n">numpy_longdouble_type</span><span class="p">,</span>
+                    <span class="mi">14</span> <span class="p">:</span> <span class="n">numpy_cfloat_type</span><span class="p">,</span>
+                    <span class="mi">15</span> <span class="p">:</span> <span class="n">numpy_cdouble_type</span><span class="p">,</span>
+                    <span class="mi">16</span> <span class="p">:</span> <span class="n">numpy_clongdouble_type</span><span class="p">}</span>
+
+<span class="c1"># This dictionary is required as the precision does not line up with the expected type on windows</span>
+<span class="n">numpy_int_type_precision_map</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">1</span> <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span><span class="o">.</span><span class="n">num</span><span class="p">,</span>
+        <span class="mi">2</span> <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span><span class="o">.</span><span class="n">num</span><span class="p">,</span>
+        <span class="mi">4</span> <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">num</span><span class="p">,</span>
+        <span class="mi">8</span> <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">num</span><span class="p">}</span>
+
+<span class="n">numpy_dtype_registry</span> <span class="o">=</span> <span class="p">{(</span><span class="s1">&#39;bool&#39;</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>     <span class="p">:</span> <span class="n">numpy_bool_type</span><span class="p">,</span>
+                        <span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>      <span class="p">:</span> <span class="n">numpy_num_to_type</span><span class="p">[</span><span class="n">numpy_int_type_precision_map</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                        <span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>      <span class="p">:</span> <span class="n">numpy_num_to_type</span><span class="p">[</span><span class="n">numpy_int_type_precision_map</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                        <span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>      <span class="p">:</span> <span class="n">numpy_num_to_type</span><span class="p">[</span><span class="n">numpy_int_type_precision_map</span><span class="p">[</span><span class="mi">4</span><span class="p">]],</span>
+                        <span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span><span class="mi">8</span><span class="p">)</span>      <span class="p">:</span> <span class="n">numpy_num_to_type</span><span class="p">[</span><span class="n">numpy_int_type_precision_map</span><span class="p">[</span><span class="mi">8</span><span class="p">]],</span>
+                        <span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span><span class="mi">16</span><span class="p">)</span>     <span class="p">:</span> <span class="n">numpy_longlong_type</span><span class="p">,</span>
+                        <span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>    <span class="p">:</span> <span class="n">numpy_float_type</span><span class="p">,</span>
+                        <span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span><span class="mi">8</span><span class="p">)</span>    <span class="p">:</span> <span class="n">numpy_double_type</span><span class="p">,</span>
+                        <span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span><span class="mi">16</span><span class="p">)</span>   <span class="p">:</span> <span class="n">numpy_longdouble_type</span><span class="p">,</span>
+                        <span class="p">(</span><span class="s1">&#39;complex&#39;</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>  <span class="p">:</span> <span class="n">numpy_cfloat_type</span><span class="p">,</span>
+                        <span class="p">(</span><span class="s1">&#39;complex&#39;</span><span class="p">,</span><span class="mi">8</span><span class="p">)</span>  <span class="p">:</span> <span class="n">numpy_cdouble_type</span><span class="p">,</span>
+                        <span class="p">(</span><span class="s1">&#39;complex&#39;</span><span class="p">,</span><span class="mi">16</span><span class="p">)</span> <span class="p">:</span> <span class="n">numpy_clongdouble_type</span><span class="p">}</span>
+
+<span class="c1"># Needed to check for numpy arguments type</span>
+<span class="n">Numpy_Bool_ref</span>       <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeVoid</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Bool&#39;</span><span class="p">)</span>
+<span class="n">Numpy_Int8_ref</span>       <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeVoid</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Int8&#39;</span><span class="p">)</span>
+<span class="n">Numpy_Int16_ref</span>      <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeVoid</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Int16&#39;</span><span class="p">)</span>
+<span class="n">Numpy_Int32_ref</span>      <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeVoid</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Int32&#39;</span><span class="p">)</span>
+<span class="n">Numpy_Int64_ref</span>      <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeVoid</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Int64&#39;</span><span class="p">)</span>
+<span class="n">Numpy_Float_ref</span>      <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeVoid</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Float32&#39;</span><span class="p">)</span>
+<span class="n">Numpy_Double_ref</span>     <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeVoid</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Float64&#39;</span><span class="p">)</span>
+<span class="n">Numpy_Complex64_ref</span>  <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeVoid</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Complex64&#39;</span><span class="p">)</span>
+<span class="n">Numpy_Complex128_ref</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeVoid</span><span class="p">(),</span>  <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Complex128&#39;</span><span class="p">)</span>
+
+<span class="n">numpy_type_check_registry</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>       <span class="p">:</span> <span class="n">Numpy_Int32_ref</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>       <span class="p">:</span> <span class="n">Numpy_Int64_ref</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span>       <span class="p">:</span> <span class="n">Numpy_Int16_ref</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeInteger</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>       <span class="p">:</span> <span class="n">Numpy_Int8_ref</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>         <span class="p">:</span> <span class="n">Numpy_Double_ref</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeFloat</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>         <span class="p">:</span> <span class="n">Numpy_Float_ref</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>       <span class="p">:</span> <span class="n">Numpy_Complex64_ref</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeComplex</span><span class="p">(),</span> <span class="mi">8</span><span class="p">)</span>       <span class="p">:</span> <span class="n">Numpy_Complex128_ref</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">NativeBool</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>          <span class="p">:</span> <span class="n">Numpy_Bool_ref</span>
+<span class="p">}</span>
+
+<span class="c1"># helpers</span>
+<span class="k">def</span> <span class="nf">find_in_numpy_dtype_registry</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Find the numpy dtype key for a given variable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">prec</span>  <span class="o">=</span> <span class="n">get_final_precision</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+    <span class="k">try</span> <span class="p">:</span>
+        <span class="k">return</span> <span class="n">numpy_dtype_registry</span><span class="p">[(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">prec</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span>
+                <span class="n">symbol</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">[kind = </span><span class="si">{}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">prec</span><span class="p">),</span>
+                <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="array_checker"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.numpy_wrapper.array_checker">[docs]</a><span class="k">def</span> <span class="nf">array_checker</span><span class="p">(</span><span class="n">py_variable</span><span class="p">,</span> <span class="n">c_variable</span><span class="p">,</span> <span class="n">type_check_needed</span><span class="p">,</span> <span class="n">language</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create FunctionCall responsible of checking numpy array and collecting its value</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    ----------</span>
+<span class="sd">    py_variable : Variable</span>
+<span class="sd">        The python argument of the check function</span>
+<span class="sd">    c_variable  : Variable</span>
+<span class="sd">        The variable needed for the generation of the type check</span>
+<span class="sd">    type_check_needed : boolean</span>
+<span class="sd">        True if data type check is needed, used to avoid multiple type check</span>
+<span class="sd">        in interface</span>
+<span class="sd">    language    : string</span>
+<span class="sd">        Needed to collect the flag for order check</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    FunctionCall : Check type FunctionCall</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rank</span>     <span class="o">=</span> <span class="n">c_variable</span><span class="o">.</span><span class="n">rank</span>
+    <span class="n">type_ref</span> <span class="o">=</span> <span class="n">no_type_check</span>
+    <span class="n">flag</span>     <span class="o">=</span> <span class="n">no_order_check</span>
+
+    <span class="c1"># extract numpy type ref</span>
+    <span class="k">if</span> <span class="n">type_check_needed</span><span class="p">:</span>
+        <span class="n">type_ref</span> <span class="o">=</span> <span class="n">find_in_numpy_dtype_registry</span><span class="p">(</span><span class="n">c_variable</span><span class="p">)</span>
+
+    <span class="c1"># order flag</span>
+    <span class="k">if</span> <span class="n">rank</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">language</span> <span class="o">==</span> <span class="s1">&#39;fortran&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">c_variable</span><span class="o">.</span><span class="n">order</span> <span class="o">==</span> <span class="s1">&#39;F&#39;</span><span class="p">:</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">numpy_flag_f_contig</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">numpy_flag_c_contig</span>
+
+    <span class="n">check</span> <span class="o">=</span> <span class="n">PyccelNot</span><span class="p">(</span><span class="n">FunctionCall</span><span class="p">(</span><span class="n">pyarray_check</span><span class="p">,</span> <span class="p">[</span><span class="n">py_variable</span><span class="p">,</span> <span class="n">type_ref</span><span class="p">,</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="n">rank</span><span class="p">),</span> <span class="n">flag</span><span class="p">]))</span>
+
+    <span class="k">return</span> <span class="n">check</span></div>
+
+<span class="k">def</span> <span class="nf">array_type_check</span><span class="p">(</span><span class="n">py_variable</span><span class="p">,</span> <span class="n">c_variable</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the code which checks if the array has the expected type</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">type_ref</span> <span class="o">=</span> <span class="n">find_in_numpy_dtype_registry</span><span class="p">(</span><span class="n">c_variable</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">PyccelEq</span><span class="p">(</span><span class="n">FunctionCall</span><span class="p">(</span><span class="n">numpy_get_type</span><span class="p">,</span> <span class="p">[</span><span class="n">py_variable</span><span class="p">]),</span> <span class="n">type_ref</span><span class="p">)</span>
+
+
+
+<span class="k">def</span> <span class="nf">scalar_type_check</span><span class="p">(</span><span class="n">py_variable</span><span class="p">,</span> <span class="n">c_variable</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create FunctionCall responsible of checking numpy argument data type</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    ----------</span>
+<span class="sd">    py_variable : Variable</span>
+<span class="sd">        The python argument of the check function</span>
+<span class="sd">    c_variable : Variable</span>
+<span class="sd">        The variable needed for the generation of the type check</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    FunctionCall : Check type FunctionCall</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span> <span class="p">:</span>
+        <span class="n">check_numpy_ref</span> <span class="o">=</span> <span class="n">numpy_type_check_registry</span><span class="p">[(</span><span class="n">c_variable</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">c_variable</span><span class="o">.</span><span class="n">precision</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">c_variable</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span><span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+    <span class="n">check_numpy_func</span> <span class="o">=</span> <span class="n">FunctionDef</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;PyArray_IsScalar&#39;</span><span class="p">,</span>
+                              <span class="n">body</span>      <span class="o">=</span> <span class="p">[],</span>
+                              <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">PyccelPyObject</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;alias&#39;</span><span class="p">),</span>
+                                           <span class="n">check_numpy_ref</span><span class="p">],</span>
+                              <span class="n">results</span>   <span class="o">=</span> <span class="p">[</span><span class="n">Variable</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">NativeBool</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;r&#39;</span><span class="p">)])</span>
+
+    <span class="k">return</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">check_numpy_func</span><span class="p">,</span> <span class="p">[</span><span class="n">py_variable</span><span class="p">,</span> <span class="n">check_numpy_ref</span><span class="p">])</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

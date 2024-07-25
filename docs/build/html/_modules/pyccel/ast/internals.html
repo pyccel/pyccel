@@ -1,0 +1,517 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.ast.internals &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.ast.internals</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.ast.internals</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">File containing basic classes which are used throughout pyccel.</span>
+<span class="sd">To avoid circular imports this file should only import from basic, datatypes, and literals</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">attrgetter</span>
+<span class="kn">from</span> <span class="nn">pyccel.utilities.stage</span> <span class="kn">import</span> <span class="n">PyccelStage</span>
+
+<span class="kn">from</span> <span class="nn">.basic</span>     <span class="kn">import</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">PyccelAstNode</span><span class="p">,</span> <span class="n">Immutable</span>
+<span class="kn">from</span> <span class="nn">.datatypes</span> <span class="kn">import</span> <span class="n">NativeInteger</span><span class="p">,</span> <span class="n">default_precision</span>
+<span class="kn">from</span> <span class="nn">.literals</span>  <span class="kn">import</span> <span class="n">LiteralInteger</span>
+
+<span class="n">pyccel_stage</span> <span class="o">=</span> <span class="n">PyccelStage</span><span class="p">()</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;PrecomputedCode&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PyccelArraySize&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PyccelInternalFunction&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PyccelSymbol&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Slice&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;max_precision&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;get_final_precision&#39;</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="PyccelInternalFunction"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.internals.PyccelInternalFunction">[docs]</a><span class="k">class</span> <span class="nc">PyccelInternalFunction</span><span class="p">(</span><span class="n">PyccelAstNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Abstract class used by function calls</span>
+<span class="sd">    which are translated to Pyccel objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_args&#39;</span><span class="p">,)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_args&#39;</span><span class="p">,)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_args</span>   <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The arguments passed to the function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_elemental</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the function should be</span>
+<span class="sd">        called elementwise for an array argument</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="PyccelArraySize"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.internals.PyccelArraySize">[docs]</a><span class="k">class</span> <span class="nc">PyccelArraySize</span><span class="p">(</span><span class="n">PyccelInternalFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class representing a call to a function which would</span>
+<span class="sd">    return the shape of an object in a given dimension</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    arg   : PyccelAstNode</span>
+<span class="sd">            A PyccelAstNode of unknown shape</span>
+<span class="sd">    index : int</span>
+<span class="sd">            The dimension along which the shape is</span>
+<span class="sd">            provided</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_arg&#39;</span><span class="p">,</span><span class="s1">&#39;_index&#39;</span><span class="p">)</span>
+    <span class="n">name</span>   <span class="o">=</span> <span class="s1">&#39;shape&#39;</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_arg&#39;</span><span class="p">,</span> <span class="s1">&#39;_index&#39;</span><span class="p">)</span>
+    <span class="n">_dtype</span> <span class="o">=</span> <span class="n">NativeInteger</span><span class="p">()</span>
+    <span class="n">_precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">_rank</span>  <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">_shape</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_order</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span>
+                                <span class="nb">tuple</span><span class="p">,</span>
+                                <span class="n">PyccelAstNode</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unknown type of  </span><span class="si">%s</span><span class="s1">.&#39;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">PyccelAstNode</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unknown type of  </span><span class="si">%s</span><span class="s1">.&#39;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_arg</span>   <span class="o">=</span> <span class="n">arg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">arg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Object whose size is investigated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arg</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Dimension along which the size is calculated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;Shape(</span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arg</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">PyccelArraySize</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">arg</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Slice"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.internals.Slice">[docs]</a><span class="k">class</span> <span class="nc">Slice</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Represents a slice in the code.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start : PyccelSymbol or int</span>
+<span class="sd">        starting index</span>
+
+<span class="sd">    stop : PyccelSymbol or int</span>
+<span class="sd">        ending index</span>
+
+<span class="sd">    step : PyccelSymbol or int default None</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.internals import Slice, symbols</span>
+<span class="sd">    &gt;&gt;&gt; start, end, step = symbols(&#39;start, stop, step&#39;, integer=True)</span>
+<span class="sd">    &gt;&gt;&gt; Slice(start, stop)</span>
+<span class="sd">    start : stop</span>
+<span class="sd">    &gt;&gt;&gt; Slice(None, stop)</span>
+<span class="sd">     : stop</span>
+<span class="sd">    &gt;&gt;&gt; Slice(start, None)</span>
+<span class="sd">    start :</span>
+<span class="sd">    &gt;&gt;&gt; Slice(start, stop, step)</span>
+<span class="sd">    start : stop : step</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_start&#39;</span><span class="p">,</span><span class="s1">&#39;_stop&#39;</span><span class="p">,</span><span class="s1">&#39;_step&#39;</span><span class="p">)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_start&#39;</span><span class="p">,</span><span class="s1">&#39;_stop&#39;</span><span class="p">,</span><span class="s1">&#39;_step&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stop</span> <span class="o">=</span> <span class="n">stop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step</span> <span class="o">=</span> <span class="n">step</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">pyccel_stage</span> <span class="o">==</span> <span class="s1">&#39;syntactic&#39;</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeInteger</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Slice start must be Integer or None&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">stop</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stop</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeInteger</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Slice stop must be Integer or None&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeInteger</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Slice step must be Integer or None&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Index where the slicing of the object starts</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Index until which the slicing takes place</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stop</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The difference between each index of the</span>
+<span class="sd">        objects in the slice</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> : </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PyccelSymbol"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.internals.PyccelSymbol">[docs]</a><span class="k">class</span> <span class="nc">PyccelSymbol</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Immutable</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Symbolic placeholder for a Python variable, which has a name but no type yet.</span>
+<span class="sd">    This is very generic, and it can also represent a function or a module.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : String</span>
+<span class="sd">        name of the symbol</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.internals import PyccelSymbol</span>
+<span class="sd">    &gt;&gt;&gt; x = PyccelSymbol(&#39;x&#39;)</span>
+<span class="sd">    x</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_is_temp&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">is_temp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">is_temp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_temp</span> <span class="o">=</span> <span class="n">is_temp</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_temp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Indicates if this symbol represents a temporary variable created by Pyccel,</span>
+<span class="sd">        and was not present in the original Python code [default value : False].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_temp</span></div>
+
+<div class="viewcode-block" id="PrecomputedCode"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.internals.PrecomputedCode">[docs]</a><span class="k">class</span> <span class="nc">PrecomputedCode</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Internal helper class for storing code which must be defined by the printer</span>
+<span class="sd">    before it is needed chronologically (e.g. for inline functions as arguments</span>
+<span class="sd">    to the same function).</span>
+<span class="sd">    This class should be avoided if at all possible as it may break code which</span>
+<span class="sd">    searches through attribute nodes, where possible use Basic&#39;s methods,</span>
+<span class="sd">    e.g. substitute</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    code : str</span>
+<span class="sd">           A string containing the precomputed code</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_code&#39;</span><span class="p">,)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_code</span> <span class="o">=</span> <span class="n">code</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">code</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The string containing the precomputed code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code</span></div>
+
+<span class="k">def</span> <span class="nf">symbols</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform strings into instances of PyccelSymbol class.</span>
+
+<span class="sd">    function returns a sequence of symbols with names taken</span>
+<span class="sd">    from argument, which can be a comma delimited</span>
+<span class="sd">    string</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : String</span>
+<span class="sd">        comma delimited string</span>
+
+<span class="sd">    Return</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Tuple :</span>
+<span class="sd">        tuple of instances of PyccelSymbol</span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.internals import symbols</span>
+<span class="sd">    &gt;&gt;&gt; x, y, z = symbols(&#39;x,y,z&#39;)</span>
+<span class="sd">    (x, y, z)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+    <span class="n">symbols</span> <span class="o">=</span> <span class="p">[</span><span class="n">PyccelSymbol</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span>
+
+<div class="viewcode-block" id="max_precision"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.internals.max_precision">[docs]</a><span class="k">def</span> <span class="nf">max_precision</span><span class="p">(</span><span class="n">objs</span> <span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">allow_native</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the largest precision of an object in the list</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    objs : list</span>
+<span class="sd">           A list of PyccelAstNodes</span>
+<span class="sd">    dtype : Dtype class</span>
+<span class="sd">            If this argument is provided then only the</span>
+<span class="sd">            precision of objects with this dtype are</span>
+<span class="sd">            considered</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">allow_native</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">precision</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">objs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">dtype</span><span class="p">:</span>
+        <span class="n">def_prec</span> <span class="o">=</span> <span class="n">default_precision</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">dtype</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">def_prec</span> <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">precision</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> \
+                <span class="k">else</span> <span class="n">o</span><span class="o">.</span><span class="n">precision</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">objs</span> <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="n">dtype</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ndarray_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">objs</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="s1">&#39;is_ndarray&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">ndarray_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">get_final_precision</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">ndarray_list</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;precision&#39;</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">get_final_precision</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">objs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="get_final_precision"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.internals.get_final_precision">[docs]</a><span class="k">def</span> <span class="nf">get_final_precision</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the the usable precision of an object. Ie. the precision that you</span>
+<span class="sd">    can use to print, eg 8 instead of -1 for a default precision float</span>
+
+<span class="sd">    If the precision is set to the default then the value of the default</span>
+<span class="sd">    precision is returned, otherwise the provided precision is returned</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">default_precision</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">dtype</span><span class="p">)]</span> <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">precision</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="n">obj</span><span class="o">.</span><span class="n">precision</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
