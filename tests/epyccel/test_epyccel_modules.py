@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
+import pytest
 import numpy as np
 import pytest
 from pyccel import epyccel
@@ -143,8 +144,6 @@ def test_module_7(language):
         assert np.array_equal(mod_att, modnew_att)
         assert mod_att.dtype == modnew_att.dtype
 
-    assert np.array_equal(mod.F, modnew.F)
-
     modnew.update_a()
     mod.update_a()
 
@@ -172,6 +171,25 @@ def test_module_7(language):
     mod.reset_a()
     mod.reset_c()
     mod.reset_e()
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="List wrapper is not implemented yet, related issue #1911"),
+            pytest.mark.fortran]
+            ),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="List indexing is not yet supported in C, related issue #1876"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_module_8(language):
+    import modules.list_comprehension as mod
+
+    modnew = epyccel(mod, language=language)
+
+    assert np.array_equal(mod.A, modnew.A)
 
 def test_awkward_names(language):
     import modules.awkward_names as mod

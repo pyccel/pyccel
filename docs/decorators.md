@@ -597,6 +597,36 @@ end module boo
 
 The generated C code:
 ```c
+#include "boo.h"
+
+
+/*........................................*/
+int64_t f(int64_t* a, int64_t* b, int64_t* c, int64_t* d)
+{
+    int64_t Dummy_0000;
+    int64_t Dummy_0001;
+    int64_t Dummy_0002;
+    int64_t Dummy_0003;
+    int64_t Dummy_0004;
+    int64_t Dummy_0005;
+    int64_t Dummy_0006;
+    int64_t Dummy_0007;
+    Dummy_0000 = INT64_C(2);
+    Dummy_0001 = INT64_C(4);
+    (*a) = Dummy_0000 + Dummy_0001;
+    Dummy_0002 = INT64_C(3);
+    Dummy_0003 = INT64_C(5);
+    (*b) = Dummy_0002 + Dummy_0003;
+    Dummy_0004 = INT64_C(6);
+    Dummy_0005 = INT64_C(5);
+    (*c) = Dummy_0004 + Dummy_0005;
+    Dummy_0006 = INT64_C(3);
+    Dummy_0007 = INT64_C(4);
+    (*d) = Dummy_0006 + Dummy_0007;
+    return 0;
+}
+/*........................................*/
+
 ```
 
 ### Import Error when imported from the shared library

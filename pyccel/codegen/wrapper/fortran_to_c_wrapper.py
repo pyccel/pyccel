@@ -22,6 +22,7 @@ from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.operators import PyccelIsNot, PyccelMul
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
+from pyccel.ast.numpyext import NumpyNDArrayType
 from pyccel.parser.scope import Scope
 from .wrapper import Wrapper
 
@@ -451,7 +452,7 @@ class FortranToCWrapper(Wrapper):
         """
         if isinstance(expr.class_type, FixedSizeNumericType):
             return expr.clone(expr.name, new_class = BindCVariable)
-        else:
+        elif isinstance(expr.class_type, NumpyNDArrayType):
             scope = self.scope
             func_name = scope.get_new_name('bind_c_'+expr.name.lower())
             func_scope = scope.new_child_scope(func_name)
@@ -483,6 +484,8 @@ class FortranToCWrapper(Wrapper):
                           original_function = expr)
             return expr.clone(expr.name, new_class = BindCArrayVariable, wrapper_function = func,
                                 original_variable = expr)
+        else:
+            raise NotImplementedError(f"Objects of type {expr.class_type} cannot be wrapped yet")
 
     def _wrap_DottedVariable(self, expr):
         """
