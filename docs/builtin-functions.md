@@ -76,7 +76,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 
 ## Dictionary methods
 
-:warning: The dictionary support provided by Pyccel only covers unordered dicts.
+:warning: The dictionary support provided by Pyccel only covers unordered dictionaries.
 
 | Method | Supported |
 |----------|-----------|
