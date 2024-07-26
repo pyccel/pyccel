@@ -995,7 +995,7 @@ class Bot:
             The name which can be used as a key.
         """
         if '(' in name:
-            return name.split('(')[1].split(')')[0].split(', ')
+            return tuple(name.split('(')[1].split(')')[0].split(', '))
         elif 'Codacy' in name:
             return 'Codacy'
         else:
