@@ -48,6 +48,7 @@ All notable changes to this project will be documented in this file.
 -   #1913 : Fix function calls to renamed functions.
 -   #1927 : Improve error Message for missing target language compiler in Pyccel
 -   #1930 : Preserve ordering of import targets.
+-   #1951 : Fix return type for class whose argument cannot be wrapped.
 
 ### Changed
 
