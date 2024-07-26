@@ -251,7 +251,7 @@ def get_cls_base(class_type):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    if isinstance(class_type, CustomDataType):
+    if isinstance(class_type, (CustomDataType, SymbolicType)):
         return None
     elif class_type in literal_classes:
         return literal_classes[class_type]
@@ -265,8 +265,6 @@ def get_cls_base(class_type):
         return SetClass
     elif isinstance(class_type, DictType):
         return DictClass
-    elif isinstance(class_type, SymbolicType):
-        return None
     else:
         raise NotImplementedError(f"No class definition found for type {class_type}")
 
