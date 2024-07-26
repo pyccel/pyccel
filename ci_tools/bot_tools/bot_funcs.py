@@ -291,10 +291,11 @@ class Bot:
             check_runs = {self.get_name_key(c["name"]): c for c in self._GAI.get_check_runs(self._ref)['check_runs']}
             already_triggered = [c["name"] for n,c in check_runs.items() if c['status'] in ('completed', 'in_progress') and \
                                                                             c['conclusion'] != 'cancelled' and \
-                                                                            n != 'coverage']
+                                                                            n != ('coverage', default_python_versions['coverage'])]
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
-            already_programmed = {c["name"]:c for c in check_runs.values() if c['status'] == 'queued'}
-            success_names = [n for n,c in check_runs.items() if c['status'] == 'completed' and c['conclusion'] == 'success']
+            already_programmed = {n:c for n,c in check_runs.items() if c['status'] == 'queued'}
+            success_names = [n if not isinstance(n, tuple) else n[0] for n,c in check_runs.items()
+                                if c['status'] == 'completed' and c['conclusion'] == 'success']
             print(already_triggered)
             states = []
 
@@ -313,11 +314,11 @@ class Bot:
 
             for t in tests:
                 pv = python_version or default_python_versions[t]
-                key = f"({t}, {pv})"
-                if any(key in a for a in already_triggered):
-                    states.append(check_runs[t]['conclusion'])
+                key = (t, pv)
+                if key in already_triggered_names:
+                    states.append(check_runs[key]['conclusion'])
                     continue
-                name = f"{test_names[t]} {key}"
+                name = f"{test_names[t]} ({t}, {pv})"
                 if not force_run and not self.is_test_required(commit_log, name, t, states):
                     continue
                 states.append('queued')
@@ -994,7 +995,7 @@ class Bot:
             The name which can be used as a key.
         """
         if '(' in name:
-            return name.split('(')[1].split(',')[0]
+            return name.split('(')[1].split(')')[0].split(', ')
         elif 'Codacy' in name:
             return 'Codacy'
         else:
