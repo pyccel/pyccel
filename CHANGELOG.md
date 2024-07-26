@@ -51,7 +51,7 @@ All notable changes to this project will be documented in this file.
 -   #1927 : Improve error Message for missing target language compiler in Pyccel
 -   #1933 : Improve code printing speed.
 -   #1930 : Preserve ordering of import targets.
--   #1951 : Fix return type for class taking unwrappable argument
+-   #1951 : Fix return type for class whose argument cannot be wrapped.
 
 ### Changed
 
