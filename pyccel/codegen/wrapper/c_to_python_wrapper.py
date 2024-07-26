@@ -447,7 +447,10 @@ class CToPythonWrapper(Wrapper):
             The new function which raises the error.
         """
         func_args = [FunctionDefArgument(self.get_new_PyObject(n)) for n in ("self", "args", "kwargs")]
-        func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+        if self._error_exit_code is Nil():
+            func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+        else:
+            func_results = [FunctionDefResult(self.scope.get_temporary_variable(self._error_exit_code.class_type, "result"))]
         function = PyFunctionDef(name = name, arguments = func_args, results = func_results,
                 body = [FunctionCall(PyErr_SetString, [PyNotImplementedError,
                                         LiteralString(error_msg)]),
