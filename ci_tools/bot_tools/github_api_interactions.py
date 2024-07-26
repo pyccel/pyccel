@@ -394,7 +394,15 @@ class GitHubAPIInteractions:
             A dictionary containing the comments.
         """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/comments"
-        return self._post_request("GET", url).json()
+        results = []
+        page = 1
+        new_results = [None]
+        while len(new_results) != 0:
+            request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
+            new_results = request.json()
+            results.extend(new_results)
+            page += 1
+        return results
 
     def get_review_comments(self, pr_id):
         """
