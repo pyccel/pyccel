@@ -19,7 +19,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `compile` | No |
 | **`complex`** | **Yes** |
 | `delattr` | No |
-| *`dict`* | Preliminary Python support |
+| *`dict`* | Preliminary Python and C **unordered** support |
 | `dir` | No |
 | `divmod` | No |
 | **`enumerate`** | as a loop iterable |
@@ -75,6 +75,8 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | \_\_`import`\_\_ | No
 
 ## Dictionary methods
+
+:warning: The dictionary support provided by Pyccel only covers unordered dictionaries.
 
 | Method | Supported |
 |----------|-----------|
