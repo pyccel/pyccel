@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
             if was_examined and not result_ignored:
                 print(completed_runs, pr_test_keys, successful_runs)
-                print(all( in completed_runs for k in pr_test_keys),
+                print(all(k in completed_runs for k in pr_test_keys),
                      all(k in successful_runs for k in pr_test_keys))
                 if event['check_run']['conclusion'] == 'failure':
                     bot.draft_due_to_failure()
