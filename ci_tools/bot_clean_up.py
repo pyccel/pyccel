@@ -10,6 +10,18 @@ pr_test_keys = [(t, default_python_versions[t]) for t in bot_pr_test_keys] + ['C
 def get_name_from_key(name_key):
     """
     Get the name from a name key by dropping the information about the Python version.
+
+    Get the name from a name key by dropping the information about the Python version.
+
+    Parameters
+    ----------
+    name_key : str | tuple
+        The key used to uniquely identify the run configuration.
+
+    Returns
+    -------
+    str
+        A string indicating the run tool (but not the Python version).
     """
     if isinstance(name_key, tuple):
         # Ignore Python version
