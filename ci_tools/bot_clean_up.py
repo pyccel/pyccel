@@ -3,9 +3,18 @@
 import json
 import os
 import sys
-from bot_tools.bot_funcs import Bot, test_dependencies, pr_test_keys as bot_pr_test_keys
+from bot_tools.bot_funcs import Bot, test_dependencies, pr_test_keys as bot_pr_test_keys, default_python_versions
 
-pr_test_keys = list(bot_pr_test_keys) + ['Codacy']
+pr_test_keys = [(t, default_python_versions[t]) for t in bot_pr_test_keys] + ['Codacy']
+
+def get_name_from_key(name_key):
+    """
+    Get the name from a name key by dropping the information about the Python version.
+    """
+    if isinstance(name_key, tuple):
+        # Ignore Python version
+        return name_key[0]
+    return name_key
 
 if __name__ == '__main__':
     # Parse event payload from $GITHUB_EVENT_PATH variable
@@ -15,7 +24,7 @@ if __name__ == '__main__':
     with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
         event = json.load(event_file)
 
-    name = event['check_run']['name']
+    full_name = event['check_run']['name']
 
     print(event)
 
@@ -30,10 +39,7 @@ if __name__ == '__main__':
     except StopIteration:
         pr_id = 0
 
-    name_key = bot.get_name_key(name)
-    if isinstance(name_key, tuple):
-        # Ignore Python version
-        name_key = name_key[0]
+    name = get_name_from_key(bot.get_name_key(full_name))
 
     runs = bot.get_check_runs()
 
@@ -54,8 +60,8 @@ if __name__ == '__main__':
             # Not a Pyccel triggered test
             continue
         deps = test_dependencies.get(q_key[0], ())
-        if name_key in deps:
-            if all(d in successful_runs for d in deps):
+        if name in deps:
+            if all(d in (get_name_from_key(r) for r in successful_runs) for d in deps):
                 q_name, python_version = q_key
                 workflow_ids = None
                 if q_name == 'coverage':
@@ -106,7 +112,7 @@ if __name__ == '__main__':
 
             if was_examined and not result_ignored:
                 print(completed_runs, pr_test_keys, successful_runs)
-                print(all(k in completed_runs for k in pr_test_keys),
+                print(all( in completed_runs for k in pr_test_keys),
                      all(k in successful_runs for k in pr_test_keys))
                 if event['check_run']['conclusion'] == 'failure':
                     bot.draft_due_to_failure()
