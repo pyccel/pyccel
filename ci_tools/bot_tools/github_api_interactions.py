@@ -883,6 +883,29 @@ class GitHubAPIInteractions:
 
         return success
 
+    def has_valid_artifacts(self, run_id):
+        """
+        Check if all the artifacts associated with a run id are valid (i.e. not expired).
+
+        Check if all the artifacts associated with a run id are valid (i.e. not expired).
+        This is done by collecting all artifacts associated with a run id using the GitHub
+        API as described here:
+        <https://docs.github.com/en/rest/actions/artifacts?apiVersion=2022-11-28#list-workflow-run-artifacts>
+
+        Parameters
+        ----------
+        run_id : int
+            The id of the run to be investigated.
+
+        Returns
+        -------
+        bool
+            True if all artifacts are valid. False otherwise.
+        """
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/runs/{run_id}/artifacts"
+        artifacts = self._post_request("GET", url).json()['artifacts']
+        return all(not a['expired'] for a in artifacts)
+
     def get_headers(self):
         """
         Get the header which is always passed to the API.
