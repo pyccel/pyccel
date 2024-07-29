@@ -31,6 +31,9 @@ if __name__ == '__main__':
         pr_id = 0
 
     name_key = bot.get_name_key(name)
+    if isinstance(name_key, tuple):
+        # Ignore Python version
+        name_key = name_key[0]
 
     runs = bot.get_check_runs()
 
@@ -46,11 +49,14 @@ if __name__ == '__main__':
 
     for q in queued_runs:
         q_name = q['name']
-        deps = test_dependencies.get(bot.get_name_key(q_name), ())
+        q_key = bot.get_name_key(q_name)
+        if not isinstance(q_key, tuple):
+            # Not a Pyccel triggered test
+            continue
+        deps = test_dependencies.get(q_key[0], ())
         if name_key in deps:
             if all(d in successful_runs for d in deps):
-                q_key = q_name.split('(')[1].split(')')[0].strip()
-                q_name, python_version = q_key.split(',')
+                q_name, python_version = q_key
                 workflow_ids = None
                 if q_name == 'coverage':
                     workflow_ids = [int(r['details_url'].split('/')[-1]) for r in runs if r['conclusion'] == "success" and '(' in r['name']]
