@@ -10,7 +10,7 @@ import re
 from pyccel.ast.basic     import ScopedAstNode
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
-from pyccel.ast.builtins  import PythonPrint, PythonType, PythonLen
+from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict
 
 from pyccel.ast.core      import Declare, For, CodeBlock
@@ -19,7 +19,7 @@ from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
-from pyccel.ast.core      import Module, AsName, Iterable
+from pyccel.ast.core      import Module, AsName
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
@@ -59,8 +59,6 @@ from pyccel.ast.variable import InhomogeneousTupleVariable
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
-
-from pyccel.parser.scope import Scope
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
