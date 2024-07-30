@@ -688,9 +688,7 @@ class CCodePrinter(CodePrinter):
             init_args = [self.init_stc_container(a, element_type) if isinstance(a, (PythonList, PythonSet, PythonDict)) \
                          else self._print(a) for a in expr.args]
             keyraw = '{' + ', '.join(init_args) + '}'
-        container_name = self._print(assignment_var.lhs)
-        init = f'{container_name} = c_init({dtype}, {keyraw});\n'
-        return init
+        return f'c_init({dtype}, {keyraw})'
 
     def rename_imported_methods(self, expr):
         """
@@ -2233,8 +2231,9 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.arrayFill(expr)
         lhs = self._print(expr.lhs)
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
-            return prefix_code+self.init_stc_container(rhs, expr.lhs.class_type)
-        rhs = self._print(expr.rhs)
+            rhs = self.init_stc_container(rhs, expr.lhs.class_type)
+        else:
+            rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
 
     def _print_SetPop(self, expr):
