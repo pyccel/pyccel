@@ -875,7 +875,7 @@ class SemanticParser(BasicParser):
         body = []
         if var.rank == 0:
             return body
-        elif var.rank > 1 and not isinstance(var.class_type, NumpyNDArrayType):
+        elif var.rank > 1 and not isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             scope = self.scope.create_new_loop_scope()
             index = self.scope.get_temporary_variable(PythonNativeInt())
             element = IndexedElement(var, index)
