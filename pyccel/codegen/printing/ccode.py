@@ -671,7 +671,7 @@ class CCodePrinter(CodePrinter):
             The object representing the container being printed (e.g., PythonList, PythonSet).
     
         assignment_type : PyccelType
-            The type of the STC container
+            The type of the STC container.
         
         Returns
         -------

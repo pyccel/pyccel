@@ -865,7 +865,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         var : Variable
-            The variable to be deallocated
+            The variable to be deallocated.
 
         Returns
         -------
