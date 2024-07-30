@@ -16,12 +16,13 @@ All notable changes to this project will be documented in this file.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1743 : Add Python support for set method `discard()`.
 -   #1754 : Add Python support for set method `update()`.
+-   #1893 : Add Python support for set initialisation with `set()`.
 -   #1787 : Ensure STC is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
 -   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the STC library.
+-   #1876 : Add C support for indexing lists.
 -   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
--   #1893 : Add Python support for set initialisation with `set()`.
 -   #1877 : Add C Support for set method `pop()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
