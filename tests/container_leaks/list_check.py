@@ -9,9 +9,9 @@ def allocate_list_of_pointers():
     b = [a]
     print(b[0][0])
 
-def get_list_element():
-    a = [[[1,2], [3,4]], [[5,6], [7,8]]]
-    return a[1][0][1]
+def get_list_element_1d():
+    a = [1,2,3,4]
+    return a[2]
 
 if __name__ == '__main__':
     allocate_list_of_list()
