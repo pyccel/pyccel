@@ -565,7 +565,7 @@ class SemanticParser(BasicParser):
                         continue
                 if isinstance(i.class_type, CustomDataType) and i.is_alias:
                     continue
-                deallocs.extend(self._create_Deallocate(i))
+                deallocs.append(Deallocate(i))
         self._allocs.pop()
         return deallocs
 
@@ -854,37 +854,6 @@ class SemanticParser(BasicParser):
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
         return var[indices]
-
-    def _create_Deallocate(self, var):
-        """
-        Create a Deallocate node.
-
-        Create a Deallocate node. This includes deallocating any elements inside
-        the variable being deallocated.
-
-        Parameters
-        ----------
-        var : Variable
-            The variable to be deallocated.
-
-        Returns
-        -------
-        list[PyccelAstNode]
-            The nodes that deallocate the variable.
-        """
-        body = []
-        if var.rank == 0:
-            return body
-        elif var.rank > 1 and not isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
-            scope = self.scope.create_new_loop_scope()
-            index = self.scope.get_temporary_variable(PythonNativeInt())
-            element = IndexedElement(var, index)
-            for_body = self._create_Deallocate(element)
-            iter_obj = Iterable(PythonRange(PythonLen(var)))
-            body.append(For(index, iter_obj, for_body, scope=scope))
-        body.append(Deallocate(var))
-
-        return body
 
     def _create_PyccelOperator(self, expr, visited_args):
         """
@@ -1662,7 +1631,7 @@ class SemanticParser(BasicParser):
             # we allow pointers to be reassigned multiple times
             # pointers reassigning need to call free_pointer func
             # to remove memory leaks
-            new_expressions.extend(self._create_Deallocate(var))
+            new_expressions.append(Deallocate(var))
 
         elif class_type != var.class_type:
             if is_augassign:
@@ -1746,7 +1715,7 @@ class SemanticParser(BasicParser):
 
                 new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
             elif isinstance(var.class_type, CustomDataType) and not var.is_alias:
-                new_expressions.extend(self._create_Deallocate(var))
+                new_expressions.append(Deallocate(var))
 
     def _assign_GeneratorComprehension(self, lhs_name, expr):
         """
@@ -3790,7 +3759,7 @@ class SemanticParser(BasicParser):
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
         self._check_pointer_targets(results)
-        code = assigns + [d for i in self._allocs[-1] if i not in results for d in self._create_Deallocate(i)]
+        code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results]
         if code:
             expr  = Return(results, CodeBlock(code))
         else:
@@ -4281,7 +4250,7 @@ class SemanticParser(BasicParser):
 
     def _visit_Del(self, expr):
 
-        ls = [d for i in expr.variables for d in self._create_Deallocate(self._visit(i))]
+        ls = [Deallocate(self._visit(i)) for i in expr.variables]
         return Del(ls)
 
     def _visit_PyccelIs(self, expr):
