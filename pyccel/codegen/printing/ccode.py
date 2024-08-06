@@ -669,7 +669,7 @@ class CCodePrinter(CodePrinter):
             The object representing the container being printed (e.g., PythonList, PythonSet).
     
         assignment_var : Assign
-            The assignment node where the Python container (rhs) is being initialized
+            The assignment node where the Python container (rhs) is being initialized 
             and saved into a variable (lhs).
         
         Returns
