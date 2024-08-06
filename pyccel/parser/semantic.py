@@ -1377,6 +1377,10 @@ class SemanticParser(BasicParser):
             d_lhs['memory_handling'] = 'alias'
             rhs.base.is_target = not rhs.base.is_alias
 
+        if isinstance(rhs, (PythonList, PythonDict, PythonTuple)):
+            for r in rhs:
+                self._ensure_target(r, d_lhs)
+
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False):
         """
         Create a variable from the left-hand side (lhs) of an assignment.
@@ -2289,13 +2293,27 @@ class SemanticParser(BasicParser):
         return PythonTuple(*ls)
 
     def _visit_PythonList(self, expr):
-        ls = [self._visit(i) for i in expr]
-        try:
-            expr = PythonList(*ls)
-        except TypeError:
-            errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
-                severity='fatal')
-        return expr
+        # If Python list is the rhs of an assign statement
+        if expr.get_direct_user_nodes(lambda v: isinstance(v, Assign)):
+            ls = [self._visit(i) for i in expr]
+            try:
+                expr = PythonList(*ls)
+                for l in ls:
+                    if l.rank > 0:
+                        self._indicate_pointer_target(expr, l, expr)
+            except TypeError:
+                errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
+                    severity='fatal')
+            return expr
+        else:
+            # If Python list is inside another statement, unpack it to ensure that referencing works
+            pyccel_stage.set_stage('syntactic')
+            tmp_var = self.scope.get_new_name()
+            syntactic_assign = Assign(tmp_var, expr, python_ast = expr.python_ast)
+            pyccel_stage.set_stage('semantic')
+            assign = self._visit(syntactic_assign)
+            self._additional_exprs[-1].append(assign)
+            return self._visit(tmp_var)
 
     def _visit_PythonSet(self, expr):
         ls = [self._visit(i) for i in expr]
