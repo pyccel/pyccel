@@ -1987,6 +1987,28 @@ class SemanticParser(BasicParser):
         raise errors.report("Unrecognised type slice",
                 severity='fatal', symbol=expr)
 
+    def _create_iterable_object(self, expr, cls_type):
+        usage_in_array = [f.funcdef for f in expr.get_user_nodes(FunctionCall) if f.funcdef == 'array']
+        lst = []
+        for elem in expr:
+            if isinstance(elem, (PythonTuple, PythonList, PythonSet, PythonDict)) and not usage_in_array:
+                # If object of rank>0 is inside the list, unpack it to ensure that
+                # deallocation works correctly
+                pyccel_stage.set_stage('syntactic')
+                tmp_var = self.scope.get_new_name()
+                syntactic_assign = Assign(tmp_var, elem, python_ast = expr.python_ast)
+                pyccel_stage.set_stage('semantic')
+                assign = self._visit(syntactic_assign)
+                self._additional_exprs[-1].append(assign)
+                lst.append(self._visit(tmp_var))
+            else:
+                lst.append(self._visit(elem))
+        try:
+            expr = cls_type(*lst)
+        except TypeError:
+            errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
+                severity='fatal')
+        return expr
 
     #====================================================
     #                 _visit functions
@@ -2258,31 +2280,10 @@ class SemanticParser(BasicParser):
         return mod
 
     def _visit_PythonTuple(self, expr):
-        ls = [self._visit(i) for i in expr]
-        return PythonTuple(*ls)
+        return self._create_iterable_object(expr, PythonTuple)
 
     def _visit_PythonList(self, expr):
-        usage_in_array = [f.funcdef for f in expr.get_user_nodes(FunctionCall) if f.funcdef == 'array']
-        lst = []
-        for elem in expr:
-            if isinstance(elem, (PythonList, PythonSet, PythonDict)) and not usage_in_array:
-                # If object of rank>0 is inside the list, unpack it to ensure that
-                # deallocation works correctly
-                pyccel_stage.set_stage('syntactic')
-                tmp_var = self.scope.get_new_name()
-                syntactic_assign = Assign(tmp_var, elem, python_ast = expr.python_ast)
-                pyccel_stage.set_stage('semantic')
-                assign = self._visit(syntactic_assign)
-                self._additional_exprs[-1].append(assign)
-                lst.append(self._visit(tmp_var))
-            else:
-                lst.append(self._visit(elem))
-        try:
-            expr = PythonList(*lst)
-        except TypeError:
-            errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
-                severity='fatal')
-        return expr
+        return self._create_iterable_object(expr, PythonList)
 
     def _visit_PythonSet(self, expr):
         ls = [self._visit(i) for i in expr]
