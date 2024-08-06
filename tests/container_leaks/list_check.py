@@ -16,4 +16,4 @@ def get_list_element_1d():
 if __name__ == '__main__':
     allocate_list_of_list()
     allocate_list_of_pointers()
-    elem = get_list_element()
+    elem = get_list_element_1d()
