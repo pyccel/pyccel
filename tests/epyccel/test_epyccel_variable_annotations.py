@@ -229,6 +229,7 @@ def test_homogeneous_list_annotation_int(stc_language):
     def homogeneous_list_annotation():
         a: 'list[int]'  # pylint: disable=unused-variable
         a = [1, 2, 3, 4]
+        return a[0], a[1], a[2], a[3]
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=stc_language)
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
@@ -236,6 +237,7 @@ def test_homogeneous_list_annotation_int(stc_language):
 def test_homogeneous_list_without_annotation(stc_language):
     def homogeneous_list():
         a = [1, 2, 3, 4] # pylint: disable=unused-variable
+        return a[0], a[1], a[2], a[3]
     epyc_homogeneous_list = epyccel(homogeneous_list, language=stc_language)
     assert epyc_homogeneous_list() == homogeneous_list()
     assert isinstance(epyc_homogeneous_list(), type(homogeneous_list()))
@@ -244,6 +246,7 @@ def test_homogeneous_list_annotation_float(stc_language):
     def homogeneous_list_annotation():
         a: 'list[float]'  # pylint: disable=unused-variable
         a = [1.1, 2.2, 3.3, 4.4]
+        return a[0], a[1], a[2], a[3]
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=stc_language)
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
@@ -252,6 +255,7 @@ def test_homogeneous_list_annotation_bool(stc_language):
     def homogeneous_list_annotation():
         a: 'list[bool]'  # pylint: disable=unused-variable
         a = [False, True, True, False]
+        return a[0], a[1], a[2], a[3]
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=stc_language)
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
@@ -260,6 +264,7 @@ def test_homogeneous_list_annotation_complex(stc_language):
     def homogeneous_list_annotation():
         a: 'list[complex]'  # pylint: disable=unused-variable
         a = [1+1j, 2+2j, 3+3j, 4+4j]
+        return a[0], a[1], a[2], a[3]
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=stc_language)
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
@@ -268,6 +273,7 @@ def test_homogeneous_list_annotation_embedded_complex(stc_language):
     def homogeneous_list_annotation():
         a : 'list[complex]' = [1j, 2j]
         b = [a] # pylint: disable=unused-variable
+        return b[0][0]
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=stc_language)
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
