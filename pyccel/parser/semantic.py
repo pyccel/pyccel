@@ -2265,7 +2265,7 @@ class SemanticParser(BasicParser):
         usage_in_array = [f.funcdef for f in expr.get_user_nodes(FunctionCall) if f.funcdef == 'array']
         lst = []
         for elem in expr:
-            if isinstance(elem, (PythonList, PythonSet, PythonDict)):
+            if isinstance(elem, (PythonList, PythonSet, PythonDict)) and not usage_in_array:
                 # If object of rank>0 is inside the list, unpack it to ensure that
                 # deallocation works correctly
                 pyccel_stage.set_stage('syntactic')
