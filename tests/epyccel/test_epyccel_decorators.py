@@ -169,3 +169,22 @@ def test_indexed_template(language):
 
     assert python_cmplx == pyccel_cmplx
     assert isinstance(python_cmplx, type(pyccel_cmplx))
+
+@pytest.mark.parametrize("language", (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="lists not implemented in fortran"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+        )
+)
+def test_allow_negative_index_list(language):
+    def allow_negative_index_annotation():
+        a = [1,2,3,4]
+        return a[-1], a[-2], a[-3], a[0]
+
+    epyc_allow_negative_index_annotation = epyccel(allow_negative_index_annotation, language=language)
+
+    assert epyc_allow_negative_index_annotation() == allow_negative_index_annotation()
+    assert isinstance(epyc_allow_negative_index_annotation(), type(allow_negative_index_annotation()))
+
