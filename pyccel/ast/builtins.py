@@ -734,6 +734,7 @@ class PythonListFunction(PyccelFunction):
     arg : TypedAstNode
         The argument passed to the function call.
     """
+    name = 'list'
     __slots__ = ('_class_type', '_shape')
     _attribute_nodes = ()
 
