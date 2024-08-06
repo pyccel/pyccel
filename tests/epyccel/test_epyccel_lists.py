@@ -730,7 +730,7 @@ def test_homogenous_list_float_copy(language):
 
     assert python_out == pyccel_out
 
-def test_homogenous_list_int_tuplecopy(language):
+def test_homogenous_list_int_tuple_copy(language):
     def homogeneous_list_int_tuple():
         return list((1, 2, 3, 4))
     f1 = homogeneous_list_int_tuple
@@ -738,6 +738,21 @@ def test_homogenous_list_int_tuplecopy(language):
 
     python_out = f1()
     pyccel_out = f2()
+    print(pyccel_out)
+    print(python_out)
+
+    assert python_out == pyccel_out
+
+def test_homogenous_list_unknown_size_copy(language):
+    def homogeneous_list_unknown_size_copy(n : int):
+        a = (3,)*n
+        b = list(a)
+        return b[0]
+    f1 = homogeneous_list_unknown_size_copy
+    f2 = epyccel( f1 , language=language)
+
+    python_out = f1(5)
+    pyccel_out = f2(5)
     print(pyccel_out)
     print(python_out)
 
