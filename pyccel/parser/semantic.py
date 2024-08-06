@@ -2262,17 +2262,20 @@ class SemanticParser(BasicParser):
         return PythonTuple(*ls)
 
     def _visit_PythonList(self, expr):
+        usage_in_array = [f.funcdef for f in expr.get_user_nodes(FunctionCall) if f.funcdef == 'array']
         # If Python list is the rhs of an assign statement
-        if expr.get_direct_user_nodes(lambda v: isinstance(v, Assign)):
+        if expr.get_direct_user_nodes(lambda v: isinstance(v, Assign)) or usage_in_array:
             ls = [self._visit(i) for i in expr]
             try:
                 expr = PythonList(*ls)
-                for l in ls:
-                    if l.rank > 0:
-                        self._indicate_pointer_target(expr, l, expr)
             except TypeError:
                 errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
                     severity='fatal')
+            # Array creates via pointer so pointer target is not required
+            if not usage_in_array:
+                for l in ls:
+                    if l.rank > 0:
+                        self._indicate_pointer_target(expr, l, expr)
             return expr
         else:
             # If Python list is inside another statement, unpack it to ensure that referencing works
