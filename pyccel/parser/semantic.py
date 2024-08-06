@@ -26,7 +26,7 @@ from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
 from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate
-from pyccel.ast.builtins import PythonTuple, Lambda, PythonMap, PythonLen
+from pyccel.ast.builtins import PythonTuple, Lambda, PythonMap
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
 from pyccel.ast.builtin_methods.set_methods  import SetMethod, SetAdd
