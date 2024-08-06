@@ -53,7 +53,7 @@ All notable changes to this project will be documented in this file.
 -   #1933 : Improve code printing speed.
 -   #1930 : Preserve ordering of import targets.
 -   #1951 : Fix return type for class whose argument cannot be wrapped.
--   #1892 : Fix implementation of list function when list or tuple is passed as parameter.
+-   #1892 : Fix implementation of list function when an iterable is passed as parameter.
 
 ### Changed
 
