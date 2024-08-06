@@ -1678,19 +1678,18 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(f"Allocate not implemented for {variable}")
 
     def _print_Deallocate(self, expr):
-        var = expr.variable
-        if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-            variable_address = self._print(ObjectAddress(var))
-            container_type = self.get_c_type(var.class_type)
+        if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            variable_address = self._print(ObjectAddress(expr.variable))
+            container_type = self.get_c_type(expr.variable.class_type)
             return f'{container_type}_drop({variable_address});\n'
-        if isinstance(var, InhomogeneousTupleVariable):
-            return ''.join(self._print(Deallocate(v)) for v in var)
-        variable_address = self._print(ObjectAddress(var))
-        if isinstance(var.dtype, CustomDataType):
-            Pyccel__del = var.cls_base.scope.find('__del__').name
+        if isinstance(expr.variable, InhomogeneousTupleVariable):
+            return ''.join(self._print(Deallocate(v)) for v in expr.variable)
+        variable_address = self._print(ObjectAddress(expr.variable))
+        if isinstance(expr.variable.dtype, CustomDataType):
+            Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
             return f"{Pyccel__del}({variable_address});\n"
-        elif isinstance(var.class_type, (NumpyNDArrayType, HomogeneousContainerType)):
-            if var.is_alias:
+        elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousContainerType)):
+            if expr.variable.is_alias:
                 return f'free_pointer({variable_address});\n'
             else:
                 return f'free_array({variable_address});\n'
