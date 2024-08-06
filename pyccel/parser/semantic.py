@@ -2282,11 +2282,6 @@ class SemanticParser(BasicParser):
         except TypeError:
             errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
                 severity='fatal')
-        # Array creates via pointer so pointer target is not required
-        if not usage_in_array:
-            for l in lst:
-                if l.rank > 0:
-                    self._indicate_pointer_target(expr, l, expr)
         return expr
 
     def _visit_PythonSet(self, expr):
@@ -3321,6 +3316,7 @@ class SemanticParser(BasicParser):
                     errors.report("Cannot modify 'const' variable",
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                         symbol=l, severity='error')
+
             if isinstance(expr, AugAssign):
                 new_expr = AugAssign(l, expr.op, r)
             else:
@@ -3350,6 +3346,10 @@ class SemanticParser(BasicParser):
                         errors.report(PYCCEL_RESTRICTION_TODO,
                                       bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                                       severity='fatal')
+
+                elif isinstance(r, (PythonList, PythonTuple)) and r.rank > 1:
+                    for r_i in r:
+                        self._indicate_pointer_target(l, r_i, expr)
 
             new_expressions.append(new_expr)
 
