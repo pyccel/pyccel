@@ -721,7 +721,7 @@ class PythonList(TypedAstNode):
         return True
 
 
-class PythonListFunction(TypedAstNode):
+class PythonListFunction(PyccelFunction):
     """
     Class representing a call to the `list` function.
 
@@ -734,7 +734,7 @@ class PythonListFunction(TypedAstNode):
     arg : TypedAstNode
         The argument passed to the function call.
     """
-    __slots__ = ()
+    __slots__ = ('_class_type', '_shape')
     _attribute_nodes = ()
 
     def __new__(cls, arg):
