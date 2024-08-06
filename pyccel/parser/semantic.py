@@ -21,7 +21,7 @@ from sympy import ceiling
 from pyccel.utilities.strings import random_string
 from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
 
-from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonListFunction, PythonSetFunction
+from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
 from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
