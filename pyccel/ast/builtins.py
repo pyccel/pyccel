@@ -743,7 +743,20 @@ class PythonListFunction(TypedAstNode):
         elif isinstance(arg.shape[0], LiteralInteger):
             return PythonList(*[arg[i] for i in range(arg.shape[0])])
         else:
-            raise TypeError(f"Can't unpack {arg} into a list")
+            return super().__new__(cls)
+
+    def __init__(self, copied_obj):
+        self._class_type = copied_obj.class_type
+        self._shape = copied_obj.shape
+        super().__init__(copied_obj)
+
+    @property
+    def copied_obj(self):
+        """
+        The object being copied.
+        The object being copied to create a new dict instance.
+        """
+        return self._args[0]
 
 
 #==============================================================================
