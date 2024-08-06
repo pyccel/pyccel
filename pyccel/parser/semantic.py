@@ -2263,29 +2263,31 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonList(self, expr):
         usage_in_array = [f.funcdef for f in expr.get_user_nodes(FunctionCall) if f.funcdef == 'array']
-        # If Python list is the rhs of an assign statement
-        if expr.get_direct_user_nodes(lambda v: isinstance(v, Assign)) or usage_in_array:
-            ls = [self._visit(i) for i in expr]
-            try:
-                expr = PythonList(*ls)
-            except TypeError:
-                errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
-                    severity='fatal')
-            # Array creates via pointer so pointer target is not required
-            if not usage_in_array:
-                for l in ls:
-                    if l.rank > 0:
-                        self._indicate_pointer_target(expr, l, expr)
-            return expr
-        else:
-            # If Python list is inside another statement, unpack it to ensure that referencing works
-            pyccel_stage.set_stage('syntactic')
-            tmp_var = self.scope.get_new_name()
-            syntactic_assign = Assign(tmp_var, expr, python_ast = expr.python_ast)
-            pyccel_stage.set_stage('semantic')
-            assign = self._visit(syntactic_assign)
-            self._additional_exprs[-1].append(assign)
-            return self._visit(tmp_var)
+        lst = []
+        for elem in expr:
+            if isinstance(elem, (PythonList, PythonSet, PythonDict)):
+                # If object of rank>0 is inside the list, unpack it to ensure that
+                # deallocation works correctly
+                pyccel_stage.set_stage('syntactic')
+                tmp_var = self.scope.get_new_name()
+                syntactic_assign = Assign(tmp_var, elem, python_ast = expr.python_ast)
+                pyccel_stage.set_stage('semantic')
+                assign = self._visit(syntactic_assign)
+                self._additional_exprs[-1].append(assign)
+                lst.append(self._visit(tmp_var))
+            else:
+                lst.append(self._visit(elem))
+        try:
+            expr = PythonList(*lst)
+        except TypeError:
+            errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
+                severity='fatal')
+        # Array creates via pointer so pointer target is not required
+        if not usage_in_array:
+            for l in lst:
+                if l.rank > 0:
+                    self._indicate_pointer_target(expr, l, expr)
+        return expr
 
     def _visit_PythonSet(self, expr):
         ls = [self._visit(i) for i in expr]
