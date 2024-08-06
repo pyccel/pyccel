@@ -718,7 +718,7 @@ def test_homogenous_list_bool_copy(language):
     assert python_out == pyccel_out
 
 def test_homogenous_list_float_copy(language):
-    def homogeneous_list_int():
+    def homogeneous_list_float():
         return list([1.0, 2.0, 3.0, 4.0])
     f1 = homogeneous_list_float
     f2 = epyccel( f1 , language=language)
