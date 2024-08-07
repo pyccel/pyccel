@@ -1988,6 +1988,26 @@ class SemanticParser(BasicParser):
                 severity='fatal', symbol=expr)
 
     def _create_iterable_object(self, expr, cls_type):
+        """
+        Create an iterable object such as a tuple of a list from its syntactic representation.
+
+        Create an iterable object such as a tuple of a list from its syntactic representation.
+        This function avoids code duplication between iterables and takes care of ensuring that
+        elements of nested lists/tuples are declared individually so they can be the target of
+        a pointer.
+
+        Parameters
+        ----------
+        expr : TypedAstNode
+            The syntactic representation of the iterable object.
+        cls_type : type
+            The type to be returned.
+
+        Returns
+        -------
+        cls_type
+            The semantic version of the object.
+        """
         usage_in_array = [f.funcdef for f in expr.get_user_nodes(FunctionCall) if f.funcdef == 'array']
         lst = []
         for elem in expr:
