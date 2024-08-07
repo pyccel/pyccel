@@ -2174,14 +2174,11 @@ class SemanticParser(BasicParser):
                     variables.remove(v)
 
             # Get deallocations
-            deallocs = self._garbage_collector(CodeBlock(init_func_body))
+            all_deallocs = self._garbage_collector(CodeBlock(init_func_body))
+            deallocs = [d for d in all_deallocs if d.variable not in to_remove]
 
             # Deallocate temporaries in init function
-            dealloc_vars = [d.variable for d in deallocs]
-            for i,v in enumerate(dealloc_vars):
-                if v in to_remove:
-                    d = deallocs.pop(i)
-                    init_func_body.append(d)
+            init_func_body.extend(d for d in all_deallocs if d.variable in to_remove)
 
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
