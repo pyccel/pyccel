@@ -756,7 +756,7 @@ class PythonListFunction(PyccelFunction):
         """
         The object being copied.
 
-        The object being copied to create a new dict instance.
+        The object being copied to create a new list instance.
         """
         return self._args[0]
 
