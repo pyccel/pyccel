@@ -46,6 +46,7 @@ __all__ = (
     'PythonInt',
     'PythonLen',
     'PythonList',
+    'PythonListFunction',
     'PythonMap',
     'PythonMax',
     'PythonMin',
@@ -719,6 +720,47 @@ class PythonList(TypedAstNode):
         """
         return True
 
+
+class PythonListFunction(PyccelFunction):
+    """
+    Class representing a call to the `list` function.
+
+    Class representing a call to the `list` function. This is
+    different to the `[,]' syntax as it only takes one argument
+    and unpacks any variables.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function call.
+    """
+    name = 'list'
+    __slots__ = ('_class_type', '_shape')
+    _attribute_nodes = ()
+
+    def __new__(cls, arg):
+        if isinstance(arg, PythonList):
+            return arg
+        elif isinstance(arg.shape[0], LiteralInteger):
+            return PythonList(*[arg[i] for i in range(arg.shape[0])])
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, copied_obj):
+        self._class_type = copied_obj.class_type
+        self._shape = copied_obj.shape
+        super().__init__(copied_obj)
+
+    @property
+    def copied_obj(self):
+        """
+        The object being copied.
+
+        The object being copied to create a new list instance.
+        """
+        return self._args[0]
+
+
 #==============================================================================
 class PythonSet(TypedAstNode):
     """
@@ -1382,7 +1424,7 @@ builtin_functions_dict = {
     'float'    : PythonFloat,
     'int'      : PythonInt,
     'len'      : PythonLen,
-    'list'     : PythonList,
+    'list'     : PythonListFunction,
     'map'      : PythonMap,
     'max'      : PythonMax,
     'min'      : PythonMin,

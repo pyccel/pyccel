@@ -22,7 +22,7 @@ from pyccel.utilities.strings import random_string
 from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
-from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction
+from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
@@ -148,7 +148,7 @@ pyccel_stage = PyccelStage()
 
 type_container = {
                    PythonTupleFunction : HomogeneousTupleType,
-                   PythonList : HomogeneousListType,
+                   PythonListFunction : HomogeneousListType,
                    PythonSetFunction : HomogeneousSetType,
                   }
 
@@ -1969,7 +1969,7 @@ class SemanticParser(BasicParser):
             if (len(args) == 2 and args[1] is LiteralEllipsis()) or len(args) == 1:
                 syntactic_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
                 internal_datatypes = self._visit(syntactic_annotation)
-                if dtype_cls in type_container :
+                if dtype_cls in type_container:
                     class_type = type_container[dtype_cls]
                 else:
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
