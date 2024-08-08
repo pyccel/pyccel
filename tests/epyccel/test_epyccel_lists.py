@@ -690,3 +690,70 @@ def test_mutable_multi_level_indexing(stc_language):
 
     epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
+
+def test_homogenous_list_int_copy(language):
+    def homogeneous_list_int():
+        return list([1, 2, 3, 4])
+    f1 = homogeneous_list_int
+    f2 = epyccel( f1 , language=language)
+
+    python_out = f1()
+    pyccel_out = f2()
+    print(pyccel_out)
+    print(python_out)
+
+    assert python_out == pyccel_out
+
+def test_homogenous_list_bool_copy(language):
+    def homogeneous_list_bool():
+        return list([True, False, True, False])
+    f1 = homogeneous_list_bool
+    f2 = epyccel( f1 , language=language)
+
+    python_out = f1()
+    pyccel_out = f2()
+    print(pyccel_out)
+    print(python_out)
+
+    assert python_out == pyccel_out
+
+def test_homogenous_list_float_copy(language):
+    def homogeneous_list_float():
+        return list([1.0, 2.0, 3.0, 4.0])
+    f1 = homogeneous_list_float
+    f2 = epyccel( f1 , language=language)
+
+    python_out = f1()
+    pyccel_out = f2()
+    print(pyccel_out)
+    print(python_out)
+
+    assert python_out == pyccel_out
+
+def test_homogenous_list_int_tuple_copy(language):
+    def homogeneous_list_int_tuple():
+        return list((1, 2, 3, 4))
+    f1 = homogeneous_list_int_tuple
+    f2 = epyccel( f1 , language=language)
+
+    python_out = f1()
+    pyccel_out = f2()
+    print(pyccel_out)
+    print(python_out)
+
+    assert python_out == pyccel_out
+
+def test_homogenous_list_unknown_size_copy(language):
+    def homogeneous_list_unknown_size_copy(n : int):
+        a = (3,)*n
+        b = list(a)
+        return b[0]
+    f1 = homogeneous_list_unknown_size_copy
+    f2 = epyccel( f1 , language=language)
+
+    python_out = f1(5)
+    pyccel_out = f2(5)
+    print(pyccel_out)
+    print(python_out)
+
+    assert python_out == pyccel_out
