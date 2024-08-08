@@ -38,6 +38,7 @@ __all__ = (
         'GenericType',
         'SymbolicType',
         'CharType',
+        'TypeAlias',
         # ------------ Container types ------------
         'TupleType',
         'HomogeneousContainerType',
@@ -471,6 +472,21 @@ class CharType(FixedSizeType):
     __slots__ = ()
     _name = 'char'
     _primitive_type = PrimitiveCharacterType
+
+#==============================================================================
+class TypeAlias(SymbolicType):
+    """
+    Class representing the type of a symbolic object describing a type descriptor.
+
+    Class representing the type of a symbolic object describing a type descriptor.
+    This type is equivalent to Python's built-in typing.TypeAlias.
+
+    See Also
+    --------
+    typing.TypeAlias : <https://docs.python.org/3/library/typing.html#typing.TypeAlias>.
+    """
+    __slots__ = ()
+    _name = 'TypeAlias'
 
 #==============================================================================
 
