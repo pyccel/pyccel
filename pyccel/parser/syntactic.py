@@ -42,6 +42,8 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
 
+from pyccel.ast.datatypes import TypeAlias
+
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
@@ -62,7 +64,7 @@ from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelFunction
 
-from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation
+from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation, VariableTypeAnnotation
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
@@ -1352,6 +1354,17 @@ class SyntaxParser(BasicParser):
 
     def _visit_Starred(self, stmt):
         return StarredArguments(self._visit(stmt.value))
+
+    def _visit_TypeAlias(self, stmt):
+        if stmt.type_params:
+            errors.report("Type parameters are not yet supported on a type alias expression.\n"+PYCCEL_RESTRICTION_TODO,
+                    severity='error', symbol=stmt)
+        self._in_lhs_assign = True
+        name = self._visit(stmt.name)
+        self._in_lhs_assign = False
+        rhs = self._treat_type_annotation(stmt.value, self._visit(stmt.value))
+        type_annotation = UnionTypeAnnotation(VariableTypeAnnotation(TypeAlias(), is_const = True))
+        return Assign(AnnotatedPyccelSymbol(name, annotation=type_annotation), rhs)
 
 #==============================================================================
 

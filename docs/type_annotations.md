@@ -93,3 +93,25 @@ def f(a : 'T', b : 'T'):
 ```
 
 For more details, see the documentation for [templates](./templates.md).
+
+## Type Aliases
+
+Python also provides type alias objects as described in the Python docs (<https://docs.python.org/3/library/typing.html#type-aliases>). For the moment type parameter lists are not supported. Both the new Python 3.12 syntax and the old syntax are supported. Type aliases cannot be redefined. This allows the user to more easily change between different types. The type name will not appear in the underlying code.
+
+E.g.
+```python
+from typing import TypeAlias
+
+MyType : TypeAlias = float
+
+def set_i(x : 'MyType[:]', i : 'int', val : MyType):
+    x[i] = val
+```
+
+or:
+```python
+type MyType = float
+
+def set_i(x : 'MyType[:]', i : 'int', val : MyType):
+    x[i] = val
+```

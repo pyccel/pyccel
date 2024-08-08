@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 -   #1944 : Add the appropriate C language equivalent for declaring a Python `dict` container using the STC library.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
+-   #1544 : Add support for `typing.TypeAlias`.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 

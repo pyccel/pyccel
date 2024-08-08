@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
+import sys
 import numpy as np
+import pytest
 from pyccel import epyccel
 
 RTOL = 2e-14
@@ -200,3 +201,45 @@ def test_awkward_names(language):
     assert mod.function() == modnew.function()
     assert mod.pure() == modnew.pure()
     assert mod.allocate(1) == modnew.allocate(1)
+
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="PEP613 (TypeAlias) implemented in Python 3.10")
+def test_module_type_alias(language):
+    import modules.Module_9 as mod
+
+    modnew = epyccel(mod, language=language)
+
+    n_x = np.random.randint(4,20)
+    n_y = np.random.randint(4,20)
+
+    x = np.empty(n_x, dtype=float)
+    y = np.random.random_sample(n_y)
+
+    x_pyc = x.copy()
+    y_pyc = y.copy()
+
+    max_pyt = mod.f(x,y)
+    max_pyc = modnew.f(x_pyc, y_pyc)
+    assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
+    assert np.allclose( x, x_pyc, rtol=1e-14, atol=1e-14 )
+    assert np.allclose( y, y_pyc, rtol=1e-14, atol=1e-14 )
+
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="PEP695 (type statement) implemented in Python 3.12")
+def test_module_type_alias_expression(language):
+    import modules.Module_10 as mod
+
+    modnew = epyccel(mod, language=language)
+
+    n_x = np.random.randint(4,20)
+    n_y = np.random.randint(4,20)
+
+    x = np.empty(n_x, dtype=float)
+    y = np.random.random_sample(n_y)
+
+    x_pyc = x.copy()
+    y_pyc = y.copy()
+
+    max_pyt = mod.f(x,y)
+    max_pyc = modnew.f(x_pyc, y_pyc)
+    assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
+    assert np.allclose( x, x_pyc, rtol=1e-14, atol=1e-14 )
+    assert np.allclose( y, y_pyc, rtol=1e-14, atol=1e-14 )
