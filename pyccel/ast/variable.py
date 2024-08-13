@@ -139,6 +139,7 @@ class Variable(TypedAstNode):
 
         if memory_handling not in ('heap', 'stack', 'alias'):
             raise ValueError("memory_handling must be 'heap', 'stack' or 'alias'")
+        assert (memory_handling == 'alias') == class_type.is_alias
         self._memory_handling = memory_handling
 
         if not isinstance(is_const, bool):
@@ -291,6 +292,7 @@ class Variable(TypedAstNode):
     def memory_handling(self, memory_handling):
         # Memory handling cannot be set to alias as that would change the class type.
         assert memory_handling in ('heap', 'stack')
+        assert self._memory_handling != 'alias'
         self._memory_handling = memory_handling
 
     @property
