@@ -289,8 +289,8 @@ class Variable(TypedAstNode):
 
     @memory_handling.setter
     def memory_handling(self, memory_handling):
-        if memory_handling not in ('heap', 'stack', 'alias'):
-            raise ValueError("memory_handling must be 'heap', 'stack' or 'alias'")
+        # Memory handling cannot be set to alias as that would change the class type.
+        assert memory_handling in ('heap', 'stack')
         self._memory_handling = memory_handling
 
     @property
