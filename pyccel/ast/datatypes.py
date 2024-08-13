@@ -518,8 +518,18 @@ class HomogeneousContainerType(ContainerType):
 
     Base class representing a datatype which contains multiple elements of a given type.
     This is the case for objects such as arrays, lists, etc.
+
+    Parameters
+    ----------
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
-    __slots__ = ()
+    __slots__ = ('_is_alias',)
+
+    def __init__(self, *, is_alias = False):
+        assert isinstance(is_alias, bool)
+        self._is_alias = is_alias
+        super().__init__()
 
     @property
     def datatype(self):
@@ -641,6 +651,15 @@ class HomogeneousContainerType(ContainerType):
         else:
             return self.element_type.switch_rank(new_rank - self.container_rank)
 
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+        """
+        cls = type(self)
+        return cls(True)
+
     @property
     def container_rank(self):
         """
@@ -672,6 +691,15 @@ class HomogeneousContainerType(ContainerType):
         """
         return self._order # pylint: disable=no-member
 
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return self._is_alias
+
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.element_type == other.element_type
 
@@ -683,6 +711,11 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
     Class representing Python's native string type.
 
     Class representing Python's native string type.
+
+    Parameters
+    ----------
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
     __slots__ = ()
     _name = 'str'
@@ -754,15 +787,26 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
     ----------
     element_type : PyccelType
         The type of the elements of the homogeneous tuple.
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
     __slots__ = ('_element_type', '_order')
     _container_rank = 1
 
-    def __init__(self, element_type):
+    def __init__(self, element_type, *, is_alias = False):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
         self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
-        super().__init__()
+        super().__init__(is_alias = is_alias)
+
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+        """
+        cls = type(self)
+        return cls(self._element_type, is_alias = True)
 
     def __str__(self):
         return f'{self._name}[{self._element_type}, ...]'
@@ -778,16 +822,27 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
     ----------
     element_type : PyccelType
         The type which is stored in the homogeneous list.
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
     __slots__ = ('_element_type', '_order')
     _name = 'list'
     _container_rank = 1
 
-    def __init__(self, element_type):
+    def __init__(self, element_type, *, is_alias = False):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
         self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
-        super().__init__()
+        super().__init__(is_alias = is_alias)
+
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+        """
+        cls = type(self)
+        return cls(self._element_type, is_alias = True)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self._element_type == other._element_type \
@@ -807,16 +862,27 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
     ----------
     element_type : PyccelType
         The type which is stored in the homogeneous set.
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
     __slots__ = ('_element_type',)
     _name = 'set'
     _container_rank = 1
     _order = None
 
-    def __init__(self, element_type):
+    def __init__(self, element_type, *, is_alias = False):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
-        super().__init__()
+        super().__init__(is_alias = is_alias)
+
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+        """
+        cls = type(self)
+        return cls(self._element_type, is_alias = True)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self._element_type == other._element_type
@@ -1009,15 +1075,18 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
         The type of the keys of the homogeneous dictionary.
     value_type : PyccelType
         The type of the values of the homogeneous dictionary.
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
-    __slots__ = ('_key_type', '_value_type')
+    __slots__ = ('_key_type', '_value_type', '_is_alias')
     _name = 'dict'
     _container_rank = 1
     _order = None
 
-    def __init__(self, key_type, value_type):
+    def __init__(self, key_type, value_type, *, is_alias = False):
         self._key_type = key_type
         self._value_type = value_type
+        self._is_alias = is_alias
         super().__init__()
 
     def __str__(self):
@@ -1096,6 +1165,15 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
         this function returns None.
         """
         return None
+
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+        """
+        cls = type(self)
+        return cls(True)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.key_type == other.key_type \

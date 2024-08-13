@@ -271,17 +271,19 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         The rank of the new NumPy array.
     order : str
         The order of the memory layout for the new NumPy array.
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
     __slots__ = ('_element_type', '_container_rank', '_order')
     _name = 'numpy.ndarray'
 
-    def __new__(cls, dtype, rank, order):
+    def __new__(cls, dtype, rank, order, *, is_alias = False):
         if rank == 0:
             return dtype
         else:
             return super().__new__(cls)
 
-    def __init__(self, dtype, rank, order):
+    def __init__(self, dtype, rank, order, *, is_alias = False):
         assert isinstance(rank, int)
         assert order in (None, 'C', 'F')
         assert rank < 2 or order is not None
@@ -292,7 +294,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         self._element_type = dtype
         self._container_rank = rank
         self._order = order
-        super().__init__()
+        super().__init__(is_alias = is_alias)
 
     @lru_cache
     def __add__(self, other):
