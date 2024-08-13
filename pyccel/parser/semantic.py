@@ -1312,8 +1312,9 @@ class SemanticParser(BasicParser):
                 elem_vars.append(var)
 
             d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'heap'
+            contains_alias = any(v.is_alias for v in elem_vars)
 
-            if is_homogeneous and not (d_lhs['memory_handling'] == 'alias' and isinstance(rhs, PythonTuple)):
+            if is_homogeneous and not (contains_alias and isinstance(rhs, PythonTuple)):
                 lhs = Variable(class_type, name, **d_lhs, is_temp=is_temp)
             else:
                 lhs = InhomogeneousTupleVariable(elem_vars, name, class_type = class_type, **d_lhs, is_temp=is_temp)
