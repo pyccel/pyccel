@@ -724,6 +724,12 @@ class SemanticParser(BasicParser):
 
             var = expr.internal_var
 
+            if isinstance(var, Variable):
+                d_var['class_type'] = d_var['class_type'].get_alias_equivalent()
+                d_var['memory_handling'] = 'alias'
+            else:
+                d_var['memory_handling'] = 'heap'
+
             d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
             return d_var
 
@@ -1305,10 +1311,7 @@ class SemanticParser(BasicParser):
                 var = self._create_variable(elem_name, elem_type, r, elem_d_lhs)
                 elem_vars.append(var)
 
-            if any(v.is_alias for v in elem_vars):
-                d_lhs['memory_handling'] = 'alias'
-            else:
-                d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'heap'
+            d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'heap'
 
             if is_homogeneous and not (d_lhs['memory_handling'] == 'alias' and isinstance(rhs, PythonTuple)):
                 lhs = Variable(class_type, name, **d_lhs, is_temp=is_temp)
@@ -1337,15 +1340,18 @@ class SemanticParser(BasicParser):
         """
 
         if isinstance(rhs, NumpyTranspose) and rhs.internal_var.on_heap:
+            d_lhs['class_type'] = d_lhs['class_type'].get_alias_equivalent()
             d_lhs['memory_handling'] = 'alias'
             rhs.internal_var.is_target = True
 
         if isinstance(rhs, Variable) and (rhs.is_ndarray or isinstance(rhs.class_type, CustomDataType)):
+            d_lhs['class_type'] = d_lhs['class_type'].get_alias_equivalent()
             d_lhs['memory_handling'] = 'alias'
             rhs.is_target = not rhs.is_alias
 
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and \
                 (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'is_alias', False)):
+            d_lhs['class_type'] = d_lhs['class_type'].get_alias_equivalent()
             d_lhs['memory_handling'] = 'alias'
             rhs.base.is_target = not rhs.base.is_alias
 
@@ -1396,12 +1402,12 @@ class SemanticParser(BasicParser):
             name = lhs
             if lhs == '_':
                 name = self.scope.get_new_name()
-            class_type = d_var.pop('class_type')
 
             d_lhs = d_var.copy()
             # ISSUES #177: lhs must be a pointer when rhs is heap array
             if not arr_in_multirets:
                 self._ensure_target(rhs, d_lhs)
+            class_type = d_lhs.pop('class_type')
 
             if isinstance(lhs, DottedName):
                 prefix = self.get_class_prefix(lhs)
@@ -3171,6 +3177,7 @@ class SemanticParser(BasicParser):
                     name = name[6:]
                     d['cls_base'] = self.scope.find(name, 'classes')
                     if d_var['memory_handling'] == 'alias':
+                        d['class_type'] = d['class_type'].get_alias_equivalent()
                         d['memory_handling'] = 'alias'
                     else:
                         d['memory_handling'] = d_var['memory_handling'] or 'heap'
@@ -3180,6 +3187,7 @@ class SemanticParser(BasicParser):
 
                 if isinstance(rhs, Variable) and rhs.is_target:
                     # case of rhs is a target variable the lhs must be a pointer
+                    d['class_type'] = d['class_type'].get_alias_equivalent()
                     d['memory_handling'] = 'alias'
 
         if isinstance(lhs, (PyccelSymbol, DottedName)):
