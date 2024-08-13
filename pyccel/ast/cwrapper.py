@@ -109,6 +109,15 @@ class PyccelPyClassType(FixedSizeType, metaclass=Singleton):
     __slots__ = ()
     _name = 'pyclasstype'
 
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return True
+
 class PyccelPyTypeObject(FixedSizeType, metaclass=Singleton):
     """
     Datatype representing a `PyTypeObject`.
@@ -118,6 +127,15 @@ class PyccelPyTypeObject(FixedSizeType, metaclass=Singleton):
     """
     __slots__ = ()
     _name = 'pytypeobject'
+
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return True
 
 class WrapperCustomDataType(CustomDataType):
     """
@@ -1078,13 +1096,13 @@ PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
 
 PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
               body      = [],
-              arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o')),
+              arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling = 'alias')),
                            FunctionDefArgument(Variable(StringType(), name = 's'))],
               results   = [])
 
-PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
-PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
-PyAttributeError = Variable(PyccelPyObject(), name = 'PyExc_AttributeError')
+PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError', memory_handling = 'alias')
+PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError', memory_handling = 'alias')
+PyAttributeError = Variable(PyccelPyObject(), name = 'PyExc_AttributeError', memory_handling = 'alias')
 
 PyObject_TypeCheck = FunctionDef(name = 'PyObject_TypeCheck',
             arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'o', memory_handling = 'alias')),

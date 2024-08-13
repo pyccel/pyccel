@@ -401,6 +401,15 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         order = None if self._order is None else ('C' if self._order == 'F' else 'F')
         return NumpyNDArrayType(self.element_type, self._container_rank, order)
 
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+        """
+        cls = type(self)
+        return cls(self.element_type, self.rank, self.order, is_alias = True)
+
     @property
     def rank(self):
         """

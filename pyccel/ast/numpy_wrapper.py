@@ -56,6 +56,15 @@ class PyccelPyArrayObject(FixedSizeType):
     __slots__ = ()
     _name = 'PyArrayObject'
 
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return True
+
 #-------------------------------------------------------------------
 #                      Numpy functions
 #-------------------------------------------------------------------
@@ -87,7 +96,7 @@ def get_numpy_max_acceptable_version_file():
 
 PyArray_Check = FunctionDef(name      = 'PyArray_Check',
                             body      = [],
-                            arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o'))],
+                            arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling = 'alias'))],
                             results   = [FunctionDefResult(Variable(PythonNativeBool(), name='b'))])
 
 # NumPy array to c ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c

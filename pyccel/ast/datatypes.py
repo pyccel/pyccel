@@ -277,6 +277,15 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
         assert isinstance(new_type, FixedSizeType)
         return new_type
 
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return False
+
 class FixedSizeNumericType(FixedSizeType):
     """
     Base class representing a scalar numeric datatype.
@@ -658,7 +667,7 @@ class HomogeneousContainerType(ContainerType):
         Get a type which is an alias to this type.
         """
         cls = type(self)
-        return cls(True)
+        return cls(is_alias = True)
 
     @property
     def container_rank(self):
@@ -1062,6 +1071,15 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         """
         return self._order
 
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return False
+
 class DictType(ContainerType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous dictionary type.
@@ -1173,7 +1191,7 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
         Get a type which is an alias to this type.
         """
         cls = type(self)
-        return cls(True)
+        return cls(is_alias = True)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.key_type == other.key_type \
