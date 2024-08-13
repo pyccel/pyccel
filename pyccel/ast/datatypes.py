@@ -901,14 +901,25 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
 
 #==============================================================================
 
-class CustomDataType(ContainerType, metaclass=Singleton):
+class CustomDataType(ContainerType, metaclass=ArgumentSingleton):
     """
     Class from which user-defined types inherit.
 
     A general class for custom data types which is used as a
     base class when a user defines their own type using classes.
+
+    Parameters
+    ----------
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
-    __slots__ = ()
+    __slots__ = ('_is_alias',)
+
+    def __init__(self, *, is_alias = False):
+        print("is_alias : ", is_alias)
+        assert isinstance(is_alias, bool)
+        self._is_alias = is_alias
+        super().__init__()
 
     @property
     def datatype(self):
@@ -955,6 +966,30 @@ class CustomDataType(ContainerType, metaclass=Singleton):
         this function returns None.
         """
         return None
+
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+        """
+        cls = type(self)
+        return cls(is_alias = True)
+
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return self._is_alias
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__)
+
+    def __hash__(self):
+        return hash((self.__class__, self._is_alias))
 
 class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingleton):
     """
@@ -1184,6 +1219,15 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
         """
         return None
 
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return self._is_alias
+
     def get_alias_equivalent(self):
         """
         Get a type which is an alias to this type.
@@ -1230,6 +1274,7 @@ def DataTypeFactory(name, argnames = (), *, BaseClass=CustomDataType):
         """
         The __init__ function for the new CustomDataType class.
         """
+        is_alias = kwargs.pop('is_alias', False)
         for key, value in kwargs.items():
             # here, the argnames variable is the one passed to the
             # DataTypeFactory call
@@ -1237,7 +1282,7 @@ def DataTypeFactory(name, argnames = (), *, BaseClass=CustomDataType):
                 raise TypeError(f"Argument {key} not valid for {self.__class__.__name__}")
             setattr(self, key, value)
 
-        BaseClass.__init__(self) # pylint: disable=unnecessary-dunder-call
+        BaseClass.__init__(self, is_alias = is_alias) # pylint: disable=unnecessary-dunder-call
 
     assert iterable(argnames)
     assert all(isinstance(a, str) for a in argnames)
