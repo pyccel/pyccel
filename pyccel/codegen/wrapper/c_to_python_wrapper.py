@@ -615,7 +615,7 @@ class CToPythonWrapper(Wrapper):
         module_var = self.get_new_PyObject("mod")
         API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
         API_var = Variable(CStackArray(BindCPointer()), API_var_name, shape = (n_classes,),
-                                    cls_base = StackArrayClass)
+                                    cls_base = StackArrayClass, memory_handling='alias')
         self.scope.insert_variable(API_var)
         capsule_obj = self.get_new_PyObject(self.scope.get_new_name('c_api_object'))
 

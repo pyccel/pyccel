@@ -504,8 +504,8 @@ class CWrapperCodePrinter(CCodePrinter):
             if var.rank == 0:
                 return f'{static}{external}{declaration_type} {variable};\n'
 
-            size = var.shape[0]
-            if isinstance(size, LiteralInteger):
+            size = var.alloc_shape[0]
+            if isinstance(size, int):
                 return f'{static}{external}{declaration_type} {variable}[{size}];\n'
             else:
                 return f'{static}{external}{declaration_type}* {variable};\n'

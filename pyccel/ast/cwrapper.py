@@ -1061,16 +1061,20 @@ def C_to_Python(c_object):
     if c_object.rank != 0:
         cast_function = 'ndarray_to_pyarray'
         memory_handling = 'stack'
+        optional = False
     else:
         try :
             cast_function = c_to_py_registry[c_object.dtype]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
-        memory_handling = 'alias'
+        memory_handling = 'heap'
+        optional = True
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True, memory_handling=memory_handling, new_class = Variable))],
+                       arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True,
+                                                        memory_handling=memory_handling,
+                                                        new_class = Variable, is_optional = optional))],
                        results   = [FunctionDefResult(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))])
 
     return cast_func
