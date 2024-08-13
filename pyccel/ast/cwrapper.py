@@ -32,6 +32,8 @@ from .internals import PyccelFunction
 
 from .literals  import LiteralString, LiteralInteger
 
+from .numpytypes import NumpyNDArrayType
+
 from .variable  import Variable
 
 
@@ -1062,6 +1064,7 @@ def C_to_Python(c_object):
         cast_function = 'ndarray_to_pyarray'
         memory_handling = 'stack'
         optional = False
+        class_type = NumpyNDArrayType(c_object.dtype, c_object.rank, c_object.order)
     else:
         try :
             cast_function = c_to_py_registry[c_object.dtype]
@@ -1069,11 +1072,12 @@ def C_to_Python(c_object):
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
         memory_handling = 'heap'
         optional = True
+        class_type = c_object.class_type
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
                        arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True,
-                                                        memory_handling=memory_handling,
+                                                        memory_handling=memory_handling, class_type = class_type,
                                                         new_class = Variable, is_optional = optional))],
                        results   = [FunctionDefResult(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))])
 
