@@ -45,6 +45,15 @@ class BindCPointer(FixedSizeType, metaclass = Singleton):
     __slots__ = ()
     _name = 'bindcpointer'
 
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return True
+
 # =======================================================================================
 #                                   Wrapper classes
 # =======================================================================================
