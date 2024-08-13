@@ -11,7 +11,7 @@ import numpy as np
 
 from .bind_c            import BindCPointer
 
-from .datatypes         import PythonNativeBool, GenericType, VoidType, FixedSizeType
+from .datatypes         import PythonNativeBool, GenericType, FixedSizeType
 
 from .cwrapper          import PyccelPyObject, check_type_registry, c_to_py_registry, pytype_parse_registry
 
@@ -123,26 +123,26 @@ is_numpy_array = FunctionDef(
 # Return the shape of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_dim  = FunctionDef(name    = 'nd_ndim',
                            body      = [],
-                           arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional = True)),
+                           arguments = [FunctionDefArgument(Variable(NumpyNDArrayType(GenericType(), 1, None), name = 'o', is_optional = True)),
                                         FunctionDefArgument(Variable(CNativeInt(), name = 'idx'))],
                            results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
 
 # Return the stride of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_c_step = FunctionDef(name    = 'nd_nstep_C',
                            body      = [],
-                           arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional = True)),
+                           arguments = [FunctionDefArgument(Variable(NumpyNDArrayType(GenericType(), 1, None), name = 'o', is_optional = True)),
                                         FunctionDefArgument(Variable(CNativeInt(), name = 'idx'))],
                            results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
 array_get_f_step = FunctionDef(name    = 'nd_nstep_F',
                            body      = [],
-                           arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional = True)),
+                           arguments = [FunctionDefArgument(Variable(NumpyNDArrayType(GenericType(), 1, None), name = 'o', is_optional = True)),
                                         FunctionDefArgument(Variable(CNativeInt(), name = 'idx'))],
                            results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
 
 # Return the data of ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_data  = FunctionDef(name   = 'nd_data',
                            body      = [],
-                           arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional=True))],
+                           arguments = [FunctionDefArgument(Variable(NumpyNDArrayType(GenericType(), 1, None), name = 'o', is_optional=True))],
                            results   = [FunctionDefResult(Variable(BindCPointer(), name = 'v', memory_handling='alias'))])
 
 PyArray_SetBaseObject = FunctionDef(name   = 'PyArray_SetBaseObject',
