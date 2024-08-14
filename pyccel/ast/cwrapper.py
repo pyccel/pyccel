@@ -753,10 +753,10 @@ class PyClassDef(ClassDef):
         self._original_class = original_class
         self._struct_name = struct_name
         self._type_name = type_name
-        self._type_object = Variable(PyccelPyClassType(), type_name)
+        self._type_object = Variable(PyccelPyClassType(), type_name, memory_handling='alias')
         self._new_func = None
         self._properties = ()
-        variables = [Variable(VoidType(), 'instance', memory_handling='alias'),
+        variables = [Variable(BindCPointer(), 'instance', memory_handling='alias'),
                      Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias'),
                      Variable(PythonNativeBool(), 'is_alias')]
         scope.insert_variable(variables[0])
