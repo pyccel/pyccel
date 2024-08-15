@@ -916,7 +916,6 @@ class CustomDataType(ContainerType, metaclass=ArgumentSingleton):
     __slots__ = ('_is_alias',)
 
     def __init__(self, *, is_alias = False):
-        print("is_alias : ", is_alias)
         assert isinstance(is_alias, bool)
         self._is_alias = is_alias
         super().__init__()
