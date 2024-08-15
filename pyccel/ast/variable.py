@@ -108,7 +108,7 @@ class Variable(TypedAstNode):
         class_type,
         name,
         *,
-        memory_handling='stack',
+        memory_handling=None,
         is_const=False,
         is_target=False,
         is_optional=False,
@@ -137,7 +137,9 @@ class Variable(TypedAstNode):
             raise TypeError(f'Expecting a string or DottedName, given {type(name)}')
         self._name = name
 
-        if memory_handling not in ('heap', 'stack', 'alias'):
+        if memory_handling is None:
+            memory_handling = 'alias' if class_type.is_alias else 'stack'
+        elif memory_handling not in ('heap', 'stack', 'alias'):
             raise ValueError("memory_handling must be 'heap', 'stack' or 'alias'")
         assert (memory_handling == 'alias') == class_type.is_alias
         self._memory_handling = memory_handling
