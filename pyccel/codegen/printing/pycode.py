@@ -430,6 +430,10 @@ class PythonCodePrinter(CodePrinter):
         args = ', '.join(self._print(i) for i in expr.args)
         return '{'+args+'}'
 
+    def _print_PythonDict(self, expr):
+        args = ', '.join(f'{self._print(k)}: {self._print(v)}' for k,v in expr)
+        return '{'+args+'}'
+
     def _print_PythonBool(self, expr):
         return 'bool({})'.format(self._print(expr.arg))
 
@@ -842,6 +846,22 @@ class PythonCodePrinter(CodePrinter):
             method_args = ', '.join(self._print(a) for a in expr.args)
 
         return f"{list_obj}.{method_name}({method_args})\n"
+
+    def _print_DictMethod(self, expr):
+        method_name = expr.name
+        dict_obj = self._print(expr.dict_obj)
+        method_args = ', '.join(self._print(a) for a in expr.args)
+
+        return f"{dict_obj}.{method_name}({method_args})\n"
+
+    def _print_DictPop(self, expr):
+        dict_obj = self._print(expr.dict_obj)
+        key = self._print(expr.key)
+        if expr.default_value:
+            val = self._print(expr.default_value)
+            return f"{dict_obj}.pop({key}, {val})\n"
+        else:
+            return f"{dict_obj}.pop({key})\n"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''

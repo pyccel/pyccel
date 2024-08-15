@@ -22,7 +22,7 @@ from pyccel.utilities.strings import random_string
 from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
-from pyccel.ast.builtins import PythonComplex
+from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
@@ -65,7 +65,7 @@ from pyccel.ast.datatypes import PrimitiveIntegerType, StringType, SymbolicType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from pyccel.ast.datatypes import DataTypeFactory, PrimitiveFloatingPointType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType, HomogeneousSetType, HomogeneousListType
-from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType
+from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType, DictType, TypeAlias
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
@@ -148,8 +148,8 @@ pyccel_stage = PyccelStage()
 
 type_container = {
                    PythonTupleFunction : HomogeneousTupleType,
-                   PythonList : HomogeneousListType,
-                   PythonSetFunction : HomogeneousSetType
+                   PythonListFunction : HomogeneousListType,
+                   PythonSetFunction : HomogeneousSetType,
                   }
 
 #==============================================================================
@@ -368,7 +368,7 @@ class SemanticParser(BasicParser):
                 class_def = prefix.cls_base
             except AttributeError:
                 class_def = get_cls_base(prefix.class_type) or \
-                            self.scope.find(prefix.class_type.name, 'classes')
+                            self.scope.find(str(prefix.class_type), 'classes')
 
             attr_name = name.name[-1]
             class_scope = class_def.scope
@@ -689,6 +689,9 @@ class SemanticParser(BasicParser):
         dict
             Dictionary containing all the type information which was inferred.
         """
+        if not isinstance(expr, TypedAstNode):
+            return {'class_type' : SymbolicType()}
+
         d_var = {
                 'class_type' : expr.class_type,
                 'shape'      : expr.shape,
@@ -1410,6 +1413,10 @@ class SemanticParser(BasicParser):
                 else:
                     var = None
             else:
+                symbolic_var = self.scope.find(lhs, 'symbolic_alias')
+                if symbolic_var:
+                    errors.report(f"{lhs} variable represents a symbolic concept. Its value cannot be changed.",
+                            severity='fatal')
                 var = self.scope.find(lhs)
 
             # Variable not yet declared (hence array not yet allocated)
@@ -1640,7 +1647,7 @@ class SemanticParser(BasicParser):
             if raise_error:
                 name = var.name
                 rhs_str = str(rhs)
-                errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(repr(var.class_type), repr(class_type)),
+                errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(var.class_type, class_type),
                     symbol=f'{name}={rhs_str}',
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
@@ -1880,6 +1887,30 @@ class SemanticParser(BasicParser):
 
         return list(parent.values())
 
+    def _convert_syntactic_object_to_type_annotation(self, syntactic_annotation):
+        """
+        Convert an arbitrary syntactic object to a type annotation.
+
+        Convert an arbitrary syntactic object to a type annotation. This means that
+        the syntactic object is wrapped in a SyntacticTypeAnnotation (if necessary).
+        This ensures that a type annotation is obtained instead of e.g. a function.
+
+        Parameters
+        ----------
+        syntactic_annotation : PyccelAstNode
+            A syntactic object that needs to be visited as a type annotation.
+
+        Returns
+        -------
+        SyntacticTypeAnnotation
+            A syntactic object that will be recognised as a type annotation.
+        """
+        if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
+            pyccel_stage.set_stage('syntactic')
+            syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
+            pyccel_stage.set_stage('semantic')
+        return syntactic_annotation
+
     def _get_indexed_type(self, base, args, expr):
         """
         Extract a type annotation from an IndexedElement.
@@ -1912,6 +1943,8 @@ class SemanticParser(BasicParser):
             for t in annotation.type_list:
                 t.is_const = True
             return annotation
+        elif isinstance(base, UnionTypeAnnotation):
+            return UnionTypeAnnotation(*[self._get_indexed_type(t, args, expr) for t in base.type_list])
 
         if all(isinstance(a, Slice) for a in args):
             rank = len(args)
@@ -1933,21 +1966,24 @@ class SemanticParser(BasicParser):
             else:
                 raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
-            if len(args) == 2 and args[1] is LiteralEllipsis() or len(args) == 1:
-                syntactic_annotation = args[0]
-                if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
-                    pyccel_stage.set_stage('syntactic')
-                    syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
-                    pyccel_stage.set_stage('semantic')
+            if (len(args) == 2 and args[1] is LiteralEllipsis()) or len(args) == 1:
+                syntactic_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
                 internal_datatypes = self._visit(syntactic_annotation)
-                type_annotations = []
-                if dtype_cls in type_container :
+                if dtype_cls in type_container:
                     class_type = type_container[dtype_cls]
                 else:
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                             severity='fatal', symbol=expr)
-                for u in internal_datatypes.type_list:
-                    type_annotations.append(VariableTypeAnnotation(class_type(u.class_type), u.is_const))
+                type_annotations = [VariableTypeAnnotation(class_type(u.class_type), u.is_const)
+                                    for u in internal_datatypes.type_list]
+                return UnionTypeAnnotation(*type_annotations)
+            elif len(args) == 2 and dtype_cls is PythonDictFunction:
+                syntactic_key_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
+                syntactic_val_annotation = self._convert_syntactic_object_to_type_annotation(args[1])
+                key_types = self._visit(syntactic_key_annotation)
+                val_types = self._visit(syntactic_val_annotation)
+                type_annotations = [VariableTypeAnnotation(DictType(k.class_type, v.class_type)) \
+                                    for k,v in zip(key_types.type_list, val_types.type_list)]
                 return UnionTypeAnnotation(*type_annotations)
             else:
                 raise errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,
@@ -2249,6 +2285,16 @@ class SemanticParser(BasicParser):
                 severity='fatal')
         return expr
 
+    def _visit_PythonDict(self, expr):
+        keys = [self._visit(k) for k in expr.keys]
+        vals = [self._visit(v) for v in expr.values]
+        try:
+            expr = PythonDict(keys, vals)
+        except TypeError as e:
+            errors.report(str(e), symbol=expr,
+                severity='fatal')
+        return expr
+
     def _visit_FunctionCallArgument(self, expr):
         value = self._visit(expr.value)
         a = FunctionCallArgument(value, expr.keyword)
@@ -2435,7 +2481,7 @@ class SemanticParser(BasicParser):
     def _visit_IndexedElement(self, expr):
         var = self._visit(expr.base)
 
-        if isinstance(var, (PyccelFunctionDef, VariableTypeAnnotation)):
+        if isinstance(var, (PyccelFunctionDef, VariableTypeAnnotation, UnionTypeAnnotation)):
             return self._get_indexed_type(var, expr.indices, expr)
 
         # TODO check consistency of indices with shape/rank
@@ -2547,7 +2593,7 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
-                cls_base = get_cls_base(class_type) or self.scope.find(class_type.name, 'classes')
+                cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
                 v = var_class(class_type, name, cls_base = cls_base,
                         shape = None,
                         is_const = t.is_const, is_optional = False,
@@ -2591,6 +2637,8 @@ class SemanticParser(BasicParser):
             raise errors.report(PYCCEL_RESTRICTION_TODO + ' Could not deduce type information',
                     severity='fatal', symbol=expr)
 
+    def _visit_VariableTypeAnnotation(self, expr):
+        return expr
 
     def _visit_DottedName(self, expr):
 
@@ -2661,7 +2709,7 @@ class SemanticParser(BasicParser):
         class_type = d_var['class_type']
         cls_base = get_cls_base(class_type)
         if cls_base is None:
-            cls_base = self.scope.find(class_type.name, 'classes')
+            cls_base = self.scope.find(str(class_type), 'classes')
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
@@ -2943,6 +2991,35 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
 
+        if isinstance(lhs, AnnotatedPyccelSymbol):
+            semantic_lhs = self._visit(lhs)
+            if len(semantic_lhs) != 1:
+                errors.report("Cannot declare variable with multiple types",
+                        symbol=expr, severity='error')
+            semantic_lhs_var = semantic_lhs[0]
+            if isinstance(semantic_lhs_var, DottedVariable):
+                cls_def = semantic_lhs_var.lhs.cls_base
+                insert_scope = cls_def.scope
+                cls_def.add_new_attribute(semantic_lhs_var)
+            else:
+                insert_scope = self.scope
+
+            lhs = lhs.name
+            if semantic_lhs_var.class_type is TypeAlias():
+                if not isinstance(rhs, SyntacticTypeAnnotation):
+                    pyccel_stage.set_stage('syntactic')
+                    rhs = SyntacticTypeAnnotation(rhs)
+                    pyccel_stage.set_stage('semantic')
+                type_annot = self._visit(rhs)
+                self.scope.insert_symbolic_alias(lhs, type_annot)
+                return EmptyNode()
+
+            try:
+                insert_scope.insert_variable(semantic_lhs_var)
+            except RuntimeError as e:
+                errors.report(e, symbol=expr, severity='error')
+
+
         # Steps before visiting
         if isinstance(rhs, GeneratorComprehension):
             rhs.substitute(rhs.lhs, lhs)
@@ -2987,10 +3064,12 @@ class SemanticParser(BasicParser):
                 d_m_args = {arg.value.name:arg.value for arg in macro.master_arguments
                                   if isinstance(arg.value, Variable)}
 
-                if not sympy_iterable(lhs):
-                    lhs = [lhs]
+                lhs_iter = lhs
+
+                if not sympy_iterable(lhs_iter):
+                    lhs_iter = [lhs]
                 results_shapes = macro.get_results_shapes(args)
-                for m_result, shape, result in zip(macro.results, results_shapes, lhs):
+                for m_result, shape, result in zip(macro.results, results_shapes, lhs_iter):
                     if m_result in d_m_args and not result in args_names:
                         d_result = self._infer_type(d_m_args[m_result])
                         d_result['shape'] = shape
@@ -3033,14 +3112,6 @@ class SemanticParser(BasicParser):
             isinstance(rhs.body[0], (ListMethod, SetMethod))):
             return rhs
         if isinstance(rhs, ConstructorCall):
-            return rhs
-        elif isinstance(rhs, FunctionDef):
-
-            # case of lambdify
-
-            rhs = rhs.rename(expr.lhs.name)
-            for i in rhs.body:
-                i.set_current_ast(python_ast)
             return rhs
 
         elif isinstance(rhs, CodeBlock) and len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
@@ -3110,25 +3181,6 @@ class SemanticParser(BasicParser):
                 if isinstance(rhs, Variable) and rhs.is_target:
                     # case of rhs is a target variable the lhs must be a pointer
                     d['memory_handling'] = 'alias'
-
-        lhs = expr.lhs
-        if isinstance(lhs, AnnotatedPyccelSymbol):
-            semantic_lhs = self._visit(lhs)
-            if len(semantic_lhs) != 1:
-                errors.report("Cannot declare variable with multiple types",
-                        symbol=expr, severity='error')
-            semantic_lhs_var = semantic_lhs[0]
-            if isinstance(semantic_lhs_var, DottedVariable):
-                cls_def = semantic_lhs_var.lhs.cls_base
-                insert_scope = cls_def.scope
-                cls_def.add_new_attribute(semantic_lhs_var)
-            else:
-                insert_scope = self.scope
-            try:
-                insert_scope.insert_variable(semantic_lhs_var)
-            except RuntimeError as e:
-                errors.report(e, symbol=expr, severity='error')
-            lhs = lhs.name
 
         if isinstance(lhs, (PyccelSymbol, DottedName)):
             if isinstance(d_var, list):
@@ -3284,12 +3336,9 @@ class SemanticParser(BasicParser):
                     # it is then treated as a def node
 
                     F = self.scope.find(l, 'symbolic_functions')
-                    if F is None:
-                        self.insert_symbolic_function(new_expr)
-                    else:
-                        errors.report(PYCCEL_RESTRICTION_TODO,
-                                      bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                                      severity='fatal')
+                    errors.report(PYCCEL_RESTRICTION_TODO,
+                                  bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                                  severity='fatal')
 
             new_expressions.append(new_expr)
 
@@ -4367,7 +4416,7 @@ class SemanticParser(BasicParser):
             __module_name__ = p.metavars.get('module_name', None)
 
             if source_target in container['imports']:
-                targets = list(container['imports'][source_target].target.union(targets))
+                targets.extend(container['imports'][source_target].target)
 
             if import_init:
                 old_name = import_init.name
@@ -4663,10 +4712,11 @@ class SemanticParser(BasicParser):
                 fabs_name = self.scope.get_new_name('fabs')
                 imp_name = AsName('fabs', fabs_name)
                 new_import = Import('math',imp_name)
-                self._visit(new_import)
                 new_call = FunctionCall(fabs_name, [mul1])
 
                 pyccel_stage.set_stage('semantic')
+
+                self._visit(new_import)
 
                 return self._visit(new_call)
         elif isinstance(arg.value, PyccelPow):
@@ -4677,10 +4727,11 @@ class SemanticParser(BasicParser):
                 fabs_name = self.scope.get_new_name('fabs')
                 imp_name = AsName('fabs', fabs_name)
                 new_import = Import('math',imp_name)
-                self._visit(new_import)
                 new_call = FunctionCall(fabs_name, [base])
 
                 pyccel_stage.set_stage('semantic')
+
+                self._visit(new_import)
 
                 return self._visit(new_call)
 
@@ -4723,10 +4774,11 @@ class SemanticParser(BasicParser):
                 abs_name = self.scope.get_new_name('abs')
                 imp_name = AsName('abs', abs_name)
                 new_import = Import('numpy',imp_name)
-                self._visit(new_import)
                 new_call = FunctionCall(abs_name, [abs_arg])
 
                 pyccel_stage.set_stage('semantic')
+
+                self._visit(new_import)
 
                 # Cast to preserve final dtype
                 return PythonComplex(self._visit(new_call))
