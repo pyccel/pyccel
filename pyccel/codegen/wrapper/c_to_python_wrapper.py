@@ -112,7 +112,6 @@ class CToPythonWrapper(Wrapper):
         else:
             var = Variable(PyccelPyObject(),
                            self.scope.get_new_name(name),
-                           memory_handling='alias',
                            is_temp=is_temp)
         self.scope.insert_variable(var)
         return var
@@ -2055,6 +2054,7 @@ class CToPythonWrapper(Wrapper):
 
         self._python_object_map[expr] = wrapped_class
         self._python_object_map[orig_cls_dtype] = dtype
+        self._python_object_map[orig_cls_dtype.get_alias_equivalent()] = dtype
 
         self.scope.insert_class(wrapped_class, name)
         orig_scope = expr.scope
