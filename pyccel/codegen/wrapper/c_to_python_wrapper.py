@@ -807,7 +807,6 @@ class CToPythonWrapper(Wrapper):
         self.scope = func_scope
 
         self_var = Variable(PyccelPyTypeObject(), name=self.scope.get_new_name('self'))
-        print(self_var)
         self.scope.insert_variable(self_var)
         func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
         func_args = [FunctionDefArgument(a) for a in func_args]
@@ -1305,7 +1304,7 @@ class CToPythonWrapper(Wrapper):
                 if not o_r.var.is_alias:
                     body.append(Allocate(r, shape=(), status='unallocated', like=o_r.var))
         c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
-        c_results = [PointerCast(r, cast_type = o_r.var) if isinstance(r, DottedVariable) else r for r,o_r in zip(c_results, original_c_results)]
+        c_results = [PointerCast(r, cast_type = o_r.var) if isinstance(r, ObjectAddress) else r for r,o_r in zip(c_results, original_c_results)]
 
         if class_dtype:
             body.extend(self._save_referenced_objects(expr, func_args))
