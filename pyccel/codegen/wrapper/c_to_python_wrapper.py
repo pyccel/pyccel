@@ -806,8 +806,8 @@ class CToPythonWrapper(Wrapper):
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
-        self_var = Variable(PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
-                              memory_handling='alias')
+        self_var = Variable(PyccelPyTypeObject(), name=self.scope.get_new_name('self'))
+        print(self_var)
         self.scope.insert_variable(self_var)
         func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
         func_args = [FunctionDefArgument(a) for a in func_args]
@@ -1665,7 +1665,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(c_res, orig_var_name)
 
             body.append(Allocate(c_res, shape = shape_vars, status='unallocated'))
-            body.append(AliasAssign(DottedVariable(VoidType(), 'raw_data', memory_handling = 'alias', lhs=c_res), arg_var))
+            body.append(AliasAssign(DottedVariable(BindCPointer(), 'raw_data', lhs=c_res), arg_var))
         elif isinstance(orig_var.dtype, CustomDataType):
             c_res = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
             self.scope.insert_variable(c_res, var_name)
@@ -1748,8 +1748,8 @@ class CToPythonWrapper(Wrapper):
         v = expr.original_variable
 
         # Get pointer to store raw array data
-        var = self.scope.get_temporary_variable(dtype_or_var = VoidType(),
-                name = v.name + '_data', memory_handling = 'alias')
+        var = self.scope.get_temporary_variable(dtype_or_var = BindCPointer(),
+                name = v.name + '_data')
         # Create variables to store the shape of the array
         shape = [self.scope.get_temporary_variable(PythonNativeInt(),
                 v.name+'_size') for _ in range(v.rank)]
@@ -1763,8 +1763,8 @@ class CToPythonWrapper(Wrapper):
                 name = v.name, memory_handling = 'alias')
         alloc = Allocate(nd_var, shape=shape, status='unallocated')
         # Save raw_data into ndarray to obtain useable pointer
-        set_data = AliasAssign(DottedVariable(VoidType(), 'raw_data',
-                memory_handling = 'alias', lhs=nd_var), var)
+        set_data = AliasAssign(DottedVariable(BindCPointer(), 'raw_data',
+                lhs=nd_var), var)
 
         # Save the ndarray to vars_to_wrap to be handled as if it came from C
         body = [call, alloc, set_data] + self._wrap_Variable(nd_var)
@@ -1809,13 +1809,13 @@ class CToPythonWrapper(Wrapper):
         getter_scope = self.scope.new_child_scope(getter_name)
         self.scope = getter_scope
         getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
-                       getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+                       getter_scope.get_temporary_variable(BindCPointer())]
         self.scope.insert_symbol(expr.name)
         getter_result = self.get_new_PyObject(expr.name, dtype = expr.dtype)
         get_val_result = FunctionDefResult(expr.clone(expr.name, new_class = Variable))
         self._python_object_map[get_val_result] = getter_result
 
-        class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
+        class_obj = Variable(lhs.dtype.get_alias_equivalent(), self.scope.get_new_name('self'), memory_handling='alias')
         self.scope.insert_variable(class_obj)
 
         attrib = expr.clone(expr.name, lhs = class_obj)
@@ -1856,14 +1856,14 @@ class CToPythonWrapper(Wrapper):
         self.scope = setter_scope
         setter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        self.get_new_PyObject(f'{expr.name}_obj'),
-                       setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+                       setter_scope.get_temporary_variable(BindCPointer())]
         setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))]
         self.scope.insert_symbol(expr.name)
         new_set_val_arg = FunctionDefArgument(expr.clone(expr.name, new_class = Variable))
         self._python_object_map[new_set_val_arg] = setter_args[1]
 
         if isinstance(expr.class_type, FixedSizeNumericType) or expr.is_alias:
-            class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
+            class_obj = Variable(lhs.dtype.get_alias_equivalent(), self.scope.get_new_name('self'), memory_handling='alias')
             self.scope.insert_variable(class_obj)
 
             attrib = expr.clone(expr.name, lhs = class_obj)
@@ -1940,7 +1940,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_symbol(r.var.name)
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
-                       getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+                       getter_scope.get_temporary_variable(BindCPointer())]
         getter_result = self.get_new_PyObject(f'{name}_obj',
                                         dtype = getattr(get_val_result, 'original_function_result_variable', get_val_result.var).dtype)
 
@@ -1997,7 +1997,7 @@ class CToPythonWrapper(Wrapper):
 
         setter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        self.get_new_PyObject(f'{name}_obj'),
-                       setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+                       setter_scope.get_temporary_variable(BindCPointer())]
         setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))]
 
         self._python_object_map[self_arg] = setter_args[0]
