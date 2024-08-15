@@ -51,7 +51,7 @@ class CWrapperCodePrinter(CCodePrinter):
     dtype_registry = {**CCodePrinter.dtype_registry,
                       PyccelPyObject() : 'PyObject',
                       PyccelPyArrayObject() : 'PyArrayObject',
-                      PyccelPyTypeObject() : 'PyTypeObject',
+                      PyccelPyTypeObject() : 'PyTypeObject*',
                       BindCPointer()  : 'void'}
 
     def __init__(self, filename, target_language, **settings):
