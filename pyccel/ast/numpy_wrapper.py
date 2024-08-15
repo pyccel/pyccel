@@ -9,6 +9,8 @@ Handling the transitions between Python code and C code using (Numpy/C Api).
 
 import numpy as np
 
+from pyccel.utilities.metaclasses import Singleton
+
 from .bind_c            import BindCPointer
 
 from .datatypes         import PythonNativeBool, GenericType, FixedSizeType
@@ -46,7 +48,7 @@ __all__ = (
     'get_numpy_max_acceptable_version_file',
 )
 
-class PyccelPyArrayObject(FixedSizeType):
+class PyccelPyArrayObject(FixedSizeType, metaclass=Singleton):
     """
     Datatype representing a `PyArrayObject`.
 

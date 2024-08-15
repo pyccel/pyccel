@@ -7,7 +7,7 @@
 Module representing object address.
 """
 
-from pyccel.utilities.metaclasses import ArgumentSingleton
+from pyccel.utilities.metaclasses import ArgumentSingleton, Singleton
 from .basic     import TypedAstNode, PyccelAstNode
 from .datatypes import HomogeneousContainerType, FixedSizeType, PrimitiveIntegerType
 from .literals  import LiteralString
@@ -21,7 +21,7 @@ __all__ = ('CMacro',
 
 #------------------------------------------------------------------------------
 
-class CNativeInt(FixedSizeType):
+class CNativeInt(FixedSizeType, metaclass=Singleton):
     """
     Class representing C's native integer type.
 

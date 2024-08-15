@@ -193,7 +193,7 @@ class PyccelType:
 
 #==============================================================================
 
-class FixedSizeType(PyccelType, metaclass=Singleton):
+class FixedSizeType(PyccelType):
     """
     Base class representing a built-in scalar datatype.
 
@@ -286,7 +286,7 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
         """
         return False
 
-class FixedSizeNumericType(FixedSizeType):
+class FixedSizeNumericType(FixedSizeType, metaclass=Singleton):
     """
     Base class representing a scalar numeric datatype.
 
@@ -425,7 +425,7 @@ class PythonNativeComplex(PythonNativeNumericType):
         """
         return PythonNativeFloat()
 
-class VoidType(FixedSizeType):
+class VoidType(FixedSizeType, metaclass=Singleton):
     """
     Class representing a void datatype.
 
@@ -437,7 +437,7 @@ class VoidType(FixedSizeType):
     _name = 'void'
     _primitive_type = None
 
-class GenericType(FixedSizeType):
+class GenericType(FixedSizeType, metaclass=Singleton):
     """
     Class representing a generic datatype.
 
@@ -459,7 +459,7 @@ class GenericType(FixedSizeType):
     def __hash__(self):
         return hash(self.__class__)
 
-class SymbolicType(FixedSizeType):
+class SymbolicType(FixedSizeType, metaclass=Singleton):
     """
     Class representing the datatype of a placeholder symbol.
 
@@ -471,7 +471,7 @@ class SymbolicType(FixedSizeType):
     _name = 'Symbolic'
     _primitive_type = None
 
-class CharType(FixedSizeType):
+class CharType(FixedSizeType, metaclass=Singleton):
     """
     Class representing a char type in C/Fortran.
 
