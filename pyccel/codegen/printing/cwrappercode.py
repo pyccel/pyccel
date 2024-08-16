@@ -53,7 +53,7 @@ class CWrapperCodePrinter(CCodePrinter):
                       PyccelPyObject() : 'PyObject',
                       PyccelPyArrayObject() : 'PyArrayObject',
                       PyccelPyTypeObject() : 'PyTypeObject*',
-                      VoidType(is_alias=True) : 'void*',
+                      VoidType(is_alias=True) : 'void',
                       BindCPointer()  : 'void'}
 
     def __init__(self, filename, target_language, **settings):
