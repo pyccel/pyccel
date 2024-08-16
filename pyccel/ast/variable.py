@@ -286,7 +286,11 @@ class Variable(TypedAstNode):
 
     @property
     def memory_handling(self):
-        """ Indicates whether a Variable has a dynamic size
+        """
+        Gets a string describing how the variable is saved in memory.
+
+        Gets a string describing how the variable is saved in memory. This will
+        be one of ['stack', 'heap', 'alias'].
         """
         return self._memory_handling
 

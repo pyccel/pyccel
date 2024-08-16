@@ -406,6 +406,10 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         Get a type which is an alias to this type.
 
         Get a type which is an alias to this type.
+
+        Returns
+        -------
+        A type which is an aliased version of this type.
         """
         cls = type(self)
         return cls(self.element_type, self.rank, self.order, is_alias = True)
