@@ -304,7 +304,8 @@ class FixedSizeType(PyccelType):
 
         Returns
         -------
-        A type which is an aliased version of this type.
+        FixedSizeType
+            A type which is an aliased version of this type.
         """
         cls = type(self)
         return cls(is_alias = True)
@@ -876,7 +877,8 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
 
         Returns
         -------
-        A type which is an aliased version of this type.
+        HomogeneousTupleType
+            A type which is an aliased version of this type.
         """
         cls = type(self)
         return cls(self._element_type, is_alias = True)
@@ -916,7 +918,8 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
 
         Returns
         -------
-        A type which is an aliased version of this type.
+        HomogeneousListType
+            A type which is an aliased version of this type.
         """
         cls = type(self)
         return cls(self._element_type, is_alias = True)
@@ -960,7 +963,8 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
 
         Returns
         -------
-        A type which is an aliased version of this type.
+        HomogeneousSetType
+            A type which is an aliased version of this type.
         """
         cls = type(self)
         return cls(self._element_type, is_alias = True)
@@ -1046,7 +1050,8 @@ class CustomDataType(ContainerType, metaclass=ArgumentSingleton):
 
         Returns
         -------
-        A type which is an aliased version of this type.
+        CustomDataType
+            A type which is an aliased version of this type.
         """
         cls = type(self)
         return cls(is_alias = True)
@@ -1311,7 +1316,8 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
 
         Returns
         -------
-        A type which is an aliased version of this type.
+        DictType
+            A type which is an aliased version of this type.
         """
         cls = type(self)
         return cls(self.key_type, self.value_type, is_alias = True)
