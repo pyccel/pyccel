@@ -14,6 +14,7 @@ from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
+from pyccel.ast.datatypes  import VoidType
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
 from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
 from pyccel.ast.c_concepts import ObjectAddress
@@ -52,6 +53,7 @@ class CWrapperCodePrinter(CCodePrinter):
                       PyccelPyObject() : 'PyObject',
                       PyccelPyArrayObject() : 'PyArrayObject',
                       PyccelPyTypeObject() : 'PyTypeObject*',
+                      VoidType(is_alias=True) : 'void*',
                       BindCPointer()  : 'void'}
 
     def __init__(self, filename, target_language, **settings):
