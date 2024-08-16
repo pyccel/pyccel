@@ -2123,6 +2123,7 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class = PyClassDef(t, struct_name, type_name, Scope(), class_type = dtype)
                 self._python_object_map[t] = wrapped_class
                 self._python_object_map[t.class_type] = dtype
+                self._python_object_map[t.class_type.get_alias_equivalent()] = dtype
                 self.scope.imports['classes'][t.name] = wrapped_class
                 import_wrapper = True
 
