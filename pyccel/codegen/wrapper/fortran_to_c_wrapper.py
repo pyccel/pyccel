@@ -390,9 +390,14 @@ class FortranToCWrapper(Wrapper):
         scope.insert_symbol(name)
         wrap_dotted = isinstance(var, DottedVariable)
         stored_in_c_ptr = var.rank or isinstance(var.dtype, CustomDataType)
-        memory_handling = 'alias' if wrap_dotted and stored_in_c_ptr else var.memory_handling
+        if wrap_dotted and stored_in_c_ptr:
+            memory_handling = 'alias'
+            class_type = var.class_type.get_alias_equivalent()
+        else:
+            memory_handling = var.memory_handling
+            class_type = var.class_type
         local_var = var.clone(scope.get_expected_name(name), new_class = Variable,
-                            memory_handling = memory_handling)
+                            class_type = class_type, memory_handling = memory_handling)
 
         if stored_in_c_ptr:
             # Allocatable is not returned so it must appear in local scope
