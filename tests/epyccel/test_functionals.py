@@ -55,3 +55,7 @@ def test_functional_for_2d_array_range_const(language):
 
 def test_functional_for_3d_range(language):
     compare_epyccel(functionals.functional_for_3d_range, language)
+
+def test_unknown_length_functional(language):
+    y = randint(100, size = 20)
+    compare_epyccel(functionals.unknown_length_functional, language, y)
