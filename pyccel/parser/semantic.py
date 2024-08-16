@@ -922,7 +922,7 @@ class SemanticParser(BasicParser):
                 length = length.python_value
             else:
                 symbol_map = {}
-                used_symbols = {}
+                used_symbols = set()
                 sympy_length = pyccel_to_sympy(length, symbol_map, used_symbols)
                 if isinstance(sympy_length, sp_Integer):
                     length = int(sympy_length)
