@@ -596,7 +596,7 @@ class FortranToCWrapper(Wrapper):
         func_name = self.scope.get_new_name(f'{name}_bind_c_alloc'.lower())
         func_scope = self.scope.new_child_scope(func_name)
 
-        local_var = Variable(expr.class_type, func_scope.get_new_name(f'{name}_obj'),
+        local_var = Variable(expr.class_type.get_alias_equivalent(), func_scope.get_new_name(f'{name}_obj'),
                              cls_base = expr, memory_handling='alias')
 
         # Allocatable is not returned so it must appear in local scope
