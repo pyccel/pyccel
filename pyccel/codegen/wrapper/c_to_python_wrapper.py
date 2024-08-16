@@ -1302,8 +1302,7 @@ class CToPythonWrapper(Wrapper):
                 self.scope.remove_variable(r, name=n)
                 if not o_r.var.is_alias:
                     body.append(Allocate(r, shape=(), status='unallocated', like=o_r.var))
-        c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
-        c_results = [PointerCast(r, cast_type = o_r.var) if isinstance(r, ObjectAddress) else r for r,o_r in zip(c_results, original_c_results)]
+        c_results = [PointerCast(r, cast_type = o_r.var) if r.dtype is BindCPointer() else r for r,o_r in zip(c_results, original_c_results)]
 
         if class_dtype:
             body.extend(self._save_referenced_objects(expr, func_args))
