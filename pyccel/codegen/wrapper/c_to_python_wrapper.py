@@ -1759,6 +1759,7 @@ class CToPythonWrapper(Wrapper):
 
         # Create ndarray to store array data
         nd_var = self.scope.get_temporary_variable(dtype_or_var = v,
+                class_type = v.class_type.get_alias_equivalent(),
                 name = v.name, memory_handling = 'alias')
         alloc = Allocate(nd_var, shape=shape, status='unallocated')
         # Save raw_data into ndarray to obtain useable pointer
