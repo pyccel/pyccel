@@ -416,8 +416,8 @@ class FortranToCWrapper(Wrapper):
 
             if not (var.is_alias or wrap_dotted):
                 # Create an array variable which can be passed to CLocFunc
-                ptr_var = var.clone(scope.get_new_name(name+'_ptr'), class_type = var.class_type.get_alias_equivalent(),
-                                    memory_handling='alias')
+                ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
+                                    class_type = var.class_type.get_alias_equivalent())
                 scope.insert_variable(ptr_var)
 
                 # Define the additional steps necessary to define and fill ptr_var
@@ -602,7 +602,7 @@ class FortranToCWrapper(Wrapper):
         func_scope = self.scope.new_child_scope(func_name)
 
         local_var = Variable(expr.class_type.get_alias_equivalent(), func_scope.get_new_name(f'{name}_obj'),
-                             cls_base = expr, memory_handling='alias')
+                             cls_base = expr)
 
         # Allocatable is not returned so it must appear in local scope
         func_scope.insert_variable(local_var)

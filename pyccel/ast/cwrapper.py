@@ -95,15 +95,6 @@ class PyccelPyObject(FixedSizeType, metaclass=Singleton):
     def __init__(self):
         super().__init__(is_alias = True)
 
-    @property
-    def is_alias(self):
-        """
-        Indicates if the type is an alias to the equivalent non-alias type.
-
-        Indicates if the type is an alias to the equivalent non-alias type.
-        """
-        return True
-
 class PyccelPyClassType(FixedSizeType, metaclass=ArgumentSingleton):
     """
     Datatype representing a subclass of `PyObject`.
@@ -756,8 +747,8 @@ class PyClassDef(ClassDef):
         self._type_object = Variable(PyccelPyClassType(), type_name)
         self._new_func = None
         self._properties = ()
-        variables = [Variable(VoidType(is_alias=True), 'instance', memory_handling='alias'),
-                     Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias'),
+        variables = [Variable(VoidType(is_alias=True), 'instance'),
+                     Variable(PyccelPyObject(), 'referenced_objects'),
                      Variable(PythonNativeBool(), 'is_alias')]
         scope.insert_variable(variables[0])
         scope.insert_variable(variables[1])
@@ -1074,7 +1065,7 @@ def C_to_Python(c_object):
         memory_handling = 'heap'
         optional = True
     else:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=class_type, severity='fatal')
+        raise errors.report(PYCCEL_RESTRICTION_TODO, symbol=class_type, severity='fatal')
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
@@ -1110,7 +1101,7 @@ PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
                            FunctionDefArgument(Variable(StringType(), name = 's'))],
               results   = [])
 
-PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError', memory_handling = 'alias')
+PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
 PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
 PyAttributeError = Variable(PyccelPyObject(), name = 'PyExc_AttributeError')
 

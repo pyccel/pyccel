@@ -61,15 +61,6 @@ class CStackArray(HomogeneousContainerType, metaclass=ArgumentSingleton):
         self._element_type = element_type
         super().__init__()
 
-    @property
-    def is_alias(self):
-        """
-        Indicates if the type is an alias to the equivalent non-alias type.
-
-        Indicates if the type is an alias to the equivalent non-alias type.
-        """
-        return True
-
 #------------------------------------------------------------------------------
 class ObjectAddress(TypedAstNode):
     """
@@ -109,15 +100,6 @@ class ObjectAddress(TypedAstNode):
         """The object whose address is of interest
         """
         return self._obj
-
-    @property
-    def is_alias(self):
-        """
-        Indicate that an ObjectAddress uses alias memory handling.
-
-        Indicate that an ObjectAddress uses alias memory handling.
-        """
-        return True
 
 #------------------------------------------------------------------------------
 class PointerCast(TypedAstNode):

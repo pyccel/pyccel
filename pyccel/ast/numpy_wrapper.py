@@ -61,15 +61,6 @@ class PyccelPyArrayObject(FixedSizeType, metaclass=Singleton):
     def __init__(self):
         super().__init__(is_alias = True)
 
-    @property
-    def is_alias(self):
-        """
-        Indicates if the type is an alias to the equivalent non-alias type.
-
-        Indicates if the type is an alias to the equivalent non-alias type.
-        """
-        return True
-
 #-------------------------------------------------------------------
 #                      Numpy functions
 #-------------------------------------------------------------------
@@ -115,7 +106,7 @@ pyarray_to_ndarray = FunctionDef(
 pyarray_check = FunctionDef(
                 name      = 'pyarray_check',
                 arguments = [
-                        FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling='alias')),
+                        FunctionDefArgument(Variable(PyccelPyObject(), 'a')),
                         FunctionDefArgument(Variable(CNativeInt(), 'dtype')),
                         FunctionDefArgument(Variable(CNativeInt(), 'rank')),
                         FunctionDefArgument(Variable(CNativeInt(), 'flag'))
@@ -126,7 +117,7 @@ pyarray_check = FunctionDef(
 is_numpy_array = FunctionDef(
                 name      = 'is_numpy_array',
                 arguments = [
-                        FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling='alias')),
+                        FunctionDefArgument(Variable(PyccelPyObject(), 'a')),
                         FunctionDefArgument(Variable(CNativeInt(), 'dtype')),
                         FunctionDefArgument(Variable(CNativeInt(), 'rank')),
                         FunctionDefArgument(Variable(CNativeInt(), 'flag'))

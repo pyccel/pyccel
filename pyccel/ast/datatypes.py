@@ -209,6 +209,7 @@ class FixedSizeType(PyccelType):
     __slots__ = ('_is_alias',)
 
     def __init__(self, *, is_alias = False):
+        assert isinstance(is_alias, bool)
         self._is_alias = is_alias
         super().__init__()
 
@@ -702,15 +703,6 @@ class HomogeneousContainerType(ContainerType):
             return self.element_type
         else:
             return self.element_type.switch_rank(new_rank - self.container_rank)
-
-    def get_alias_equivalent(self):
-        """
-        Get a type which is an alias to this type.
-
-        Get a type which is an alias to this type.
-        """
-        cls = type(self)
-        return cls(is_alias = True)
 
     @property
     def container_rank(self):
@@ -1277,7 +1269,7 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
         Get a type which is an alias to this type.
         """
         cls = type(self)
-        return cls(is_alias = True)
+        return cls(self.key_type, self.value_type, is_alias = True)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.key_type == other.key_type \

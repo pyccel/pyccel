@@ -614,7 +614,7 @@ class CToPythonWrapper(Wrapper):
         module_var = self.get_new_PyObject("mod")
         API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
         API_var = Variable(CStackArray(BindCPointer()), API_var_name, shape = (n_classes,),
-                                    cls_base = StackArrayClass, memory_handling='alias')
+                                    cls_base = StackArrayClass)
         self.scope.insert_variable(API_var)
         capsule_obj = self.get_new_PyObject(self.scope.get_new_name('c_api_object'))
 
@@ -1421,7 +1421,7 @@ class CToPythonWrapper(Wrapper):
         if orig_var.is_ndarray:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     class_type = orig_var.class_type.get_alias_equivalent(),
-                                    memory_handling = 'alias', new_class = Variable)
+                                    new_class = Variable)
             self._wrapping_arrays = orig_var.is_ndarray
             self.scope.insert_variable(arg_var, orig_var.name)
         else:
@@ -1460,7 +1460,6 @@ class CToPythonWrapper(Wrapper):
             else:
                 cast_type = Variable(self._python_object_map[dtype].get_alias_equivalent(),
                                     self.scope.get_new_name(collect_arg.name),
-                                    memory_handling='alias',
                                     cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True))
                 self.scope.insert_variable(cast_type)
                 cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type))]
@@ -1589,7 +1588,7 @@ class CToPythonWrapper(Wrapper):
         if orig_var.is_ndarray:
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
             c_res = orig_var.clone(name, class_type = orig_var.class_type.get_alias_equivalent(),
-                                   is_argument = False, memory_handling='alias')
+                                   is_argument = False)
             self._wrapping_arrays = True
         elif isinstance(orig_var.dtype, CustomDataType):
             scope = python_res.cls_base.scope
@@ -1651,7 +1650,7 @@ class CToPythonWrapper(Wrapper):
             # C-compatible result variable
             c_res = orig_var.clone(self.scope.get_new_name(orig_var_name), is_argument = False,
                                     class_type = orig_var.class_type.get_alias_equivalent(),
-                                    memory_handling='alias', new_class = Variable)
+                                    new_class = Variable)
             self._wrapping_arrays = True
             # Result of calling the bind-c function
             arg_var = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
@@ -1815,7 +1814,7 @@ class CToPythonWrapper(Wrapper):
         get_val_result = FunctionDefResult(expr.clone(expr.name, new_class = Variable))
         self._python_object_map[get_val_result] = getter_result
 
-        class_obj = Variable(lhs.dtype.get_alias_equivalent(), self.scope.get_new_name('self'), memory_handling='alias')
+        class_obj = Variable(lhs.dtype.get_alias_equivalent(), self.scope.get_new_name('self'))
         self.scope.insert_variable(class_obj)
 
         attrib = expr.clone(expr.name, lhs = class_obj)
@@ -1863,7 +1862,7 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[new_set_val_arg] = setter_args[1]
 
         if isinstance(expr.class_type, FixedSizeNumericType) or expr.is_alias:
-            class_obj = Variable(lhs.dtype.get_alias_equivalent(), self.scope.get_new_name('self'), memory_handling='alias')
+            class_obj = Variable(lhs.dtype.get_alias_equivalent(), self.scope.get_new_name('self'))
             self.scope.insert_variable(class_obj)
 
             attrib = expr.clone(expr.name, lhs = class_obj)
