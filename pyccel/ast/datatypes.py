@@ -199,8 +199,18 @@ class FixedSizeType(PyccelType):
 
     The base class representing a built-in scalar datatype which can be
     represented in memory. E.g. int32, int64.
+
+    Parameters
+    ----------
+    is_alias : bool
+        True if the object stores a reference to a PyccelPyClassType defined
+        elsewhere. False otherwise.
     """
-    __slots__ = ()
+    __slots__ = ('_is_alias',)
+
+    def __init__(self, *, is_alias = False):
+        self._is_alias = is_alias
+        super().__init__()
 
     @property
     def datatype(self):
@@ -284,14 +294,29 @@ class FixedSizeType(PyccelType):
 
         Indicates if the type is an alias to the equivalent non-alias type.
         """
-        return False
+        return self._is_alias
 
-class FixedSizeNumericType(FixedSizeType, metaclass=Singleton):
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+        """
+        cls = type(self)
+        return cls(is_alias = True)
+
+class FixedSizeNumericType(FixedSizeType, metaclass=ArgumentSingleton):
     """
     Base class representing a scalar numeric datatype.
 
     The base class representing a scalar numeric datatype which can be
     represented in memory. E.g. int32, int64.
+
+    Parameters
+    ----------
+    is_alias : bool
+        True if the object stores a reference to a PyccelPyClassType defined
+        elsewhere. False otherwise.
     """
     __slots__ = ()
 
@@ -439,22 +464,9 @@ class VoidType(FixedSizeType, metaclass=ArgumentSingleton):
         True if the object stores a reference to a PyccelPyClassType defined
         elsewhere. False otherwise.
     """
-    __slots__ = ('_is_alias',)
+    __slots__ = ()
     _name = 'void'
     _primitive_type = None
-
-    def __init__(self, *, is_alias = False):
-        self._is_alias = is_alias
-        super().__init__()
-
-    @property
-    def is_alias(self):
-        """
-        Indicates if the type is an alias to the equivalent non-alias type.
-
-        Indicates if the type is an alias to the equivalent non-alias type.
-        """
-        return self._is_alias
 
 class GenericType(FixedSizeType, metaclass=Singleton):
     """
@@ -467,6 +479,9 @@ class GenericType(FixedSizeType, metaclass=Singleton):
     __slots__ = ()
     _name = 'Generic'
     _primitive_type = None
+
+    def __init__(self):
+        super().__init__(is_alias = False)
 
     @lru_cache
     def __add__(self, other):
@@ -490,12 +505,21 @@ class SymbolicType(FixedSizeType, metaclass=Singleton):
     _name = 'Symbolic'
     _primitive_type = None
 
-class CharType(FixedSizeType, metaclass=Singleton):
+    def __init__(self):
+        super().__init__(is_alias = False)
+
+class CharType(FixedSizeType, metaclass=ArgumentSingleton):
     """
     Class representing a char type in C/Fortran.
 
     Class representing a char type in C/Fortran. This datatype is
     useful for describing strings.
+
+    Parameters
+    ----------
+    is_alias : bool
+        True if the object stores a reference to a PyccelPyClassType defined
+        elsewhere. False otherwise.
     """
     __slots__ = ()
     _name = 'char'

@@ -45,6 +45,9 @@ class BindCPointer(FixedSizeType, metaclass = Singleton):
     __slots__ = ()
     _name = 'bindcpointer'
 
+    def __init__(self):
+        super().__init__(is_alias = True)
+
     @property
     def is_alias(self):
         """

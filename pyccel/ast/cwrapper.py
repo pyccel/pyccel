@@ -92,6 +92,9 @@ class PyccelPyObject(FixedSizeType, metaclass=Singleton):
     __slots__ = ()
     _name = 'pyobject'
 
+    def __init__(self):
+        super().__init__(is_alias = True)
+
     @property
     def is_alias(self):
         """
@@ -114,21 +117,8 @@ class PyccelPyClassType(FixedSizeType, metaclass=ArgumentSingleton):
         True if the object stores a reference to a PyccelPyClassType defined
         elsewhere. False otherwise.
     """
-    __slots__ = ('_is_alias',)
+    __slots__ = ()
     _name = 'pyclasstype'
-
-    def __init__(self, *, is_alias = False):
-        self._is_alias = is_alias
-        super().__init__()
-
-    @property
-    def is_alias(self):
-        """
-        Indicates if the type is an alias to the equivalent non-alias type.
-
-        Indicates if the type is an alias to the equivalent non-alias type.
-        """
-        return self._is_alias
 
 class PyccelPyTypeObject(FixedSizeType, metaclass=Singleton):
     """
@@ -140,6 +130,9 @@ class PyccelPyTypeObject(FixedSizeType, metaclass=Singleton):
     __slots__ = ()
     _name = 'pytypeobject'
 
+    def __init__(self):
+        super().__init__(is_alias = False)
+
 class WrapperCustomDataType(CustomDataType):
     """
     Datatype representing a subclass of `PyObject`.
@@ -149,6 +142,9 @@ class WrapperCustomDataType(CustomDataType):
     """
     __slots__ = ()
     _name = 'pycustomclasstype'
+
+    def __init__(self):
+        super().__init__(is_alias = True)
 
     @property
     def is_alias(self):

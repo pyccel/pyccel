@@ -7,7 +7,7 @@
 Module representing object address.
 """
 
-from pyccel.utilities.metaclasses import ArgumentSingleton, Singleton
+from pyccel.utilities.metaclasses import ArgumentSingleton
 from .basic     import TypedAstNode, PyccelAstNode
 from .datatypes import HomogeneousContainerType, FixedSizeType, PrimitiveIntegerType
 from .literals  import LiteralString
@@ -21,11 +21,17 @@ __all__ = ('CMacro',
 
 #------------------------------------------------------------------------------
 
-class CNativeInt(FixedSizeType, metaclass=Singleton):
+class CNativeInt(FixedSizeType, metaclass=ArgumentSingleton):
     """
     Class representing C's native integer type.
 
     Class representing C's native integer type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        True if the object stores a reference to a PyccelPyClassType defined
+        elsewhere. False otherwise.
     """
     __slots__ = ()
     _name = 'int'
