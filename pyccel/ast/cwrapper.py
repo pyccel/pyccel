@@ -139,21 +139,15 @@ class WrapperCustomDataType(CustomDataType):
 
     Datatype representing a subclass of `PyObject`. This is the
     datatype of a class which is compatible with Python.
+
+    Parameters
+    ----------
+    is_alias : bool
+        True if the object stores a reference to a PyccelPyClassType defined
+        elsewhere. False otherwise.
     """
     __slots__ = ()
     _name = 'pycustomclasstype'
-
-    def __init__(self):
-        super().__init__(is_alias = True)
-
-    @property
-    def is_alias(self):
-        """
-        Indicates if the type is an alias to the equivalent non-alias type.
-
-        Indicates if the type is an alias to the equivalent non-alias type.
-        """
-        return True
 
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes
