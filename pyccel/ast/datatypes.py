@@ -203,8 +203,7 @@ class FixedSizeType(PyccelType):
     Parameters
     ----------
     is_alias : bool
-        True if the object stores a reference to a PyccelPyClassType defined
-        elsewhere. False otherwise.
+        Indicates if the type describes an alias.
     """
     __slots__ = ('_is_alias',)
 
@@ -320,8 +319,7 @@ class FixedSizeNumericType(FixedSizeType, metaclass=ArgumentSingleton):
     Parameters
     ----------
     is_alias : bool
-        True if the object stores a reference to a PyccelPyClassType defined
-        elsewhere. False otherwise.
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
 
@@ -348,6 +346,11 @@ class PythonNativeNumericType(FixedSizeNumericType):
     Base class representing a built-in scalar numeric datatype.
 
     Base class representing a built-in scalar numeric datatype.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
 
@@ -356,6 +359,11 @@ class PythonNativeBool(PythonNativeNumericType):
     Class representing Python's native boolean type.
 
     Class representing Python's native boolean type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'bool'
@@ -385,6 +393,11 @@ class PythonNativeInt(PythonNativeNumericType):
     Class representing Python's native integer type.
 
     Class representing Python's native integer type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'int'
@@ -412,6 +425,11 @@ class PythonNativeFloat(PythonNativeNumericType):
     Class representing Python's native floating point type.
 
     Class representing Python's native floating point type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'float'
@@ -432,6 +450,11 @@ class PythonNativeComplex(PythonNativeNumericType):
     Class representing Python's native complex type.
 
     Class representing Python's native complex type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ('_element_type',)
     _name = 'complex'
@@ -466,8 +489,7 @@ class VoidType(FixedSizeType, metaclass=ArgumentSingleton):
     Parameters
     ----------
     is_alias : bool
-        True if the object stores a reference to a PyccelPyClassType defined
-        elsewhere. False otherwise.
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'void'
@@ -523,8 +545,7 @@ class CharType(FixedSizeType, metaclass=ArgumentSingleton):
     Parameters
     ----------
     is_alias : bool
-        True if the object stores a reference to a PyccelPyClassType defined
-        elsewhere. False otherwise.
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'char'

@@ -45,6 +45,11 @@ class NumpyNumericType(FixedSizeNumericType):
     Base class representing a scalar numeric datatype defined in the numpy module.
 
     Base class representing a scalar numeric datatype defined in the numpy module.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
 
@@ -82,6 +87,11 @@ class NumpyIntType(NumpyNumericType):
     Super class representing NumPy's integer types.
 
     Super class representing NumPy's integer types.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _primitive_type = PrimitiveIntegerType()
@@ -112,6 +122,11 @@ class NumpyInt8Type(NumpyIntType):
     Class representing NumPy's int8 type.
 
     Class representing NumPy's int8 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.int8'
@@ -123,6 +138,11 @@ class NumpyInt16Type(NumpyIntType):
     Class representing NumPy's int16 type.
 
     Class representing NumPy's int16 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.int16'
@@ -134,6 +154,11 @@ class NumpyInt32Type(NumpyIntType):
     Class representing NumPy's int32 type.
 
     Class representing NumPy's int32 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.int32'
@@ -145,6 +170,11 @@ class NumpyInt64Type(NumpyIntType):
     Class representing NumPy's int64 type.
 
     Class representing NumPy's int64 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.int64'
@@ -157,6 +187,11 @@ class NumpyFloat32Type(NumpyNumericType):
     Class representing NumPy's float32 type.
 
     Class representing NumPy's float32 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.float32'
@@ -169,6 +204,11 @@ class NumpyFloat64Type(NumpyNumericType):
     Class representing NumPy's float64 type.
 
     Class representing NumPy's float64 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.float64'
@@ -181,6 +221,11 @@ class NumpyFloat128Type(NumpyNumericType):
     Class representing NumPy's float128 type.
 
     Class representing NumPy's float128 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.float128'
@@ -194,6 +239,11 @@ class NumpyComplex64Type(NumpyNumericType):
     Class representing NumPy's complex64 type.
 
     Class representing NumPy's complex64 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.complex64'
@@ -216,6 +266,11 @@ class NumpyComplex128Type(NumpyNumericType):
     Class representing NumPy's complex128 type.
 
     Class representing NumPy's complex128 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.complex128'
@@ -238,6 +293,11 @@ class NumpyComplex256Type(NumpyNumericType):
     Class representing NumPy's complex256 type.
 
     Class representing NumPy's complex256 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.complex256'
