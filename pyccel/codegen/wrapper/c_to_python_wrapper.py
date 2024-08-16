@@ -104,7 +104,7 @@ class CToPythonWrapper(Wrapper):
             The new variable.
         """
         if isinstance(dtype, CustomDataType):
-            var = Variable(self._python_object_map[dtype],
+            var = Variable(self._python_object_map[dtype].get_alias_equivalent(),
                            self.scope.get_new_name(name),
                            memory_handling='alias',
                            cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
@@ -1458,7 +1458,7 @@ class CToPythonWrapper(Wrapper):
                 cast_type = collect_arg
                 cast = []
             else:
-                cast_type = Variable(self._python_object_map[dtype],
+                cast_type = Variable(self._python_object_map[dtype].get_alias_equivalent(),
                                     self.scope.get_new_name(collect_arg.name),
                                     memory_handling='alias',
                                     cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True))
