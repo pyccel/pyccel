@@ -1649,6 +1649,7 @@ class CToPythonWrapper(Wrapper):
         if orig_var.rank:
             # C-compatible result variable
             c_res = orig_var.clone(self.scope.get_new_name(orig_var_name), is_argument = False,
+                                    class_type = orig_var.class_type.get_alias_equivalent(),
                                     memory_handling='alias', new_class = Variable)
             self._wrapping_arrays = True
             # Result of calling the bind-c function

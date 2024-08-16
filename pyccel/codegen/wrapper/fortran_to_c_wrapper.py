@@ -338,7 +338,8 @@ class FortranToCWrapper(Wrapper):
         if var.is_ndarray or var.is_optional or isinstance(var.dtype, CustomDataType):
             new_var = Variable(BindCPointer(), self.scope.get_new_name(f'bound_{name}'),
                                 is_argument = True, is_optional = False, memory_handling='alias')
-            arg_var = var.clone(collisionless_name, is_argument = False, is_optional = False,
+            arg_var = var.clone(collisionless_name, class_type = var.class_type.get_alias_equivalent(),
+                                is_argument = False, is_optional = False,
                                 memory_handling = 'alias', allows_negative_indexes=False,
                                 new_class = Variable)
             self.scope.insert_variable(arg_var)
@@ -410,7 +411,7 @@ class FortranToCWrapper(Wrapper):
 
             if not (var.is_alias or wrap_dotted):
                 # Create an array variable which can be passed to CLocFunc
-                ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
+                ptr_var = var.clone(scope.get_new_name(name+'_ptr'), class_type = var.class_type.get_alias_equivalent(),
                                     memory_handling='alias')
                 scope.insert_variable(ptr_var)
 
