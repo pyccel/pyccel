@@ -58,5 +58,5 @@ def functional_for_3d_range():
     return len(a), a[0], a[1], a[2], a[3]
 
 def unknown_length_functional(x : 'int[:]'):
-    a = [i for i in range(len(x)*2)]
+    a = [i*3 for i in range(len(x)*2)]
     return len(a), a[0], a[-1]
