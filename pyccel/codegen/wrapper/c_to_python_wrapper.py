@@ -34,10 +34,10 @@ from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, 
 from pyccel.ast.datatypes     import FixedSizeNumericType
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse
-from pyccel.ast.numpyext      import NumpyNDArrayType
+from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt32Type, NumpyInt64Type
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
-from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
-from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
+from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, PyArray_DATA, PyccelPyArrayObject
+from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step, PyArray_SHAPE
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
@@ -1476,7 +1476,18 @@ class CToPythonWrapper(Wrapper):
                                results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
             cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
         else:
-            cast = [Assign(arg_var, FunctionCall(pyarray_to_ndarray, [collect_arg]))]
+            data_ptr = DottedVariable(VoidType(), 'data', lhs = arg_var, memory_handling='alias')
+            expected_collect_arg = Variable(PyccelPyArrayObject(), 'dummy')
+            numpy_collect_arg = ObjectAddress(PointerCast(collect_arg, expected_collect_arg))
+            shape_array = DottedVariable(CStackArray(NumpyInt32Type()), 'shape', lhs = arg_var)
+            numpy_shape_array = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name('shape'))
+            self.scope.insert_variable(numpy_shape_array)
+
+            cast = [AliasAssign(data_ptr, FunctionCall(PyArray_DATA,
+                                [numpy_collect_arg]))]
+            cast += [Assign(numpy_shape_array, FunctionCall(PyArray_SHAPE, [numpy_collect_arg]))]
+            cast += [Assign(IndexedElement(shape_array, i), IndexedElement(numpy_shape_array, i)) \
+                                   for i, s in enumerate(arg_var.alloc_shape)]
 
         if arg_var.is_optional and not isinstance(dtype, CustomDataType):
             memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
