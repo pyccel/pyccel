@@ -294,13 +294,6 @@ class Variable(TypedAstNode):
         """
         return self._memory_handling
 
-    @memory_handling.setter
-    def memory_handling(self, memory_handling):
-        # Memory handling cannot be set to alias as that would change the class type.
-        assert memory_handling in ('heap', 'stack')
-        assert self._memory_handling != 'alias'
-        self._memory_handling = memory_handling
-
     @property
     def is_alias(self):
         """ Indicates if variable is an alias
@@ -694,15 +687,6 @@ class InhomogeneousTupleVariable(Variable):
 
     def __len__(self):
         return len(self._vars)
-
-    @Variable.memory_handling.setter
-    def memory_handling(self, memory_handling):
-        if memory_handling not in ('heap', 'stack', 'alias'):
-            raise ValueError("memory_handling must be 'heap', 'stack' or 'alias'")
-        self._memory_handling = memory_handling
-        for var in self._vars:
-            if var.rank > 0:
-                var.memory_handling = memory_handling
 
     @Variable.is_target.setter
     def is_target(self, is_target):
