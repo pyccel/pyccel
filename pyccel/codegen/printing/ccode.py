@@ -440,7 +440,8 @@ class CCodePrinter(CodePrinter):
             copy_to = temp_var
         else:
             copy_to = lhs
-        copy_to_data_var = DottedVariable(lhs.dtype, dtype, lhs=copy_to)
+        copy_to_data_var = ObjectAddress(DottedVariable(VoidType(), 'data',
+                                         memory_handling='alias', lhs=copy_to))
 
         num_elements = len(flattened_list)
         # Get the offset variable if it is needed
@@ -480,8 +481,8 @@ class CCodePrinter(CodePrinter):
                 operations += f"{declare_dtype} {dummy_array_name}[] = {subset_str};\n"
 
                 copy_to_data = self._print(copy_to_data_var)
-                type_size = self._print(DottedVariable(VoidType(), 'type_size', lhs=copy_to))
-                operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * {type_size});\n"
+                #nelems = NumpySize(copy_to)
+                operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * sizeof({declare_dtype}));\n"
 
                 i += lenSubset
                 if i < num_elements:
