@@ -101,6 +101,15 @@ class ObjectAddress(TypedAstNode):
         """
         return self._obj
 
+    @property
+    def is_alias(self):
+        """
+        Indicate that an ObjectAddress uses alias memory handling.
+
+        Indicate that an ObjectAddress uses alias memory handling.
+        """
+        return True
+
 #------------------------------------------------------------------------------
 class PointerCast(TypedAstNode):
     """
