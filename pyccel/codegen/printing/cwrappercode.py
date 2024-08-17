@@ -158,6 +158,8 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if expr.dtype is BindCPointer():
             return 'void*'
+        elif isinstance(expr.class_type, CStackArray):
+            return self.get_c_type(expr.class_type.element_type) + '*'
         return CCodePrinter.get_declare_type(self, expr)
 
     def _handle_is_operator(self, Op, expr):
@@ -514,7 +516,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_IndexedElement(self, expr):
         if isinstance(expr.base.class_type, CStackArray):
-            base = self._print(expr.base.name)
+            base = self._print(expr.base)
             idxs = ''.join(f'[{self._print(a)}]' for a in expr.indices)
             return f'{base}{idxs}'
         else:
