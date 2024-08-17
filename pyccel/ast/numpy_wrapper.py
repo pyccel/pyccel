@@ -18,7 +18,7 @@ from .cwrapper          import PyccelPyObject, check_type_registry, c_to_py_regi
 from .core              import FunctionDef
 from .core              import FunctionDefArgument, FunctionDefResult
 
-from .c_concepts        import CNativeInt
+from .c_concepts        import CNativeInt, CStackArray
 
 from .numpytypes        import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from .numpytypes        import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
@@ -89,6 +89,21 @@ PyArray_Check = FunctionDef(name      = 'PyArray_Check',
                             body      = [],
                             arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o'))],
                             results   = [FunctionDefResult(Variable(PythonNativeBool(), name='b'))])
+
+PyArray_DATA = FunctionDef(name = 'PyArray_DATA',
+                           body = [],
+                           arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],
+                           results   = [FunctionDefResult(Variable(VoidType(), name='b', memory_handling='alias'))])
+
+PyArray_SHAPE = FunctionDef(name = 'PyArray_SHAPE',
+                            body = [],
+                            arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],
+                            results   = [FunctionDefResult(Variable(CStackArray(NumpyInt32Type()), name='s', memory_handling='alias'))])
+
+PyArray_STRIDES = FunctionDef(name = 'PyArray_STRIDES',
+                            body = [],
+                            arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],
+                            results   = [FunctionDefResult(Variable(CStackArray(NumpyInt32Type()), name='s', memory_handling='alias'))])
 
 # NumPy array to c ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_to_ndarray = FunctionDef(
