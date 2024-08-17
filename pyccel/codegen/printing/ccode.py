@@ -33,7 +33,7 @@ from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleTyp
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType, DictType
 
-from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
+from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement, PyccelSymbol
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
@@ -334,6 +334,35 @@ class CCodePrinter(CodePrinter):
             self._additional_imports[import_obj.source] = import_obj
         elif import_obj.target:
             self._additional_imports[import_obj.source].define_target(import_obj.target)
+
+    def sort_imports(self, imports):
+        """
+        Sort imports to avoid any errors due to bad ordering.
+
+        Sort imports. This is important so that types exist before they are used to create
+        container types. E.g. it is important that complex or inttypes be imported before
+        vec_int or vec_double_complex is declared.
+
+        Parameters
+        ----------
+        imports : list[Import]
+            A list of the imports.
+
+        Returns
+        -------
+        list[Import]
+            A sorted list of the imports.
+        """
+        import_src = [str(i.source) for i in imports]
+        stc_imports = [i for i in import_src if i.startswith('stc/')]
+        dependent_imports = [i for i in import_src if i in import_header_guard_prefix]
+        non_stc_imports = [i for i in import_src if i not in chain(stc_imports, dependent_imports)]
+        stc_imports.sort()
+        dependent_imports.sort()
+        non_stc_imports.sort()
+        sorted_imports = [imports[import_src.index(name)] for name in chain(non_stc_imports, dependent_imports, stc_imports)]
+        import_sorted_src = [str(i.source) for i in sorted_imports]
+        return sorted_imports
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -846,6 +875,7 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
+        imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self._in_header = False
@@ -1516,7 +1546,7 @@ class CCodePrinter(CodePrinter):
         indices = ", ".join(self._print(i) for i in inds)
         if isinstance(base.class_type, NumpyNDArrayType):
             #TODO Handle slices
-            return f'cspan_at({self._print(ObjectAddress(base))}, {indices})'
+            return f'(*cspan_at({self._print(ObjectAddress(base))}, {indices}))'
         elif isinstance(base.class_type, CStackArray):
             return f'{self._print(base)}[{indices}]'
         else:
@@ -2553,6 +2583,7 @@ class CCodePrinter(CodePrinter):
         decs = ''.join(self._print(Declare(v)) for v in variables)
 
         imports = [*expr.imports, *self._additional_imports.values()]
+        imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
