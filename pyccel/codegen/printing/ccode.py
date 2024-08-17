@@ -21,6 +21,8 @@ from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName
 
+from pyccel.ast.c_concepts import CStackArray
+
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
@@ -548,19 +550,11 @@ class CCodePrinter(CodePrinter):
             lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
         declare_dtype = self.get_c_type(NumpyInt64Type())
 
-        dummy_array_name = self.scope.get_new_name('array_dummy')
-        buffer_array = "{dtype} {name}[{size}];\n".format(
-                dtype = dtype,
-                name  = dummy_array_name,
-                size  = tot_shape)
-        shape_init = "({declare_dtype}[]){{{shape}}}".format(declare_dtype=declare_dtype, shape=shape)
-        strides_init = "({declare_dtype}[{length}]){{0}}".format(declare_dtype=declare_dtype, length=len(var.shape))
-        array_init = ' = (t_ndarray){{\n.{0}={1},\n .shape={2},\n .strides={3},\n '
-        array_init += '.nd={4},\n .type={0},\n .is_view={5}\n}};\n'
-        array_init = array_init.format(np_dtype, dummy_array_name,
-                    shape_init, strides_init, len(var.shape), 'false')
-        array_init += 'stack_array_init(&{})'.format(self._print(var))
-        self.add_import(c_imports['ndarrays'])
+        order = 'c_COLMAJOR' if var.order == 'F' else 'c_ROWMAJOR'
+
+        dummy_array_name = self.scope.get_new_name(f'{var.name}_ptr')
+        buffer_array = f"{dtype} {dummy_array_name}[{tot_shape}];\n"
+        array_init = f' = cspan_md_layout({order}, {dummy_array_name}, {shape})'
         return buffer_array, array_init
 
     def _handle_inline_func_call(self, expr):
@@ -1398,27 +1392,24 @@ class CCodePrinter(CodePrinter):
         return f'{ret_type} (*{name})({arg_code});\n'
 
     def _print_Declare(self, expr):
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+        var = expr.variable
+        if isinstance(var, InhomogeneousTupleVariable):
+            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in var)
 
-        declaration_type = self.get_declare_type(expr.variable)
-        variable = self._print(expr.variable.name)
-
-        if expr.variable.is_stack_array:
-            preface, init = self._init_stack_array(expr.variable,)
-        elif declaration_type == 't_ndarray' and not self._in_header:
-            preface = ''
-            init    = ' = {.shape = NULL}'
-        else:
-            preface = ''
-            init    = ''
+        declaration_type = self.get_declare_type(var)
+        variable = self._print(var)
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
 
-        declaration = f'{static}{external}{declaration_type} {variable}{init};\n'
+        init = ''
 
-        return preface + declaration
+        if isinstance(var.class_type, NumpyNDArrayType):
+            order = 'c_COLMAJOR' if var.order == 'F' else 'c_ROWMAJOR'
+            shape = ', '.join('0'*var.rank)
+            init = f' = cspan_md_layout({order}, NULL, {shape})'
+
+        return f'{static}{external}{declaration_type} {variable}{init};\n'
 
     def function_signature(self, expr, print_arg_names = True):
         """
@@ -1522,28 +1513,14 @@ class CCodePrinter(CodePrinter):
                     return f"(*{container_type}_at_mut({list_var},{index}))"
             return f"(*{container_type}_at({list_var},{index}))"
 
-        base_name = self._print(base)
+        indices = ", ".join(self._print(i) for i in inds)
         if isinstance(base.class_type, NumpyNDArrayType):
-            #set dtype to the C struct types
-            dtype = self.find_in_ndarray_type_registry(expr.dtype)
-        elif isinstance(base.class_type, HomogeneousTupleType):
-            dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(expr.dtype.primitive_type, expr.dtype.precision)])
+            #TODO Handle slices
+            return f'cspan_at({self._print(ObjectAddress(base))}, {indices})'
+        elif isinstance(base.class_type, CStackArray):
+            return f'{self._print(base)}[{indices}]'
         else:
-            raise NotImplementedError(f"Don't know how to index {expr.class_type} type")
-        if expr.rank > 0:
-            #managing the Slice input
-            for i , ind in enumerate(inds):
-                if isinstance(ind, Slice):
-                    inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArrayShapeElement(base, i),
-                        allow_negative_indexes)
-                else:
-                    inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1),
-                        Slice.Element)
-            indices = ", ".join(self._print(i) for i in inds)
-            return f"array_slicing({base_name}, {expr.rank}, {indices})"
-        indices = ", ".join(self._cast_to(i, NumpyInt64Type()).format(self._print(i)) for i in inds)
-        return f"GET_ELEMENT({base_name}, {dtype}, {indices})"
-
+            raise NotImplementedError(f"Indexing not implemented for {base.class_type}")
 
     def _cast_to(self, expr, dtype):
         """
@@ -1666,26 +1643,23 @@ class CCodePrinter(CodePrinter):
         if variable.rank > 0:
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
-                shape_var = DottedVariable(VoidType(), 'shape', lhs = variable)
-                free_code = f'if ({self._print(shape_var)} != NULL)\n'
-                free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
+                data_ptr = DottedVariable(VoidType(), 'data', lhs = var, memory_handling='alias')
+                free_code = f'if ({self._print(data_ptr)} != NULL)\n'
+                free_code += ''.join(("{\n", self._print(Deallocate(variable)), "}\n"))
             elif (expr.status == 'allocated'):
                 free_code += self._print(Deallocate(variable))
-            self.add_import(c_imports['ndarrays'])
-            shape = ", ".join(self._print(i) for i in expr.shape)
-            if isinstance(variable.class_type, NumpyNDArrayType):
-                #set dtype to the C struct types
-                dtype = self.find_in_ndarray_type_registry(variable.dtype)
-            elif isinstance(variable.class_type, HomogeneousContainerType):
-                dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(variable.dtype.primitive_type, variable.dtype.precision)])
-            else:
-                raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
-            shape_dtype = self.get_c_type(NumpyInt64Type())
-            shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-            is_view = 'false' if variable.on_heap else 'true'
-            order = "order_f" if expr.order == "F" else "order_c"
-            alloc_code = f"{self._print(variable)} = array_create({variable.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
-            return f'{free_code}{alloc_code}'
+
+            data_ptr = ObjectAddress(DottedVariable(VoidType(), 'data', lhs = variable, memory_handling='alias'))
+            tot_shape = self._print(functools.reduce(
+                lambda x,y: PyccelMul(x,y,simplify=True), variable.alloc_shape))
+            element_type = self.get_c_type(variable.class_type.element_type)
+
+            buffer_array = f"{self._print(data_ptr)} = malloc(sizeof({element_type}) * {tot_shape});\n"
+            shape_array = DottedVariable(CStackArray(NumpyInt32Type()), 'shape', lhs = variable)
+            shape_assign = ''.join(self._print(Assign(IndexedElement(shape_array, i), s)) \
+                                   for i, s in enumerate(variable.alloc_shape))
+
+            return buffer_array + shape_assign
         elif variable.is_alias:
             var_code = self._print(ObjectAddress(variable))
             if expr.like:
@@ -2027,6 +2001,12 @@ class CCodePrinter(CodePrinter):
 
         return code
 
+    def _print_NumpyArray(self, expr):
+        declare_type = self.get_c_type(expr.class_type)
+        values = ', '.join(self._print(a) for a in expr.arg)
+        init_list = '{'+values+'}'
+        return f'cspan_init({declare_type}, {init_list})'
+
     def _print_Interface(self, expr):
         return ""
 
@@ -2242,7 +2222,7 @@ class CCodePrinter(CodePrinter):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
             return prefix_code+'{};\n'.format(self._print(rhs))
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
-        if isinstance(rhs, (NumpyArray, PythonTuple)):
+        if isinstance(rhs, (NumpyArray, PythonTuple)) and (not lhs.on_stack or lhs.rank!=1):
             return prefix_code+self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
