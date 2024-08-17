@@ -59,7 +59,7 @@ class CStackArray(HomogeneousContainerType, metaclass=ArgumentSingleton):
     def __init__(self, element_type):
         assert isinstance(element_type, FixedSizeType)
         self._element_type = element_type
-        super().__init__()
+        super().__init__(is_alias = True)
 
 #------------------------------------------------------------------------------
 class ObjectAddress(TypedAstNode):
