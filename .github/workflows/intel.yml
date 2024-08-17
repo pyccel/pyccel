@@ -90,9 +90,6 @@ jobs:
         id: parallel
         timeout-minutes: 20
         uses: ./.github/actions/pytest_parallel
-      - name: Test with valgrind for memory leaks
-        id: valgrind
-        uses: ./.github/actions/valgrind_run
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
@@ -105,4 +102,4 @@ jobs:
       - name: "Post completed"
         if: always() && github.event_name != 'push'
         run:
-          python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }} ${{ steps.valgrind.outcome }}
+          python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }}

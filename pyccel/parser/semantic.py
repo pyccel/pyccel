@@ -25,8 +25,8 @@ from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunct
 from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
-from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
-                                 PythonTuple, Lambda, PythonMap)
+from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate
+from pyccel.ast.builtins import PythonTuple, Lambda, PythonMap
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
 from pyccel.ast.builtin_methods.set_methods  import SetMethod, SetAdd
@@ -1349,6 +1349,10 @@ class SemanticParser(BasicParser):
             d_lhs['memory_handling'] = 'alias'
             rhs.base.is_target = not rhs.base.is_alias
 
+        if isinstance(rhs, (PythonList, PythonDict, PythonTuple)):
+            for r in rhs:
+                self._ensure_target(r, d_lhs)
+
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False):
         """
         Create a variable from the left-hand side (lhs) of an assignment.
@@ -1992,6 +1996,48 @@ class SemanticParser(BasicParser):
         raise errors.report("Unrecognised type slice",
                 severity='fatal', symbol=expr)
 
+    def _create_iterable_object(self, expr, cls_type):
+        """
+        Create an iterable object such as a tuple of a list from its syntactic representation.
+
+        Create an iterable object such as a tuple of a list from its syntactic representation.
+        This function avoids code duplication between iterables and takes care of ensuring that
+        elements of nested lists/tuples are declared individually so they can be the target of
+        a pointer.
+
+        Parameters
+        ----------
+        expr : TypedAstNode
+            The syntactic representation of the iterable object.
+        cls_type : type
+            The type to be returned.
+
+        Returns
+        -------
+        cls_type
+            The semantic version of the object.
+        """
+        usage_in_array = [f.funcdef for f in expr.get_user_nodes(FunctionCall) if f.funcdef == 'array']
+        lst = []
+        for elem in expr:
+            if isinstance(elem, (PythonTuple, PythonList, PythonSet, PythonDict)) and not usage_in_array:
+                # If object of rank>0 is inside the list, unpack it to ensure that
+                # deallocation works correctly
+                pyccel_stage.set_stage('syntactic')
+                tmp_var = self.scope.get_new_name()
+                syntactic_assign = Assign(tmp_var, elem, python_ast = expr.python_ast)
+                pyccel_stage.set_stage('semantic')
+                assign = self._visit(syntactic_assign)
+                self._additional_exprs[-1].append(assign)
+                lst.append(self._visit(tmp_var))
+            else:
+                lst.append(self._visit(elem))
+        try:
+            expr = cls_type(*lst)
+        except TypeError:
+            errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
+                severity='fatal')
+        return expr
 
     #====================================================
     #                 _visit functions
@@ -2137,14 +2183,11 @@ class SemanticParser(BasicParser):
                     variables.remove(v)
 
             # Get deallocations
-            deallocs = self._garbage_collector(CodeBlock(init_func_body))
+            all_deallocs = self._garbage_collector(CodeBlock(init_func_body))
+            deallocs = [d for d in all_deallocs if d.variable not in to_remove]
 
             # Deallocate temporaries in init function
-            dealloc_vars = [d.variable for d in deallocs]
-            for i,v in enumerate(dealloc_vars):
-                if v in to_remove:
-                    d = deallocs.pop(i)
-                    init_func_body.append(d)
+            init_func_body.extend(d for d in all_deallocs if d.variable in to_remove)
 
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
@@ -2263,17 +2306,10 @@ class SemanticParser(BasicParser):
         return mod
 
     def _visit_PythonTuple(self, expr):
-        ls = [self._visit(i) for i in expr]
-        return PythonTuple(*ls)
+        return self._create_iterable_object(expr, PythonTuple)
 
     def _visit_PythonList(self, expr):
-        ls = [self._visit(i) for i in expr]
-        try:
-            expr = PythonList(*ls)
-        except TypeError:
-            errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
-                severity='fatal')
-        return expr
+        return self._create_iterable_object(expr, PythonList)
 
     def _visit_PythonSet(self, expr):
         ls = [self._visit(i) for i in expr]
@@ -3313,6 +3349,7 @@ class SemanticParser(BasicParser):
                     errors.report("Cannot modify 'const' variable",
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                         symbol=l, severity='error')
+
             if isinstance(expr, AugAssign):
                 new_expr = AugAssign(l, expr.op, r)
             else:
@@ -3339,6 +3376,10 @@ class SemanticParser(BasicParser):
                     errors.report(PYCCEL_RESTRICTION_TODO,
                                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                                   severity='fatal')
+
+                elif isinstance(r, (PythonList, PythonTuple)) and r.rank > 1:
+                    for r_i in r:
+                        self._indicate_pointer_target(l, r_i, expr)
 
             new_expressions.append(new_expr)
 
