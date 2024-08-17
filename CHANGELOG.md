@@ -84,7 +84,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
 -   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
 -   \[INTERNALS\] Handle STC imports with Pyccel objects.
--   \[INTERNALS\] Add alias information to PyccelTypes. See #1956 for more details.
+-   \[INTERNALS\] Add alias information to Pyccel's typing system. See #1956 for more details.
 
 ### Deprecated
 
