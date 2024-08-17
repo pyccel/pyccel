@@ -1013,7 +1013,22 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1]
         else:
             source = self._print(source)
-        if source.startswith('stc/') or source in import_header_guard_prefix:
+        if source == 'stc/cspan':
+            code = ''
+            for t in expr.target:
+                dtype = t.object.class_type
+                container_type = t.target
+                element_type = self.get_c_type(dtype.element_type)
+                rank = dtype.rank
+                header_guard_prefix = import_header_guard_prefix.get(source, '')
+                header_guard = f'{header_guard_prefix}_{container_type.upper()}'
+                code += ''.join((f'#ifndef {header_guard}\n',
+                        f'#define {header_guard}\n',
+                        f'#include <stc/cspan.h>\n',
+                        f'using_cspan({container_type}, {element_type}, {rank});\n',
+                        f'#endif // {header_guard}\n\n'))
+            return code
+        elif source.startswith('stc/') or source in import_header_guard_prefix:
             code = ''
             for t in expr.target:
                 dtype = t.object.class_type
@@ -1251,12 +1266,20 @@ class CCodePrinter(CodePrinter):
                 return 'bool'
 
             key = (primitive_type, dtype.precision)
+
+        elif isinstance(dtype, NumpyNDArrayType):
+            element_type = self.get_c_type(dtype.element_type).replace(' ', '_').rstrip('_t')
+            i_type = f'array_{element_type}_{dtype.rank}d'
+            self.add_import(Import(f'stc/cspan', AsName(VariableTypeAnnotation(dtype), i_type)))
+            return i_type
+
         elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
             container_type = 'hset' if dtype.name == 'set' else 'vec'
             element_type = self.get_c_type(dtype.element_type).replace(' ', '_')
             i_type = f'{container_type}_{element_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
+
         elif isinstance(dtype, DictType):
             container_type = 'hmap'
             key_type = self.get_c_type(dtype.key_type).replace(' ', '_')
@@ -1264,6 +1287,7 @@ class CCodePrinter(CodePrinter):
             i_type = f'{container_type}_{key_type}_{val_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
+
         else:
             key = dtype
 
@@ -1339,14 +1363,9 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
 
         if rank > 0:
-            if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType, DictType)):
+            if isinstance(expr.class_type, HomogeneousContainerType):
                 dtype = self.get_c_type(expr.class_type)
                 return dtype
-            if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
-                if expr.rank > 15:
-                    errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
-                self.add_import(c_imports['ndarrays'])
-                dtype = 't_ndarray'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
         elif not isinstance(class_type, CustomDataType):
