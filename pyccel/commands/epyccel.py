@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """ File containing functions for calling Pyccel interactively (epyccel and epyccel_seq)
 """
@@ -18,7 +18,7 @@ from importlib.machinery import ExtensionFileLoader
 
 from pyccel.utilities.strings  import random_string
 from pyccel.codegen.pipeline   import execute_pyccel
-from pyccel.errors.errors      import ErrorsMode
+from pyccel.errors.errors      import ErrorsMode, PyccelError
 
 __all__ = ['get_source_function', 'epyccel_seq', 'epyccel']
 
@@ -359,6 +359,8 @@ def epyccel( python_function_or_module, **kwargs ):
                 fun_name = python_function_or_module.__name__ if fun else None
                 success  = True
             # error handling carried out after broadcast to prevent deadlocks
+            except PyccelError as e:
+                raise type(e)(str(e)) from None
             except BaseException as e: # pylint: disable=broad-except
                 exc_info = e
                 success  = False
@@ -396,7 +398,10 @@ def epyccel( python_function_or_module, **kwargs ):
 
     # Serial version
     else:
-        mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+        try:
+            mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+        except PyccelError as e:
+            raise type(e)(str(e)) from None
 
     # Return Fortran function (if any), otherwise module
     return fun or mod

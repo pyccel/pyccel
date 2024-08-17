@@ -16,7 +16,7 @@ keywords = [
 ]
 dependencies = [
     "filelock >= 3.4.0",
-    "numpy >= 1.16",
+    "numpy >= 1.16, < 2.0",
     "sympy >= 1.2",
     "termcolor >= 1.0.0",
     "textx >= 2.2",
@@ -50,13 +50,13 @@ artifacts = [
   "*.pyccel",
 ]
 include = [
-  "*.py",
-  "*.pyh",
-  "*.pyccel",
+  "pyccel/**/*.py",
+  "pyccel/**/*.pyh",
+  "pyccel/**/*.pyccel",
   "pyccel/parser/grammar/*.tx",
-  "pyccel/stdlib/*/*.h",
-  "pyccel/stdlib/*/*.c",
-  "pyccel/stdlib/*/*.f90",
+  "pyccel/stdlib/**/*.h",
+  "pyccel/stdlib/**/*.c",
+  "pyccel/stdlib/**/*.f90",
   "pyccel/extensions/STC/include",
   "pyccel/extensions/gFTL/include/v2"
 ]

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 import os
@@ -42,6 +42,8 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
 
+from pyccel.ast.datatypes import TypeAlias
+
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
@@ -51,7 +53,7 @@ from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
-from pyccel.ast.builtins import PythonTuple, PythonList, PythonSet
+from pyccel.ast.builtins import PythonTuple, PythonList, PythonSet, PythonDict
 from pyccel.ast.builtins import PythonPrint, Lambda
 from pyccel.ast.headers  import MetaVariable, FunctionHeader, MethodHeader
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
@@ -62,7 +64,7 @@ from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelFunction
 
-from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation
+from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation, VariableTypeAnnotation
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
@@ -399,8 +401,7 @@ class SyntaxParser(BasicParser):
             return old
 
     def _visit_Dict(self, stmt):
-        errors.report(PYCCEL_RESTRICTION_TODO,
-                symbol=stmt, severity='error')
+        return PythonDict(self._visit(stmt.keys), self._visit(stmt.values))
 
     def _visit_NoneType(self, stmt):
         return Nil()
@@ -1353,6 +1354,17 @@ class SyntaxParser(BasicParser):
 
     def _visit_Starred(self, stmt):
         return StarredArguments(self._visit(stmt.value))
+
+    def _visit_TypeAlias(self, stmt):
+        if stmt.type_params:
+            errors.report("Type parameters are not yet supported on a type alias expression.\n"+PYCCEL_RESTRICTION_TODO,
+                    severity='error', symbol=stmt)
+        self._in_lhs_assign = True
+        name = self._visit(stmt.name)
+        self._in_lhs_assign = False
+        rhs = self._treat_type_annotation(stmt.value, self._visit(stmt.value))
+        type_annotation = UnionTypeAnnotation(VariableTypeAnnotation(TypeAlias(), is_const = True))
+        return Assign(AnnotatedPyccelSymbol(name, annotation=type_annotation), rhs)
 
 #==============================================================================
 

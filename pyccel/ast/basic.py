@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 """
@@ -278,6 +278,11 @@ class PyccelAstNode:
         if self._recursion_in_progress:
             return
         self._recursion_in_progress = True
+
+        if not original:
+            assert not replacement
+            self._recursion_in_progress = False
+            return
 
         if iterable(original):
             assert iterable(replacement)

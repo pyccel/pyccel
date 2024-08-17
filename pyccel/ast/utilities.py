@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 import sys
@@ -17,7 +17,7 @@ from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Concatenate, Module, PyccelFunctionDef)
 
 from .builtins      import (builtin_functions_dict,
-                            PythonRange, PythonList, PythonTuple)
+                            PythonRange, PythonList, PythonTuple, PythonSet)
 from .cmathext      import cmath_mod
 from .datatypes     import HomogeneousTupleType, PythonNativeInt
 from .internals     import PyccelFunction, Slice
@@ -409,7 +409,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
     if result is None:
         result = []
     current_level = 0
-    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate)
+    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
                                 or (isinstance(f, PyccelFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
                                     and not isinstance(f, (NumpyTranspose))))

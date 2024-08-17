@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 """
@@ -295,13 +295,26 @@ class BasicParser(object):
         return self._blocking
 
     def insert_function(self, func):
-        """."""
+        """
+        Insert a function into the current scope.
+
+        Insert a function into the current scope under the final name by which it
+        will be known in the generated code.
+
+        Parameters
+        ----------
+        func : FunctionDef | SympyFunction | Interface | FunctionAddress
+            The function to be inserted into the scope.
+        """
 
         if isinstance(func, SympyFunction):
             self.insert_symbolic_function(func)
         elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
             container = self.scope.functions
-            container[func.name] = func
+            if func.pyccel_staging == 'syntactic':
+                container[self.scope.get_expected_name(func.name)] = func
+            else:
+                container[func.name] = func
         else:
             raise TypeError('Expected a Function definition')
 

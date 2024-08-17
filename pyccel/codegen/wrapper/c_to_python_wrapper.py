@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Module describing the code-wrapping class : CToPythonWrapper
@@ -443,7 +443,10 @@ class CToPythonWrapper(Wrapper):
             The new function which raises the error.
         """
         func_args = [FunctionDefArgument(self.get_new_PyObject(n)) for n in ("self", "args", "kwargs")]
-        func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+        if self._error_exit_code is Nil():
+            func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+        else:
+            func_results = [FunctionDefResult(self.scope.get_temporary_variable(self._error_exit_code.class_type, "result"))]
         function = PyFunctionDef(name = name, arguments = func_args, results = func_results,
                 body = [FunctionCall(PyErr_SetString, [PyNotImplementedError,
                                         LiteralString(error_msg)]),

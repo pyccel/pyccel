@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 """
@@ -23,8 +23,8 @@ from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
 from .variable  import Variable
 
-__all__ = ('sympy_to_pyccel',
-           'pyccel_to_sympy')
+__all__ = ('pyccel_to_sympy',
+           'sympy_to_pyccel')
 
 #==============================================================================
 def sympy_to_pyccel(expr, symbol_map):

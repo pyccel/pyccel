@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """ Module containing types from the numpy module understood by pyccel
 """
@@ -424,6 +424,13 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         dims = ','.join(':'*self._container_rank)
         order_str = f'(order={self._order})' if self._order else ''
         return f'{self.element_type}[{dims}]{order_str}'
+
+    def __hash__(self):
+        return hash((self.element_type, self.rank, self.order))
+
+    def __eq__(self, other):
+        return isinstance(other, NumpyNDArrayType) and self.element_type == other.element_type \
+                and self.rank == other.rank and self.order == other.order
 
 #==============================================================================
 

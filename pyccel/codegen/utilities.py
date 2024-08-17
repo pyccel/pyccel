@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 """
@@ -12,11 +12,16 @@ import os
 import shutil
 from filelock import FileLock
 import pyccel.stdlib as stdlib_folder
+import pyccel.extensions as ext_folder
 
-from .compiling.basic     import CompileObj
+from .compiling.basic      import CompileObj
+from .compiling.file_locks import FileLockSet
 
 # get path to pyccel/stdlib/lib_name
 stdlib_path = os.path.dirname(stdlib_folder.__file__)
+
+# get path to pyccel/extensions/lib_name
+ext_path = os.path.dirname(ext_folder.__file__)
 
 __all__ = ['copy_internal_library','recompile_object']
 
@@ -24,15 +29,20 @@ __all__ = ['copy_internal_library','recompile_object']
 language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 
 #==============================================================================
+# map external libraries inside pyccel/extensions with their path
+external_libs = {"stc"  : "STC/include",}
+
+#==============================================================================
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
 # The compile object folder will be in the pyccel dirpath
 internal_libs = {
-    "ndarrays"     : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
-    "pyc_math_f90" : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
-    "pyc_math_c"   : ("math", CompileObj("pyc_math_c.c",folder="math")),
-    "cwrapper"     : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
-    "numpy_f90"    : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
-    "numpy_c"      : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
+    "ndarrays"       : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
+    "pyc_math_f90"   : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
+    "pyc_math_c"     : ("math", CompileObj("pyc_math_c.c",folder="math")),
+    "cwrapper"       : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
+    "numpy_f90"      : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
+    "numpy_c"        : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
+    "Set_extensions" : ("STC_Extensions", CompileObj("Set_Extensions.h", folder="STC_Extensions", has_target_file = False)),
 }
 internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_ndarrays.c",folder="cwrapper_ndarrays",
                                                              accelerators = ('python',),
@@ -101,8 +111,12 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     str
         The location that the files were copied to.
     """
-    # get lib path (stdlib_path/lib_name)
-    lib_path = os.path.join(stdlib_path, lib_folder)
+    # get lib path (stdlib_path/lib_name or ext_path/lib_name)
+    if lib_folder in external_libs:
+        lib_path = os.path.join(ext_path, external_libs[lib_folder], lib_folder)
+    else:
+        lib_path = os.path.join(stdlib_path, lib_folder)
+
     # remove library folder to avoid missing files and copy
     # new one from pyccel stdlib
     lib_dest_path = os.path.join(pyccel_dirpath, lib_folder)
@@ -114,8 +128,11 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
         else:
             to_create = False
             # If folder exists check if it needs updating
-            src_files = os.listdir(lib_path)
-            dst_files = [f for f in os.listdir(lib_dest_path) if not f.endswith('.lock')]
+            src_files = [os.path.relpath(os.path.join(root, f), lib_path) \
+                    for root, dirs, files in os.walk(lib_path) for f in files]
+            dst_files = [os.path.relpath(os.path.join(root, f), lib_dest_path) \
+                    for root, dirs, files in os.walk(lib_dest_path) \
+                    for f in files if not f.endswith('.lock')]
             # Check if all files are present in destination
             to_update = any(s not in dst_files for s in src_files)
 
@@ -132,36 +149,32 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
                     with open(os.path.join(lib_dest_path, filename), 'w') as f:
                         f.writelines(contents)
         elif to_update:
-            locks = []
+            locks = FileLockSet()
             for s in src_files:
                 base, ext = os.path.splitext(s)
                 if ext != '.h':
                     locks.append(FileLock(os.path.join(lib_dest_path, base+'.o.lock')))
             # Acquire locks to avoid compilation problems
-            for l in locks:
-                l.acquire()
-            # Remove all files in destination directory
-            for d in dst_files:
-                d_file = os.path.join(lib_dest_path, d)
-                try:
-                    os.remove(d_file)
-                except FileNotFoundError:
-                    # Don't call error in case of temporary compilation file that has disappeared
-                    # since reading the folder
-                    pass
-            # Copy all files from the source to the destination
-            for s in src_files:
-                shutil.copyfile(os.path.join(lib_path, s),
-                        os.path.join(lib_dest_path, s))
-            # Create any requested extra files
-            if extra_files:
-                for filename, contents in extra_files.items():
-                    extra_file = os.path.join(lib_dest_path, filename)
-                    with open(extra_file, 'w', encoding="utf-8") as f:
-                        f.writelines(contents)
-            # Release the locks
-            for l in locks:
-                l.release()
+            with locks:
+                # Remove all files in destination directory
+                for d in dst_files:
+                    d_file = os.path.join(lib_dest_path, d)
+                    try:
+                        os.remove(d_file)
+                    except FileNotFoundError:
+                        # Don't call error in case of temporary compilation file that has disappeared
+                        # since reading the folder
+                        pass
+                # Copy all files from the source to the destination
+                for s in src_files:
+                    shutil.copyfile(os.path.join(lib_path, s),
+                            os.path.join(lib_dest_path, s))
+                # Create any requested extra files
+                if extra_files:
+                    for filename, contents in extra_files.items():
+                        extra_file = os.path.join(lib_dest_path, filename)
+                        with open(extra_file, 'w', encoding="utf-8") as f:
+                            f.writelines(contents)
     return lib_dest_path
 
 #==============================================================================

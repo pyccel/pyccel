@@ -16,37 +16,53 @@ All notable changes to this project will be documented in this file.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1743 : Add Python support for set method `discard()`.
 -   #1754 : Add Python support for set method `update()`.
--   #1787 : Ensure `STC` is installed with Pyccel.
--   #1656 : Ensure `gFTL` is installed with Pyccel.
--   #1830 : Add a `pyccel.lambdify.lambdify` function to accelerate SymPy expressions.
+-   #1893 : Add Python support for set initialisation with `set()`.
+-   #1787 : Ensure STC is installed with Pyccel.
+-   #1656 : Ensure gFTL is installed with Pyccel.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
+-   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the STC library.
+-   #1876 : Add C support for indexing lists.
+-   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
+-   #1877 : Add C Support for set method `pop()`.
+-   #1895 : Add Python support for dict initialisation with `{}`.
+-   #1895 : Add Python support for dict initialisation with `dict()`.
+-   #1886 : Add Python support for dict method `pop()`.
+-   #1944 : Add the appropriate C language equivalent for declaring a Python `dict` container using the STC library.
+-   #1936 : Add missing C output for inline decorator example in documentation
+-   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
+-   #1544 : Add support for `typing.TypeAlias`.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
 ### Fixed
 
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
--   #1762 : Fix array copy between different data types.
 -   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
 -   Fix some cases where a Python built-in type is returned in place of a NumPy type.
 -   Stop printing numbers with more decimal digits than their precision.
 -   Allow printing the result of a function returning multiple objects of different types.
--   #1792 : Fix array unpacking.
--   #1795 : Fix bug when returning slices in C.
 -   #1732 : Fix multidimensional list indexing in Python.
 -   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
--   #1218 : Fix bug when assigning an array to a slice in Fortran.
--   #1830 : Fix missing allocation when returning an annotated array expression.
 -   #1821 : Ensure an error is raised when creating an ambiguous interface.
 -   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
 -   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
+-   Link and mention `devel` branch, not `master`.
+-   #1047 : Print the value of an unrecognised constant.
+-   #1903 : Fix memory leak when using type annotations on local variables.
+-   #1913 : Fix function calls to renamed functions.
+-   #1927 : Improve error Message for missing target language compiler in Pyccel
+-   #1933 : Improve code printing speed.
+-   #1930 : Preserve ordering of import targets.
+-   #1951 : Fix return type for class whose argument cannot be wrapped.
+-   #1892 : Fix implementation of list function when an iterable is passed as parameter.
+-   #1924 : Fix internal error arising in Duplicate or list comprehensions.
 
 ### Changed
 
+-   #1920 : Add a maximum version for NumPy.
 -   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
--   \[TESTS\] Filter out cast warnings in cast tests.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -56,8 +72,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Moved order from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
 -   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
--   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
--   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
 -   \[INTERNALS\] Stop storing `FunctionDef`, `ClassDef`, and `Import` objects inside `CodeBlock`s.
 -   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
 -   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
@@ -69,21 +83,51 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] `PyccelFunction` objects which do not represent objects in memory have the type `SymbolicType`.
 -   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
 -   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
+-   \[INTERNALS\] Handle STC imports with Pyccel objects.
 
 ### Deprecated
 
--   #1820 : Deprecated unused decorator `@lambdify`
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
 -   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
--   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 -   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
 -   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
+
+## \[1.12.0\] - 2024-05-13
+
+### Added
+
+-   #1830 : Add a `pyccel.lambdify` function to accelerate SymPy expressions.
+-   #1867 : Add a `use_out` parameter to `pyccel.lambdify` to avoid unnecessary memory allocation.
+-   #1867 : Auto-generate a docstring for functions generated via calls to `pyccel.lambdify`.
+-   #1868 : Hide traceback for `epyccel` and `lambdify` errors.
+
+### Fixed
+
+-   #1762 : Fix array copy between different data types.
+-   #1792 : Fix array unpacking.
+-   #1795 : Fix bug when returning slices in C.
+-   #1218 : Fix bug when assigning an array to a slice in Fortran.
+-   #1830 : Fix missing allocation when returning an annotated array expression.
+-   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
+-   Link and mention `devel` branch, not `master`.
+
+### Changed
+
+-   #1866 : Raise a more informative error when mixing scalar and array return types.
+-   \[TESTS\] Filter out cast warnings in cast tests.
+-   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
+-   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
+
+### Deprecated
+
+-   #1820 : Deprecated unused decorator `@lambdify`
+-   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 -   \[INTERNALS\] Remove function `Module.set_name`.
 -   \[INTERNALS\] Remove unused `assign_to` argument of `CodePrinter.doprint`.
 -   \[INTERNALS\] Remove unnecessary functions from `CodePrinter` : `_get_statement`, `_get_comment`.

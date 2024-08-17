@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 The Set container has a number of built-in methods that are 
@@ -40,7 +40,7 @@ class SetMethod(PyccelFunction):
         The arguments passed to the function call.
     """
     __slots__ = ('_set_variable',)
-    _attribute_nodes = ('_set_variable',)
+    _attribute_nodes = PyccelFunction._attribute_nodes + ('_set_variable',)
     def __init__(self,  set_variable, *args):
         self._set_variable = set_variable
         super().__init__(*args)

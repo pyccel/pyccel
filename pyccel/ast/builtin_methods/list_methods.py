@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 The List container has a number of built-in methods that are 
@@ -41,7 +41,7 @@ class ListMethod(PyccelFunction):
         The arguments passed to list methods.
     """
     __slots__ = ("_list_obj",)
-    _attribute_nodes = ("_list_obj",)
+    _attribute_nodes = PyccelFunction._attribute_nodes + ("_list_obj",)
     name = None
     def __init__(self, list_obj, *args):
         self._list_obj = list_obj
