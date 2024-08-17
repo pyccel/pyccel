@@ -1355,7 +1355,7 @@ class CCodePrinter(CodePrinter):
         't_ndarray*'
         """
         class_type = expr.class_type
-        rank  = expr.rank
+        rank = expr.rank
 
         if rank > 0:
             if isinstance(expr.class_type, HomogeneousContainerType):
@@ -1398,7 +1398,6 @@ class CCodePrinter(CodePrinter):
             return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in var)
 
         declaration_type = self.get_declare_type(var)
-        variable = self._print(var)
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
@@ -1410,7 +1409,7 @@ class CCodePrinter(CodePrinter):
             shape = ', '.join('0'*var.rank)
             init = f' = cspan_md_layout({order}, NULL, {shape})'
 
-        return f'{static}{external}{declaration_type} {variable}{init};\n'
+        return f'{static}{external}{declaration_type} {var.name}{init};\n'
 
     def function_signature(self, expr, print_arg_names = True):
         """
