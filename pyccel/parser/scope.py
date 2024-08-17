@@ -48,9 +48,9 @@ class Scope(object):
     parent_scope : Scope, default: None
         The enclosing scope.
 
-    used_symbols : set, default: None
-        A set of all the names which we know will appear in the scope and which
-        we therefore want to avoid when creating new names.
+    used_symbols : dict, default: None
+        A dictionary mapping all the names which we know will appear in the scope and which
+        we therefore want to avoid when creating new names to their collisionless name.
 
     original_symbols : dict, default: None
         A dictionary which maps names used in the code to the original name used

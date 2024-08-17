@@ -73,7 +73,6 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 
 # TODO: add examples
-# TODO: use _get_statement when returning a string
 
 __all__ = ["FCodePrinter", "fcode"]
 
@@ -307,9 +306,6 @@ class FCodePrinter(CodePrinter):
             return self.get_function(name.name[-1])
         errors.report(UNDEFINED_FUNCTION, symbol=name,
             severity='fatal')
-
-    def _get_statement(self, codestring):
-        return codestring
 
     def _format_code(self, lines):
         return self._wrap_fortran(self.indent_code(lines))
@@ -684,7 +680,7 @@ class FCodePrinter(CodePrinter):
 
         # in some cases, the source is given as a string (when using metavar)
         code = code.replace("'", '')
-        return self._get_statement(code) + '\n'
+        return code + '\n'
 
     def _print_PythonPrint(self, expr):
         end = LiteralString('\n')
@@ -887,8 +883,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_SymbolicPrint(self, expr):
         # for every expression we will generate a print
-        code = '\n'.join("print *, 'sympy> {}'".format(a) for a in expr.expr)
-        return self._get_statement(code) + '\n'
+        code = '\n'.join(f"print *, 'sympy> {a}'" for a in expr.expr)
+        return code + '\n'
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
@@ -1409,7 +1405,7 @@ class FCodePrinter(CodePrinter):
         else:
             code = ','.join(self._print(arg) for arg in args)
             code = 'min('+code+')'
-        return self._get_statement(code)
+        return code
 
     def _print_PythonMax(self, expr):
         args = expr.args
@@ -1419,7 +1415,7 @@ class FCodePrinter(CodePrinter):
         else:
             code = ','.join(self._print(arg) for arg in args)
             code = 'max('+code+')'
-        return self._get_statement(code)
+        return code
 
     # ... MACROS
     def _print_MacroShape(self, expr):
@@ -1650,7 +1646,7 @@ class FCodePrinter(CodePrinter):
                                           op=op,
                                           rhs=self._print(expr.rhs))
 
-        return self._get_statement(code) + '\n'
+        return code + '\n'
 
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
@@ -1779,7 +1775,7 @@ class FCodePrinter(CodePrinter):
 #                else:
 #            print('code_args > {0}'.format(code_args))
 #            code = 'call {0}({1})'.format(rhs_code, code_args)
-        return self._get_statement(code) + '\n'
+        return code + '\n'
 
 #------------------------------------------------------------------------------
     def _print_Allocate(self, expr):
@@ -2263,17 +2259,17 @@ class FCodePrinter(CodePrinter):
         body    = ''.join(self._print(i) for i in expr.body)
 
         # ... TODO adapt get_statement to have continuation with OpenACC
-        prolog = '!$acc parallel {clauses}\n'.format(clauses=clauses)
+        prolog = f'!$acc parallel {clauses}\n'
         epilog = '!$acc end parallel\n'
         # ...
 
         # ...
-        code = ('{prolog}'
-                '{body}'
-                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
+        code = (f'{prolog}'
+                f'{body}'
+                f'{epilog}')
         # ...
 
-        return self._get_statement(code)
+        return code
 
     def _print_ACC_For(self, expr):
         # ...
@@ -2282,17 +2278,17 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ... TODO adapt get_statement to have continuation with OpenACC
-        prolog = '!$acc loop {clauses}\n'.format(clauses=clauses)
+        prolog = f'!$acc loop {clauses}\n'
         epilog = '!$acc end loop\n'
         # ...
 
         # ...
-        code = ('{prolog}'
-                '{loop}'
-                '{epilog}').format(prolog=prolog, loop=loop, epilog=epilog)
+        code = (f'{prolog}'
+                f'{loop}'
+                f'{epilog}')
         # ...
 
-        return self._get_statement(code)
+        return code
 
     def _print_ACC_Async(self, expr):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
@@ -2744,8 +2740,8 @@ class FCodePrinter(CodePrinter):
         args = [self._print(NumpyFloat(a) if isinstance(a.dtype.primitive_type, PrimitiveIntegerType) else a)\
 				for a in expr.args]
         code_args = ', '.join(args)
-        code = '{0}({1})'.format(func_name, code_args)
-        return self._get_statement(code)
+        code = f'{func_name}({code_args})'
+        return code
 
     def _print_NumpyIsInf(self, expr):
         code = PyccelAssociativeParenthesis(PyccelAnd(
@@ -2884,8 +2880,8 @@ class FCodePrinter(CodePrinter):
         if isinstance(dtype, (PrimitiveIntegerType, PrimitiveBooleanType)):
             arg = NumpyFloat(arg)
         code_args = self._print(arg)
-        code = 'sqrt({})'.format(code_args)
-        return self._get_statement(code)
+        code = f'sqrt({code_args})'
+        return code
 
     def _print_LiteralImaginaryUnit(self, expr):
         """ purpose: print complex numbers nicely in Fortran."""

@@ -16,9 +16,21 @@ All notable changes to this project will be documented in this file.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1743 : Add Python support for set method `discard()`.
 -   #1754 : Add Python support for set method `update()`.
--   #1787 : Ensure `STC` is installed with Pyccel.
--   #1656 : Ensure `gFTL` is installed with Pyccel.
+-   #1893 : Add Python support for set initialisation with `set()`.
+-   #1787 : Ensure STC is installed with Pyccel.
+-   #1656 : Ensure gFTL is installed with Pyccel.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
+-   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the STC library.
+-   #1876 : Add C support for indexing lists.
+-   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
+-   #1877 : Add C Support for set method `pop()`.
+-   #1895 : Add Python support for dict initialisation with `{}`.
+-   #1895 : Add Python support for dict initialisation with `dict()`.
+-   #1886 : Add Python support for dict method `pop()`.
+-   #1944 : Add the appropriate C language equivalent for declaring a Python `dict` container using the STC library.
+-   #1936 : Add missing C output for inline decorator example in documentation
+-   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
+-   #1544 : Add support for `typing.TypeAlias`.
 -   #1583 : Allow inhomogeneous tuples in classes.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
@@ -37,9 +49,18 @@ All notable changes to this project will be documented in this file.
 -   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
 -   Link and mention `devel` branch, not `master`.
 -   #1047 : Print the value of an unrecognised constant.
+-   #1903 : Fix memory leak when using type annotations on local variables.
+-   #1913 : Fix function calls to renamed functions.
+-   #1927 : Improve error Message for missing target language compiler in Pyccel
+-   #1933 : Improve code printing speed.
+-   #1930 : Preserve ordering of import targets.
+-   #1951 : Fix return type for class whose argument cannot be wrapped.
+-   #1892 : Fix implementation of list function when an iterable is passed as parameter.
+-   #1924 : Fix internal error arising in Duplicate or list comprehensions.
 
 ### Changed
 
+-   #1920 : Add a maximum version for NumPy.
 -   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
@@ -63,6 +84,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] `PyccelFunction` objects which do not represent objects in memory have the type `SymbolicType`.
 -   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
 -   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
+-   \[INTERNALS\] Handle STC imports with Pyccel objects.
 
 ### Deprecated
 
@@ -77,7 +99,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 
-## \[1.12.0\] - 2024-05-08
+## \[1.12.0\] - 2024-05-13
 
 ### Added
 
@@ -109,6 +131,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 -   \[INTERNALS\] Remove function `Module.set_name`.
 -   \[INTERNALS\] Remove unused `assign_to` argument of `CodePrinter.doprint`.
+-   \[INTERNALS\] Remove unnecessary functions from `CodePrinter` : `_get_statement`, `_get_comment`.
 
 ## \[1.11.2\] - 2024-03-05
 
