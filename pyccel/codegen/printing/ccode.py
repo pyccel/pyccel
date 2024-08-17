@@ -1677,15 +1677,17 @@ class CCodePrinter(CodePrinter):
             return f'{container_type}_drop({variable_address});\n'
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
-        variable_address = self._print(ObjectAddress(expr.variable))
         if isinstance(expr.variable.dtype, CustomDataType):
+            variable_address = self._print(ObjectAddress(expr.variable))
             Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
             return f"{Pyccel__del}({variable_address});\n"
         elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousContainerType)):
             if expr.variable.is_alias:
-                return f'free_pointer({variable_address});\n'
+                return ''
             else:
-                return f'free_array({variable_address});\n'
+                data_ptr = DottedVariable(VoidType(), 'data', lhs = expr.variable, memory_handling='alias')
+                data_ptr_code = self._print(ObjectAddress(data_ptr))
+                return f'free({data_ptr_code});\n{data_ptr_code} = NULL;\n'
         else:
             return f'free({variable_address});\n'
 
