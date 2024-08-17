@@ -416,7 +416,7 @@ class FortranToCWrapper(Wrapper):
 
             if not (var.is_alias or wrap_dotted):
                 # Create an array variable which can be passed to CLocFunc
-                ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
+                ptr_var = var.clone(scope.get_new_name(name+'_ptr'), memory_handling='alias',
                                     class_type = var.class_type.get_alias_equivalent())
                 scope.insert_variable(ptr_var)
 

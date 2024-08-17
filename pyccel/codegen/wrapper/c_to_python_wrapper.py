@@ -1421,7 +1421,7 @@ class CToPythonWrapper(Wrapper):
         if orig_var.is_ndarray:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     class_type = orig_var.class_type.get_alias_equivalent(),
-                                    new_class = Variable)
+                                    new_class = Variable, memory_handling='alias')
             self._wrapping_arrays = orig_var.is_ndarray
             self.scope.insert_variable(arg_var, orig_var.name)
         else:
@@ -1588,7 +1588,7 @@ class CToPythonWrapper(Wrapper):
         if orig_var.is_ndarray:
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
             c_res = orig_var.clone(name, class_type = orig_var.class_type.get_alias_equivalent(),
-                                   is_argument = False)
+                                   is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True
         elif isinstance(orig_var.dtype, CustomDataType):
             scope = python_res.cls_base.scope
@@ -1650,7 +1650,7 @@ class CToPythonWrapper(Wrapper):
             # C-compatible result variable
             c_res = orig_var.clone(self.scope.get_new_name(orig_var_name), is_argument = False,
                                     class_type = orig_var.class_type.get_alias_equivalent(),
-                                    new_class = Variable)
+                                    new_class = Variable, memory_handling='alias')
             self._wrapping_arrays = True
             # Result of calling the bind-c function
             arg_var = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
