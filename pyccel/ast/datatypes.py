@@ -38,6 +38,7 @@ __all__ = (
         'GenericType',
         'SymbolicType',
         'CharType',
+        'TypeAlias',
         # ------------ Container types ------------
         'TupleType',
         'HomogeneousContainerType',
@@ -149,6 +150,16 @@ class PyccelType:
     is expected when calling a bitwise comparison operator on objects of these types.
     """
     __slots__ = ()
+    _name = None
+
+    @property
+    def name(self):
+        """
+        Get the name of the pyccel type.
+        
+        Get the name of the pyccel type.
+        """
+        return self._name
 
     def __init__(self): #pylint: disable=useless-parent-delegation
         # This __init__ function is required so the ArgumentSingleton can
@@ -433,6 +444,12 @@ class GenericType(FixedSizeType):
     def __add__(self, other):
         return other
 
+    def __eq__(self, other):
+        return True
+
+    def __hash__(self):
+        return hash(self.__class__)
+
 class SymbolicType(FixedSizeType):
     """
     Class representing the datatype of a placeholder symbol.
@@ -455,6 +472,21 @@ class CharType(FixedSizeType):
     __slots__ = ()
     _name = 'char'
     _primitive_type = PrimitiveCharacterType
+
+#==============================================================================
+class TypeAlias(SymbolicType):
+    """
+    Class representing the type of a symbolic object describing a type descriptor.
+
+    Class representing the type of a symbolic object describing a type descriptor.
+    This type is equivalent to Python's built-in typing.TypeAlias.
+
+    See Also
+    --------
+    typing.TypeAlias : <https://docs.python.org/3/library/typing.html#typing.TypeAlias>.
+    """
+    __slots__ = ()
+    _name = 'TypeAlias'
 
 #==============================================================================
 
@@ -640,6 +672,12 @@ class HomogeneousContainerType(ContainerType):
         """
         return self._order # pylint: disable=no-member
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.element_type == other.element_type
+
+    def __hash__(self):
+        return hash((self.__class__, self.element_type))
+
 class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
     Class representing Python's native string type.
@@ -699,6 +737,12 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
         """
         return 1
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__)
+
+    def __hash__(self):
+        return hash(self.__class__)
+
 class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous tuple type.
@@ -745,6 +789,13 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
         self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
         super().__init__()
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self._element_type == other._element_type \
+                and self._order == other._order
+
+    def __hash__(self):
+        return hash((self.__class__, self._element_type, self._order))
+
 class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous set type.
@@ -766,6 +817,12 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
         super().__init__()
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self._element_type == other._element_type
+
+    def __hash__(self):
+        return hash((self.__class__, self._element_type))
 
 #==============================================================================
 
@@ -948,23 +1005,23 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
 
     Parameters
     ----------
-    index_type : PyccelType
+    key_type : PyccelType
         The type of the keys of the homogeneous dictionary.
     value_type : PyccelType
         The type of the values of the homogeneous dictionary.
     """
-    __slots__ = ('_index_type', '_value_type')
-    _name = 'map'
+    __slots__ = ('_key_type', '_value_type')
+    _name = 'dict'
     _container_rank = 1
     _order = None
 
-    def __init__(self, index_type, value_type):
-        self._index_type = index_type
+    def __init__(self, key_type, value_type):
+        self._key_type = key_type
         self._value_type = value_type
         super().__init__()
 
     def __str__(self):
-        return f'map[{self._index_type.name}, {self._value_type.name}]'
+        return f'dict[{self._key_type}, {self._value_type}]'
 
     def __reduce__(self):
         """
@@ -980,7 +1037,7 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
         args
             A tuple containing any arguments to be passed to the callable.
         """
-        return (self.__class__, (self._index_type, self._value_type))
+        return (self.__class__, (self._key_type, self._value_type))
 
     @property
     def datatype(self):
@@ -989,7 +1046,63 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
 
         The datatype of the object.
         """
-        return self._index_type.datatype
+        return self._key_type.datatype
+
+    @property
+    def key_type(self):
+        """
+        The type of the keys of the object.
+
+        The type of the keys of the object.
+        """
+        return self._key_type
+
+    @property
+    def value_type(self):
+        """
+        The type of the values of the object.
+
+        The type of the values of the object.
+        """
+        return self._value_type
+
+    @property
+    def container_rank(self):
+        """
+        Number of dimensions of the container.
+
+        Number of dimensions of the object described by the container. This is
+        equal to the number of values required to index an element of this container.
+        """
+        return 1
+
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+        """
+        return self._container_rank
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return None
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.key_type == other.key_type \
+                and self.value_type == other.value_type
+
+    def __hash__(self):
+        return hash((self.__class__, self._key_type, self._value_type))
 
 #==============================================================================
 

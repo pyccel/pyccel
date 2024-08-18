@@ -19,7 +19,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `compile` | No |
 | **`complex`** | **Yes** |
 | `delattr` | No |
-| `dict` | No |
+| *`dict`* | Preliminary Python and C **unordered** support |
 | `dir` | No |
 | `divmod` | No |
 | **`enumerate`** | as a loop iterable |
@@ -42,12 +42,12 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `issubclass` | No |
 | `iter` | No |
 | **`len`** | **Yes** |
-| *`list`* | implemented as a tuple |
+| *`list`* | Python-only |
 | `locals` | No |
 | **`map`** | as a loop iterable |
-| **`max`** | Fortran-only |
+| **`max`** | Full Fortran support and C support for 2 arguments |
 | `memoryview` | No |
-| **`min`** | Fortran-only |
+| **`min`** | Full Fortran support and C support for 2 arguments |
 | `next` | No |
 | `object` | No |
 | `oct` | No |
@@ -60,16 +60,54 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `repr` | No |
 | `reversed` | No |
 | `round` | No |
-| `set` | No |
+| *`set`* | Python-only |
 | `setattr` | No  |
 | `slice` | No |
 | `sorted` | No |
 | `staticmethod` | No |
 | `str` | No |
-| **`sum`** | Fortran-only |
+| **`sum`** | **Yes** |
 | `super` | No |
 | **`tuple`** | **Yes** |
 | **`type`** | **Yes** |
 | `vars` | No |
 | **`zip`** | as a loop iterable |
 | \_\_`import`\_\_ | No
+
+## List methods
+
+| Method | Supported |
+|----------|-----------|
+| `append` | Python-only |
+| `clear` | Python-only |
+| `copy` | Python-only |
+| `count` | No |
+| `extend` | Python-only |
+| `index` | No |
+| `insert` | Python-only |
+| `max` | No |
+| `min` | No |
+| `pop` | Python-only |
+| `remove` | Python-only |
+| `reverse` | No |
+| `sort` | Python-only |
+
+
+## Dictionary methods
+
+:warning: The dictionary support provided by Pyccel only covers unordered dictionaries.
+
+| Method | Supported |
+|----------|-----------|
+| `clear` | No |
+| `copy` | No |
+| `get` | No |
+| `items` | No |
+| `keys` | No |
+| `pop` | Python-only |
+| `popitem` | No |
+| `reversed` | No |
+| `setdefault` | No |
+| `update` | No |
+| `values` | No |
+

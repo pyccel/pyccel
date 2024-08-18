@@ -23,8 +23,8 @@ from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
 from .variable  import Variable
 
-__all__ = ('sympy_to_pyccel',
-           'pyccel_to_sympy')
+__all__ = ('pyccel_to_sympy',
+           'sympy_to_pyccel')
 
 #==============================================================================
 def sympy_to_pyccel(expr, symbol_map):
