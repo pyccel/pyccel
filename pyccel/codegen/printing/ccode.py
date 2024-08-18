@@ -233,7 +233,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                 ['stdlib',
                  'math',
                  'string',
-                 'ndarrays',
+                 #'ndarrays',
                  'complex',
                  'stdint',
                  'pyc_math_c',
@@ -1435,9 +1435,10 @@ class CCodePrinter(CodePrinter):
         init = ''
 
         if isinstance(var.class_type, NumpyNDArrayType):
-            order = 'c_COLMAJOR' if var.order == 'F' else 'c_ROWMAJOR'
-            shape = ', '.join('0'*var.rank)
-            init = f' = cspan_md_layout({order}, NULL, {shape})'
+            #order = 'c_COLMAJOR' if var.order == 'F' else 'c_ROWMAJOR'
+            #shape = ', '.join('0'*var.rank)
+            #init = f' = cspan_md_layout({order}, NULL, {shape})'
+            pass
 
         return f'{static}{external}{declaration_type} {var.name}{init};\n'
 
@@ -1517,6 +1518,26 @@ class CCodePrinter(CodePrinter):
             while isinstance(base, IndexedElement) and isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
                 inds = list(base.indices) + inds
                 base = base.base
+
+        if expr.rank > 0:
+            c_type = self.get_c_type(expr.class_type)
+            indices = []
+            for idx in inds:
+                if isinstance(idx, Slice):
+                    start = idx.start or '0'
+                    stop = idx.stop or 'c_END'
+                    args = f'{self._print(start)}, {self._print(stop)}'
+                    if idx.step:
+                        args += f', {self._print(idx.step)}'
+                        self._additional_code += f'printf("stride: %ld\\n", {self._print(idx.step)});\n'
+                    if args == '0, c_END':
+                        args = 'c_ALL'
+                    indices.append('{'+args+'}')
+                else:
+                    indices.append('{'+self._print(idx)+'}')
+            indices_code = ', '.join(indices)
+            base_code = self._print(ObjectAddress(base))
+            return f'cspan_slice({c_type}, {base_code}, {indices_code})'
 
         for i, ind in enumerate(inds):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
@@ -1679,17 +1700,26 @@ class CCodePrinter(CodePrinter):
             elif (expr.status == 'allocated'):
                 free_code += self._print(Deallocate(variable))
 
-            data_ptr = ObjectAddress(DottedVariable(VoidType(), 'data', lhs = variable, memory_handling='alias'))
+            #data_ptr = ObjectAddress(DottedVariable(VoidType(), 'data', lhs = variable, memory_handling='alias'))
             tot_shape = self._print(functools.reduce(
-                lambda x,y: PyccelMul(x,y,simplify=True), variable.alloc_shape))
+                lambda x,y: PyccelMul(x,y,simplify=True), expr.shape))
+            c_type = self.get_c_type(variable.class_type)
             element_type = self.get_c_type(variable.class_type.element_type)
 
-            buffer_array = f"{self._print(data_ptr)} = malloc(sizeof({element_type}) * {tot_shape});\n"
-            shape_array = DottedVariable(CStackArray(NumpyInt32Type()), 'shape', lhs = variable)
-            shape_assign = ''.join(self._print(Assign(IndexedElement(shape_array, i), s)) \
-                                   for i, s in enumerate(variable.alloc_shape))
+            if expr.like:
+                assert isinstance(expr.like.class_type, VoidType)
+                dummy_array_name = self._print(ObjectAddress(expr.like))
+                buffer_array = ''
+            else:
+                dummy_array_name = self.scope.get_new_name(f'{variable.name}_ptr')
+                buffer_array_var = Variable(variable.class_type.element_type, dummy_array_name, memory_handling='alias')
+                self.scope.insert_variable(buffer_array_var)
+                buffer_array = f"{dummy_array_name} = malloc(sizeof({element_type}) * {tot_shape});\n"
 
-            return buffer_array + shape_assign
+            order = 'c_COLMAJOR' if variable.order == 'F' else 'c_ROWMAJOR'
+            shape = ", ".join(self._print(i) for i in expr.shape)
+
+            return buffer_array + f'{self._print(variable)} = ({c_type})cspan_md_layout({order}, {dummy_array_name}, {shape});\n'
         elif variable.is_alias:
             var_code = self._print(ObjectAddress(variable))
             if expr.like:
