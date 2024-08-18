@@ -32,12 +32,16 @@ from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString, PyGe
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType
+from pyccel.ast.internals     import Slice
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
-from pyccel.ast.literals      import LiteralFalse
+from pyccel.ast.literals      import LiteralFalse, convert_to_literal
 from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt32Type, NumpyInt64Type
+from pyccel.ast.numpy_wrapper import PyArray_DATA, PyArray_SHAPE, PyArray_STRIDES, PyArray_ITEMSIZE
+from pyccel.ast.numpy_wrapper import PyArray_BASE
+from pyccel.ast.numpy_wrapper import numpy_to_stc_strides, get_strides_and_size_from_numpy_array
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
-from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, PyArray_DATA, PyccelPyArrayObject
-from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step, PyArray_SHAPE
+from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, PyccelPyArrayObject
+from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
@@ -1476,18 +1480,44 @@ class CToPythonWrapper(Wrapper):
                                results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
             cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
         else:
-            data_ptr = DottedVariable(VoidType(), 'data', lhs = arg_var, memory_handling='alias')
+            unstrided_arg_var = arg_var.clone(self.scope.get_new_name(arg_var.name+'_unstrided'))
             expected_collect_arg = Variable(PyccelPyArrayObject(), 'dummy')
             numpy_collect_arg = ObjectAddress(PointerCast(collect_arg, expected_collect_arg))
-            shape_array = DottedVariable(CStackArray(NumpyInt32Type()), 'shape', lhs = arg_var)
             numpy_shape_array = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name('shape'))
-            self.scope.insert_variable(numpy_shape_array)
 
-            cast = [AliasAssign(data_ptr, FunctionCall(PyArray_DATA,
-                                [numpy_collect_arg]))]
-            cast += [Assign(numpy_shape_array, FunctionCall(PyArray_SHAPE, [numpy_collect_arg]))]
-            cast += [Assign(IndexedElement(shape_array, i), IndexedElement(numpy_shape_array, i)) \
-                                   for i, s in enumerate(arg_var.alloc_shape)]
+            base = Variable(PyccelPyArrayObject(), self.scope.get_new_name(arg_var.name + '_base'),
+                            memory_handling='alias')
+
+            slice_ends = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name('ends'))
+            slice_steps = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name('steps'))
+
+            self.scope.insert_variable(unstrided_arg_var)
+            self.scope.insert_variable(numpy_shape_array)
+            self.scope.insert_variable(slice_ends)
+            self.scope.insert_variable(slice_steps)
+            self.scope.insert_variable(base)
+
+            shape = [IndexedElement(numpy_shape_array, i) for i in range(arg_var.rank)]
+
+            base_assign = AliasAssign(base, PointerCast(FunctionCall(PyArray_BASE, [numpy_collect_arg]), base))
+
+            slice_builder = FunctionCall(get_strides_and_size_from_numpy_array,
+                                        [numpy_collect_arg, ObjectAddress(slice_ends), ObjectAddress(slice_steps),
+                                         convert_to_literal(arg_var.order == 'F')])
+
+            indices = [Slice(None, slice_ends[i], slice_steps[i]) for i in range(arg_var.rank)]
+
+            no_base_code = IfSection(PyccelIs(base, Nil()),
+                                [Assign(numpy_shape_array, FunctionCall(PyArray_SHAPE, [numpy_collect_arg])),
+                                 Allocate(arg_var, shape = shape, status = 'unallocated',
+                                         like = FunctionCall(PyArray_DATA, [numpy_collect_arg]))])
+            has_base_code = IfSection(LiteralTrue(), [slice_builder,
+                                      Assign(numpy_shape_array, FunctionCall(PyArray_SHAPE, [base])),
+                                      Allocate(unstrided_arg_var, shape = shape, status = 'unallocated',
+                                              like = FunctionCall(PyArray_DATA, [base])),
+                                      Assign(arg_var, IndexedElement(unstrided_arg_var, *indices))])
+
+            cast = [base_assign, If(no_base_code, has_base_code)]
 
         if arg_var.is_optional and not isinstance(dtype, CustomDataType):
             memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)

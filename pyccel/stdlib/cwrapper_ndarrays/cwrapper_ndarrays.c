@@ -19,7 +19,7 @@
  * Returns    :
  *     ndarray_strides : a new array with new strides values
  */
-static int64_t	*_numpy_to_ndarray_strides(npy_intp  *np_strides, int type_size, int nd)
+int64_t* numpy_to_ndarray_strides(npy_intp  *np_strides, int type_size, int nd)
 {
     int64_t *ndarray_strides;
 
@@ -30,7 +30,7 @@ static int64_t	*_numpy_to_ndarray_strides(npy_intp  *np_strides, int type_size, 
     return ndarray_strides;
 }
 
-static npy_intp	*_ndarray_to_numpy_strides(int64_t  *nd_strides, int32_t type_size, int nd)
+npy_intp* ndarray_to_numpy_strides(int64_t  *nd_strides, int32_t type_size, int nd)
 {
     npy_intp *numpy_strides;
 
@@ -41,6 +41,46 @@ static npy_intp	*_ndarray_to_numpy_strides(int64_t  *nd_strides, int32_t type_si
     return numpy_strides;
 }
 
+void get_strides_and_size_from_numpy_array(PyArrayObject *a, int64_t** ends, int64_t** steps, bool f_order)
+{
+    int nd = PyArray_NDIM(a);
+    *ends = (int64_t*)malloc(sizeof(int64_t) * nd);
+    *steps = (int64_t*)malloc(sizeof(int64_t) * nd);
+
+    PyArrayObject* base = (PyArrayObject*)PyArray_BASE(a);
+
+    npy_intp* orig_strides = PyArray_STRIDES(base);
+    npy_intp* strides = PyArray_STRIDES(a);
+    npy_intp* shape = PyArray_SHAPE(a);
+    for (int i = 0; i < nd; ++i) {
+        (*steps)[i] = strides[i] / orig_strides[i];
+        (*ends)[i] = (shape[i] - 1) * (*steps)[i] + 1;
+    }
+}
+
+int64_t* numpy_to_stc_strides(PyArrayObject *a)
+{
+    int nd = PyArray_NDIM(a);
+    int64_t* strides = (int64_t*)malloc(sizeof(int64_t) * nd);
+    npy_intp* numpy_strides = PyArray_STRIDES(a);
+    npy_intp* numpy_shape = PyArray_SHAPE(a);
+    int64_t current_stride = PyArray_ITEMSIZE(a);
+
+    if (PyArray_CHKFLAGS(a, NPY_ARRAY_F_CONTIGUOUS)) {
+        for (int i = 0; i < nd; ++i) {
+            strides[i] = numpy_strides[i] / current_stride;
+            current_stride *= strides[i] * numpy_shape[i];
+        }
+    }
+    else {
+        for (int i = nd - 1; i >= 0; --i) {
+            strides[i] = numpy_strides[i] / current_stride;
+            current_stride *= strides[i] * numpy_shape[i];
+        }
+    }
+
+    return strides;
+}
 
 /*
  * Function : _numpy_to_ndarray_shape
@@ -55,7 +95,7 @@ static npy_intp	*_ndarray_to_numpy_strides(int64_t  *nd_strides, int32_t type_si
  * Returns    :
  *     ndarray_strides : new array
 */
-static int64_t     *_numpy_to_ndarray_shape(npy_intp  *np_shape, int nd)
+int64_t* numpy_to_ndarray_shape(npy_intp  *np_shape, int nd)
 {
     int64_t *nd_shape;
 
@@ -65,7 +105,7 @@ static int64_t     *_numpy_to_ndarray_shape(npy_intp  *np_shape, int nd)
     return nd_shape;
 }
 
-static npy_intp *_ndarray_to_numpy_shape(int64_t *nd_shape, int nd)
+npy_intp* ndarray_to_numpy_shape(int64_t *nd_shape, int nd)
 {
     npy_intp *np_shape;
 
@@ -101,6 +141,9 @@ static char*	_check_pyarray_dtype(PyArrayObject *a, int dtype)
 	if (current_dtype != dtype)
 	{
         char* error = (char *)malloc(200);
+        printf("argument dtype must be %s, not %s",
+			dataTypes[dtype],
+			dataTypes[current_dtype]);
         sprintf(error, "argument dtype must be %s, not %s",
 			dataTypes[dtype],
 			dataTypes[current_dtype]);
@@ -133,6 +176,9 @@ static char* _check_pyarray_rank(PyArrayObject *a, int rank)
 	if (current_rank != rank)
 	{
         char* error = (char *)malloc(200);
+        printf("argument rank must be %d, not %d",
+			rank,
+			current_rank);
         sprintf(error, "argument rank must be %d, not %d",
 			rank,
 			current_rank);
@@ -159,17 +205,35 @@ static char* _check_pyarray_rank(PyArrayObject *a, int rank)
  */
 static char* _check_pyarray_order(PyArrayObject *a, int flag)
 {
-
 	if (flag == NO_ORDER_CHECK)
 		return NULL;
 
-	if (!PyArray_CHKFLAGS(a, flag))
-	{
-		char order = (flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : (flag == NPY_ARRAY_F_CONTIGUOUS ? 'F' : '?'));
-        char* error = (char *)malloc(200);
-		sprintf(error, "argument does not have the expected ordering (%c)", order);
-		return error;
-	}
+    int nd = PyArray_NDIM(a);
+    npy_intp* strides = PyArray_STRIDES(a);
+    char* error = (char *)malloc(200);
+    for (int i = 0; i<nd; ++i) {
+        printf("%ld ", strides[i]);
+    }
+    if (flag == NPY_ARRAY_F_CONTIGUOUS) {
+        bool f_order = true;
+        for (int i = 1; i<nd; ++i) {
+            f_order &= strides[i-1] <= strides[i];
+        }
+        if (!f_order) {
+            sprintf(error, "argument does not have the expected ordering (F)");
+		    return error;
+        }
+    }
+    else {
+        bool c_order = true;
+        for (int i = 1; i<nd; ++i) {
+            c_order &= strides[i-1] >= strides[i];
+        }
+        if (!c_order) {
+            sprintf(error, "argument does not have the expected ordering (C)");
+		    return error;
+        }
+    }
 
 	return NULL;
 }
@@ -195,6 +259,8 @@ static char* _check_pyarray_type(PyObject *a)
 	if (!PyArray_Check(a))
 	{
         char* error = (char *)malloc(200);
+        printf("argument must be numpy.ndarray, not %s",
+			 a == Py_None ? "None" : Py_TYPE(a)->tp_name);
         sprintf(error, "argument must be numpy.ndarray, not %s",
 			 a == Py_None ? "None" : Py_TYPE(a)->tp_name);
         return error;
@@ -203,6 +269,7 @@ static char* _check_pyarray_type(PyObject *a)
 	return NULL;
 }
 
+/*
 enum NPY_TYPES get_numpy_type(t_ndarray o)
 {
     enum e_types nd_type = o.type;
@@ -283,7 +350,7 @@ enum e_types get_ndarray_type(PyArrayObject *a)
     return nd_type;
 }
 
-/* converting numpy array to c nd array*/
+// converting numpy array to c nd array
 t_ndarray	pyarray_to_ndarray(PyObject *o)
 {
     PyArrayObject* a = (PyArrayObject*) o;
@@ -327,6 +394,7 @@ PyObject* ndarray_to_pyarray(t_ndarray o)
             _ndarray_to_numpy_strides(o.strides, o.type_size, o.nd),
             o.raw_data, FLAGS, NULL);
 }
+*/
 
 /*
  * Function: pyarray_check
@@ -433,13 +501,14 @@ bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag)
  * -------------------------------------------
  * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_DIM
  */
+/*
 int     nd_ndim(t_ndarray *a, int n)
 {
 	if (a == NULL)
 		return 0;
 
 	return a->shape[n];
-}
+}*/
 
 
 /*
@@ -455,13 +524,13 @@ int     nd_ndim(t_ndarray *a, int n)
  * -------------------------------------------
  * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_DIM
  */
-void    *nd_data(t_ndarray *a)
+/*void    *nd_data(t_ndarray *a)
 {
 	if (a == NULL)
 		return NULL;
 
 	return a->raw_data;
-}
+}*/
 
 /*
  * Function: nd_step_C
@@ -474,7 +543,7 @@ void    *nd_data(t_ndarray *a)
  * 	Returns		:
  *		return 1 if object is NULL or the step along the indexed dimension
  */
-int     nd_nstep_C(t_ndarray *a, int n)
+/*int     nd_nstep_C(t_ndarray *a, int n)
 {
 	if (a == NULL || a->length == 0)
 		return 1;
@@ -484,7 +553,7 @@ int     nd_nstep_C(t_ndarray *a, int n)
 		step /= a->shape[i];
 	}
 	return step > 0 ? step : 1;
-}
+}*/
 /*
  * Function: nd_step_F
  * --------------------
@@ -496,7 +565,7 @@ int     nd_nstep_C(t_ndarray *a, int n)
  * 	Returns		:
  *		return 1 if object is NULL or the step along the indexed dimension
  */
-int     nd_nstep_F(t_ndarray *a, int n)
+/*int     nd_nstep_F(t_ndarray *a, int n)
 {
 	if (a == NULL || a->length == 0)
 		return 1;
@@ -506,4 +575,4 @@ int     nd_nstep_F(t_ndarray *a, int n)
 		step /= a->shape[i];
 	}
 	return step > 0 ? step : 1;
-}
+}*/

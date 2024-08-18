@@ -14,7 +14,7 @@
 # define CWRAPPER_NDARRAYS_H
 
 # include "cwrapper.h"
-# include "ndarrays.h"
+//# include "ndarrays.h"
 
 # define NO_TYPE_CHECK -1
 # define NO_ORDER_CHECK -1
@@ -35,21 +35,27 @@
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html
  */
-enum NPY_TYPES get_numpy_type(t_ndarray o);
-enum e_types get_ndarray_type(PyArrayObject *a);
-t_ndarray	pyarray_to_ndarray(PyObject *o);
-PyObject* ndarray_to_pyarray(t_ndarray o);
-PyObject* c_ndarray_to_pyarray(t_ndarray o);
-PyObject* fortran_ndarray_to_pyarray(t_ndarray o);
+//enum NPY_TYPES get_numpy_type(t_ndarray o);
+//enum e_types get_ndarray_type(PyArrayObject *a);
+//t_ndarray	pyarray_to_ndarray(PyObject *o);
+//PyObject* ndarray_to_pyarray(t_ndarray o);
+//PyObject* c_ndarray_to_pyarray(t_ndarray o);
+//PyObject* fortran_ndarray_to_pyarray(t_ndarray o);
 
 
 /* arrays checkers and helpers */
 bool	pyarray_check(PyObject *o, int dtype, int rank, int flag);
 bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag);
 
-void    *nd_data(t_ndarray *a);
-int     nd_ndim(t_ndarray *a, int n);
-int     nd_nstep_C(t_ndarray *a, int n);
-int     nd_nstep_F(t_ndarray *a, int n);
+//void    *nd_data(t_ndarray *a);
+//int     nd_ndim(t_ndarray *a, int n);
+//int     nd_nstep_C(t_ndarray *a, int n);
+//int     nd_nstep_F(t_ndarray *a, int n);
+int64_t* numpy_to_ndarray_strides(npy_intp  *np_strides, int type_size, int nd);
+npy_intp* ndarray_to_numpy_strides(int64_t  *nd_strides, int32_t type_size, int nd);
+int64_t* numpy_to_ndarray_shape(npy_intp  *np_shape, int nd);
+npy_intp* ndarray_to_numpy_shape(int64_t *nd_shape, int nd);
+int64_t* numpy_to_stc_strides(PyArrayObject *a);
+void get_strides_and_size_from_numpy_array(PyArrayObject *a, int64_t** ends, int64_t** steps, bool f_order);
 
 #endif
