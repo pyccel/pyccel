@@ -10,7 +10,7 @@ from modules import functionals
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="C does not support list indexing yet, related issue #1876"),
+            pytest.mark.skip(reason="C does not support list comprehensions. See #1948"),
             pytest.mark.c]),
         pytest.param("python", marks = pytest.mark.python)
     ],
@@ -69,3 +69,7 @@ def test_functional_for_2d_array_range_const(language):
 
 def test_functional_for_3d_range(language):
     compare_epyccel(functionals.functional_for_3d_range, language)
+
+def test_unknown_length_functional(language):
+    y = randint(100, size = 20)
+    compare_epyccel(functionals.unknown_length_functional, language, y)
