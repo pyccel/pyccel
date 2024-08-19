@@ -134,3 +134,44 @@ PyObject	*Float_to_NumpyDouble(float *d)
 {
     return PyArray_Scalar(d, PyArray_DescrFromType(NPY_FLOAT), NULL);
 }
+
+
+/*
+ * Functions : Numpy array handling functions
+ */
+
+void get_strides_and_size_from_numpy_array(PyObject* arr, int64_t* size[], int64_t* strides[])
+{
+    PyArrayObject* a = (PyArrayObject*)(arr);
+    int nd = PyArray_NDIM(a);
+
+    PyArrayObject* base = (PyArrayObject*)PyArray_BASE(a);
+
+    if (base == NULL) {
+        npy_intp* np_strides = PyArray_STRIDES(a);
+        npy_intp* np_shape = PyArray_SHAPE(a);
+        int64_t current_stride = PyArray_ITEMSIZE(a);
+        if (np_strides[0] == current_stride) {
+            for (int i = 0; i < nd; ++i) {
+                (*size)[i] = np_shape[i];
+                (*strides)[i] = np_strides / current_stride;
+                current_stride *= (*strides)[i];
+            }
+        } else {
+            for (int i = nd - 1; i >= 0; --i) {
+                (*size)[i] = np_shape[i];
+                (*strides)[i] = np_strides / current_stride;
+                current_stride *= (*strides)[i];
+            }
+        }
+    }
+    else {
+        npy_intp* orig_strides = PyArray_STRIDES(base);
+        npy_intp* np_strides = PyArray_STRIDES(a);
+        npy_intp* np_shape = PyArray_SHAPE(a);
+        for (int i = 0; i < nd; ++i) {
+            (*strides)[i] = np_strides[i] / orig_strides[i];
+            (*size)[i] = (np_shape[i] - 1) * (*strides)[i] + 1;
+        }
+    }
+}
