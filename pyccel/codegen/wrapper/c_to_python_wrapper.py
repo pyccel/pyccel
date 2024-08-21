@@ -811,7 +811,7 @@ class CToPythonWrapper(Wrapper):
 
         self_var = Variable(PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
                               memory_handling='alias')
-        self.scope.insert_variable(self_var)
+        self.scope.insert_variable(self_var, 'self')
         func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
         func_args = [FunctionDefArgument(a) for a in func_args]
 
@@ -1296,7 +1296,7 @@ class CToPythonWrapper(Wrapper):
 
         # Add the variables to the expected symbols in the scope
         for a in expr.arguments:
-            func_scope.insert_symbol(a.var.name)
+            func_scope.insert_symbol(getattr(a, 'original_function_argument_variable', a.var).name)
         for a in getattr(expr, 'bind_c_arguments', ()):
             func_scope.insert_symbol(a.original_function_argument_variable.name)
         for r in expr.results:
@@ -1482,9 +1482,9 @@ class CToPythonWrapper(Wrapper):
                 if isinstance(expr, BindCFunctionDefArgument):
                     kwargs['class_type'] = VoidType()
 
-            arg_var = orig_var.clone(self.scope.get_expected_name(expr.var.name), new_class = Variable,
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
                                     **kwargs)
-            self.scope.insert_variable(arg_var, expr.var.name)
+            self.scope.insert_variable(arg_var, orig_var.name)
 
         body = []
 
@@ -1848,7 +1848,7 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[get_val_result] = getter_result
 
         class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
-        self.scope.insert_variable(class_obj)
+        self.scope.insert_variable(class_obj, 'self')
 
         attrib = expr.clone(expr.name, lhs = class_obj)
         # Cast the C variable into a Python variable
@@ -1896,11 +1896,12 @@ class CToPythonWrapper(Wrapper):
 
         if isinstance(expr.class_type, FixedSizeNumericType) or expr.is_alias:
             class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
-            self.scope.insert_variable(class_obj)
+            self.scope.insert_variable(class_obj, 'self')
 
             attrib = expr.clone(expr.name, lhs = class_obj)
-            arg_wrapper = self._wrap(new_set_val_arg)
-            new_set_val = self.scope.find(expr.name, category='variables', raise_if_missing = True)
+            wrap_arg = self._wrap(new_set_val_arg)
+            arg_wrapper = wrap_arg['body']
+            new_set_val = wrap_arg['args'][0]
 
             if expr.memory_handling == 'alias':
                 update = AliasAssign(attrib, new_set_val)
@@ -1964,7 +1965,7 @@ class CToPythonWrapper(Wrapper):
         self.scope = getter_scope
 
         get_val_arg = expr.getter.arguments[0]
-        self.scope.insert_symbol(get_val_arg.var.name)
+        self.scope.insert_symbol(get_val_arg.original_function_argument_variable.name)
         get_val_result = expr.getter.bind_c_results[0]
         result_name = get_val_result.var.name
         self.scope.insert_symbol(result_name)
@@ -1979,8 +1980,9 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[get_val_arg] = getter_args[0]
         self._python_object_map[get_val_result] = getter_result
 
-        arg_code = self._wrap(get_val_arg)
-        class_obj = self.scope.find(get_val_arg.var.name, raise_if_missing = True)
+        wrapped_args = self._wrap(get_val_arg)
+        arg_code = wrapped_args['body']
+        class_obj = wrapped_args['args'][0]
 
         # Cast the C variable into a Python variable
         res_wrapper = self._wrap(get_val_result)
@@ -2036,9 +2038,9 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[set_val_arg] = setter_args[1]
 
         if isinstance(wrapped_var.class_type, FixedSizeNumericType) or wrapped_var.is_alias:
-            arg_code = [l for a in original_args for l in self._wrap(a)]
-
-            func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in f_wrapped_args]
+            wrapped_args = [self._wrap(a) for a in original_args]
+            arg_code = [l for a in wrapped_args for l in a['body']]
+            func_call_args = [ca for a in wrapped_args for ca in a['args']]
 
             setter_body = [*arg_code,
                            FunctionCall(expr.setter, func_call_args),
