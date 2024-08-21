@@ -1029,7 +1029,6 @@ class CToPythonWrapper(Wrapper):
              - shape : a Variable describing a stack array in which the shape information is stored.
              - strides : a Variable describing a stack array in which the strides are stored.
         """
-        arg_var = expr.var
         collect_arg = self._python_object_map[expr]
         pyarray_collect_arg = PointerCast(collect_arg, Variable(PyccelPyArrayObject(), '_', memory_handling = 'alias'))
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
