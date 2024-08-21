@@ -1023,7 +1023,7 @@ class CToPythonWrapper(Wrapper):
 
         get_data = AliasAssign(data_var, FunctionCall(PyArray_DATA, [ObjectAddress(pyarray_collect_arg)]))
         get_strides_and_shape = FunctionCall(get_strides_and_shape_from_numpy_array,
-                                        [ObjectAddress(collect_arg), ObjectAddress(shape_var), ObjectAddress(stride_var)])
+                                        [ObjectAddress(collect_arg), shape_var, stride_var])
 
         body = [get_data, get_strides_and_shape]
 
