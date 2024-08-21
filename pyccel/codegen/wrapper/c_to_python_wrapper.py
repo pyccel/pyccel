@@ -1543,7 +1543,7 @@ class CToPythonWrapper(Wrapper):
         else:
             body.extend(cast)
 
-        return {'body': body, 'args': [self.scope.find(orig_var.name, category='variables', raise_if_missing = True)]}}
+        return {'body': body, 'args': [self.scope.find(orig_var.name, category='variables', raise_if_missing = True)]}
 
     def _wrap_BindCFunctionDefArgument(self, expr):
         """
