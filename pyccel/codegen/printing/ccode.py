@@ -1392,7 +1392,7 @@ class CCodePrinter(CodePrinter):
 
         if isinstance(var.class_type, CStackArray):
             preface = ''
-            if isinstance(var.shape[0], int):
+            if isinstance(var.shape[0], LiteralInteger):
                 init = f'[{var.shape[0]}]'
             else:
                 declaration_type += '*'
