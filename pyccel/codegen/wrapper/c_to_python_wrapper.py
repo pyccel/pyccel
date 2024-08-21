@@ -1008,6 +1008,27 @@ class CToPythonWrapper(Wrapper):
         return function
 
     def _get_array_parts(self, expr):
+        """
+        Get AST nodes describing the extraction of the data pointer, shape, and strides from a Python array object.
+
+        Get AST nodes describing the extraction of the data pointer, shape, and strides from a Python array object.
+        These noes as well as the new objects can then be packed into a structure or passed directly to a function
+        depending on the target language.
+
+        Parameters
+        ----------
+        expr : FunctionDefArgument
+            The argument of the function being wrapped.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list containing the AST nodes which extract the data pointer, shape, and strides.
+             - data : a Variable describing a pointer in which the data is stored.
+             - shape : a Variable describing a stack array in which the shape information is stored.
+             - strides : a Variable describing a stack array in which the strides are stored.
+        """
         arg_var = expr.var
         collect_arg = self._python_object_map[expr]
         pyarray_collect_arg = PointerCast(collect_arg, Variable(PyccelPyArrayObject(), '_', memory_handling = 'alias'))
