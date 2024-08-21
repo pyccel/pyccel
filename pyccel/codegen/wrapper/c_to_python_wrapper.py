@@ -1575,8 +1575,7 @@ class CToPythonWrapper(Wrapper):
         orig_var = expr.original_function_argument_variable
 
         if orig_var.rank == 0:
-            body = self._wrap_FunctionDefArgument(expr)
-            args = [self.scope.find(orig_var.name, category='variables', raise_if_missing = True)]
+            return self._wrap_FunctionDefArgument(expr)
         elif isinstance(orig_var.class_type, NumpyNDArrayType):
             self._wrapping_arrays = True
             parts = self._get_array_parts(expr)
@@ -1585,10 +1584,9 @@ class CToPythonWrapper(Wrapper):
             strides = parts['strides']
             args = [parts['data']] + [IndexedElement(shape, i) for i in range(orig_var.rank)] \
                     + [IndexedElement(strides, i) for i in range(orig_var.rank)]
+            return {'body': body, 'args': args}
         else:
             raise NotImplementedError(f"Wrapping is not yet handled for type {orig_var.class_type}")
-
-        return {'body': body, 'args': args}
 
     def _wrap_FunctionDefResult(self, expr):
         """
