@@ -901,10 +901,11 @@ class CToPythonWrapper(Wrapper):
         python_result_variable = Variable(CNativeInt(), self.scope.get_new_name(), is_temp = True)
 
         # Get the code required to extract the C-compatible arguments from the Python arguments
-        body += [l for a in python_args for l in self._wrap(a)]
+        wrapped_args = [self._wrap(a) for a in python_args]
+        body += [l for a in wrapped_args for l in a['body']]
 
         # Get the arguments and results which should be used to call the c-compatible function
-        func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in original_c_args]
+        func_call_args = [ca for a in wrapped_args for ca in a['args']]
 
         body.extend(self._save_referenced_objects(init_function, func_args))
 
