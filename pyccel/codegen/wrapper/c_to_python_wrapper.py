@@ -1456,8 +1456,11 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.PyccelAstNode
-            The code which translates the `PyccelPyObject` to a C-compatible variable.
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates the `PyccelPyObject`
+                        to a C-compatible variable.
+             - args : a list of Variables which should be passed to call the function being wrapped.
         """
 
         collect_arg = self._python_object_map[expr]
@@ -1562,8 +1565,11 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.PyccelAstNode
-            The code which translates the `PyccelPyObject` to a C-compatible variable.
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates the `PyccelPyObject`
+                        to a C-compatible variable.
+             - args : a list of Variables which should be passed to call the function being wrapped.
         """
         orig_var = expr.original_function_argument_variable
 
