@@ -140,7 +140,7 @@ PyObject	*Float_to_NumpyDouble(float *d)
  * Functions : Numpy array handling functions
  */
 
-void get_strides_and_size_from_numpy_array(PyObject* arr, int64_t* size[], int64_t* strides[])
+void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t* shape[], int64_t* strides[])
 {
     PyArrayObject* a = (PyArrayObject*)(arr);
     int nd = PyArray_NDIM(a);
@@ -153,13 +153,13 @@ void get_strides_and_size_from_numpy_array(PyObject* arr, int64_t* size[], int64
         int64_t current_stride = PyArray_ITEMSIZE(a);
         if (np_strides[0] == current_stride) {
             for (int i = 0; i < nd; ++i) {
-                (*size)[i] = np_shape[i];
+                (*shape)[i] = np_shape[i];
                 (*strides)[i] = np_strides / current_stride;
                 current_stride *= (*strides)[i];
             }
         } else {
             for (int i = nd - 1; i >= 0; --i) {
-                (*size)[i] = np_shape[i];
+                (*shape)[i] = np_shape[i];
                 (*strides)[i] = np_strides / current_stride;
                 current_stride *= (*strides)[i];
             }
