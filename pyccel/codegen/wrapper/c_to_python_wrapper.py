@@ -52,7 +52,8 @@ from .wrapper                 import Wrapper
 
 errors = Errors()
 
-cwrapper_ndarray_imports = [Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))]
+cwrapper_ndarray_imports = [Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ())),
+                            Import('ndarrays', Module('ndarrays', (), ()))]
 
 class CToPythonWrapper(Wrapper):
     """
