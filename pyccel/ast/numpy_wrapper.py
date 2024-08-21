@@ -18,7 +18,7 @@ from .cwrapper          import PyccelPyObject, check_type_registry, c_to_py_regi
 from .core              import FunctionDef
 from .core              import FunctionDefArgument, FunctionDefResult
 
-from .c_concepts        import CNativeInt
+from .c_concepts        import CNativeInt, CStackArray
 
 from .numpytypes        import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from .numpytypes        import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
