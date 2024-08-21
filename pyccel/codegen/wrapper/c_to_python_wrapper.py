@@ -1021,13 +1021,13 @@ class CToPythonWrapper(Wrapper):
         self.scope.insert_variable(shape_var)
         self.scope.insert_variable(stride_var)
 
-        get_data = AliasAssign(data_var, FunctionCall(PyArray_DATA, [pyarray_collect_arg]))
+        get_data = AliasAssign(data_var, FunctionCall(PyArray_DATA, [ObjectAddress(pyarray_collect_arg)]))
         get_strides_and_shape = FunctionCall(get_strides_and_shape_from_numpy_array,
-                                        [pyarray_collect_arg, ObjectAddress(shape_var), ObjectAddress(stride_var)])
+                                        [ObjectAddress(collect_arg), ObjectAddress(shape_var), ObjectAddress(stride_var)])
 
         body = [get_data, get_strides_and_shape]
 
-        return body, (data_var, shape_var, stride_var)
+        return {'body': body, 'data':data_var, 'shape':shape_var, 'strides':stride_var}
 
     #--------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1547,7 +1547,12 @@ class CToPythonWrapper(Wrapper):
         orig_var = expr.original_function_argument_variable
 
         if orig_var.rank:
-            body, args = self._get_array_parts(expr)
+            parts = self._get_array_parts(expr)
+            body = parts['body']
+            shape = parts['shape']
+            strides = parts['strides']
+            args = [parts['data']] + [IndexedElement(shape, i) for i in range(orig_var.rank)] \
+                    + [IndexedElement(strides, i) for i in range(orig_var.rank)]
         else:
             body = self._wrap_FunctionDefArgument(expr)
             args = [self.scope.find(orig_var.name, category='variables', raise_if_missing = True)]
