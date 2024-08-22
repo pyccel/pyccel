@@ -1578,12 +1578,17 @@ class CToPythonWrapper(Wrapper):
             return self._wrap_FunctionDefArgument(expr)
         elif isinstance(orig_var.class_type, NumpyNDArrayType):
             self._wrapping_arrays = True
+            collect_arg = self._python_object_map[expr]
             parts = self._get_array_parts(expr)
             body = parts['body']
             shape = parts['shape']
             strides = parts['strides']
             args = [parts['data']] + [IndexedElement(shape, i) for i in range(orig_var.rank)] \
                     + [IndexedElement(strides, i) for i in range(orig_var.rank)]
+            check_func, err = self._get_check_function(collect_arg, orig_var, True)
+            body = [If( IfSection(check_func, body),
+                        IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])])
+                        )]
             return {'body': body, 'args': args}
         else:
             raise NotImplementedError(f"Wrapping is not yet handled for type {orig_var.class_type}")
