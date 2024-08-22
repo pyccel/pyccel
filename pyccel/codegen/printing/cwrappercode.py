@@ -14,6 +14,7 @@ from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
+from pyccel.ast.datatypes  import CharType
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
 from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
 from pyccel.ast.c_concepts import ObjectAddress
@@ -88,7 +89,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if isinstance(a.dtype, (WrapperCustomDataType, BindCPointer)):
             return True
-        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create)):
+        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create, LiteralString)):
             return True
         else:
             return CCodePrinter.is_c_pointer(self,a)
@@ -158,6 +159,8 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if expr.dtype is BindCPointer():
             return 'void*'
+        if isinstance(expr.class_type, CharType):
+            return 'char*' if expr.is_alias else 'char'
         return CCodePrinter.get_declare_type(self, expr)
 
     def _handle_is_operator(self, Op, expr):

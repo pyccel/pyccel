@@ -11,7 +11,7 @@ import numpy as np
 
 from .bind_c            import BindCPointer
 
-from .datatypes         import PythonNativeBool, GenericType, VoidType, FixedSizeType
+from .datatypes         import PythonNativeBool, GenericType, VoidType, FixedSizeType, CharType
 
 from .cwrapper          import PyccelPyObject, check_type_registry, c_to_py_registry, pytype_parse_registry
 
@@ -101,6 +101,7 @@ pyarray_to_ndarray = FunctionDef(
 pyarray_check = FunctionDef(
                 name      = 'pyarray_check',
                 arguments = [
+                        FunctionDefArgument(Variable(CharType(), 'name', memory_handling='alias')),
                         FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling='alias')),
                         FunctionDefArgument(Variable(CNativeInt(), 'dtype')),
                         FunctionDefArgument(Variable(CNativeInt(), 'rank')),
