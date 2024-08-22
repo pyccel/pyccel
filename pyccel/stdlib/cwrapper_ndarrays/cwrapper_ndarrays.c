@@ -367,6 +367,8 @@ bool	pyarray_check(char* name, PyObject *o, int dtype, int rank, int flag)
 
     char* array_rank = _check_pyarray_rank(a, rank);
     if (array_rank != NULL) {
+        if (!correct_type)
+            strcat(error, ", ");
         strcat(error, array_rank);
         free(array_rank);
         correct_type = false;
@@ -375,6 +377,8 @@ bool	pyarray_check(char* name, PyObject *o, int dtype, int rank, int flag)
     if (rank > 1) {
         char* array_order = _check_pyarray_order(a, flag);
         if (array_order != NULL) {
+            if (!correct_type)
+                strcat(error, ", ");
             strcat(error, array_order);
             free(array_order);
             correct_type = false;
