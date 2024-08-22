@@ -155,12 +155,13 @@ void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int6
         }
     }
     else {
-        npy_intp* orig_strides = PyArray_STRIDES(base);
+        npy_intp current_stride = PyArray_ITEMSIZE(a);
         npy_intp* np_strides = PyArray_STRIDES(a);
         npy_intp* np_shape = PyArray_SHAPE(a);
         for (int i = 0; i < nd; ++i) {
             shape[i] = np_shape[i];
-            strides[i] = np_strides[i] / orig_strides[i];
+            strides[i] = np_strides[i] / current_stride;
+            current_stride *= shape[i];
         }
     }
 }
