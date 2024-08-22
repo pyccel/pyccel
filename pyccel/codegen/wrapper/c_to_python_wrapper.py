@@ -1586,9 +1586,13 @@ class CToPythonWrapper(Wrapper):
             args = [parts['data']] + [IndexedElement(shape, i) for i in range(orig_var.rank)] \
                     + [IndexedElement(strides, i) for i in range(orig_var.rank)]
             check_func, err = self._get_check_function(collect_arg, orig_var, True)
-            body = [If( IfSection(check_func, body),
-                        IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])])
-                        )]
+
+            if_sections = []
+            if orig_var.is_optional:
+                if_sections = [IfSection(PyccelIs(collect_arg, Py_None), [AliasAssign(parts['data'], Nil())])]
+            if_sections += [IfSection(check_func, body),
+                        IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])])]
+            body = [If(*if_sections)]
             return {'body': body, 'args': args}
         else:
             raise NotImplementedError(f"Wrapping is not yet handled for type {orig_var.class_type}")
