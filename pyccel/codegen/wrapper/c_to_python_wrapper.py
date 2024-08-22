@@ -883,7 +883,7 @@ class CToPythonWrapper(Wrapper):
 
         # Add the variables to the expected symbols in the scope
         for a in init_function.arguments:
-            func_scope.insert_symbol(a.var.name)
+            func_scope.insert_symbol(getattr(a, 'original_function_argument_variable', a.var).name)
         for a in getattr(init_function, 'bind_c_arguments', ()):
             func_scope.insert_symbol(a.original_function_argument_variable.name)
 
@@ -918,7 +918,7 @@ class CToPythonWrapper(Wrapper):
         # is an ndarray.
         for a in original_c_args:
             orig_var = getattr(a, 'original_function_argument_variable', a.var)
-            if orig_var.is_ndarray:
+            if not isinstance(a, BindCFunctionDefArgument) and orig_var.is_ndarray:
                 v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
                 if v.is_optional:
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
