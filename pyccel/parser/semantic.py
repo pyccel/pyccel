@@ -1521,6 +1521,7 @@ class SemanticParser(BasicParser):
                                     new_expressions.append(Allocate(a,
                                         shape=a.alloc_shape, status=status))
                             args = new_args
+                            new_args = []
                     else:
                         new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status))
                 # ...
@@ -1538,6 +1539,7 @@ class SemanticParser(BasicParser):
                                 else:
                                     self._allocs[-1].add(a)
                             args = new_args
+                            new_args = []
                     else:
                         self._allocs[-1].add(lhs)
                 # ...
