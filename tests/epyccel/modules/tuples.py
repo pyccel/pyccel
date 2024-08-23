@@ -77,7 +77,6 @@ __all__ = [
         'tuple_homogeneous',
         'tuple_inhomogeneous',
         'tuple_multilevel_inhomogeneous',
-        'tuple_different_ranks',
         ]
 
 def homogeneous_tuple_int():
