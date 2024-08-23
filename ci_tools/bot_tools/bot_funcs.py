@@ -337,8 +337,10 @@ class Bot:
                     workflow_ids = None
                     ready = True
                     if t == 'coverage':
-                        print([r['details_url'] for r in check_runs.values() if r['conclusion'] == "success"])
-                        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs.values() if r['conclusion'] == "success" and '(' in r['name']]
+                        print([r['details_url'] for k,r in check_runs.items() \
+                                if r['conclusion'] == "success" and isinstance(k, tuple) and k[0] in deps])
+                        workflow_ids = [int(r['details_url'].split('/')[-1]) for k,r in check_runs.items() \
+                                        if r['conclusion'] == "success" and isinstance(k, tuple) and k[0] in deps]
                         ready = all(self._GAI.has_valid_artifacts(w) for w in workflow_ids)
                     if ready:
                         print("Running test")
