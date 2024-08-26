@@ -1334,7 +1334,7 @@ class CToPythonWrapper(Wrapper):
         body.extend(l  for r in wrapped_results for l in r['body'])
 
         for p_r, c_r in zip(python_result_variables, original_func.results):
-            arg_targets = expr.result_pointer_map.get(c_r, ())
+            arg_targets = expr.result_pointer_map.get(c_r.var, ())
             n_targets = len(arg_targets)
             if n_targets == 1:
                 collect_arg = self._python_object_map[python_args[arg_targets[0]]]
@@ -1648,9 +1648,16 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(data_var)
             self.scope.insert_variable(shape_var)
 
+            funcdef = expr.get_user_nodes(FunctionDef)
+            release_memory = False
+            if funcdef:
+                arg_targets = funcdef[0].result_pointer_map.get(orig_var, ())
+                release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
+
             body = [AliasAssign(python_res, FunctionCall(to_pyarray,
                             [LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
-                             convert_to_literal(orig_var.order != 'F')]))]
+                             convert_to_literal(orig_var.order != 'F'),
+                             convert_to_literal(release_memory)]))]
 
             shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
             return {'results': [ObjectAddress(data_var)]+shape_vars, 'body': body}
