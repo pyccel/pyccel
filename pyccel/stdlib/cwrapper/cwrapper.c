@@ -140,7 +140,7 @@ void capsule_cleanup(PyObject *capsule) {
     free(memory);
 }
 
-PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order)
+PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order, bool release_memory)
 {
     int FLAGS;
     if (nd == 1) {
@@ -161,9 +161,11 @@ PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[]
 
     PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(typenum),
                                          nd, npy_shape, NULL, data, FLAGS, NULL);
-    // Add a capsule base to ensure that memory is freed.
-    PyObject* base = PyCapsule_New(data, NULL, capsule_cleanup);
-    PyArray_SetBaseObject((PyArrayObject*)arr, base);
+    if (release_memory) {
+        // Add a capsule base to ensure that memory is freed.
+        PyObject* base = PyCapsule_New(data, NULL, capsule_cleanup);
+        PyArray_SetBaseObject((PyArrayObject*)arr, base);
+    }
     return arr;
 }
 

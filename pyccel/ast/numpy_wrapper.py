@@ -158,7 +158,8 @@ to_pyarray = FunctionDef(name = 'to_pyarray',
                                       FunctionDefArgument(Variable(CNativeInt(), name = 'typenum')),
                                       FunctionDefArgument(Variable(VoidType(), name = 'data', memory_handling='alias')),
                                       FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'shape')),
-                                      FunctionDefArgument(Variable(PythonNativeBool(), 'c_order'))],
+                                      FunctionDefArgument(Variable(PythonNativeBool(), 'c_order')),
+                                      FunctionDefArgument(Variable(PythonNativeBool(), 'release_memory'))],
                          results = [FunctionDefResult(Variable(PyccelPyObject(), name = 'arr', memory_handling='alias'))]
                          )
 

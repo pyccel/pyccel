@@ -29,7 +29,7 @@ extern const char* dataTypes[17];
 
 void capsule_cleanup(PyObject *capsule);
 
-PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order);
+PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order, bool release_memory);
 
 /*
  * Functions : Cast functions
