@@ -1598,8 +1598,7 @@ class CToPythonWrapper(Wrapper):
             c_res = orig_var.clone(name, is_argument = False)
             body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res]))]
         else:
-            errors.report(f"Wrapping function results is not implemented for type {orig_var.class_type}",
-                    severity='fatal', symbol=orig_var)
+            raise NotImplementedError(f"Wrapping function results is not implemented for type {orig_var.class_type}")
 
         self.scope.insert_variable(c_res, orig_var.name)
 
