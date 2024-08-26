@@ -34,7 +34,7 @@ from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, 
 from pyccel.ast.datatypes     import FixedSizeNumericType
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
-from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type
+from pyccel.ast.numpytypes    import NumpyNDArrayType
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, to_pyarray
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
@@ -1672,7 +1672,7 @@ class CToPythonWrapper(Wrapper):
         if isinstance(orig_var.class_type, NumpyNDArrayType):
             # Result of calling the bind-c function
             data_var = Variable(VoidType(), self.scope.get_new_name(orig_var_name+'_data'), memory_handling='alias')
-            shape_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var_name+'_shape'),
+            shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(orig_var_name+'_shape'),
                             shape = (orig_var.rank,), memory_handling='alias')
             typenum = numpy_dtype_registry[orig_var.dtype]
             # Save so we can find by iterating over func.results
