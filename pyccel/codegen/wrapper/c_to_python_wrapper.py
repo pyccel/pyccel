@@ -1944,7 +1944,11 @@ class CToPythonWrapper(Wrapper):
         c_results = result_wrapping['results']
 
         if len(c_results) == 1:
-            call = Assign(c_results[0], FunctionCall(expr.getter, (class_obj,)))
+            c_res = c_results[0]
+            if c_res.is_alias:
+                call = AliasAssign(c_res, FunctionCall(expr.getter, (class_obj,)))
+            else:
+                call = Assign(c_res, FunctionCall(expr.getter, (class_obj,)))
         else:
             call = Assign(c_results, FunctionCall(expr.getter, (class_obj,)))
 

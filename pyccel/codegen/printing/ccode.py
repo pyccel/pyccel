@@ -1389,7 +1389,10 @@ class CCodePrinter(CodePrinter):
         declaration_type = self.get_declare_type(var)
         variable = self._print(var.name)
 
+        init = ' = {self._print(expr.value)}' if expr.value else ''
+
         if isinstance(var.class_type, CStackArray):
+            assert init == ''
             preface = ''
             if isinstance(var.alloc_shape[0], (int, LiteralInteger)):
                 init = f'[{var.alloc_shape[0]}]'
@@ -1399,14 +1402,11 @@ class CCodePrinter(CodePrinter):
         elif var.is_stack_array:
             preface, init = self._init_stack_array(var,)
         elif declaration_type == 't_ndarray' and not self._in_header:
+            assert init == ''
             preface = ''
             init    = ' = {.shape = NULL}'
-        elif declaration_type == 'void*':
-            preface = ''
-            init    = ' = NULL'
         else:
             preface = ''
-            init    = ''
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
