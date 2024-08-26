@@ -1011,6 +1011,44 @@ class CToPythonWrapper(Wrapper):
 
         return function
 
+    def _call_wrapped_function(self, func, args, results):
+        """
+        Call the wrapped function.
+
+        Call the wrapped function. The call is either a FunctionCall, an Assign or
+        an AliasAssign depending on the number of results and the return type.
+
+        Parameters
+        ----------
+        func : FunctionDef
+            The function being wrapped.
+        args : iterable[TypedAstNode]
+            The arguments passed to the wrapped function.
+        results : iterable[TypedAstNode]
+            The results returned from the wrapped function.
+
+        Returns
+        -------
+        FunctionCall | Assign | AliasAssign
+            An AST node describing the function call.
+        """
+        n_results = len(results)
+        if n_results == 0:
+            return FunctionCall(func, args)
+        elif n_results == 1:
+            res = results[0]
+            func_call = FunctionCall(func, args)
+            if func_call.is_alias:
+                if isinstance(res, PointerCast):
+                    res = res.obj
+                if isinstance(res, ObjectAddress):
+                    res = res.obj
+                return AliasAssign(res, func_call)
+            else:
+                return Assign(res, func_call)
+        else:
+            return Assign(results, FunctionCall(func, args))
+
     #--------------------------------------------------------------------------------------------------------------------------------------------
 
     def _wrap_Module(self, expr):
@@ -1304,22 +1342,7 @@ class CToPythonWrapper(Wrapper):
             body.extend(self._save_referenced_objects(expr, func_args))
 
         # Call the C-compatible function
-        n_c_results = len(c_results)
-        if n_c_results == 0:
-            body.append(FunctionCall(expr, func_call_args))
-        elif n_c_results == 1:
-            res = c_results[0]
-            func_call = FunctionCall(expr, func_call_args)
-            if func_call.is_alias:
-                if isinstance(res, PointerCast):
-                    res = res.obj
-                if isinstance(res, ObjectAddress):
-                    res = res.obj
-                body.append(AliasAssign(res, func_call))
-            else:
-                body.append(Assign(res, func_call))
-        else:
-            body.append(Assign(c_results, FunctionCall(expr, func_call_args)))
+        body.append(self._call_wrapped_function(expr, func_call_args, c_results))
 
         # Deallocate the C equivalent of any array arguments
         # The C equivalent is the same variable that is passed to the function unless the target language is Fortran.
@@ -1955,14 +1978,7 @@ class CToPythonWrapper(Wrapper):
         res_wrapper = result_wrapping['body']
         c_results = result_wrapping['results']
 
-        if len(c_results) == 1:
-            c_res = c_results[0]
-            if c_res.is_alias:
-                call = AliasAssign(c_res, FunctionCall(expr.getter, (class_obj,)))
-            else:
-                call = Assign(c_res, FunctionCall(expr.getter, (class_obj,)))
-        else:
-            call = Assign(c_results, FunctionCall(expr.getter, (class_obj,)))
+        call = self._call_wrapped_function(expr.getter, (class_obj,), c_results)
 
         if isinstance(getter_result.dtype, CustomDataType):
             arg_code.append(Allocate(getter_result, shape=(), status='unallocated'))
