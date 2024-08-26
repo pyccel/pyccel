@@ -9,6 +9,8 @@ import re
 
 from pyccel.ast.basic     import ScopedAstNode
 
+from pyccel.ast.bind_c    import BindCPointer
+
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict
@@ -1389,7 +1391,7 @@ class CCodePrinter(CodePrinter):
         declaration_type = self.get_declare_type(var)
         variable = self._print(var.name)
 
-        init = ' = {self._print(expr.value)}' if expr.value else ''
+        init = f' = {self._print(expr.value)}' if expr.value is not None else ''
 
         if isinstance(var.class_type, CStackArray):
             assert init == ''
@@ -2037,7 +2039,8 @@ class CCodePrinter(CodePrinter):
             self._additional_args.append(results)
 
         body  = self._print(expr.body)
-        decs  = [Declare(i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
+        decs = [Declare(i, value=(Nil() if i.is_alias and isinstance(i.class_type, (VoidType, BindCPointer)) else None))
+                if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
 
         if len(results) == 1 :
             res = results[0]
