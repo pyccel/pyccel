@@ -150,7 +150,7 @@ PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[]
         FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     }
     else {
-        FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
+        FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     }
 
     npy_intp npy_shape[nd];
