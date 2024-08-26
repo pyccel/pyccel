@@ -1313,6 +1313,8 @@ class CToPythonWrapper(Wrapper):
             if func_call.is_alias:
                 if isinstance(res, PointerCast):
                     res = res.obj
+                if isinstance(res, ObjectAddress):
+                    res = res.obj
                 body.append(AliasAssign(res, func_call))
             else:
                 body.append(Assign(res, func_call))
@@ -1670,7 +1672,7 @@ class CToPythonWrapper(Wrapper):
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             attrib_var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
             body = [AliasAssign(attrib_var, c_res)]
-            return {'results': [c_res], 'body': body}
+            return {'results': [ObjectAddress(c_res)], 'body': body}
 
         elif orig_var.rank == 0:
             c_res = orig_var.clone(self.scope.get_expected_name(orig_var_name), is_argument = False,
