@@ -1807,8 +1807,9 @@ class CToPythonWrapper(Wrapper):
 
         attrib = expr.clone(expr.name, lhs = class_obj)
         # Cast the C variable into a Python variable
-        res_wrapper = self._wrap(get_val_result)
-        new_res_val = self.scope.find(expr.name, category='variables', raise_if_missing = True)
+        result_wrapping = self._wrap(get_val_result)
+        res_wrapper = result_wrapping['body']
+        new_res_val = result_wrapping['results'][0]
         if new_res_val.rank > 0:
             body = [AliasAssign(new_res_val, attrib), *res_wrapper]
         elif isinstance(expr.dtype, CustomDataType):
@@ -1938,10 +1939,9 @@ class CToPythonWrapper(Wrapper):
         class_obj = self.scope.find(get_val_arg.var.name, raise_if_missing = True)
 
         # Cast the C variable into a Python variable
-        res_wrapper = self._wrap(get_val_result)
-        res_vars = [self.scope.find(r.var.name, category='variables', raise_if_missing = True)
-                        for r in expr.getter.results]
-        c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in res_vars]
+        result_wrapping = self._wrap(get_val_result)
+        res_wrapper = result_wrapping['body']
+        c_results = result_wrapping['results']
 
         if len(c_results) == 1:
             call = Assign(c_results[0], FunctionCall(expr.getter, (class_obj,)))
