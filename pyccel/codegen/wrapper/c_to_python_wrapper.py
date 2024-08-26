@@ -1591,7 +1591,7 @@ class CToPythonWrapper(Wrapper):
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
             setup = [Allocate(c_res, shape=(), status='unallocated', like=orig_var)]
-            result = PointerCast(ObjectAddress(c_res), cast_type = expr.var)
+            result = PointerCast(c_res, cast_type = expr.var)
             return {'results': [result], 'body': [], 'setup': setup}
 
         elif orig_var.rank == 0:
@@ -1816,7 +1816,8 @@ class CToPythonWrapper(Wrapper):
         if new_res_val.rank > 0:
             body = [AliasAssign(new_res_val, attrib), *res_wrapper]
         elif isinstance(expr.dtype, CustomDataType):
-            self.scope.remove_variable(new_res_val, name = expr.name)
+            if isinstance(new_res_val, PointerCast):
+                new_res_val = new_res_val.obj
             body = [Allocate(getter_result, shape=(), status='unallocated'),
                     AliasAssign(new_res_val, attrib),
                     *res_wrapper]
