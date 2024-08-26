@@ -1309,12 +1309,13 @@ class CToPythonWrapper(Wrapper):
             body.append(FunctionCall(expr, func_call_args))
         elif n_c_results == 1:
             res = c_results[0]
-            if original_func.results[0].var.is_alias:
+            func_call = FunctionCall(expr, func_call_args)
+            if func_call.is_alias:
                 if isinstance(res, PointerCast):
                     res = res.obj
-                body.append(AliasAssign(res, FunctionCall(expr, func_call_args)))
+                body.append(AliasAssign(res, func_call))
             else:
-                body.append(Assign(res, FunctionCall(expr, func_call_args)))
+                body.append(Assign(res, func_call))
         else:
             body.append(Assign(c_results, FunctionCall(expr, func_call_args)))
 
@@ -1419,7 +1420,7 @@ class CToPythonWrapper(Wrapper):
             self._wrapping_arrays = orig_var.is_ndarray
             self.scope.insert_variable(arg_var, orig_var.name)
         else:
-            kwargs = {'is_argument':False}
+            kwargs = {'is_argument': False}
             if isinstance(orig_var.dtype, CustomDataType):
                 kwargs['memory_handling']='alias'
                 if isinstance(expr, BindCFunctionDefArgument):
@@ -1576,30 +1577,33 @@ class CToPythonWrapper(Wrapper):
 
         name = self.scope.get_expected_name(orig_var.name)
 
+        setup = []
+
         # Create a variable to store the C-compatible result.
-        if orig_var.is_ndarray:
+        if isinstance(orig_var.class_type, NumpyNDArrayType):
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
             c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True
+            body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])),
+                    Deallocate(c_res)]
         elif isinstance(orig_var.dtype, CustomDataType):
             scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-        else:
-            c_res = orig_var.clone(name, is_argument = False)
-        self.scope.insert_variable(c_res, orig_var.name)
+            setup = [Allocate(c_res, shape=(), status='unallocated', like=orig_var)]
+            result = PointerCast(ObjectAddress(c_res), cast_type = expr.var)
+            return {'results': [result], 'body': [], 'setup': setup}
 
-        # Cast from C to Python
-        if not isinstance(orig_var.dtype, CustomDataType):
+        elif orig_var.rank == 0:
+            c_res = orig_var.clone(name, is_argument = False)
             body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res]))]
         else:
-            body = []
+            errors.report("",
+                    severity='fatal', symbol=orig_var)
 
-        # Deallocate any unused memory
-        if orig_var.rank:
-            body.append(Deallocate(c_res))
+        self.scope.insert_variable(c_res, orig_var.name)
 
-        return {'results': [c_res], 'body': body}
+        return {'results': [c_res], 'body': body, 'setup': setup}
 
     def _wrap_BindCFunctionDefResult(self, expr):
         """
@@ -1660,8 +1664,7 @@ class CToPythonWrapper(Wrapper):
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             attrib_var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
             body = [AliasAssign(attrib_var, c_res)]
-            setup = [Allocate(c_res, shape=(), status='unallocated', like=orig_var)]
-            return {'results': [c_res], 'body': body, 'setup': setup}
+            return {'results': [c_res], 'body': body}
 
         elif orig_var.rank == 0:
             c_res = orig_var.clone(self.scope.get_expected_name(orig_var_name), is_argument = False,
