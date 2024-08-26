@@ -1599,7 +1599,7 @@ class CToPythonWrapper(Wrapper):
         if orig_var.rank:
             body.append(Deallocate(c_res))
 
-        return {'args': [c_res], 'body': body}
+        return {'results': [c_res], 'body': body}
 
     def _wrap_BindCFunctionDefResult(self, expr):
         """
@@ -1636,7 +1636,6 @@ class CToPythonWrapper(Wrapper):
         var_name = expr.var.name
 
         if isinstance(orig_var.class_type, NumpyNDArrayType):
-            self._wrapping_arrays = True
             # Result of calling the bind-c function
             data_var = Variable(VoidType(), self.scope.get_new_name(orig_var_name+'_data'), memory_handling='alias')
             shape_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var_name+'_shape'),
