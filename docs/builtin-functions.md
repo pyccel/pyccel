@@ -19,7 +19,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `compile` | No |
 | **`complex`** | **Yes** |
 | `delattr` | No |
-| *`dict`* | Preliminary Python support |
+| *`dict`* | Preliminary Python and C **unordered** support |
 | `dir` | No |
 | `divmod` | No |
 | **`enumerate`** | as a loop iterable |
@@ -74,7 +74,28 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **`zip`** | as a loop iterable |
 | \_\_`import`\_\_ | No
 
+## List methods
+
+| Method | Supported |
+|----------|-----------|
+| `append` | Python-only |
+| `clear` | Python-only |
+| `copy` | Python-only |
+| `count` | No |
+| `extend` | Python-only |
+| `index` | No |
+| `insert` | Python-only |
+| `max` | No |
+| `min` | No |
+| `pop` | Python-only |
+| `remove` | Python-only |
+| `reverse` | No |
+| `sort` | Python-only |
+
+
 ## Dictionary methods
+
+:warning: The dictionary support provided by Pyccel only covers unordered dictionaries.
 
 | Method | Supported |
 |----------|-----------|
