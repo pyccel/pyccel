@@ -3323,7 +3323,7 @@ class SemanticParser(BasicParser):
                     new_expr = AliasAssign(l, r)
                     if isinstance(r, FunctionCall):
                         funcdef = r.funcdef
-                        target_r_idx = funcdef.result_pointer_map[funcdef.results[0]]
+                        target_r_idx = funcdef.result_pointer_map[funcdef.results[0].var]
                         for ti in target_r_idx:
                             self._indicate_pointer_target(l, r.args[ti].value, expr)
                     else:
@@ -4024,7 +4024,7 @@ class SemanticParser(BasicParser):
                             symbol=r, severity='error',
                             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
                     else:
-                        result_pointer_map[r] = persistent_targets
+                        result_pointer_map[r.var] = persistent_targets
 
             optional_inits = []
             for a in arguments:

@@ -18,7 +18,7 @@ from .cwrapper          import PyccelPyObject, check_type_registry, c_to_py_regi
 from .core              import FunctionDef
 from .core              import FunctionDefArgument, FunctionDefResult
 
-from .c_concepts        import CNativeInt
+from .c_concepts        import CNativeInt, CStackArray
 
 from .numpytypes        import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from .numpytypes        import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
@@ -151,6 +151,18 @@ PyArray_SetBaseObject = FunctionDef(name   = 'PyArray_SetBaseObject',
                                     arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'arr', memory_handling='alias')),
                                                  FunctionDefArgument(Variable(PyccelPyObject(), name = 'obj', memory_handling='alias'))],
                                     results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
+
+to_pyarray = FunctionDef(name = 'to_pyarray',
+                         body = [],
+                         arguments = [FunctionDefArgument(Variable(CNativeInt(), name = 'nd')),
+                                      FunctionDefArgument(Variable(CNativeInt(), name = 'typenum')),
+                                      FunctionDefArgument(Variable(VoidType(), name = 'data', memory_handling='alias')),
+                                      FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'shape')),
+                                      FunctionDefArgument(Variable(PythonNativeBool(), 'c_order')),
+                                      FunctionDefArgument(Variable(PythonNativeBool(), 'release_memory'))],
+                         results = [FunctionDefResult(Variable(PyccelPyObject(), name = 'arr', memory_handling='alias'))]
+                         )
+
 
 import_array = FunctionDef('import_array', (), (), ())
 

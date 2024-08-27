@@ -501,14 +501,16 @@ class CWrapperCodePrinter(CCodePrinter):
 
             variable = self._print(expr.variable.name)
 
+            init = f' = {self._print(expr.value)}' if expr.value is not None else ''
+
             if var.rank == 0:
-                return f'{static}{external}{declaration_type} {variable};\n'
+                return f'{static}{external}{declaration_type} {variable}{init};\n'
 
             size = var.shape[0]
             if isinstance(size, LiteralInteger):
                 return f'{static}{external}{declaration_type} {variable}[{size}];\n'
             else:
-                return f'{static}{external}{declaration_type}* {variable};\n'
+                return f'{static}{external}{declaration_type}* {variable}{init};\n'
         else:
             return CCodePrinter._print_Declare(self, expr)
 

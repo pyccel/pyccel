@@ -451,14 +451,14 @@ def convert_to_literal(value, dtype = None):
 
     # Calculate the default datatype
     if dtype is None:
-        if isinstance(value, int):
+        if isinstance(value, bool):
+            dtype = PythonNativeBool()
+        elif isinstance(value, int):
             dtype = PythonNativeInt()
         elif isinstance(value, float):
             dtype = PythonNativeFloat()
         elif isinstance(value, complex):
             dtype = PythonNativeComplex()
-        elif isinstance(value, bool):
-            dtype = PythonNativeBool()
         elif isinstance(value, str):
             dtype = StringType()
         else:

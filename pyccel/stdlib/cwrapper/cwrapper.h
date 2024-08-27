@@ -28,6 +28,35 @@
 extern const char* dataTypes[17];
 
 /*
+ * A function which can be passed to a PyCapsule in order to free data that was created by Pyccel.
+ */
+void capsule_cleanup(PyObject *capsule);
+
+/*
+ * Functions : Cast functions
+ * --------------------------
+ * Handwritten cast functions to build Python objects from C objects.
+ */
+
+/*
+ * Build a PyArrayObject*.
+ *
+ * Parameters
+ * ----------
+ * nd : The number of dimensions.
+ * typenum : The NumPy type of the array elements.
+ * data : A pointer to the underlying data.
+ * shape : The shape of the array (the C/F order is not important).
+ * c_order : True if the data is in C order, False otherwise.
+ * release_memory : If true a Capsule is created to automatically free the data when the created PyArrayObject goes out of scope.
+ */
+#ifdef _WIN32
+PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order, bool release_memory);
+#else
+PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order, bool release_memory);
+#endif
+
+/*
  * Functions : Cast functions
  * --------------------------
  * All functions listed down are based on C/python api

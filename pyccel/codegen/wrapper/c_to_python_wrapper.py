@@ -33,10 +33,10 @@ from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CN
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
-from pyccel.ast.literals      import LiteralFalse
-from pyccel.ast.numpyext      import NumpyNDArrayType
+from pyccel.ast.literals      import LiteralFalse, convert_to_literal
+from pyccel.ast.numpytypes    import NumpyNDArrayType
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
-from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
+from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, to_pyarray
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
@@ -1011,6 +1011,44 @@ class CToPythonWrapper(Wrapper):
 
         return function
 
+    def _call_wrapped_function(self, func, args, results):
+        """
+        Call the wrapped function.
+
+        Call the wrapped function. The call is either a FunctionCall, an Assign or
+        an AliasAssign depending on the number of results and the return type.
+
+        Parameters
+        ----------
+        func : FunctionDef
+            The function being wrapped.
+        args : iterable[TypedAstNode]
+            The arguments passed to the wrapped function.
+        results : iterable[TypedAstNode]
+            The results returned from the wrapped function.
+
+        Returns
+        -------
+        FunctionCall | Assign | AliasAssign
+            An AST node describing the function call.
+        """
+        n_results = len(results)
+        if n_results == 0:
+            return FunctionCall(func, args)
+        elif n_results == 1:
+            res = results[0]
+            func_call = FunctionCall(func, args)
+            if func_call.is_alias:
+                if isinstance(res, PointerCast):
+                    res = res.obj
+                if isinstance(res, ObjectAddress):
+                    res = res.obj
+                return AliasAssign(res, func_call)
+            else:
+                return Assign(res, func_call)
+        else:
+            return Assign(results, FunctionCall(func, args))
+
     #--------------------------------------------------------------------------------------------------------------------------------------------
 
     def _wrap_Module(self, expr):
@@ -1291,46 +1329,20 @@ class CToPythonWrapper(Wrapper):
 
         # Get the code required to wrap the C-compatible results into Python objects
         # This function creates variables so it must be called before extracting them from the scope.
-        result_wrap = [l for r in python_results for l in self._wrap(r)]
+        wrapped_results = [self._wrap(r) for r in python_results]
 
         # Get the arguments and results which should be used to call the c-compatible function
         func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in original_c_args]
 
         # Get the names of the results collected from the C-compatible function
-        c_result_names = []
-        for r in original_c_results:
-            if isinstance(r, BindCFunctionDefResult):
-                orig_var = r.original_function_result_variable
-                if orig_var.rank == 0 and isinstance(orig_var.dtype, FixedSizeNumericType):
-                    c_result_names.append(orig_var.name)
-                    continue
-            c_result_names.append(r.var.name)
-        c_results = [self.scope.find(n, category='variables', raise_if_missing = True) for n in c_result_names]
-        for n, r, o_r in zip(c_result_names, c_results, original_c_results):
-            if isinstance(r, DottedVariable):
-                self.scope.remove_variable(r, name=n)
-                if not o_r.var.is_alias:
-                    body.append(Allocate(r, shape=(), status='unallocated', like=o_r.var))
-        c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
-        c_results = [PointerCast(r, cast_type = o_r.var) if isinstance(r, DottedVariable) else r for r,o_r in zip(c_results, original_c_results)]
+        body.extend(l for r in wrapped_results for l in r.get('setup',()))
+        c_results = [r for wr in wrapped_results for r in wr['results']]
 
         if class_dtype:
             body.extend(self._save_referenced_objects(expr, func_args))
 
         # Call the C-compatible function
-        n_c_results = len(c_results)
-        if n_c_results == 0:
-            body.append(FunctionCall(expr, func_call_args))
-        elif n_c_results == 1:
-            res = c_results[0]
-            if original_func.results[0].var.is_alias and not is_bind_c_function_def:
-                if isinstance(res, PointerCast):
-                    res = res.obj
-                body.append(AliasAssign(res, FunctionCall(expr, func_call_args)))
-            else:
-                body.append(Assign(res, FunctionCall(expr, func_call_args)))
-        else:
-            body.append(Assign(c_results, FunctionCall(expr, func_call_args)))
+        body.append(self._call_wrapped_function(expr, func_call_args, c_results))
 
         # Deallocate the C equivalent of any array arguments
         # The C equivalent is the same variable that is passed to the function unless the target language is Fortran.
@@ -1344,10 +1356,10 @@ class CToPythonWrapper(Wrapper):
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
                 else:
                     body.append(Deallocate(v))
-        body.extend(result_wrap)
+        body.extend(l  for r in wrapped_results for l in r['body'])
 
         for p_r, c_r in zip(python_result_variables, original_func.results):
-            arg_targets = expr.result_pointer_map.get(c_r, ())
+            arg_targets = expr.result_pointer_map.get(c_r.var, ())
             n_targets = len(arg_targets)
             if n_targets == 1:
                 collect_arg = self._python_object_map[python_args[arg_targets[0]]]
@@ -1433,7 +1445,7 @@ class CToPythonWrapper(Wrapper):
             self._wrapping_arrays = orig_var.is_ndarray
             self.scope.insert_variable(arg_var, orig_var.name)
         else:
-            kwargs = {'is_argument':False}
+            kwargs = {'is_argument': False}
             if isinstance(orig_var.dtype, CustomDataType):
                 kwargs['memory_handling']='alias'
                 if isinstance(expr, BindCFunctionDefArgument):
@@ -1578,8 +1590,11 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.PyccelAstNode
-            The code which translates the variable to a `PyccelPyObject`.
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates the C-compatible variable
+                        to a `PyccelPyObject`.
+             - results : a list of Variables which are returned from the function being wrapped.
         """
 
         orig_var = expr.var
@@ -1589,30 +1604,32 @@ class CToPythonWrapper(Wrapper):
 
         name = self.scope.get_expected_name(orig_var.name)
 
+        setup = []
+
         # Create a variable to store the C-compatible result.
-        if orig_var.is_ndarray:
+        if isinstance(orig_var.class_type, NumpyNDArrayType):
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
             c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True
+            body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])),
+                    Deallocate(c_res)]
         elif isinstance(orig_var.dtype, CustomDataType):
             scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-        else:
-            c_res = orig_var.clone(name, is_argument = False)
-        self.scope.insert_variable(c_res, orig_var.name)
+            setup = [Allocate(c_res, shape=(), status='unallocated', like=orig_var)]
+            result = PointerCast(c_res, cast_type = expr.var)
+            return {'results': [result], 'body': [], 'setup': setup}
 
-        # Cast from C to Python
-        if not isinstance(orig_var.dtype, CustomDataType):
+        elif orig_var.rank == 0:
+            c_res = orig_var.clone(name, is_argument = False)
             body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res]))]
         else:
-            body = []
+            raise NotImplementedError(f"Wrapping function results is not implemented for type {orig_var.class_type}")
 
-        # Deallocate any unused memory
-        if orig_var.rank:
-            body.append(Deallocate(c_res))
+        self.scope.insert_variable(c_res, orig_var.name)
 
-        return body
+        return {'results': [c_res], 'body': body, 'setup': setup}
 
     def _wrap_BindCFunctionDefResult(self, expr):
         """
@@ -1637,56 +1654,64 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.PyccelAstNode
-            The code which translates the variable to a `PyccelPyObject`.
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates the C-compatible variable
+                        to a `PyccelPyObject`.
+             - results : a list of Variables which are returned from the function being wrapped.
         """
 
         orig_var = expr.original_function_result_variable
 
         python_res = self._python_object_map[expr]
 
-        body = []
-
         orig_var_name = orig_var.name
         var_name = expr.var.name
 
-        if orig_var.rank:
-            # C-compatible result variable
-            c_res = orig_var.clone(self.scope.get_new_name(orig_var_name), is_argument = False,
-                                    memory_handling='alias', new_class = Variable)
-            self._wrapping_arrays = True
+        if isinstance(orig_var.class_type, NumpyNDArrayType):
             # Result of calling the bind-c function
-            arg_var = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
-            shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
+            data_var = Variable(VoidType(), self.scope.get_new_name(orig_var_name+'_data'), memory_handling='alias')
+            shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(orig_var_name+'_shape'),
+                            shape = (orig_var.rank,), memory_handling='alias')
+            typenum = numpy_dtype_registry[orig_var.dtype]
             # Save so we can find by iterating over func.results
-            self.scope.insert_variable(arg_var, var_name)
-            for v,s in zip(shape_vars, expr.shape):
-                self.scope.insert_variable(v,s.name)
-            # Save so we can find by iterating over func.bind_c_results
-            self.scope.insert_variable(c_res, orig_var_name)
+            self.scope.insert_variable(data_var)
+            self.scope.insert_variable(shape_var)
 
-            body.append(Allocate(c_res, shape = shape_vars, status='unallocated'))
-            body.append(AliasAssign(DottedVariable(VoidType(), 'raw_data', memory_handling = 'alias', lhs=c_res), arg_var))
+            funcdef = expr.get_user_nodes(FunctionDef)
+            release_memory = False
+            if funcdef:
+                arg_targets = funcdef[0].result_pointer_map.get(orig_var, ())
+                release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
+
+            body = [AliasAssign(python_res, FunctionCall(to_pyarray,
+                            [LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
+                             convert_to_literal(orig_var.order != 'F'),
+                             convert_to_literal(release_memory)]))]
+
+            shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
+            return {'results': [ObjectAddress(data_var)]+shape_vars, 'body': body}
+
         elif isinstance(orig_var.dtype, CustomDataType):
             c_res = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
             self.scope.insert_variable(c_res, var_name)
-        else:
+
+            scope = python_res.cls_base.scope
+            attribute = scope.find('instance', 'variables', raise_if_missing = True)
+            attrib_var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
+            body = [AliasAssign(attrib_var, c_res)]
+            return {'results': [ObjectAddress(c_res)], 'body': body}
+
+        elif orig_var.rank == 0:
             c_res = orig_var.clone(self.scope.get_expected_name(orig_var_name), is_argument = False,
                     new_class = Variable)
             self.scope.insert_variable(c_res, orig_var_name)
 
-        if not isinstance(orig_var.dtype, CustomDataType):
-            body.append(AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])))
+            body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res]))]
+            return {'results': [c_res], 'body': body}
+
         else:
-            scope = python_res.cls_base.scope
-            attribute = scope.find('instance', 'variables', raise_if_missing = True)
-            attrib_var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-            body.append(AliasAssign(attrib_var, c_res))
-
-        if orig_var.rank:
-            body.append(Deallocate(c_res))
-
-        return body
+            raise NotImplementedError(f"Wrapping is not yet handled for type {orig_var.class_type}")
 
     def _wrap_Variable(self, expr):
         """
@@ -1821,12 +1846,14 @@ class CToPythonWrapper(Wrapper):
 
         attrib = expr.clone(expr.name, lhs = class_obj)
         # Cast the C variable into a Python variable
-        res_wrapper = self._wrap(get_val_result)
-        new_res_val = self.scope.find(expr.name, category='variables', raise_if_missing = True)
+        result_wrapping = self._wrap(get_val_result)
+        res_wrapper = result_wrapping['body']
+        new_res_val = result_wrapping['results'][0]
         if new_res_val.rank > 0:
             body = [AliasAssign(new_res_val, attrib), *res_wrapper]
         elif isinstance(expr.dtype, CustomDataType):
-            self.scope.remove_variable(new_res_val, name = expr.name)
+            if isinstance(new_res_val, PointerCast):
+                new_res_val = new_res_val.obj
             body = [Allocate(getter_result, shape=(), status='unallocated'),
                     AliasAssign(new_res_val, attrib),
                     *res_wrapper]
@@ -1952,15 +1979,11 @@ class CToPythonWrapper(Wrapper):
         class_obj = self.scope.find(get_val_arg.var.name, raise_if_missing = True)
 
         # Cast the C variable into a Python variable
-        res_wrapper = self._wrap(get_val_result)
-        res_vars = [self.scope.find(r.var.name, category='variables', raise_if_missing = True)
-                        for r in expr.getter.results]
-        c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in res_vars]
+        result_wrapping = self._wrap(get_val_result)
+        res_wrapper = result_wrapping['body']
+        c_results = result_wrapping['results']
 
-        if len(c_results) == 1:
-            call = Assign(c_results[0], FunctionCall(expr.getter, (class_obj,)))
-        else:
-            call = Assign(c_results, FunctionCall(expr.getter, (class_obj,)))
+        call = self._call_wrapped_function(expr.getter, (class_obj,), c_results)
 
         if isinstance(getter_result.dtype, CustomDataType):
             arg_code.append(Allocate(getter_result, shape=(), status='unallocated'))

@@ -84,6 +84,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
 -   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
 -   \[INTERNALS\] Handle STC imports with Pyccel objects.
+-   \[INTERNALS\] Stop using ndarrays as an intermediate step to return arrays from Fortran code.
 
 
 ### Deprecated
