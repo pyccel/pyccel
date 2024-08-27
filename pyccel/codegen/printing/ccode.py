@@ -1295,7 +1295,7 @@ class CCodePrinter(CodePrinter):
 
             key = (primitive_type, dtype.precision)
 
-        elif isinstance(dtype, NumpyNDArrayType):
+        elif isinstance(dtype, (NumpyNDArrayType, HomogeneousTupleType)):
             element_type = self.get_c_type(dtype.element_type).replace(' ', '_').rstrip('_t')
             i_type = f'array_{element_type}_{dtype.rank}d'
             self.add_import(Import(f'stc/cspan', AsName(VariableTypeAnnotation(dtype), i_type)))
