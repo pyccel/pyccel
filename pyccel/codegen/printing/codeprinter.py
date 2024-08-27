@@ -38,7 +38,7 @@ class CodePrinter:
 
         Parameters
         ----------
-        expr : Expression
+        expr : PyccelAstNode
             The expression to be printed.
 
         Returns
@@ -51,7 +51,7 @@ class CodePrinter:
         # Do the actual printing
         lines = self._print(expr).splitlines(True)
 
-        # Format the output
+        # Format the output (indenting, wrapping, etc)
         return ''.join(self._format_code(lines))
 
     @property
@@ -112,7 +112,7 @@ class CodePrinter:
     def _print_not_supported(self, expr):
         """ Print an error message if the print function for the type
         is not implemented """
-        msg = '_print_{} is not yet implemented for language : {}\n'.format(type(expr).__name__, self.language)
+        msg = f'_print_{type(expr).__name__} is not yet implemented for language : {self.language}\n'
         errors.report(msg+PYCCEL_RESTRICTION_TODO, symbol = expr,
                 severity='fatal')
 
