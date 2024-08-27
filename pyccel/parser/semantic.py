@@ -3186,22 +3186,20 @@ class SemanticParser(BasicParser):
                 except TypeError as e:
                     is_literal_rhs = False
                 if is_literal_rhs:
+                    insert_scope.remove_variable(semantic_lhs_var)
                     semantic_lhs_var = semantic_lhs_var.clone(lhs.name, new_class = Constant, value=literal_rhs)
 
-            if isinstance(semantic_lhs_var, DottedVariable):
-                cls_def = semantic_lhs_var.lhs.cls_base
-                insert_scope = cls_def.scope
-                cls_def.add_new_attribute(semantic_lhs_var)
-            else:
-                insert_scope = self.scope
-            try:
-                insert_scope.insert_variable(semantic_lhs_var)
-            except RuntimeError as e:
-                errors.report(e, symbol=expr, severity='error')
+                    if isinstance(semantic_lhs_var, DottedVariable):
+                        cls_def = semantic_lhs_var.lhs.cls_base
+                        insert_scope = cls_def.scope
+                        cls_def.add_new_attribute(semantic_lhs_var)
+                    else:
+                        insert_scope = self.scope
+
+                    insert_scope.insert_variable(semantic_lhs_var)
+                    return EmptyNode()
 
             lhs = lhs.name
-            if isinstance(semantic_lhs_var, Constant):
-                return EmptyNode()
 
         if isinstance(lhs, (PyccelSymbol, DottedName)):
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign))
