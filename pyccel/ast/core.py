@@ -3839,7 +3839,7 @@ class Import(PyccelAstNode):
         Parameters
         ----------
         new_target : str
-            The name of the target that has been imported
+            The name of the target that has been imported.
 
         Returns
         -------

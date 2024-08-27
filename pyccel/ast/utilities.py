@@ -110,7 +110,7 @@ def collect_relevant_imports(module, targets):
 
     Returns
     -------
-    imports : list of tuples
+    list of tuples
               A list where each element is a tuple containing the name which
               will be used to refer to the object in the code, and the object.
     """
