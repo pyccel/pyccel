@@ -39,11 +39,11 @@ from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
-from pyccel.ast.literals  import Nil
+from pyccel.ast.literals  import Nil, convert_to_literal
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
 
 from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
@@ -2009,27 +2009,6 @@ class CCodePrinter(CodePrinter):
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
 
-    def _print_NumpySum(self, expr):
-        '''
-        Convert a call to numpy.sum to the equivalent function in C.
-        '''
-        if not isinstance(expr.arg, (NumpyArray, Variable, IndexedElement)):
-            raise TypeError(f'Expecting a NumpyArray, given {type(expr.arg)}')
-        dtype = expr.arg.dtype
-        primitive_type = dtype.primitive_type
-        prec  = dtype.precision
-        name  = self._print(expr.arg)
-
-        if isinstance(primitive_type, PrimitiveIntegerType):
-            return f'numpy_sum_int{prec * 8}({name})'
-        elif isinstance(primitive_type, PrimitiveFloatingPointType):
-            return f'numpy_sum_float{prec * 8}({name})'
-        elif isinstance(primitive_type, PrimitiveComplexType):
-            return f'numpy_sum_complex{prec * 16}({name})'
-        elif isinstance(primitive_type, PrimitiveBooleanType):
-            return f'numpy_sum_bool({name})'
-        raise NotImplementedError('Sum not implemented for argument')
-
     def _print_NumpyAmax(self, expr):
         '''
         Convert a call to numpy.max to the equivalent function in C.
@@ -2317,6 +2296,17 @@ class CCodePrinter(CodePrinter):
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)) and (not lhs.on_stack or lhs.rank!=1):
             return prefix_code+self.copy_NumpyArray_Data(expr)
+        if isinstance(rhs, NumpySum):
+            sum_arg = self._print(rhs.arg)
+            c_type = self.get_c_type(rhs.arg.class_type)
+            lhs = self._print(lhs)
+            zero = self._print(convert_to_literal(0, rhs.class_type))
+            loop_scope = self.scope.create_new_loop_scope()
+            iter_var_name = loop_scope.get_new_name()
+
+            return (f'{lhs} = {zero};\n'
+                    f'c_foreach({iter_var_name}, {c_type}, {sum_arg}) '
+                    f'{lhs} += (*{iter_var_name}.ref);\n')
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
         lhs = self._print(expr.lhs)
