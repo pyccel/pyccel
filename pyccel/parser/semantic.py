@@ -165,8 +165,6 @@ def _get_name(var):
         return str(var.base)
     if isinstance(var, FunctionCall):
         return var.funcdef
-    if isinstance(var, AsName):
-        return var.local_alias
     name = type(var).__name__
     msg = f'Name of Object : {name} cannot be determined'
     return errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
