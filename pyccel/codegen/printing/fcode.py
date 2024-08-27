@@ -656,7 +656,7 @@ class FCodePrinter(CodePrinter):
         code = ''
         for i in targets:
             old_name = i.name
-            new_name = i.target
+            new_name = i.local_alias
             if old_name != new_name:
                 target = '{target} => {name}'.format(target=new_name,
                                                      name=old_name)
