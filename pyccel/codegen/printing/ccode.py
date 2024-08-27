@@ -9,6 +9,8 @@ import re
 
 from pyccel.ast.basic     import ScopedAstNode
 
+from pyccel.ast.bind_c    import BindCPointer
+
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict
@@ -59,6 +61,7 @@ from pyccel.ast.variable import DottedVariable
 from pyccel.ast.variable import InhomogeneousTupleVariable
 
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
+from pyccel.ast.c_concepts import CStackArray
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -1391,6 +1394,13 @@ class CCodePrinter(CodePrinter):
             if isinstance(expr.class_type, HomogeneousContainerType):
                 dtype = self.get_c_type(expr.class_type)
                 return dtype
+            if isinstance(expr.class_type, CStackArray):
+                return self.get_c_type(expr.class_type.element_type)
+            if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
+                if expr.rank > 15:
+                    errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
+                self.add_import(c_imports['ndarrays'])
+                dtype = 't_ndarray'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
         elif not isinstance(class_type, CustomDataType):
@@ -1428,6 +1438,26 @@ class CCodePrinter(CodePrinter):
             return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in var)
 
         declaration_type = self.get_declare_type(var)
+        variable = self._print(var.name)
+
+        init = f' = {self._print(expr.value)}' if expr.value is not None else ''
+
+        if isinstance(var.class_type, CStackArray):
+            assert init == ''
+            preface = ''
+            if isinstance(var.alloc_shape[0], (int, LiteralInteger)):
+                init = f'[{var.alloc_shape[0]}]'
+            else:
+                declaration_type += '*'
+                init = ''
+        elif var.is_stack_array:
+            preface, init = self._init_stack_array(var,)
+        elif declaration_type == 't_ndarray' and not self._in_header:
+            assert init == ''
+            preface = ''
+            init    = ' = {.shape = NULL}'
+        else:
+            preface = ''
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
@@ -2084,7 +2114,8 @@ class CCodePrinter(CodePrinter):
             self._additional_args.append(results)
 
         body  = self._print(expr.body)
-        decs  = [Declare(i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
+        decs = [Declare(i, value=(Nil() if i.is_alias and isinstance(i.class_type, (VoidType, BindCPointer)) else None))
+                if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
 
         if len(results) == 1 :
             res = results[0]
