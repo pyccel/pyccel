@@ -451,7 +451,7 @@ def convert_to_literal(value, dtype = None):
     from .variable import Constant
 
     if isinstance(value, Constant):
-        return convert_to_literal(expr.value)
+        return convert_to_literal(value.value)
     elif isinstance(value, Literal):
         return value
     elif isinstance(value, PyccelUnarySub):
