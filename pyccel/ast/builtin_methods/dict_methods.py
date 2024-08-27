@@ -10,6 +10,7 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
+from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.internals import PyccelFunction
 
 __all__ = ('DictMethod',
@@ -119,5 +120,5 @@ class DictPopitem(DictMethod):
 
     def __init__(self, dict_obj):
         dict_type = dict_obj.class_type
-        self._class_type = dict_type.value_type
+        self._class_type = InhomogeneousTupleType(dict_type.key_type, dict_type.value_type)
         super().__init__(dict_obj)
