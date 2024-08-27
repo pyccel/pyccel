@@ -12,26 +12,25 @@ from collections import namedtuple
 import pyccel.decorators as pyccel_decorators
 from pyccel.errors.errors import Errors, PyccelError
 
+from .builtins      import PythonLen, PythonAbs, PythonRange, PythonList, PythonTuple, PythonSet
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
                             Concatenate, Module, PyccelFunctionDef)
-
-from .builtins      import (builtin_functions_dict,
-                            PythonRange, PythonList, PythonTuple, PythonSet)
 from .cmathext      import cmath_mod
-from .datatypes     import HomogeneousTupleType, PythonNativeInt
-from .internals     import PyccelFunction, Slice
+from .datatypes     import HomogeneousTupleType, PythonNativeInt, PrimitiveIntegerType
+from .internals     import PyccelFunction, Slice, PyccelArrayShapeElement
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
 from .mathext       import math_mod
-from .sysext        import sys_mod
-
-from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
+from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod, NumpyAbs,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
+from .operators     import PyccelUnarySub, PyccelMinus, IfTernaryOperator, PyccelLt
+from .operators     import PyccelGt
 from .scipyext      import scipy_mod
+from .sysext        import sys_mod
 from .typingext     import typing_mod
-from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable )
+from .variable      import Variable, IndexedElement, InhomogeneousTupleVariable, Constant
 
 from .c_concepts import ObjectAddress
 
@@ -796,3 +795,116 @@ def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     body = [bi for b in body for bi in b]
 
     return body
+
+#==============================================================================
+def is_literal_integer(expr):
+    """
+    Determine whether the expression is a literal integer.
+
+    Determine whether the expression is a literal integer. A literal integer
+    can be described by a LiteralInteger, a PyccelUnarySub(LiteralInteger) or
+    a Constant.
+
+    Parameters
+    ----------
+    expr : object
+        Any Python object which should be analysed to determine whether it is an integer.
+
+    Returns
+    -------
+    bool
+        True if the object represents a literal integer, false otherwise.
+    """
+    return isinstance(expr, (int, LiteralInteger)) or \
+        (isinstance(expr, PyccelUnarySub) and isinstance(expr.args[0], (int, LiteralInteger))) or \
+        (isinstance(expr, Constant) and isinstance(expr.dtype.primitive_type, PrimitiveIntegerType))
+
+#==============================================================================
+def get_expression_sign(expr):
+    """
+    Get an expression indicating the sign of the expression passed as an argument.
+
+    Get an expression indicating the sign of the expression passed as an argument.
+    If the expression represents a known literal integer then the value of the integer
+    is returned. If the expression is known to be positive then the return value
+    is 1. If the expression is known to be negative then the return value is -1.
+    If nothing is known about the sign of the expression the return value is None.
+    """
+    positive_types = (PyccelArrayShapeElement, PythonLen, NumpyAbs, PythonAbs)
+    try:
+        sign = int(expr)
+    except TypeError:
+        if isinstance(expr, positive_types):
+            sign = 1
+        elif isinstance(expr, PyccelUnarySub) and isinstance(expr.args[0], positive_types):
+            sign = -1
+        else:
+            sign = None
+
+    return sign
+
+#==============================================================================
+def get_new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
+    """
+    Create new slice with information collected from old slice and decorators.
+
+    Create a new slice where the original `start`, `stop`, and `step` have
+    been processed using basic simplifications, as well as additional rules
+    identified by the function decorators.
+
+    Parameters
+    ----------
+    _slice : Slice
+        Slice needed to collect (start, stop, step).
+
+    array_size : PyccelArrayShapeElement
+        Call to function size().
+
+    allow_negative_index : bool
+        True when the decorator allow_negative_index is present.
+
+    Returns
+    -------
+    Slice
+        The new slice with processed arguments (start, stop, step).
+    """
+    start = _slice.start
+    stop = _slice.stop
+    step = _slice.step
+
+    start_value = get_expression_sign(start)
+    stop_value = get_expression_sign(stop)
+    step_value = get_expression_sign(step)
+
+    # negative start and end in slice
+    if start_value and start_value < 0:
+        start = PyccelAdd(array_size, start, simplify = True)
+    elif start is not None and allow_negative_index and start_value is None:
+        start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
+                    PyccelAdd(array_size, start, simplify = True), start)
+
+    if stop_value and stop_value < 0:
+        stop = PyccelAdd(array_size, stop, simplify = True)
+    elif stop is not None and allow_negative_index and stop_value is None:
+        stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
+                    PyccelAdd(array_size, stop, simplify = True), stop)
+
+    # negative step in slice
+    if step_value and step_value < 0:
+        stop = PyccelAdd(stop, LiteralInteger(1), simplify = True) if stop is not None else LiteralInteger(0)
+        start = start if start is not None else PyccelMinus(array_size, LiteralInteger(1), simplify = True)
+
+    # variable step in slice
+    elif step and allow_negative_index and step_value is None:
+        if start is None:
+            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                LiteralInteger(0), PyccelMinus(array_size , LiteralInteger(1), simplify = True))
+
+        if stop is None:
+            stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                PyccelMinus(array_size, LiteralInteger(1), simplify = True), LiteralInteger(0))
+        else:
+            stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                stop, PyccelAdd(stop, LiteralInteger(1), simplify = True))
+
+    return Slice(start, stop, step)

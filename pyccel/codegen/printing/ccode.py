@@ -49,8 +49,9 @@ from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
 from pyccel.ast.utilities import expand_to_loops
+from pyccel.ast.utilities import get_new_slice_with_processed_arguments
 
-from pyccel.ast.variable import IndexedElement
+from pyccel.ast.variable import IndexedElement, Constant
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
@@ -1379,17 +1380,21 @@ class CCodePrinter(CodePrinter):
         return f'{ret_type} (*{name})({arg_code});\n'
 
     def _print_Declare(self, expr):
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+        variable = expr.variable
+        if isinstance(variable, InhomogeneousTupleVariable):
+            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in variable)
 
-        declaration_type = self.get_declare_type(expr.variable)
-        variable = self._print(expr.variable.name)
+        declaration_type = self.get_declare_type(variable)
+        name = self._print(variable.name)
 
-        if expr.variable.is_stack_array:
-            preface, init = self._init_stack_array(expr.variable,)
+        if variable.is_stack_array:
+            preface, init = self._init_stack_array(variable,)
         elif declaration_type == 't_ndarray' and not self._in_header:
             preface = ''
             init    = ' = {.shape = NULL}'
+        elif expr.value:
+            preface = 'const ' if isinstance(variable, Constant) else ''
+            init    = f' = {self._print(expr.value)}'
         else:
             preface = ''
             init    = ''
@@ -1397,7 +1402,7 @@ class CCodePrinter(CodePrinter):
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
 
-        declaration = f'{static}{external}{declaration_type} {variable}{init};\n'
+        declaration = f'{static}{external}{declaration_type} {name}{init};\n'
 
         return preface + declaration
 
@@ -1515,8 +1520,11 @@ class CCodePrinter(CodePrinter):
             #managing the Slice input
             for i , ind in enumerate(inds):
                 if isinstance(ind, Slice):
-                    inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArrayShapeElement(base, i),
+                    inds[i] = get_new_slice_with_processed_arguments(ind, PyccelArrayShapeElement(base, i),
                         allow_negative_indexes)
+                    # Provide stop explicitly. This can be improved when STC is used for arrays
+                    if inds[i].stop is None:
+                        inds[i] = Slice(inds[i].start, PyccelArrayShapeElement(base, i), inds[i].step, inds[i].slice_type)
                 else:
                     inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1),
                         Slice.Element)
@@ -1566,66 +1574,6 @@ class CCodePrinter(CodePrinter):
             return f'(*{code})'
         else:
             return code
-
-    @staticmethod
-    def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
-        """
-        Create new slice with information collected from old slice and decorators.
-
-        Create a new slice where the original `start`, `stop`, and `step` have
-        been processed using basic simplifications, as well as additional rules
-        identified by the function decorators.
-
-        Parameters
-        ----------
-        _slice : Slice
-            Slice needed to collect (start, stop, step).
-
-        array_size : PyccelArrayShapeElement
-            Call to function size().
-
-        allow_negative_index : bool
-            True when the decorator allow_negative_index is present.
-
-        Returns
-        -------
-        Slice
-            The new slice with processed arguments (start, stop, step).
-        """
-        start = LiteralInteger(0) if _slice.start is None else _slice.start
-        stop = array_size if _slice.stop is None else _slice.stop
-
-        # negative start and end in slice
-        if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
-            start = PyccelMinus(array_size, start.args[0], simplify = True)
-        elif allow_negative_index and not isinstance(start, (LiteralInteger, PyccelArrayShapeElement)):
-            start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
-                            PyccelMinus(array_size, start, simplify = True), start)
-
-        if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
-            stop = PyccelMinus(array_size, stop.args[0], simplify = True)
-        elif allow_negative_index and not isinstance(stop, (LiteralInteger, PyccelArrayShapeElement)):
-            stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
-                            PyccelMinus(array_size, stop, simplify = True), stop)
-
-        # steps in slices
-        step = _slice.step
-
-        if step is None:
-            step = LiteralInteger(1)
-
-        # negative step in slice
-        elif isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
-            start = PyccelMinus(array_size, LiteralInteger(1), simplify = True) if _slice.start is None else start
-            stop = LiteralInteger(0) if _slice.stop is None else stop
-
-        # variable step in slice
-        elif allow_negative_index and step and not isinstance(step, LiteralInteger):
-            og_start = start
-            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, PyccelMinus(stop, LiteralInteger(1), simplify = True))
-            stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, og_start)
-
-        return Slice(start, stop, step)
 
     def _print_PyccelArraySize(self, expr):
         arg = expr.arg
@@ -1697,9 +1645,9 @@ class CCodePrinter(CodePrinter):
             return f'free({variable_address});\n'
 
     def _print_Slice(self, expr):
-        start = self._print(expr.start)
+        start = self._print(expr.start) if expr.start else self._print(LiteralInteger(0))
         stop = self._print(expr.stop)
-        step = self._print(expr.step)
+        step = self._print(expr.step) if expr.step else self._print(LiteralInteger(1))
         slice_type = 'RANGE' if expr.slice_type == Slice.Range else 'ELEMENT'
         return f'new_slice({start}, {stop}, {step}, {slice_type})'
 
@@ -2449,8 +2397,7 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['math'])
             return 'M_E'
         else:
-            cast_func = DtypePrecisionToCastFunction[expr.dtype]
-            return self._print(cast_func(expr.value))
+            return self._print_Variable(expr)
 
 
     def _print_Variable(self, expr):

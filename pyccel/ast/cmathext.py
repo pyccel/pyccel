@@ -12,7 +12,7 @@ from pyccel.ast.core      import PyccelFunctionDef, Module
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat, PythonNativeComplex
 from pyccel.ast.datatypes import PrimitiveComplexType, HomogeneousTupleType
 from pyccel.ast.internals import PyccelFunction
-from pyccel.ast.literals  import LiteralInteger
+from pyccel.ast.literals  import LiteralInteger, LiteralComplex
 from pyccel.ast.operators import PyccelAnd, PyccelOr
 from pyccel.ast.variable  import Constant
 
@@ -469,8 +469,8 @@ cmath_functions = [PyccelFunctionDef(v.name, v) for v in
             CmathPolar, CmathRect, CmathSin, CmathSinh, CmathSqrt, CmathTan, CmathTanh)]
 
 cmath_constants = { **math_constants,
-    'infj': Constant(PythonNativeComplex(), 'infj', value=cmath.infj),
-    'nanj': Constant(PythonNativeComplex(), 'nanj', value=cmath.nanj),
+    'infj': Constant(PythonNativeComplex(), 'infj', value=LiteralComplex(0.0, cmath.infj.imag)),
+    'nanj': Constant(PythonNativeComplex(), 'nanj', value=LiteralComplex(0.0, cmath.nanj.imag)),
     }
 
 cmath_mod = Module('cmath',

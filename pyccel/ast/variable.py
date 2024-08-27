@@ -16,7 +16,7 @@ from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PyccelType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .internals import apply_pickle
-from .literals  import LiteralInteger, Nil, LiteralEllipsis
+from .literals  import LiteralInteger, LiteralEllipsis, Literal
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
 from .numpytypes import NumpyNDArrayType
@@ -725,7 +725,7 @@ class Constant(Variable):
     *args : tuple
         See pyccel.ast.variable.Variable.
 
-    value : bool|int|float|complex
+    value : Literal
         The value that the constant represents.
 
     **kwargs : dict
@@ -743,7 +743,9 @@ class Constant(Variable):
     # The value of a constant is not a translated object
     _attribute_nodes = ()
 
-    def __init__(self, *args, value = Nil(), **kwargs):
+    def __init__(self, *args, value, **kwargs):
+        assert isinstance(value, Literal) or \
+                (isinstance(value, PyccelUnarySub) and isinstance(value.args[0], Literal))
         self._value = value
         super().__init__(*args, **kwargs)
 
@@ -756,6 +758,18 @@ class Constant(Variable):
     def __str__(self):
         return f'{self.name}={self.value}'
 
+    def __index__(self):
+        return self.value.__index__()
+
+    def __eq__(self, other):
+        if isinstance(other, Constant):
+            # Include an is equality for nan as nan!=nan
+            return (self.value is other.value or self.value == other.value) and super().__eq__(other)
+        else:
+            return self.value == other
+
+    def __hash__(self):
+        return hash((type(self).__name__, self._name))
 
 
 class IndexedElement(TypedAstNode):

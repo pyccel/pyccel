@@ -63,9 +63,10 @@ from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthe
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
-from pyccel.ast.utilities import expand_to_loops
+from pyccel.ast.utilities import expand_to_loops, get_new_slice_with_processed_arguments
 
 from pyccel.ast.variable import Variable, IndexedElement, InhomogeneousTupleVariable, DottedName
+from pyccel.ast.variable import Constant
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -529,6 +530,8 @@ class FCodePrinter(CodePrinter):
         # ...
 
         declarations = list(expr.declarations)
+        builtin_constants = set(c for c in expr.get_attribute_nodes(Constant) if c not in declarations)
+        declarations += [Declare(c) for c in builtin_constants if c in expr.scope.imports['variables'].values()]
         # look for external functions and declare their result type
         self._get_external_declarations(declarations)
         decs += ''.join(self._print(d) for d in declarations)
@@ -958,13 +961,6 @@ class FCodePrinter(CodePrinter):
         else:
             return '{}'.format(self._print(expr.value))
 
-    def _print_Constant(self, expr):
-        if expr == math_constants['nan']:
-            errors.report("Can't print nan in Fortran",
-                    severity='error', symbol=expr)
-        val = LiteralFloat(expr.value)
-        return self._print(val)
-
     def _print_DottedVariable(self, expr):
         if isinstance(expr.lhs, FunctionCall):
             base = expr.lhs.funcdef.results[0].var
@@ -1065,7 +1061,7 @@ class FCodePrinter(CodePrinter):
         else:
             v = self._print(expr.stop)
 
-        if not isinstance(expr.endpoint, LiteralFalse):
+        if expr.endpoint != LiteralFalse():
             lhs = expr.get_user_nodes(Assign)[0].lhs
 
 
@@ -1080,7 +1076,7 @@ class FCodePrinter(CodePrinter):
                                                  PyccelMinus(expr.num, LiteralInteger(1),
                                                  simplify = True)))
 
-            if isinstance(expr.endpoint, LiteralTrue):
+            if expr.endpoint == LiteralTrue():
                 cond_template = lhs + ' = {stop}'
             else:
                 cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
@@ -1099,9 +1095,9 @@ class FCodePrinter(CodePrinter):
             end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)),
         )
 
-        if isinstance(expr.endpoint, LiteralFalse):
+        if expr.endpoint == LiteralFalse():
             code = init_value
-        elif isinstance(expr.endpoint, LiteralTrue):
+        elif expr.endpoint == LiteralTrue():
             code = init_value + '\n' + cond_template.format(stop=v)
         else:
             code = init_value + '\n' + cond_template.format(stop=v, lhs=lhs, cond=self._print(expr.endpoint))
@@ -1538,7 +1534,10 @@ class FCodePrinter(CodePrinter):
 
         code_value = ''
         if expr.value:
-            code_value = ' = {0}'.format(self._print(expr.value))
+            code_value = f' = {self._print(expr.value)}'
+            if var == math_constants['nan']:
+                errors.report("Can't print nan in Fortran",
+                        severity='error', symbol=expr)
 
         vstr = self._print(expr.variable.name)
 
@@ -1554,6 +1553,7 @@ class FCodePrinter(CodePrinter):
         privatestr     = ''
         rankstr        = ''
         externalstr    = ''
+        parameterstr   = ''
         is_string = isinstance(var.class_type, StringType)
 
         # Compute intent string
@@ -1590,6 +1590,9 @@ class FCodePrinter(CodePrinter):
         if is_external:
             externalstr = ', external'
 
+        if isinstance(var, Constant):
+            parameterstr = ', parameter'
+
         # Compute rank string
         # TODO: improve
         if not is_string:
@@ -1621,7 +1624,7 @@ class FCodePrinter(CodePrinter):
             mod_str = ', bind(c)'
 
         # Construct declaration
-        left  = dtype + allocatablestr + optionalstr + privatestr + externalstr + mod_str + intentstr
+        left  = dtype + allocatablestr + optionalstr + privatestr + externalstr + mod_str + intentstr + parameterstr
         right = vstr + rankstr + code_value
         return f'{left} :: {right}\n'
 
@@ -2162,20 +2165,20 @@ class FCodePrinter(CodePrinter):
         start = self._print(expr.start)
 
         test_step = expr.step
-        if isinstance(test_step, LiteralInteger) and test_step.python_value == 1:
+        if isinstance(test_step, Constant):
+            test_step = test_step.value
+
+        if test_step == 1:
             step = ''
         else:
-            step = ', '+self._print(expr.step)
+            step = ', '+self._print(test_step)
 
-        if isinstance(test_step, PyccelUnarySub):
-            test_step = expr.step.args[0]
 
         # testing if the step is a value or an expression
-        if isinstance(test_step, Literal):
-            if isinstance(expr.step, PyccelUnarySub):
-                stop = PyccelAdd(expr.stop, LiteralInteger(1), simplify = True)
-            else:
-                stop = PyccelMinus(expr.stop, LiteralInteger(1), simplify = True)
+        if isinstance(test_step, PyccelUnarySub) and isinstance(test_step.args[0], Literal):
+            stop = PyccelAdd(expr.stop, LiteralInteger(1), simplify = True)
+        elif isinstance(test_step, Literal):
+            stop = PyccelMinus(expr.stop, LiteralInteger(1), simplify = True)
         else:
             stop = IfTernaryOperator(PyccelGt(expr.step, LiteralInteger(0)),
                                      PyccelMinus(expr.stop, LiteralInteger(1), simplify = True),
@@ -2523,7 +2526,7 @@ class FCodePrinter(CodePrinter):
 
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
-            elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
+            elif i == len(expr.blocks) - 1 and c == LiteralTrue():
                 lines.append("else\n")
             else:
                 lines.append("else if (%s) then\n" % self._print(c))
@@ -2932,7 +2935,7 @@ class FCodePrinter(CodePrinter):
         for i, ind in enumerate(inds):
             _shape = PyccelArrayShapeElement(base, i if expr.base.order != 'C' else len(inds) - i - 1)
             if isinstance(ind, Slice):
-                inds[i] = self._new_slice_with_processed_arguments(ind, _shape, allow_negative_indexes)
+                inds[i] = get_new_slice_with_processed_arguments(ind, _shape, allow_negative_indexes)
             elif isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(_shape, ind.args[0], simplify = True)
             else:
@@ -2946,71 +2949,6 @@ class FCodePrinter(CodePrinter):
         inds = [self._print(i) for i in inds]
 
         return "%s(%s)" % (base_code, ", ".join(inds))
-
-    @staticmethod
-    def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
-        """
-        Create new slice with information collected from old slice and decorators.
-
-        Create a new slice where the original `start`, `stop`, and `step` have
-        been processed using basic simplifications, as well as additional rules
-        identified by the function decorators.
-
-        Parameters
-        ----------
-        _slice : Slice
-            Slice needed to collect (start, stop, step).
-
-        array_size : PyccelArrayShapeElement
-            Call to function size().
-
-        allow_negative_index : bool
-            True when the decorator allow_negative_index is present.
-
-        Returns
-        -------
-        Slice
-            The new slice with processed arguments (start, stop, step).
-        """
-        start = _slice.start
-        stop = _slice.stop
-        step = _slice.step
-
-        # negative start and end in slice
-        if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
-            start = PyccelMinus(array_size, start.args[0], simplify = True)
-        elif start is not None and allow_negative_index and not isinstance(start,LiteralInteger):
-            start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
-                        PyccelAdd(array_size, start, simplify = True), start)
-
-        if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
-            stop = PyccelMinus(array_size, stop.args[0], simplify = True)
-        elif stop is not None and allow_negative_index and not isinstance(stop, LiteralInteger):
-            stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
-                        PyccelAdd(array_size, stop, simplify = True), stop)
-
-        # negative step in slice
-        if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
-            stop = PyccelAdd(stop, LiteralInteger(1), simplify = True) if stop is not None else LiteralInteger(0)
-            start = start if start is not None else PyccelMinus(array_size, LiteralInteger(1), simplify = True)
-
-        # variable step in slice
-        elif step and allow_negative_index and not isinstance(step, LiteralInteger):
-            if start is None :
-                start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                    LiteralInteger(0), PyccelMinus(array_size , LiteralInteger(1), simplify = True))
-
-            if stop is None :
-                stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                    PyccelMinus(array_size, LiteralInteger(1), simplify = True), LiteralInteger(0))
-            else :
-                stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                    stop, PyccelAdd(stop, LiteralInteger(1), simplify = True))
-
-        elif stop is not None:
-            stop = PyccelMinus(stop, LiteralInteger(1), simplify = True)
-
-        return Slice(start, stop, step)
 
     def _print_Slice(self, expr):
         if expr.start is None or  isinstance(expr.start, Nil):

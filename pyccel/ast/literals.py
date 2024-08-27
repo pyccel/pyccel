@@ -448,6 +448,14 @@ def convert_to_literal(value, dtype = None):
         with the specified dtype.
     """
     from .operators import PyccelUnarySub # Imported here to avoid circular import
+    from .variable import Constant
+
+    if isinstance(value, Constant):
+        return convert_to_literal(value.value)
+    elif isinstance(value, Literal):
+        return value
+    elif isinstance(value, PyccelUnarySub):
+        return PyccelUnarySub(convert_to_literal(value.args[0]))
 
     # Calculate the default datatype
     if dtype is None:
@@ -462,7 +470,7 @@ def convert_to_literal(value, dtype = None):
         elif isinstance(value, str):
             dtype = StringType()
         else:
-            raise TypeError(f'Unknown type of object {value}')
+            raise TypeError(f'Unknown type of object {type(value)}')
 
     # Resolve any datatypes which don't inherit from FixedSizeType
     if isinstance(dtype, StringType):
