@@ -1498,7 +1498,7 @@ class CToPythonWrapper(Wrapper):
                                arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
                                results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
             cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
-        else:
+        elif isinstance(orig_var.class_type, NumpyNDArrayType):
             unstrided_arg_var = arg_var.clone(self.scope.get_new_name(arg_var.name+'_unstrided'))
             expected_collect_arg = Variable(PyccelPyArrayObject(), 'dummy')
             numpy_collect_arg = ObjectAddress(PointerCast(collect_arg, expected_collect_arg))
@@ -1537,6 +1537,8 @@ class CToPythonWrapper(Wrapper):
                                       Assign(arg_var, IndexedElement(unstrided_arg_var, *indices))])
 
             cast = [base_assign, If(no_base_code, has_base_code)]
+        else:
+            raise NotImplementedError(f"Wrapping function arguments not implemented for type {orig_var.class_type}")
 
         if arg_var.is_optional and not isinstance(dtype, CustomDataType):
             memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
