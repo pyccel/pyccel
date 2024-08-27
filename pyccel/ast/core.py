@@ -153,7 +153,10 @@ class AsName(PyccelAstNode):
 
     @property
     def local_alias(self):
-        """ The local_alias name of the object
+        """
+        The local_alias name of the object.
+
+        The name used to identify the object in the local scope.
         """
         return self._local_alias
 
@@ -3828,6 +3831,22 @@ class Import(PyccelAstNode):
             self._target[new_target] = None
 
     def find_module_target(self, new_target):
+        """
+        Find the specified target amongst the targets of the Import.
+
+        Find the specified target amongst the targets of the Import.
+
+        Parameters
+        ----------
+        new_target : str
+            The name of the target that has been imported
+
+        Returns
+        -------
+        str
+            The name of the target in the local scope or None if the
+            target is not found.
+        """
         for t in self._target:
             if isinstance(t, AsName) and new_target == t.name:
                 return t.local_alias
