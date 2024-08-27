@@ -455,7 +455,7 @@ def convert_to_literal(value, dtype = None):
     elif isinstance(value, Literal):
         return value
     elif isinstance(value, PyccelUnarySub):
-        return PyccelUnarySub(value.args[0])
+        return PyccelUnarySub(convert_to_literal(value.args[0]))
 
     # Calculate the default datatype
     if dtype is None:
