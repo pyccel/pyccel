@@ -907,7 +907,4 @@ def get_new_slice_with_processed_arguments(_slice, array_size, allow_negative_in
             stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
                 stop, PyccelAdd(stop, LiteralInteger(1), simplify = True))
 
-    elif stop is not None:
-        stop = PyccelMinus(stop, LiteralInteger(1), simplify = True)
-
     return Slice(start, stop, step)

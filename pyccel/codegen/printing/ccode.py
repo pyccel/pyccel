@@ -1522,6 +1522,9 @@ class CCodePrinter(CodePrinter):
                 if isinstance(ind, Slice):
                     inds[i] = get_new_slice_with_processed_arguments(ind, PyccelArrayShapeElement(base, i),
                         allow_negative_indexes)
+                    # Provide stop explicitly. This can be improved when STC is used for arrays
+                    if inds[i].stop is None:
+                        inds[i] = Slice(inds[i].start, PyccelArrayShapeElement(base, i), inds[i].step, inds[i].slice_type)
                 else:
                     inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1),
                         Slice.Element)
@@ -1643,7 +1646,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else self._print(LiteralInteger(0))
-        stop = self._print(expr.stop) if expr.stop else self._print(array_size)
+        stop = self._print(expr.stop)
         step = self._print(expr.step) if expr.step else self._print(LiteralInteger(1))
         slice_type = 'RANGE' if expr.slice_type == Slice.Range else 'ELEMENT'
         return f'new_slice({start}, {stop}, {step}, {slice_type})'
