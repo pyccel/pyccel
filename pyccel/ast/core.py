@@ -2075,9 +2075,6 @@ class FunctionCall(TypedAstNode):
         """
         return c is None or isinstance(c, (FunctionDef, *cls._ignored_types))
 
-    def is_alias(self):
-        return self.funcdef.results != 1 and self.funcdef.results[0].var.is_alias
-
 class ConstructorCall(FunctionCall):
 
     """
