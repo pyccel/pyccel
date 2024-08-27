@@ -763,7 +763,8 @@ class Constant(Variable):
 
     def __eq__(self, other):
         if isinstance(other, Constant):
-            return self.value == other.value and super().__eq__(other)
+            # Include an is equality for nan as nan!=nan
+            return (self.value is other.value or self.value == other.value) and super().__eq__(other)
         else:
             return self.value == other
 
