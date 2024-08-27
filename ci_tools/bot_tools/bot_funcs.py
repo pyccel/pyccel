@@ -291,10 +291,11 @@ class Bot:
             check_runs = {self.get_name_key(c["name"]): c for c in self._GAI.get_check_runs(self._ref)['check_runs']}
             already_triggered = [c["name"] for n,c in check_runs.items() if c['status'] in ('completed', 'in_progress') and \
                                                                             c['conclusion'] != 'cancelled' and \
-                                                                            n != 'coverage']
+                                                                            n != ('coverage', default_python_versions['coverage'])]
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
-            already_programmed = {c["name"]:c for c in check_runs.values() if c['status'] == 'queued'}
-            success_names = [n for n,c in check_runs.items() if c['status'] == 'completed' and c['conclusion'] == 'success']
+            already_programmed = {n:c for n,c in check_runs.items() if c['status'] == 'queued'}
+            success_names = [n if not isinstance(n, tuple) else n[0] for n,c in check_runs.items()
+                                if c['status'] == 'completed' and c['conclusion'] == 'success']
             print(already_triggered)
             states = []
 
@@ -307,17 +308,21 @@ class Bot:
                     assert p.returncode == 0
 
                 commit_log = [o.split(' ')[0] for o in out.split('\n')]
-                print(commit_log)
                 idx = next((i for i,c in enumerate(commit_log) if c ==self._base), len(commit_log))
                 commit_log = commit_log[:idx+1]
 
             for t in tests:
                 pv = python_version or default_python_versions[t]
-                key = f"({t}, {pv})"
-                if any(key in a for a in already_triggered):
-                    states.append(check_runs[t]['conclusion'])
-                    continue
-                name = f"{test_names[t]} {key}"
+                key = (t, pv)
+                if key in check_runs:
+                    current_conclusion = check_runs[key]['conclusion']
+                    if current_conclusion:
+                        workflow_id = int(check_runs[key]['details_url'].split('/')[-1])
+                        force_run = not self._GAI.has_valid_artifacts(workflow_id)
+                    if key in already_triggered_names and not force_run:
+                        states.append(check_runs[key]['conclusion'])
+                        continue
+                name = f"{test_names[t]} ({t}, {pv})"
                 if not force_run and not self.is_test_required(commit_log, name, t, states):
                     continue
                 states.append('queued')
@@ -330,11 +335,16 @@ class Bot:
                 print(already_triggered_names, deps)
                 if all(d in success_names for d in deps):
                     workflow_ids = None
+                    ready = True
                     if t == 'coverage':
-                        print([r['details_url'] for r in check_runs.values() if r['conclusion'] == "success"])
-                        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs.values() if r['conclusion'] == "success" and '(' in r['name']]
-                    print("Running test")
-                    self.run_test(t, pv, posted["id"], workflow_ids)
+                        print([r['details_url'] for k,r in check_runs.items() \
+                                if r['conclusion'] == "success" and isinstance(k, tuple) and k[0] in deps])
+                        workflow_ids = [int(r['details_url'].split('/')[-1]) for k,r in check_runs.items() \
+                                        if r['conclusion'] == "success" and isinstance(k, tuple) and k[0] in deps]
+                        ready = all(self._GAI.has_valid_artifacts(w) for w in workflow_ids)
+                    if ready:
+                        print("Running test")
+                        self.run_test(t, pv, posted["id"], workflow_ids)
             return states
 
     def run_test(self, test, python_version, check_run_id, workflow_ids = None):
@@ -994,7 +1004,7 @@ class Bot:
             The name which can be used as a key.
         """
         if '(' in name:
-            return name.split('(')[1].split(',')[0]
+            return tuple(name.split('(')[1].split(')')[0].split(', '))
         elif 'Codacy' in name:
             return 'Codacy'
         else:
