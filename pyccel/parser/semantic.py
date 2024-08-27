@@ -4369,8 +4369,8 @@ class SemanticParser(BasicParser):
             import_init = p.semantic_parser.ast.init_func if source_target not in container['imports'] else None
             import_free = p.semantic_parser.ast.free_func if source_target not in container['imports'] else None
             if expr.target:
-                targets = {i.target if isinstance(i,AsName) else i:None for i in expr.local_alias}
-                names = [i.name if isinstance(i,AsName) else i for i in expr.local_alias]
+                targets = {i.local_alias if isinstance(i,AsName) else i:None for i in expr.target}
+                names = [i.name if isinstance(i,AsName) else i for i in expr.target]
 
                 p_scope = p.scope
                 p_imports = p_scope.imports
