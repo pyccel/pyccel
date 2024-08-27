@@ -1380,11 +1380,11 @@ class CCodePrinter(CodePrinter):
         return f'{ret_type} (*{name})({arg_code});\n'
 
     def _print_Declare(self, expr):
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
-
-        declaration_type = self.get_declare_type(expr.variable)
         variable = expr.variable
+        if isinstance(variable, InhomogeneousTupleVariable):
+            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in variable)
+
+        declaration_type = self.get_declare_type(variable)
         name = self._print(variable.name)
 
         if variable.is_stack_array:
