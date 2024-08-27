@@ -115,7 +115,7 @@ class DictPopitem(DictMethod):
         The object from which the method is called.
     """
     __slots__ = ('_class_type',)
-    _shape = None
+    _shape = (2,)
     name = 'popitem'
 
     def __init__(self, dict_obj):
