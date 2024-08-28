@@ -12,7 +12,7 @@ ATOL = 1e-15
 def Module_5(language):
     import modules.Module_5 as mod
 
-    modnew = epyccel(mod, language = language)
+    modnew = epyccel(mod, language = language, fflags = '-Werror=uninitialized')
     return mod, modnew
 
 #------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ def test_f1(language):
             return 5
         return x + 5
 
-    f = epyccel(f1, language = language)
+    f = epyccel(f1, language = language, fflags = '-Werror=uninitialized')
 
     # ...
     assert f(2) == f1(2)
@@ -37,7 +37,7 @@ def test_f2(language):
             return 2.5
         return x + 2.5
 
-    f = epyccel(f2, language = language)
+    f = epyccel(f2, language = language, fflags = '-Werror=uninitialized')
 
     # ...
     assert np.isclose(f(2.0), f2(2.0), rtol=RTOL, atol=ATOL)
@@ -52,7 +52,7 @@ def test_f3(language):
             return complex(2, 5.2)
         return x + complex(2.5, 2)
 
-    f = epyccel(f3, language = language)
+    f = epyccel(f3, language = language, fflags = '-Werror=uninitialized')
 
     # ...
     assert np.isclose(f(complex(1, 2.2)), f3(complex(1, 2.2)), rtol=RTOL, atol=ATOL)
@@ -66,7 +66,7 @@ def test_f4(language):
             return True
         return False
 
-    f = epyccel(f4, language = language)
+    f = epyccel(f4, language = language, fflags = '-Werror=uninitialized')
 
     # ...
     assert f(True) == f4(True)
@@ -78,7 +78,7 @@ def test_f4(language):
 def test_f5(language):
     import modules.Module_3 as mod
 
-    modnew = epyccel(mod, language = language)
+    modnew = epyccel(mod, language = language, fflags = '-Werror=uninitialized')
 
     # ...
     assert mod.func(1) == modnew.func(1)
@@ -90,7 +90,7 @@ def test_f5(language):
 def test_f6(language):
     import modules.Module_4 as mod
 
-    modnew = epyccel(mod, language = language, verbose=True)
+    modnew = epyccel(mod, language = language, fflags = '-Werror=uninitialized', verbose=True)
 
     # ...
     assert mod.call_optional_1() == modnew.call_optional_1()
@@ -141,7 +141,7 @@ def test_optional_args_1d(language):
             x[:] *= 2
         else :
             x[:] = x // y
-    f = epyccel(f12, language = language)
+    f = epyccel(f12, language = language, fflags = '-Werror=uninitialized')
 
     x1 = np.array( [1,2,3], dtype=int )
     x2 = np.copy(x1)
@@ -158,7 +158,7 @@ def test_optional_2d_F(language):
             x[:] *= 2
         else :
             x[:] = x // y
-    f = epyccel(f13, language = language)
+    f = epyccel(f13, language = language, fflags = '-Werror=uninitialized')
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     x2 = np.copy(x1)
@@ -179,7 +179,7 @@ def test_f14(language):
             y = 5
         return x + y
 
-    f = epyccel(f14, language = language)
+    f = epyccel(f14, language = language, fflags = '-Werror=uninitialized')
 
     # ...
     assert f(2,7) == f14(2,7)
