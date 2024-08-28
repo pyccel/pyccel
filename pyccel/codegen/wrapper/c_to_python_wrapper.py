@@ -1589,7 +1589,10 @@ class CToPythonWrapper(Wrapper):
 
             if_sections = []
             if orig_var.is_optional:
-                if_sections = [IfSection(PyccelIs(collect_arg, Py_None), [AliasAssign(parts['data'], Nil())])]
+                default_body = [AliasAssign(parts['data'], Nil())] + \
+                        [Assign(IndexedElement(shape, i), 0) for i in range(orig_var.rank)] + \
+                        [Assign(IndexedElement(strides, i), 1) for i in range(orig_var.rank)]
+                if_sections = [IfSection(PyccelIs(collect_arg, Py_None), default_body)]
             if_sections += [IfSection(check_func, body),
                         IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])])]
             body = [If(*if_sections)]
