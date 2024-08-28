@@ -63,6 +63,7 @@ All notable changes to this project will be documented in this file.
 -   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
+-   #1964 : Improve the error message when the wrong type is passed as a NumPy array argument.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -85,6 +86,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
 -   \[INTERNALS\] Handle STC imports with Pyccel objects.
 -   \[INTERNALS\] Stop using ndarrays as an intermediate step to call Fortran code.
+-   \[INTERNALS\] Stop using ndarrays as an intermediate step to return arrays from Fortran code.
 
 ### Deprecated
 
