@@ -49,7 +49,7 @@ def test_f2(language):
     assert np.isclose(f(0.0), f2(0.0), rtol=RTOL, atol=ATOL)
     if language != 'python':
         with pytest.raises(TypeError):
-        f(3)
+            f(3)
     # ...
 #------------------------------------------------------------------------------
 def test_f3(language):
