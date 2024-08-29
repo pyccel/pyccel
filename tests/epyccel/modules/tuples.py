@@ -64,6 +64,7 @@ __all__ = [
         'tuple_variable_slice',
         'tuple_negative_slice',
         'inhomogeneous_tuple_negative_slice',
+        'inhomogeneous_tuple_var_negative_slice',
         'tuple_index',
         'tuple_homogeneous_int',
         'tuple_homogeneous_bool',
@@ -73,9 +74,9 @@ __all__ = [
         'tuple_inhomogeneous_1',
         'tuple_inhomogeneous_2',
         'tuple_inhomogeneous_3',
-        'test_tuple_homogeneous',
-        'test_tuple_inhomogeneous',
-        'tuple_different_ranks',
+        'tuple_homogeneous',
+        'tuple_inhomogeneous',
+        'tuple_multilevel_inhomogeneous',
         ]
 
 def homogeneous_tuple_int():
@@ -434,6 +435,11 @@ def inhomogeneous_tuple_negative_slice():
     a,b = (1,False,3)[:-1]
     return a,b
 
+def inhomogeneous_tuple_var_negative_slice():
+    c = (1,False,3)
+    a,b = c[:-1]
+    return a,b
+
 def tuple_index():
     a = (1,2,3,False)[2]
     return a
@@ -475,19 +481,19 @@ def tuple_inhomogeneous_3():
     a = tuple((0, 1.0, 3))
     return a[0], a[1], a[2], len(a)
 
-def test_tuple_homogeneous():
+def tuple_homogeneous():
     b = (10, 20, 30, 40)
     a = tuple(b)
     return a[0], a[1], a[2], a[3], len(a)
 
-def test_tuple_inhomogeneous():
+def tuple_inhomogeneous():
     b = ( 42, True, 3.14)
     a = tuple(b)
     return a[0], a[1], a[2], len(a)
 
-def tuple_different_ranks():
-    a = (1,(2,3))
-    return a[0], a[1][0], a[1][1]
+def tuple_multilevel_inhomogeneous():
+    a = (1,(2,(3,4)))
+    return a[0], a[1][0], a[1][1][0], a[1][1][1]
 
 def homogeneous_tuple_of_arrays():
     from numpy import array, empty

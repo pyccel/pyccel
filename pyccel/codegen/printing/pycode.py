@@ -1145,7 +1145,7 @@ class PythonCodePrinter(CodePrinter):
     #------------------Annotation Printer------------------
 
     def _print_UnionTypeAnnotation(self, expr):
-        types = [self._print(t)[1:-1] for t in expr.type_list]
+        types = [self._print(t) for t in expr.type_list]
         return ' | '.join(types)
 
     def _print_SyntacticTypeAnnotation(self, expr):
@@ -1154,8 +1154,8 @@ class PythonCodePrinter(CodePrinter):
         return f'{dtype}{order}'
 
     def _print_FunctionTypeAnnotation(self, expr):
-        args = ', '.join(self._print(a.annotation)[1:-1] for a in expr.args)
-        results = ', '.join(self._print(r.annotation)[1:-1] for r in expr.results)
+        args = ', '.join(self._print(a.annotation) for a in expr.args)
+        results = ', '.join(self._print(r.annotation) for r in expr.results)
         return f"({results})({args})"
 
     def _print_TypingFinal(self, expr):
