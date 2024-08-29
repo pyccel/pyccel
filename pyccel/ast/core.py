@@ -2055,6 +2055,16 @@ class FunctionCall(TypedAstNode):
         """
         return self._interface_name
 
+    @property
+    def is_alias(self):
+        """
+        Check if the result of the function call is an alias type.
+
+        Check if the result of the function call is an alias type.
+        """
+        assert len(self._funcdef.results) == 1
+        return self._funcdef.results[0].var.is_alias
+
     def __repr__(self):
         args = ', '.join(str(a) for a in self.args)
         return f'{self.func_name}({args})'
