@@ -1,0 +1,8 @@
+# Tuples
+
+In Pyccel tuples require special handling. There are 2 main use cases. The first use case is tuples as a small collection of objects of the same type. This case is handled by homogeneous tuples (for more details see the [user docs](../docs/containers.md)). This case is relatively easy to handle as it works similarly to all other containers. The second case is much more tricky. In this case a tuple is an object which allows objects of different types to be grouped together. In this case Pyccel must treat the objects symbolically.
+
+In order to handle the translation of inhomogeneous tuples Pyccel creates variables for each of the elements of the inhomogeneous tuples. The names of these elements are chosen to keep the code as close to the original as possible. Therefore for a tuple stored in a variable `var` the element `var[0]` is usually translated to a variable called `var_0`. This handling of tuples is mostly made possible via the `Scope`.
+Whenever a variable representing a tuple element is created it must be associated with the `IndexedElement` via the `Scope`. This is done by calling the function `Scope.insert_symbolic_alias` (e.g. `insertion_scope.insert_symbolic_alias(IndexedElement(lhs, i), v)`).
+Once the symbolic alias has been created the function `Scope.collect_tuple_element` allows the variable to be retrieved from the `IndexedElement`.
+The `IndexedElement` representation of the inhomogeneous tuple element is a purely symbolic object and should not appear in generated code. Care must therefore be taken to ensure that `Scope.collect_tuple_element` is used whenever elements are extracted from a tuple.

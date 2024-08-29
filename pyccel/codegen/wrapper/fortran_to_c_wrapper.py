@@ -17,14 +17,17 @@ from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
-from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
+from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType, TupleType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.operators import PyccelIsNot, PyccelMul
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
 from pyccel.ast.numpyext import NumpyNDArrayType
+from pyccel.errors.errors import Errors
 from pyccel.parser.scope import Scope
 from .wrapper import Wrapper
+
+errors = Errors()
 
 class FortranToCWrapper(Wrapper):
     """
@@ -623,10 +626,15 @@ class FortranToCWrapper(Wrapper):
                 self._wrap(f)
         interfaces = [self._wrap(i) for i in expr.interfaces]
 
+        if any(isinstance(v.class_type, TupleType) for v in expr.attributes):
+            errors.report("Tuples cannot yet be exposed to Python.",
+                    severity='warning',
+                    symbol=expr)
+
         # Pseudo-self variable is useful for pre-defined attributes which are not DottedVariables
         pseudo_self = Variable(expr.class_type, 'self', cls_base = expr)
         properties = [self._wrap(v if isinstance(v, DottedVariable) else v.clone(v.name, new_class = DottedVariable, lhs=pseudo_self)) \
-                        for v in expr.attributes if not v.is_private]
+                        for v in expr.attributes if not v.is_private and not isinstance(v.class_type, TupleType)]
         return BindCClassDef(expr, new_func = new_method, methods = methods,
                              interfaces = interfaces, attributes = properties,
                              docstring = expr.docstring, class_type = expr.class_type)

@@ -700,30 +700,8 @@ class NumpyArray(NumpyNewArray):
 
     def __init__(self, arg, dtype=None, order='K', ndmin=None):
 
-        if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
-            raise TypeError(f'Unknown type of  {type(arg)}')
-
-        is_homogeneous_tuple = isinstance(arg.class_type, HomogeneousTupleType)
-        # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
-        if isinstance(arg.class_type, InhomogeneousTupleType):
-            is_homogeneous_tuple = isinstance(arg.dtype, FixedSizeNumericType) and len(set(a.rank for a in arg))
-            if not isinstance(arg, PythonTuple):
-                arg = PythonTuple(*arg)
-
-        # TODO: treat inhomogenous lists and tuples when they have mixed ordering
-        if not (is_homogeneous_tuple or isinstance(arg.class_type, HomogeneousContainerType)):
-            raise TypeError('we only accept homogeneous arguments')
-
-        if not isinstance(order, (LiteralString, str)):
-            raise TypeError("The order must be specified explicitly with a string.")
-        elif isinstance(order, LiteralString):
-            order = order.python_value
-
-        if ndmin is not None:
-            if not isinstance(ndmin, (LiteralInteger, int)):
-                raise TypeError("The minimum number of dimensions must be specified explicitly with an integer.")
-            elif isinstance(ndmin, LiteralInteger):
-                ndmin = ndmin.python_value
+        assert isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement))
+        assert isinstance(order, str)
 
         init_dtype = dtype
 

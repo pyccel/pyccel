@@ -22,7 +22,7 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefAr
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
-from pyccel.ast.builtins import PythonBool
+from pyccel.ast.builtins import PythonBool, PythonList
 
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -66,7 +66,7 @@ from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOp
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import expand_to_loops
 
-from pyccel.ast.variable import Variable, IndexedElement, InhomogeneousTupleVariable, DottedName
+from pyccel.ast.variable import Variable, IndexedElement, DottedName
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -714,7 +714,7 @@ class FCodePrinter(CodePrinter):
                 continue
             else:
                 f = f.value
-            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple, str)):
+            if isinstance(f, (PythonTuple, PythonList, str)):
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
@@ -1480,8 +1480,8 @@ class FCodePrinter(CodePrinter):
     def _print_Declare(self, expr):
         # ... ignored declarations
         var = expr.variable
-        expr_dtype      = var.dtype
-        if isinstance(expr_dtype, SymbolicType):
+        expr_type = var.class_type
+        if isinstance(expr_type, SymbolicType):
             return ''
 
         # meta-variables
@@ -1490,17 +1490,18 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+        if isinstance(expr_type, InhomogeneousTupleType):
+            return ''
 
         # ... TODO improve
         # Group the variables by intent
+        dtype           = var.dtype
         rank            = var.rank
         shape           = var.alloc_shape
         is_const        = var.is_const
         is_optional     = var.is_optional
         is_private      = var.is_private
-        is_alias        = var.is_alias and not isinstance(expr_dtype, BindCPointer)
+        is_alias        = var.is_alias and not isinstance(dtype, BindCPointer)
         on_heap         = var.on_heap
         on_stack        = var.on_stack
         is_static       = expr.static
@@ -1514,31 +1515,29 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ... print datatype
-        if isinstance(expr_dtype, CustomDataType):
-            name   = expr_dtype.name
+        if isinstance(expr_type, CustomDataType):
+            name   = expr_type.name
 
             if var.is_argument:
                 sig = 'class'
             else:
                 sig = 'type'
             dtype = f'{sig}({name})'
-        elif isinstance(expr_dtype, FixedSizeNumericType):
-            dtype = self._print(expr_dtype.primitive_type)
+        elif isinstance(dtype, FixedSizeNumericType):
+            dtype = self._print(dtype.primitive_type)
             dtype += f'({self.print_kind(var)})'
+        elif isinstance(dtype, StringType):
+            dtype = self._print(dtype)
+
+            if intent_in:
+                dtype = dtype[:9] +'(len =*)'
+                #TODO improve ,this is the case of character as argument
+        elif isinstance(dtype, BindCPointer):
+            dtype = 'type(c_ptr)'
+            self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
         else:
-
-        # ...
-            if isinstance(expr_dtype, StringType):
-                dtype = self._print(expr_dtype)
-
-                if intent_in:
-                    dtype = dtype[:9] +'(len =*)'
-                    #TODO improve ,this is the case of character as argument
-            elif isinstance(expr_dtype, BindCPointer):
-                dtype = 'type(c_ptr)'
-                self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
-            else:
-                dtype = self._print(expr_dtype)
+            errors.report("Unrecognised datatype",
+                    symbol=expr, severity='fatal')
 
         code_value = ''
         if expr.value:
@@ -1563,7 +1562,7 @@ class FCodePrinter(CodePrinter):
         # Compute intent string
         if intent:
             if intent == 'in' and rank == 0 and not is_optional \
-                and not isinstance(expr_dtype, CustomDataType):
+                and not isinstance(expr_type, CustomDataType):
                 intentstr = ', value'
                 if is_const:
                     intentstr += ', intent(in)'
@@ -1634,7 +1633,7 @@ class FCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
-        if isinstance(lhs, InhomogeneousTupleVariable):
+        if isinstance(lhs.class_type, InhomogeneousTupleType):
             return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
         if isinstance(rhs, FunctionCall):
             return self._print(rhs)
@@ -1819,10 +1818,11 @@ class FCodePrinter(CodePrinter):
 #-----------------------------------------------------------------------------
     def _print_Deallocate(self, expr):
         var = expr.variable
-        if isinstance(var, InhomogeneousTupleVariable):
+        class_type = var.class_type
+        if isinstance(class_type, InhomogeneousTupleType):
             return ''.join(self._print(Deallocate(v)) for v in var)
 
-        if isinstance(var.dtype, CustomDataType):
+        if isinstance(class_type, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__')
             Pyccel_del_args = [FunctionCallArgument(var)]
             return self._print(FunctionCall(Pyccel__del, Pyccel_del_args))

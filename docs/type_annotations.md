@@ -41,7 +41,7 @@ In general string type hints must be used to provide Pyccel with information abo
 
 ## Tuples
 
-Currently tuples are supported locally in Pyccel but cannot be passed as arguments or returned. The implementation of the type annotations (as a first step to adding the missing support) is in progress. Currently homogeneous tuple type annotations are supported for local variables. Internally we handle homogeneous tuples as thought they were NumPy arrays. When creating multiple dimensional tuples it is therefore important to ensure that all objects have compatible sizes otherwise they will be handled as inhomogeneous tuples.
+Currently tuples are supported locally in Pyccel but cannot be passed as arguments or returned. The implementation of the type annotations (as a first step to adding the missing support) is in progress. Currently homogeneous tuple type annotations are supported for local variables. See [Container types in Pyccel](./containers.md#tuples) for more information about tuple handling. When creating multiple dimensional tuples it is therefore important to ensure that all objects have compatible sizes otherwise they will be handled as inhomogeneous tuples.
 
 To declare a homogeneous tuple the syntax is as follows:
 ```python

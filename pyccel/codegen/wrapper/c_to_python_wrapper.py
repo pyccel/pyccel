@@ -31,7 +31,7 @@ from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, PyCapsul
 from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString, PyGetSetDefElement
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
-from pyccel.ast.datatypes     import FixedSizeNumericType
+from pyccel.ast.datatypes     import FixedSizeNumericType, TupleType
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
 from pyccel.ast.numpytypes    import NumpyNDArrayType
@@ -2108,6 +2108,12 @@ class CToPythonWrapper(Wrapper):
         # Pseudo-self variable is useful for pre-defined attributes which are not DottedVariables
         pseudo_self = Variable(expr.class_type, 'self', cls_base = expr)
         for a in expr.attributes:
+            if isinstance(a.class_type, TupleType):
+                errors.report("Tuples cannot yet be exposed to Python.",
+                        severity='warning',
+                        symbol=a)
+                continue
+
             if bound_class or not a.is_private:
                 if isinstance(a, (DottedVariable, BindCClassProperty)):
                     wrapped_class.add_property(self._wrap(a))
