@@ -2636,12 +2636,6 @@ class CCodePrinter(CodePrinter):
             else:
                 return pop_elem
 
-    def _print_ListAppend(self, expr):
-        c_type = self.get_c_type(expr.list_obj.class_type)
-        list_obj = self._print(ObjectAddress(expr.list_obj))
-        new_elem = self._print(expr.new_elem)
-        return f'{c_type}_push({list_obj}, {new_elem});\n'
-
     #=================== MACROS ==================
 
     def _print_MacroShape(self, expr):
