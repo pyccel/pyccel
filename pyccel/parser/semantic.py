@@ -815,17 +815,29 @@ class SemanticParser(BasicParser):
                 self._additional_exprs[-1].append(self._visit(assign))
                 var = self._visit(tmp_var)
 
+        elif isinstance(var, Variable):
+            # Nothing to do but excludes this case from the subsequent ifs
+            pass
 
-        elif not isinstance(var, Variable):
-            if hasattr(var,'__getitem__'):
-                if len(indices)==1:
-                    return var[indices[0]]
-                else:
-                    return self._visit(var[indices[0]][indices[1:]])
+        elif hasattr(var,'__getitem__'):
+            if len(indices)==1:
+                return var[indices[0]]
             else:
-                var_type = type(var)
-                errors.report(f"Can't index {var_type}", symbol=expr,
-                    severity='fatal')
+                return self._visit(var[indices[0]][indices[1:]])
+
+        elif isinstance(var, PyccelFunction):
+            pyccel_stage.set_stage('syntactic')
+            tmp_var = PyccelSymbol(self.scope.get_new_name())
+            assign = Assign(tmp_var, var)
+            assign.set_current_ast(expr.python_ast)
+            pyccel_stage.set_stage('semantic')
+            self._additional_exprs[-1].append(self._visit(assign))
+            var = self._visit(tmp_var)
+            print(var)
+
+        else:
+            errors.report(f"Can't index {type(var)}", symbol=expr,
+                severity='fatal')
 
         indices = tuple(indices)
 
