@@ -13,7 +13,9 @@ from pyccel.ast.bind_c    import BindCPointer
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
-from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict
+from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
+
+from pyccel.ast.builtin_methods.list_methods import ListPop
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
@@ -51,7 +53,7 @@ from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
-from pyccel.ast.utilities import expand_to_loops
+from pyccel.ast.utilities import expand_to_loops, is_literal_integer
 
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
@@ -1652,9 +1654,19 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelArrayShapeElement(self, expr):
         arg = expr.arg
-        if self.is_c_pointer(arg):
-            return '{}->shape[{}]'.format(self._print(ObjectAddress(arg)), self._print(expr.index))
-        return '{}.shape[{}]'.format(self._print(arg), self._print(expr.index))
+        if isinstance(arg.class_type, NumpyNDArrayType):
+            idx = self._print(expr.index)
+            if self.is_c_pointer(arg):
+                arg_code = self._print(ObjectAddress(arg))
+                return f'{arg_code}->shape[{idx}]'
+            arg_code = self._print(arg)
+            return '{arg_code}.shape[{idx}]'
+        elif isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            c_type = self.get_c_type(arg.class_type)
+            arg_code = self._print(ObjectAddress(arg))
+            return f'{c_type}_size({arg_code})'
+        else:
+            raise NotImplementedError(f"Don't know how to represent shape of object of type {arg.class_type}")
 
     def _print_Allocate(self, expr):
         free_code = ''
@@ -2245,11 +2257,13 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
+        if isinstance(rhs, ListPop):
+            return self._print(rhs)
         lhs = self._print(expr.lhs)
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
             return prefix_code+self.init_stc_container(rhs, expr)
         rhs = self._print(expr.rhs)
-        return prefix_code+'{} = {};\n'.format(lhs, rhs)
+        return prefix_code+f'{lhs} = {rhs};\n'
 
     def _print_SetPop(self, expr):
         dtype = expr.set_variable.class_type
@@ -2596,6 +2610,38 @@ class CCodePrinter(CodePrinter):
         interfaces = ''.join(self._print(function) for interface in expr.interfaces for function in interface.functions)
 
         return methods + interfaces
+
+    #================== List methods ==================
+    def _print_ListPop(self, expr):
+        c_type = self.get_c_type(expr.list_obj.class_type)
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        if expr.index_element:
+            tmp_var = self.scope.get_temporary_variable(expr.list_obj.class_type.element_type, memory_handling='alias')
+            if is_literal_integer(expr.index_element) and int(expr.index_element) < 0:
+                idx_code = self._print(PyccelAdd(PythonLen(expr.list_obj), expr.index_element, simplify=True))
+            else:
+                idx_code = self._print(expr.index_element)
+            if isinstance(expr.current_user_node, Assign):
+                lhs = self._print(expr.current_user_node.lhs)
+                return (f'{tmp_var} = {c_type}_at_mut({list_obj}, {idx_code});\n'
+                        f'{lhs} = (*{tmp_var});\n'
+                        f'{c_type}_erase_at({list_obj}, ({c_type}_iter){{.ref = {tmp_var}}});\n')
+            else:
+                raise NotImplementedError("Save listpop to variable")
+        else:
+            pop_elem = f'{c_type}_pull({list_obj})'
+            if isinstance(expr.current_user_node, Assign):
+                lhs = self._print(expr.current_user_node.lhs)
+                return f'{lhs} = {pop_elem};\n'
+            else:
+                return pop_elem
+
+    def _print_ListAppend(self, expr):
+        c_type = self.get_c_type(expr.list_obj.class_type)
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        new_elem = self._print(expr.new_elem)
+        return f'{c_type}_push({list_obj}, {new_elem});\n'
+
     #=================== MACROS ==================
 
     def _print_MacroShape(self, expr):
