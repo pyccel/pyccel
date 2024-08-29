@@ -134,3 +134,42 @@ PyObject	*Float_to_NumpyDouble(float *d)
 {
     return PyArray_Scalar(d, PyArray_DescrFromType(NPY_FLOAT), NULL);
 }
+
+void capsule_cleanup(PyObject *capsule) {
+    void *memory = PyCapsule_GetPointer(capsule, NULL);
+    free(memory);
+}
+
+#ifdef _WIN32
+PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order, bool release_memory)
+#else
+PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order, bool release_memory)
+#endif
+{
+    int FLAGS;
+    if (nd == 1) {
+        FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
+    }
+    else if (c_order) {
+        FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
+    }
+    else {
+        FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
+    }
+
+    npy_intp npy_shape[nd];
+
+    for (int i=0; i<nd; ++i) {
+        npy_shape[i] = shape[i];
+    }
+
+    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(typenum),
+                                         nd, npy_shape, NULL, data, FLAGS, NULL);
+    if (release_memory) {
+        // Add a capsule base to ensure that memory is freed.
+        PyObject* base = PyCapsule_New(data, NULL, capsule_cleanup);
+        PyArray_SetBaseObject((PyArrayObject*)arr, base);
+    }
+    return arr;
+}
+
