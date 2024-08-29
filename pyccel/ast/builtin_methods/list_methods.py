@@ -89,6 +89,15 @@ class ListAppend(ListMethod):
             raise TypeError(f"Expecting an argument of the same type as the elements of the list ({expected_type}) but received {new_elem.class_type}")
         super().__init__(list_obj, new_elem)
 
+    @property
+    def new_elem(self):
+        """
+        The element to be appended to the list.
+
+        The element to be appended to the list.
+        """
+        return self._args[0]
+
 #==============================================================================
 class ListPop(ListMethod) :
     """
@@ -116,6 +125,15 @@ class ListPop(ListMethod) :
         self._shape = (None if len(list_obj.shape) == 1 else tuple(list_obj.shape[1:]))
         self._class_type = list_obj.class_type.element_type
         super().__init__(list_obj, index_element)
+
+    @property
+    def index_element(self):
+        """
+        The current index value for the element to be popped.
+
+        The current index value for the element to be popped.
+        """
+        return self._args[0]
 
 #==============================================================================
 class ListClear(ListMethod) :
