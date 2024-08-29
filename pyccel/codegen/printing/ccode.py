@@ -1390,6 +1390,9 @@ class CCodePrinter(CodePrinter):
         elif declaration_type == 't_ndarray' and not self._in_header:
             preface = ''
             init    = ' = {.shape = NULL}'
+        elif declaration_type.startswith('vec'):
+            preface = ''
+            init = ' = {0}'
         else:
             preface = ''
             init    = ''
@@ -1643,7 +1646,13 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         variable = expr.variable
         if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-            return ''
+            if len(variable.alloc_shape) > 0:
+                size = self._print(variable.alloc_shape[0])
+                variable_address = self._print(ObjectAddress(expr.variable))
+                container_type = self.get_c_type(expr.variable.class_type)
+                return f'{container_type}_reserve({variable_address}, {size});\n'
+            else:
+                return ''
         if variable.rank > 0:
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
@@ -2352,6 +2361,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonConjugate(self, expr):
         return 'conj({})'.format(self._print(expr.internal_var))
+
+    def _print_ListAppend(self, expr):
+        target = expr.list_obj
+        class_type = target.class_type
+        dtype = self.get_c_type(class_type)
+        args = self._print(expr.args[0])
+        return f'{dtype}_push(&{target.name}, {args});\n'
 
     def _handle_is_operator(self, Op, expr):
         """

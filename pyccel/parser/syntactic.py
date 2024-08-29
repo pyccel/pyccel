@@ -54,6 +54,7 @@ from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList, PythonSet, PythonDict
+from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.builtins import PythonPrint, Lambda
 from pyccel.ast.headers  import MetaVariable, FunctionHeader, MethodHeader
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
@@ -422,6 +423,8 @@ class SyntaxParser(BasicParser):
 
         rhs = self._visit(stmt.value)
 
+        if isinstance(rhs, CodeBlock):
+            return rhs
         expr = Assign(lhs, rhs)
 
         return expr
@@ -1146,7 +1149,37 @@ class SyntaxParser(BasicParser):
 
         expr = For(iterator, iterable, [], scope=scope)
         return expr
+    
+    '''
+    def _visit_ListComp(self, stmt):
+        
+        result = self._visit(stmt.elt)
 
+        generators = list(self._visit(stmt.generators))
+        
+        if not isinstance(self._context[-2],ast.Assign):
+            errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
+                          symbol = stmt,
+                          severity='error')
+            lhs = PyccelSymbol('_', is_temp=True)
+        else:
+            lhs = self._visit(self._context[-2].targets)
+            if len(lhs)==1:
+                lhs = lhs[0]
+            else:
+                raise NotImplementedError("A list comprehension cannot be unpacked")
+
+        body = []
+        body.append(Assign(lhs, PythonList(1)))
+        generators[-1].insert2body(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
+        if len(generators) > 1:
+            for i in range(len(generators)-2, -1, -1):
+                generators[i].insert2body(generators[i+1])
+        #for gen in generators:
+        body.append(generators[0])
+        return CodeBlock(body)
+
+    '''
     def _visit_ListComp(self, stmt):
 
         result = self._visit(stmt.elt)
@@ -1164,7 +1197,8 @@ class SyntaxParser(BasicParser):
                 lhs = lhs[0]
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
-
+        indices = [generator.target for generator in generators]
+        '''
         index = PyccelSymbol('_', is_temp=True)
 
         args = [index]
@@ -1177,16 +1211,18 @@ class SyntaxParser(BasicParser):
         assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
         assign2.set_current_ast(stmt)
         generators[-1].insert2body(assign2)
+        '''
+        generators[-1].insert2body(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
 
         indices = [generators[-1].target]
         while len(generators) > 1:
             F = generators.pop()
             generators[-1].insert2body(F)
             indices.append(generators[-1].target)
-        indices = indices[::-1]
+        #indices = indices[::-1]
 
-        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
-                             indices, index)
+        return FunctionalFor(generators, result, lhs,
+                             indices) 
 
     def _visit_GeneratorExp(self, stmt):
 
