@@ -3783,7 +3783,8 @@ class SemanticParser(BasicParser):
                     a.cls_variable.is_temp = False
 
         results = [self._visit(i.var) for i in return_objs]
-        if any(isinstance(i.class_type, TupleType) for i in results):
+        if any(isinstance(i.class_type, InhomogeneousTupleType) for i in results):
+            # Extraction of underlying variables is not yet implemented here
             errors.report("Returning tuples is not yet implemented",
                     severity='error', symbol=expr)
 
