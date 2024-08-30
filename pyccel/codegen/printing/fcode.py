@@ -642,7 +642,7 @@ class FCodePrinter(CodePrinter):
         if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return 'use mpi\n' + 'use mpiext\n'
 
-        if source.startswith('gFTL_extensions/'):
+        if source.startswith('gFTL/'):
             return f'use {expr.source.name}'
 
         targets = [t for t in expr.target if not isinstance(t.object, Module)]
@@ -1546,7 +1546,7 @@ class FCodePrinter(CodePrinter):
         elif isinstance(expr_type, HomogeneousListType):
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
-            self._additional_imports.add(Import(AsName(Module(mod_name, (), ()), 'gFTL_extensions/mod_name.F90'),
+            self._additional_imports.add(Import(AsName(Module(mod_name, (), ()), f'gFTL/{mod_name}.F90'),
                                                 [AsName(VariableTypeAnnotation(expr_type), typename)]))
             dtype_str = f'type({typename})'
         elif isinstance(dtype, StringType):
