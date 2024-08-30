@@ -1214,12 +1214,9 @@ class SyntaxParser(BasicParser):
         '''
         generators[-1].insert2body(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
 
-        indices = [generators[-1].target]
         while len(generators) > 1:
             F = generators.pop()
             generators[-1].insert2body(F)
-            indices.append(generators[-1].target)
-        #indices = indices[::-1]
 
         return FunctionalFor(generators, result, lhs,
                              indices) 
