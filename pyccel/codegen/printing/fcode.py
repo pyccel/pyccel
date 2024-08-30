@@ -1508,10 +1508,10 @@ class FCodePrinter(CodePrinter):
         is_target       = var.is_target and not var.is_alias
         intent          = expr.intent
         intent_in = intent and intent != 'out'
-
-        if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:
-            shape = shape[0]
         # ...
+
+        dtype_str = ''
+        rankstr   = ''
 
         # ... print datatype
         if isinstance(expr_type, CustomDataType):
@@ -1521,26 +1521,42 @@ class FCodePrinter(CodePrinter):
                 sig = 'class'
             else:
                 sig = 'type'
-            dtype = f'{sig}({name})'
+            dtype_str = f'{sig}({name})'
         elif isinstance(dtype, FixedSizeNumericType) and \
                 isinstance(expr_type, (NumpyNDArrayType, HomogeneousTupleType, FixedSizeNumericType)):
-            dtype = self._print(dtype.primitive_type)
-            dtype += f'({self.print_kind(var)})'
+            dtype_str = self._print(dtype.primitive_type)
+            dtype_str += f'({self.print_kind(var)})'
+
+            if rank > 0:
+                # arrays are 0-based in pyccel, to avoid ambiguity with range
+                start_val = self._print(LiteralInteger(0))
+
+                if intent_in:
+                    rankstr = ', '.join([f'{start_val}:'] * rank)
+                elif is_static or on_stack:
+                    ordered_shape = shape[::-1] if var.order == 'C' else shape
+                    ubounds = [PyccelMinus(s, LiteralInteger(1), simplify = True) for s in ordered_shape]
+                    rankstr = ', '.join(f'{start_val}:{self._print(u)}' for u in ubounds)
+                elif is_alias or on_heap:
+                    rankstr = ', '.join(':'*rank)
+                else:
+                    raise NotImplementedError("Fortran rank string undetermined")
+                rankstr = f'({rankstr})'
+
         elif isinstance(expr_type, HomogeneousListType):
-            dtype = self._print(dtype.primitive_type)
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
             self._additional_imports.add(Import(AsName(Module(mod_name, (), ()), 'gFTL_extensions/mod_name.F90'),
                                                 [AsName(VariableTypeAnnotation(expr_type), typename)]))
-            dtype = f'type({typename})'
+            dtype_str = f'type({typename})'
         elif isinstance(dtype, StringType):
-            dtype = self._print(dtype)
+            dtype_str = self._print(dtype)
 
             if intent_in:
-                dtype = dtype[:9] +'(len =*)'
+                dtype_str = dtype_str[:9] +'(len =*)'
                 #TODO improve ,this is the case of character as argument
         elif isinstance(dtype, BindCPointer):
-            dtype = 'type(c_ptr)'
+            dtype_str = 'type(c_ptr)'
             self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
         else:
             errors.report(f"Don't know how to print type {expr_type} in Fortran",
@@ -1552,17 +1568,11 @@ class FCodePrinter(CodePrinter):
 
         vstr = self._print(expr.variable.name)
 
-        # arrays are 0-based in pyccel, to avoid ambiguity with range
-        start_val = self._print(LiteralInteger(0))
-        if not(is_static) and (on_heap or (var.shape is None)):
-            start_val = ''
-
         # Default empty strings
         intentstr      = ''
         allocatablestr = ''
         optionalstr    = ''
         privatestr     = ''
-        rankstr        = ''
         externalstr    = ''
         is_string = isinstance(var.class_type, StringType)
 
@@ -1600,38 +1610,12 @@ class FCodePrinter(CodePrinter):
         if is_external:
             externalstr = ', external'
 
-        # Compute rank string
-        # TODO: improve
-        if not is_string:
-            if ((rank == 1) and (isinstance(shape, (int, TypedAstNode))) and (is_static or on_stack)):
-                ubound = PyccelMinus(shape, LiteralInteger(1), simplify = True)
-                rankstr = f'({self._print(start_val)}:{self._print(ubound)})'
-
-            elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or on_stack)):
-                #TODO fix bug when we include shape of type list
-
-                ordered_shape = shape[::-1] if var.order == 'C' else shape
-                ubounds = [PyccelMinus(s, LiteralInteger(1), simplify = True) for s in ordered_shape]
-                rankstr = ','.join(f'{self._print(start_val)}:{self._print(u)}' for u in ubounds)
-                rankstr = f'({rankstr})'
-
-            elif (rank > 0) and on_heap and intent_in:
-                rankstr = ','.join(['0:'] * rank)
-                rankstr = f'({rankstr})'
-
-            elif (rank > 0) and (on_heap or is_alias):
-                rankstr = "(:" + ",:" * (rank-1) + ")"
-
-    #        else:
-    #            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-    #                severity='fatal')
-
         mod_str = ''
         if expr.module_variable and not is_private and isinstance(expr.variable.class_type, FixedSizeNumericType):
             mod_str = ', bind(c)'
 
         # Construct declaration
-        left  = dtype + allocatablestr + optionalstr + privatestr + externalstr + mod_str + intentstr
+        left  = dtype_str + allocatablestr + optionalstr + privatestr + externalstr + mod_str + intentstr
         right = vstr + rankstr + code_value
         return f'{left} :: {right}\n'
 
