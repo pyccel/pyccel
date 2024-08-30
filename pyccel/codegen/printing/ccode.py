@@ -1653,7 +1653,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelArrayShapeElement(self, expr):
         arg = expr.arg
-        if isinstance(arg.class_type, NumpyNDArrayType):
+        if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             idx = self._print(expr.index)
             if self.is_c_pointer(arg):
                 arg_code = self._print(ObjectAddress(arg))
