@@ -35,7 +35,7 @@ from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
-from pyccel.ast.datatypes import PythonNativeInt, HomogeneousTupleType
+from pyccel.ast.datatypes import PythonNativeInt, HomogeneousTupleType, HomogeneousListType
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type
 
@@ -63,6 +63,8 @@ from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
+
+from pyccel.ast.type_annotations import VariableTypeAnnotation
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import expand_to_loops
@@ -639,6 +641,9 @@ class FCodePrinter(CodePrinter):
 
         if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return 'use mpi\n' + 'use mpiext\n'
+
+        if source.startswith('gFTL_extensions/'):
+            return f'use {expr.source.name}'
 
         targets = [t for t in expr.target if not isinstance(t.object, Module)]
 
@@ -1517,9 +1522,17 @@ class FCodePrinter(CodePrinter):
             else:
                 sig = 'type'
             dtype = f'{sig}({name})'
-        elif isinstance(dtype, FixedSizeNumericType) and isinstance(expr_type, (NumpyNDArrayType, HomogeneousTupleType)):
+        elif isinstance(dtype, FixedSizeNumericType) and \
+                isinstance(expr_type, (NumpyNDArrayType, HomogeneousTupleType, FixedSizeNumericType)):
             dtype = self._print(dtype.primitive_type)
             dtype += f'({self.print_kind(var)})'
+        elif isinstance(expr_type, HomogeneousListType):
+            dtype = self._print(dtype.primitive_type)
+            typename = self._print(expr_type)
+            mod_name = f'{typename}_mod'
+            self._additional_imports.add(Import(AsName(Module(mod_name, (), ()), 'gFTL_extensions/mod_name.F90'),
+                                                [AsName(VariableTypeAnnotation(expr_type), typename)]))
+            dtype = f'type({typename})'
         elif isinstance(dtype, StringType):
             dtype = self._print(dtype)
 
@@ -1851,6 +1864,21 @@ class FCodePrinter(CodePrinter):
     def _print_StringType(self, expr):
         return 'character(len=280)'
         #TODO fix improve later
+
+    def _print_PythonNativeInt(self, expr):
+        return 'integer'
+
+    def _print_PythonNativeFloat(self, expr):
+        return 'real'
+
+    def _print_PythonNativeComplex(self, expr):
+        return 'complex'
+
+    def _print_PythonNativeBool(self, expr):
+        return 'logical'
+
+    def _print_HomogeneousListType(self, expr):
+        return 'Vector_'+self._print(expr.element_type)
 
     def _print_DataType(self, expr):
         return self._print(expr.name)
