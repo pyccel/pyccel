@@ -35,7 +35,7 @@ from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
-from pyccel.ast.datatypes import PythonNativeInt
+from pyccel.ast.datatypes import PythonNativeInt, HomogeneousTupleType
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type
 
@@ -57,6 +57,8 @@ from pyccel.ast.numpyext import NumpyNewArray, NumpyArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
+
+from pyccel.ast.numpytypes import NumpyNDArrayType
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
@@ -1515,7 +1517,7 @@ class FCodePrinter(CodePrinter):
             else:
                 sig = 'type'
             dtype = f'{sig}({name})'
-        elif isinstance(dtype, FixedSizeNumericType):
+        elif isinstance(dtype, FixedSizeNumericType) and isinstance(expr_type, (NumpyNDArrayType, HomogeneousTupleType)):
             dtype = self._print(dtype.primitive_type)
             dtype += f'({self.print_kind(var)})'
         elif isinstance(dtype, StringType):
@@ -1528,7 +1530,7 @@ class FCodePrinter(CodePrinter):
             dtype = 'type(c_ptr)'
             self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
         else:
-            errors.report("Unrecognised datatype",
+            errors.report(f"Don't know how to print type {expr_type} in Fortran",
                     symbol=expr, severity='fatal')
 
         code_value = ''
