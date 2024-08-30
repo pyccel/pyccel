@@ -19,4 +19,6 @@ static inline i_key _c_MEMB(_pop)(i_type* self) {
     return *(itr.ref); // Return the element that is being popped.
 }
 
+#undef i_type
+#undef i_key
 #endif
