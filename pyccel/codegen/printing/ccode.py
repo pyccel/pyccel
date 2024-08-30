@@ -246,7 +246,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'assert',
                  'numpy_c']}
 
-import_header_guard_prefix = {'Set_extensions' : '_TOOLS_SET'}
+import_header_guard_prefix = {'Set_extensions'  : '_TOOLS_SET',
+                              'List_extensions' : '_TOOLS_LIST'}
 
 class CCodePrinter(CodePrinter):
     """
@@ -1660,7 +1661,7 @@ class CCodePrinter(CodePrinter):
                 arg_code = self._print(ObjectAddress(arg))
                 return f'{arg_code}->shape[{idx}]'
             arg_code = self._print(arg)
-            return '{arg_code}.shape[{idx}]'
+            return f'{arg_code}.shape[{idx}]'
         elif isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             c_type = self.get_c_type(arg.class_type)
             arg_code = self._print(ObjectAddress(arg))
@@ -2257,20 +2258,11 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
-        if isinstance(rhs, ListPop):
-            return self._print(rhs)
         lhs = self._print(expr.lhs)
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
             return prefix_code+self.init_stc_container(rhs, expr)
         rhs = self._print(expr.rhs)
         return prefix_code+f'{lhs} = {rhs};\n'
-
-    def _print_SetPop(self, expr):
-        dtype = expr.set_variable.class_type
-        var_type = self.get_c_type(dtype)
-        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(dtype), var_type)))
-        set_var = self._print(ObjectAddress(expr.set_variable))
-        return f'{var_type}_pop({set_var})'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
@@ -2613,29 +2605,27 @@ class CCodePrinter(CodePrinter):
 
     #================== List methods ==================
     def _print_ListPop(self, expr):
-        c_type = self.get_c_type(expr.list_obj.class_type)
+        class_type = expr.list_obj.class_type
+        c_type = self.get_c_type(class_type)
         list_obj = self._print(ObjectAddress(expr.list_obj))
         if expr.index_element:
-            tmp_var = self.scope.get_temporary_variable(expr.list_obj.class_type.element_type, memory_handling='alias')
+            self.add_import(Import('List_extensions', AsName(VariableTypeAnnotation(class_type), c_type)))
             if is_literal_integer(expr.index_element) and int(expr.index_element) < 0:
                 idx_code = self._print(PyccelAdd(PythonLen(expr.list_obj), expr.index_element, simplify=True))
             else:
                 idx_code = self._print(expr.index_element)
-            if isinstance(expr.current_user_node, Assign):
-                lhs = self._print(expr.current_user_node.lhs)
-                return (f'{tmp_var} = {c_type}_at_mut({list_obj}, {idx_code});\n'
-                        f'{lhs} = (*{tmp_var});\n'
-                        f'{c_type}_erase_at({list_obj}, ({c_type}_iter){{.ref = {tmp_var}}});\n')
-            else:
-                raise errors.report("If an index is passed to pop. Please save the result to a variable.",
-                        severity='fatal', symbol=expr)
+            return f'{c_type}_pull_elem({list_obj}, {idx_code})'
         else:
-            pop_elem = f'{c_type}_pull({list_obj})'
-            if isinstance(expr.current_user_node, Assign):
-                lhs = self._print(expr.current_user_node.lhs)
-                return f'{lhs} = {pop_elem};\n'
-            else:
-                return pop_elem
+            return f'{c_type}_pull({list_obj})'
+
+    #================== Set methods ==================
+
+    def _print_SetPop(self, expr):
+        dtype = expr.set_variable.class_type
+        var_type = self.get_c_type(dtype)
+        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(dtype), var_type)))
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        return f'{var_type}_pop({set_var})'
 
     #=================== MACROS ==================
 
