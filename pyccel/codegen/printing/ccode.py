@@ -2627,7 +2627,7 @@ class CCodePrinter(CodePrinter):
                         f'{lhs} = (*{tmp_var});\n'
                         f'{c_type}_erase_at({list_obj}, ({c_type}_iter){{.ref = {tmp_var}}});\n')
             else:
-                errors.report("If an index is passed to pop. Please save the result to a variable.",
+                raise errors.report("If an index is passed to pop. Please save the result to a variable.",
                         severity='fatal', symbol=expr)
         else:
             pop_elem = f'{c_type}_pull({list_obj})'
