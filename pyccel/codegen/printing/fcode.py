@@ -1546,7 +1546,7 @@ class FCodePrinter(CodePrinter):
         elif isinstance(expr_type, HomogeneousListType):
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
-            self._additional_imports.add(Import(AsName(Module(mod_name, (), ()), f'gFTL/{mod_name}.F90'),
+            self.add_import(Import(AsName(Module(mod_name, (), ()), f'gFTL/{mod_name}.F90'),
                                                 [AsName(VariableTypeAnnotation(expr_type), typename)]))
             dtype_str = f'type({typename})'
         elif isinstance(dtype, StringType):
