@@ -3425,7 +3425,23 @@ class SemanticParser(BasicParser):
         return for_expr
 
     def _visit_FunctionalFor(self, expr):
-        
+        """
+        Visit and transform a FunctionalFor AST node into an equivalent code block.
+
+        This method processes a `FunctionalFor` expression and transforms the loop structure
+        into a corresponding code block.
+
+        Parameters
+        ----------
+        expr : pyccel.ast.functionalexpr.FunctionalFor
+            The FunctionalFor AST node.
+
+        Returns
+        -------
+        pyccel.ast.basic.CodeBlock
+            A code block containing the equivalent loops and necessary variable allocations for the given `FunctionalFor` expression.
+        """
+         
         target  = expr.expr
         indices = []
         dims = []

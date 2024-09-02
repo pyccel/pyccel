@@ -1150,6 +1150,21 @@ class SyntaxParser(BasicParser):
         return expr
 
     def _visit_ListComp(self, stmt):
+        """
+        Converts a list comprehension statement into a `FunctionalFor` AST object.
+
+        This method translates the list comprehension into an equivalent `FunctionalFor`
+        
+        Parameters
+        ----------
+        stmt : ast.stmt
+            Object to visit of type X.
+
+        Returns
+        -------
+        pyccel.ast.functionalexpr.FunctionalFor
+            AST object which is the syntactic equivalent of the list comprehension.
+        """
 
         result = self._visit(stmt.elt)
 

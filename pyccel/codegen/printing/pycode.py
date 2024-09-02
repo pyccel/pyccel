@@ -628,6 +628,21 @@ class PythonCodePrinter(CodePrinter):
         return code
 
     def _print_FunctionalFor(self, expr):
+        """
+        Generate the Python code for a FunctionalFor expression.
+        
+        This method translates a `FunctionalFor` AST node into a Python code string.
+
+        Parameters
+        ----------
+        expr : pyccel.ast.functionalexpr.FunctionalFor
+            The FunctionalFor AST node.
+        
+        Returns
+        -------
+        str
+            The Python code as a string that corresponds to the `FunctionalFor` expression.
+        """
         body, iterators = self._find_functional_expr_and_iterables(expr)
         lhs = self._print(expr.lhs)
         body = self._print(body.args)
