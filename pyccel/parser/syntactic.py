@@ -54,7 +54,6 @@ from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList, PythonSet, PythonDict
-from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.builtins import PythonPrint, Lambda
 from pyccel.ast.headers  import MetaVariable, FunctionHeader, MethodHeader
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
@@ -1149,7 +1148,7 @@ class SyntaxParser(BasicParser):
 
         expr = For(iterator, iterable, [], scope=scope)
         return expr
-    
+
     def _visit_ListComp(self, stmt):
 
         result = self._visit(stmt.elt)
@@ -1175,7 +1174,7 @@ class SyntaxParser(BasicParser):
             generators[-1].insert2body(F)
 
         return FunctionalFor(generators, result, lhs,
-                             indices) 
+                             indices)
 
     def _visit_GeneratorExp(self, stmt):
 
