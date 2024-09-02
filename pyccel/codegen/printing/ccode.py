@@ -1663,7 +1663,7 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         variable = expr.variable
         if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-            if len(variable.alloc_shape) > 0:
+            if len(variable.alloc_shape) > 0 and isinstance(variable.class_type, HomogeneousListType):
                 size = self._print(variable.alloc_shape[0])
                 variable_address = self._print(ObjectAddress(expr.variable))
                 container_type = self.get_c_type(expr.variable.class_type)

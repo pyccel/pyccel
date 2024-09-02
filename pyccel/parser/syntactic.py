@@ -422,8 +422,6 @@ class SyntaxParser(BasicParser):
 
         rhs = self._visit(stmt.value)
 
-        if isinstance(rhs, CodeBlock):
-            return rhs
         expr = Assign(lhs, rhs)
 
         return expr
