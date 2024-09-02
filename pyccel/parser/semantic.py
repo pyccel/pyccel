@@ -3481,9 +3481,9 @@ class SemanticParser(BasicParser):
                 var   = self._create_variable(var, PythonNativeInt(), start, {})
                 dvar  = self._infer_type(var)
                 vars.append((var, dvar))
-                stop  = a.stop
-                start = a.start
-                step  = a.step
+                stop  = a.iterable.stop
+                start = a.iterable.start
+                step  = a.iterable.step
             elif isinstance(a.iterable, PythonEnumerate):
                 var1 = self.scope.get_expected_name(expr.indices[i][0])
                 var2 = self.scope.get_expected_name(expr.indices[i][1])
