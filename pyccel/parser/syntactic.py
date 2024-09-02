@@ -1150,36 +1150,6 @@ class SyntaxParser(BasicParser):
         expr = For(iterator, iterable, [], scope=scope)
         return expr
     
-    '''
-    def _visit_ListComp(self, stmt):
-        
-        result = self._visit(stmt.elt)
-
-        generators = list(self._visit(stmt.generators))
-        
-        if not isinstance(self._context[-2],ast.Assign):
-            errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
-                          symbol = stmt,
-                          severity='error')
-            lhs = PyccelSymbol('_', is_temp=True)
-        else:
-            lhs = self._visit(self._context[-2].targets)
-            if len(lhs)==1:
-                lhs = lhs[0]
-            else:
-                raise NotImplementedError("A list comprehension cannot be unpacked")
-
-        body = []
-        body.append(Assign(lhs, PythonList(1)))
-        generators[-1].insert2body(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
-        if len(generators) > 1:
-            for i in range(len(generators)-2, -1, -1):
-                generators[i].insert2body(generators[i+1])
-        #for gen in generators:
-        body.append(generators[0])
-        return CodeBlock(body)
-
-    '''
     def _visit_ListComp(self, stmt):
 
         result = self._visit(stmt.elt)
@@ -1198,20 +1168,6 @@ class SyntaxParser(BasicParser):
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
         indices = [generator.target for generator in generators]
-        '''
-        index = PyccelSymbol('_', is_temp=True)
-
-        args = [index]
-        target = IndexedElement(lhs, *args)
-        target = Assign(target, result)
-        assign1 = Assign(index, LiteralInteger(0))
-        assign1.set_current_ast(stmt)
-        target.set_current_ast(stmt)
-        generators[-1].insert2body(target)
-        assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
-        assign2.set_current_ast(stmt)
-        generators[-1].insert2body(assign2)
-        '''
         generators[-1].insert2body(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
 
         while len(generators) > 1:

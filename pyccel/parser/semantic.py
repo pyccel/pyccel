@@ -3423,6 +3423,7 @@ class SemanticParser(BasicParser):
             for_expr = For(target, iterable, body, scope=scope)
             for_expr.end_annotation = expr.end_annotation
         return for_expr
+
     def _visit_FunctionalFor(self, expr):
         
         target  = expr.expr
@@ -3433,7 +3434,6 @@ class SemanticParser(BasicParser):
         body = expr.loops[0]
         i = 0
         while isinstance(body, For):
-            print(i)
             stop = None
             start = LiteralInteger(0)
             step = LiteralInteger(1)
@@ -3449,21 +3449,6 @@ class SemanticParser(BasicParser):
                 start = a.start
                 step  = a.step
             elif isinstance(a.iterable, PythonEnumerate):
-                if not isinstance(expr.indices[i], PythonTuple):
-                    errors.report(PYCCEL_RESTRICTION_TODO,
-                        bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                    severity='fatal')
-                if not len(expr.indices[i]) == 2:
-                    errors.report(PYCCEL_RESTRICTION_TODO,
-                        bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                    severity='fatal')
-                if a.num_loop_counters_required:
-                    add_indices = [Variable(PythonNativeInt(), self.scope.get_new_name(), is_temp=True)
-                        for i in range(a.num_loop_counters_required)]
-                    a.set_loop_counter(*add_indices)
-                    for idx in add_indices:
-                        vars.append((idx, self._infer_type(idx)))
-                        indices.append(idx.name)
                 var1 = self.scope.get_expected_name(expr.indices[i][0])
                 var2 = self.scope.get_expected_name(expr.indices[i][1])
                 indices.append(var1)
@@ -3482,14 +3467,6 @@ class SemanticParser(BasicParser):
                 vars.append((var2, dvar2))
                 stop = a.iterable.element.shape[0]
             elif isinstance(a.iterable, PythonZip):
-                if not isinstance(expr.indices[i], PythonTuple):
-                    errors.report(PYCCEL_RESTRICTION_TODO,
-                        bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                    severity='fatal')
-                if len(expr.indices[i]) != len(a.iterable.args):
-                    errors.report(PYCCEL_RESTRICTION_TODO,
-                        bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                    severity='fatal')
                 for idx, arg in enumerate(a.iterable.args):
                     var = self.scope.get_expected_name(expr.indices[i][idx])
                     indices.append(var)
@@ -3506,10 +3483,6 @@ class SemanticParser(BasicParser):
                 stop = LiteralInteger(a.iterable.length)
             
             elif isinstance(a.iterable, Variable):
-                if isinstance(expr.indices[i], PythonTuple):
-                    errors.report(PYCCEL_RESTRICTION_TODO,
-                        bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                    severity='fatal')
                 var = self.scope.get_expected_name(expr.indices[i])
                 indices.append(var)
                 dvar  = self._infer_type(a.iterable)
@@ -3530,7 +3503,6 @@ class SemanticParser(BasicParser):
                               severity='fatal')
             
             for var, dvar in vars:
-                print('-> ', var)
                 existing_var = self.scope.find(var.name, 'variables')
                 if existing_var:
                     if self._infer_type(existing_var) != dvar:
@@ -3553,9 +3525,7 @@ class SemanticParser(BasicParser):
             body = body.body.body[0]
             i += 1
         
-        print(indices)
         for idx in indices:
-            print(idx)
             var = self.get_variable(idx)
             idx_subs[idx] = var
 
@@ -3648,410 +3618,8 @@ class SemanticParser(BasicParser):
 
         loops = [self._visit(i) for i in expr.loops]
 
-        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=indices, index=indices[0])])
+        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=expr.indices, index=indices[0])])
 
-
-
-    def _svisit_FunctionalFor(self, expr):
-
-        target  = expr.expr
-        indices = []
-        for idx in expr.indices:
-            if isinstance(idx, PythonTuple):
-                for t in idx:
-                    indices.append(self.scope.get_expected_name(t))
-            else:
-                indices.append(self.scope.get_expected_name(idx))
-        dims    = []
-        #body    = expr.loops[0]
-
-        idx_subs = {}
-        #scope = self.create_new_loop_scope()
-
-        # The symbols created to represent unknown valued objects are temporary
-        tmp_used_names = self.scope.all_used_symbols.copy()
-        i = 0
-        #while isinstance(body, For):
-
-        for body in expr.loops:
-            stop  = None
-            start = LiteralInteger(0)
-            step  = LiteralInteger(1)
-            #var   = indices[i]
-            #i += 1
-            vars = []
-            a     = self._visit(body.iterable)
-            if isinstance(a, PythonRange):
-                var   = self._create_variable(var, PythonNativeInt(), start, {})
-                dvar  = self._infer_type(var)
-                stop  = a.stop
-                start = a.start
-                step  = a.step
-
-            elif isinstance(a, (PythonZip, PythonEnumerate)):
-                dvar  = self._infer_type(a.element)
-                class_type = dvar.pop('class_type')
-                if class_type.rank > 0:
-                    class_type = class_type.switch_rank(class_type.rank-1)
-                    dvar['shape'] = (dvar['shape'])[1:]
-                if class_type.rank == 0:
-                    dvar['shape'] = None
-                    dvar['memory_handling'] = 'stack'
-                var  = Variable(class_type, indices[i+1], **dvar)
-                vars.append(Variable(PythonNativeInt(), indices[i]))
-                vars.append(var)
-                stop = a.element.shape[0]
-                i += 2
-
-            elif isinstance(a, Variable):
-                dvar  = self._infer_type(a)
-                class_type = dvar.pop('class_type')
-                if class_type.rank > 0:
-                    class_type = class_type.switch_rank(class_type.rank-1)
-                    dvar['shape'] = (dvar['shape'])[1:]
-                if class_type.rank == 0:
-                    dvar['shape'] = None
-                    dvar['memory_handling'] = 'stack'
-                var  = Variable(class_type, var, **dvar)
-                stop = a.shape[0]
-
-            else:
-                errors.report(PYCCEL_RESTRICTION_TODO,
-                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                              severity='fatal')
-            for var in vars:
-                existing_var = self.scope.find(var.name, 'variables')
-                if existing_var:
-                    if self._infer_type(existing_var) != dvar:
-                        errors.report(f"Variable {var} already exists with different type",
-                                symbol = expr, severity='error')
-                else:
-                    self.scope.insert_variable(var)
-            step.invalidate_node()
-            step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
-            start.invalidate_node()
-            start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
-            stop.invalidate_node()
-            stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
-            size = (stop - start) / step
-            if (step != 1):
-                size = ceiling(size)
-
-            #body = body.body.body[0]
-            dims.append((size, step, start, stop))
-
-        # we now calculate the size of the array which will be allocated
-
-        for idx in indices:
-            var = self.get_variable(idx)
-            idx_subs[idx] = var
-
-
-        sp_indices  = [sp_Symbol(i) for i in indices]
-
-        dim = sp_Integer(1)
-
-        for i in reversed(range(len(dims))):
-            size  = dims[i][0]
-            step  = dims[i][1]
-            start = dims[i][2]
-            stop  = dims[i][3]
-
-            # For complicated cases we must ensure that the upper bound is never smaller than the
-            # lower bound as this leads to too little memory being allocated
-            min_size = size
-            # Collect all uses of other indices
-            start_idx = [-1] + [sp_indices.index(a) for a in start.atoms(sp_Symbol) if a in sp_indices]
-            stop_idx  = [-1] + [sp_indices.index(a) for a in  stop.atoms(sp_Symbol) if a in sp_indices]
-            start_idx.sort()
-            stop_idx.sort()
-
-            # Find the minimum size
-            while max(len(start_idx),len(stop_idx))>1:
-                # Use the maximum value of the start
-                if start_idx[-1] > stop_idx[-1]:
-                    s = start_idx.pop()
-                    min_size = min_size.subs(sp_indices[s], dims[s][3])
-                # and the minimum value of the stop
-                else:
-                    s = stop_idx.pop()
-                    min_size = min_size.subs(sp_indices[s], dims[s][2])
-
-            # While the min_size is not a known integer, assume that the bounds are positive
-            j = 0
-            while not isinstance(min_size, sp_Integer) and j<=i:
-                min_size = min_size.subs(dims[j][3]-dims[j][2], 1).simplify()
-                j+=1
-            # If the min_size is negative then the size will be wrong and an error is raised
-            if isinstance(min_size, sp_Integer) and min_size < 0:
-                errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS.format(indices[i]),
-                          bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                          severity='error')
-
-            # sympy is necessary to carry out the summation
-            dim   = dim.subs(sp_indices[i], start+step*sp_indices[i])
-            dim   = Summation(dim, (sp_indices[i], 0, size-1))
-            dim   = dim.doit()
-
-        try:
-            dim = sympy_to_pyccel(dim, idx_subs)
-        except TypeError:
-            errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE + f'\n Deduced size : {dim}',
-                          bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                          severity='fatal')
-
-        # TODO find a faster way to calculate dim
-        # when step>1 and not isinstance(dim, Sum)
-        # maybe use the c++ library of sympy
-
-        # we annotate the target to infere the type of the list created
-
-        target = self._visit(target)
-        d_var = self._infer_type(target)
-
-        class_type = d_var['class_type']
-
-        if class_type is GenericType():
-            errors.report(LIST_OF_TUPLES,
-                          bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                          severity='fatal')
-
-        d_var['memory_handling'] = 'heap'
-        class_type = HomogeneousListType(class_type)
-        d_var['class_type'] = class_type
-        shape = [dim]
-        if d_var['shape']:
-            shape.extend(d_var['shape'])
-        d_var['shape'] = shape
-        d_var['cls_base'] = get_cls_base(class_type)
-
-        # ...
-        # TODO [YG, 30.10.2020]:
-        #  - Check if we should allow the possibility that is_stack_array=True
-        # ...
-        lhs_symbol = expr.lhs
-        ne = []
-        lhs = self._assign_lhs_variable(lhs_symbol, d_var, rhs=expr, new_expressions=ne, is_augassign=False)
-        lhs_alloc = ne[0]
-
-        if isinstance(target, PythonTuple) and not target.is_homogeneous:
-            errors.report(LIST_OF_TUPLES, symbol=expr, severity='error')
-
-        target.invalidate_node()
-
-        loops = [self._visit(i) for i in expr.loops]
-        #index = self._visit(index)
-
-        l = loops[-1]
-        for idx in indices:
-            assert isinstance(l, For)
-            # Sub in indices as defined here for coherent naming
-            if idx.is_temp:
-                self.scope.remove_variable(l.target)
-                l.substitute(l.target, idx_subs[idx])
-            #l = l.body.body[-1]
-
-        #self.exit_loop_scope()
-
-        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=indices, index=indices[0])])
-
-    '''
-    def _visit_FunctionalFor(self, expr):
-        old_index   = expr.index
-        new_index   = self.scope.get_new_name()
-        expr.substitute(old_index, new_index)
-
-        target  = expr.expr
-        index   = new_index
-        indices = [self.scope.get_expected_name(i) for i in expr.indices]
-        dims    = []
-        body    = expr.loops[1]
-
-        idx_subs = {}
-        #scope = self.create_new_loop_scope()
-
-        # The symbols created to represent unknown valued objects are temporary
-        tmp_used_names = self.scope.all_used_symbols.copy()
-        i = 0
-        while isinstance(body, For):
-
-            stop  = None
-            start = LiteralInteger(0)
-            step  = LiteralInteger(1)
-            var   = indices[i]
-            i += 1
-            a     = self._visit(body.iterable)
-            if isinstance(a, PythonRange):
-                var   = self._create_variable(var, PythonNativeInt(), start, {})
-                dvar  = self._infer_type(var)
-                stop  = a.stop
-                start = a.start
-                step  = a.step
-
-            elif isinstance(a, (PythonZip, PythonEnumerate)):
-                dvar  = self._infer_type(a.element)
-                class_type = dvar.pop('class_type')
-                if class_type.rank > 0:
-                    class_type = class_type.switch_rank(class_type.rank-1)
-                    dvar['shape'] = (dvar['shape'])[1:]
-                if class_type.rank == 0:
-                    dvar['shape'] = None
-                    dvar['memory_handling'] = 'stack'
-                var  = Variable(class_type, var, **dvar)
-                stop = a.element.shape[0]
-
-            elif isinstance(a, Variable):
-                dvar  = self._infer_type(a)
-                class_type = dvar.pop('class_type')
-                if class_type.rank > 0:
-                    class_type = class_type.switch_rank(class_type.rank-1)
-                    dvar['shape'] = (dvar['shape'])[1:]
-                if class_type.rank == 0:
-                    dvar['shape'] = None
-                    dvar['memory_handling'] = 'stack'
-                var  = Variable(class_type, var, **dvar)
-                stop = a.shape[0]
-
-            else:
-                errors.report(PYCCEL_RESTRICTION_TODO,
-                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                              severity='fatal')
-            existing_var = self.scope.find(var.name, 'variables')
-            if existing_var:
-                if self._infer_type(existing_var) != dvar:
-                    errors.report(f"Variable {var} already exists with different type",
-                            symbol = expr, severity='error')
-            else:
-                self.scope.insert_variable(var)
-            step.invalidate_node()
-            step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
-            start.invalidate_node()
-            start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
-            stop.invalidate_node()
-            stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
-            size = (stop - start) / step
-            if (step != 1):
-                size = ceiling(size)
-
-            body = body.body.body[0]
-            dims.append((size, step, start, stop))
-
-        # we now calculate the size of the array which will be allocated
-
-        for idx in indices:
-            var = self.get_variable(idx)
-            idx_subs[idx] = var
-
-
-        sp_indices  = [sp_Symbol(i) for i in indices]
-
-        dim = sp_Integer(1)
-
-        for i in reversed(range(len(dims))):
-            size  = dims[i][0]
-            step  = dims[i][1]
-            start = dims[i][2]
-            stop  = dims[i][3]
-
-            # For complicated cases we must ensure that the upper bound is never smaller than the
-            # lower bound as this leads to too little memory being allocated
-            min_size = size
-            # Collect all uses of other indices
-            start_idx = [-1] + [sp_indices.index(a) for a in start.atoms(sp_Symbol) if a in sp_indices]
-            stop_idx  = [-1] + [sp_indices.index(a) for a in  stop.atoms(sp_Symbol) if a in sp_indices]
-            start_idx.sort()
-            stop_idx.sort()
-
-            # Find the minimum size
-            while max(len(start_idx),len(stop_idx))>1:
-                # Use the maximum value of the start
-                if start_idx[-1] > stop_idx[-1]:
-                    s = start_idx.pop()
-                    min_size = min_size.subs(sp_indices[s], dims[s][3])
-                # and the minimum value of the stop
-                else:
-                    s = stop_idx.pop()
-                    min_size = min_size.subs(sp_indices[s], dims[s][2])
-
-            # While the min_size is not a known integer, assume that the bounds are positive
-            j = 0
-            while not isinstance(min_size, sp_Integer) and j<=i:
-                min_size = min_size.subs(dims[j][3]-dims[j][2], 1).simplify()
-                j+=1
-            # If the min_size is negative then the size will be wrong and an error is raised
-            if isinstance(min_size, sp_Integer) and min_size < 0:
-                errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS.format(indices[i]),
-                          bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                          severity='error')
-
-            # sympy is necessary to carry out the summation
-            dim   = dim.subs(sp_indices[i], start+step*sp_indices[i])
-            dim   = Summation(dim, (sp_indices[i], 0, size-1))
-            dim   = dim.doit()
-
-        try:
-            dim = sympy_to_pyccel(dim, idx_subs)
-        except TypeError:
-            errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE + f'\n Deduced size : {dim}',
-                          bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                          severity='fatal')
-
-        # TODO find a faster way to calculate dim
-        # when step>1 and not isinstance(dim, Sum)
-        # maybe use the c++ library of sympy
-
-        # we annotate the target to infere the type of the list created
-
-        target = self._visit(target)
-        d_var = self._infer_type(target)
-
-        class_type = d_var['class_type']
-
-        if class_type is GenericType():
-            errors.report(LIST_OF_TUPLES,
-                          bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                          severity='fatal')
-
-        d_var['memory_handling'] = 'heap'
-        class_type = HomogeneousListType(class_type)
-        d_var['class_type'] = class_type
-        shape = [dim]
-        if d_var['shape']:
-            shape.extend(d_var['shape'])
-        d_var['shape'] = shape
-        d_var['cls_base'] = get_cls_base(class_type)
-
-        # ...
-        # TODO [YG, 30.10.2020]:
-        #  - Check if we should allow the possibility that is_stack_array=True
-        # ...
-        lhs_symbol = expr.lhs.base
-        ne = []
-        lhs = self._assign_lhs_variable(lhs_symbol, d_var, rhs=expr, new_expressions=ne, is_augassign=False)
-        lhs_alloc = ne[0]
-
-        if isinstance(target, PythonTuple) and not target.is_homogeneous:
-            errors.report(LIST_OF_TUPLES, symbol=expr, severity='error')
-
-        target.invalidate_node()
-
-        loops = [self._visit(i) for i in expr.loops]
-        index = self._visit(index)
-
-        l = loops[-1]
-        for idx in indices:
-            assert isinstance(l, For)
-            # Sub in indices as defined here for coherent naming
-            if idx.is_temp:
-                self.scope.remove_variable(l.target)
-                l.substitute(l.target, idx_subs[idx])
-            l = l.body.body[-1]
-
-        #self.exit_loop_scope()
-
-        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
-    '''
-    
     def _visit_GeneratorComprehension(self, expr):
         lhs = self.check_for_variable(expr.lhs)
         if lhs is None:
