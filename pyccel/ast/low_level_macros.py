@@ -28,7 +28,7 @@ class MacroDefinition(PyccelAstNode):
     def __init__(self, macro_name, obj, suffix = None):
         self._macro_name = macro_name
         self._obj = obj
-        self._suffix = suffix
+        self._suffix = suffix or ''
         super().__init__()
 
     @property
