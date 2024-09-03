@@ -23,7 +23,7 @@ from .datatypes import (PyccelType, SymbolicType, HomogeneousTupleType,
 
 from .internals import PyccelSymbol, PyccelFunction, apply_pickle
 
-from .literals  import Nil, LiteralFalse, LiteralInteger
+from .literals  import Nil, LiteralFalse, LiteralInteger, LiteralString
 from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
@@ -1070,8 +1070,8 @@ class Module(ScopedAstNode):
         imports = list(imports)
         for i in classes:
             imports += i.imports
-        imports = set(imports)  # for unicity
-        imports = tuple(imports)
+        imports = {i: None for i in imports} # for unicity and ordering
+        imports = tuple(imports.keys())
 
         self._name = name
         self._variables = variables
@@ -3782,7 +3782,7 @@ class Import(PyccelAstNode):
                 return DottedName(*i.split('.'))
             else:
                 return PyccelSymbol(i)
-        if isinstance(i, (DottedName, AsName, PyccelSymbol)):
+        if isinstance(i, (DottedName, AsName, PyccelSymbol, LiteralString)):
             return i
         else:
             raise TypeError(f'Expecting a string, PyccelSymbol DottedName, given {type(i)}')
