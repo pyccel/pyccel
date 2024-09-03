@@ -55,6 +55,7 @@ All notable changes to this project will be documented in this file.
 -   #1951 : Fix return type for class whose argument cannot be wrapped.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
 -   #1924 : Fix internal error arising in Duplicate or list comprehensions.
+-   #1970 : Fix missing `TypeError` for wrong type passed as optional argument.
 
 ### Changed
 
