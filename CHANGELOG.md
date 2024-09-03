@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 -   #1700 : Add Python support for list method `sort()`.
 -   #1696 : Add Python support for list method `copy()`.
 -   #1693 : Add Python support for list method `remove()`.
+-   #1690 : Add C support for list method `pop()`.
 -   #1739 : Add abstract class `SetMethod` to handle calls to various set methods.
 -   #1739 : Add Python support for set method `clear()`.
 -   #1740 : Add Python support for set method `copy()`.
@@ -28,6 +29,7 @@ All notable changes to this project will be documented in this file.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
 -   #1886 : Add Python support for dict method `pop()`.
 -   #1887 : Add Python support for dict method `popitem()`.
+-   #1885 : Add Python support for dict method `get()`.
 -   #1944 : Add the appropriate C language equivalent for declaring a Python `dict` container using the STC library.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
