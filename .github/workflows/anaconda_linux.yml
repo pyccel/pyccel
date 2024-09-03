@@ -108,6 +108,7 @@ jobs:
           name: coverage-artifact
           path: .coverage
           retention-days: 1
+          include-hidden-files: true
       - name: "Post completed"
         if: always() && github.event_name != 'push'
         run:

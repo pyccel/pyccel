@@ -31,6 +31,7 @@ All notable changes to this project will be documented in this file.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
+-   #1583 : Allow inhomogeneous tuples in classes.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
@@ -86,6 +87,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
 -   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
 -   \[INTERNALS\] Handle STC imports with Pyccel objects.
+-   \[INTERNALS\] Stop using ndarrays as an intermediate step to return arrays from Fortran code.
+-   \[INTERNALS\] Unify the strategy for handling additional imports in the printing stage for different languages.
 
 ### Deprecated
 
