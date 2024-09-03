@@ -387,7 +387,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_AsName(self, expr):
         name = self._print(expr.name)
-        target = self._print(expr.target)
+        target = self._print(expr.local_alias)
         if name == target:
             return name
         else:
@@ -562,17 +562,18 @@ class PythonCodePrinter(CodePrinter):
             return 'import {source}\n'.format(source=source)
         else:
             if source in import_object_swap:
-                target = [AsName(import_object_swap[source].get(i.object,i.object), i.target) for i in target]
+                target = [AsName(import_object_swap[source].get(i.object,i.object), i.local_alias) for i in target]
             if source in import_target_swap:
                 # If the source contains multiple names which reference the same object
                 # check if the target is referred to by another name in pyccel.
                 # Print the name used by pyccel (either the value from import_target_swap
                 # or the original name from the import
-                target = [AsName(i.object, import_target_swap[source].get(i.target,i.target)) for i in target]
+                target = [AsName(i.object, import_target_swap[source].get(i.local_alias,i.local_alias)) for i in target]
 
             target = list(set(target))
             if source in pyccel_builtin_import_registry:
-                self._aliases.update([(pyccel_builtin_import_registry[source][t.name].cls_name, t.target) for t in target if t.name != t.target])
+                self._aliases.update((pyccel_builtin_import_registry[source][t.name].cls_name, t.local_alias) \
+                                        for t in target if t.name != t.local_alias)
 
             if expr.source_module:
                 if expr.source_module.init_func:

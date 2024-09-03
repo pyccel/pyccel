@@ -164,8 +164,6 @@ def _get_name(var):
         return str(var.base)
     if isinstance(var, FunctionCall):
         return var.funcdef
-    if isinstance(var, AsName):
-        return var.target
     name = type(var).__name__
     msg = f'Name of Object : {name} cannot be determined'
     return errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
@@ -4353,7 +4351,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(expr.source, AsName):
             source        = expr.source.name
-            source_target = expr.source.target
+            source_target = expr.source.local_alias
         else:
             source        = str(expr.source)
             source_target = source
@@ -4410,7 +4408,7 @@ class SemanticParser(BasicParser):
             import_init = p.semantic_parser.ast.init_func if source_target not in container['imports'] else None
             import_free = p.semantic_parser.ast.free_func if source_target not in container['imports'] else None
             if expr.target:
-                targets = {i.target if isinstance(i,AsName) else i:None for i in expr.target}
+                targets = {i.local_alias if isinstance(i,AsName) else i:None for i in expr.target}
                 names = [i.name if isinstance(i,AsName) else i for i in expr.target]
 
                 p_scope = p.scope
