@@ -74,8 +74,6 @@ class CToPythonWrapper(Wrapper):
     def __init__(self, file_location):
         # A map used to find the Python-compatible Variable equivalent to an object in the AST
         self._python_object_map = {}
-        # Indicate if arrays were wrapped.
-        self._wrapping_arrays = False
         # The object that should be returned to indicate an error
         self._error_exit_code = Nil()
 
@@ -1148,7 +1146,6 @@ class CToPythonWrapper(Wrapper):
 
         self.exit_scope()
 
-        imports += cwrapper_ndarray_imports if self._wrapping_arrays else []
         if not isinstance(expr, BindCModule):
             imports.append(Import(mod_scope.get_python_name(expr.name), expr))
         original_mod = getattr(expr, 'original_module', expr)
@@ -1495,7 +1492,6 @@ class CToPythonWrapper(Wrapper):
         if orig_var.is_ndarray:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     memory_handling='alias', new_class = Variable)
-            self._wrapping_arrays = orig_var.is_ndarray
             self.scope.insert_variable(arg_var, orig_var.name)
         else:
             kwargs = {'is_argument': False}
@@ -1548,44 +1544,31 @@ class CToPythonWrapper(Wrapper):
                                results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
             cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
         elif isinstance(orig_var.class_type, NumpyNDArrayType):
+            parts = self._get_array_parts(expr)
             unstrided_arg_var = arg_var.clone(self.scope.get_new_name(arg_var.name+'_unstrided'))
-            expected_collect_arg = Variable(PyccelPyArrayObject(), 'dummy')
-            numpy_collect_arg = ObjectAddress(PointerCast(collect_arg, expected_collect_arg))
-            numpy_shape_array = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name('shape'))
-
-            base = Variable(PyccelPyArrayObject(), self.scope.get_new_name(arg_var.name + '_base'),
-                            memory_handling='alias')
-
-            slice_ends = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name('ends'))
-            slice_steps = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name('steps'))
-
             self.scope.insert_variable(unstrided_arg_var)
-            self.scope.insert_variable(numpy_shape_array)
-            self.scope.insert_variable(slice_ends)
-            self.scope.insert_variable(slice_steps)
-            self.scope.insert_variable(base)
 
-            shape = [IndexedElement(numpy_shape_array, i) for i in range(arg_var.rank)]
+            shape = parts['shape']
+            strides = parts['strides']
+            shape_elements = [IndexedElement(shape, i) for i in range(orig_var.rank)]
+            indices = [Slice(None, None, IndexedElement(strides, i)) for i in range(orig_var.rank)]
+            check_func, err = self._get_check_function(collect_arg, orig_var, True)
 
-            base_assign = AliasAssign(base, PointerCast(FunctionCall(PyArray_BASE, [numpy_collect_arg]), base))
+            body = parts['body'] + \
+                   [Allocate(unstrided_arg_var, shape = shape_elements, status = 'unallocated', like = parts['data']),
+                    Assign(arg_var, IndexedElement(unstrided_arg_var, *indices))]
 
-            slice_builder = FunctionCall(get_strides_and_size_from_numpy_array,
-                                        [numpy_collect_arg, ObjectAddress(slice_ends), ObjectAddress(slice_steps),
-                                         convert_to_literal(arg_var.order == 'F')])
+            if_sections = []
+            if orig_var.is_optional:
+                default_body = [AliasAssign(parts['data'], Nil())] + \
+                        [Assign(IndexedElement(shape, i), 0) for i in range(orig_var.rank)] + \
+                        [Assign(IndexedElement(strides, i), 1) for i in range(orig_var.rank)]
+                if_sections = [IfSection(PyccelIs(collect_arg, Py_None), default_body)]
+            if_sections += [IfSection(check_func, body),
+                        IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])])]
+            body = [If(*if_sections)]
 
-            indices = [Slice(None, slice_ends[i], slice_steps[i]) for i in range(arg_var.rank)]
-
-            no_base_code = IfSection(PyccelIs(base, Nil()),
-                                [Assign(numpy_shape_array, FunctionCall(PyArray_SHAPE, [numpy_collect_arg])),
-                                 Allocate(arg_var, shape = shape, status = 'unallocated',
-                                         like = FunctionCall(PyArray_DATA, [numpy_collect_arg]))])
-            has_base_code = IfSection(LiteralTrue(), [slice_builder,
-                                      Assign(numpy_shape_array, FunctionCall(PyArray_SHAPE, [base])),
-                                      Allocate(unstrided_arg_var, shape = shape, status = 'unallocated',
-                                              like = FunctionCall(PyArray_DATA, [base])),
-                                      Assign(arg_var, IndexedElement(unstrided_arg_var, *indices))])
-
-            cast = [base_assign, If(no_base_code, has_base_code)]
+            return {'body': body, 'args': [arg_var]}
         else:
             raise NotImplementedError(f"Wrapping function arguments not implemented for type {orig_var.class_type}")
 
@@ -1637,7 +1620,6 @@ class CToPythonWrapper(Wrapper):
         if orig_var.rank == 0:
             return self._wrap_FunctionDefArgument(expr)
         elif isinstance(orig_var.class_type, NumpyNDArrayType):
-            self._wrapping_arrays = True
             collect_arg = self._python_object_map[expr]
             parts = self._get_array_parts(expr)
             body = parts['body']
@@ -1701,7 +1683,6 @@ class CToPythonWrapper(Wrapper):
         if isinstance(orig_var.class_type, NumpyNDArrayType):
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
             c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
-            self._wrapping_arrays = True
             body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])),
                     Deallocate(c_res)]
         elif isinstance(orig_var.dtype, CustomDataType):
@@ -1822,10 +1803,6 @@ class CToPythonWrapper(Wrapper):
         list of pyccel.ast.basic.PyccelAstNode
             The code which translates the Variable to a Python-compatible variable.
         """
-
-        # Ensure that cwrapper_ndarrays is imported
-        if expr.rank > 0:
-            self._wrapping_arrays = True
 
         # Create the resulting Variable with datatype `PyccelPyObject`
         py_equiv = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
