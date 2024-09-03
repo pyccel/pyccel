@@ -21,7 +21,7 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefAr
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
-from pyccel.ast.builtins import PythonBool
+from pyccel.ast.builtins import PythonBool, PythonList
 
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -65,7 +65,7 @@ from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOp
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import expand_to_loops
 
-from pyccel.ast.variable import Variable, IndexedElement, InhomogeneousTupleVariable, DottedName
+from pyccel.ast.variable import Variable, IndexedElement, DottedName
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -251,7 +251,6 @@ class FCodePrinter(CodePrinter):
         self._current_class    = None
 
         self._additional_code = None
-        self._additional_imports = set()
 
         self.prefix_module = prefix_module
 
@@ -267,10 +266,6 @@ class FCodePrinter(CodePrinter):
             macro += " , ".join(rename)
             macros.append(macro)
         return "\n".join(macros)
-
-    def get_additional_imports(self):
-        """return the additional modules collected for importing in printing stage"""
-        return [i.source for i in self._additional_imports]
 
     def set_current_class(self, name):
 
@@ -438,13 +433,14 @@ class FCodePrinter(CodePrinter):
         func.reinstate_presence_checks()
         func.swap_out_args()
 
-        self._additional_imports.update(func.imports)
+        for i in func.imports:
+            self.add_import(i)
         if func.global_vars or func.global_funcs:
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
             current_mod = expr.get_user_nodes(Module, excluded_nodes=(FunctionCall,))[0]
             if current_mod is not mod:
-                self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
-                          for v in (*func.global_vars, *func.global_funcs)]))
+                self.add_import(Import(mod.name, [AsName(v, v.name) \
+                              for v in (*func.global_vars, *func.global_funcs)]))
                 for v in (*func.global_vars, *func.global_funcs):
                     self.scope.insert_symbol(v.name)
 
@@ -507,10 +503,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
-        if isinstance(expr.name, AsName):
-            name = self._print(expr.name.target)
-        else:
-            name = self._print(expr.name)
+        name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_') and self.prefix_module:
             name = f'{self.prefix_module}_{name}'
@@ -560,7 +553,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
-        imports += ''.join(self._print(i) for i in self._additional_imports)
+        imports += ''.join(self._print(i) for i in self._additional_imports.values())
         imports += "\n" + self.print_constant_imports()
         parts = ['module {}\n'.format(name),
                  imports,
@@ -604,7 +597,7 @@ class FCodePrinter(CodePrinter):
 
             decs += '\ninteger :: ierr = -1' +\
                     '\ninteger, allocatable :: status (:)'
-        imports += ''.join(self._print(i) for i in self._additional_imports)
+        imports += ''.join(self._print(i) for i in self._additional_imports.values())
         imports += "\n" + self.print_constant_imports()
         parts = ['program {}\n'.format(name),
                  imports,
@@ -623,10 +616,7 @@ class FCodePrinter(CodePrinter):
         if expr.ignore:
             return ''
 
-        if isinstance(expr.source, AsName):
-            source = expr.source.target
-        else:
-            source = expr.source
+        source = expr.source
         if isinstance(source, DottedName):
             source = source.name[-1]
         else:
@@ -656,7 +646,7 @@ class FCodePrinter(CodePrinter):
         code = ''
         for i in targets:
             old_name = i.name
-            new_name = i.target
+            new_name = i.local_alias
             if old_name != new_name:
                 target = '{target} => {name}'.format(target=new_name,
                                                      name=old_name)
@@ -712,7 +702,7 @@ class FCodePrinter(CodePrinter):
                 continue
             else:
                 f = f.value
-            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple, str)):
+            if isinstance(f, (PythonTuple, PythonList, str)):
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
@@ -1379,7 +1369,7 @@ class FCodePrinter(CodePrinter):
             arg_code = self._print(array_arg)
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
-            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             return f'amax({array_arg})'
         else:
             return f'maxval({arg_code})'
@@ -1392,7 +1382,7 @@ class FCodePrinter(CodePrinter):
             arg_code = self._print(array_arg)
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
-            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             return f'amin({array_arg})'
         else:
             return f'minval({arg_code})'
@@ -1476,8 +1466,8 @@ class FCodePrinter(CodePrinter):
     def _print_Declare(self, expr):
         # ... ignored declarations
         var = expr.variable
-        expr_dtype      = var.dtype
-        if isinstance(expr_dtype, SymbolicType):
+        expr_type = var.class_type
+        if isinstance(expr_type, SymbolicType):
             return ''
 
         # meta-variables
@@ -1486,17 +1476,18 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+        if isinstance(expr_type, InhomogeneousTupleType):
+            return ''
 
         # ... TODO improve
         # Group the variables by intent
+        dtype           = var.dtype
         rank            = var.rank
         shape           = var.alloc_shape
         is_const        = var.is_const
         is_optional     = var.is_optional
         is_private      = var.is_private
-        is_alias        = var.is_alias and not isinstance(expr_dtype, BindCPointer)
+        is_alias        = var.is_alias and not isinstance(dtype, BindCPointer)
         on_heap         = var.on_heap
         on_stack        = var.on_stack
         is_static       = expr.static
@@ -1510,31 +1501,29 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ... print datatype
-        if isinstance(expr_dtype, CustomDataType):
-            name   = expr_dtype.name
+        if isinstance(expr_type, CustomDataType):
+            name   = expr_type.name
 
             if var.is_argument:
                 sig = 'class'
             else:
                 sig = 'type'
             dtype = f'{sig}({name})'
-        elif isinstance(expr_dtype, FixedSizeNumericType):
-            dtype = self._print(expr_dtype.primitive_type)
+        elif isinstance(dtype, FixedSizeNumericType):
+            dtype = self._print(dtype.primitive_type)
             dtype += f'({self.print_kind(var)})'
+        elif isinstance(dtype, StringType):
+            dtype = self._print(dtype)
+
+            if intent_in:
+                dtype = dtype[:9] +'(len =*)'
+                #TODO improve ,this is the case of character as argument
+        elif isinstance(dtype, BindCPointer):
+            dtype = 'type(c_ptr)'
+            self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
         else:
-
-        # ...
-            if isinstance(expr_dtype, StringType):
-                dtype = self._print(expr_dtype)
-
-                if intent_in:
-                    dtype = dtype[:9] +'(len =*)'
-                    #TODO improve ,this is the case of character as argument
-            elif isinstance(expr_dtype, BindCPointer):
-                dtype = 'type(c_ptr)'
-                self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
-            else:
-                dtype = self._print(expr_dtype)
+            errors.report("Unrecognised datatype",
+                    symbol=expr, severity='fatal')
 
         code_value = ''
         if expr.value:
@@ -1559,7 +1548,7 @@ class FCodePrinter(CodePrinter):
         # Compute intent string
         if intent:
             if intent == 'in' and rank == 0 and not is_optional \
-                and not isinstance(expr_dtype, CustomDataType):
+                and not isinstance(expr_type, CustomDataType):
                 intentstr = ', value'
                 if is_const:
                     intentstr += ', intent(in)'
@@ -1630,7 +1619,7 @@ class FCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
-        if isinstance(lhs, InhomogeneousTupleVariable):
+        if isinstance(lhs.class_type, InhomogeneousTupleType):
             return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
         if isinstance(rhs, FunctionCall):
             return self._print(rhs)
@@ -1815,10 +1804,11 @@ class FCodePrinter(CodePrinter):
 #-----------------------------------------------------------------------------
     def _print_Deallocate(self, expr):
         var = expr.variable
-        if isinstance(var, InhomogeneousTupleVariable):
+        class_type = var.class_type
+        if isinstance(class_type, InhomogeneousTupleType):
             return ''.join(self._print(Deallocate(v)) for v in var)
 
-        if isinstance(var.dtype, CustomDataType):
+        if isinstance(class_type, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__')
             Pyccel_del_args = [FunctionCallArgument(var)]
             return self._print(FunctionCall(Pyccel__del, Pyccel_del_args))
@@ -2774,7 +2764,7 @@ class FCodePrinter(CodePrinter):
         arg_code = self._print(arg)
         if isinstance(expr.dtype.primitive_type, PrimitiveComplexType):
             func = PyccelFunctionDef('numpy_sign', NumpySign)
-            self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
+            self.add_import(Import('numpy_f90', AsName(func, 'numpy_sign')))
             return f'numpy_sign({arg_code})'
         else:
             cast_func = DtypePrecisionToCastFunction[expr.dtype]
@@ -2822,7 +2812,7 @@ class FCodePrinter(CodePrinter):
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         if func_name.startswith("pyc"):
-            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
         args = []
         for arg in expr.args:
             if arg.dtype != expr.dtype:

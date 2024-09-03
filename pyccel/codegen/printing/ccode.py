@@ -28,7 +28,8 @@ from pyccel.ast.c_concepts import CStackArray
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
-from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
+from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
+from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType, DictType
 
@@ -59,7 +60,6 @@ from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
-from pyccel.ast.variable import InhomogeneousTupleVariable
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -313,28 +313,6 @@ class CCodePrinter(CodePrinter):
         self._temporary_args = []
         self._current_module = None
         self._in_header = False
-
-    def get_additional_imports(self):
-        """return the additional imports collected in printing stage"""
-        return self._additional_imports.keys()
-
-    def add_import(self, import_obj):
-        """
-        Add a new import to the current context.
-
-        Add a new import to the current context. This allows the import to be recognised
-        at the compiling/linking stage. If the source of the import is not new then any
-        new targets are added to the Import object.
-
-        Parameters
-        ----------
-        import_obj : Import
-            The AST node describing the import.
-        """
-        if import_obj.source not in self._additional_imports:
-            self._additional_imports[import_obj.source] = import_obj
-        elif import_obj.target:
-            self._additional_imports[import_obj.source].define_target(import_obj.target)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -1020,7 +998,7 @@ class CCodePrinter(CodePrinter):
             code = ''
             for t in expr.target:
                 dtype = t.object.class_type
-                container_type = t.target
+                container_type = t.local_alias
                 if isinstance(dtype, DictType):
                     container_key_key = self.get_c_type(dtype.key_type)
                     container_val_key = self.get_c_type(dtype.value_type)
@@ -1153,7 +1131,8 @@ class CCodePrinter(CodePrinter):
 
         for i, f in enumerate(orig_args):
             f = f.value
-            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple)):
+
+            if isinstance(f, PythonTuple):
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
@@ -1385,8 +1364,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_Declare(self, expr):
         var = expr.variable
-        if isinstance(var, InhomogeneousTupleVariable):
-            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in var)
+        if isinstance(var.class_type, InhomogeneousTupleType):
+            return ''
 
         declaration_type = self.get_declare_type(var)
         variable = self._print(var.name)
@@ -1698,7 +1677,7 @@ class CCodePrinter(CodePrinter):
             variable_address = self._print(ObjectAddress(expr.variable))
             container_type = self.get_c_type(expr.variable.class_type)
             return f'{container_type}_drop({variable_address});\n'
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
+        if isinstance(expr.variable.class_type, InhomogeneousTupleType):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
         variable_address = self._print(ObjectAddress(expr.variable))
         if isinstance(expr.variable.dtype, CustomDataType):

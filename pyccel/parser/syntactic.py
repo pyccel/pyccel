@@ -566,7 +566,7 @@ class SyntaxParser(BasicParser):
         for name in stmt.names:
             imp = self._visit(name)
             if isinstance(imp, AsName):
-                source = AsName(self._treat_import_source(imp.object, 0), imp.target)
+                source = AsName(self._treat_import_source(imp.object, 0), imp.local_alias)
             else:
                 source = self._treat_import_source(imp, 0)
             import_line = Import(source)
