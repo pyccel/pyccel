@@ -940,7 +940,7 @@ class SemanticParser(BasicParser):
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 severity='fatal')
 
-        if isinstance(val.class_type, HomogeneousTupleType):
+        if isinstance(val.class_type, (HomogeneousTupleType, HomogeneousListType)):
             return Duplicate(val, length)
         else:
             if isinstance(length, LiteralInteger):

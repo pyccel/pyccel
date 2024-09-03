@@ -80,7 +80,7 @@ def test_double_loop_on_2d_array_F(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="C does not support list indexing yet, related issue #1876"),
+            pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -101,7 +101,7 @@ def test_product_loop_on_2d_array_C(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="C does not support list indexing yet, related issue #1876"),
+            pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -122,7 +122,7 @@ def test_product_loop_on_2d_array_F(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="C does not support list indexing yet, related issue #1876"),
+            pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -180,7 +180,7 @@ def test_enumerate_on_1d_array_with_start(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="C does not support list indexing yet, related issue #1876"),
+            pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
