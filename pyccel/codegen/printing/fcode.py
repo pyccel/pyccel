@@ -74,6 +74,8 @@ from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.ast.variable import Variable, IndexedElement, DottedName
 
+from pyccel.parser.scope import Scope
+
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -511,11 +513,11 @@ class FCodePrinter(CodePrinter):
             module = self._generated_gFTL_extensions[expr_type]
         else:
             if isinstance(expr_type, HomogeneousListType):
-                include = Import('gFTL/vector/template.inc', Module('_', (), ()))
+                include = Import(LiteralString('gFTL/vector/template.inc'), Module('_', (), ()))
             elif isinstance(expr_type, HomogeneousSetType):
-                include = Import('gFTL/set/template.inc', Module('_', (), ()))
+                include = Import(LiteralString('gFTL/set/template.inc'), Module('_', (), ()))
             elif isinstance(expr_type, DictType):
-                include = Import('gFTL/map/template.inc', Module('_', (), ()))
+                include = Import(LiteralString('gFTL/map/template.inc'), Module('_', (), ()))
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
 
@@ -525,7 +527,7 @@ class FCodePrinter(CodePrinter):
 
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
-            module = Module(mod_name, (), (), imports = [include, *macros])
+            module = Module(mod_name, (), (), scope = Scope(), imports = [include, *macros])
 
             self._generated_gFTL_extensions[expr_type] = module
 
@@ -653,12 +655,17 @@ class FCodePrinter(CodePrinter):
         source = expr.source
         if isinstance(source, DottedName):
             source = source.name[-1]
+        elif isinstance(source, LiteralString):
+            source = source.python_value
         else:
             source = self._print(source)
 
         # importing of pyccel extensions is not printed
         if source in pyccel_builtin_import_registry:
             return ''
+
+        if source.endswith('.inc'):
+            return f'#include <{source}>\n'
 
         if expr.source_module:
             source = expr.source_module.name
@@ -3315,7 +3322,7 @@ class FCodePrinter(CodePrinter):
         tabwidth = self._default_settings['tabwidth']
         new_code = []
         for i, line in enumerate(code):
-            if line in('','\n'):
+            if line in ('','\n') or line.startswith('#'):
                 new_code.append(line)
                 continue
             level -= decrease[i]
@@ -3337,3 +3344,9 @@ class FCodePrinter(CodePrinter):
                  *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes]]
         sep = f'\n{self._print(SeparatorComment(40))}\n'
         return '', sep.join(self._print(f) for f in funcs)
+
+    def _print_MacroDefinition(self, expr):
+        name = expr.macro_name
+        obj = self._print(expr.object)
+        suffix = expr.suffix
+        return f'#define {name} {obj}{suffix}\n'
