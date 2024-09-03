@@ -10,7 +10,7 @@ from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetClear, SetCopy, S
 from pyccel.ast.builtin_methods.list_methods import (ListAppend, ListInsert, ListPop,
                                                      ListClear, ListExtend, ListRemove,
                                                      ListCopy, ListSort)
-from pyccel.ast.builtin_methods.dict_methods  import DictPop
+from pyccel.ast.builtin_methods.dict_methods  import DictPop, DictPopitem
 
 from .builtins   import PythonImag, PythonReal, PythonConjugate
 from .core       import ClassDef, PyccelFunctionDef
@@ -171,6 +171,7 @@ SetClass = ClassDef('set',
 DictClass = ClassDef('dict',
         methods=[
             PyccelFunctionDef('pop', func_class = DictPop),
+            PyccelFunctionDef('popitem', func_class = DictPopitem),
         ])
 
 #=======================================================================================

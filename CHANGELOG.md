@@ -27,10 +27,12 @@ All notable changes to this project will be documented in this file.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
 -   #1886 : Add Python support for dict method `pop()`.
+-   #1887 : Add Python support for dict method `popitem()`.
 -   #1944 : Add the appropriate C language equivalent for declaring a Python `dict` container using the STC library.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
+-   #1583 : Allow inhomogeneous tuples in classes.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
@@ -65,6 +67,7 @@ All notable changes to this project will be documented in this file.
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
 -   #1964 : Improve the error message when the wrong type is passed as a NumPy array argument.
+-   #1941 : Rename "target" in `AsName` to `local_alias` to better illustrate its use in the local context.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -87,6 +90,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
 -   \[INTERNALS\] Handle STC imports with Pyccel objects.
 -   \[INTERNALS\] Stop using ndarrays as an intermediate step to return arrays from Fortran code.
+-   \[INTERNALS\] Unify the strategy for handling additional imports in the printing stage for different languages.
 
 ### Deprecated
 
