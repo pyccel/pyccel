@@ -251,7 +251,6 @@ class FCodePrinter(CodePrinter):
         self._current_class    = None
 
         self._additional_code = None
-        self._additional_imports = set()
 
         self.prefix_module = prefix_module
 
@@ -267,10 +266,6 @@ class FCodePrinter(CodePrinter):
             macro += " , ".join(rename)
             macros.append(macro)
         return "\n".join(macros)
-
-    def get_additional_imports(self):
-        """return the additional modules collected for importing in printing stage"""
-        return [i.source for i in self._additional_imports]
 
     def set_current_class(self, name):
 
@@ -438,13 +433,14 @@ class FCodePrinter(CodePrinter):
         func.reinstate_presence_checks()
         func.swap_out_args()
 
-        self._additional_imports.update(func.imports)
+        for i in func.imports:
+            self.add_import(i)
         if func.global_vars or func.global_funcs:
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
             current_mod = expr.get_user_nodes(Module, excluded_nodes=(FunctionCall,))[0]
             if current_mod is not mod:
-                self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
-                          for v in (*func.global_vars, *func.global_funcs)]))
+                self.add_import(Import(mod.name, [AsName(v, v.name) \
+                              for v in (*func.global_vars, *func.global_funcs)]))
                 for v in (*func.global_vars, *func.global_funcs):
                     self.scope.insert_symbol(v.name)
 
@@ -560,7 +556,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
-        imports += ''.join(self._print(i) for i in self._additional_imports)
+        imports += ''.join(self._print(i) for i in self._additional_imports.values())
         imports += "\n" + self.print_constant_imports()
         parts = ['module {}\n'.format(name),
                  imports,
@@ -604,7 +600,7 @@ class FCodePrinter(CodePrinter):
 
             decs += '\ninteger :: ierr = -1' +\
                     '\ninteger, allocatable :: status (:)'
-        imports += ''.join(self._print(i) for i in self._additional_imports)
+        imports += ''.join(self._print(i) for i in self._additional_imports.values())
         imports += "\n" + self.print_constant_imports()
         parts = ['program {}\n'.format(name),
                  imports,
@@ -1379,7 +1375,7 @@ class FCodePrinter(CodePrinter):
             arg_code = self._print(array_arg)
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
-            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             return f'amax({array_arg})'
         else:
             return f'maxval({arg_code})'
@@ -1392,7 +1388,7 @@ class FCodePrinter(CodePrinter):
             arg_code = self._print(array_arg)
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
-            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             return f'amin({array_arg})'
         else:
             return f'minval({arg_code})'
@@ -2774,7 +2770,7 @@ class FCodePrinter(CodePrinter):
         arg_code = self._print(arg)
         if isinstance(expr.dtype.primitive_type, PrimitiveComplexType):
             func = PyccelFunctionDef('numpy_sign', NumpySign)
-            self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
+            self.add_import(Import('numpy_f90', AsName(func, 'numpy_sign')))
             return f'numpy_sign({arg_code})'
         else:
             cast_func = DtypePrecisionToCastFunction[expr.dtype]
@@ -2822,7 +2818,7 @@ class FCodePrinter(CodePrinter):
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         if func_name.startswith("pyc"):
-            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
         args = []
         for arg in expr.args:
             if arg.dtype != expr.dtype:
