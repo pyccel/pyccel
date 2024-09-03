@@ -20,6 +20,7 @@ from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
 from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
+from pyccel.codegen.utilities      import generate_extension_modules
 from pyccel.codegen.utilities      import internal_libs
 from pyccel.codegen.utilities      import external_libs
 from pyccel.codegen.python_wrapper import create_shared_library
@@ -28,6 +29,7 @@ from pyccel.utilities.stage        import PyccelStage
 from pyccel.ast.utilities          import python_builtin_libs
 from pyccel.parser.scope           import Scope
 
+from .codegen             import printer_registry
 from .compiling.basic     import CompileObj
 from .compiling.compilers import Compiler, get_condaless_search_path
 
@@ -338,10 +340,13 @@ def execute_pyccel(fname, *,
 
     # Iterate over the external_libs list and determine if the printer
     # requires an external lib to be included.
-    for key in codegen.get_printer_imports():
-        lib_name = key.split("/", 1)[0]
-        if lib_name in external_libs:
-            lib_dest_path = copy_internal_library(lib_name, pyccel_dirpath)
+    for key, import_node in codegen.get_printer_imports().items():
+        deps = generate_extension_modules(lib_name, key, import_node, pyccel_dirpath, language)
+        for d in deps:
+            recompile_object(d,
+                              compiler = src_compiler,
+                              verbose  = verbose)
+            mod_obj.add_dependencies(d)
 
     if convert_only:
         # Change working directory back to starting point

@@ -13,7 +13,9 @@ import shutil
 from filelock import FileLock
 import pyccel.stdlib as stdlib_folder
 import pyccel.extensions as ext_folder
+from pyccel.errors.errors import PyccelError
 
+from .codegen              import printer_registry
 from .compiling.basic      import CompileObj
 from .compiling.file_locks import FileLockSet
 
@@ -176,6 +178,41 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
                         with open(extra_file, 'w', encoding="utf-8") as f:
                             f.writelines(contents)
     return lib_dest_path
+
+#==============================================================================
+def generate_extension_modules(lib_name, import_key, import_node, pyccel_dirpath, language):
+    new_dependencies = []
+    lib_name = import_key.split("/", 1)[0]
+    if lib_name == 'gFTL_extensions':
+        lib_name = 'gFTL'
+        mod = import_node.source_module
+        printer = printer_registry[language]
+        filename = os.path.join(pyccel_dirpath, import_key)+'.F90'
+        folder = os.path.dirname(filename)
+        try:
+            code = printer(filename).doprint(mod)
+        except NotImplementedError as error:
+            msg = str(error)
+            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+                severity='error',
+                traceback=error.__traceback__)
+            handle_error('code generation (wrapping)')
+            raise PyccelCodegenError(msg) from None
+        except PyccelError:
+            handle_error('code generation (wrapping)')
+            raise
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+        with open(filename, 'w', encoding="utf-8") as f:
+            f.write(code)
+
+        new_dependencies.append(CompileObj(os.path.basename(filename), folder=folder,
+                            includes=(os.path.join(pyccel_dirpath, 'gFTL'),)))
+
+    if lib_name in external_libs:
+        lib_dest_path = copy_internal_library(lib_name, pyccel_dirpath)
+
+    return new_dependencies
 
 #==============================================================================
 def recompile_object(compile_obj,

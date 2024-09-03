@@ -513,11 +513,11 @@ class FCodePrinter(CodePrinter):
             module = self._generated_gFTL_extensions[expr_type]
         else:
             if isinstance(expr_type, HomogeneousListType):
-                include = Import(LiteralString('gFTL/vector/template.inc'), Module('_', (), ()))
+                include = Import(LiteralString('vector/template.inc'), Module('_', (), ()))
             elif isinstance(expr_type, HomogeneousSetType):
-                include = Import(LiteralString('gFTL/set/template.inc'), Module('_', (), ()))
+                include = Import(LiteralString('set/template.inc'), Module('_', (), ()))
             elif isinstance(expr_type, DictType):
-                include = Import(LiteralString('gFTL/map/template.inc'), Module('_', (), ()))
+                include = Import(LiteralString('map/template.inc'), Module('_', (), ()))
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
 
@@ -527,7 +527,7 @@ class FCodePrinter(CodePrinter):
 
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
-            module = Module(mod_name, (), (), scope = Scope(), imports = [include, *macros])
+            module = Module(mod_name, (), (), scope = Scope(), imports = [*macros, include])
 
             self._generated_gFTL_extensions[expr_type] = module
 
