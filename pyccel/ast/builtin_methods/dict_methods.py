@@ -10,12 +10,13 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
+from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.internals import PyccelFunction
 
-__all__ = ('DictMethod',
+__all__ = ('DictGet',
+           'DictMethod',
            'DictPop',
            'DictPopitem',
-           'DictGet'
            )
 
 #==============================================================================
@@ -115,15 +116,15 @@ class DictPopitem(DictMethod):
         The object from which the method is called.
     """
     __slots__ = ('_class_type',)
-    _shape = None
+    _shape = (2,)
     name = 'popitem'
 
     def __init__(self, dict_obj):
         dict_type = dict_obj.class_type
-        self._class_type = dict_type.value_type
+        self._class_type = InhomogeneousTupleType(dict_type.key_type, dict_type.value_type)
         super().__init__(dict_obj)
 
-
+#==============================================================================
 class DictGet(DictMethod):
     """
     Represents a call to the .get() method.
@@ -176,4 +177,3 @@ class DictGet(DictMethod):
         return self._args[1]
    
 
-#==============================================================================

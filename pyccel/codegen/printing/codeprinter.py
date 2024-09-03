@@ -29,6 +29,7 @@ class CodePrinter:
     language = None
     def __init__(self):
         self._scope = None
+        self._additional_imports = {}
 
     def doprint(self, expr):
         """
@@ -53,6 +54,38 @@ class CodePrinter:
 
         # Format the output
         return ''.join(self._format_code(lines))
+
+    def get_additional_imports(self):
+        """
+        Get any additional imports collected during the printing stage.
+
+        Get any additional imports collected during the printing stage.
+        This is necessary to correctly compile the files.
+
+        Returns
+        -------
+        iterable[str]
+            An iterable of the include strings.
+        """
+        return self._additional_imports.keys()
+
+    def add_import(self, import_obj):
+        """
+        Add a new import to the current context.
+
+        Add a new import to the current context. This allows the import to be recognised
+        at the compiling/linking stage. If the source of the import is not new then any
+        new targets are added to the Import object.
+
+        Parameters
+        ----------
+        import_obj : Import
+            The AST node describing the import.
+        """
+        if import_obj.source not in self._additional_imports:
+            self._additional_imports[import_obj.source] = import_obj
+        elif import_obj.target:
+            self._additional_imports[import_obj.source].define_target(import_obj.target)
 
     @property
     def scope(self):

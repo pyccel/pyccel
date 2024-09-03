@@ -170,9 +170,9 @@ SetClass = ClassDef('set',
 
 DictClass = ClassDef('dict',
         methods=[
+            PyccelFunctionDef('get', func_class = DictGet),
             PyccelFunctionDef('pop', func_class = DictPop),
             PyccelFunctionDef('popitem', func_class = DictPopitem),
-            PyccelFunctionDef('get', func_class = DictGet),
         ])
 
 #=======================================================================================
