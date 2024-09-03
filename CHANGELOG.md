@@ -86,6 +86,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
 -   \[INTERNALS\] Handle STC imports with Pyccel objects.
 -   \[INTERNALS\] Stop using ndarrays as an intermediate step to return arrays from Fortran code.
+-   \[INTERNALS\] Unify the strategy for handling additional imports in the printing stage for different languages.
 
 
 ### Deprecated

@@ -105,6 +105,7 @@ jobs:
           name: coverage-artifact-${{ matrix.python_version }}
           path: .coverage
           retention-days: 3
+          include-hidden-files: true
       - name: "Post completed"
         if: always() && github.event_name != 'push'
         run:

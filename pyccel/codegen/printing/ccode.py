@@ -314,28 +314,6 @@ class CCodePrinter(CodePrinter):
         self._current_module = None
         self._in_header = False
 
-    def get_additional_imports(self):
-        """return the additional imports collected in printing stage"""
-        return self._additional_imports.keys()
-
-    def add_import(self, import_obj):
-        """
-        Add a new import to the current context.
-
-        Add a new import to the current context. This allows the import to be recognised
-        at the compiling/linking stage. If the source of the import is not new then any
-        new targets are added to the Import object.
-
-        Parameters
-        ----------
-        import_obj : Import
-            The AST node describing the import.
-        """
-        if import_obj.source not in self._additional_imports:
-            self._additional_imports[import_obj.source] = import_obj
-        elif import_obj.target:
-            self._additional_imports[import_obj.source].define_target(import_obj.target)
-
     def _format_code(self, lines):
         return self.indent_code(lines)
 
