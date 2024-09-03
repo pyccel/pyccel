@@ -10,10 +10,12 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
+from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.internals import PyccelFunction
 
 __all__ = ('DictMethod',
            'DictPop',
+           'DictPopitem',
            )
 
 #==============================================================================
@@ -99,3 +101,24 @@ class DictPop(DictMethod):
         The value that should be returned if the key is not present in the dictionary.
         """
         return self._args[1]
+
+
+class DictPopitem(DictMethod):
+    """
+    Represents a call to the .popitem() method.
+
+    The popitem() method removes the last inserted key-value pair from the dict.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+    """
+    __slots__ = ('_class_type',)
+    _shape = (2,)
+    name = 'popitem'
+
+    def __init__(self, dict_obj):
+        dict_type = dict_obj.class_type
+        self._class_type = InhomogeneousTupleType(dict_type.key_type, dict_type.value_type)
+        super().__init__(dict_obj)
