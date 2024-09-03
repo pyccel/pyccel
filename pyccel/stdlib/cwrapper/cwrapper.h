@@ -225,5 +225,9 @@ static inline bool    PyIs_Complex64(PyObject *o)
     return PyArray_IsScalar(o, Complex64);
 }
 
+/*
+ * Functions : Numpy array handling functions
+ */
+void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int64_t strides[]);
 
 #endif
