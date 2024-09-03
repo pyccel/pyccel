@@ -23,9 +23,8 @@ from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName
 
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
-from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
-from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
+from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
+from pyccel.ast.c_concepts import CStackArray
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
@@ -49,6 +48,10 @@ from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type,
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
+from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
+
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
 from pyccel.ast.utilities import expand_to_loops, is_literal_integer
@@ -57,9 +60,6 @@ from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
-
-from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
-from pyccel.ast.c_concepts import CStackArray
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -314,28 +314,6 @@ class CCodePrinter(CodePrinter):
         self._temporary_args = []
         self._current_module = None
         self._in_header = False
-
-    def get_additional_imports(self):
-        """return the additional imports collected in printing stage"""
-        return self._additional_imports.keys()
-
-    def add_import(self, import_obj):
-        """
-        Add a new import to the current context.
-
-        Add a new import to the current context. This allows the import to be recognised
-        at the compiling/linking stage. If the source of the import is not new then any
-        new targets are added to the Import object.
-
-        Parameters
-        ----------
-        import_obj : Import
-            The AST node describing the import.
-        """
-        if import_obj.source not in self._additional_imports:
-            self._additional_imports[import_obj.source] = import_obj
-        elif import_obj.target:
-            self._additional_imports[import_obj.source].define_target(import_obj.target)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -1021,7 +999,7 @@ class CCodePrinter(CodePrinter):
             code = ''
             for t in expr.target:
                 dtype = t.object.class_type
-                container_type = t.target
+                container_type = t.local_alias
                 if isinstance(dtype, DictType):
                     container_key_key = self.get_c_type(dtype.key_type)
                     container_val_key = self.get_c_type(dtype.value_type)
@@ -1404,7 +1382,7 @@ class CCodePrinter(CodePrinter):
                 declaration_type += '*'
                 init = ''
         elif var.is_stack_array:
-            preface, init = self._init_stack_array(var,)
+            preface, init = self._init_stack_array(var)
         elif declaration_type == 't_ndarray' and not self._in_header:
             assert init == ''
             preface = ''
