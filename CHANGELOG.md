@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 -   #1927 : Improve error Message for missing target language compiler in Pyccel
 -   #1933 : Improve code printing speed.
 -   #1924 : Fix internal error arising in Duplicate or list comprehensions.
+-   #1970 : Fix missing `TypeError` for wrong type passed as optional argument.
 
 ## \[1.12.0\] - 2024-05-08
 
