@@ -36,6 +36,7 @@ from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
 from pyccel.ast.datatypes import PythonNativeInt, HomogeneousTupleType, HomogeneousListType
+from pyccel.ast.datatypes import HomogeneousSetType, DictType
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type
 
@@ -46,6 +47,8 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal, LiteralEllipsis
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
 from pyccel.ast.literals  import Nil
+
+from pyccel.ast.low_level_macros  import MacroDefinition
 
 from pyccel.ast.mathext  import math_constants
 
@@ -257,6 +260,8 @@ class FCodePrinter(CodePrinter):
         self._additional_code = None
 
         self.prefix_module = prefix_module
+
+        self._generated_gFTL_extensions = {}
 
     def print_constant_imports(self):
         """Prints the use line for the constant imports used"""
@@ -501,6 +506,31 @@ class FCodePrinter(CodePrinter):
                         scope.rename_function(f, suggested_name)
                     f.cls_name = scope.get_new_name(f'{name}_{f.name}')
 
+    def _build_gFTL_module(self, expr_type):
+        if expr_type in self._generated_gFTL_extensions:
+            module = self._generated_gFTL_extensions[expr_type]
+        else:
+            if isinstance(expr_type, HomogeneousListType):
+                include = Import('gFTL/vector/template.inc', Module('_', (), ()))
+            elif isinstance(expr_type, HomogeneousSetType):
+                include = Import('gFTL/set/template.inc', Module('_', (), ()))
+            elif isinstance(expr_type, DictType):
+                include = Import('gFTL/map/template.inc', Module('_', (), ()))
+            else:
+                raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
+
+            macros = [MacroDefinition('T', expr_type.element_type),
+                      MacroDefinition('Vector', expr_type),
+                      MacroDefinition('VectorIterator', expr_type, '_Iterator')]
+
+            typename = self._print(expr_type)
+            mod_name = f'{typename}_mod'
+            module = Module(mod_name, (), (), imports = [include, *macros])
+
+            self._generated_gFTL_extensions[expr_type] = module
+
+        return Import(f'gFTL_extensions/{mod_name}', module)
+
     # ============ Elements ============ #
     def _print_PyccelSymbol(self, expr):
         return expr
@@ -623,8 +653,6 @@ class FCodePrinter(CodePrinter):
         source = expr.source
         if isinstance(source, DottedName):
             source = source.name[-1]
-        elif isinstance(source, AsName):
-            source = source.local_alias
         else:
             source = self._print(source)
 
@@ -638,19 +666,19 @@ class FCodePrinter(CodePrinter):
         if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return 'use mpi\n' + 'use mpiext\n'
 
-        if source.startswith('gFTL/'):
-            return f'use {expr.source.name}'
+        if source.startswith('gFTL_extensions/'):
+            return f'use {expr.source.name}\n'
 
         targets = [t for t in expr.target if not isinstance(t.object, Module)]
 
         if len(targets) == 0:
-            return 'use {}\n'.format(source)
+            return f'use {source}\n'
 
         targets = [t for t in targets if not getattr(t.object, 'is_inline', False)]
         if len(targets) == 0:
             return ''
 
-        prefix = 'use {}, only:'.format(source)
+        prefix = f'use {source}, only:'
 
         code = ''
         for i in targets:
@@ -1539,11 +1567,9 @@ class FCodePrinter(CodePrinter):
                     raise NotImplementedError("Fortran rank string undetermined")
                 rankstr = f'({rankstr})'
 
-        elif isinstance(expr_type, HomogeneousListType):
+        elif isinstance(expr_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            self.add_import(self._build_gFTL_module(expr_type))
             typename = self._print(expr_type)
-            mod_name = f'{typename}_mod'
-            self.add_import(Import(AsName(Module(mod_name, (), ()), f'gFTL/{mod_name}.F90'),
-                                                [AsName(VariableTypeAnnotation(expr_type), typename)]))
             dtype_str = f'type({typename})'
         elif isinstance(dtype, StringType):
             dtype_str = self._print(dtype)

@@ -1089,7 +1089,8 @@ class Module(ScopedAstNode):
             self._internal_dictionary.update({f.name:f for f in funcs})
             self._internal_dictionary.update({i.name:i for i in interfaces})
             self._internal_dictionary.update({c.name:c for c in classes})
-            import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
+            import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] \
+                                for i in imports if isinstance(i, Import)}
             self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
             if init_func:
