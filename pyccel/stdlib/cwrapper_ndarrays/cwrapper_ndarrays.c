@@ -334,6 +334,7 @@ PyObject* ndarray_to_pyarray(t_ndarray o)
  * Check Python Object (DataType, Rank, Order):
  *
  * 	Parameters	:
+ * 	    name  : the name of the argument (used for error output)
  *		a 	  : python array object
  *      dtype : desired data type enum
  *		rank  : desired rank
@@ -341,7 +342,7 @@ PyObject* ndarray_to_pyarray(t_ndarray o)
  * 	Returns		:
  *		return true if no error occurred otherwise it will return false
  */
-bool	pyarray_check(PyObject *o, int dtype, int rank, int flag)
+bool	pyarray_check(char* name, PyObject *o, int dtype, int rank, int flag)
 {
     char* array_type = _check_pyarray_type(o);
 	if (array_type != NULL) {
@@ -352,37 +353,42 @@ bool	pyarray_check(PyObject *o, int dtype, int rank, int flag)
 
     PyArrayObject* a = (PyArrayObject*)o;
 
-    char error[600];
-    error[0] = '\0';
+    bool correct_type = true;
+    char error[800];
+    sprintf(error, "Wrong argument type for argument %s : ", name);
 
 	// check array element type / rank / order
     char* array_dtype = _check_pyarray_dtype(a, dtype);
     if (array_dtype != NULL) {
         strcat(error, array_dtype);
         free(array_dtype);
+        correct_type = false;
     }
 
     char* array_rank = _check_pyarray_rank(a, rank);
     if (array_rank != NULL) {
+        if (!correct_type)
+            strcat(error, ", ");
         strcat(error, array_rank);
         free(array_rank);
+        correct_type = false;
     }
 
     if (rank > 1) {
         char* array_order = _check_pyarray_order(a, flag);
         if (array_order != NULL) {
+            if (!correct_type)
+                strcat(error, ", ");
             strcat(error, array_order);
             free(array_order);
+            correct_type = false;
         }
     }
 
-    if (error[0] != '\0') {
-		PyErr_Format(PyExc_TypeError, error);
-        return false;
+    if (!correct_type) {
+		PyErr_SetString(PyExc_TypeError, error);
     }
-    else {
-        return true;
-    }
+    return correct_type;
 }
 
 bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag)

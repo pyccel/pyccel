@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
+-   #1583 : Allow inhomogeneous tuples in classes.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
@@ -57,6 +58,7 @@ All notable changes to this project will be documented in this file.
 -   #1930 : Preserve ordering of import targets.
 -   #1951 : Fix return type for class whose argument cannot be wrapped.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
+-   #1924 : Fix internal error arising in Duplicate or list comprehensions.
 
 ### Changed
 
@@ -64,6 +66,7 @@ All notable changes to this project will be documented in this file.
 -   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
+-   #1964 : Improve the error message when the wrong type is passed as a NumPy array argument.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -85,6 +88,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
 -   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
 -   \[INTERNALS\] Handle STC imports with Pyccel objects.
+-   \[INTERNALS\] Stop using ndarrays as an intermediate step to return arrays from Fortran code.
 
 ### Deprecated
 
