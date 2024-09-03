@@ -1368,15 +1368,15 @@ class CCodePrinter(CodePrinter):
         rank = expr.rank
 
         if rank > 0:
+            if isinstance(expr.class_type, CStackArray):
+                return self.get_c_type(expr.class_type.element_type)
             if isinstance(expr.class_type, HomogeneousContainerType):
                 dtype = self.get_c_type(expr.class_type)
                 return dtype
-            if isinstance(expr.class_type, CStackArray):
-                return self.get_c_type(expr.class_type.element_type)
             if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
-                self.add_import(c_imports['ndarrays'])
+                #self.add_import(c_imports['ndarrays'])
                 dtype = 't_ndarray'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
@@ -1438,8 +1438,6 @@ class CCodePrinter(CodePrinter):
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
-
-        init = ''
 
         if isinstance(var.class_type, NumpyNDArrayType):
             #order = 'c_COLMAJOR' if var.order == 'F' else 'c_ROWMAJOR'

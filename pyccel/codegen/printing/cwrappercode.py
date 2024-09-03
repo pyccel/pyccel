@@ -158,8 +158,6 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if expr.dtype is BindCPointer():
             return 'void*'
-        elif isinstance(expr.class_type, CStackArray):
-            return self.get_c_type(expr.class_type.element_type) + '*'
         return CCodePrinter.get_declare_type(self, expr)
 
     def _handle_is_operator(self, Op, expr):
