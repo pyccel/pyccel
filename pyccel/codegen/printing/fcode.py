@@ -623,6 +623,8 @@ class FCodePrinter(CodePrinter):
         source = expr.source
         if isinstance(source, DottedName):
             source = source.name[-1]
+        elif isinstance(source, AsName):
+            source = source.local_alias
         else:
             source = self._print(source)
 
