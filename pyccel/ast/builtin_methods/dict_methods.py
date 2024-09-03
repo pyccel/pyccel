@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
-The dict container has a number of built-in methods that are 
+The dict container has a number of built-in methods that are
 always available.
 
 This module contains objects which describe these methods within Pyccel's AST.
@@ -13,7 +13,8 @@ This module contains objects which describe these methods within Pyccel's AST.
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.internals import PyccelFunction
 
-__all__ = ('DictMethod',
+__all__ = ('DictGet',
+           'DictMethod',
            'DictPop',
            'DictPopitem',
            )
@@ -30,7 +31,7 @@ class DictMethod(PyccelFunction):
     ----------
     dict_obj : TypedAstNode
         The object which the method is called from.
-    
+
     *args : TypedAstNode
         The arguments passed to dict methods.
     """
@@ -122,3 +123,57 @@ class DictPopitem(DictMethod):
         dict_type = dict_obj.class_type
         self._class_type = InhomogeneousTupleType(dict_type.key_type, dict_type.value_type)
         super().__init__(dict_obj)
+
+#==============================================================================
+class DictGet(DictMethod):
+    """
+    Represents a call to the .get() method.
+
+    The get() method returns the value for the specified key. If the key is not
+    found, it returns the default value.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+
+    k : TypedAstNode
+        The key which is used to select the value from the dictionary.
+
+    d : TypedAstNode, optional
+        The value that should be returned if the key is not present in the
+        dictionary.
+    """
+    __slots__ = ('_class_type',)
+    _shape = None
+    name = 'get'
+
+    def __init__(self, dict_obj, k, d = None):
+        dict_type = dict_obj.class_type
+        self._class_type = dict_type.value_type
+        if k.class_type != dict_type.key_type:
+            raise TypeError(f"Key passed to get method has type {k.class_type}. Expected {dict_type.key_type}")
+        if d and d.class_type != dict_type.value_type:
+            raise TypeError(f"Default value passed to get method has type {d.class_type}. Expected {dict_type.value_type}")
+
+        super().__init__(dict_obj, k, d)
+
+    @property
+    def key(self):
+        """
+        The key that is used to select the element from the dict.
+
+        The key that is used to select the element from the dict.
+        """
+        return self._args[0]
+
+    @property
+    def default_value(self):
+        """
+        The value that should be returned if the key is not present in the dictionary.
+
+        The value that should be returned if the key is not present in the dictionary.
+        """
+        return self._args[1]
+
+
