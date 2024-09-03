@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
-The dict container has a number of built-in methods that are 
+The dict container has a number of built-in methods that are
 always available.
 
 This module contains objects which describe these methods within Pyccel's AST.
@@ -31,7 +31,7 @@ class DictMethod(PyccelFunction):
     ----------
     dict_obj : TypedAstNode
         The object which the method is called from.
-    
+
     *args : TypedAstNode
         The arguments passed to dict methods.
     """
@@ -155,7 +155,7 @@ class DictGet(DictMethod):
             raise TypeError(f"Key passed to get method has type {k.class_type}. Expected {dict_type.key_type}")
         if d and d.class_type != dict_type.value_type:
             raise TypeError(f"Default value passed to get method has type {d.class_type}. Expected {dict_type.value_type}")
-        
+
         super().__init__(dict_obj, k, d)
 
     @property
@@ -175,5 +175,5 @@ class DictGet(DictMethod):
         The value that should be returned if the key is not present in the dictionary.
         """
         return self._args[1]
-   
+
 
