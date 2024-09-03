@@ -998,7 +998,7 @@ class CCodePrinter(CodePrinter):
             code = ''
             for t in expr.target:
                 dtype = t.object.class_type
-                container_type = t.target
+                container_type = t.local_alias
                 if isinstance(dtype, DictType):
                     container_key_key = self.get_c_type(dtype.key_type)
                     container_val_key = self.get_c_type(dtype.value_type)

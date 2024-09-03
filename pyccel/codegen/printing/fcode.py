@@ -505,10 +505,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
-        if isinstance(expr.name, AsName):
-            name = self._print(expr.name.target)
-        else:
-            name = self._print(expr.name)
+        name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_') and self.prefix_module:
             name = f'{self.prefix_module}_{name}'
@@ -621,10 +618,7 @@ class FCodePrinter(CodePrinter):
         if expr.ignore:
             return ''
 
-        if isinstance(expr.source, AsName):
-            source = expr.source.target
-        else:
-            source = expr.source
+        source = expr.source
         if isinstance(source, DottedName):
             source = source.name[-1]
         else:
@@ -654,7 +648,7 @@ class FCodePrinter(CodePrinter):
         code = ''
         for i in targets:
             old_name = i.name
-            new_name = i.target
+            new_name = i.local_alias
             if old_name != new_name:
                 target = '{target} => {name}'.format(target=new_name,
                                                      name=old_name)
