@@ -87,7 +87,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `insert` | Python-only |
 | `max` | No |
 | `min` | No |
-| `pop` | Python-only |
+| `pop` | Python and C only |
 | `remove` | Python-only |
 | `reverse` | No |
 | `sort` | Python-only |
