@@ -1020,7 +1020,7 @@ class CToPythonWrapper(Wrapper):
         Get AST nodes describing the extraction of the data pointer, shape, and strides from a Python array object.
 
         Get AST nodes describing the extraction of the data pointer, shape, and strides from a Python array object.
-        These noes as well as the new objects can then be packed into a structure or passed directly to a function
+        These nodes as well as the new objects can then be packed into a structure or passed directly to a function
         depending on the target language.
 
         Parameters
