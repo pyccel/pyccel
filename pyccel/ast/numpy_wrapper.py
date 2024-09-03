@@ -121,6 +121,21 @@ is_numpy_array = FunctionDef(
                 body      = [],
                 results   = [FunctionDefResult(Variable(PythonNativeBool(), 'b'))])
 
+get_strides_and_shape_from_numpy_array = FunctionDef(
+        name = 'get_strides_and_shape_from_numpy_array',
+        arguments = [
+            FunctionDefArgument(Variable(PyccelPyObject(), 'arr', memory_handling='alias')),
+            FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'shape', memory_handling='alias')),
+            FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'strides', memory_handling='alias'))
+            ],
+        body = [],
+        results = [])
+
+PyArray_DATA = FunctionDef(name = 'PyArray_DATA',
+        body = [],
+        arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), 'arr', memory_handling='alias'))],
+        results = [FunctionDefResult(Variable(VoidType(), 'data', memory_handling='alias'))])
+
 # Return the shape of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_dim  = FunctionDef(name    = 'nd_ndim',
                            body      = [],

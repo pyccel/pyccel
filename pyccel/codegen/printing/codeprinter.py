@@ -56,7 +56,17 @@ class CodePrinter:
         return ''.join(self._format_code(lines))
 
     def get_additional_imports(self):
-        """return the additional imports collected in printing stage"""
+        """
+        Get any additional imports collected during the printing stage.
+
+        Get any additional imports collected during the printing stage.
+        This is necessary to correctly compile the files.
+
+        Returns
+        -------
+        iterable[str]
+            An iterable of the include strings.
+        """
         return self._additional_imports.keys()
 
     def add_import(self, import_obj):

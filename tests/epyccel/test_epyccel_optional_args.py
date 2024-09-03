@@ -29,6 +29,9 @@ def test_f1(language):
     assert f() == f1()
     assert f(None) == f1(None)
     assert f(0) == f1(0)
+    if language != 'python':
+        with pytest.raises(TypeError):
+            f(3.5)
     # ...
 #------------------------------------------------------------------------------
 def test_f2(language):
@@ -44,6 +47,9 @@ def test_f2(language):
     assert np.isclose(f(), f2(), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(None), f2(None), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(0.0), f2(0.0), rtol=RTOL, atol=ATOL)
+    if language != 'python':
+        with pytest.raises(TypeError):
+            f(3)
     # ...
 #------------------------------------------------------------------------------
 def test_f3(language):
@@ -58,6 +64,9 @@ def test_f3(language):
     assert np.isclose(f(complex(1, 2.2)), f3(complex(1, 2.2)), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(), f3(), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(None), f3(None), rtol=RTOL, atol=ATOL)
+    if language != 'python':
+        with pytest.raises(TypeError):
+            f(3.5)
     # ...
 #------------------------------------------------------------------------------
 def test_f4(language):
@@ -73,6 +82,9 @@ def test_f4(language):
     assert f() == f4()
     assert f(None) == f4(None)
     assert f(False) == f4(False)
+    if language != 'python':
+        with pytest.raises(TypeError):
+            f(3.5)
     # ...
 #------------------------------------------------------------------------------
 def test_f5(language):
@@ -151,6 +163,10 @@ def test_optional_args_1d(language):
     # ...
     assert np.array_equal(x1, x2)
 
+    if language != 'python':
+        with pytest.raises(TypeError):
+            f(x1, 3)
+
 #------------------------------------------------------------------------------
 def test_optional_2d_F(language):
     def f13(x : 'int32[:,:](order=F)', y  : 'int32[:,:](order=F)' =  None):
@@ -167,6 +183,11 @@ def test_optional_2d_F(language):
 
     # ...
     assert np.array_equal(x1, x2)
+
+    if language != 'python':
+        with pytest.raises(TypeError):
+            f(x1, 3.5)
+
 #------------------------------------------------------------------------------
 
 def test_f14(language):
