@@ -833,7 +833,6 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
             self._additional_exprs[-1].append(self._visit(assign))
             var = self._visit(tmp_var)
-            print(var)
 
         else:
             errors.report(f"Can't index {type(var)}", symbol=expr,
