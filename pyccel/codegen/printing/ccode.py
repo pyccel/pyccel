@@ -26,9 +26,8 @@ from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName
 
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
-from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
-from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
+from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
+from pyccel.ast.c_concepts import CStackArray
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
@@ -52,6 +51,10 @@ from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type,
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
+from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
+
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
 from pyccel.ast.utilities import expand_to_loops
@@ -60,9 +63,6 @@ from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
-
-from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
-from pyccel.ast.c_concepts import CStackArray
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -1381,7 +1381,7 @@ class CCodePrinter(CodePrinter):
                 declaration_type += '*'
                 init = ''
         elif var.is_stack_array:
-            preface, init = self._init_stack_array(var,)
+            preface, init = self._init_stack_array(var)
         elif declaration_type == 't_ndarray' and not self._in_header:
             assert init == ''
             preface = ''

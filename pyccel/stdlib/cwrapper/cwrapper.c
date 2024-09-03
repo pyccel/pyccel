@@ -135,6 +135,37 @@ PyObject	*Float_to_NumpyDouble(float *d)
     return PyArray_Scalar(d, PyArray_DescrFromType(NPY_FLOAT), NULL);
 }
 
+
+/*
+ * Functions : Numpy array handling functions
+ */
+
+void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int64_t strides[])
+{
+    PyArrayObject* a = (PyArrayObject*)(arr);
+    int nd = PyArray_NDIM(a);
+
+    PyArrayObject* base = (PyArrayObject*)PyArray_BASE(a);
+
+    if (base == NULL) {
+        npy_intp* np_shape = PyArray_SHAPE(a);
+        for (int i = 0; i < nd; ++i) {
+            shape[i] = np_shape[i];
+            strides[i] = 1;
+        }
+    }
+    else {
+        npy_intp current_stride = PyArray_ITEMSIZE(a);
+        npy_intp* np_strides = PyArray_STRIDES(a);
+        npy_intp* np_shape = PyArray_SHAPE(a);
+        for (int i = 0; i < nd; ++i) {
+            shape[i] = np_shape[i];
+            strides[i] = np_strides[i] / current_stride;
+            current_stride *= shape[i];
+        }
+    }
+}
+
 void capsule_cleanup(PyObject *capsule) {
     void *memory = PyCapsule_GetPointer(capsule, NULL);
     free(memory);
