@@ -34,7 +34,9 @@ from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, 
 from pyccel.ast.datatypes     import FixedSizeNumericType, TupleType
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
-from pyccel.ast.numpytypes    import NumpyNDArrayType
+from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type
+from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array, PyccelPyArrayObject
+from pyccel.ast.numpy_wrapper import PyArray_DATA
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, to_pyarray
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
@@ -50,7 +52,8 @@ from .wrapper                 import Wrapper
 
 errors = Errors()
 
-cwrapper_ndarray_imports = [Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))]
+cwrapper_ndarray_imports = [Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ())),
+                            Import('ndarrays', Module('ndarrays', (), ()))]
 
 class CToPythonWrapper(Wrapper):
     """
@@ -815,7 +818,7 @@ class CToPythonWrapper(Wrapper):
 
         self_var = Variable(PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
                               memory_handling='alias')
-        self.scope.insert_variable(self_var)
+        self.scope.insert_variable(self_var, 'self')
         func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
         func_args = [FunctionDefArgument(a) for a in func_args]
 
@@ -887,7 +890,7 @@ class CToPythonWrapper(Wrapper):
 
         # Add the variables to the expected symbols in the scope
         for a in init_function.arguments:
-            func_scope.insert_symbol(a.var.name)
+            func_scope.insert_symbol(getattr(a, 'original_function_argument_variable', a.var).name)
         for a in getattr(init_function, 'bind_c_arguments', ()):
             func_scope.insert_symbol(a.original_function_argument_variable.name)
 
@@ -905,10 +908,11 @@ class CToPythonWrapper(Wrapper):
         python_result_variable = Variable(CNativeInt(), self.scope.get_new_name(), is_temp = True)
 
         # Get the code required to extract the C-compatible arguments from the Python arguments
-        body += [l for a in python_args for l in self._wrap(a)]
+        wrapped_args = [self._wrap(a) for a in python_args]
+        body += [l for a in wrapped_args for l in a['body']]
 
         # Get the arguments and results which should be used to call the c-compatible function
-        func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in original_c_args]
+        func_call_args = [ca for a in wrapped_args for ca in a['args']]
 
         body.extend(self._save_referenced_objects(init_function, func_args))
 
@@ -921,7 +925,7 @@ class CToPythonWrapper(Wrapper):
         # is an ndarray.
         for a in original_c_args:
             orig_var = getattr(a, 'original_function_argument_variable', a.var)
-            if orig_var.is_ndarray:
+            if not isinstance(a, BindCFunctionDefArgument) and orig_var.is_ndarray:
                 v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
                 if v.is_optional:
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
@@ -1010,6 +1014,49 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[del_function] = function
 
         return function
+
+    def _get_array_parts(self, expr):
+        """
+        Get AST nodes describing the extraction of the data pointer, shape, and strides from a Python array object.
+
+        Get AST nodes describing the extraction of the data pointer, shape, and strides from a Python array object.
+        These nodes as well as the new objects can then be packed into a structure or passed directly to a function
+        depending on the target language.
+
+        Parameters
+        ----------
+        expr : FunctionDefArgument
+            The argument of the function being wrapped.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list containing the AST nodes which extract the data pointer, shape, and strides.
+             - data : a Variable describing a pointer in which the data is stored.
+             - shape : a Variable describing a stack array in which the shape information is stored.
+             - strides : a Variable describing a stack array in which the strides are stored.
+        """
+        collect_arg = self._python_object_map[expr]
+        pyarray_collect_arg = PointerCast(collect_arg, Variable(PyccelPyArrayObject(), '_', memory_handling = 'alias'))
+        orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
+        data_var = Variable(VoidType(), self.scope.get_new_name(orig_var.name + '_data'),
+                            memory_handling='alias')
+        shape_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_shape'),
+                            shape = (orig_var.rank,))
+        stride_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_strides'),
+                            shape = (orig_var.rank,))
+        self.scope.insert_variable(data_var)
+        self.scope.insert_variable(shape_var)
+        self.scope.insert_variable(stride_var)
+
+        get_data = AliasAssign(data_var, FunctionCall(PyArray_DATA, [ObjectAddress(pyarray_collect_arg)]))
+        get_strides_and_shape = FunctionCall(get_strides_and_shape_from_numpy_array,
+                                        [ObjectAddress(collect_arg), shape_var, stride_var])
+
+        body = [get_data, get_strides_and_shape]
+
+        return {'body': body, 'data':data_var, 'shape':shape_var, 'strides':stride_var}
 
     def _call_wrapped_function(self, func, args, results):
         """
@@ -1294,7 +1341,7 @@ class CToPythonWrapper(Wrapper):
 
         # Add the variables to the expected symbols in the scope
         for a in expr.arguments:
-            func_scope.insert_symbol(a.var.name)
+            func_scope.insert_symbol(getattr(a, 'original_function_argument_variable', a.var).name)
         for a in getattr(expr, 'bind_c_arguments', ()):
             func_scope.insert_symbol(a.original_function_argument_variable.name)
         for r in expr.results:
@@ -1325,14 +1372,15 @@ class CToPythonWrapper(Wrapper):
                 body.extend(self._allocate_class_instance(p_r, p_r.cls_base.scope, c_r.var.is_alias))
 
         # Get the code required to extract the C-compatible arguments from the Python arguments
-        body += [l for a in python_args for l in self._wrap(a)]
+        wrapped_args = [self._wrap(a) for a in python_args]
+        body += [l for a in wrapped_args for l in a['body']]
 
         # Get the code required to wrap the C-compatible results into Python objects
         # This function creates variables so it must be called before extracting them from the scope.
         wrapped_results = [self._wrap(r) for r in python_results]
 
         # Get the arguments and results which should be used to call the c-compatible function
-        func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in original_c_args]
+        func_call_args = [ca for a in wrapped_args for ca in a['args']]
 
         # Get the names of the results collected from the C-compatible function
         body.extend(l for r in wrapped_results for l in r.get('setup',()))
@@ -1346,11 +1394,10 @@ class CToPythonWrapper(Wrapper):
 
         # Deallocate the C equivalent of any array arguments
         # The C equivalent is the same variable that is passed to the function unless the target language is Fortran.
-        # In this case the function arguments are the data pointer and the shapes and strides, but the C equivalent
-        # is an ndarray.
+        # In this case known-size stack arrays are used which are automatically deallocated when they go out of scope.
         for a in original_c_args:
             orig_var = getattr(a, 'original_function_argument_variable', a.var)
-            if orig_var.is_ndarray:
+            if not isinstance(a, BindCFunctionDefArgument) and orig_var.is_ndarray:
                 v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
                 if v.is_optional:
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
@@ -1429,8 +1476,11 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.PyccelAstNode
-            The code which translates the `PyccelPyObject` to a C-compatible variable.
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates the `PyccelPyObject`
+                        to a C-compatible variable.
+             - args : a list of Variables which should be passed to call the function being wrapped.
         """
 
         collect_arg = self._python_object_map[expr]
@@ -1451,9 +1501,9 @@ class CToPythonWrapper(Wrapper):
                 if isinstance(expr, BindCFunctionDefArgument):
                     kwargs['class_type'] = VoidType()
 
-            arg_var = orig_var.clone(self.scope.get_expected_name(expr.var.name), new_class = Variable,
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
                                     **kwargs)
-            self.scope.insert_variable(arg_var, expr.var.name)
+            self.scope.insert_variable(arg_var, orig_var.name)
 
         body = []
 
@@ -1514,7 +1564,7 @@ class CToPythonWrapper(Wrapper):
         else:
             body.extend(cast)
 
-        return body
+        return {'body': body, 'args': [self.scope.find(orig_var.name, category='variables', raise_if_missing = True)]}
 
     def _wrap_BindCFunctionDefArgument(self, expr):
         """
@@ -1534,40 +1584,39 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.PyccelAstNode
-            The code which translates the `PyccelPyObject` to a C-compatible variable.
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates the `PyccelPyObject`
+                        to a C-compatible variable.
+             - args : a list of Variables which should be passed to call the function being wrapped.
         """
-        body = self._wrap_FunctionDefArgument(expr)
-
         orig_var = expr.original_function_argument_variable
 
-        if orig_var.rank:
-            bound_var_name = expr.var.name
-            # Create variable to hold raw data pointer
-            arg_var = expr.var.clone(self.scope.get_expected_name(bound_var_name), is_argument = False)
-            # Create variables for the shapes and strides
-            shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
-            stride_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.strides]
+        if orig_var.rank == 0:
+            return self._wrap_FunctionDefArgument(expr)
+        elif isinstance(orig_var.class_type, NumpyNDArrayType):
+            self._wrapping_arrays = True
+            collect_arg = self._python_object_map[expr]
+            parts = self._get_array_parts(expr)
+            body = parts['body']
+            shape = parts['shape']
+            strides = parts['strides']
+            args = [parts['data']] + [IndexedElement(shape, i) for i in range(orig_var.rank)] \
+                    + [IndexedElement(strides, i) for i in range(orig_var.rank)]
+            check_func, err = self._get_check_function(collect_arg, orig_var, True)
 
-            # Add variables to scope
-            self.scope.insert_variable(arg_var, bound_var_name)
-            for v,s in zip(shape_vars, expr.shape):
-                self.scope.insert_variable(v,s.name)
-            for v,s in zip(stride_vars, expr.strides):
-                self.scope.insert_variable(v,s.name)
-
-            # Get the C-compatible variable created in self._wrap_FunctionDefArgument
-            c_arg = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
-
-            # Unpack the C-compatible variable
-            body.append(AliasAssign(arg_var, FunctionCall(array_get_data, [c_arg])))
-            body.extend(Assign(s, FunctionCall(array_get_dim, [c_arg, i])) for i,s in enumerate(shape_vars))
-            if orig_var.order == 'C':
-                body.extend(Assign(s, FunctionCall(array_get_c_step, [c_arg, i])) for i,s in enumerate(stride_vars))
-            else:
-                body.extend(Assign(s, FunctionCall(array_get_f_step, [c_arg, i])) for i,s in enumerate(stride_vars))
-
-        return body
+            if_sections = []
+            if orig_var.is_optional:
+                default_body = [AliasAssign(parts['data'], Nil())] + \
+                        [Assign(IndexedElement(shape, i), 0) for i in range(orig_var.rank)] + \
+                        [Assign(IndexedElement(strides, i), 1) for i in range(orig_var.rank)]
+                if_sections = [IfSection(PyccelIs(collect_arg, Py_None), default_body)]
+            if_sections += [IfSection(check_func, body),
+                        IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])])]
+            body = [If(*if_sections)]
+            return {'body': body, 'args': args}
+        else:
+            raise NotImplementedError(f"Wrapping is not yet handled for type {orig_var.class_type}")
 
     def _wrap_FunctionDefResult(self, expr):
         """
@@ -1842,7 +1891,7 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[get_val_result] = getter_result
 
         class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
-        self.scope.insert_variable(class_obj)
+        self.scope.insert_variable(class_obj, 'self')
 
         attrib = expr.clone(expr.name, lhs = class_obj)
         # Cast the C variable into a Python variable
@@ -1892,11 +1941,12 @@ class CToPythonWrapper(Wrapper):
 
         if isinstance(expr.class_type, FixedSizeNumericType) or expr.is_alias:
             class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
-            self.scope.insert_variable(class_obj)
+            self.scope.insert_variable(class_obj, 'self')
 
             attrib = expr.clone(expr.name, lhs = class_obj)
-            arg_wrapper = self._wrap(new_set_val_arg)
-            new_set_val = self.scope.find(expr.name, category='variables', raise_if_missing = True)
+            wrap_arg = self._wrap(new_set_val_arg)
+            arg_wrapper = wrap_arg['body']
+            new_set_val = wrap_arg['args'][0]
 
             if expr.memory_handling == 'alias':
                 update = AliasAssign(attrib, new_set_val)
@@ -1960,7 +2010,7 @@ class CToPythonWrapper(Wrapper):
         self.scope = getter_scope
 
         get_val_arg = expr.getter.arguments[0]
-        self.scope.insert_symbol(get_val_arg.var.name)
+        self.scope.insert_symbol(get_val_arg.original_function_argument_variable.name)
         get_val_result = expr.getter.bind_c_results[0]
         result_name = get_val_result.var.name
         self.scope.insert_symbol(result_name)
@@ -1975,8 +2025,9 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[get_val_arg] = getter_args[0]
         self._python_object_map[get_val_result] = getter_result
 
-        arg_code = self._wrap(get_val_arg)
-        class_obj = self.scope.find(get_val_arg.var.name, raise_if_missing = True)
+        wrapped_args = self._wrap(get_val_arg)
+        arg_code = wrapped_args['body']
+        class_obj = wrapped_args['args'][0]
 
         # Cast the C variable into a Python variable
         result_wrapping = self._wrap(get_val_result)
@@ -2028,9 +2079,9 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[set_val_arg] = setter_args[1]
 
         if isinstance(wrapped_var.class_type, FixedSizeNumericType) or wrapped_var.is_alias:
-            arg_code = [l for a in original_args for l in self._wrap(a)]
-
-            func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in f_wrapped_args]
+            wrapped_args = [self._wrap(a) for a in original_args]
+            arg_code = [l for a in wrapped_args for l in a['body']]
+            func_call_args = [ca for a in wrapped_args for ca in a['args']]
 
             setter_body = [*arg_code,
                            FunctionCall(expr.setter, func_call_args),
