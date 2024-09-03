@@ -813,17 +813,28 @@ class SemanticParser(BasicParser):
                 self._additional_exprs[-1].append(self._visit(assign))
                 var = self._visit(tmp_var)
 
+        elif isinstance(var, Variable):
+            # Nothing to do but excludes this case from the subsequent ifs
+            pass
 
-        elif not isinstance(var, Variable):
-            if hasattr(var,'__getitem__'):
-                if len(indices)==1:
-                    return var[indices[0]]
-                else:
-                    return self._visit(var[indices[0]][indices[1:]])
+        elif hasattr(var,'__getitem__'):
+            if len(indices)==1:
+                return var[indices[0]]
             else:
-                var_type = type(var)
-                errors.report(f"Can't index {var_type}", symbol=expr,
-                    severity='fatal')
+                return self._visit(var[indices[0]][indices[1:]])
+
+        elif isinstance(var, PyccelFunction):
+            pyccel_stage.set_stage('syntactic')
+            tmp_var = PyccelSymbol(self.scope.get_new_name())
+            assign = Assign(tmp_var, var)
+            assign.set_current_ast(expr.python_ast)
+            pyccel_stage.set_stage('semantic')
+            self._additional_exprs[-1].append(self._visit(assign))
+            var = self._visit(tmp_var)
+
+        else:
+            errors.report(f"Can't index {type(var)}", symbol=expr,
+                severity='fatal')
 
         indices = tuple(indices)
 
@@ -1301,21 +1312,22 @@ class SemanticParser(BasicParser):
 
         if isinstance(class_type, InhomogeneousTupleType):
             if isinstance(rhs, FunctionCall):
-                iterable = [r.var for r in rhs.funcdef.results]
+                iterable = [self.scope.collect_tuple_element(r.var) for r in rhs.funcdef.results]
+            elif isinstance(rhs, PyccelFunction):
+                iterable = [IndexedElement(rhs, i)  for i in range(rhs.shape[0])]
             else:
-                iterable = rhs
+                iterable = [self.scope.collect_tuple_element(r) for r in rhs]
             elem_vars = []
             for i,tuple_elem in enumerate(iterable):
-                r = self.scope.collect_tuple_element(tuple_elem)
                 elem_name = self.scope.get_new_name( name + '_' + str(i) )
-                elem_d_lhs = self._infer_type( r )
+                elem_d_lhs = self._infer_type( tuple_elem )
 
                 if not arr_in_multirets:
-                    self._ensure_target( r, elem_d_lhs )
+                    self._ensure_target( tuple_elem, elem_d_lhs )
 
                 elem_type = elem_d_lhs.pop('class_type')
 
-                var = self._create_variable(elem_name, elem_type, r, elem_d_lhs,
+                var = self._create_variable(elem_name, elem_type, tuple_elem, elem_d_lhs,
                         insertion_scope = insertion_scope)
                 elem_vars.append(var)
 
@@ -3286,7 +3298,7 @@ class SemanticParser(BasicParser):
             for l,r in zip(lhs, rhs):
                 # Split assign (e.g. for a,b = 1,c)
                 if isinstance(l.class_type, InhomogeneousTupleType) \
-                        and not isinstance(r, FunctionCall):
+                        and not isinstance(r, (FunctionCall, PyccelFunction)):
                     new_lhs.extend(self.scope.collect_tuple_element(v) for v in l)
                     new_rhs.extend(self.scope.collect_tuple_element(v) for v in r)
                     # Repeat step to handle tuples of tuples of etc.
@@ -3359,6 +3371,7 @@ class SemanticParser(BasicParser):
                                   severity='fatal')
 
             new_expressions.append(new_expr)
+
 
         if (len(new_expressions)==1):
             new_expressions = new_expressions[0]
@@ -3767,6 +3780,10 @@ class SemanticParser(BasicParser):
                     a.cls_variable.is_temp = False
 
         results = [self._visit(i.var) for i in return_objs]
+        if any(isinstance(i.class_type, InhomogeneousTupleType) for i in results):
+            # Extraction of underlying variables is not yet implemented here
+            errors.report("Returning tuples is not yet implemented",
+                    severity='error', symbol=expr)
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
