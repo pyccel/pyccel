@@ -1021,7 +1021,7 @@ class CCodePrinter(CodePrinter):
             code = ''
             for t in expr.target:
                 dtype = t.object.class_type
-                container_type = t.target
+                container_type = t.local_alias
                 element_type = self.get_c_type(dtype.element_type)
                 rank = dtype.rank
                 header_guard_prefix = import_header_guard_prefix.get(source, '')
