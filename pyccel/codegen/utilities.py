@@ -182,6 +182,30 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
 
 #==============================================================================
 def generate_extension_modules(import_key, import_node, pyccel_dirpath, language):
+    """
+    Generate any new modules that describe extensions.
+
+    Generate any new modules that describe extensions. This is the case for lists/
+    sets/dicts/etc handled by gFTL.
+
+    Parameters
+    ----------
+    import_key : str
+        The name by which the extension is identified in the import.
+    import_node : Import
+        The import used in the code generator (this object contains the module to
+        be printed).
+    pyccel_dirpath : str
+        The folder where files are being saved.
+    language : str
+        The language in which code is being printed.
+
+    Returns
+    -------
+    list[CompileObj]
+        A list of any new compilation dependencies which are required to compile
+        the translated file.
+    """
     new_dependencies = []
     lib_name = import_key.split("/", 1)[0]
     if lib_name == 'gFTL_extensions':
