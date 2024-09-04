@@ -1051,11 +1051,16 @@ class CCodePrinter(CodePrinter):
 
         This is required so that escape characters are displayed correctly in the string.
 
-        Args:
-            expr (string): String to undo the effect of _print_LiteralString() function.
+        Parameters
+        ----------
+        expr : str
+            String to undo the effect of _print_LiteralString() function.
 
-        Returns:
-            string: The resultant string after operation.
+        Returns
+        -------
+        expr : str
+            The resultant string after the effects of _print_LiteralString() function
+            is reverted.
         """
         expr = str(expr)
         expr = expr.replace("\\\\", "\\")\
