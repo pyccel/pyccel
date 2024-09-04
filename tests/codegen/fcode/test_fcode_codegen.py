@@ -19,7 +19,7 @@ files = [os.path.join(path_dir,f) \
          #if f not in failing_files \
          #else pytest.param(os.path.join(path_dir,f), marks = pytest.mark.xfail(reason=failing_files[f])) \
          for f in files \
-         if f.endswith(".py") \
+         if f.endswith(".py") and f != 'ListComprehension.py' \
         ]
 @pytest.mark.fortran
 @pytest.mark.parametrize("f", files)

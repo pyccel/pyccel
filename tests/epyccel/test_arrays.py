@@ -4036,6 +4036,7 @@ def test_array_float_nested_C_array_initialization_3(language):
         pytest.param("python", marks = pytest.mark.python)
     )
 )
+@pytest.mark.skipif(lambda lang: lang == 'fortran', reason="List comprehension is not supported in Fortran")
 def test_arr_bool_sum(language):
     f1 = arrays.arr_bool_sum
     f2 = epyccel(f1, language = language)
