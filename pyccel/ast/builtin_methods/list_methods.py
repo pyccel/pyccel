@@ -117,6 +117,15 @@ class ListPop(ListMethod) :
         self._class_type = list_obj.class_type.element_type
         super().__init__(list_obj, index_element)
 
+    @property
+    def index_element(self):
+        """
+        The current index value for the element to be popped.
+
+        The current index value for the element to be popped.
+        """
+        return self._args[0]
+
 #==============================================================================
 class ListClear(ListMethod) :
     """
