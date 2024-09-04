@@ -62,12 +62,12 @@ def unknown_length_functional(x : 'int[:]'):
     return len(a), a[0], a[-1]
 
 def functional_with_enumerate():
-    a = [range(10)]
+    a = [x + 1 for x in range(10)]
     b = [i * j for i,j in enumerate(a)]
     return len(b), b[0], b[1], b[2]
 
 def functional_with_enumerate_with_start():
-    a = [range(10)]
+    a = [x - 3  for x in range(10)]
     b = [i * j for i,j in enumerate(a, start=5)]
     return len(b), b[0], b[1], b[2]
 
@@ -77,7 +77,7 @@ def functional_with_condition():
 
 def functional_with_zip():
     a = [x ** 2 for x in range(8)]
-    b = [range(3)]
+    b = [0, 1, 2]
     c = [k-y for k,y in zip(a,b)]
     return len(c), c[0], c[1], c[2]
 
