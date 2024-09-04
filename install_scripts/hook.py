@@ -1,6 +1,5 @@
 """ A script to provide a hook which allows artifacts to be generated during installation of the package.
 """
-import glob
 import os
 from pathlib import Path
 import shutil
@@ -39,7 +38,7 @@ class CustomBuildHook(BuildHookInterface):
         subprocess.run([shutil.which('cmake'), '--build', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
         subprocess.run([shutil.which('cmake'), '--install', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
 
-        build_data['artifacts'].extend(glob.glob(gFTL_folder / 'install' / 'GFTL-1.13' / 'include' / '*'))
+        build_data['artifacts'].extend((gFTL_folder / 'install' / 'GFTL-1.13' / 'include').glob('**/*'))
 
         # Build pickle files
         pickle_folder = (Path(__file__).parent.parent / 'pyccel' / 'stdlib' / 'internal').absolute()
