@@ -3527,7 +3527,7 @@ class SemanticParser(BasicParser):
                         dvar['memory_handling'] = 'stack'
                     var  = Variable(class_type, var, **dvar)
                     vars.append((var, dvar))
-                stop = LiteralInteger(a.iterable.length)
+                stop = a.iterable.length
             
             elif isinstance(a.iterable, Variable):
                 var = self.scope.get_expected_name(expr.indices[i])

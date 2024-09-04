@@ -1156,7 +1156,7 @@ class PythonZip(PyccelFunction):
             if lengths:
                 self._length = min(lengths)
             else:
-                self._length = self.args[0].shape[0]
+                self._length = PythonMin([a.shape[0] for a in self.args])
 
     @property
     def length(self):
