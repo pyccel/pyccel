@@ -32,7 +32,7 @@ language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 
 #==============================================================================
 # map external libraries inside pyccel/extensions with their path
-external_libs = {"stc" : "STC/include/stc", "gFTL" : "gFTL/include/v2"}
+external_libs = {"stc" : "STC/include/stc", "gFTL" : "gFTL/install/GFTL-1.13/include/v2"}
 
 #==============================================================================
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
