@@ -1211,7 +1211,7 @@ class CCodePrinter(CodePrinter):
                                                 file=expr.file)],
                                  unravelled = True)
                 code += self._print(body)
-            elif isinstance(f.class_type, StringType):
+            elif isinstance(f, LiteralString):
                 arg_format, arg = self.get_print_format_and_arg(f)
                 if isinstance(arg, str):
                     arg = self._undo_print_LiteralString(arg)
