@@ -649,11 +649,11 @@ class CCodePrinter(CodePrinter):
         ----------
         expr : TypedAstNode
             The object representing the container being printed (e.g., PythonList, PythonSet).
-    
+
         assignment_var : Assign
-            The assignment node where the Python container (rhs) is being initialized 
+            The assignment node where the Python container (rhs) is being initialized
             and saved into a variable (lhs).
-        
+
         Returns
         -------
         str
@@ -676,7 +676,7 @@ class CCodePrinter(CodePrinter):
         Rename class methods from user-defined imports.
 
         This function is responsible for renaming methods of classes from
-        the imported modules, ensuring that the names are correct 
+        the imported modules, ensuring that the names are correct
         by prefixing them with their class names.
 
         Parameters
@@ -1045,6 +1045,31 @@ class CCodePrinter(CodePrinter):
                                .replace("'", "\\'")
         return '"{}"'.format(format_str)
 
+    def _undo_print_LiteralString(self, expr):
+        """
+        Undo the changes done by _print_LiteralString() function on the given string.
+
+        This is required so that escape characters are displayed correctly in the string.
+
+        Args:
+            expr (string): String to undo the effect of _print_LiteralString() function.
+
+        Returns:
+            string: The resultant string after operation.
+        """
+        expr = str(expr)
+        expr = expr.replace("\\\\", "\\")\
+                    .replace('\\b', '\b')\
+                    .replace('\a', '\\a')\
+                    .replace('\f', '\\f')\
+                    .replace("\n", "\\n")\
+                    .replace('\r', '\\r')\
+                    .replace('\t', '\\t')\
+                    .replace('\v', '\\v')\
+                    .replace('\\"', '"')\
+                    .replace("\\'", "'")
+        return expr
+
     def get_print_format_and_arg(self, var):
         """
         Get the C print format string for the object var.
@@ -1186,6 +1211,11 @@ class CCodePrinter(CodePrinter):
                                                 file=expr.file)],
                                  unravelled = True)
                 code += self._print(body)
+            elif isinstance(f.class_type, StringType):
+                arg_format, arg = self.get_print_format_and_arg(f)
+                if isinstance(arg, str):
+                    arg = self._undo_print_LiteralString(arg)
+                    args_format.append(arg[1:-1])
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
@@ -2664,4 +2694,3 @@ class CCodePrinter(CodePrinter):
             pretty.append("%s%s" % (tab*level, line))
             level += increase[n]
         return pretty
-
