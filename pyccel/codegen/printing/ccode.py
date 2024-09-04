@@ -1058,7 +1058,7 @@ class CCodePrinter(CodePrinter):
 
         Returns
         -------
-        expr : str
+        str
             The resultant string after the effects of _print_LiteralString() function
             is reverted.
         """

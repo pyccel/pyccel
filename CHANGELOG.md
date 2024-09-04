@@ -61,7 +61,7 @@ All notable changes to this project will be documented in this file.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
 -   #1924 : Fix internal error arising in Duplicate or list comprehensions.
 -   #1970 : Fix missing `TypeError` for wrong type passed as optional argument.
--   #1972 : Simplified printf statement for Literal String.
+-   #1972 : Simplified `printf` statement for Literal String.
 
 ### Changed
 
