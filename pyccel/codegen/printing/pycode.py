@@ -92,7 +92,7 @@ class PythonCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return lines
 
-    def _find_functional_expr_and_iterables(self, expr):
+    def _find_functional_expr_and_iterables(self, expr, central_expr=Assign, body_idx=1):
         """
         Traverse through the loop representing a FunctionalFor or GeneratorComprehension
         to extract the central expression and the different iterable objects
@@ -110,8 +110,8 @@ class PythonCodePrinter(CodePrinter):
         """
         dummy_var = expr.index
         iterables = []
-        body = expr.loops[0]
-        while not isinstance(body, ListAppend):
+        body = expr.loops[body_idx]
+        while not isinstance(body, central_expr):
             if isinstance(body, CodeBlock):
                 body = list(body.body)
                 while isinstance(body[0], FunctionalFor):
@@ -623,7 +623,7 @@ class PythonCodePrinter(CodePrinter):
         str
             The Python code as a string that corresponds to the `FunctionalFor` expression.
         """
-        body, iterators = self._find_functional_expr_and_iterables(expr)
+        body, iterators = self._find_functional_expr_and_iterables(expr, ListAppend, 0)
         lhs = self._print(expr.lhs)
         body = self._print(body.args)
         for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
