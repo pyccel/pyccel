@@ -77,7 +77,7 @@ def functional_with_condition():
 
 def functional_with_zip():
     a = [x ** 2 for x in range(8)]
-    b = [x for x in range(3)]
+    b = [range(3)]
     c = [k-y for k,y in zip(a,b)]
     return len(c), c[0], c[1], c[2]
 

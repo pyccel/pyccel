@@ -87,3 +87,4 @@ def test_functional_with_condition(language):
 
 def test_functional_with_zip(language):
     compare_epyccel(functionals.functional_with_zip, language)
+
