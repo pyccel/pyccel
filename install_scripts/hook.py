@@ -21,7 +21,7 @@ class CustomBuildHook(BuildHookInterface):
     *args : tuple
         See hatch docs.
     **kwds : dict
-        See hatch docs
+        See hatch docs.
     """
 
     def initialize(self, version, build_data):
