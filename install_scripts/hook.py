@@ -15,6 +15,13 @@ class CustomBuildHook(BuildHookInterface):
     A class inheriting from BuildHookInterface which allows code to be run to create artifacts during the build stage
     of the package installation using hatch.
     See <https://hatch.pypa.io/latest/plugins/build-hook/reference> for more details.
+
+    Parameters
+    ----------
+    *args : tuple
+        See hatch docs.
+    **kwds : dict
+        See hatch docs
     """
 
     def initialize(self, version, build_data):
