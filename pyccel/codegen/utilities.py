@@ -181,7 +181,7 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     return lib_dest_path
 
 #==============================================================================
-def generate_extension_modules(lib_name, import_key, import_node, pyccel_dirpath, language):
+def generate_extension_modules(import_key, import_node, pyccel_dirpath, language):
     new_dependencies = []
     lib_name = import_key.split("/", 1)[0]
     if lib_name == 'gFTL_extensions':
@@ -190,28 +190,18 @@ def generate_extension_modules(lib_name, import_key, import_node, pyccel_dirpath
         printer = printer_registry[language]
         filename = os.path.join(pyccel_dirpath, import_key)+'.F90'
         folder = os.path.dirname(filename)
-        try:
-            code = printer(filename).doprint(mod)
-        except NotImplementedError as error:
-            msg = str(error)
-            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-                severity='error',
-                traceback=error.__traceback__)
-            handle_error('code generation (wrapping)')
-            raise PyccelCodegenError(msg) from None
-        except PyccelError:
-            handle_error('code generation (wrapping)')
-            raise
+        code = printer(filename).doprint(mod)
         if not os.path.exists(folder):
             os.mkdir(folder)
-        with open(filename, 'w', encoding="utf-8") as f:
-            f.write(code)
+        with FileLock(f'{folder}.lock'):
+            with open(filename, 'w', encoding="utf-8") as f:
+                f.write(code)
 
         new_dependencies.append(CompileObj(os.path.basename(filename), folder=folder,
                             includes=(os.path.join(pyccel_dirpath, 'gFTL'),)))
 
     if lib_name in external_libs:
-        lib_dest_path = copy_internal_library(lib_name, pyccel_dirpath)
+        copy_internal_library(lib_name, pyccel_dirpath)
 
     return new_dependencies
 

@@ -29,7 +29,6 @@ from pyccel.utilities.stage        import PyccelStage
 from pyccel.ast.utilities          import python_builtin_libs
 from pyccel.parser.scope           import Scope
 
-from .codegen             import printer_registry
 from .compiling.basic     import CompileObj
 from .compiling.compilers import Compiler, get_condaless_search_path
 
@@ -341,7 +340,18 @@ def execute_pyccel(fname, *,
     # Iterate over the external_libs list and determine if the printer
     # requires an external lib to be included.
     for key, import_node in codegen.get_printer_imports().items():
-        deps = generate_extension_modules(lib_name, key, import_node, pyccel_dirpath, language)
+        try:
+            deps = generate_extension_modules(key, import_node, pyccel_dirpath, language)
+        except NotImplementedError as error:
+            msg = str(error)
+            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+                severity='error',
+                traceback=error.__traceback__)
+            handle_error('code generation (wrapping)')
+            raise PyccelCodegenError(msg) from None
+        except PyccelError:
+            handle_error('code generation (wrapping)')
+            raise
         for d in deps:
             recompile_object(d,
                               compiler = src_compiler,
