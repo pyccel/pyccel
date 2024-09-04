@@ -1,6 +1,8 @@
 """ A script to provide a hook which allows artifacts to be generated during installation of the package.
 """
 import os
+from pathlib import Path
+import shutil
 import subprocess
 import sys
 
@@ -29,12 +31,20 @@ class CustomBuildHook(BuildHookInterface):
         build_data : dict
             See hatch documentation.
         """
-        folder = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','pyccel','stdlib','internal'))
+        # Build gFTL for installation
+        gFTL_folder = (Path(__file__).parent.parent / 'pyccel' / 'extensions' / 'gFTL').absolute()
+        subprocess.run([shutil.which('cmake'), '-S', str(gFTL_folder), '-B', str(gFTL_folder / 'build'),
+                        '--install-prefix', str(gFTL_folder / 'install')], cwd = gFTL_folder, check=True)
+        subprocess.run([shutil.which('cmake'), '--build', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
+        subprocess.run([shutil.which('cmake'), '--install', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
+
+        # Build pickle files
+        pickle_folder = (Path(__file__).parent.parent / 'pyccel' / 'stdlib' / 'internal').absolute()
         files_stubs = ['blas', 'dfftpack', 'fitpack',
                 'lapack', 'mpi', 'openacc', 'openmp']
-        output_files = [os.path.join(folder, f)+'.pyccel' for f in files_stubs]
+        output_files = [pickle_folder / (f+'.pyccel') for f in files_stubs]
         for f in output_files:
-            if os.path.isfile(f):
+            if f.is_file():
                 os.remove(f)
 
         subprocess.run([sys.executable, "-c", "from pyccel.commands.pyccel_init import pyccel_init; pyccel_init()"],
