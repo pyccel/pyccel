@@ -9,6 +9,7 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
 from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction
+from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType
@@ -91,7 +92,7 @@ class PythonCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return lines
 
-    def _find_functional_expr_and_iterables(self, expr):
+    def _find_functional_expr_and_iterables(self, expr, central_expr=Assign, body_idx=1):
         """
         Traverse through the loop representing a FunctionalFor or GeneratorComprehension
         to extract the central expression and the different iterable objects
@@ -109,8 +110,8 @@ class PythonCodePrinter(CodePrinter):
         """
         dummy_var = expr.index
         iterables = []
-        body = expr.loops[1]
-        while not isinstance(body, Assign):
+        body = expr.loops[body_idx]
+        while not isinstance(body, central_expr):
             if isinstance(body, CodeBlock):
                 body = list(body.body)
                 while isinstance(body[0], FunctionalFor):
@@ -179,7 +180,7 @@ class PythonCodePrinter(CodePrinter):
 
         init_dtype : PythonType, PyccelFunctionDef, LiteralString, str
             The actual dtype passed to the NumPy function.
-
+            
         Returns
         -------
         str
@@ -607,9 +608,24 @@ class PythonCodePrinter(CodePrinter):
         return code
 
     def _print_FunctionalFor(self, expr):
-        body, iterators = self._find_functional_expr_and_iterables(expr)
+        """
+        Generate the Python code for a FunctionalFor expression.
+        
+        This method translates a `FunctionalFor` AST node into a Python code string.
+
+        Parameters
+        ----------
+        expr : pyccel.ast.functionalexpr.FunctionalFor
+            The FunctionalFor AST node.
+        
+        Returns
+        -------
+        str
+            The Python code as a string that corresponds to the `FunctionalFor` expression.
+        """
+        body, iterators = self._find_functional_expr_and_iterables(expr, ListAppend, 0)
         lhs = self._print(expr.lhs)
-        body = self._print(body.rhs)
+        body = self._print(body.args)
         for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
                         for idx, iters in zip(expr.indices, iterators)])
 

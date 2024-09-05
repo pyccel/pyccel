@@ -1148,6 +1148,21 @@ class SyntaxParser(BasicParser):
         return expr
 
     def _visit_ListComp(self, stmt):
+        """
+        Converts a list comprehension statement into a `FunctionalFor` AST object.
+
+        This method translates the list comprehension into an equivalent `FunctionalFor`
+        
+        Parameters
+        ----------
+        stmt : ast.stmt
+            Object to visit of type X.
+
+        Returns
+        -------
+        pyccel.ast.functionalexpr.FunctionalFor
+            AST object which is the syntactic equivalent of the list comprehension.
+        """
 
         result = self._visit(stmt.elt)
 
@@ -1164,29 +1179,15 @@ class SyntaxParser(BasicParser):
                 lhs = lhs[0]
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
+        indices = [generator.target for generator in generators]
+        generators[-1].insert2body(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
 
-        index = PyccelSymbol('_', is_temp=True)
-
-        args = [index]
-        target = IndexedElement(lhs, *args)
-        target = Assign(target, result)
-        assign1 = Assign(index, LiteralInteger(0))
-        assign1.set_current_ast(stmt)
-        target.set_current_ast(stmt)
-        generators[-1].insert2body(target)
-        assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
-        assign2.set_current_ast(stmt)
-        generators[-1].insert2body(assign2)
-
-        indices = [generators[-1].target]
         while len(generators) > 1:
             F = generators.pop()
             generators[-1].insert2body(F)
-            indices.append(generators[-1].target)
-        indices = indices[::-1]
 
-        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
-                             indices, index)
+        return FunctionalFor(generators, result, lhs,
+                             indices)
 
     def _visit_GeneratorExp(self, stmt):
 
