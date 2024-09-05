@@ -1387,7 +1387,7 @@ class CCodePrinter(CodePrinter):
             assert init == ''
             preface = ''
             init    = ' = {.shape = NULL}'
-        elif declaration_type.startswith('vec'):
+        elif isinstance(var.class_type, HomogeneousListType):
             preface = ''
             init = ' = {0}'
         else:
