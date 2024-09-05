@@ -13,7 +13,7 @@ runs:
         from os.path import exists, join
         pyccel_loc = pyccel.__path__[0]
         print(pyccel_loc)
-        assert exists(join(pyccel_loc,'extensions/gFTL/include/v2'))
+        assert exists(join(pyccel_loc,'extensions/gFTL/install/GFTL-1.13/include/v2'))
         if ${{ inputs.not_editable }}:
           assert not exists(join(pyccel_loc,'extensions/gFTL/doc'))
 

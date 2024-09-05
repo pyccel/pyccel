@@ -120,3 +120,4 @@ indexable
 traceback
 STC
 gFTL
+CMake
