@@ -46,6 +46,8 @@ We recommend using GFortran/GCC and Open-MPI.
 
 Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require additional packages which are installed as optional dependencies with pip, while building the documentation requires [Sphinx](http://www.sphinx-doc.org/).
 
+In order to install Pyccel from source, CMake is additionally required to build the gFTL dependence.
+
 ### Linux Debian-Ubuntu-Mint
 
 To install all requirements on a Linux Ubuntu machine, just use APT, the Advanced Package Tool:
