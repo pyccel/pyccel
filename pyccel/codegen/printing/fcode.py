@@ -511,6 +511,7 @@ class FCodePrinter(CodePrinter):
     def _build_gFTL_module(self, expr_type):
         if expr_type in self._generated_gFTL_extensions:
             module = self._generated_gFTL_extensions[expr_type]
+            mod_name = module.name
         else:
             if isinstance(expr_type, HomogeneousListType):
                 include = Import(LiteralString('vector/template.inc'), Module('_', (), ()))
