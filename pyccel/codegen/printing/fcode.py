@@ -515,16 +515,11 @@ class FCodePrinter(CodePrinter):
         else:
             if isinstance(expr_type, HomogeneousListType):
                 include = Import(LiteralString('vector/template.inc'), Module('_', (), ()))
-            elif isinstance(expr_type, HomogeneousSetType):
-                include = Import(LiteralString('set/template.inc'), Module('_', (), ()))
-            elif isinstance(expr_type, DictType):
-                include = Import(LiteralString('map/template.inc'), Module('_', (), ()))
+                macros = [MacroDefinition('T', expr_type.element_type),
+                          MacroDefinition('Vector', expr_type),
+                          MacroDefinition('VectorIterator', expr_type, '_Iterator')]
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
-
-            macros = [MacroDefinition('T', expr_type.element_type),
-                      MacroDefinition('Vector', expr_type),
-                      MacroDefinition('VectorIterator', expr_type, '_Iterator')]
 
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
