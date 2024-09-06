@@ -523,7 +523,8 @@ class FCodePrinter(CodePrinter):
 
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
-            module = Module(mod_name, (), (), scope = Scope(), imports = [*macros, include])
+            module = Module(mod_name, (), (), scope = Scope(), imports = [*macros, include],
+                                       is_external = True)
 
             self._generated_gFTL_extensions[expr_type] = module
 
@@ -585,14 +586,13 @@ class FCodePrinter(CodePrinter):
         # ...
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
-        imports = [self._print(i) for i in self._additional_imports.values()]
-        macro_imports = ''.join(i for i in imports if i.startswith('#'))
-        use_imports = ''.join(i for i in imports if not i.startswith('#'))
-        use_imports += "\n" + self.print_constant_imports()
-        parts = ['module {}\n'.format(name),
-                 use_imports,
-                 'implicit none\n',
-                 macro_imports,
+        imports = "".join(self._print(i) for i in self._additional_imports.values())
+        imports += "\n" + self.print_constant_imports()
+         implicit_none = '' if expr.is_external else 'implicit none\n'
+
+         parts = ['module {}\n'.format(name),
+                 imports,
+                  implicit_none,
                  private,
                  decs,
                  interfaces,
