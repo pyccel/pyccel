@@ -981,6 +981,10 @@ class Module(ScopedAstNode):
     scope : Scope
         The scope of the module.
 
+    is_external : bool
+        Indicates if the Module's definition is found elsewhere.
+        This is notably the case for gFTL extensions.
+
     Examples
     --------
     >>> from pyccel.ast.variable import Variable
@@ -1008,7 +1012,8 @@ class Module(ScopedAstNode):
     """
     __slots__ = ('_name','_variables','_funcs','_interfaces',
                  '_classes','_imports','_init_func','_free_func',
-                 '_program','_variable_inits','_internal_dictionary')
+                 '_program','_variable_inits','_internal_dictionary',
+                 '_is_external')
     _attribute_nodes = ('_variables','_funcs','_interfaces',
                         '_classes','_imports','_init_func',
                         '_free_func','_program','_variable_inits')
@@ -1024,7 +1029,8 @@ class Module(ScopedAstNode):
         interfaces=(),
         classes=(),
         imports=(),
-        scope = None
+        scope = None,
+        is_external = False
         ):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
@@ -1073,6 +1079,8 @@ class Module(ScopedAstNode):
         imports = {i: None for i in imports} # for unicity and ordering
         imports = tuple(imports.keys())
 
+        assert isinstance(is_external, bool)
+
         self._name = name
         self._variables = variables
         self._variable_inits = [None]*len(variables)
@@ -1083,6 +1091,7 @@ class Module(ScopedAstNode):
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
+        self._is_external = is_external
 
         if pyccel_stage != "syntactic":
             self._internal_dictionary = {v.name:v for v in variables}
@@ -1209,6 +1218,14 @@ class Module(ScopedAstNode):
         """ Returns the names of all objects accessible directly in this module
         """
         return self._internal_dictionary.keys()
+
+    def is_external(self):
+        """
+        Indicates if the Module's definition is found elsewhere.
+
+        This is notably the case for gFTL extensions.
+        """
+        return self._is_external
 
 class ModuleHeader(PyccelAstNode):
     """
