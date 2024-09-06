@@ -585,11 +585,14 @@ class FCodePrinter(CodePrinter):
         # ...
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
-        imports += ''.join(self._print(i) for i in self._additional_imports.values())
-        imports += "\n" + self.print_constant_imports()
+        imports = [self._print(i) for i in self._additional_imports.values()]
+        macro_imports = ''.join(i for i in imports if i.startswith('#'))
+        use_imports = ''.join(i for i in imports if not i.startswith('#'))
+        use_imports += "\n" + self.print_constant_imports()
         parts = ['module {}\n'.format(name),
-                 imports,
+                 use_imports,
                  'implicit none\n',
+                 macro_imports,
                  private,
                  decs,
                  interfaces,
