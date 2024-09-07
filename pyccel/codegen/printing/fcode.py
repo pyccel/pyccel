@@ -973,7 +973,12 @@ class FCodePrinter(CodePrinter):
         return '[{0}]'.format(fs)
 
     def _print_PythonList(self, expr):
-        return self._print_PythonTuple(expr)
+        if len(expr) == 0:
+            code = ''
+        else:
+            args = ', '.join(self._print(a) for a in expr)
+            code = f'[{args}]'
+        return f'vector({code})'
 
     def _print_InhomogeneousTupleVariable(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
