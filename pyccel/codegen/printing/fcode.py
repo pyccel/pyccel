@@ -1802,42 +1802,35 @@ class FCodePrinter(CodePrinter):
 
 #------------------------------------------------------------------------------
     def _print_Allocate(self, expr):
-        if isinstance(expr.variable.class_type, (NumpyNDArrayType, CustomDataType, HomogeneousTupleType)):
-            # Transpose indices because of Fortran column-major ordering
-            shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
+        # Transpose indices because of Fortran column-major ordering
+        shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
 
-            var_code = self._print(expr.variable)
-            size_code = ', '.join(self._print(i) for i in shape)
-            shape_code = ', '.join('0:' + self._print(PyccelMinus(i, LiteralInteger(1), simplify = True)) for i in shape)
-            if shape:
-                shape_code = f'({shape_code})'
-            code = ''
+        var_code = self._print(expr.variable)
+        size_code = ', '.join(self._print(i) for i in shape)
+        shape_code = ', '.join('0:' + self._print(PyccelMinus(i, LiteralInteger(1), simplify = True)) for i in shape)
+        if shape:
+            shape_code = f'({shape_code})'
+        code = ''
 
-            if expr.status == 'unallocated':
-                code += f'allocate({var_code}{shape_code})\n'
+        if expr.status == 'unallocated':
+            code += f'allocate({var_code}{shape_code})\n'
 
-            elif expr.status == 'unknown':
-                code += f'if (allocated({var_code})) then\n'
-                code += f'  if (any(size({var_code}) /= [{size_code}])) then\n'
-                code += f'    deallocate({var_code})\n'
-                code += f'    allocate({var_code}{shape_code})\n'
-                code +=  '  end if\n'
-                code +=  'else\n'
-                code += f'  allocate({var_code}{shape_code})\n'
-                code +=  'end if\n'
+        elif expr.status == 'unknown':
+            code += f'if (allocated({var_code})) then\n'
+            code += f'  if (any(size({var_code}) /= [{size_code}])) then\n'
+            code += f'    deallocate({var_code})\n'
+            code += f'    allocate({var_code}{shape_code})\n'
+            code +=  '  end if\n'
+            code +=  'else\n'
+            code += f'  allocate({var_code}{shape_code})\n'
+            code +=  'end if\n'
 
-            elif expr.status == 'allocated':
-                code += f'if (any(size({var_code}) /= [{size_code}])) then\n'
-                code += f'  deallocate({var_code})\n'
-                code += f'  allocate({var_code}{shape_code})\n'
-                code +=  'end if\n'
+        elif expr.status == 'allocated':
+            code += f'if (any(size({var_code}) /= [{size_code}])) then\n'
+            code += f'  deallocate({var_code})\n'
+            code += f'  allocate({var_code}{shape_code})\n'
+            code +=  'end if\n'
 
-        elif isinstance(expr.variable.class_type, HomogeneousListType):
-            code = ''
-    
-        else:
-            raise NotImplementedError(f"Allocate not implemented for type {expr.variable.class_type}")
-    
         return code
 
 #-----------------------------------------------------------------------------
