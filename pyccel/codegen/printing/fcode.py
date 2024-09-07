@@ -973,7 +973,7 @@ class FCodePrinter(CodePrinter):
         return '[{0}]'.format(fs)
 
     def _print_PythonList(self, expr):
-        if len(expr) == 0:
+        if len(expr.args) == 0:
             code = ''
         else:
             args = ', '.join(self._print(a) for a in expr)
