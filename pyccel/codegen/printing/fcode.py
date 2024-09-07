@@ -1807,7 +1807,7 @@ class FCodePrinter(CodePrinter):
 
 #------------------------------------------------------------------------------
     def _print_Allocate(self, expr):
-        if isinstance(expr.variable.class_type, (NumpyNDArrayType, CustomDataType)):
+        if isinstance(expr.variable.class_type, (NumpyNDArrayType, CustomDataType, HomogeneousTupleType)):
             # Transpose indices because of Fortran column-major ordering
             shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
 
