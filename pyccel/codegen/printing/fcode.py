@@ -530,6 +530,15 @@ class FCodePrinter(CodePrinter):
 
         return Import(f'gFTL_extensions/{mod_name}', module)
 
+    def _get_literal_array_code(self, expr):
+        shape = tuple(reversed(expr.shape))
+        if len(shape)>1:
+            elements = ', '.join(self._print(i) for i in expr)
+            shape    = ', '.join(self._print(i) for i in shape)
+            return 'reshape(['+ elements + '], [' + shape + '])'
+        args = ', '.join(self._print(f) for f in expr)
+        return f'[{args}]'
+
     # ============ Elements ============ #
     def _print_PyccelSymbol(self, expr):
         return expr
@@ -964,20 +973,13 @@ class FCodePrinter(CodePrinter):
         return "abs({})".format(self._print(expr.arg))
 
     def _print_PythonTuple(self, expr):
-        shape = tuple(reversed(expr.shape))
-        if len(shape)>1:
-            elements = ', '.join(self._print(i) for i in expr)
-            shape    = ', '.join(self._print(i) for i in shape)
-            return 'reshape(['+ elements + '], '+ '[' + shape + ']' + ')'
-        fs = ', '.join(self._print(f) for f in expr)
-        return '[{0}]'.format(fs)
+        return self._get_literal_array_code(expr)
 
     def _print_PythonList(self, expr):
         if len(expr.args) == 0:
             code = ''
         else:
-            args = ', '.join(self._print(a) for a in expr)
-            code = f'[{args}]'
+            code = self._get_literal_array_code(expr)
         return f'vector({code})'
 
     def _print_InhomogeneousTupleVariable(self, expr):
@@ -1238,7 +1240,7 @@ class FCodePrinter(CodePrinter):
         # use reshape with order for rank > 2
         if expr.rank <= 2:
             arg = expr.arg if expr.arg.dtype == expr.dtype else cast_func(expr.arg)
-            rhs_code = self._print(arg)
+            rhs_code = self._get_literal_array_code(arg)
             if expr.arg.order and expr.arg.order != expr.order:
                 rhs_code = f'transpose({rhs_code})'
             if expr.arg.rank < expr.rank:
@@ -1253,7 +1255,7 @@ class FCodePrinter(CodePrinter):
             new_args = []
             inv_order = 'C' if order == 'F' else 'F'
             for a in expr_args:
-                ac = self._print(a)
+                ac = self._get_literal_array_code(a)
 
                 # Pack list/tuple of array/list/tuple into array
                 if a.order is None and a.rank > 1:
