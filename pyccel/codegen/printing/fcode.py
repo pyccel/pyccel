@@ -588,9 +588,9 @@ class FCodePrinter(CodePrinter):
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
         imports = "".join(self._print(i) for i in self._additional_imports.values())
         imports += "\n" + self.print_constant_imports()
-         implicit_none = '' if expr.is_external else 'implicit none\n'
+        implicit_none = '' if expr.is_external else 'implicit none\n'
 
-         parts = ['module {}\n'.format(name),
+        parts = ['module {}\n'.format(name),
                  imports,
                   implicit_none,
                  private,
