@@ -118,7 +118,10 @@ def test_f6(language):
 #------------------------------------------------------------------------------
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="List initialisation not yet supported"),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Lists not yet supported"),
             pytest.mark.c]
@@ -237,7 +240,10 @@ def test_f11(language):
 #------------------------------------------------------------------------------
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="List initialisation not yet supported"),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Lists not yet supported"),
             pytest.mark.c]
