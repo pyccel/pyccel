@@ -280,7 +280,7 @@ def test_homogeneous_list_annotation_embedded_complex(stc_language):
 
 def test_list_declaration(language):
     def list_int():
-        a : 'list[int]'
+        a : 'list[int]' #pylint: disable=unused-variable
 
     epyccel(list_int, language=language)
 
