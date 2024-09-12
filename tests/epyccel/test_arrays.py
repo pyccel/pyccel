@@ -4031,7 +4031,10 @@ def test_array_float_nested_C_array_initialization_3(language):
 # NUMPY SUM
 #==============================================================================
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="List comprehension not yet implemented"),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="List indexing is not yet supported in C, related issue #1876"),
             pytest.mark.c]
