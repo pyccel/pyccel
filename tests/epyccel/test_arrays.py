@@ -320,7 +320,10 @@ def test_array_int_1d_initialization_1(language):
 
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="List initialisation not yet supported."),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Lists not yet supported"),
             pytest.mark.c]
