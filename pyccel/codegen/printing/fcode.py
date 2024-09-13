@@ -687,9 +687,6 @@ class FCodePrinter(CodePrinter):
         if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return 'use mpi\n' + 'use mpiext\n'
 
-        if source.startswith('gFTL_extensions/'):
-            return f'use {expr.source.name}\n'
-
         targets = [t for t in expr.target if not isinstance(t.object, Module)]
 
         if len(targets) == 0:
