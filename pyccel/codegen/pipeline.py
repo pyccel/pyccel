@@ -343,8 +343,7 @@ def execute_pyccel(fname, *,
         try:
             deps = generate_extension_modules(key, import_node, pyccel_dirpath, language)
         except NotImplementedError as error:
-            msg = str(error)
-            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
                 severity='error',
                 traceback=error.__traceback__)
             handle_error('code generation (wrapping)')
