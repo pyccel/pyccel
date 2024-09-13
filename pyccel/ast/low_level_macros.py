@@ -8,6 +8,7 @@ Module to handle low-level language agnostic types such as macros.
 
 from .basic import PyccelAstNode
 
+__all__ = ('MacroDefinition',)
 class MacroDefinition(PyccelAstNode):
     """
     A class for defining a macro in a file.
