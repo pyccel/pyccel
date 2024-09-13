@@ -67,8 +67,6 @@ from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
-from pyccel.ast.type_annotations import VariableTypeAnnotation
-
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import expand_to_loops
 
