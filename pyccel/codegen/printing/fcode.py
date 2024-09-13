@@ -3317,20 +3317,20 @@ class FCodePrinter(CodePrinter):
 
     def indent_code(self, code):
         """
-	Add the correct indentation to the code.
+        Add the correct indentation to the code.
 
         Analyse the code to calculate when indentation is needed.
-	Add the necessary spaces at the start of each line.
+        Add the necessary spaces at the start of each line.
 
         Parameters
-	----------
-	code : str | iterable[str]
+        ----------
+        code : str | iterable[str]
             A string of code or a list of code lines.
 
         Returns
-	-------
+        -------
         list[str]
-	    A list of indented code lines.
+            A list of indented code lines.
         """
         if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
