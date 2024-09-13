@@ -25,6 +25,7 @@ class MacroDefinition(PyccelAstNode):
         A suffix that may be added to the object.
     """
     _attribute_nodes = ()
+    __slots__ = ()
 
     def __init__(self, macro_name, obj, suffix = None):
         self._macro_name = macro_name
