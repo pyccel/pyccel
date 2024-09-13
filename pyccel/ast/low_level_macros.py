@@ -28,6 +28,8 @@ class MacroDefinition(PyccelAstNode):
     __slots__ = ('_macro_name', '_obj', '_suffix')
 
     def __init__(self, macro_name, obj, suffix = None):
+        assert isinstance(macro_name, str)
+        assert suffix is None or isinstance(suffix, str)
         self._macro_name = macro_name
         self._obj = obj
         self._suffix = suffix or ''
