@@ -507,6 +507,23 @@ class FCodePrinter(CodePrinter):
                     f.cls_name = scope.get_new_name(f'{name}_{f.name}')
 
     def _build_gFTL_module(self, expr_type):
+        """
+        Build the gFTL module to create container types.
+
+        Create a module which will import the gFTL include files
+        in order to create container types (e.g lists, sets, etc).
+        The name of the module is derived from the name of the type.
+
+        Parameters
+        ----------
+        expr_type : DataType
+            The data type to be defined in a gFTL module.
+
+        Returns
+        -------
+        Import
+            The import which allows the new type to be accessed.
+        """
         if expr_type in self._generated_gFTL_extensions:
             module = self._generated_gFTL_extensions[expr_type]
             mod_name = module.name
