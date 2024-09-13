@@ -1221,7 +1221,7 @@ class Module(ScopedAstNode):
 
     def is_external(self):
         """
-        Indicates if the Module's definition is found elsewhere.
+        Indicate if the Module's definition is found elsewhere.
 
         This is notably the case for gFTL extensions.
         """
