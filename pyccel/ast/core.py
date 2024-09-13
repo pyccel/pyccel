@@ -1219,6 +1219,7 @@ class Module(ScopedAstNode):
         """
         return self._internal_dictionary.keys()
 
+    @property
     def is_external(self):
         """
         Indicate if the Module's definition is found elsewhere.
