@@ -1793,7 +1793,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isfinite function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isfinite({code_arg})"
 
@@ -1802,7 +1802,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isinf function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isinf({code_arg})"
 
@@ -1811,7 +1811,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isnan function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isnan({code_arg})"
 
