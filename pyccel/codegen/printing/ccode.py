@@ -6,6 +6,9 @@
 import functools
 from itertools import chain
 import re
+from packaging.version import Version
+
+import numpy as np
 
 from pyccel.ast.basic     import ScopedAstNode
 
@@ -67,6 +70,7 @@ from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
 
+numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 errors = Errors()
 
