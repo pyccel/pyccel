@@ -52,7 +52,7 @@ long long int isign(long long int x)
 /* numpy.sign for float, double and integers */
 double  fsign(double x)
 {
-    return double((x>0) - (x<0));
+    return (double)((x>0) - (x<0));
 }
 
 /* numpy.sign for complex for NumPy v1 */
