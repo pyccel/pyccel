@@ -2765,7 +2765,7 @@ class FCodePrinter(CodePrinter):
         arg = expr.args[0]
         arg_code = self._print(arg)
         if isinstance(expr.dtype.primitive_type, PrimitiveComplexType):
-            func_name = 'csgn' if numpy_v1 else 'signum'
+            func_name = 'csgn' if numpy_v1 else 'csign'
             func = PyccelFunctionDef(func_name, NumpySign)
             self.add_import(Import('numpy_f90', AsName(func, func_name)))
             return f'{func_name}({arg_code})'
