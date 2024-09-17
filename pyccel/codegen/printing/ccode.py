@@ -241,8 +241,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdio',
                  "inttypes",
                  'stdbool',
-                 'assert',
-                 'numpy_c']}
+                 'assert']}
 
 import_header_guard_prefix = {'Set_extensions'  : '_TOOLS_SET',
                               'List_extensions' : '_TOOLS_LIST'}
@@ -1773,7 +1772,7 @@ class CCodePrinter(CodePrinter):
             numpy.sign(x) => csign(x)   (x is complex)
 
         """
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['pyc_math_c'])
         primitive_type = expr.dtype.primitive_type
         func = ''
         if isinstance(primitive_type, PrimitiveIntegerType):
@@ -1781,7 +1780,7 @@ class CCodePrinter(CodePrinter):
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
             func = 'fsign'
         elif isinstance(primitive_type, PrimitiveComplexType):
-            func = 'csign'
+            func = 'csgn' if numpy_v1 else 'csign'
 
         return f'{func}({self._print(expr.args[0])})'
 
