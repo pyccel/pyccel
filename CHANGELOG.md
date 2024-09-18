@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## \[1.12.1\] - 2024-09-XX
 
+### Added
+
+-   #1915 : Add support for NumPy v2 `sign` function.
+
 ### Fixed
 
 -   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.

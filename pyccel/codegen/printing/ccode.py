@@ -6,6 +6,9 @@
 import functools
 from itertools import chain
 import re
+from packaging.version import Version
+
+import numpy as np
 
 from pyccel.ast.basic     import ScopedAstNode
 
@@ -56,6 +59,7 @@ from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
 
+numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 errors = Errors()
 
@@ -87,9 +91,6 @@ numpy_ufunc_to_c_float = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
-    'NumpyIsInf':'isinf',
-    'NumpyIsFinite':'isfinite',
-    'NumpyIsNan':'isnan',
 }
 
 numpy_ufunc_to_c_complex = {
@@ -230,8 +231,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdio',
                  "inttypes",
                  'stdbool',
-                 'assert',
-                 'numpy_c']}
+                 'assert']}
 
 class CCodePrinter(CodePrinter):
     """
@@ -1608,7 +1608,7 @@ class CCodePrinter(CodePrinter):
             numpy.sign(x) => csign(x)   (x is complex)
 
         """
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['pyc_math_c'])
         dtype = expr.dtype
         func = ''
         if isinstance(dtype, NativeInteger):
@@ -1616,7 +1616,7 @@ class CCodePrinter(CodePrinter):
         elif isinstance(dtype, NativeFloat):
             func = 'fsign'
         elif isinstance(dtype, NativeComplex):
-            func = 'csign'
+            func = 'csgn' if numpy_v1 else 'csign'
 
         return f'{func}({self._print(expr.args[0])})'
 
@@ -1625,7 +1625,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isfinite function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isfinite({code_arg})"
 
@@ -1634,7 +1634,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isinf function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isinf({code_arg})"
 
@@ -1643,7 +1643,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isnan function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isnan({code_arg})"
 

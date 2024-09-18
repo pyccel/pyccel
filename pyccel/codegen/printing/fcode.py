@@ -11,8 +11,10 @@ import string
 import re
 from itertools import chain
 from collections import OrderedDict
+from packaging.version import Version
 
 import functools
+import numpy as np
 
 from pyccel.ast.basic import TypedAstNode
 
@@ -73,6 +75,7 @@ from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
+numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 # TODO: add examples
 # TODO: use _get_statement when returning a string
@@ -2697,9 +2700,10 @@ class FCodePrinter(CodePrinter):
         arg = expr.args[0]
         arg_code = self._print(arg)
         if isinstance(expr.dtype, NativeComplex):
-            func = PyccelFunctionDef('numpy_sign', NumpySign)
-            self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
-            return f'numpy_sign({arg_code})'
+            func_name = 'csgn' if numpy_v1 else 'csign'
+            func = PyccelFunctionDef(func_name, NumpySign)
+            self._additional_imports.add(Import('pyc_math_f90', AsName(func, func_name)))
+            return f'{func_name}({arg_code})'
         else:
             cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
             # The absolute value of the result (0 if the argument is 0, 1 otherwise)
