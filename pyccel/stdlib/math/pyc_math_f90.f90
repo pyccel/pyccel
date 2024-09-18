@@ -231,16 +231,16 @@ function amin_4(arr) result(min_value)
 
     implicit none
 
-    complex( C_FLOAT_COMPLEX)                :: min_value
-    complex( C_FLOAT_COMPLEX), intent(in)    :: arr(0:)
-    complex( C_FLOAT_COMPLEX)                :: a
-    integer(C_INT64_T)                       :: current_value
+    complex(c32)                :: min_value
+    complex(c32), intent(in)    :: arr(0:)
+    complex(c32)                :: a
+    integer(i64)                       :: current_value
 
-    min_value = arr(0_C_INT64_T)
-    do current_value = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+    min_value = arr(0_i64)
+    do current_value = 1_i64, size(arr, kind=i64) - 1_i64
       a = arr(current_value)
-      if (Real(a, C_FLOAT) < Real(min_value, C_FLOAT) .or. (Real(a, C_FLOAT) == &
-            Real(min_value, C_FLOAT) .and. aimag(a) < aimag(min_value &
+      if (Real(a, f32) < Real(min_value, f32) .or. (Real(a, f32) == &
+            Real(min_value, f32) .and. aimag(a) < aimag(min_value &
             ))) then
         min_value = a
       end if
@@ -253,16 +253,16 @@ function amin_4(arr) result(min_value)
 
     implicit none
 
-    complex(C_DOUBLE_COMPLEX)                :: min_value
-    complex(C_DOUBLE_COMPLEX), intent(in)    :: arr(0:)
-    complex(C_DOUBLE_COMPLEX)                :: a
-    integer(C_INT64_T)                       :: current_value
+    complex(c64)                :: min_value
+    complex(c64), intent(in)    :: arr(0:)
+    complex(c64)                :: a
+    integer(i64)                       :: current_value
 
-    min_value = arr(0_C_INT64_T)
-    do current_value = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+    min_value = arr(0_i64)
+    do current_value = 1_i64, size(arr, kind=i64) - 1_i64
       a = arr(current_value)
-      if (Real(a, C_DOUBLE) < Real(min_value, C_DOUBLE) .or. (Real(a, C_DOUBLE) == &
-            Real(min_value, C_DOUBLE) .and. aimag(a) < aimag(min_value &
+      if (Real(a, f64) < Real(min_value, f64) .or. (Real(a, f64) == &
+            Real(min_value, f64) .and. aimag(a) < aimag(min_value &
             ))) then
         min_value = a
       end if
@@ -276,12 +276,12 @@ function amin_4(arr) result(min_value)
 
     implicit none
 
-    complex(C_FLOAT_COMPLEX) :: Out_0001
-    complex(C_FLOAT_COMPLEX), value :: x
+    complex(c32) :: Out_0001
+    complex(c32), value :: x
     logical :: real_ne_zero ! Condition for x.real different than 0
     logical :: imag_ne_zero ! Condition for x.imag different than 0
-    real(C_FLOAT) :: real_sign ! np.sign(x.real)
-    real(C_FLOAT) :: imag_sign ! np.sign(x.imag)
+    real(f32) :: real_sign ! np.sign(x.real)
+    real(f32) :: imag_sign ! np.sign(x.imag)
 
     real_ne_zero = (real(x) .ne. 0._f32)
     imag_ne_zero = (aimag(x) .ne. 0._f32)
@@ -297,12 +297,12 @@ function amin_4(arr) result(min_value)
 
     implicit none
 
-    complex(C_DOUBLE_COMPLEX) :: Out_0001
-    complex(C_DOUBLE_COMPLEX), value :: x
+    complex(c64) :: Out_0001
+    complex(c64), value :: x
     logical :: real_ne_zero ! Condition for x.real different than 0
     logical :: imag_ne_zero ! Condition for x.imag different than 0
-    real(C_DOUBLE) :: real_sign ! np.sign(x.real)
-    real(C_DOUBLE) :: imag_sign ! np.sign(x.imag)
+    real(f64) :: real_sign ! np.sign(x.real)
+    real(f64) :: imag_sign ! np.sign(x.imag)
 
     real_ne_zero = (real(x) .ne. 0._f64)
     imag_ne_zero = (aimag(x) .ne. 0._f64)
@@ -317,14 +317,14 @@ function amin_4(arr) result(min_value)
   elemental function numpy_v2_sign_c32(x) result(Out_0001)
     implicit none
 
-    complex(C_FLOAT_COMPLEX) :: Out_0001
-    complex(C_FLOAT_COMPLEX), value :: x
+    complex(c32) :: Out_0001
+    complex(c32), value :: x
 
-    real(C_FLOAT) :: abs_val
+    real(f32) :: abs_val
 
     abs_val = abs(x)
     if (abs_val == 0) then
-      Out_0001 = 0
+      Out_0001 = 0._c32
     else
       Out_0001 = x / abs_val
     end if
@@ -334,14 +334,14 @@ function amin_4(arr) result(min_value)
   elemental function numpy_v2_sign_c64(x) result(Out_0001)
     implicit none
 
-    complex(C_DOUBLE_COMPLEX) :: Out_0001
-    complex(C_DOUBLE_COMPLEX), value :: x
+    complex(c64) :: Out_0001
+    complex(c64), value :: x
 
-    real(C_DOUBLE) :: abs_val
+    real(f64) :: abs_val
 
     abs_val = abs(x)
     if (abs_val == 0) then
-      Out_0001 = 0
+      Out_0001 = 0._c64
     else
       Out_0001 = x / abs_val
     end if
