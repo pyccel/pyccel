@@ -7,6 +7,7 @@ Module to handle low-level language agnostic objects such as macros.
 """
 
 from .basic import PyccelAstNode
+from .datatypes import FixedSizeType
 
 __all__ = ('MacroDefinition',
            'IteratorType')
