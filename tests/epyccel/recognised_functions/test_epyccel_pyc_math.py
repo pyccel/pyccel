@@ -24,6 +24,20 @@ def test_call_gcd(language):
 
 # -----------------------------------------------------------------------------
 
+def test_call_gcd_negative(language):
+    def call_gcd(x : int, y : int):
+        from math import gcd
+        return gcd(x, y)
+
+    f = epyccel(call_gcd, language=language)
+    x = randint(-1e9, 1e9)
+    y = randint(-1e9, 1e9)
+
+    assert f(x,y) == call_gcd(x, y)
+
+
+# -----------------------------------------------------------------------------
+
 def test_call_factorial(language):
     def call_factorial(x : 'int'):
         from math import factorial
@@ -46,6 +60,21 @@ def test_call_lcm(language):
     f = epyccel(call_lcm, language=language)
     x = randint(1e4)
     y = randint(1e5)
+
+    assert f(x,y) == call_lcm(x, y)
+
+# -----------------------------------------------------------------------------
+
+# New in version 3.9.
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
+def test_call_lcm_negative(language):
+    def call_lcm(x : int, y : int):
+        from math import lcm
+        return lcm(x, y)
+
+    f = epyccel(call_lcm, language=language)
+    x = randint(-1e4, 1e4)
+    y = randint(-1e5, 1e5)
 
     assert f(x,y) == call_lcm(x, y)
 
