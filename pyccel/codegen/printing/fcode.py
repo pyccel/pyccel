@@ -1907,7 +1907,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_IteratorType(self, expr):
          iterator_type = self._print(expr.iterator_type)
-         return f"{iterator_type}_Iterator
+         return f"{iterator_type}_Iterator"
     def _print_DataType(self, expr):
         return self._print(expr.name)
 
