@@ -8,7 +8,31 @@ Module to handle low-level language agnostic objects such as macros.
 
 from .basic import PyccelAstNode
 
-__all__ = ('MacroDefinition',)
+__all__ = ('MacroDefinition',
+           'IteratorType')
+
+#------------------------------------------------------------------------------
+class IteratorType(FixedSizeType):
+    """
+    The type of an iterator which accessed elements of a container.
+
+    The type of an iterator which accessed elements of a container
+    (e.g. list, set, etc)
+    """
+    def __init__(self, iterable_type):
+        self._iterable_type = iterable_type
+        super().__init__()
+
+    @property
+    def iterable_type(self):
+        """
+        The type of the iterable object whose elements are accessed via this type.
+
+        The type of the iterable object whose elements are accessed via this type.
+        """
+        return self._iterable_type
+
+#------------------------------------------------------------------------------
 class MacroDefinition(PyccelAstNode):
     """
     A class for defining a macro in a file.
