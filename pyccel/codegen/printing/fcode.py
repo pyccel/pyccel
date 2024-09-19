@@ -1905,6 +1905,9 @@ class FCodePrinter(CodePrinter):
     def _print_HomogeneousListType(self, expr):
         return 'Vector_'+self._print(expr.element_type)
 
+    def _print_IteratorType(self, expr):
+         iterator_type = self._print(expr.iterator_type)
+         return f"{iterator_type}_Iterator
     def _print_DataType(self, expr):
         return self._print(expr.name)
 
