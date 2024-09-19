@@ -3,7 +3,7 @@
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
-Module to handle low-level language agnostic types such as macros.
+Module to handle low-level language agnostic objects such as macros.
 """
 
 from .basic import PyccelAstNode
