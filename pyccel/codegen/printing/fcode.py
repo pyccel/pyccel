@@ -49,7 +49,7 @@ from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal, LiteralE
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
 from pyccel.ast.literals  import Nil
 
-from pyccel.ast.low_level_macros  import MacroDefinition
+from pyccel.ast.low_leveltools  import MacroDefinition, IteratorType
 
 from pyccel.ast.mathext  import math_constants
 
