@@ -5,6 +5,7 @@
 """
 Module to handle low-level language agnostic objects such as macros.
 """
+from pyccel.utilities.metaclasses import ArgumentSingleton
 
 from .basic import PyccelAstNode
 from .datatypes import FixedSizeType
@@ -13,7 +14,7 @@ __all__ = ('MacroDefinition',
            'IteratorType')
 
 #------------------------------------------------------------------------------
-class IteratorType(FixedSizeType):
+class IteratorType(FixedSizeType, metaclass=ArgumentSingleton):
     """
     The type of an iterator which accessed elements of a container.
 
@@ -23,7 +24,7 @@ class IteratorType(FixedSizeType):
     Parameters
     -----------
     iterable_type : ContainerType
-        The container that is iterated over
+        The container that is iterated over.
     """
     __slots__ = ('_iterable_type',)
     def __init__(self, iterable_type):
