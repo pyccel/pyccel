@@ -19,6 +19,11 @@ class IteratorType(FixedSizeType):
 
     The type of an iterator which accessed elements of a container
     (e.g. list, set, etc)
+
+    Parameters
+    -----------
+    iterable_type : ContainerType
+        The container that is iterated over
     """
     __slots__ = ('_iterable_type',)
     def __init__(self, iterable_type):
