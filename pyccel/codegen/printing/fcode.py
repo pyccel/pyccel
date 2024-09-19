@@ -534,7 +534,7 @@ class FCodePrinter(CodePrinter):
                 include = Import(LiteralString('vector/template.inc'), Module('_', (), ()))
                 macros = [MacroDefinition('T', expr_type.element_type),
                           MacroDefinition('Vector', expr_type),
-                          MacroDefinition('VectorIterator', expr_type, '_Iterator')]
+                          MacroDefinition('VectorIterator', IteratorType(expr_type))]
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
 
