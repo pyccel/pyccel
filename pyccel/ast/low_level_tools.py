@@ -20,6 +20,7 @@ class IteratorType(FixedSizeType):
     The type of an iterator which accessed elements of a container
     (e.g. list, set, etc)
     """
+    __slots__ = ('_iterable_type',)
     def __init__(self, iterable_type):
         self._iterable_type = iterable_type
         super().__init__()
