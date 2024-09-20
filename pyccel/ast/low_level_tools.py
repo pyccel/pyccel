@@ -8,13 +8,13 @@ Module to handle low-level language agnostic objects such as macros.
 from pyccel.utilities.metaclasses import ArgumentSingleton
 
 from .basic import PyccelAstNode
-from .datatypes import FixedSizeType
+from .datatypes import PyccelType
 
 __all__ = ('MacroDefinition',
            'IteratorType')
 
 #------------------------------------------------------------------------------
-class IteratorType(FixedSizeType, metaclass=ArgumentSingleton):
+class IteratorType(PyccelType, metaclass=ArgumentSingleton):
     """
     The type of an iterator which accessed elements of a container.
 
