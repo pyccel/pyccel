@@ -22,7 +22,7 @@ class IteratorType(PyccelType, metaclass=ArgumentSingleton):
     (e.g. list, set, etc)
 
     Parameters
-    -----------
+    ----------
     iterable_type : ContainerType
         The container that is iterated over.
     """
