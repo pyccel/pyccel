@@ -120,5 +120,3 @@ traceback
 STC
 gFTL
 CMake
-gcd
-lcm
