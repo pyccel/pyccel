@@ -94,8 +94,8 @@ pure function pyc_gcd_4(a, b) result(gcd) ! integers with precision 4
     integer(i32)             :: x, y
     integer(i32)             :: gcd
 
-    x = a
-    y = b
+    x = MERGE(a, -a, a > 0)
+    y = MERGE(b, -b, b > 0)
     do while (y > 0)
         x = MOD(x, y)
         x = IEOR(x, y)
@@ -115,8 +115,8 @@ pure function pyc_gcd_8(a, b) result(gcd) ! integers with precision 8
     integer(i64)              :: x, y
     integer(i64)              :: gcd
 
-    x = a
-    y = b
+    x = MERGE(a, -a, a > 0)
+    y = MERGE(b, -b, b > 0)
     do while (y > 0)
         x = MOD(x, y)
         x = IEOR(x, y)
@@ -137,6 +137,8 @@ pure function pyc_lcm_4(a, b) result(lcm)
     integer(i32), value      :: b
     integer(i32)             :: lcm
 
+    a = MERGE(a, -a, a > 0)
+    b = MERGE(b, -b, b > 0)
     lcm = a / pyc_gcd(a, b) * b
     return
 
@@ -150,6 +152,8 @@ pure function pyc_lcm_8(a, b) result(lcm)
     integer(i64), value      :: b
     integer(i64)             :: lcm
 
+    a = MERGE(a, -a, a > 0)
+    b = MERGE(b, -b, b > 0)
     lcm = a / pyc_gcd(a, b) * b
     return
 
