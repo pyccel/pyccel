@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 -   #1933 : Improve code printing speed.
 -   #1924 : Fix internal error arising in Duplicate or list comprehensions.
 -   #1970 : Fix missing `TypeError` for wrong type passed as optional argument.
+-   #1985 : Fix implementation of `gcd` and `lcm` for C and Fortran.
 
 ## \[1.12.0\] - 2024-05-08
 
