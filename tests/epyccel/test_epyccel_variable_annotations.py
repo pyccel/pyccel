@@ -217,11 +217,11 @@ def test_homogeneous_set_annotation_complex(stc_language):
     assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
     assert isinstance(epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation()))
 
-def test_homogeneous_empty_list_annotation_int(stc_language):
+def test_homogeneous_empty_list_annotation_int(language):
     def homogeneous_list_annotation():
         a: 'list[int]'  # pylint: disable=unused-variable
         a = []
-    epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=stc_language)
+    epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
 

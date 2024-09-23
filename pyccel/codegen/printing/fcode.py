@@ -37,7 +37,7 @@ from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
 from pyccel.ast.datatypes import PythonNativeInt, HomogeneousTupleType, HomogeneousListType
-from pyccel.ast.datatypes import HomogeneousSetType, DictType
+from pyccel.ast.datatypes import HomogeneousSetType, DictType, HomogeneousContainerType
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type
 
@@ -987,7 +987,19 @@ class FCodePrinter(CodePrinter):
         return f'[{args}]'
 
     def _print_PythonList(self, expr):
-        return self._print_PythonTuple(expr)
+        if len(expr.args) == 0:
+            list_arg = ''
+            assign = expr.get_direct_user_nodes(lambda a : isinstance(a, Assign))
+            if assign:
+                vec_type = self._print(assign[0].lhs.class_type)
+            else:
+                errors.report("Can't use an empty list without assigning it to a variable as the type cannot be deduced",
+                        severity='fatal', symbol=expr)
+
+        else:
+            list_arg = self._print_PythonTuple(expr)
+            vec_type = self._print(expr.class_type)
+        return f'{vec_type}({list_arg})'
 
     def _print_InhomogeneousTupleVariable(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
@@ -1816,36 +1828,44 @@ class FCodePrinter(CodePrinter):
 
 #------------------------------------------------------------------------------
     def _print_Allocate(self, expr):
-        # Transpose indices because of Fortran column-major ordering
-        shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
+        class_type = expr.variable.class_type
+        if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
+            # Transpose indices because of Fortran column-major ordering
+            shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
 
-        var_code = self._print(expr.variable)
-        size_code = ', '.join(self._print(i) for i in shape)
-        shape_code = ', '.join('0:' + self._print(PyccelMinus(i, LiteralInteger(1), simplify = True)) for i in shape)
-        if shape:
-            shape_code = f'({shape_code})'
-        code = ''
+            var_code = self._print(expr.variable)
+            size_code = ', '.join(self._print(i) for i in shape)
+            shape_code = ', '.join('0:' + self._print(PyccelMinus(i, LiteralInteger(1), simplify = True)) for i in shape)
+            if shape:
+                shape_code = f'({shape_code})'
+            code = ''
 
-        if expr.status == 'unallocated':
-            code += f'allocate({var_code}{shape_code})\n'
+            if expr.status == 'unallocated':
+                code += f'allocate({var_code}{shape_code})\n'
 
-        elif expr.status == 'unknown':
-            code += f'if (allocated({var_code})) then\n'
-            code += f'  if (any(size({var_code}) /= [{size_code}])) then\n'
-            code += f'    deallocate({var_code})\n'
-            code += f'    allocate({var_code}{shape_code})\n'
-            code +=  '  end if\n'
-            code +=  'else\n'
-            code += f'  allocate({var_code}{shape_code})\n'
-            code +=  'end if\n'
+            elif expr.status == 'unknown':
+                code += f'if (allocated({var_code})) then\n'
+                code += f'  if (any(size({var_code}) /= [{size_code}])) then\n'
+                code += f'    deallocate({var_code})\n'
+                code += f'    allocate({var_code}{shape_code})\n'
+                code +=  '  end if\n'
+                code +=  'else\n'
+                code += f'  allocate({var_code}{shape_code})\n'
+                code +=  'end if\n'
 
-        elif expr.status == 'allocated':
-            code += f'if (any(size({var_code}) /= [{size_code}])) then\n'
-            code += f'  deallocate({var_code})\n'
-            code += f'  allocate({var_code}{shape_code})\n'
-            code +=  'end if\n'
+            elif expr.status == 'allocated':
+                code += f'if (any(size({var_code}) /= [{size_code}])) then\n'
+                code += f'  deallocate({var_code})\n'
+                code += f'  allocate({var_code}{shape_code})\n'
+                code +=  'end if\n'
 
-        return code
+            return code
+
+        elif isinstance(class_type, HomogeneousContainerType):
+            return ''
+
+        else:
+            return self._print_not_supported(expr)
 
 #-----------------------------------------------------------------------------
     def _print_Deallocate(self, expr):
