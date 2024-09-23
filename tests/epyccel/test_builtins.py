@@ -433,3 +433,7 @@ def test_len_dict_int_float(stc_language):
         a = {1:1.0, 2:2.0, 3:3.0, 4:4.0}
         b = len(a)
         return b
+
+    epyc_f = epyccel(f, language=stc_language)
+
+    assert epyc_f() == f()
