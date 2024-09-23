@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 -   #1700 : Add Python support for list method `sort()`.
 -   #1696 : Add Python support for list method `copy()`.
 -   #1693 : Add Python support for list method `remove()`.
+-   #1690 : Add C support for list method `pop()`.
 -   #1739 : Add abstract class `SetMethod` to handle calls to various set methods.
 -   #1739 : Add Python support for set method `clear()`.
 -   #1740 : Add Python support for set method `copy()`.
@@ -29,11 +30,14 @@ All notable changes to this project will be documented in this file.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
 -   #1886 : Add Python support for dict method `pop()`.
+-   #1887 : Add Python support for dict method `popitem()`.
+-   #1885 : Add Python support for dict method `get()`.
 -   #1944 : Add the appropriate C language equivalent for declaring a Python `dict` container using the STC library.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
 -   #1583 : Allow inhomogeneous tuples in classes.
+-   #1915 : Add support for NumPy v2 `sign` function.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
@@ -59,6 +63,8 @@ All notable changes to this project will be documented in this file.
 -   #1951 : Fix return type for class whose argument cannot be wrapped.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
 -   #1924 : Fix internal error arising in Duplicate or list comprehensions.
+-   #1970 : Fix missing `TypeError` for wrong type passed as optional argument.
+-   #1985 : Fix implementation of `gcd` and `lcm` for C and Fortran.
 
 ### Changed
 
@@ -67,6 +73,7 @@ All notable changes to this project will be documented in this file.
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
 -   #1964 : Improve the error message when the wrong type is passed as a NumPy array argument.
+-   #1941 : Rename "target" in `AsName` to `local_alias` to better illustrate its use in the local context.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -88,7 +95,9 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
 -   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
 -   \[INTERNALS\] Handle STC imports with Pyccel objects.
+-   \[INTERNALS\] Stop using ndarrays as an intermediate step to call Fortran code.
 -   \[INTERNALS\] Stop using ndarrays as an intermediate step to return arrays from Fortran code.
+-   \[INTERNALS\] Unify the strategy for handling additional imports in the printing stage for different languages.
 
 ### Deprecated
 
