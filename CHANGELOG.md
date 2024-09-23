@@ -6,38 +6,39 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
+-   #1787 : Ensure STC is installed with Pyccel.
+-   #1656 : Ensure gFTL is installed with Pyccel.
 -   #1694 : Add Python support for list method `extend()`.
 -   #1700 : Add Python support for list method `sort()`.
 -   #1696 : Add Python support for list method `copy()`.
 -   #1693 : Add Python support for list method `remove()`.
--   #1690 : Add C support for list method `pop()`.
--   #1739 : Add abstract class `SetMethod` to handle calls to various set methods.
 -   #1739 : Add Python support for set method `clear()`.
 -   #1740 : Add Python support for set method `copy()`.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1743 : Add Python support for set method `discard()`.
 -   #1754 : Add Python support for set method `update()`.
 -   #1893 : Add Python support for set initialisation with `set()`.
--   #1874 : Add the appropriate C language equivalent of `len()` for the `list` container using the `STC` library.
--   #1875 : Add the appropriate C language equivalent of `len()` for the `set` container using the `STC` library.
--   #1787 : Ensure STC is installed with Pyccel.
--   #1656 : Ensure gFTL is installed with Pyccel.
--   #1844 : Add line numbers and code to errors from built-in function calls.
--   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the STC library.
--   #1876 : Add C support for indexing lists.
--   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
--   #1877 : Add C Support for set method `pop()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
 -   #1886 : Add Python support for dict method `pop()`.
 -   #1887 : Add Python support for dict method `popitem()`.
 -   #1885 : Add Python support for dict method `get()`.
+-   #1844 : Add line numbers and code to errors from built-in function calls.
+-   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the STC library.
+-   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
 -   #1944 : Add the appropriate C language equivalent for declaring a Python `dict` container using the STC library.
+-   #1874 : Add the appropriate C language equivalent of `len()` for the `list` container using the `STC` library.
+-   #1875 : Add the appropriate C language equivalent of `len()` for the `set` container using the `STC` library.
+-   #1908 : Add the appropriate C language equivalent of `len()` for the `dict` container using the `STC` library.
+-   #1876 : Add C support for indexing lists.
+-   #1690 : Add C support for list method `pop()`.
+-   #1877 : Add C Support for set method `pop()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
 -   #1583 : Allow inhomogeneous tuples in classes.
 -   #1915 : Add support for NumPy v2 `sign` function.
+-   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
