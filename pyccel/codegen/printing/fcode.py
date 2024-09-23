@@ -3379,5 +3379,4 @@ class FCodePrinter(CodePrinter):
     def _print_MacroDefinition(self, expr):
         name = expr.macro_name
         obj = self._print(expr.object)
-        suffix = expr.suffix
-        return f'#define {name} {obj}{suffix}\n'
+        return f'#define {name} {obj}\n'
