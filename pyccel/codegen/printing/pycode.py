@@ -16,7 +16,7 @@ from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
-from pyccel.ast.numpytypes import NumpyNumericType
+from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.variable   import DottedName, Variable
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
@@ -490,10 +490,14 @@ class PythonCodePrinter(CodePrinter):
         return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))
 
     def _print_PyccelArrayShapeElement(self, expr):
-        arg = self._print(expr.arg)
-        index = self._print(expr.index)
-        name = self._get_numpy_name(expr)
-        return f'{name}({arg})[{index}]'
+        arg = expr.arg
+        arg_code = self._print(arg)
+        if isinstance(arg.class_type, NumpyNDArrayType):
+            index = self._print(expr.index)
+            name = self._get_numpy_name(expr)
+            return f'{name}({arg_code})[{index}]'
+        else:
+            return f'len({arg_code})'
 
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
