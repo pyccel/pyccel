@@ -10,15 +10,15 @@ from pyccel.utilities.metaclasses import ArgumentSingleton
 from .basic import PyccelAstNode
 from .datatypes import PyccelType
 
-__all__ = ('MacroDefinition',
-           'IteratorType')
+__all__ = ('IteratorType',
+           'MacroDefinition')
 
 #------------------------------------------------------------------------------
 class IteratorType(PyccelType, metaclass=ArgumentSingleton):
     """
-    The type of an iterator which accessed elements of a container.
+    The type of an iterator which accesses elements of a container.
 
-    The type of an iterator which accessed elements of a container
+    The type of an iterator which accesses elements of a container
     (e.g. list, set, etc)
 
     Parameters
@@ -53,18 +53,14 @@ class MacroDefinition(PyccelAstNode):
         The name of the macro.
     obj : Any
         The object that will define the macro.
-    suffix : str, optional
-        A suffix that may be added to the object.
     """
     _attribute_nodes = ()
-    __slots__ = ('_macro_name', '_obj', '_suffix')
+    __slots__ = ('_macro_name', '_obj')
 
-    def __init__(self, macro_name, obj, suffix = None):
+    def __init__(self, macro_name, obj):
         assert isinstance(macro_name, str)
-        assert suffix is None or isinstance(suffix, str)
         self._macro_name = macro_name
         self._obj = obj
-        self._suffix = suffix or ''
         super().__init__()
 
     @property
@@ -85,11 +81,3 @@ class MacroDefinition(PyccelAstNode):
         """
         return self._obj
 
-    @property
-    def suffix(self):
-        """
-        A suffix that may be added to the object.
-
-        A suffix that may be added to the object.
-        """
-        return self._suffix
