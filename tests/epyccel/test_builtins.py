@@ -370,17 +370,6 @@ def test_len_inhomog_tuple(language):
 
     assert epyc_f() == f()
 
-@pytest.fixture( params=[
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="list & set declaration in Fortran are not yet implemented. related issues #1657 #1658"),
-            pytest.mark.fortran])
-    ],
-    scope = "module"
-)
-def stc_language(request):
-    return request.param
-
 def test_len_list_int(stc_language):
     def f():
         a = [1, 2, 3]
@@ -438,3 +427,9 @@ def test_len_set_complex(stc_language):
     epyc_f = epyccel(f, language=stc_language)
 
     assert epyc_f() == f()
+
+def test_len_dict_int_float(stc_language):
+    def f():
+        a = {1:1.0, 2:2.0, 3:3.0, 4:4.0}
+        b = len(a)
+        return b
