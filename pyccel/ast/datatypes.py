@@ -9,12 +9,14 @@
 Classes and methods that handle supported datatypes in C/Fortran.
 """
 from functools import lru_cache
-import warnings
 
 import numpy
 
+from pyccel.errors.errors     import Errors
 from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
 from .basic import iterable
+
+errors = Errors()
 
 __all__ = (
         # ------------ Super classes ------------
@@ -787,7 +789,7 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
         if element_type.rank > 0:
-            warnings.warn("Nested lists are not yet fully supported. Using containers in lists may lead to bugs such as memory leaks")
+            errors.report("Nested lists are not yet fully supported. Using containers in lists may lead to bugs such as memory leaks", symbol=self, severity="warning")
         self._element_type = element_type
         self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
         super().__init__()
