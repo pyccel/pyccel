@@ -568,6 +568,34 @@ class FCodePrinter(CodePrinter):
 
         return Import(f'gFTL_extensions/{mod_name}', module)
 
+    def _get_array_init_element_code(self, expr):
+        """
+        Get the code to print an element of an array.
+
+        This function ensures that lists are printed as basic Fortran lists instead of using a
+        gFTL Vector.
+
+        Parameters
+        ----------
+        expr : PyccelAstType
+            The element of the array.
+
+        Returns
+        -------
+        str
+            The code for the element.
+        """
+        if isinstance(expr, (PythonList, PythonTuple)):
+            shape = tuple(reversed(expr.shape))
+            if len(shape)>1:
+                elements = ', '.join(self._get_array_init_element_code(i) for i in expr)
+                shape    = ', '.join(self._print(i) for i in shape)
+                return 'reshape(['+ elements + '], [' + shape + '])'
+            args = ', '.join(self._print(f) for f in expr)
+            return f'[{args}]'
+        else:
+            return self._print(expr)
+
     # ============ Elements ============ #
     def _print_PyccelSymbol(self, expr):
         return expr
@@ -1280,7 +1308,7 @@ class FCodePrinter(CodePrinter):
         # use reshape with order for rank > 2
         if expr.rank <= 2:
             arg = expr.arg if expr.arg.dtype == expr.dtype else cast_func(expr.arg)
-            rhs_code = self._print(arg)
+            rhs_code = self._get_array_init_element_code(arg)
             if expr.arg.order and expr.arg.order != expr.order:
                 rhs_code = f'transpose({rhs_code})'
             if expr.arg.rank < expr.rank:
@@ -1295,12 +1323,11 @@ class FCodePrinter(CodePrinter):
             new_args = []
             inv_order = 'C' if order == 'F' else 'F'
             for a in expr_args:
-                ac = self._print(a)
 
                 # Pack list/tuple of array/list/tuple into array
                 if a.order is None and a.rank > 1:
                     a = NumpyArray(a)
-                    ac = self._print(a)
+                ac = self._get_array_init_element_code(a)
 
                 # Reshape array element if out of order
                 if a.order == inv_order:
