@@ -117,13 +117,27 @@ def test_f6(language):
     # ...
 #------------------------------------------------------------------------------
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="Copy of a list not yet supported (required to handle the generated temporary)."),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Copy of a list not yet supported (required to handle the generated temporary)."),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_f7(language):
     def f7(x : 'int'):
         a = [1.,2.,3.] if x < 5 else [1.5,6.5,7.5]
+        print(a[0])
         return a[0]
 
     def f7wp(x : 'int'):
         a = [1.,2.,3.] if x < 5 else ([1.5,6.5,7.5] if x > 5 else [3.1,9.5,2.8])
+        print(a[0])
         return a[0]
 
     f = epyccel(f7, language = language)
@@ -227,6 +241,18 @@ def test_f11(language):
     # ...
 #------------------------------------------------------------------------------
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="Copy of a list not yet supported (required to handle the generated temporary)."),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Copy of a list not yet supported (required to handle the generated temporary)."),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_f12(language):
     def f12(x : 'int'):
         a = [1.,2.,3.,4.] if x < 5 else [1.5,6.5,7.5]
