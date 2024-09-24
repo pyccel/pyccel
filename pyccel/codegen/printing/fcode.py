@@ -41,6 +41,8 @@ from pyccel.ast.datatypes import HomogeneousSetType, DictType, HomogeneousContai
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type, PyccelType
 
+from pyccel.ast.fortran_concepts import KindSpecification
+
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 
 from pyccel.ast.itertoolsext import Product
@@ -275,8 +277,9 @@ class FCodePrinter(CodePrinter):
             if len(rename) == 0:
                 continue
             macro += " , ".join(rename)
+            macro += "\n"
             macros.append(macro)
-        return "\n".join(macros)
+        return "".join(macros)
 
     def set_current_class(self, name):
 
@@ -535,7 +538,7 @@ class FCodePrinter(CodePrinter):
                 include = Import(LiteralString('vector/template.inc'), Module('_', (), ()))
                 element_type = expr_type.element_type
                 macros = [MacroDefinition('T', element_type),
-                          MacroDefinition('T_KINDLEN(context)', f'(kind={expr_type.precision})')]
+                          MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type))]
                 if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
                     macros.append(MacroDefinition('T_rank', element_type.rank))
                 macros.append(MacroDefinition('Vector', expr_type))
@@ -609,12 +612,12 @@ class FCodePrinter(CodePrinter):
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
         imports += ''.join(self._print(i) for i in self._additional_imports.values())
-        imports += "\n" + self.print_constant_imports()
+        imports = self.print_constant_imports() + imports
         implicit_none = '' if expr.is_external else 'implicit none\n'
 
         parts = ['module {}\n'.format(name),
                  imports,
-                  implicit_none,
+                 implicit_none,
                  private,
                  decs,
                  interfaces,
@@ -3413,3 +3416,6 @@ class FCodePrinter(CodePrinter):
         name = expr.macro_name
         obj = self._print(expr.object)
         return f'#define {name} {obj}\n'
+
+    def _print_KindSpecification(self, expr):
+        return f'(kind = {self.print_kind(expr.type_specifier)})'
