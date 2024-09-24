@@ -269,7 +269,6 @@ def test_homogeneous_list_annotation_complex(language):
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
 
-#TODO: list in list
 def test_homogeneous_list_annotation_embedded_complex(stc_language):
     def homogeneous_list_annotation():
         a : 'list[complex]' = [1j, 2j]
