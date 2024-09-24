@@ -537,8 +537,9 @@ class FCodePrinter(CodePrinter):
             if isinstance(expr_type, HomogeneousListType):
                 include = Import(LiteralString('vector/template.inc'), Module('_', (), ()))
                 element_type = expr_type.element_type
-                macros = [MacroDefinition('T', element_type),
-                          MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type))]
+                macros = [MacroDefinition('T', element_type)]
+                if isinstance(element_type, FixedSizeNumericType):
+                    macros.append(MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type)))
                 if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
                     macros.append(MacroDefinition('T_rank', element_type.rank))
                 macros.append(MacroDefinition('Vector', expr_type))
