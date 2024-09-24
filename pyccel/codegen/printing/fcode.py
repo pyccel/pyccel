@@ -268,7 +268,17 @@ class FCodePrinter(CodePrinter):
         self._generated_gFTL_extensions = {}
 
     def print_constant_imports(self):
-        """Prints the use line for the constant imports used"""
+        """
+        Print the import of constant intrinsics.
+
+        Print the import of constants such as `C_INT` from an intrinsic module (i.e. a
+        module provided by Fortran) such as `iso_c_binding`.
+
+        Returns
+        -------
+        str
+            The code describing the import of the intrinsics.
+        """
         macros = []
         for (name, imports) in self._constantImports.items():
 
