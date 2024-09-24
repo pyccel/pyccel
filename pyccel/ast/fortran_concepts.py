@@ -34,5 +34,7 @@ class KindSpecification(PyccelAstNode):
     def type_specifier(self):
         """
         The type of the element whose kind parameter should be specified.
+
+        The type of the element whose kind parameter should be specified.
         """
         return self._type_specifier
