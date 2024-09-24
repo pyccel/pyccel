@@ -1656,7 +1656,7 @@ class FCodePrinter(CodePrinter):
             if is_alias:
                 allocatablestr = ', pointer'
 
-            elif on_heap and not intent_in:
+            elif on_heap and not intent_in and isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -1890,14 +1890,18 @@ class FCodePrinter(CodePrinter):
             Pyccel_del_args = [FunctionCallArgument(var)]
             return self._print(FunctionCall(Pyccel__del, Pyccel_del_args))
 
-        if var.is_alias:
+        if var.is_alias or isinstance(class_type, HomogeneousListType):
             return ''
-        else:
+        elif isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             var_code = self._print(var)
             code  = 'if (allocated({})) then\n'.format(var_code)
             code += '  deallocate({})\n'     .format(var_code)
             code += 'end if\n'
             return code
+        else:
+            errors.report(f"Deallocate not implemented for {class_type}",
+                    severity='error', symbol=expr)
+            return ''
 
     def _print_DeallocatePointer(self, expr):
         var_code = self._print(expr.variable)
