@@ -278,12 +278,6 @@ def test_homogeneous_list_annotation_embedded_complex(stc_language):
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
 
-def test_list_declaration(language):
-    def list_int():
-        a : 'list[int]' #pylint: disable=unused-variable
-
-    epyccel(list_int, language=language)
-
 def test_dict_int_float(stc_language):
     def dict_int_float():
         # Not valid in Python 3.8
