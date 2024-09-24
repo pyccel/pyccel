@@ -3023,9 +3023,17 @@ class FCodePrinter(CodePrinter):
                     inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
                             PyccelAdd(_shape, ind, simplify = True), ind)
 
-        inds = [self._print(i) for i in inds]
-
-        return "%s(%s)" % (base_code, ", ".join(inds))
+        if isinstance(base.class_type, HomogeneousListType):
+            inds = [PyccelAdd(i, LiteralInteger(1), simplify=True) for i in inds]
+            inds_code = ", ".join(self._print(i) for i in inds)
+            return f"{base_code}%of({inds_code})"
+        elif isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            inds_code = ", ".join(self._print(i) for i in inds)
+            return f"{base_code}({inds_code})"
+        else:
+            errors.report(f"Don't know how to index type {base.class_type}",
+                    symbol=expr, severity='fatal')
+            return ''
 
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
