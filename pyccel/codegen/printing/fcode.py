@@ -542,6 +542,8 @@ class FCodePrinter(CodePrinter):
                     macros.append(MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type)))
                 if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
                     macros.append(MacroDefinition('T_rank', element_type.rank))
+                elif not isinstance(expr_type.datatype, FixedSizeNumericType):
+                    raise NotImplementedError("Support for lists of types defined in other modules is not yet implemented")
                 macros.append(MacroDefinition('Vector', expr_type))
                 macros.append(MacroDefinition('VectorIterator', IteratorType(expr_type)))
             else:
