@@ -35,7 +35,7 @@ from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
-from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
+from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
 from pyccel.ast.datatypes import PythonNativeInt, HomogeneousTupleType, HomogeneousListType
 from pyccel.ast.datatypes import HomogeneousSetType, DictType, HomogeneousContainerType
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
@@ -1004,7 +1004,7 @@ class FCodePrinter(CodePrinter):
             if assign:
                 vec_type = self._print(assign[0].lhs.class_type)
             else:
-                errors.report("Can't use an empty list without assigning it to a variable as the type cannot be deduced",
+                raise errors.report("Can't use an empty list without assigning it to a variable as the type cannot be deduced",
                         severity='fatal', symbol=expr)
 
         else:
