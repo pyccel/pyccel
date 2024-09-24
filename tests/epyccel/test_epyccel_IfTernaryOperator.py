@@ -117,18 +117,6 @@ def test_f6(language):
     # ...
 #------------------------------------------------------------------------------
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="List initialisation not yet supported"),
-            pytest.mark.fortran]
-        ),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Lists not yet supported"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_f7(language):
     def f7(x : 'int'):
         a = [1.,2.,3.] if x < 5 else [1.5,6.5,7.5]
@@ -239,18 +227,6 @@ def test_f11(language):
     # ...
 #------------------------------------------------------------------------------
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="List initialisation not yet supported"),
-            pytest.mark.fortran]
-        ),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Lists not yet supported"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_f12(language):
     def f12(x : 'int'):
         a = [1.,2.,3.,4.] if x < 5 else [1.5,6.5,7.5]
