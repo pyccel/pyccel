@@ -39,7 +39,7 @@ from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType,
 from pyccel.ast.datatypes import PythonNativeInt, HomogeneousTupleType, HomogeneousListType
 from pyccel.ast.datatypes import HomogeneousSetType, DictType, HomogeneousContainerType
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
-from pyccel.ast.datatypes import pyccel_type_to_original_type
+from pyccel.ast.datatypes import pyccel_type_to_original_type, PyccelType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 
@@ -324,7 +324,7 @@ class FCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : TypedAstNode
+        expr : TypedAstNode | PyccelType
             The object whose precision should be investigated.
 
         Returns
@@ -332,7 +332,8 @@ class FCodePrinter(CodePrinter):
         str
             The code for the kind parameter.
         """
-        dtype = expr.dtype
+        dtype = expr if isinstance(expr, PyccelType) else expr.dtype
+
         constant_name = iso_c_binding[dtype.primitive_type][dtype.precision]
 
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
@@ -532,9 +533,13 @@ class FCodePrinter(CodePrinter):
         else:
             if isinstance(expr_type, HomogeneousListType):
                 include = Import(LiteralString('vector/template.inc'), Module('_', (), ()))
-                macros = [MacroDefinition('T', expr_type.element_type),
-                          MacroDefinition('Vector', expr_type),
-                          MacroDefinition('VectorIterator', IteratorType(expr_type))]
+                element_type = expr_type.element_type
+                macros = [MacroDefinition('T', element_type),
+                          MacroDefinition('T_KINDLEN(context)', f'(kind={expr_type.precision})')]
+                if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
+                    macros.append(MacroDefinition('T_rank', element_type.rank))
+                macros.append(MacroDefinition('Vector', expr_type))
+                macros.append(MacroDefinition('VectorIterator', IteratorType(expr_type)))
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
 
