@@ -36,6 +36,7 @@ All notable changes to this project will be documented in this file.
 -   #1544 : Add support for `typing.TypeAlias`.
 -   #1583 : Allow inhomogeneous tuples in classes.
 -   #1915 : Add support for NumPy v2 `sign` function.
+-   Add a warning about containers in lists.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
