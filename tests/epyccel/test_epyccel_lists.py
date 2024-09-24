@@ -3,19 +3,6 @@ import pytest
 import numpy as np
 from pyccel import epyccel
 
-@pytest.fixture( params=[
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="list methods not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="list methods not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("python", marks = pytest.mark.python)
-    ],
-    scope = "module"
-)
-def language(request):
-    return request.param
 
 @pytest.fixture( params=[
         pytest.param("c", marks = pytest.mark.c),
@@ -59,27 +46,27 @@ def test_pop_list_float(stc_language) :
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_pop_list_of_lists(language) :
+def test_pop_list_of_lists() :
     def pop_last_element():
         a = [[4.6, 3.3], [4.2, 9.1], [2.3, 6.8]]
         return a.pop()
-    epyc_last_element = epyccel(pop_last_element, language = language)
+    epyc_last_element = epyccel(pop_last_element, language = 'python')
     pyccel_result = epyc_last_element()
     python_result = pop_last_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_pop_list_of_tuples(language) :
+def test_pop_list_of_tuples() :
     def pop_last_element():
         a = [(4.6, 3.3), (4.2, 9.1), (2.3, 6.8)]
         return a.pop()
-    epyc_last_element = epyccel(pop_last_element, language = language)
+    epyc_last_element = epyccel(pop_last_element, language = 'python')
     pyccel_result = epyc_last_element()
     python_result = pop_last_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_pop_list_of_ndarrays(language) :
+def test_pop_list_of_ndarrays() :
     def pop_last_element():
         from numpy import array
 
@@ -88,7 +75,7 @@ def test_pop_list_of_ndarrays(language) :
         array3 = array([[13, 14, 15], [16, 17, 18]])
         a = [array1, array2, array3]
         return a.pop()
-    epyc_last_element = epyccel(pop_last_element, language = language)
+    epyc_last_element = epyccel(pop_last_element, language = 'python')
     pyccel_result = epyc_last_element()
     python_result = pop_last_element()
     assert isinstance(python_result, type(pyccel_result))
@@ -125,16 +112,16 @@ def test_pop_2(stc_language) :
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_append_basic(language):
+def test_append_basic():
     def f():
         a = [1, 2, 3]
         a.append(4)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_append_multiple(language):
+def test_append_multiple():
     def f():
         a = [1, 2, 3]
         a.append(4)
@@ -142,19 +129,19 @@ def test_append_multiple(language):
         a.append(6)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_append_list(language):
+def test_append_list():
     def f():
         a = [[1, 2, 3]]
         a.append([4, 5, 6])
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_append_range(language):
+def test_append_range():
     def f():
         a = [1, 2, 3]
         for i in range(0, 1000):
@@ -162,20 +149,20 @@ def test_append_range(language):
         a.append(1000)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_append_range_list(language):
+def test_append_range_list():
     def f():
         a = [[1, 2, 3]]
         for i in range(0, 1000):
             a.append([i, i + 1])
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_append_bool(language):
+def test_append_bool():
     def f():
         a = [True, True, True]
         a.append(False)
@@ -183,10 +170,10 @@ def test_append_bool(language):
         a.append(True)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_append_float(language):
+def test_append_float():
     def f():
         a = [3.5, 2.2, 1.5]
         a.append(3.0)
@@ -194,10 +181,10 @@ def test_append_float(language):
         a.append(1.1)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_append_complex(language):
+def test_append_complex():
     def f():
         a = [1 + 2j, 3 + 4j, 5 + 6j]
         a.append(9j)
@@ -205,10 +192,10 @@ def test_append_complex(language):
         a.append(1j)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_append_ndarrays(language):
+def test_append_ndarrays():
     def f():
         from numpy import array
 
@@ -224,29 +211,29 @@ def test_append_ndarrays(language):
         a.append(array6)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert np.array_equal(f(), epyc_f())
 
-def test_append_user_defined_objects(language):
+def test_append_user_defined_objects():
     import modules.list_user_defined_objs2 as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = epyccel(mod, language = 'python')
     python_list = mod.fn()
     accelerated_list = modnew.fn()
     assert len(python_list) == len(accelerated_list)
     for python_elem, accelerated_elem in zip(python_list, accelerated_list):
         assert python_elem.x == accelerated_elem.x
 
-def test_insert_basic(language):
+def test_insert_basic():
     def f():
         a = [1, 2, 3]
         a.insert(4, 4)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_insert_booleans(language):
+def test_insert_booleans():
     def f():
         a = [True, False, True]
         a.insert(0, True)
@@ -258,10 +245,10 @@ def test_insert_booleans(language):
         a.insert(-25, False)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_insert_complex(language):
+def test_insert_complex():
     def f():
         a = [2j, 3 + 6j, 0 + 0j]
         a.insert(0, 9j)
@@ -273,10 +260,10 @@ def test_insert_complex(language):
         a.insert(-25, 0 - 0j)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_insert_float(language):
+def test_insert_float():
     def f():
         a = [0.0, 3.6 , 0.5]
         a.insert(0, 6.4)
@@ -288,10 +275,10 @@ def test_insert_float(language):
         a.insert(-25, 2.5)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_insert_ndarrays(language):
+def test_insert_ndarrays():
     def f():
         from numpy import array
 
@@ -308,10 +295,10 @@ def test_insert_ndarrays(language):
         a.insert(-3, array6)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert np.array_equal(f(), epyc_f())
 
-def test_insert_multiple(language):
+def test_insert_multiple():
     def f():
         a = [1, 2, 3]
         a.insert(4, 4)
@@ -319,49 +306,49 @@ def test_insert_multiple(language):
         a.insert(1, 6)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_insert_list(language):
+def test_insert_list():
     def f():
         a = [[1, 2, 3]]
         a.insert(1, [4, 5, 6])
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_insert_range(language):
+def test_insert_range():
     def f():
         a = [1, 2, 3]
         for i in range(4, 1000):
             a.insert(i - 1 ,i)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_insert_range_list(language):
+def test_insert_range_list():
     def f():
         a = [[1, 2, 3]]
         for i in range(4, 1000):
             a.insert(i, [i, i + 1])
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_insert_user_defined_objects(language):
+def test_insert_user_defined_objects():
     import modules.list_user_defined_objs as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = epyccel(mod, language = 'python')
     python_list = mod.fn()
     accelerated_list = modnew.fn()
     assert len(python_list) == len(accelerated_list)
     for python_elem, accelerated_elem in zip(python_list, accelerated_list):
         assert python_elem.x == accelerated_elem.x
 
-def test_clear_1(language):
+def test_clear_1():
 
     def clear_1():
         a = [1, 2, 3]
@@ -373,7 +360,7 @@ def test_clear_1(language):
     python_result = clear_1()
     assert python_result == pyccel_result
 
-def test_clear_2(language):
+def test_clear_2():
 
     def clear_2():
         a = []
@@ -385,7 +372,7 @@ def test_clear_2(language):
     python_result = clear_2()
     assert python_result == pyccel_result
 
-def test_clear_3(language):
+def test_clear_3():
 
     def clear_3():
         a = [[1, 2, 3]]
@@ -397,17 +384,17 @@ def test_clear_3(language):
     python_result = clear_3()
     assert python_result == pyccel_result
 
-def test_extend_basic(language):
+def test_extend_basic():
     def f():
         a = [1, 2, 3]
         b = [4, 5, 6]
         a.extend(b)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_multiple(language):
+def test_extend_multiple():
     def f():
         a = [1, 2, 3]
         a.extend([4, 5])
@@ -415,68 +402,68 @@ def test_extend_multiple(language):
         a.extend([10])
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_nested_list(language):
+def test_extend_nested_list():
     def f():
         a = [[1, 2, 3]]
         a.extend([[4, 5, 6]])
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_tuple_with_list(language):
+def test_extend_tuple_with_list():
     def f():
         a = [1, 2, 3]
         b = (4, 5, 6)
         a.extend(b)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_boolean_tuple(language):
+def test_extend_boolean_tuple():
     def f():
         a = [True, False, True]
         b = (False, True, False)
         a.extend(b)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_float_tuple(language):
+def test_extend_float_tuple():
     def f():
         a = [3.4, 2.1, 3.9]
         b = (4.1, 5.9, 0.3)
         a.extend(b)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_complex_list(language):
+def test_extend_complex_list():
     def f():
         a = [1j, 2 + 3j, 0 + 0j]
         b = [4j, 5j, 1 + 6j]
         a.extend(b)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_range(language):
+def test_extend_range():
     def f():
         a = [1, 2, 3]
         a.extend(range(4, 9))
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_function_return(language):
+def test_extend_function_return():
     def f():
         def g():
             a = [4, 5]
@@ -485,55 +472,55 @@ def test_extend_function_return(language):
         lst = [1, 2, 3]
         lst.extend(g())
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_sort_basic(language):
+def test_sort_basic():
     def f():
         a = [4, 0, 1, -1]
         a.sort()
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_sort_bool(language):
+def test_sort_bool():
     def f():
         a = [True, False, False, True, False]
         a.sort()
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_sort_float(language):
+def test_sort_float():
     def f():
         a = [3.4, 1.0, -4.5, 0.0, 2.1]
         a.sort()
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_list_as_arg(language):
+def test_extend_list_as_arg():
     def f():
         a = [1, 2, 3]
         a.extend([4, 5, 6])
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_tuple_as_arg(language):
+def test_extend_tuple_as_arg():
     def f():
         a = [1, 2, 3]
         a.extend((4, 5, 6))
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_np_int(language):
+def test_extend_np_int():
     def f():
         from numpy import ones, int64
 
@@ -542,10 +529,10 @@ def test_extend_np_int(language):
         a.extend(b)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_np_float(language):
+def test_extend_np_float():
     def f():
         from numpy import ones, float64
 
@@ -554,78 +541,78 @@ def test_extend_np_float(language):
         a.extend(b)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_user_defined_objects(language):
+def test_extend_user_defined_objects():
     import modules.list_user_defined_objs2 as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = epyccel(mod, language = 'python')
     python_list = mod.fn()
     accelerated_list = modnew.fn()
     assert len(python_list) == len(accelerated_list)
     for python_elem, accelerated_elem in zip(python_list, accelerated_list):
         assert python_elem.x == accelerated_elem.x
 
-def test_remove_basic(language):
+def test_remove_basic():
     def f():
         lst = [1, 2, 3, 4]
         lst.remove(3)
         return lst
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_remove_float(language):
+def test_remove_float():
     def f():
         lst = [1.4, 2.3, 3.2, 4.4]
         lst.remove(3.2)
         return lst
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_remove_complex(language):
+def test_remove_complex():
     def f():
         lst = [1j, 3j, 8j]
         lst.remove(3j)
         return lst
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_remove_list_from_list(language):
+def test_remove_list_from_list():
     def f():
         lst = [[True, False, True], [False, True]]
         lst.remove([False, True])
         return lst
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_extend_list_class_attribute(language):
+def test_extend_list_class_attribute():
     import modules.list_class_attr as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = epyccel(mod, language = 'python')
     python_list = mod.fn()
     accelerated_list = modnew.fn()
     assert python_list == accelerated_list
 
-def test_copy_basic(language):
+def test_copy_basic():
     def f():
         a = [1, 2, 3]
         b = a.copy()
         return b
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_copy_nested(language):
+def test_copy_nested():
     def f():
         a = [[1, 2], [3, 4]]
         b = a.copy()
         return b
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_copy_modify_nested_values(language):
+def test_copy_modify_nested_values():
     def f():
         a = [[1, 2], [3, 4]]
         b = a.copy()
@@ -633,10 +620,10 @@ def test_copy_modify_nested_values(language):
         a[0][1] = 0
         return b
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
-def test_mixed_list_methods(language):
+def test_mixed_list_methods():
     def f():
         a = [(1, 4, 5), (33, 12, 5), (3, 5)]
         a.append((0, 1, 2))
@@ -646,7 +633,7 @@ def test_mixed_list_methods(language):
         a.extend(((4, 5, 6), (3, 3)))
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = 'python')
     assert f() == epyc_f()
 
 @pytest.mark.parametrize( 'language', [
@@ -667,7 +654,7 @@ def test_extend_returned_list(language):
             return [4, 5, 6]
         lst = [1, 2, 3]
         lst.extend(g())
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language = language)
     assert f() == epyc_f()
 
 def test_mutable_indexing(stc_language):
@@ -691,11 +678,11 @@ def test_mutable_multi_level_indexing(stc_language):
     epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
 
-def test_homogenous_list_int_copy(language):
+def test_homogenous_list_int_copy():
     def homogeneous_list_int():
         return list([1, 2, 3, 4])
     f1 = homogeneous_list_int
-    f2 = epyccel( f1 , language=language)
+    f2 = epyccel( f1 , language = 'python')
 
     python_out = f1()
     pyccel_out = f2()
@@ -704,11 +691,11 @@ def test_homogenous_list_int_copy(language):
 
     assert python_out == pyccel_out
 
-def test_homogenous_list_bool_copy(language):
+def test_homogenous_list_bool_copy():
     def homogeneous_list_bool():
         return list([True, False, True, False])
     f1 = homogeneous_list_bool
-    f2 = epyccel( f1 , language=language)
+    f2 = epyccel( f1 , language = 'python')
 
     python_out = f1()
     pyccel_out = f2()
@@ -717,11 +704,11 @@ def test_homogenous_list_bool_copy(language):
 
     assert python_out == pyccel_out
 
-def test_homogenous_list_float_copy(language):
+def test_homogenous_list_float_copy():
     def homogeneous_list_float():
         return list([1.0, 2.0, 3.0, 4.0])
     f1 = homogeneous_list_float
-    f2 = epyccel( f1 , language=language)
+    f2 = epyccel( f1 , language = 'python')
 
     python_out = f1()
     pyccel_out = f2()
@@ -730,11 +717,11 @@ def test_homogenous_list_float_copy(language):
 
     assert python_out == pyccel_out
 
-def test_homogenous_list_int_tuple_copy(language):
+def test_homogenous_list_int_tuple_copy():
     def homogeneous_list_int_tuple():
         return list((1, 2, 3, 4))
     f1 = homogeneous_list_int_tuple
-    f2 = epyccel( f1 , language=language)
+    f2 = epyccel( f1 , language = 'python')
 
     python_out = f1()
     pyccel_out = f2()
@@ -743,13 +730,13 @@ def test_homogenous_list_int_tuple_copy(language):
 
     assert python_out == pyccel_out
 
-def test_homogenous_list_unknown_size_copy(language):
+def test_homogenous_list_unknown_size_copy():
     def homogeneous_list_unknown_size_copy(n : int):
         a = (3,)*n
         b = list(a)
         return b[0]
     f1 = homogeneous_list_unknown_size_copy
-    f2 = epyccel( f1 , language=language)
+    f2 = epyccel( f1 , language = 'python')
 
     python_out = f1(5)
     pyccel_out = f2(5)
