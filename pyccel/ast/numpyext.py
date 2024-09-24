@@ -40,7 +40,7 @@ from .variable       import Variable, Constant, IndexedElement
 
 errors = Errors()
 pyccel_stage = PyccelStage()
-numpy_v1 = Version(numpy.__version__) < Version("2.0.0")
+numpy_v2_1 = Version(numpy.__version__) >= Version("2.1.0")
 
 __all__ = (
     'process_shape',
@@ -1924,11 +1924,11 @@ class NumpyFloor(NumpyUfuncUnary):
         x : TypedAstNode
             The argument passed to the function.
         """
-        if numpy_v1:
-            super()._set_dtype_precision(x)
-        else:
+        if numpy_v2_1:
             self._dtype = x.dtype
             self._precision = get_final_precision(x)
+        else:
+            super()._set_dtype_precision(x)
 
 class NumpyMod(NumpyUfuncBinary):
     """
