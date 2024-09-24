@@ -7,6 +7,7 @@
 """ Module containing objects from the numpy module understood by pyccel
 """
 from functools import lru_cache
+from packaging.version import Version
 
 import numpy
 
@@ -39,6 +40,7 @@ from .variable       import Variable, Constant, IndexedElement
 
 errors = Errors()
 pyccel_stage = PyccelStage()
+numpy_v1 = Version(numpy.__version__) < Version("2.0.0")
 
 __all__ = (
     'process_shape',
@@ -1039,7 +1041,7 @@ class NumpyLinspace(NumpyNewArray):
                 self._precision = default_precision[self._dtype]
             else:
                 self._dtype = type_info.dtype
-                self._precision = type_info.precision
+                self._precision = get_final_precision(type_info)
 
         self._index = Variable('int', 'linspace_index')
         self._start = start
@@ -1922,8 +1924,11 @@ class NumpyFloor(NumpyUfuncUnary):
         x : TypedAstNode
             The argument passed to the function.
         """
-        self._dtype     = NativeFloat()
-        self._precision = default_precision[self._dtype]
+        if numpy_v1:
+            super()._set_dtype_precision(x)
+        else:
+            self._dtype = x.dtype
+            self._precision = get_final_precision(x)
 
 class NumpyMod(NumpyUfuncBinary):
     """
