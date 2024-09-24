@@ -9,6 +9,8 @@ Module representing concepts that are only applicable to Fortran code (e.g. kind
 from .basic     import PyccelAstNode
 from .datatypes import FixedSizeNumericType
 
+__all__ = ('KindSpecification',)
+
 class KindSpecification(PyccelAstNode):
     """
     Class representing the kind specification of a type.
