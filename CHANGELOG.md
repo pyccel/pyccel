@@ -106,7 +106,7 @@ All notable changes to this project will be documented in this file.
 ￼### Added
 ￼
 ￼-   #1915 : Add support for NumPy v2 `sign` function.
-￼-   #1988 : Add support for NumPy v2.
+￼-   #1988 : Add support for NumPy v2 (fix `floor`, fix type mixing, update tests).
 ￼
 ￼### Fixed
 ￼
