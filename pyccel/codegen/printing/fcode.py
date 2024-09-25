@@ -20,9 +20,9 @@ from pyccel.ast.basic import TypedAstNode
 
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule, BindCClassDef
 
-from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
-from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
-from pyccel.ast.builtins import PythonBool, PythonList
+from pyccel.ast.builtins import PythonBool, PythonInt, PythonFloat, PythonComplex
+from pyccel.ast.builtins import PythonType, PythonPrint, PythonRange
+from pyccel.ast.builtins import PythonList, PythonTuple, DtypePrecisionToCastFunction
 
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -593,6 +593,13 @@ class FCodePrinter(CodePrinter):
                 return 'reshape(['+ elements + '], [' + shape + '])'
             args = ', '.join(self._print(f) for f in expr)
             return f'[{args}]'
+        elif isinstance(expr, (PythonBool, PythonInt, PythonFloat, PythonComplex)) and isinstance(expr.arg, (PythonList, PythonTuple)):
+            args = self._get_array_init_element_code(expr.arg)
+            # Create temporary name to be replaced easily
+            tmp_arg = Variable(expr.arg.class_type, 'var_to_replace')
+            cast = type(expr)(tmp_arg)
+            tmp_arg_code = self._print(tmp_arg)
+            return self._print(cast).replace(tmp_arg_code, args)
         else:
             return self._print(expr)
 
@@ -1403,19 +1410,40 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
+        kind = self.print_kind(expr)
         if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
-            code = 'MERGE(1_{0}, 0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
+            code = f'MERGE(1_{kind}, 0_{kind}, {value})'
         else:
-            code  = 'Int({0}, {1})'.format(value, self.print_kind(expr))
+            code  = f'Int({value}, kind = {kind})'
         return code
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
+        kind = self.print_kind(expr)
         if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
-            code = 'MERGE(1.0_{0}, 0.0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
+            code = f'MERGE(1.0_{kind}, 0.0_{kind}, {value})'
         else:
-            code  = 'Real({0}, {1})'.format(value, self.print_kind(expr))
+            code  = f'Real({value}, kind = {kind})'
         return code
+
+    def _print_PythonComplex(self, expr):
+        kind = self.print_kind(expr)
+        if expr.is_cast:
+            var = self._print(expr.internal_var)
+            code = f'cmplx({var}, kind = {kind})'
+        else:
+            real = self._print(expr.real)
+            imag = self._print(expr.imag)
+            code = f'cmplx({real}, {imag}, {kind})'
+        return code
+
+    def _print_PythonBool(self, expr):
+        value = self._print(expr.arg)
+        kind = self.print_kind(expr)
+        if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
+            return f'logical({value}, kind = {kind})'
+        else:
+            return f'({value} /= 0)'
 
     def _print_MathFloor(self, expr):
         arg = expr.args[0]
@@ -1424,28 +1452,10 @@ class FCodePrinter(CodePrinter):
         # math.floor on integer argument is identity,
         # but we need parentheses around expressions
         if isinstance(arg.dtype.primitive_type, PrimitiveIntegerType):
-            return '({})'.format(arg_code)
+            return f'({arg_code})'
 
-        prec_code = self.print_kind(expr)
-        return 'floor({}, kind={})'.format(arg_code, prec_code)
-
-    def _print_PythonComplex(self, expr):
-        if expr.is_cast:
-            var = self._print(expr.internal_var)
-            code = 'cmplx({0}, kind={1})'.format(var,
-                                self.print_kind(expr))
-        else:
-            real = self._print(expr.real)
-            imag = self._print(expr.imag)
-            code = 'cmplx({0}, {1}, {2})'.format(real, imag,
-                                self.print_kind(expr))
-        return code
-
-    def _print_PythonBool(self, expr):
-        if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
-            return 'logical({}, kind = {prec})'.format(self._print(expr.arg), prec = self.print_kind(expr))
-        else:
-            return '({} /= 0)'.format(self._print(expr.arg))
+        kind = self.print_kind(expr)
+        return f'floor({arg_code}, kind = {kind})'
 
     def _print_NumpyRand(self, expr):
         if expr.rank != 0:
