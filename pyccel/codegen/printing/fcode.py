@@ -547,9 +547,11 @@ class FCodePrinter(CodePrinter):
             if isinstance(expr_type, HomogeneousListType):
                 include = Import(LiteralString('vector/template.inc'), Module('_', (), ()))
                 element_type = expr_type.element_type
-                macros = [MacroDefinition('T', element_type)]
                 if isinstance(element_type, FixedSizeNumericType):
-                    macros.append(MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type)))
+                    macros = [MacroDefinition('T', element_type.primitive_type),
+                              MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type))]
+                else:
+                    macros = [MacroDefinition('T', element_type)]
                 if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
                     macros.append(MacroDefinition('T_rank', element_type.rank))
                 elif not isinstance(element_type, FixedSizeNumericType):
@@ -593,7 +595,14 @@ class FCodePrinter(CodePrinter):
                 return 'reshape(['+ elements + '], [' + shape + '])'
             args = ', '.join(self._print(f) for f in expr)
             return f'[{args}]'
-        elif isinstance(expr, (PythonBool, PythonInt, PythonFloat, PythonComplex)) and isinstance(expr.arg, (PythonList, PythonTuple)):
+        elif isinstance(expr, PythonComplex) and isinstance(expr.internal_var, (PythonList, PythonTuple)):
+            args = self._get_array_init_element_code(expr.internal_var)
+            # Create temporary name to be replaced easily
+            tmp_arg = Variable(expr.internal_var.class_type, 'var_to_replace')
+            cast = type(expr)(tmp_arg)
+            tmp_arg_code = self._print(tmp_arg)
+            return self._print(cast).replace(tmp_arg_code, args)
+        elif isinstance(expr, (PythonBool, PythonInt, PythonFloat)) and isinstance(expr.arg, (PythonList, PythonTuple)):
             args = self._get_array_init_element_code(expr.arg)
             # Create temporary name to be replaced easily
             tmp_arg = Variable(expr.arg.class_type, 'var_to_replace')
@@ -1972,17 +1981,11 @@ class FCodePrinter(CodePrinter):
         return 'character(len=280)'
         #TODO fix improve later
 
-    def _print_PythonNativeInt(self, expr):
-        return 'integer'
+    def _print_FixedSizeNumericType(self, expr):
+        return expr.name.split('.')[-1]
 
-    def _print_PythonNativeFloat(self, expr):
-        return 'real'
-
-    def _print_PythonNativeComplex(self, expr):
-        return 'complex'
-
-    def _print_PythonNativeBool(self, expr):
-        return 'logical'
+    def _print_PythonNativeNumericType(self, expr):
+        return expr.name
 
     def _print_HomogeneousListType(self, expr):
         return 'Vector_'+self._print(expr.element_type)
