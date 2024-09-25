@@ -540,8 +540,10 @@ class FCodePrinter(CodePrinter):
         Import
             The import which allows the new type to be accessed.
         """
-        if expr_type in self._generated_gFTL_extensions:
-            module = self._generated_gFTL_extensions[expr_type]
+        # Get the type used in the dict for compatible types (e.g. float vs float64)
+        matching_expr_type = next((t for t in self._generated_gFTL_extensions if expr_type == t), None)
+        if matching_expr_type:
+            module = self._generated_gFTL_extensions[matching_expr_type]
             mod_name = module.name
         else:
             if isinstance(expr_type, HomogeneousListType):
@@ -1987,10 +1989,10 @@ class FCodePrinter(CodePrinter):
         #TODO fix improve later
 
     def _print_FixedSizeNumericType(self, expr):
-        return expr.name.split('.')[-1]
+        return f'{self._print(expr.primitive_type)}{expr.precision}'
 
-    def _print_PythonNativeNumericType(self, expr):
-        return expr.name
+    def _print_PythonNativeBool(self, expr):
+        return 'logical'
 
     def _print_HomogeneousListType(self, expr):
         return 'Vector_'+self._print(expr.element_type)
