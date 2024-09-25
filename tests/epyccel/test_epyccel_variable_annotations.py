@@ -260,6 +260,7 @@ def test_homogeneous_list_annotation_float64(language):
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
+    assert isinstance(epyc_homogeneous_list_annotation()[0], type(homogeneous_list_annotation())[0])
 
 def test_homogeneous_list_annotation_bool(language):
     def homogeneous_list_annotation():
