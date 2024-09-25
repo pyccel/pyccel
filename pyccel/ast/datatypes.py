@@ -795,7 +795,7 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
         super().__init__()
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self._element_type == other._element_type \
+        return isinstance(other, self.__class__) and self._element_type is other._element_type \
                 and self._order == other._order
 
     def __hash__(self):
@@ -824,7 +824,7 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
         super().__init__()
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self._element_type == other._element_type
+        return isinstance(other, self.__class__) and self._element_type is other._element_type
 
     def __hash__(self):
         return hash((self.__class__, self._element_type))
