@@ -43,11 +43,6 @@ def test_codegen(f):
     settings = {}
     ast = pyccel.annotate(**settings)
 
-    print(errors.error_info_map)
-    for v in errors.error_info_map.values():
-        for vi in v:
-            print(vi)
-
     # Assert semantic success
     assert not errors.has_errors()
 
