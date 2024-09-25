@@ -251,6 +251,16 @@ def test_homogeneous_list_annotation_float(language):
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
 
+def test_homogeneous_list_annotation_float64(language):
+    def homogeneous_list_annotation():
+        from numpy import float64
+        a: 'list[float64]'  # pylint: disable=unused-variable
+        a = [1.1, 2.2, 3.3, 4.4]
+        return a[0], a[1], a[2], a[3]
+    epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
+    assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
+    assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
+
 def test_homogeneous_list_annotation_bool(language):
     def homogeneous_list_annotation():
         a: 'list[bool]'  # pylint: disable=unused-variable
