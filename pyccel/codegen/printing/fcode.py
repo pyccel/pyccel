@@ -599,6 +599,24 @@ class FCodePrinter(CodePrinter):
             return self._print(expr)
 
     def _apply_cast(self, target_type, *args):
+        """
+        Cast the arguments to the specified target type.
+
+        Cast the arguments to the specified target type. For literal containers this
+        function applies the cast to the elements.
+
+        Parameters
+        ----------
+        target_type : PyccelType
+            The type which we should cast to.
+        *args : TypedAstNode
+            A node that should be cast to the target type.
+
+        Returns
+        -------
+        TypedAstNode | iterable[TypedAstNode]
+            A TypedAstNode for each argument. The new nodes will have the target type.
+        """
         try :
             cast_func = DtypePrecisionToCastFunction[target_type]
         except KeyError:
