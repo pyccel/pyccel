@@ -1629,7 +1629,7 @@ class NumpyNorm(PyccelFunction):
             dtype = NumpyFloat64Type()
         else:
             dtype = numpy_precision_map[(PrimitiveFloatingPointType(), arg_dtype.precision)]
-        self._arg = PythonList(arg) if arg.rank == 0 else arg
+        self._arg = PythonTuple(arg) if arg.rank == 0 else arg
         if self.axis is not None:
             sh = list(arg.shape)
             del sh[self.axis]
