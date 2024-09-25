@@ -414,7 +414,7 @@ def max_precision(objs : list, allow_native : bool = True):
         if ndarray_list:
             return get_final_precision(max(ndarray_list, key=attrgetter('precision')))
         if numpy_v1:
-            return max((get_final_precision(o) for o in objs), default = -1)
+            return max((get_final_precision(o) for o in objs))
         else:
             return get_final_precision(max(objs, key = lambda o : o.precision))
 
