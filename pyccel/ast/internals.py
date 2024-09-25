@@ -7,6 +7,9 @@
 File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
 """
+from packaging.version import Version
+
+import numpy as np
 
 from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
@@ -16,6 +19,7 @@ from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
+numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 __all__ = (
     'PrecomputedCode',
@@ -409,7 +413,10 @@ def max_precision(objs : list, allow_native : bool = True):
         ndarray_list = [o for o in objs if getattr(o, 'is_ndarray', False)]
         if ndarray_list:
             return get_final_precision(max(ndarray_list, key=attrgetter('precision')))
-        return max(get_final_precision(o) for o in objs)
+        if numpy_v1:
+            return max(get_final_precision(o) for o in objs)
+        else:
+            return get_final_precision(max(objs, key = lambda o : o.precision))
 
 
 def get_final_precision(obj):

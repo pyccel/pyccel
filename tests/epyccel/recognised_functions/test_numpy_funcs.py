@@ -5388,10 +5388,10 @@ def test_numpy_linspace_scalar(language):
 
     @template('T', ['int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
     def get_linspace(start : 'T', steps : int, num : int):
-        from numpy import linspace
+        from numpy import linspace, float64
         stop = start + steps
         b = linspace(start, stop, num)
-        x = 0.0
+        x = float64(0.0)
         for bi in b:
             x += bi
         return x
