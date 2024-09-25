@@ -21,7 +21,7 @@ from pyccel.ast.basic import TypedAstNode
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule, BindCClassDef
 
 from pyccel.ast.builtins import PythonBool, PythonInt, PythonFloat, PythonComplex
-from pyccel.ast.builtins import PythonType, PythonPrint, PythonRange
+from pyccel.ast.builtins import PythonType, PythonPrint, PythonRange, PythonSet
 from pyccel.ast.builtins import PythonList, PythonTuple, DtypePrecisionToCastFunction
 
 from pyccel.ast.core import FunctionDef
@@ -595,22 +595,29 @@ class FCodePrinter(CodePrinter):
                 return 'reshape(['+ elements + '], [' + shape + '])'
             args = ', '.join(self._print(f) for f in expr)
             return f'[{args}]'
-        elif isinstance(expr, PythonComplex) and isinstance(expr.internal_var, (PythonList, PythonTuple)):
-            args = self._get_node_without_gFTL(expr.internal_var)
-            # Create temporary name to be replaced easily
-            tmp_arg = Variable(expr.internal_var.class_type, 'var_to_replace')
-            cast = type(expr)(tmp_arg)
-            tmp_arg_code = self._print(tmp_arg)
-            return self._print(cast).replace(tmp_arg_code, args)
-        elif isinstance(expr, (PythonBool, PythonInt, PythonFloat)) and isinstance(expr.arg, (PythonList, PythonTuple)):
-            args = self._get_node_without_gFTL(expr.arg)
-            # Create temporary name to be replaced easily
-            tmp_arg = Variable(expr.arg.class_type, 'var_to_replace')
-            cast = type(expr)(tmp_arg)
-            tmp_arg_code = self._print(tmp_arg)
-            return self._print(cast).replace(tmp_arg_code, args)
         else:
             return self._print(expr)
+
+    def _apply_cast(self, target_type, *args):
+        try :
+            cast_func = DtypePrecisionToCastFunction[target_type]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+
+        new_args = []
+        for a in args:
+            if target_type != a.class_type:
+                if isinstance(a, (PythonList, PythonSet, PythonTuple)):
+                    container = type(a)
+                    a = container(*[self._apply_cast(target_type, ai) for ai in a])
+                else:
+                    a = cast_func(a)
+            new_args.append(a)
+
+        if len(args) == 1:
+            return new_args[0]
+        else:
+            return new_args
 
     # ============ Elements ============ #
     def _print_PyccelSymbol(self, expr):
@@ -1178,8 +1185,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyLinspace(self, expr):
 
         if expr.stop.dtype != expr.dtype:
-            cast_func = DtypePrecisionToCastFunction[expr.dtype]
-            st = cast_func(expr.stop)
+            st = self._apply_cast(expr.dtype, expr.stop)
             v = self._print(st)
         else:
             v = self._print(expr.stop)
@@ -1285,17 +1291,7 @@ class FCodePrinter(CodePrinter):
         return stmt
 
     def _print_NumpyWhere(self, expr):
-        value_true  = expr.value_true
-        value_false = expr.value_false
-        try :
-            cast_func = DtypePrecisionToCastFunction[expr.dtype]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
-
-        if value_true.dtype != expr.dtype:
-            value_true = cast_func(value_true)
-        if value_false.dtype != expr.dtype:
-            value_false = cast_func(value_false)
+        value_true, value_false = self._apply_cast(expr.dtype, expr.value_true, expr.value_false)
 
         condition   = self._print(expr.condition)
         value_true  = self._print(value_true)
@@ -1311,14 +1307,10 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyArray(self, expr):
         order = expr.order
 
-        try :
-            cast_func = DtypePrecisionToCastFunction[expr.dtype]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         # If Numpy array is stored with column-major ordering, transpose values
         # use reshape with order for rank > 2
         if expr.rank <= 2:
-            arg = expr.arg if expr.arg.dtype == expr.dtype else cast_func(expr.arg)
+            arg = self._apply_cast(expr.dtype, expr.arg)
             rhs_code = self._get_node_without_gFTL(arg)
             if expr.arg.order and expr.arg.order != expr.order:
                 rhs_code = f'transpose({rhs_code})'
@@ -1330,7 +1322,7 @@ class FCodePrinter(CodePrinter):
                 rhs_code = f"reshape({rhs_code}, [{shape_code}])"
         else:
             expr_args = (expr.arg,) if isinstance(expr.arg, Variable) else expr.arg
-            expr_args = tuple(a if a.dtype == expr.dtype else cast_func(a) for a in expr_args)
+            expr_args = tuple(self._apply_cast(expr.dtype, a) for a in expr_args)
             new_args = []
             inv_order = 'C' if order == 'F' else 'F'
             for a in expr_args:
@@ -2674,16 +2666,8 @@ class FCodePrinter(CodePrinter):
     def _print_IfTernaryOperator(self, expr):
 
         cond = PythonBool(expr.cond) if not isinstance(expr.cond.dtype.primitive_type, PrimitiveBooleanType) else expr.cond
-        value_true = expr.value_true
-        value_false = expr.value_false
+        value_true, value_false = self._apply_cast(expr.dtype, expr.value_true, expr.value_false)
 
-        if value_true.dtype != value_false.dtype :
-            try :
-                cast_func = DtypePrecisionToCastFunction[expr.dtype]
-            except KeyError:
-                errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
-            value_true = cast_func(value_true) if value_true.dtype != expr.dtype else value_true
-            value_false = cast_func(value_false) if value_false.dtype != expr.dtype else value_false
         cond = self._print(cond)
         value_true = self._print(value_true)
         value_false = self._print(value_false)
@@ -2912,9 +2896,8 @@ class FCodePrinter(CodePrinter):
             self.add_import(Import('pyc_math_f90', AsName(func, func_name)))
             return f'{func_name}({arg_code})'
         else:
-            cast_func = DtypePrecisionToCastFunction[expr.dtype]
             # The absolute value of the result (0 if the argument is 0, 1 otherwise)
-            abs_result = self._print(cast_func(PythonBool(arg)))
+            abs_result = self._print(self._apply_cast(expr.dtype, PythonBool(arg)))
             return f'sign({abs_result}, {arg_code})'
 
     def _print_NumpyTranspose(self, expr):
@@ -2961,8 +2944,7 @@ class FCodePrinter(CodePrinter):
         args = []
         for arg in expr.args:
             if arg.dtype != expr.dtype:
-                cast_func = DtypePrecisionToCastFunction[expr.dtype]
-                args.append(self._print(cast_func(arg)))
+                args.append(self._print(self._apply_cast(expr.dtype, arg)))
             else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
