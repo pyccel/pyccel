@@ -570,12 +570,12 @@ class FCodePrinter(CodePrinter):
 
         return Import(f'gFTL_extensions/{mod_name}', module)
 
-    def _get_array_init_element_code(self, expr):
+    def _get_node_without_gFTL(self, expr):
         """
-        Get the code to print an element of an array.
+        Get the code to print an AST node without using gFTL.
 
         This function ensures that lists are printed as basic Fortran lists instead of using a
-        gFTL Vector.
+        gFTL Vector. This is useful when lists are used as arguments to intrinsic functions.
 
         Parameters
         ----------
@@ -590,20 +590,20 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr, (PythonList, PythonTuple)):
             shape = tuple(reversed(expr.shape))
             if len(shape)>1:
-                elements = ', '.join(self._get_array_init_element_code(i) for i in expr)
+                elements = ', '.join(self._get_node_without_gFTL(i) for i in expr)
                 shape    = ', '.join(self._print(i) for i in shape)
                 return 'reshape(['+ elements + '], [' + shape + '])'
             args = ', '.join(self._print(f) for f in expr)
             return f'[{args}]'
         elif isinstance(expr, PythonComplex) and isinstance(expr.internal_var, (PythonList, PythonTuple)):
-            args = self._get_array_init_element_code(expr.internal_var)
+            args = self._get_node_without_gFTL(expr.internal_var)
             # Create temporary name to be replaced easily
             tmp_arg = Variable(expr.internal_var.class_type, 'var_to_replace')
             cast = type(expr)(tmp_arg)
             tmp_arg_code = self._print(tmp_arg)
             return self._print(cast).replace(tmp_arg_code, args)
         elif isinstance(expr, (PythonBool, PythonInt, PythonFloat)) and isinstance(expr.arg, (PythonList, PythonTuple)):
-            args = self._get_array_init_element_code(expr.arg)
+            args = self._get_node_without_gFTL(expr.arg)
             # Create temporary name to be replaced easily
             tmp_arg = Variable(expr.arg.class_type, 'var_to_replace')
             cast = type(expr)(tmp_arg)
@@ -1037,10 +1037,8 @@ class FCodePrinter(CodePrinter):
         return '[{0}]'.format(fs)
 
     def _print_PythonAbs(self, expr):
-        """ print the python builtin function abs
-        args : variable
-        """
-        return "abs({})".format(self._print(expr.arg))
+        arg_code = self._get_node_without_gFTL(expr.arg)
+        return f"abs({arg_code})"
 
     def _print_PythonTuple(self, expr):
         shape = tuple(reversed(expr.shape))
@@ -1111,34 +1109,31 @@ class FCodePrinter(CodePrinter):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
 
     def _print_PythonSum(self, expr):
-        args = [self._print(arg) for arg in expr.args]
-        return "sum({})".format(", ".join(args))
+        args = ", ".join(self._get_node_without_gFTL(arg) for arg in expr.args)
+        return f"sum({args})"
 
     def _print_PythonReal(self, expr):
         value = self._print(expr.internal_var)
-        return 'real({0})'.format(value)
+        return f'real({value})'
 
     def _print_PythonImag(self, expr):
         value = self._print(expr.internal_var)
-        return 'aimag({0})'.format(value)
+        return f'aimag({value})'
 
 
 
     #========================== Numpy Elements ===============================#
 
     def _print_NumpySum(self, expr):
-        """Fortran print."""
-        rhs_code = self._print(expr.arg)
+        arg_code = self._get_node_without_gFTL(expr.arg)
         dtype = expr.arg.dtype.primitive_type
         if isinstance(dtype, PrimitiveBooleanType):
-            return 'count({0})'.format(rhs_code)
-        return 'sum({0})'.format(rhs_code)
+            return f'count({arg_code})'
+        return f'sum({arg_code})'
 
     def _print_NumpyProduct(self, expr):
-        """Fortran print."""
-
-        rhs_code = self._print(expr.arg)
-        return 'product({0})'.format(rhs_code)
+        arg_code = self._get_node_without_gFTL(expr.arg)
+        return f'product({arg_code})'
 
     def _print_NumpyMatmul(self, expr):
         """Fortran print."""
@@ -1166,17 +1161,17 @@ class FCodePrinter(CodePrinter):
         errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity='fatal')
 
     def _print_NumpyNorm(self, expr):
-        """Fortran print."""
         arg = NumpyAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
+        arg_code = self._get_node_without_gFTL(arg)
         if expr.axis:
             axis = expr.axis
             if arg.order != 'F':
                 axis = PyccelMinus(LiteralInteger(arg.rank), expr.axis, simplify=True)
             else:
                 axis = LiteralInteger(expr.axis.python_value + 1)
-            code = 'Norm2({},{})'.format(self._print(arg), self._print(axis))
+            code = f'Norm2({arg_code},{self._print(axis)})'
         else:
-            code = 'Norm2({})'.format(self._print(arg))
+            code = f'Norm2({arg_code})'
 
         return code
 
@@ -1324,7 +1319,7 @@ class FCodePrinter(CodePrinter):
         # use reshape with order for rank > 2
         if expr.rank <= 2:
             arg = expr.arg if expr.arg.dtype == expr.dtype else cast_func(expr.arg)
-            rhs_code = self._get_array_init_element_code(arg)
+            rhs_code = self._get_node_without_gFTL(arg)
             if expr.arg.order and expr.arg.order != expr.order:
                 rhs_code = f'transpose({rhs_code})'
             if expr.arg.rank < expr.rank:
@@ -1343,7 +1338,7 @@ class FCodePrinter(CodePrinter):
                 # Pack list/tuple of array/list/tuple into array
                 if a.order is None and a.rank > 1:
                     a = NumpyArray(a)
-                ac = self._get_array_init_element_code(a)
+                ac = self._get_node_without_gFTL(a)
 
                 # Reshape array element if out of order
                 if a.order == inv_order:
@@ -1500,9 +1495,8 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyAmax(self, expr):
         array_arg = expr.arg
         if isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType):
-            arg_code = self._print(NumpyInt32(array_arg))
-        else:
-            arg_code = self._print(array_arg)
+            array_arg = NumpyInt32(array_arg)
+        arg_code = self._get_node_without_gFTL(array_arg)
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
@@ -1513,9 +1507,8 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyAmin(self, expr):
         array_arg = expr.arg
         if isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType):
-            arg_code = self._print(NumpyInt32(array_arg))
-        else:
-            arg_code = self._print(array_arg)
+            array_arg = NumpyInt32(array_arg)
+        arg_code = self._get_node_without_gFTL(array_arg)
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
@@ -1527,7 +1520,8 @@ class FCodePrinter(CodePrinter):
         args = expr.args
         if len(args) == 1:
             arg = args[0]
-            code = 'minval({0})'.format(self._print(arg))
+            arg_code = self._get_node_without_gFTL(arg)
+            code = f'minval({arg_code})'
         else:
             code = ','.join(self._print(arg) for arg in args)
             code = 'min('+code+')'
@@ -1537,7 +1531,8 @@ class FCodePrinter(CodePrinter):
         args = expr.args
         if len(args) == 1:
             arg = args[0]
-            code = 'maxval({0})'.format(self._print(arg))
+            arg_code = self._get_node_without_gFTL(arg)
+            code = f'maxval({arg_code})'
         else:
             code = ','.join(self._print(arg) for arg in args)
             code = 'max('+code+')'
@@ -2876,7 +2871,7 @@ class FCodePrinter(CodePrinter):
             self._print_not_supported(expr)
         if func_name.startswith('ieee_'):
             self._constantImports.setdefault('ieee_arithmetic', set()).add(func_name)
-        args = [self._print(NumpyFloat(a) if isinstance(a.dtype.primitive_type, PrimitiveIntegerType) else a)\
+        args = [self._get_node_without_gFTL(NumpyFloat(a) if isinstance(a.dtype.primitive_type, PrimitiveIntegerType) else a)\
 				for a in expr.args]
         code_args = ', '.join(args)
         code = f'{func_name}({code_args})'
