@@ -1939,7 +1939,7 @@ class FCodePrinter(CodePrinter):
 
         if var.is_alias or isinstance(class_type, HomogeneousListType):
             return ''
-        elif isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+        elif isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, StringType)):
             var_code = self._print(var)
             code  = 'if (allocated({})) then\n'.format(var_code)
             code += '  deallocate({})\n'     .format(var_code)
@@ -3081,6 +3081,8 @@ class FCodePrinter(CodePrinter):
                             PyccelAdd(_shape, ind, simplify = True), ind)
 
         if isinstance(base.class_type, HomogeneousListType):
+            if any(isinstance(i, Slice) for i in inds):
+                raise NotImplementedError("Slice indexing not implemented for lists")
             inds = [PyccelAdd(i, LiteralInteger(1), simplify=True) for i in inds]
             inds_code = ", ".join(self._print(i) for i in inds)
             return f"{base_code}%of({inds_code})"
