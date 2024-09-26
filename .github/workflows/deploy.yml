@@ -73,7 +73,8 @@ jobs:
           END_LINE=$(grep "^## " CHANGELOG.md -n | head -2 | tail -1 | cut -d: -f -1)
           START_LINE=$((${START_LINE}+1))
           END_LINE=$((${END_LINE}-1))
-          sed -n ${START_LINE},${END_LINE}p CHANGELOG.md > release_notes.md
+          echo "## What's Changed" > release_notes.md
+          sed -n ${START_LINE},${END_LINE}p CHANGELOG.md >> release_notes.md
       - name: "Get contributors"
         run: |
           # Get relevant commits
