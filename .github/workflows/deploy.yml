@@ -63,8 +63,31 @@ jobs:
         run: |
           version=$(python -c "from pyccel import __version__; print(__version__)")
           echo "TAG_NAME=v${version}" >> $GITHUB_OUTPUT
+      - name: "Get release notes"
+        id: release_notes
+        run: |
+          START_LINE=$(grep "^## " CHANGELOG.md -n | head -1 | cut -d: -f -1)
+          END_LINE=$(grep "^## " CHANGELOG.md -n | head -2 | tail -1 | cut -d: -f -1)
+          START_LINE=$((${START_LINE}+1))
+          END_LINE=$((${END_LINE}-1))
+          release_notes=$(sed -n ${START_LINE},${END_LINE}p CHANGELOG.md) >> $GITHUB_OUTPUT
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
+          echo "${release_notes}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
       - name: "Update repo tags"
         uses: EndBug/latest-tag@latest
         with:
           ref: ${{ steps.tag_name.outputs.TAG_NAME }}
+      - name: "Update releases"
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/EmilyBourne/pyccel/releases \
+             -f "tag_name=${tag_name}" -f "name=${tag_name}" -f "body=${release_notes}" -F "draft=false" -F "prerelease=false" -F "generate_release_notes=false"
+        env:
+          tag_name: ${{ steps.tag_name.outputs.TAG_NAME }}
+          release_notes: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
+          GH_TOKEN: ${{ github.token }}
 
