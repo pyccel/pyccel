@@ -37,7 +37,6 @@ All notable changes to this project will be documented in this file.
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
 -   #1583 : Allow inhomogeneous tuples in classes.
--   #1915 : Add support for NumPy v2 `sign` function.
 -   Add a warning about containers in lists.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
@@ -54,19 +53,10 @@ All notable changes to this project will be documented in this file.
 -   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
 -   #1821 : Ensure an error is raised when creating an ambiguous interface.
 -   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
--   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
 -   Link and mention `devel` branch, not `master`.
--   #1047 : Print the value of an unrecognised constant.
--   #1903 : Fix memory leak when using type annotations on local variables.
 -   #1913 : Fix function calls to renamed functions.
--   #1927 : Improve error Message for missing target language compiler in Pyccel
--   #1933 : Improve code printing speed.
 -   #1930 : Preserve ordering of import targets.
--   #1951 : Fix return type for class whose argument cannot be wrapped.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
--   #1924 : Fix internal error arising in Duplicate or list comprehensions.
--   #1970 : Fix missing `TypeError` for wrong type passed as optional argument.
--   #1985 : Fix implementation of `gcd` and `lcm` for C and Fortran.
 
 ### Changed
 
@@ -113,6 +103,25 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
+
+## \[1.12.1\] - 2024-09-25
+￼
+￼### Added
+￼
+￼-   #1915 : Add support for NumPy v2 `sign` function.
+￼-   #1988 : Add support for NumPy v2 (fix `floor`, fix type mixing, update tests).
+￼
+￼### Fixed
+￼
+￼-   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
+￼-   #1047 : Print the value of an unrecognised constant.
+￼-   #1951 : Fix return type for class whose argument cannot be wrapped.
+￼-   #1903 : Fix memory leak when using type annotations on local variables.
+￼-   #1927 : Improve error Message for missing target language compiler in Pyccel
+￼-   #1933 : Improve code printing speed.
+￼-   #1924 : Fix internal error arising in Duplicate or list comprehensions.
+￼-   #1970 : Fix missing `TypeError` for wrong type passed as optional argument.
+￼-   #1985 : Fix implementation of `gcd` and `lcm` for C and Fortran.
 
 ## \[1.12.0\] - 2024-05-13
 

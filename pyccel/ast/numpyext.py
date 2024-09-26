@@ -6,6 +6,8 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing objects from the numpy module understood by pyccel
 """
+from packaging.version import Version
+
 import numpy
 
 from pyccel.errors.errors import Errors
@@ -41,6 +43,7 @@ from .variable       import Variable, Constant, IndexedElement
 
 errors = Errors()
 pyccel_stage = PyccelStage()
+numpy_v2_1 = Version(numpy.__version__) >= Version("2.1.0")
 
 __all__ = (
     'process_shape',
@@ -2051,6 +2054,27 @@ class NumpyFloor(NumpyUfuncUnary):
     """
     __slots__ = ()
     name = 'floor'
+
+    def _get_dtype(self, x):
+        """
+        Use the argument to calculate the dtype of the result.
+
+        Use the argument to calculate the dtype of the result.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+
+        Returns
+        -------
+        PyccelType
+            The dtype of the result of the function.
+        """
+        if numpy_v2_1:
+            return process_dtype(x.dtype)
+        else:
+            return super()._get_dtype(x)
 
 class NumpyMod(NumpyUfuncBinary):
     """
