@@ -81,7 +81,7 @@ jobs:
             --method POST \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/EmilyBourne/pyccel/releases \
+            /repos/pyccel/pyccel/releases \
              -f "tag_name=${tag_name}" -f "name=${tag_name}" -F "body=@release_notes.md" -F "draft=false" -F "prerelease=false" -F "generate_release_notes=false"
         env:
           tag_name: ${{ steps.tag_name.outputs.TAG_NAME }}
