@@ -47,6 +47,7 @@ jobs:
           python -m pip install --upgrade build
           python -m pip install --upgrade twine
       - name: Build and deploy
+        if: github.repository == 'pyccel/pyccel'
         run: |
           echo ${{ github.event.workflow_run.head_branch }}
           python3 -m build
@@ -85,10 +86,10 @@ jobs:
           then
             # If there are new contributors then add a section with their names
             echo "## New Contributors" >> release_notes.md
-            for c in ${NEW_CONTRIBUTORS}
+            while IFS= read -r c
             do
               echo "- ${c}" >> release_notes.md
-            done
+            done <<< "${NEW_CONTRIBUTORS}"
             echo "" >> release_notes.md
           fi
 
