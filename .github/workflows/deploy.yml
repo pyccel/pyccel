@@ -114,7 +114,7 @@ jobs:
           PREVIOUS_TAG=$(gh release list --limit 1 --json tagName | jq '.[]["tagName"]' | tr -d '"')
 
           echo "" >> release_notes.md
-          echo "**Full Changelog**: https://github.com/pyccel/pyccel/compare/${PREVIOUS_TAG}..${tag_name}" >> release_notes.md
+          echo "**Full Changelog**: [${PREVIOUS_TAG}..${tag_name}](https://github.com/pyccel/pyccel/compare/${PREVIOUS_TAG}..${tag_name})" >> release_notes.md
 
         shell: bash
         env:
