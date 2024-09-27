@@ -6,6 +6,9 @@
 import functools
 from itertools import chain
 import re
+from packaging.version import Version
+
+import numpy as np
 
 from pyccel.ast.basic     import ScopedAstNode
 
@@ -13,7 +16,7 @@ from pyccel.ast.bind_c    import BindCPointer
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
-from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict
+from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
@@ -54,7 +57,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
-from pyccel.ast.utilities import expand_to_loops
+from pyccel.ast.utilities import expand_to_loops, is_literal_integer
 
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
@@ -67,6 +70,7 @@ from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
 
+numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 errors = Errors()
 
@@ -98,9 +102,6 @@ numpy_ufunc_to_c_float = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
-    'NumpyIsInf':'isinf',
-    'NumpyIsFinite':'isfinite',
-    'NumpyIsNan':'isnan',
 }
 
 numpy_ufunc_to_c_complex = {
@@ -241,10 +242,10 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdio',
                  "inttypes",
                  'stdbool',
-                 'assert',
-                 'numpy_c']}
+                 'assert']}
 
-import_header_guard_prefix = {'Set_extensions' : '_TOOLS_SET'}
+import_header_guard_prefix = {'Set_extensions'  : '_TOOLS_SET',
+                              'List_extensions' : '_TOOLS_LIST'}
 
 class CCodePrinter(CodePrinter):
     """
@@ -1687,9 +1688,19 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelArrayShapeElement(self, expr):
         arg = expr.arg
-        if self.is_c_pointer(arg):
-            return '{}->shape[{}]'.format(self._print(ObjectAddress(arg)), self._print(expr.index))
-        return '{}.shape[{}]'.format(self._print(arg), self._print(expr.index))
+        if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            idx = self._print(expr.index)
+            if self.is_c_pointer(arg):
+                arg_code = self._print(ObjectAddress(arg))
+                return f'{arg_code}->shape[{idx}]'
+            arg_code = self._print(arg)
+            return f'{arg_code}.shape[{idx}]'
+        elif isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            c_type = self.get_c_type(arg.class_type)
+            arg_code = self._print(ObjectAddress(arg))
+            return f'{c_type}_size({arg_code})'
+        else:
+            raise NotImplementedError(f"Don't know how to represent shape of object of type {arg.class_type}")
 
     def _print_Allocate(self, expr):
         free_code = ''
@@ -1827,7 +1838,7 @@ class CCodePrinter(CodePrinter):
             numpy.sign(x) => csign(x)   (x is complex)
 
         """
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['pyc_math_c'])
         primitive_type = expr.dtype.primitive_type
         func = ''
         if isinstance(primitive_type, PrimitiveIntegerType):
@@ -1835,7 +1846,7 @@ class CCodePrinter(CodePrinter):
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
             func = 'fsign'
         elif isinstance(primitive_type, PrimitiveComplexType):
-            func = 'csign'
+            func = 'csgn' if numpy_v1 else 'csign'
 
         return f'{func}({self._print(expr.args[0])})'
 
@@ -1844,7 +1855,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isfinite function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isfinite({code_arg})"
 
@@ -1853,7 +1864,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isinf function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isinf({code_arg})"
 
@@ -1862,7 +1873,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isnan function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isnan({code_arg})"
 
@@ -2288,14 +2299,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
             return prefix_code+self.init_stc_container(rhs, expr)
         rhs = self._print(expr.rhs)
-        return prefix_code+'{} = {};\n'.format(lhs, rhs)
-
-    def _print_SetPop(self, expr):
-        dtype = expr.set_variable.class_type
-        var_type = self.get_c_type(dtype)
-        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(dtype), var_type)))
-        set_var = self._print(ObjectAddress(expr.set_variable))
-        return f'{var_type}_pop({set_var})'
+        return prefix_code+f'{lhs} = {rhs};\n'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
@@ -2636,6 +2640,31 @@ class CCodePrinter(CodePrinter):
         interfaces = ''.join(self._print(function) for interface in expr.interfaces for function in interface.functions)
 
         return methods + interfaces
+
+    #================== List methods ==================
+    def _print_ListPop(self, expr):
+        class_type = expr.list_obj.class_type
+        c_type = self.get_c_type(class_type)
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        if expr.index_element:
+            self.add_import(Import('List_extensions', AsName(VariableTypeAnnotation(class_type), c_type)))
+            if is_literal_integer(expr.index_element) and int(expr.index_element) < 0:
+                idx_code = self._print(PyccelAdd(PythonLen(expr.list_obj), expr.index_element, simplify=True))
+            else:
+                idx_code = self._print(expr.index_element)
+            return f'{c_type}_pull_elem({list_obj}, {idx_code})'
+        else:
+            return f'{c_type}_pull({list_obj})'
+
+    #================== Set methods ==================
+
+    def _print_SetPop(self, expr):
+        dtype = expr.set_variable.class_type
+        var_type = self.get_c_type(dtype)
+        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(dtype), var_type)))
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        return f'{var_type}_pop({set_var})'
+
     #=================== MACROS ==================
 
     def _print_MacroShape(self, expr):

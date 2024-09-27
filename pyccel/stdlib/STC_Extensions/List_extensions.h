@@ -1,5 +1,5 @@
-#ifndef SET_EXTENSIONS_H
-#define SET_EXTENSIONS_H
+#ifndef LIST_EXTENSIONS_H
+#define LIST_EXTENSIONS_H
 
 
 #define _c_MEMB(name) c_JOIN(i_type, name)
@@ -8,8 +8,11 @@
 // i_type: Class type (e.g., hset_int64_t).
 // i_key: Data type of the elements in the set (e.g., int64_t).
 
-static inline i_key _c_MEMB(_pop)(i_type* self) {
-    _c_MEMB(_iter) itr = _c_MEMB(_begin)(self); // Get iterator of the first element in the set using (_begin).
+static inline i_key _c_MEMB(_pull_elem)(i_type* self, intptr_t pop_idx) {
+    // Get the iterator for the specified element using (_advance) and (_begin)
+    _c_MEMB(_iter) itr = _c_MEMB(_advance)(_c_MEMB(_begin)(self), pop_idx);
+
+    // If the element is found then remove it from the list
     if (itr.ref) 
     {
         i_key value = *(itr.ref);
