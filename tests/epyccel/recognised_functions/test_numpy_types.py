@@ -964,10 +964,11 @@ def test_numpy_complex_array_like_1d(language, get_complex):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
+    # float32 is used as the maximum for all float types to avoid overflow errors
+    fl = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(min_float32 / 2, max_float32 / 2, size = size)
 
     epyccel_func = epyccel(get_complex, language=language)
 
@@ -1008,10 +1009,11 @@ def test_numpy_complex_array_like_2d(language, get_complex):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
+    # float32 is used as the maximum for all float types to avoid overflow errors
+    fl = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(min_float32 / 2, max_float32 / 2, size = size)
 
     epyccel_func = epyccel(get_complex, language=language)
 
