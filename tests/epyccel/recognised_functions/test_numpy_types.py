@@ -971,7 +971,7 @@ def test_numpy_complex_array_like_1d(language, get_complex):
 
     epyccel_func = epyccel(get_complex, language=language)
 
-    is_complex64 = get_complex(bl).dtype == np.complex64
+    is_complex64 = get_complex(bl)[-1].dtype == np.complex64
     rtol = RTOL32 if is_complex64 else RTOL
     atol = ATOL32 if is_complex64 else ATOL
 
@@ -1015,7 +1015,7 @@ def test_numpy_complex_array_like_2d(language, get_complex):
 
     epyccel_func = epyccel(get_complex, language=language)
 
-    is_complex64 = get_complex(bl).dtype == np.complex64
+    is_complex64 = get_complex(bl)[-1].dtype == np.complex64
     rtol = RTOL32 if is_complex64 else RTOL
     atol = ATOL32 if is_complex64 else ATOL
 
