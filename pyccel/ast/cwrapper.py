@@ -23,7 +23,7 @@ from .datatypes import PythonNativeBool, StringType, VoidType
 from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 
 from .core      import FunctionDefArgument, FunctionDefResult
-from .core      import FunctionDef, ClassDef
+from .core      import FunctionDef, ClassDef, FunctionAddress
 from .core      import Module, Interface, Declare
 
 from .c_concepts import ObjectAddress, CNativeInt
@@ -967,6 +967,10 @@ Py_False = Variable(PyccelPyObject(), 'Py_False', memory_handling='alias')
 # Python.h object representing None
 Py_None = Variable(PyccelPyObject(), 'Py_None', memory_handling='alias')
 
+#-------------------------------------------------------------------
+#                      Python.h functions
+#-------------------------------------------------------------------
+
 # https://docs.python.org/3/c-api/refcounting.html#c.Py_INCREF
 Py_INCREF = FunctionDef(name = 'Py_INCREF',
                         body = [],
@@ -996,6 +1000,24 @@ PyUnicode_FromString = FunctionDef(name = 'PyUnicode_FromString',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(StringType(), name='_'))],
                         results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
+
+# https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_New
+PyCapsule_NewArray = FunctionDef(name = 'PyCapsule_New',
+                                   body = [],
+                                   arguments = [FunctionDefArgument(Variable(VoidType(), name='ptr', memory_handling='alias')),
+                                                FunctionDefArgument(Variable(StringType(), name='_')),
+                                                FunctionDefArgument(FunctionAddress("destructor",
+                                                                [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias'))],
+                                                                []))
+                                                ],
+                                   results = [FunctionDefResult(Variable(VoidType(), 'memory', memory_handling='alias'))])
+
+# https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_GetPointer
+PyCapsule_GetPointer = FunctionDef(name = 'PyCapsule_GetPointer',
+                                   body = [],
+                                   arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
+                                                FunctionDefArgument(Variable(StringType(), name='_'))],
+                                   results = [FunctionDefResult(Variable(VoidType(), 'memory', memory_handling='alias'))])
 
 #-------------------------------------------------------------------
 

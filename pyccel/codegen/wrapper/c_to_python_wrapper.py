@@ -2713,6 +2713,9 @@ class CToPythonWrapper(Wrapper):
                              LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
                              convert_to_literal(orig_var.order != 'F'),
                              convert_to_literal(release_memory)))]
+            if release_memory:
+                capsule_variable = self.get_new_PyObject(f'{orig_var_name}_base')
+                body.append(Assign(capsule_variable, PyCapsule_NewArray(data_var, Nil(), array_free[orig_var.rank])))
 
             shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
             c_result_vars = [ObjectAddress(data_var)]+shape_vars
