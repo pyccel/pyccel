@@ -2378,6 +2378,15 @@ def test_randint_expr(language):
     assert all(isinstance(yi, int) for yi in y)
     assert len(set(y)) > 1
 
+def test_sum_bool(language):
+    def sum_call(x : 'bool[:]'):
+        from numpy import sum as np_sum
+        return np_sum(x)
+
+    f1 = epyccel(sum_call, language = language)
+    x = randint(1, size=10, dtype=bool)
+    assert f1(x) == sum_call(x)
+
 def test_sum_int(language):
     def sum_call(x : 'int[:]'):
         from numpy import sum as np_sum

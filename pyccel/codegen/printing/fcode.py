@@ -22,7 +22,7 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefAr
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
-from pyccel.ast.builtins import PythonBool, PythonList
+from pyccel.ast.builtins import PythonBool, PythonList, PythonSet
 
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -35,10 +35,13 @@ from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
-from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
-from pyccel.ast.datatypes import PythonNativeInt
+from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
+from pyccel.ast.datatypes import PythonNativeInt, HomogeneousTupleType, HomogeneousListType
+from pyccel.ast.datatypes import HomogeneousSetType, DictType, HomogeneousContainerType
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
-from pyccel.ast.datatypes import pyccel_type_to_original_type
+from pyccel.ast.datatypes import pyccel_type_to_original_type, PyccelType
+
+from pyccel.ast.fortran_concepts import KindSpecification
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 
@@ -47,6 +50,8 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal, LiteralEllipsis
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
 from pyccel.ast.literals  import Nil
+
+from pyccel.ast.low_level_tools  import MacroDefinition, IteratorType
 
 from pyccel.ast.mathext  import math_constants
 
@@ -59,6 +64,8 @@ from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 
+from pyccel.ast.numpytypes import NumpyNDArrayType
+
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
@@ -67,6 +74,8 @@ from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_impor
 from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.ast.variable import Variable, IndexedElement, DottedName
+
+from pyccel.parser.scope import Scope
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -256,8 +265,20 @@ class FCodePrinter(CodePrinter):
 
         self.prefix_module = prefix_module
 
+        self._generated_gFTL_extensions = {}
+
     def print_constant_imports(self):
-        """Prints the use line for the constant imports used"""
+        """
+        Print the import of constant intrinsics.
+
+        Print the import of constants such as `C_INT` from an intrinsic module (i.e. a
+        module provided by Fortran) such as `iso_c_binding`.
+
+        Returns
+        -------
+        str
+            The code describing the import of the intrinsics.
+        """
         macros = []
         for (name, imports) in self._constantImports.items():
 
@@ -266,8 +287,9 @@ class FCodePrinter(CodePrinter):
             if len(rename) == 0:
                 continue
             macro += " , ".join(rename)
+            macro += "\n"
             macros.append(macro)
-        return "\n".join(macros)
+        return "".join(macros)
 
     def set_current_class(self, name):
 
@@ -315,7 +337,7 @@ class FCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : TypedAstNode
+        expr : TypedAstNode | PyccelType
             The object whose precision should be investigated.
 
         Returns
@@ -323,7 +345,8 @@ class FCodePrinter(CodePrinter):
         str
             The code for the kind parameter.
         """
-        dtype = expr.dtype
+        dtype = expr if isinstance(expr, PyccelType) else expr.dtype
+
         constant_name = iso_c_binding[dtype.primitive_type][dtype.precision]
 
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
@@ -499,6 +522,123 @@ class FCodePrinter(CodePrinter):
                         scope.rename_function(f, suggested_name)
                     f.cls_name = scope.get_new_name(f'{name}_{f.name}')
 
+    def _build_gFTL_module(self, expr_type):
+        """
+        Build the gFTL module to create container types.
+
+        Create a module which will import the gFTL include files
+        in order to create container types (e.g lists, sets, etc).
+        The name of the module is derived from the name of the type.
+
+        Parameters
+        ----------
+        expr_type : DataType
+            The data type to be defined in a gFTL module.
+
+        Returns
+        -------
+        Import
+            The import which allows the new type to be accessed.
+        """
+        # Get the type used in the dict for compatible types (e.g. float vs float64)
+        matching_expr_type = next((t for t in self._generated_gFTL_extensions if expr_type == t), None)
+        if matching_expr_type:
+            module = self._generated_gFTL_extensions[matching_expr_type]
+            mod_name = module.name
+        else:
+            if isinstance(expr_type, HomogeneousListType):
+                include = Import(LiteralString('vector/template.inc'), Module('_', (), ()))
+                element_type = expr_type.element_type
+                if isinstance(element_type, FixedSizeNumericType):
+                    macros = [MacroDefinition('T', element_type.primitive_type),
+                              MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type))]
+                else:
+                    macros = [MacroDefinition('T', element_type)]
+                if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
+                    macros.append(MacroDefinition('T_rank', element_type.rank))
+                elif not isinstance(element_type, FixedSizeNumericType):
+                    raise NotImplementedError("Support for lists of types defined in other modules is not yet implemented")
+                macros.append(MacroDefinition('Vector', expr_type))
+                macros.append(MacroDefinition('VectorIterator', IteratorType(expr_type)))
+            else:
+                raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
+
+            typename = self._print(expr_type)
+            mod_name = f'{typename}_mod'
+            module = Module(mod_name, (), (), scope = Scope(), imports = [*macros, include],
+                                       is_external = True)
+
+            self._generated_gFTL_extensions[expr_type] = module
+
+        return Import(f'gFTL_extensions/{mod_name}', module)
+
+    def _get_node_without_gFTL(self, expr):
+        """
+        Get the code to print an AST node without using gFTL.
+
+        This function ensures that lists are printed as basic Fortran lists instead of using a
+        gFTL Vector. This is useful when lists are used as arguments to intrinsic functions.
+
+        Parameters
+        ----------
+        expr : PyccelAstType
+            The element of the array.
+
+        Returns
+        -------
+        str
+            The code for the element.
+        """
+        if isinstance(expr, (PythonList, PythonTuple)):
+            shape = tuple(reversed(expr.shape))
+            if len(shape)>1:
+                elements = ', '.join(self._get_node_without_gFTL(i) for i in expr)
+                shape    = ', '.join(self._print(i) for i in shape)
+                return 'reshape(['+ elements + '], [' + shape + '])'
+            args = ', '.join(self._print(f) for f in expr)
+            return f'[{args}]'
+        else:
+            return self._print(expr)
+
+    def _apply_cast(self, target_type, *args):
+        """
+        Cast the arguments to the specified target type.
+
+        Cast the arguments to the specified target type. For literal containers this
+        function applies the cast to the elements.
+
+        Parameters
+        ----------
+        target_type : PyccelType
+            The type which we should cast to.
+        *args : TypedAstNode
+            A node that should be cast to the target type.
+
+        Returns
+        -------
+        TypedAstNode | iterable[TypedAstNode]
+            A TypedAstNode for each argument. The new nodes will have the target type.
+        """
+        try :
+            cast_func = DtypePrecisionToCastFunction[target_type]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+
+        new_args = []
+        for a in args:
+            if target_type != a.class_type:
+                if isinstance(a, (PythonList, PythonSet, PythonTuple)):
+                    container = type(a)
+                    a = container(*[self._apply_cast(target_type, ai) for ai in a])
+                else:
+                    a = cast_func(a)
+            new_args.append(a)
+
+        if len(args) == 1:
+            return new_args[0]
+        else:
+            return new_args
+
     # ============ Elements ============ #
     def _print_PyccelSymbol(self, expr):
         return expr
@@ -556,10 +696,12 @@ class FCodePrinter(CodePrinter):
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
         imports += ''.join(self._print(i) for i in self._additional_imports.values())
-        imports += "\n" + self.print_constant_imports()
+        imports = self.print_constant_imports() + imports
+        implicit_none = '' if expr.is_external else 'implicit none\n'
+
         parts = ['module {}\n'.format(name),
                  imports,
-                 'implicit none\n',
+                 implicit_none,
                  private,
                  decs,
                  interfaces,
@@ -621,12 +763,17 @@ class FCodePrinter(CodePrinter):
         source = expr.source
         if isinstance(source, DottedName):
             source = source.name[-1]
+        elif isinstance(source, LiteralString):
+            source = source.python_value
         else:
             source = self._print(source)
 
         # importing of pyccel extensions is not printed
         if source in pyccel_builtin_import_registry:
             return ''
+
+        if source.endswith('.inc'):
+            return f'#include <{source}>\n'
 
         if expr.source_module:
             source = expr.source_module.name
@@ -637,13 +784,13 @@ class FCodePrinter(CodePrinter):
         targets = [t for t in expr.target if not isinstance(t.object, Module)]
 
         if len(targets) == 0:
-            return 'use {}\n'.format(source)
+            return f'use {source}\n'
 
         targets = [t for t in targets if not getattr(t.object, 'is_inline', False)]
         if len(targets) == 0:
             return ''
 
-        prefix = 'use {}, only:'.format(source)
+        prefix = f'use {source}, only:'
 
         code = ''
         for i in targets:
@@ -917,22 +1064,32 @@ class FCodePrinter(CodePrinter):
         return '[{0}]'.format(fs)
 
     def _print_PythonAbs(self, expr):
-        """ print the python builtin function abs
-        args : variable
-        """
-        return "abs({})".format(self._print(expr.arg))
+        arg_code = self._get_node_without_gFTL(expr.arg)
+        return f"abs({arg_code})"
 
     def _print_PythonTuple(self, expr):
         shape = tuple(reversed(expr.shape))
         if len(shape)>1:
             elements = ', '.join(self._print(i) for i in expr)
             shape    = ', '.join(self._print(i) for i in shape)
-            return 'reshape(['+ elements + '], '+ '[' + shape + ']' + ')'
-        fs = ', '.join(self._print(f) for f in expr)
-        return '[{0}]'.format(fs)
+            return 'reshape(['+ elements + '], [' + shape + '])'
+        args = ', '.join(self._print(f) for f in expr)
+        return f'[{args}]'
 
     def _print_PythonList(self, expr):
-        return self._print_PythonTuple(expr)
+        if len(expr.args) == 0:
+            list_arg = ''
+            assign = expr.get_direct_user_nodes(lambda a : isinstance(a, Assign))
+            if assign:
+                vec_type = self._print(assign[0].lhs.class_type)
+            else:
+                raise errors.report("Can't use an empty list without assigning it to a variable as the type cannot be deduced",
+                        severity='fatal', symbol=expr)
+
+        else:
+            list_arg = self._print_PythonTuple(expr)
+            vec_type = self._print(expr.class_type)
+        return f'{vec_type}({list_arg})'
 
     def _print_InhomogeneousTupleVariable(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
@@ -979,34 +1136,31 @@ class FCodePrinter(CodePrinter):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
 
     def _print_PythonSum(self, expr):
-        args = [self._print(arg) for arg in expr.args]
-        return "sum({})".format(", ".join(args))
+        args = ", ".join(self._get_node_without_gFTL(arg) for arg in expr.args)
+        return f"sum({args})"
 
     def _print_PythonReal(self, expr):
         value = self._print(expr.internal_var)
-        return 'real({0})'.format(value)
+        return f'real({value})'
 
     def _print_PythonImag(self, expr):
         value = self._print(expr.internal_var)
-        return 'aimag({0})'.format(value)
+        return f'aimag({value})'
 
 
 
     #========================== Numpy Elements ===============================#
 
     def _print_NumpySum(self, expr):
-        """Fortran print."""
-        rhs_code = self._print(expr.arg)
+        arg_code = self._get_node_without_gFTL(expr.arg)
         dtype = expr.arg.dtype.primitive_type
         if isinstance(dtype, PrimitiveBooleanType):
-            return 'count({0})'.format(rhs_code)
-        return 'sum({0})'.format(rhs_code)
+            return f'count({arg_code})'
+        return f'sum({arg_code})'
 
     def _print_NumpyProduct(self, expr):
-        """Fortran print."""
-
-        rhs_code = self._print(expr.arg)
-        return 'product({0})'.format(rhs_code)
+        arg_code = self._get_node_without_gFTL(expr.arg)
+        return f'product({arg_code})'
 
     def _print_NumpyMatmul(self, expr):
         """Fortran print."""
@@ -1034,25 +1188,24 @@ class FCodePrinter(CodePrinter):
         errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity='fatal')
 
     def _print_NumpyNorm(self, expr):
-        """Fortran print."""
         arg = NumpyAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
+        arg_code = self._get_node_without_gFTL(arg)
         if expr.axis:
             axis = expr.axis
             if arg.order != 'F':
                 axis = PyccelMinus(LiteralInteger(arg.rank), expr.axis, simplify=True)
             else:
                 axis = LiteralInteger(expr.axis.python_value + 1)
-            code = 'Norm2({},{})'.format(self._print(arg), self._print(axis))
+            code = f'Norm2({arg_code},{self._print(axis)})'
         else:
-            code = 'Norm2({})'.format(self._print(arg))
+            code = f'Norm2({arg_code})'
 
         return code
 
     def _print_NumpyLinspace(self, expr):
 
         if expr.stop.dtype != expr.dtype:
-            cast_func = DtypePrecisionToCastFunction[expr.dtype]
-            st = cast_func(expr.stop)
+            st = self._apply_cast(expr.dtype, expr.stop)
             v = self._print(st)
         else:
             v = self._print(expr.stop)
@@ -1158,17 +1311,7 @@ class FCodePrinter(CodePrinter):
         return stmt
 
     def _print_NumpyWhere(self, expr):
-        value_true  = expr.value_true
-        value_false = expr.value_false
-        try :
-            cast_func = DtypePrecisionToCastFunction[expr.dtype]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
-
-        if value_true.dtype != expr.dtype:
-            value_true = cast_func(value_true)
-        if value_false.dtype != expr.dtype:
-            value_false = cast_func(value_false)
+        value_true, value_false = self._apply_cast(expr.dtype, expr.value_true, expr.value_false)
 
         condition   = self._print(expr.condition)
         value_true  = self._print(value_true)
@@ -1184,15 +1327,11 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyArray(self, expr):
         order = expr.order
 
-        try :
-            cast_func = DtypePrecisionToCastFunction[expr.dtype]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         # If Numpy array is stored with column-major ordering, transpose values
         # use reshape with order for rank > 2
         if expr.rank <= 2:
-            arg = expr.arg if expr.arg.dtype == expr.dtype else cast_func(expr.arg)
-            rhs_code = self._print(arg)
+            arg = self._apply_cast(expr.dtype, expr.arg)
+            rhs_code = self._get_node_without_gFTL(arg)
             if expr.arg.order and expr.arg.order != expr.order:
                 rhs_code = f'transpose({rhs_code})'
             if expr.arg.rank < expr.rank:
@@ -1203,16 +1342,15 @@ class FCodePrinter(CodePrinter):
                 rhs_code = f"reshape({rhs_code}, [{shape_code}])"
         else:
             expr_args = (expr.arg,) if isinstance(expr.arg, Variable) else expr.arg
-            expr_args = tuple(a if a.dtype == expr.dtype else cast_func(a) for a in expr_args)
+            expr_args = tuple(self._apply_cast(expr.dtype, a) for a in expr_args)
             new_args = []
             inv_order = 'C' if order == 'F' else 'F'
             for a in expr_args:
-                ac = self._print(a)
 
                 # Pack list/tuple of array/list/tuple into array
                 if a.order is None and a.rank > 1:
                     a = NumpyArray(a)
-                    ac = self._print(a)
+                ac = self._get_node_without_gFTL(a)
 
                 # Reshape array element if out of order
                 if a.order == inv_order:
@@ -1288,19 +1426,40 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
+        kind = self.print_kind(expr)
         if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
-            code = 'MERGE(1_{0}, 0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
+            code = f'MERGE(1_{kind}, 0_{kind}, {value})'
         else:
-            code  = 'Int({0}, {1})'.format(value, self.print_kind(expr))
+            code  = f'Int({value}, kind = {kind})'
         return code
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
+        kind = self.print_kind(expr)
         if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
-            code = 'MERGE(1.0_{0}, 0.0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
+            code = f'MERGE(1.0_{kind}, 0.0_{kind}, {value})'
         else:
-            code  = 'Real({0}, {1})'.format(value, self.print_kind(expr))
+            code  = f'Real({value}, kind = {kind})'
         return code
+
+    def _print_PythonComplex(self, expr):
+        kind = self.print_kind(expr)
+        if expr.is_cast:
+            var = self._print(expr.internal_var)
+            code = f'cmplx({var}, kind = {kind})'
+        else:
+            real = self._print(expr.real)
+            imag = self._print(expr.imag)
+            code = f'cmplx({real}, {imag}, {kind})'
+        return code
+
+    def _print_PythonBool(self, expr):
+        value = self._print(expr.arg)
+        kind = self.print_kind(expr)
+        if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
+            return f'logical({value}, kind = {kind})'
+        else:
+            return f'({value} /= 0)'
 
     def _print_MathFloor(self, expr):
         arg = expr.args[0]
@@ -1309,30 +1468,10 @@ class FCodePrinter(CodePrinter):
         # math.floor on integer argument is identity,
         # but we need parentheses around expressions
         if isinstance(arg.dtype.primitive_type, PrimitiveIntegerType):
-            return '({})'.format(arg_code)
+            return f'({arg_code})'
 
-        prec_code = self.print_kind(expr)
-        return 'floor({}, kind={})'.format(arg_code, prec_code)
-
-    def _print_PythonComplex(self, expr):
         kind = self.print_kind(expr)
-        if expr.is_cast:
-            var = expr.internal_var
-            if var.dtype is NativeBool():
-                var = PythonInt(var)
-            var_code = self._print(var)
-            code = f'cmplx({var_code}, kind={kind})'
-        else:
-            real = self._print(expr.real)
-            imag = self._print(expr.imag)
-            code = f'cmplx({real}, {imag}, {kind})'
-        return code
-
-    def _print_PythonBool(self, expr):
-        if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
-            return 'logical({}, kind = {prec})'.format(self._print(expr.arg), prec = self.print_kind(expr))
-        else:
-            return '({} /= 0)'.format(self._print(expr.arg))
+        return f'floor({arg_code}, kind = {kind})'
 
     def _print_NumpyRand(self, expr):
         if expr.rank != 0:
@@ -1368,9 +1507,8 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyAmax(self, expr):
         array_arg = expr.arg
         if isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType):
-            arg_code = self._print(NumpyInt32(array_arg))
-        else:
-            arg_code = self._print(array_arg)
+            array_arg = NumpyInt32(array_arg)
+        arg_code = self._get_node_without_gFTL(array_arg)
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
@@ -1381,9 +1519,8 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyAmin(self, expr):
         array_arg = expr.arg
         if isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType):
-            arg_code = self._print(NumpyInt32(array_arg))
-        else:
-            arg_code = self._print(array_arg)
+            array_arg = NumpyInt32(array_arg)
+        arg_code = self._get_node_without_gFTL(array_arg)
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
@@ -1395,7 +1532,8 @@ class FCodePrinter(CodePrinter):
         args = expr.args
         if len(args) == 1:
             arg = args[0]
-            code = 'minval({0})'.format(self._print(arg))
+            arg_code = self._get_node_without_gFTL(arg)
+            code = f'minval({arg_code})'
         else:
             code = ','.join(self._print(arg) for arg in args)
             code = 'min('+code+')'
@@ -1405,7 +1543,8 @@ class FCodePrinter(CodePrinter):
         args = expr.args
         if len(args) == 1:
             arg = args[0]
-            code = 'maxval({0})'.format(self._print(arg))
+            arg_code = self._get_node_without_gFTL(arg)
+            code = f'maxval({arg_code})'
         else:
             code = ','.join(self._print(arg) for arg in args)
             code = 'max('+code+')'
@@ -1499,10 +1638,10 @@ class FCodePrinter(CodePrinter):
         is_target       = var.is_target and not var.is_alias
         intent          = expr.intent
         intent_in = intent and intent != 'out'
-
-        if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:
-            shape = shape[0]
         # ...
+
+        dtype_str = ''
+        rankstr   = ''
 
         # ... print datatype
         if isinstance(expr_type, CustomDataType):
@@ -1512,21 +1651,43 @@ class FCodePrinter(CodePrinter):
                 sig = 'class'
             else:
                 sig = 'type'
-            dtype = f'{sig}({name})'
-        elif isinstance(dtype, FixedSizeNumericType):
-            dtype = self._print(dtype.primitive_type)
-            dtype += f'({self.print_kind(var)})'
+            dtype_str = f'{sig}({name})'
+        elif isinstance(dtype, FixedSizeNumericType) and \
+                isinstance(expr_type, (NumpyNDArrayType, HomogeneousTupleType, FixedSizeNumericType)):
+            dtype_str = self._print(dtype.primitive_type)
+            dtype_str += f'({self.print_kind(var)})'
+
+            if rank > 0:
+                # arrays are 0-based in pyccel, to avoid ambiguity with range
+                start_val = self._print(LiteralInteger(0))
+
+                if intent_in:
+                    rankstr = ', '.join([f'{start_val}:'] * rank)
+                elif is_static or on_stack:
+                    ordered_shape = shape[::-1] if var.order == 'C' else shape
+                    ubounds = [PyccelMinus(s, LiteralInteger(1), simplify = True) for s in ordered_shape]
+                    rankstr = ', '.join(f'{start_val}:{self._print(u)}' for u in ubounds)
+                elif is_alias or on_heap:
+                    rankstr = ', '.join(':'*rank)
+                else:
+                    raise NotImplementedError("Fortran rank string undetermined")
+                rankstr = f'({rankstr})'
+
+        elif isinstance(expr_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            self.add_import(self._build_gFTL_module(expr_type))
+            typename = self._print(expr_type)
+            dtype_str = f'type({typename})'
         elif isinstance(dtype, StringType):
-            dtype = self._print(dtype)
+            dtype_str = self._print(dtype)
 
             if intent_in:
-                dtype = dtype[:9] +'(len =*)'
+                dtype_str = dtype_str[:9] +'(len =*)'
                 #TODO improve ,this is the case of character as argument
         elif isinstance(dtype, BindCPointer):
-            dtype = 'type(c_ptr)'
+            dtype_str = 'type(c_ptr)'
             self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
         else:
-            errors.report("Unrecognised datatype",
+            errors.report(f"Don't know how to print type {expr_type} in Fortran",
                     symbol=expr, severity='fatal')
 
         code_value = ''
@@ -1535,17 +1696,11 @@ class FCodePrinter(CodePrinter):
 
         vstr = self._print(expr.variable.name)
 
-        # arrays are 0-based in pyccel, to avoid ambiguity with range
-        start_val = self._print(LiteralInteger(0))
-        if not(is_static) and (on_heap or (var.shape is None)):
-            start_val = ''
-
         # Default empty strings
         intentstr      = ''
         allocatablestr = ''
         optionalstr    = ''
         privatestr     = ''
-        rankstr        = ''
         externalstr    = ''
         is_string = isinstance(var.class_type, StringType)
 
@@ -1564,7 +1719,7 @@ class FCodePrinter(CodePrinter):
             if is_alias:
                 allocatablestr = ', pointer'
 
-            elif on_heap and not intent_in:
+            elif on_heap and not intent_in and isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -1583,38 +1738,12 @@ class FCodePrinter(CodePrinter):
         if is_external:
             externalstr = ', external'
 
-        # Compute rank string
-        # TODO: improve
-        if not is_string:
-            if ((rank == 1) and (isinstance(shape, (int, TypedAstNode))) and (is_static or on_stack)):
-                ubound = PyccelMinus(shape, LiteralInteger(1), simplify = True)
-                rankstr = f'({self._print(start_val)}:{self._print(ubound)})'
-
-            elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or on_stack)):
-                #TODO fix bug when we include shape of type list
-
-                ordered_shape = shape[::-1] if var.order == 'C' else shape
-                ubounds = [PyccelMinus(s, LiteralInteger(1), simplify = True) for s in ordered_shape]
-                rankstr = ','.join(f'{self._print(start_val)}:{self._print(u)}' for u in ubounds)
-                rankstr = f'({rankstr})'
-
-            elif (rank > 0) and on_heap and intent_in:
-                rankstr = ','.join(['0:'] * rank)
-                rankstr = f'({rankstr})'
-
-            elif (rank > 0) and (on_heap or is_alias):
-                rankstr = "(:" + ",:" * (rank-1) + ")"
-
-    #        else:
-    #            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-    #                severity='fatal')
-
         mod_str = ''
         if expr.module_variable and not is_private and isinstance(expr.variable.class_type, FixedSizeNumericType):
             mod_str = ', bind(c)'
 
         # Construct declaration
-        left  = dtype + allocatablestr + optionalstr + privatestr + externalstr + mod_str + intentstr
+        left  = dtype_str + allocatablestr + optionalstr + privatestr + externalstr + mod_str + intentstr
         right = vstr + rankstr + code_value
         return f'{left} :: {right}\n'
 
@@ -1773,37 +1902,44 @@ class FCodePrinter(CodePrinter):
 
 #------------------------------------------------------------------------------
     def _print_Allocate(self, expr):
+        class_type = expr.variable.class_type
+        if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
+            # Transpose indices because of Fortran column-major ordering
+            shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
 
-        # Transpose indices because of Fortran column-major ordering
-        shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
+            var_code = self._print(expr.variable)
+            size_code = ', '.join(self._print(i) for i in shape)
+            shape_code = ', '.join('0:' + self._print(PyccelMinus(i, LiteralInteger(1), simplify = True)) for i in shape)
+            if shape:
+                shape_code = f'({shape_code})'
+            code = ''
 
-        var_code = self._print(expr.variable)
-        size_code = ', '.join(self._print(i) for i in shape)
-        shape_code = ', '.join('0:' + self._print(PyccelMinus(i, LiteralInteger(1), simplify = True)) for i in shape)
-        if shape:
-            shape_code = f'({shape_code})'
-        code = ''
+            if expr.status == 'unallocated':
+                code += f'allocate({var_code}{shape_code})\n'
 
-        if expr.status == 'unallocated':
-            code += f'allocate({var_code}{shape_code})\n'
+            elif expr.status == 'unknown':
+                code += f'if (allocated({var_code})) then\n'
+                code += f'  if (any(size({var_code}) /= [{size_code}])) then\n'
+                code += f'    deallocate({var_code})\n'
+                code += f'    allocate({var_code}{shape_code})\n'
+                code +=  '  end if\n'
+                code +=  'else\n'
+                code += f'  allocate({var_code}{shape_code})\n'
+                code +=  'end if\n'
 
-        elif expr.status == 'unknown':
-            code += f'if (allocated({var_code})) then\n'
-            code += f'  if (any(size({var_code}) /= [{size_code}])) then\n'
-            code += f'    deallocate({var_code})\n'
-            code += f'    allocate({var_code}{shape_code})\n'
-            code +=  '  end if\n'
-            code +=  'else\n'
-            code += f'  allocate({var_code}{shape_code})\n'
-            code +=  'end if\n'
+            elif expr.status == 'allocated':
+                code += f'if (any(size({var_code}) /= [{size_code}])) then\n'
+                code += f'  deallocate({var_code})\n'
+                code += f'  allocate({var_code}{shape_code})\n'
+                code +=  'end if\n'
 
-        elif expr.status == 'allocated':
-            code += f'if (any(size({var_code}) /= [{size_code}])) then\n'
-            code += f'  deallocate({var_code})\n'
-            code += f'  allocate({var_code}{shape_code})\n'
-            code +=  'end if\n'
+            return code
 
-        return code
+        elif isinstance(class_type, HomogeneousContainerType):
+            return ''
+
+        else:
+            return self._print_not_supported(expr)
 
 #-----------------------------------------------------------------------------
     def _print_Deallocate(self, expr):
@@ -1817,14 +1953,18 @@ class FCodePrinter(CodePrinter):
             Pyccel_del_args = [FunctionCallArgument(var)]
             return self._print(FunctionCall(Pyccel__del, Pyccel_del_args))
 
-        if var.is_alias:
+        if var.is_alias or isinstance(class_type, HomogeneousListType):
             return ''
-        else:
+        elif isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, StringType)):
             var_code = self._print(var)
             code  = 'if (allocated({})) then\n'.format(var_code)
             code += '  deallocate({})\n'     .format(var_code)
             code += 'end if\n'
             return code
+        else:
+            errors.report(f"Deallocate not implemented for {class_type}",
+                    severity='error', symbol=expr)
+            return ''
 
     def _print_DeallocatePointer(self, expr):
         var_code = self._print(expr.variable)
@@ -1848,6 +1988,18 @@ class FCodePrinter(CodePrinter):
         return 'character(len=280)'
         #TODO fix improve later
 
+    def _print_FixedSizeNumericType(self, expr):
+        return f'{self._print(expr.primitive_type)}{expr.precision}'
+
+    def _print_PythonNativeBool(self, expr):
+        return 'logical'
+
+    def _print_HomogeneousListType(self, expr):
+        return 'Vector_'+self._print(expr.element_type)
+
+    def _print_IteratorType(self, expr):
+        iterable_type = self._print(expr.iterable_type)
+        return f"{iterable_type}_Iterator"
     def _print_DataType(self, expr):
         return self._print(expr.name)
 
@@ -2534,16 +2686,8 @@ class FCodePrinter(CodePrinter):
     def _print_IfTernaryOperator(self, expr):
 
         cond = PythonBool(expr.cond) if not isinstance(expr.cond.dtype.primitive_type, PrimitiveBooleanType) else expr.cond
-        value_true = expr.value_true
-        value_false = expr.value_false
+        value_true, value_false = self._apply_cast(expr.dtype, expr.value_true, expr.value_false)
 
-        if value_true.dtype != value_false.dtype :
-            try :
-                cast_func = DtypePrecisionToCastFunction[expr.dtype]
-            except KeyError:
-                errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
-            value_true = cast_func(value_true) if value_true.dtype != expr.dtype else value_true
-            value_false = cast_func(value_false) if value_false.dtype != expr.dtype else value_false
         cond = self._print(cond)
         value_true = self._print(value_true)
         value_false = self._print(value_false)
@@ -2731,7 +2875,7 @@ class FCodePrinter(CodePrinter):
             self._print_not_supported(expr)
         if func_name.startswith('ieee_'):
             self._constantImports.setdefault('ieee_arithmetic', set()).add(func_name)
-        args = [self._print(NumpyFloat(a) if isinstance(a.dtype.primitive_type, PrimitiveIntegerType) else a)\
+        args = [self._get_node_without_gFTL(NumpyFloat(a) if isinstance(a.dtype.primitive_type, PrimitiveIntegerType) else a)\
 				for a in expr.args]
         code_args = ', '.join(args)
         code = f'{func_name}({code_args})'
@@ -2772,9 +2916,8 @@ class FCodePrinter(CodePrinter):
             self.add_import(Import('pyc_math_f90', AsName(func, func_name)))
             return f'{func_name}({arg_code})'
         else:
-            cast_func = DtypePrecisionToCastFunction[expr.dtype]
             # The absolute value of the result (0 if the argument is 0, 1 otherwise)
-            abs_result = self._print(cast_func(PythonBool(arg)))
+            abs_result = self._print(self._apply_cast(expr.dtype, PythonBool(arg)))
             return f'sign({abs_result}, {arg_code})'
 
     def _print_NumpyTranspose(self, expr):
@@ -2821,8 +2964,7 @@ class FCodePrinter(CodePrinter):
         args = []
         for arg in expr.args:
             if arg.dtype != expr.dtype:
-                cast_func = DtypePrecisionToCastFunction[expr.dtype]
-                args.append(self._print(cast_func(arg)))
+                args.append(self._print(self._apply_cast(expr.dtype, arg)))
             else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
@@ -2938,9 +3080,19 @@ class FCodePrinter(CodePrinter):
                     inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
                             PyccelAdd(_shape, ind, simplify = True), ind)
 
-        inds = [self._print(i) for i in inds]
-
-        return "%s(%s)" % (base_code, ", ".join(inds))
+        if isinstance(base.class_type, HomogeneousListType):
+            if any(isinstance(i, Slice) for i in inds):
+                raise NotImplementedError("Slice indexing not implemented for lists")
+            inds = [PyccelAdd(i, LiteralInteger(1), simplify=True) for i in inds]
+            inds_code = ", ".join(self._print(i) for i in inds)
+            return f"{base_code}%of({inds_code})"
+        elif isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            inds_code = ", ".join(self._print(i) for i in inds)
+            return f"{base_code}({inds_code})"
+        else:
+            errors.report(f"Don't know how to index type {base.class_type}",
+                    symbol=expr, severity='fatal')
+            return ''
 
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
@@ -3262,7 +3414,22 @@ class FCodePrinter(CodePrinter):
         return [l if l.endswith('\n') else l+'\n' for l in result]
 
     def indent_code(self, code):
-        """Accepts a string of code or a list of code lines"""
+        """
+        Add the correct indentation to the code.
+
+        Analyse the code to calculate when indentation is needed.
+        Add the necessary spaces at the start of each line.
+
+        Parameters
+        ----------
+        code : str | iterable[str]
+            A string of code or a list of code lines.
+
+        Returns
+        -------
+        list[str]
+            A list of indented code lines.
+        """
         if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
@@ -3278,7 +3445,7 @@ class FCodePrinter(CodePrinter):
         tabwidth = self._default_settings['tabwidth']
         new_code = []
         for i, line in enumerate(code):
-            if line in('','\n'):
+            if line in ('','\n') or line.startswith('#'):
                 new_code.append(line)
                 continue
             level -= decrease[i]
@@ -3300,3 +3467,11 @@ class FCodePrinter(CodePrinter):
                  *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes]]
         sep = f'\n{self._print(SeparatorComment(40))}\n'
         return '', sep.join(self._print(f) for f in funcs)
+
+    def _print_MacroDefinition(self, expr):
+        name = expr.macro_name
+        obj = self._print(expr.object)
+        return f'#define {name} {obj}\n'
+
+    def _print_KindSpecification(self, expr):
+        return f'(kind = {self.print_kind(expr.type_specifier)})'

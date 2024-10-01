@@ -23,7 +23,7 @@ from .datatypes import (PyccelType, SymbolicType, HomogeneousTupleType,
 
 from .internals import PyccelSymbol, PyccelFunction, apply_pickle
 
-from .literals  import Nil, LiteralFalse, LiteralInteger
+from .literals  import Nil, LiteralFalse, LiteralInteger, LiteralString
 from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
@@ -981,6 +981,10 @@ class Module(ScopedAstNode):
     scope : Scope
         The scope of the module.
 
+    is_external : bool
+        Indicates if the Module's definition is found elsewhere.
+        This is notably the case for gFTL extensions.
+
     Examples
     --------
     >>> from pyccel.ast.variable import Variable
@@ -1008,7 +1012,8 @@ class Module(ScopedAstNode):
     """
     __slots__ = ('_name','_variables','_funcs','_interfaces',
                  '_classes','_imports','_init_func','_free_func',
-                 '_program','_variable_inits','_internal_dictionary')
+                 '_program','_variable_inits','_internal_dictionary',
+                 '_is_external')
     _attribute_nodes = ('_variables','_funcs','_interfaces',
                         '_classes','_imports','_init_func',
                         '_free_func','_program','_variable_inits')
@@ -1024,7 +1029,8 @@ class Module(ScopedAstNode):
         interfaces=(),
         classes=(),
         imports=(),
-        scope = None
+        scope = None,
+        is_external = False
         ):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
@@ -1070,8 +1076,10 @@ class Module(ScopedAstNode):
         imports = list(imports)
         for i in classes:
             imports += i.imports
-        imports = set(imports)  # for unicity
-        imports = tuple(imports)
+        imports = {i: None for i in imports} # for unicity and ordering
+        imports = tuple(imports.keys())
+
+        assert isinstance(is_external, bool)
 
         self._name = name
         self._variables = variables
@@ -1083,13 +1091,15 @@ class Module(ScopedAstNode):
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
+        self._is_external = is_external
 
         if pyccel_stage != "syntactic":
             self._internal_dictionary = {v.name:v for v in variables}
             self._internal_dictionary.update({f.name:f for f in funcs})
             self._internal_dictionary.update({i.name:i for i in interfaces})
             self._internal_dictionary.update({c.name:c for c in classes})
-            import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
+            import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] \
+                                for i in imports if isinstance(i, Import)}
             self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
             if init_func:
@@ -1208,6 +1218,15 @@ class Module(ScopedAstNode):
         """ Returns the names of all objects accessible directly in this module
         """
         return self._internal_dictionary.keys()
+
+    @property
+    def is_external(self):
+        """
+        Indicate if the Module's definition is found elsewhere.
+
+        This is notably the case for gFTL extensions.
+        """
+        return self._is_external
 
 class ModuleHeader(PyccelAstNode):
     """
@@ -3781,7 +3800,7 @@ class Import(PyccelAstNode):
                 return DottedName(*i.split('.'))
             else:
                 return PyccelSymbol(i)
-        if isinstance(i, (DottedName, AsName, PyccelSymbol)):
+        if isinstance(i, (DottedName, AsName, PyccelSymbol, LiteralString)):
             return i
         else:
             raise TypeError(f'Expecting a string, PyccelSymbol DottedName, given {type(i)}')

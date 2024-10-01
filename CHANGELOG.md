@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 -   #1656 : Ensure gFTL is installed with Pyccel.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
 -   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the STC library.
+-   #1657 : Add the appropriate Fortran language equivalent for declaring a Python `list` container using the gFTL library.
 -   #1876 : Add C support for indexing lists.
 -   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
 -   #1877 : Add C Support for set method `pop()`.

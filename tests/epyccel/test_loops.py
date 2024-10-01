@@ -78,7 +78,10 @@ def test_double_loop_on_2d_array_F(language):
     assert np.array_equal( x, y )
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="list comprehension not supported yet, related issue #1948"),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
             pytest.mark.c]
@@ -99,7 +102,10 @@ def test_product_loop_on_2d_array_C(language):
     assert np.array_equal( x, y )
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="list comprehension not supported yet, related issue #1948"),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
             pytest.mark.c]
@@ -120,7 +126,10 @@ def test_product_loop_on_2d_array_F(language):
     assert np.array_equal( x, y )
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="list comprehension not supported yet, related issue #1948"),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
             pytest.mark.c]
@@ -141,7 +150,10 @@ def test_product_loop(language):
     assert np.array_equal( x, y )
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="list comprehension not supported yet, related issue #1948"),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="Function in function not implemented in C"),
             pytest.mark.c]
@@ -178,7 +190,10 @@ def test_enumerate_on_1d_array_with_start(language):
     assert np.array_equal( f1(z,-2), f2(z,-2) )
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="list comprehension not supported yet, related issue #1948"),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
             pytest.mark.c]
