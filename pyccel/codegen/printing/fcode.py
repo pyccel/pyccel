@@ -1250,15 +1250,17 @@ class FCodePrinter(CodePrinter):
         return 'floor({}, kind={})'.format(arg_code, prec_code)
 
     def _print_PythonComplex(self, expr):
+        kind = self.print_kind(expr)
         if expr.is_cast:
-            var = self._print(expr.internal_var)
-            code = 'cmplx({0}, kind={1})'.format(var,
-                                self.print_kind(expr))
+            var = expr.internal_var
+            if var.dtype is NativeBool():
+                var = PythonInt(var)
+            var_code = self._print(var)
+            code = f'cmplx({var_code}, kind={kind})'
         else:
             real = self._print(expr.real)
             imag = self._print(expr.imag)
-            code = 'cmplx({0}, {1}, {2})'.format(real, imag,
-                                self.print_kind(expr))
+            code = f'cmplx({real}, {imag}, {kind})'
         return code
 
     def _print_PythonBool(self, expr):
