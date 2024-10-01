@@ -102,24 +102,24 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 
-## \[1.12.1\] - 2024-09-25
-￼
-￼### Added
-￼
-￼-   #1915 : Add support for NumPy v2 `sign` function.
-￼-   #1988 : Add support for NumPy v2 (fix `floor`, fix type mixing, update tests).
-￼
-￼### Fixed
-￼
-￼-   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
-￼-   #1047 : Print the value of an unrecognised constant.
-￼-   #1951 : Fix return type for class whose argument cannot be wrapped.
-￼-   #1903 : Fix memory leak when using type annotations on local variables.
-￼-   #1927 : Improve error Message for missing target language compiler in Pyccel
-￼-   #1933 : Improve code printing speed.
-￼-   #1924 : Fix internal error arising in Duplicate or list comprehensions.
-￼-   #1970 : Fix missing `TypeError` for wrong type passed as optional argument.
-￼-   #1985 : Fix implementation of `gcd` and `lcm` for C and Fortran.
+## \[1.12.1\] - 2024-09-27
+
+### Added
+
+-   #1915 : Add support for NumPy v2 `sign` function.
+-   #1988 : Add support for NumPy v2 (fix `floor`, fix type mixing, update tests).
+
+### Fixed
+
+-   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
+-   #1047 : Print the value of an unrecognised constant.
+-   #1951 : Fix return type for class whose argument cannot be wrapped.
+-   #1903 : Fix memory leak when using type annotations on local variables.
+-   #1927 : Improve error Message for missing target language compiler in Pyccel
+-   #1933 : Improve code printing speed.
+-   #1924 : Fix internal error arising in Duplicate or list comprehensions.
+-   #1970 : Fix missing `TypeError` for wrong type passed as optional argument.
+-   #1985 : Fix implementation of `gcd` and `lcm` for C and Fortran.
 
 ## \[1.12.0\] - 2024-05-13
 
