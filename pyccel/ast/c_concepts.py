@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------------------#
 
 """
-Module representing object address.
+Module representing concepts that are only applicable to C code (e.g. ObjectAddress).
 """
 
 from pyccel.utilities.metaclasses import ArgumentSingleton

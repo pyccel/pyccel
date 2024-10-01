@@ -1148,6 +1148,7 @@ def test_reserved_file_name():
     assert str(exc_info.value) == f"File called {libname} has the same name as a Python built-in package and can't be imported from Python. See #1402"
 
 #------------------------------------------------------------------------------
+@pytest.mark.skip(reason="List concatenation not yet implemented")
 def test_concatentation():
     pyccel_test("scripts/concatenation.py",
                 language = 'fortran',

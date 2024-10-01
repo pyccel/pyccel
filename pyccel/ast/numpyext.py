@@ -866,7 +866,7 @@ class NumpyProduct(PyccelFunction):
         if not isinstance(arg, TypedAstNode):
             raise TypeError(f'Unknown type of {type(arg)}.')
         super().__init__(arg)
-        self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
+        self._arg = PythonTuple(arg) if arg.rank == 0 else self._args[0]
         lowest_possible_type = process_dtype(PythonNativeInt())
         if isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and \
                 arg.dtype.precision <= lowest_possible_type.precision:
@@ -1629,7 +1629,7 @@ class NumpyNorm(PyccelFunction):
             dtype = NumpyFloat64Type()
         else:
             dtype = numpy_precision_map[(PrimitiveFloatingPointType(), arg_dtype.precision)]
-        self._arg = PythonList(arg) if arg.rank == 0 else arg
+        self._arg = PythonTuple(arg) if arg.rank == 0 else arg
         if self.axis is not None:
             sh = list(arg.shape)
             del sh[self.axis]
