@@ -23,7 +23,6 @@ class LanguageNameClashChecker(metaclass = Singleton):
         # This __init__ function is required so the Singleton can detect a signature
         super().__init__()
 
-
     def _get_collisionless_name(self, name, symbols):
         """
         Get a name which doesn't collision with keywords or symbols.
