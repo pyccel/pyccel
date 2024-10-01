@@ -296,8 +296,7 @@ class PythonComplex(PyccelInternalFunction):
         return super().__new__(cls)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
-        self._is_cast = arg0.dtype is NativeComplex() or \
-                        isinstance(arg1, Literal) and arg1.python_value == 0
+        self._is_cast = isinstance(arg1, Literal) and arg1.python_value == 0
 
         if self._is_cast:
             self._real_part = self._real_cast(arg0)
