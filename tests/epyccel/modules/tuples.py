@@ -35,6 +35,7 @@ __all__ = [
         'tuples_mul_homogeneous2',
         'tuples_mul_homogeneous3',
         'tuples_mul_homogeneous4',
+        'tuples_mul_homogeneous5',
         'tuples_mul_inhomogeneous',
         'tuples_mul_inhomogeneous2',
         'tuples_mul_homogeneous_2d',
@@ -278,6 +279,14 @@ def tuples_mul_homogeneous4():
     s = 2
     b = (1,2,3)*s
     return b[0], b[1], b[2], b[3], b[4], b[5]
+
+def tuples_mul_homogeneous5():
+    import numpy as np
+    s = 2
+    a = np.ones(5)
+    b = (1,2,3)*(len(a)*s)
+    i = 1
+    return b[0], b[i], b[2], b[3], b[4], b[5]
 
 def tuples_mul_inhomogeneous():
     a = (1,False)

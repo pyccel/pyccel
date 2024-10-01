@@ -974,7 +974,7 @@ class SemanticParser(BasicParser):
                 length = length.python_value
             else:
                 symbol_map = {}
-                used_symbols = {}
+                used_symbols = set()
                 sympy_length = pyccel_to_sympy(length, symbol_map, used_symbols)
                 if isinstance(sympy_length, sp_Integer):
                     length = int(sympy_length)
@@ -1684,7 +1684,9 @@ class SemanticParser(BasicParser):
                         shape=d_var['shape'], order=d_var['order'],
                         status=status))
 
-                    if status != 'unallocated':
+                    if status == 'unallocated':
+                        self._allocs[-1].add(var)
+                    else:
                         errors.report(ARRAY_REALLOCATION, symbol=var.name,
                             severity='warning',
                             bounding_box=(self.current_ast_node.lineno,

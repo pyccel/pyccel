@@ -11,8 +11,10 @@ import string
 import re
 from itertools import chain
 from collections import OrderedDict
+from packaging.version import Version
 
 import functools
+import numpy as np
 
 from pyccel.ast.basic import TypedAstNode
 
@@ -73,6 +75,7 @@ from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
+numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 # TODO: add examples
 # TODO: use _get_statement when returning a string
@@ -896,6 +899,9 @@ class FCodePrinter(CodePrinter):
             return '{}'.format(self._print(expr.value))
 
     def _print_Constant(self, expr):
+        if expr == math_constants['nan']:
+            errors.report("Can't print nan in Fortran",
+                    severity='error', symbol=expr)
         val = LiteralFloat(expr.value)
         return self._print(val)
 
@@ -1244,15 +1250,17 @@ class FCodePrinter(CodePrinter):
         return 'floor({}, kind={})'.format(arg_code, prec_code)
 
     def _print_PythonComplex(self, expr):
+        kind = self.print_kind(expr)
         if expr.is_cast:
-            var = self._print(expr.internal_var)
-            code = 'cmplx({0}, kind={1})'.format(var,
-                                self.print_kind(expr))
+            var = expr.internal_var
+            if var.dtype is NativeBool():
+                var = PythonInt(var)
+            var_code = self._print(var)
+            code = f'cmplx({var_code}, kind={kind})'
         else:
             real = self._print(expr.real)
             imag = self._print(expr.imag)
-            code = 'cmplx({0}, {1}, {2})'.format(real, imag,
-                                self.print_kind(expr))
+            code = f'cmplx({real}, {imag}, {kind})'
         return code
 
     def _print_PythonBool(self, expr):
@@ -2694,9 +2702,10 @@ class FCodePrinter(CodePrinter):
         arg = expr.args[0]
         arg_code = self._print(arg)
         if isinstance(expr.dtype, NativeComplex):
-            func = PyccelFunctionDef('numpy_sign', NumpySign)
-            self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
-            return f'numpy_sign({arg_code})'
+            func_name = 'csgn' if numpy_v1 else 'csign'
+            func = PyccelFunctionDef(func_name, NumpySign)
+            self._additional_imports.add(Import('pyc_math_f90', AsName(func, func_name)))
+            return f'{func_name}({arg_code})'
         else:
             cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
             # The absolute value of the result (0 if the argument is 0, 1 otherwise)

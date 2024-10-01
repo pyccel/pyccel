@@ -6,6 +6,9 @@
 import functools
 from itertools import chain
 import re
+from packaging.version import Version
+
+import numpy as np
 
 from pyccel.ast.basic     import ScopedAstNode
 
@@ -37,7 +40,7 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, DtypePrecisionToCastFunction
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
 
 from pyccel.ast.utilities import expand_to_loops
@@ -56,6 +59,7 @@ from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
 
+numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 errors = Errors()
 
@@ -87,9 +91,6 @@ numpy_ufunc_to_c_float = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
-    'NumpyIsInf':'isinf',
-    'NumpyIsFinite':'isfinite',
-    'NumpyIsNan':'isnan',
 }
 
 numpy_ufunc_to_c_complex = {
@@ -230,8 +231,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdio',
                  "inttypes",
                  'stdbool',
-                 'assert',
-                 'numpy_c']}
+                 'assert']}
 
 class CCodePrinter(CodePrinter):
     """
@@ -1608,7 +1608,7 @@ class CCodePrinter(CodePrinter):
             numpy.sign(x) => csign(x)   (x is complex)
 
         """
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['pyc_math_c'])
         dtype = expr.dtype
         func = ''
         if isinstance(dtype, NativeInteger):
@@ -1616,7 +1616,7 @@ class CCodePrinter(CodePrinter):
         elif isinstance(dtype, NativeFloat):
             func = 'fsign'
         elif isinstance(dtype, NativeComplex):
-            func = 'csign'
+            func = 'csgn' if numpy_v1 else 'csign'
 
         return f'{func}({self._print(expr.args[0])})'
 
@@ -1625,7 +1625,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isfinite function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isfinite({code_arg})"
 
@@ -1634,7 +1634,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isinf function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isinf({code_arg})"
 
@@ -1643,7 +1643,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isnan function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isnan({code_arg})"
 
@@ -1924,28 +1924,6 @@ class CCodePrinter(CodePrinter):
             return f'{call_code};\n'
         else:
             return call_code
-
-    def _print_Constant(self, expr):
-        """ Convert a Python expression with a math constant call to C
-        function call
-
-        Parameters
-        ----------
-            expr : Pyccel ast node
-                Python expression with a Math constant
-
-        Returns
-        -------
-            string
-                String represent the value of the constant
-
-        Example
-        -------
-            math.pi ==> 3.14159265358979
-
-        """
-        val = LiteralFloat(expr.value)
-        return self._print(val)
 
     def _print_Return(self, expr):
         code = ''
@@ -2290,6 +2268,9 @@ class CCodePrinter(CodePrinter):
         if expr == math_constants['inf']:
             self.add_import(c_imports['math'])
             return 'HUGE_VAL'
+        elif expr == math_constants['nan']:
+            self.add_import(c_imports['math'])
+            return 'NAN'
         elif expr == math_constants['pi']:
             self.add_import(c_imports['math'])
             return 'M_PI'
@@ -2297,7 +2278,9 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['math'])
             return 'M_E'
         else:
-            raise NotImplementedError("Constant not implemented")
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
+            return self._print(cast_func(expr.value))
+
 
     def _print_Variable(self, expr):
         if self.is_c_pointer(expr):

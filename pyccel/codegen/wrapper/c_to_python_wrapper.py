@@ -447,7 +447,10 @@ class CToPythonWrapper(Wrapper):
             The new function which raises the error.
         """
         func_args = [FunctionDefArgument(self.get_new_PyObject(n)) for n in ("self", "args", "kwargs")]
-        func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+        if self._error_exit_code is Nil():
+            func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+        else:
+            func_results = [FunctionDefResult(self.scope.get_temporary_variable(self._error_exit_code.class_type, "result"))]
         function = PyFunctionDef(name = name, arguments = func_args, results = func_results,
                 body = [FunctionCall(PyErr_SetString, [PyNotImplementedError,
                                         LiteralString(error_msg)]),
@@ -1486,10 +1489,9 @@ class CToPythonWrapper(Wrapper):
 
         # Create any necessary type checks and errors
         if expr.has_default:
-            check_func, err = self._get_check_function(collect_arg, orig_var, False)
-            body.append(If( IfSection(check_func, cast),
-                        IfSection(PyccelIsNot(collect_arg, Py_None), [*err, Return([self._error_exit_code])])
-                        ))
+            check_func, err = self._get_check_function(collect_arg, orig_var, True)
+            body.append(If( IfSection(PyccelIsNot(collect_arg, Py_None), [
+                                If(IfSection(check_func, cast), IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])]))])))
         elif not (in_interface or bound_argument):
             check_func, err = self._get_check_function(collect_arg, orig_var, True)
             body.append(If( IfSection(check_func, cast),

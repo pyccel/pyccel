@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import numpy as np
+from math import nan
 
-a = np.float32(4)
-a += np.float64(5.0)
+if __name__ == '__main__':
+    print(nan)
+

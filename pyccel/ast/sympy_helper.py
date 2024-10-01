@@ -23,8 +23,8 @@ from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 from .datatypes import NativeInteger
 from .variable  import Variable
 
-__all__ = ('sympy_to_pyccel',
-           'pyccel_to_sympy')
+__all__ = ('pyccel_to_sympy',
+           'sympy_to_pyccel')
 
 #==============================================================================
 def sympy_to_pyccel(expr, symbol_map):
