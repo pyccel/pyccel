@@ -124,7 +124,7 @@ def test_module_6(language):
     modnew = epyccel(mod, language=language)
 
     atts = ('g', 'R0', 'rMin', 'rMax', 'skip_centre',
-            'method', 'compl', 'tiny')
+            'method', 'compl', 'tiny', 'I')
     for att in atts:
         mod_att = getattr(mod, att)
         modnew_att = getattr(modnew, att)
