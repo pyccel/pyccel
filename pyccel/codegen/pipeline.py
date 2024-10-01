@@ -190,6 +190,7 @@ def execute_pyccel(fname, *,
     # Get compiler object
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
     src_compiler = Compiler(compiler, language, debug)
+    c_compiler = Compiler(compiler, 'c', debug)
     wrapper_compiler = Compiler('GNU', 'c', debug)
 
     # Export the compiler information if requested
@@ -411,6 +412,7 @@ def execute_pyccel(fname, *,
                                                wrapper_flags,
                                                pyccel_dirpath,
                                                src_compiler,
+                                               c_compiler,
                                                wrapper_compiler,
                                                output_name,
                                                verbose)

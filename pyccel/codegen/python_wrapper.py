@@ -36,6 +36,7 @@ def create_shared_library(codegen,
                           wrapper_flags,
                           pyccel_dirpath,
                           src_compiler,
+                          c_compiler,
                           wrapper_compiler,
                           sharedlib_modname=None,
                           verbose = False):
@@ -71,6 +72,9 @@ def create_shared_library(codegen,
 
     src_compiler : pyccel.codegen.compiling.compilers.Compiler
         The compiler which should be used to compile the library.
+
+    c_compiler : pyccel.codegen.compiling.compilers.Compiler
+        The compiler which should be used to compile C files.
 
     wrapper_compiler : pyccel.codegen.compiling.compilers.Compiler
         The compiler which should be used to compile the wrapper.
@@ -160,7 +164,7 @@ def create_shared_library(codegen,
 
     # get the include folder path and library files
     recompile_object(cwrapper_lib,
-                      compiler = wrapper_compiler,
+                      compiler = c_compiler,
                       verbose  = verbose)
     timings['Dependency compilation'] = time.time() - start_compile_libs
 
