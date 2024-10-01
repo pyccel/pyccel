@@ -370,32 +370,32 @@ def test_len_inhomog_tuple(language):
 
     assert epyc_f() == f()
 
-def test_len_list_int(stc_language):
+def test_len_list_int(language):
     def f():
         a = [1, 2, 3]
         return len(a)
 
-    epyc_f = epyccel(f, language=stc_language)
+    epyc_f = epyccel(f, language=language)
 
     assert epyc_f() == f()
 
-def test_len_list_float(stc_language):
+def test_len_list_float(language):
     def f():
         a = [1.4, 2.6, 3.5]
         b = len(a)
         return b
 
-    epyc_f = epyccel(f, language=stc_language)
+    epyc_f = epyccel(f, language=language)
 
     assert epyc_f() == f()
 
-def test_len_list_complex(stc_language):
+def test_len_list_complex(language):
     def f():
         a = [1j, 2 + 1j, 3 + 1j]
         b = len(a)
         return b
 
-    epyc_f = epyccel(f, language=stc_language)
+    epyc_f = epyccel(f, language=language)
 
     assert epyc_f() == f()
 
