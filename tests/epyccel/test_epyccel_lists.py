@@ -17,18 +17,6 @@ from pyccel import epyccel
 def language(request):
     return request.param
 
-@pytest.fixture( params=[
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="lists not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ],
-    scope = "module"
-)
-def stc_language(request):
-    return request.param
-
 def test_pop_last_element(stc_language) :
     def pop_last_element():
         a = [1,3,45]

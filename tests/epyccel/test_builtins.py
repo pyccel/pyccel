@@ -369,3 +369,71 @@ def test_len_inhomog_tuple(language):
     epyc_f = epyccel(f, language=language)
 
     assert epyc_f() == f()
+
+def test_len_list_int(language):
+    def f():
+        a = [1, 2, 3]
+        return len(a)
+
+    epyc_f = epyccel(f, language=language)
+
+    assert epyc_f() == f()
+
+def test_len_list_float(language):
+    def f():
+        a = [1.4, 2.6, 3.5]
+        b = len(a)
+        return b
+
+    epyc_f = epyccel(f, language=language)
+
+    assert epyc_f() == f()
+
+def test_len_list_complex(language):
+    def f():
+        a = [1j, 2 + 1j, 3 + 1j]
+        b = len(a)
+        return b
+
+    epyc_f = epyccel(f, language=language)
+
+    assert epyc_f() == f()
+
+def test_len_set_int(stc_language):
+    def f():
+        a = {1, 2, 3}
+        return len(a)
+
+    epyc_f = epyccel(f, language=stc_language)
+
+    assert epyc_f() == f()
+
+def test_len_set_float(stc_language):
+    def f():
+        a = {1.4, 2.6, 3.5}
+        b = len(a)
+        return b
+
+    epyc_f = epyccel(f, language=stc_language)
+
+    assert epyc_f() == f()
+
+def test_len_set_complex(stc_language):
+    def f():
+        a = {1j, 2 + 1j, 3 + 1j}
+        b = len(a)
+        return b
+
+    epyc_f = epyccel(f, language=stc_language)
+
+    assert epyc_f() == f()
+
+def test_len_dict_int_float(stc_language):
+    def f():
+        a = {1:1.0, 2:2.0, 3:3.0, 4:4.0}
+        b = len(a)
+        return b
+
+    epyc_f = epyccel(f, language=stc_language)
+
+    assert epyc_f() == f()
