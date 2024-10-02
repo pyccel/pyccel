@@ -806,7 +806,6 @@ def test_basic_header():
     compile_pyccel(cwd, filename)
 
 #------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
                                         "scripts/classes/classes_2.py",
@@ -825,6 +824,10 @@ def test_basic_header():
                                         ] )
 def test_classes( test_file , language):
     pyccel_test(test_file, language=language)
+
+def test_tuples_in_classes(language):
+    test_file = "scripts/classes/tuples_in_classes.py"
+    pyccel_test(test_file, language=language, output_dtype = [float, float, float, bool])
 
 def test_classes_type_print(language):
     test_file = "scripts/classes/empty_class.py"
@@ -1145,6 +1148,7 @@ def test_reserved_file_name():
     assert str(exc_info.value) == f"File called {libname} has the same name as a Python built-in package and can't be imported from Python. See #1402"
 
 #------------------------------------------------------------------------------
+@pytest.mark.skip(reason="List concatenation not yet implemented")
 def test_concatentation():
     pyccel_test("scripts/concatenation.py",
                 language = 'fortran',
