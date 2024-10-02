@@ -13,10 +13,10 @@ from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, 
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType
 from pyccel.ast.functionalexpr import FunctionalFor
-from pyccel.ast.literals   import LiteralTrue, LiteralString
+from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
-from pyccel.ast.numpytypes import NumpyNumericType
+from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.variable   import DottedName, Variable
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
@@ -490,10 +490,18 @@ class PythonCodePrinter(CodePrinter):
         return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))
 
     def _print_PyccelArrayShapeElement(self, expr):
-        arg = self._print(expr.arg)
-        index = self._print(expr.index)
-        name = self._get_numpy_name(expr)
-        return f'{name}({arg})[{index}]'
+        arg = expr.arg
+        index = expr.index
+        arg_code = self._print(arg)
+        if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)) or \
+                not isinstance(index, LiteralInteger):
+            index_code = self._print(index)
+            name = self._get_numpy_name(expr)
+            return f'{name}({arg_code})[{index_code}]'
+        elif index == 0:
+            return f'len({arg_code})'
+        else:
+            raise NotImplementedError("The shape access function seems to be poorly defined.")
 
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)

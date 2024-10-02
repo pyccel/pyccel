@@ -35,9 +35,9 @@ from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
-from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
-from pyccel.ast.datatypes import PythonNativeInt, HomogeneousTupleType, HomogeneousListType
-from pyccel.ast.datatypes import HomogeneousSetType, DictType, HomogeneousContainerType
+from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
+from pyccel.ast.datatypes import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType, DictType
+from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type, PyccelType
 
@@ -1409,20 +1409,26 @@ class FCodePrinter(CodePrinter):
         return f'size({init_value}, kind={prec})'
 
     def _print_PyccelArrayShapeElement(self, expr):
-        init_value = self._print(expr.arg)
+        arg = expr.arg
+        arg_code = self._print(arg)
         prec = self.print_kind(expr)
 
-        if expr.arg.rank == 1:
-            return f'size({init_value}, kind={prec})'
+        if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            if arg.rank == 1:
+                return f'size({arg_code}, kind={prec})'
 
-        if expr.arg.order == 'C':
-            index = PyccelMinus(LiteralInteger(expr.arg.rank), expr.index, simplify = True)
-            index = self._print(index)
+            if arg.order == 'C':
+                index = PyccelMinus(LiteralInteger(arg.rank), expr.index, simplify = True)
+                index = self._print(index)
+            else:
+                index = PyccelAdd(expr.index, LiteralInteger(1), simplify = True)
+                index = self._print(index)
+
+            return f'size({arg_code}, {index}, {prec})'
+        elif isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            return f'{arg_code} % size()'
         else:
-            index = PyccelAdd(expr.index, LiteralInteger(1), simplify = True)
-            index = self._print(index)
-
-        return f'size({init_value}, {index}, {prec})'
+            raise NotImplementedError(f"Don't know how to represent shape of object of type {arg.class_type}")
 
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)

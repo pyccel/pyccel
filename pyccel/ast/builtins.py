@@ -622,6 +622,10 @@ class PythonLen(PyccelFunction):
     be calculated in the generated code, but in an inhomogeneous object
     the integer value of the shape must be returned.
 
+    If the shape is unknown and cannot be determined at compile time then
+    the first element of the shape is a `PyccelArrayShapeElement` which
+    can be used to generate the equivalent C code using the `STC` library.
+
     Parameters
     ----------
     arg : TypedAstNode

@@ -10,18 +10,6 @@ from pyccel import epyccel
 from pyccel.errors.errors import PyccelSemanticError
 from pyccel.decorators import allow_negative_index, stack_array
 
-@pytest.fixture( params=[
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Variable declaration not implemented in fortran, related issues #1657 1658"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ],
-    scope = "module"
-)
-def stc_language(request):
-    return request.param
-
 def test_local_type_annotation(language):
     def local_type_annotation():
         gift : int
