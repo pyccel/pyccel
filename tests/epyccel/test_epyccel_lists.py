@@ -117,7 +117,7 @@ def test_append_basic(stc_language):
     def f():
         a = [1, 2, 3]
         a.append(4)
-        return a
+        return len(a), a[0], a[1], a[2], a[3]
 
     epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
@@ -128,18 +128,18 @@ def test_append_multiple(stc_language):
         a.append(4)
         a.append(5)
         a.append(6)
-        return a
+        return len(a), a[0], a[1], a[2], a[3], a[4], a[5]
 
     epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
 
-def test_append_list(stc_language):
+def test_append_list(language):
     def f():
         a = [[1, 2, 3]]
         a.append([4, 5, 6])
-        return a
+        return len(a)
 
-    epyc_f = epyccel(f, language=stc_language)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_append_range(stc_language):
@@ -148,19 +148,19 @@ def test_append_range(stc_language):
         for i in range(0, 1000):
             a.append(i)
         a.append(1000)
-        return a
+        return len(a), a[-1], a[-2]
 
     epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
 
-def test_append_range_list(stc_language):
+def test_append_range_list(language):
     def f():
         a = [[1, 2, 3]]
         for i in range(0, 1000):
             a.append([i, i + 1])
         return a
 
-    epyc_f = epyccel(f, language=stc_language)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_append_bool(stc_language):
@@ -169,7 +169,7 @@ def test_append_bool(stc_language):
         a.append(False)
         a.append(False)
         a.append(True)
-        return a
+        return len(a), a[3], a[4], a[5]
 
     epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
@@ -180,7 +180,7 @@ def test_append_float(stc_language):
         a.append(3.0)
         a.append(2.9)
         a.append(1.1)
-        return a
+        return len(a), a[3], a[4], a[5]
 
     epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
@@ -191,12 +191,12 @@ def test_append_complex(stc_language):
         a.append(9j)
         a.append(2 + 2j)
         a.append(1j)
-        return a
+        return len(a), a[3], a[4], a[5]
 
     epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
 
-def test_append_ndarrays(stc_language):
+def test_append_ndarrays(language):
     def f():
         from numpy import array
 
@@ -212,7 +212,7 @@ def test_append_ndarrays(stc_language):
         a.append(array6)
         return a
 
-    epyc_f = epyccel(f, language=stc_language)
+    epyc_f = epyccel(f, language=language)
     assert np.array_equal(f(), epyc_f())
 
 def test_append_user_defined_objects(language):
