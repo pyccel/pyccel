@@ -6,6 +6,8 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing objects from the numpy module understood by pyccel
 """
+from packaging.version import Version
+
 import numpy
 
 from pyccel.errors.errors import Errors
@@ -41,6 +43,7 @@ from .variable       import Variable, Constant, IndexedElement
 
 errors = Errors()
 pyccel_stage = PyccelStage()
+numpy_v2_1 = Version(numpy.__version__) >= Version("2.1.0")
 
 __all__ = (
     'process_shape',
@@ -697,30 +700,8 @@ class NumpyArray(NumpyNewArray):
 
     def __init__(self, arg, dtype=None, order='K', ndmin=None):
 
-        if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
-            raise TypeError(f'Unknown type of  {type(arg)}')
-
-        is_homogeneous_tuple = isinstance(arg.class_type, HomogeneousTupleType)
-        # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
-        if isinstance(arg.class_type, InhomogeneousTupleType):
-            is_homogeneous_tuple = isinstance(arg.dtype, FixedSizeNumericType) and len(set(a.rank for a in arg))
-            if not isinstance(arg, PythonTuple):
-                arg = PythonTuple(*arg)
-
-        # TODO: treat inhomogenous lists and tuples when they have mixed ordering
-        if not (is_homogeneous_tuple or isinstance(arg.class_type, HomogeneousContainerType)):
-            raise TypeError('we only accept homogeneous arguments')
-
-        if not isinstance(order, (LiteralString, str)):
-            raise TypeError("The order must be specified explicitly with a string.")
-        elif isinstance(order, LiteralString):
-            order = order.python_value
-
-        if ndmin is not None:
-            if not isinstance(ndmin, (LiteralInteger, int)):
-                raise TypeError("The minimum number of dimensions must be specified explicitly with an integer.")
-            elif isinstance(ndmin, LiteralInteger):
-                ndmin = ndmin.python_value
+        assert isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement))
+        assert isinstance(order, str)
 
         init_dtype = dtype
 
@@ -885,7 +866,7 @@ class NumpyProduct(PyccelFunction):
         if not isinstance(arg, TypedAstNode):
             raise TypeError(f'Unknown type of {type(arg)}.')
         super().__init__(arg)
-        self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
+        self._arg = PythonTuple(arg) if arg.rank == 0 else self._args[0]
         lowest_possible_type = process_dtype(PythonNativeInt())
         if isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and \
                 arg.dtype.precision <= lowest_possible_type.precision:
@@ -1648,7 +1629,7 @@ class NumpyNorm(PyccelFunction):
             dtype = NumpyFloat64Type()
         else:
             dtype = numpy_precision_map[(PrimitiveFloatingPointType(), arg_dtype.precision)]
-        self._arg = PythonList(arg) if arg.rank == 0 else arg
+        self._arg = PythonTuple(arg) if arg.rank == 0 else arg
         if self.axis is not None:
             sh = list(arg.shape)
             del sh[self.axis]
@@ -2073,6 +2054,27 @@ class NumpyFloor(NumpyUfuncUnary):
     """
     __slots__ = ()
     name = 'floor'
+
+    def _get_dtype(self, x):
+        """
+        Use the argument to calculate the dtype of the result.
+
+        Use the argument to calculate the dtype of the result.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+
+        Returns
+        -------
+        PyccelType
+            The dtype of the result of the function.
+        """
+        if numpy_v2_1:
+            return process_dtype(x.dtype)
+        else:
+            return super()._get_dtype(x)
 
 class NumpyMod(NumpyUfuncBinary):
     """

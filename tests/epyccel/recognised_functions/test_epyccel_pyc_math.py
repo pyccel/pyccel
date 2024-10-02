@@ -17,10 +17,13 @@ def test_call_gcd(language):
         return gcd(x, y)
 
     f = epyccel(call_gcd, language=language)
-    x = randint(1e9)
-    y = randint(1e9)
+    x = randint(0, 1e9)
+    y = randint(0, 1e9)
 
-    assert f(x,y) == call_gcd(x, y)
+    assert f(x, y) == call_gcd(x, y)
+    assert f(-x, y) == call_gcd(-x, y)
+    assert f(x, -y) == call_gcd(x, -y)
+    assert f(-x, -y) == call_gcd(-x, -y)
 
 # -----------------------------------------------------------------------------
 
@@ -44,10 +47,13 @@ def test_call_lcm(language):
         return lcm(x, y)
 
     f = epyccel(call_lcm, language=language)
-    x = randint(1e4)
-    y = randint(1e5)
+    x = randint(0, 1e4)
+    y = randint(0, 1e5)
 
-    assert f(x,y) == call_lcm(x, y)
+    assert f(x, y) == call_lcm(x, y)
+    assert f(-x, y) == call_lcm(-x, y)
+    assert f(x, -y) == call_lcm(x, -y)
+    assert f(-x, -y) == call_lcm(-x, -y)
 
 # -----------------------------------------------------------------------------
 

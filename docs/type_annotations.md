@@ -41,12 +41,23 @@ In general string type hints must be used to provide Pyccel with information abo
 
 ## Tuples
 
-Currently tuples are supported locally in Pyccel but cannot be passed as arguments or returned. The implementation of the type annotations (as a first step to adding the missing support) is in progress. Currently homogeneous tuple type annotations are supported for local variables. Internally we handle homogeneous tuples as thought they were NumPy arrays. When creating multiple dimensional tuples it is therefore important to ensure that all objects have compatible sizes otherwise they will be handled as inhomogeneous tuples.
+Currently tuples are supported locally in Pyccel but cannot be passed as arguments or returned. The implementation of the type annotations (as a first step to adding the missing support) is in progress. Currently homogeneous tuple type annotations are supported for local variables. See [Container types in Pyccel](./containers.md#tuples) for more information about tuple handling. When creating multiple dimensional tuples it is therefore important to ensure that all objects have compatible sizes otherwise they will be handled as inhomogeneous tuples.
 
 To declare a homogeneous tuple the syntax is as follows:
 ```python
 a : tuple[int,...] = (1,2,3,4)
 ```
+
+## Dictionaries
+
+Dictionaries are in the process of being added to Pyccel. They cannot yet be used effectively however the type annotations are already supported.
+Homogeneous dictionaries can be declared in Pyccel using the following syntax:
+```python
+a : dict[int,float] = {1: 1.0, 2: 2.0}
+b : dict[int,bool] = {1: False, 4: True}
+c : dict[int,complex] = {}
+```
+So far strings are supported as keys however as Pyccel is still missing support for non-literal strings it remains to be seen how such cases will be handled in low-level languages.
 
 ## Handling multiple types
 
@@ -82,3 +93,25 @@ def f(a : 'T', b : 'T'):
 ```
 
 For more details, see the documentation for [templates](./templates.md).
+
+## Type Aliases
+
+Python also provides type alias objects as described in the Python docs (<https://docs.python.org/3/library/typing.html#type-aliases>). For the moment type parameter lists are not supported. Both the new Python 3.12 syntax and the old syntax are supported. Type aliases cannot be redefined. This allows the user to more easily change between different types. The type name will not appear in the underlying code.
+
+E.g.
+```python
+from typing import TypeAlias
+
+MyType : TypeAlias = float
+
+def set_i(x : 'MyType[:]', i : 'int', val : MyType):
+    x[i] = val
+```
+
+or:
+```python
+type MyType = float
+
+def set_i(x : 'MyType[:]', i : 'int', val : MyType):
+    x[i] = val
+```

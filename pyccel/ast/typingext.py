@@ -9,9 +9,11 @@
 
 from .basic     import TypedAstNode
 from .core      import Module, PyccelFunctionDef
+from .datatypes import TypeAlias
 
 __all__ = (
     'TypingFinal',
+    'TypingTypeAlias',
     'typing_mod'
 )
 
@@ -46,9 +48,23 @@ class TypingFinal(TypedAstNode):
         return self._arg
 
 #==============================================================================
+class TypingTypeAlias(TypedAstNode):
+    """
+    Class representing a call to the typing.TypeAlias construct.
+
+    Class representing a call to the typing.TypeAlias construct. This object
+    is only used for type annotations. It is useful for creating a PyccelFunctionDef
+    but instances should not be created.
+    """
+    __slots__ = ()
+    _attribute_nodes = ()
+    _static_type = TypeAlias()
+
+#==============================================================================
 
 typing_funcs = {
         'Final': PyccelFunctionDef('Final', TypingFinal),
+        'TypeAlias': PyccelFunctionDef('TypeAlias', TypingTypeAlias),
     }
 
 typing_mod = Module('typing',

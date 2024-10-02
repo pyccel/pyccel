@@ -29,6 +29,7 @@ class CodePrinter:
     language = None
     def __init__(self):
         self._scope = None
+        self._additional_imports = {}
 
     def doprint(self, expr):
         """
@@ -53,6 +54,38 @@ class CodePrinter:
 
         # Format the output
         return ''.join(self._format_code(lines))
+
+    def get_additional_imports(self):
+        """
+        Get any additional imports collected during the printing stage.
+
+        Get any additional imports collected during the printing stage.
+        This is necessary to correctly compile the files.
+
+        Returns
+        -------
+        dict[str, Import]
+            A dictionary mapping the include strings to the import module.
+        """
+        return self._additional_imports
+
+    def add_import(self, import_obj):
+        """
+        Add a new import to the current context.
+
+        Add a new import to the current context. This allows the import to be recognised
+        at the compiling/linking stage. If the source of the import is not new then any
+        new targets are added to the Import object.
+
+        Parameters
+        ----------
+        import_obj : Import
+            The AST node describing the import.
+        """
+        if import_obj.source not in self._additional_imports:
+            self._additional_imports[import_obj.source] = import_obj
+        elif import_obj.target:
+            self._additional_imports[import_obj.source].define_target(import_obj.target)
 
     @property
     def scope(self):
@@ -88,16 +121,6 @@ class CodePrinter:
                 obj = getattr(self, print_method)(expr)
                 return obj
         return self._print_not_supported(expr)
-
-    def _get_statement(self, codestring):
-        """Formats a codestring with the proper line ending."""
-        raise NotImplementedError("This function must be implemented by "
-                                  "subclass of CodePrinter.")
-
-    def _get_comment(self, text):
-        """Formats a text string as a comment."""
-        raise NotImplementedError("This function must be implemented by "
-                                  "subclass of CodePrinter.")
 
     def _declare_number_const(self, name, value):
         """Declare a numeric constant at the top of a function"""

@@ -117,3 +117,6 @@ datatyping
 datatypes
 indexable
 traceback
+STC
+gFTL
+CMake
