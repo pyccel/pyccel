@@ -2585,7 +2585,8 @@ class CCodePrinter(CodePrinter):
         class_type = target.class_type
         c_type = self.get_c_type(class_type)
         arg = self._print(expr.args[0])
-        return f'{c_type}_push(&{target.name}, {arg});\n'
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        return f'{c_type}_push({list_obj}, {arg});\n'
 
     def _print_ListPop(self, expr):
         class_type = expr.list_obj.class_type
