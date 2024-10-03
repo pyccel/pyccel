@@ -575,10 +575,6 @@ class FCodePrinter(CodePrinter):
                               MacroDefinition('T_LT(x,y)', lt_def)]
                 else:
                     raise NotImplementedError("Support for sets of types which define their own < operator is not yet implemented")
-                if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
-                    macros.append(MacroDefinition('T_rank', element_type.rank))
-                elif not isinstance(element_type, FixedSizeNumericType):
-                    raise NotImplementedError("Support for lists of types defined in other modules is not yet implemented")
                 macros.append(MacroDefinition('Set', expr_type))
                 macros.append(MacroDefinition('SetIterator', IteratorType(expr_type)))
             else:
