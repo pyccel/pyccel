@@ -731,12 +731,12 @@ class PythonListFunction(PyccelFunction):
     _attribute_nodes = ()
 
     def __new__(cls, arg = None):
-        if isinstance(arg, PythonList):
+        if arg is None:
+            return PythonList()
+        elif isinstance(arg, PythonList):
             return arg
         elif isinstance(arg.shape[0], LiteralInteger):
             return PythonList(*[arg[i] for i in range(arg.shape[0])])
-        elif arg is None:
-            return PythonList()
         else:
             return super().__new__(cls)
 
@@ -776,6 +776,11 @@ class PythonSet(TypedAstNode):
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
+        elif len(args) == 0:
+            self._shape = (LiteralInteger(0),)
+            self._class_type = HomogeneousSetType(GenericType())
+            return
+
         arg0 = args[0]
         is_homogeneous = arg0.class_type is not GenericType() and \
                          all(a.class_type is not GenericType() and \
@@ -832,12 +837,12 @@ class PythonSetFunction(PyccelFunction):
     __slots__ = ('_shape', '_class_type')
     name = 'set'
     def __new__(cls, arg = None):
-        if isinstance(arg.class_type, HomogeneousSetType):
+        if arg is None:
+            return PythonSet()
+        elif isinstance(arg.class_type, HomogeneousSetType):
             return arg
         elif isinstance(arg, (PythonList, PythonSet, PythonTuple)):
             return PythonSet(*arg)
-        elif isinstance(arg, None):
-            return PythonSet()
         else:
             return super().__new__(cls)
 
