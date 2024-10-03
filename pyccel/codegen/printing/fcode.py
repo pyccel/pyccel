@@ -51,7 +51,7 @@ from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal, LiteralE
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
 from pyccel.ast.literals  import Nil
 
-from pyccel.ast.low_level_tools  import MacroDefinition, IteratorType
+from pyccel.ast.low_level_tools  import MacroDefinition, IteratorType, PairType
 
 from pyccel.ast.mathext  import math_constants
 
@@ -582,6 +582,7 @@ class FCodePrinter(CodePrinter):
                                    MacroDefinition('T_KINDLEN(context)', KindSpecification(value_type))])
                 else:
                     macros.append(MacroDefinition('T', value_type))
+                macros.append(MacroDefinition('Pair', PairType(key_type, value_type)))
                 macros.append(MacroDefinition('Map', expr_type))
                 macros.append(MacroDefinition('MapIterator', IteratorType(expr_type)))
             else:
@@ -1116,7 +1117,7 @@ class FCodePrinter(CodePrinter):
         return f'{vec_type}({list_arg})'
 
     def _print_PythonDict(self, expr):
-        if len(expr.args) == 0:
+        if len(expr) == 0:
             list_arg = ''
             assign = expr.get_direct_user_nodes(lambda a : isinstance(a, Assign))
             if assign:
@@ -1126,8 +1127,11 @@ class FCodePrinter(CodePrinter):
                         severity='fatal', symbol=expr)
 
         else:
-            list_arg = self._print_PythonTuple(expr)
-            dict_type = self._print(expr.class_type)
+            class_type = expr.class_type
+            pair_type = self._print(PairType(class_type.key_type, class_type.value_type))
+            args = ', '.join(f'{pair_type}({self._print(k)}, {self._print(v)})' for k,v in expr)
+            list_arg = f'[{args}]'
+            dict_type = self._print(class_type)
         return f'{dict_type}({list_arg})'
 
     def _print_InhomogeneousTupleVariable(self, expr):
@@ -2041,6 +2045,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_HomogeneousListType(self, expr):
         return 'Vector_'+self._print(expr.element_type)
+
+    def _print_PairType(self, expr):
+        return 'Pair_'+self._print(expr.key_type)+'__'+self._print(expr.value_type)
 
     def _print_DictType(self, expr):
         return 'Map_'+self._print(expr.key_type)+'__'+self._print(expr.value_type)
