@@ -224,7 +224,7 @@ def test_homogeneous_empty_list_annotation_int(language):
 def test_homogeneous_empty_list_2_annotation_int(language):
     def homogeneous_list_annotation():
         a: 'list[int]'  # pylint: disable=unused-variable
-        a = list()
+        a = list() #pylint: disable=use-list-literal
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
