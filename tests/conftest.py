@@ -30,16 +30,6 @@ def language(request):
 def stc_language(request):
     return request.param
 
-@pytest.fixture( params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python),
-    ],
-    scope = "session"
-)
-def gftl_stc_language(request):
-    return request.param
-
 def move_coverage(path_dir):
     for root, _, files in os.walk(path_dir):
         for name in files:
