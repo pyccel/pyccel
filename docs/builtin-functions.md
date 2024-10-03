@@ -78,7 +78,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 
 | Method | Supported |
 |----------|-----------|
-| `append` | Python-only |
+| **`append`** | **Yes** |
 | `clear` | Python-only |
 | `copy` | Python-only |
 | `count` | No |
