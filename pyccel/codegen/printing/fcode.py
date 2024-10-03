@@ -560,6 +560,23 @@ class FCodePrinter(CodePrinter):
                     raise NotImplementedError("Support for lists of types defined in other modules is not yet implemented")
                 macros.append(MacroDefinition('Vector', expr_type))
                 macros.append(MacroDefinition('VectorIterator', IteratorType(expr_type)))
+            elif isinstance(expr_type, HomogeneousSetType):
+                include = Import(LiteralString('set/template.inc'), Module('_', (), ()))
+                element_type = expr_type.element_type
+                if isinstance(element_type, FixedSizeNumericType):
+                    tmpVar_x = Variable(element_type, 'x')
+                    tmpVar_y = Variable(element_type, 'y')
+                    macros = [MacroDefinition('T', element_type.primitive_type),
+                              MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type)),
+                              MacroDefinition('T_LT(x,y)', PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y)))]
+                else:
+                    raise NotImplementedError("Support for sets of types which define their own < operator is not yet implemented")
+                if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
+                    macros.append(MacroDefinition('T_rank', element_type.rank))
+                elif not isinstance(element_type, FixedSizeNumericType):
+                    raise NotImplementedError("Support for lists of types defined in other modules is not yet implemented")
+                macros.append(MacroDefinition('Set', expr_type))
+                macros.append(MacroDefinition('SetIterator', IteratorType(expr_type)))
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
 
@@ -1090,6 +1107,21 @@ class FCodePrinter(CodePrinter):
             list_arg = self._print_PythonTuple(expr)
             vec_type = self._print(expr.class_type)
         return f'{vec_type}({list_arg})'
+
+    def _print_PythonSet(self, expr):
+        if len(expr.args) == 0:
+            list_arg = ''
+            assign = expr.get_direct_user_nodes(lambda a : isinstance(a, Assign))
+            if assign:
+                set_type = self._print(assign[0].lhs.class_type)
+            else:
+                raise errors.report("Can't use an empty set without assigning it to a variable as the type cannot be deduced",
+                        severity='fatal', symbol=expr)
+
+        else:
+            list_arg = self._print_PythonTuple(expr)
+            set_type = self._print(expr.class_type)
+        return f'{set_type}({list_arg})'
 
     def _print_InhomogeneousTupleVariable(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
@@ -1959,7 +1991,7 @@ class FCodePrinter(CodePrinter):
             Pyccel_del_args = [FunctionCallArgument(var)]
             return self._print(FunctionCall(Pyccel__del, Pyccel_del_args))
 
-        if var.is_alias or isinstance(class_type, HomogeneousListType):
+        if var.is_alias or isinstance(class_type, (HomogeneousListType, HomogeneousSetType)):
             return ''
         elif isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, StringType)):
             var_code = self._print(var)
@@ -2002,6 +2034,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_HomogeneousListType(self, expr):
         return 'Vector_'+self._print(expr.element_type)
+
+    def _print_HomogeneousSetType(self, expr):
+        return 'Set_'+self._print(expr.element_type)
 
     def _print_IteratorType(self, expr):
         iterable_type = self._print(expr.iterable_type)
