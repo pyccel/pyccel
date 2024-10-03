@@ -66,7 +66,7 @@ from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 
 from pyccel.ast.numpytypes import NumpyNDArrayType
 
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd, PyccelEq
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
