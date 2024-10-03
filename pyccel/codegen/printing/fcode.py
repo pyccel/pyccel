@@ -576,7 +576,7 @@ class FCodePrinter(CodePrinter):
                                    MacroDefinition('Key_KINDLEN(context)', KindSpecification(key_type)),
                                    MacroDefinition('Key_LT(x,y)', lt_def)])
                 else:
-                    macros.append(MacroDefinition('Key', key_type))
+                    raise NotImplementedError("Support for dicts whose keys define their own < operator is not yet implemented")
                 if isinstance(value_type, FixedSizeNumericType):
                     macros.extend([MacroDefinition('T', value_type.primitive_type),
                                    MacroDefinition('T_KINDLEN(context)', KindSpecification(value_type))])
