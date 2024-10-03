@@ -296,3 +296,13 @@ def test_dict_empty_init(language):
 
     epyc_dict_empty_init = epyccel(dict_empty_init, language = language)
     assert epyc_dict_empty_init() == dict_empty_init()
+
+def test_dict_complex_float(language):
+    def dict_int_float():
+        # Not valid in Python 3.8
+        a : dict[complex, float] #pylint: disable=unsubscriptable-object,unused-variable
+        a = {1j:1.0, 2j:2.0}
+        return len(a)
+
+    epyc_dict_int_float = epyccel(dict_int_float, language = language)
+    assert epyc_dict_int_float() == dict_int_float()
