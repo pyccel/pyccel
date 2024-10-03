@@ -581,7 +581,7 @@ class FCodePrinter(CodePrinter):
                     macros.extend([MacroDefinition('T', value_type.primitive_type),
                                    MacroDefinition('T_KINDLEN(context)', KindSpecification(value_type))])
                 else:
-                    macros.append(MacroDefinition('T', value_type))
+                    raise NotImplementedError(f"Support for dictionary values of type {value_type} not yet implemented")
                 macros.append(MacroDefinition('Pair', PairType(key_type, value_type)))
                 macros.append(MacroDefinition('Map', expr_type))
                 macros.append(MacroDefinition('MapIterator', IteratorType(expr_type)))
