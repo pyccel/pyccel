@@ -282,17 +282,17 @@ def test_dict_int_float(language):
         # Not valid in Python 3.8
         a : dict[int, float] #pylint: disable=unsubscriptable-object,unused-variable
         a = {1:1.0, 2:2.0}
+        return len(a)
 
     epyc_dict_int_float = epyccel(dict_int_float, language = language)
-    epyc_dict_int_float()
-    dict_int_float()
+    assert epyc_dict_int_float() == dict_int_float()
 
 def test_dict_empty_init(language):
     def dict_empty_init():
         # Not valid in Python 3.8
         a : dict[int, float] #pylint: disable=unsubscriptable-object,unused-variable
         a = {}
+        return len(a)
 
     epyc_dict_empty_init = epyccel(dict_empty_init, language = language)
-    epyc_dict_empty_init()
-    dict_empty_init()
+    assert epyc_dict_empty_init() == dict_empty_init()
