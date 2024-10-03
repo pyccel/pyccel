@@ -66,7 +66,7 @@ from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 
 from pyccel.ast.numpytypes import NumpyNDArrayType
 
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd, PyccelEq
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
@@ -566,9 +566,13 @@ class FCodePrinter(CodePrinter):
                 if isinstance(element_type, FixedSizeNumericType):
                     tmpVar_x = Variable(element_type, 'x')
                     tmpVar_y = Variable(element_type, 'y')
+                    if isinstance(element_type.primitive_type, PrimitiveComplexType):
+                        lt_def = PyccelAssociativeParenthesis(PyccelLt(NumpyAbs(tmpVar_x), NumpyAbs(tmpVar_y)))
+                    else:
+                        lt_def = PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y))
                     macros = [MacroDefinition('T', element_type.primitive_type),
                               MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type)),
-                              MacroDefinition('T_LT(x,y)', PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y)))]
+                              MacroDefinition('T_LT(x,y)', lt_def)]
                 else:
                     raise NotImplementedError("Support for sets of types which define their own < operator is not yet implemented")
                 if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
