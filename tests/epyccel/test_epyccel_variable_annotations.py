@@ -208,7 +208,7 @@ def test_homogeneous_set_annotation_complex(language):
 def test_empty_homogeneous_set_annotation_int(language):
     def homogeneous_set_annotation ():
         a : 'set[int]' #pylint: disable=unused-variable
-        a = {}
+        a = set()
     epyc_homogeneous_set_annotation =  epyccel(homogeneous_set_annotation, language=language)
     assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
     assert isinstance(epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation()))
@@ -217,6 +217,14 @@ def test_homogeneous_empty_list_annotation_int(language):
     def homogeneous_list_annotation():
         a: 'list[int]'  # pylint: disable=unused-variable
         a = []
+    epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
+    assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
+    assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
+
+def test_homogeneous_empty_list_2_annotation_int(language):
+    def homogeneous_list_annotation():
+        a: 'list[int]'  # pylint: disable=unused-variable
+        a = list()
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
