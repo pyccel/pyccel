@@ -1147,6 +1147,14 @@ class FCodePrinter(CodePrinter):
         value = self._print(expr.internal_var)
         return f'aimag({value})'
 
+    #========================== List Methods ===============================#
+
+    def _print_ListAppend(self, expr):
+        target = expr.list_obj
+        arg = self._print(expr.args[0])
+        return f'call {target} % push_back({arg})\n'
+
+
 
 
     #========================== Numpy Elements ===============================#
