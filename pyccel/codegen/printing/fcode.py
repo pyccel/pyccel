@@ -568,7 +568,9 @@ class FCodePrinter(CodePrinter):
                     tmpVar_x = Variable(element_type, 'x')
                     tmpVar_y = Variable(element_type, 'y')
                     if isinstance(element_type.primitive_type, PrimitiveComplexType):
-                        imports_and_macros.append(Import('pyc_tools_f90', Module('pyc_tools_f90',(),())))
+                        complex_tool_import = Import('pyc_tools_f90', Module('pyc_tools_f90',(),()))
+                        self.add_import(complex_tool_import)
+                        imports_and_macros.append(complex_tool_import)
                         lt_def = PyccelAssociativeParenthesis(PyccelLt(NumpyAbs(tmpVar_x), NumpyAbs(tmpVar_y)))
                     else:
                         lt_def = PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y))
