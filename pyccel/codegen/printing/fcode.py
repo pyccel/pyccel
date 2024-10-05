@@ -550,39 +550,41 @@ class FCodePrinter(CodePrinter):
                 include = Import(LiteralString('vector/template.inc'), Module('_', (), ()))
                 element_type = expr_type.element_type
                 if isinstance(element_type, FixedSizeNumericType):
-                    macros = [MacroDefinition('T', element_type.primitive_type),
+                    imports_and_macros = [MacroDefinition('T', element_type.primitive_type),
                               MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type))]
                 else:
-                    macros = [MacroDefinition('T', element_type)]
+                    imports_and_macros = [MacroDefinition('T', element_type)]
                 if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
-                    macros.append(MacroDefinition('T_rank', element_type.rank))
+                    imports_and_macros.append(MacroDefinition('T_rank', element_type.rank))
                 elif not isinstance(element_type, FixedSizeNumericType):
                     raise NotImplementedError("Support for lists of types defined in other modules is not yet implemented")
-                macros.append(MacroDefinition('Vector', expr_type))
-                macros.append(MacroDefinition('VectorIterator', IteratorType(expr_type)))
+                imports_and_macros.append(MacroDefinition('Vector', expr_type))
+                imports_and_macros.append(MacroDefinition('VectorIterator', IteratorType(expr_type)))
             elif isinstance(expr_type, HomogeneousSetType):
                 include = Import(LiteralString('set/template.inc'), Module('_', (), ()))
                 element_type = expr_type.element_type
+                imports_and_macros = []
                 if isinstance(element_type, FixedSizeNumericType):
                     tmpVar_x = Variable(element_type, 'x')
                     tmpVar_y = Variable(element_type, 'y')
                     if isinstance(element_type.primitive_type, PrimitiveComplexType):
+                        imports_and_macros.append(Import('pyc_tools_f90', Module('pyc_tools_f90',(),())))
                         lt_def = PyccelAssociativeParenthesis(PyccelLt(NumpyAbs(tmpVar_x), NumpyAbs(tmpVar_y)))
                     else:
                         lt_def = PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y))
-                    macros = [MacroDefinition('T', element_type.primitive_type),
+                    imports_and_macros.extend([MacroDefinition('T', element_type.primitive_type),
                               MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type)),
-                              MacroDefinition('T_LT(x,y)', lt_def)]
+                              MacroDefinition('T_LT(x,y)', lt_def)])
                 else:
                     raise NotImplementedError("Support for sets of types which define their own < operator is not yet implemented")
-                macros.append(MacroDefinition('Set', expr_type))
-                macros.append(MacroDefinition('SetIterator', IteratorType(expr_type)))
+                imports_and_macros.append(MacroDefinition('Set', expr_type))
+                imports_and_macros.append(MacroDefinition('SetIterator', IteratorType(expr_type)))
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
 
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
-            module = Module(mod_name, (), (), scope = Scope(), imports = [*macros, include],
+            module = Module(mod_name, (), (), scope = Scope(), imports = [*imports_and_macros, include],
                                        is_external = True)
 
             self._generated_gFTL_extensions[expr_type] = module
