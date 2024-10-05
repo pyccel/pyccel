@@ -204,7 +204,7 @@ def test_homogeneous_set_annotation_bool(language):
 def test_homogeneous_set_annotation_complex(language):
     def homogeneous_set_annotation():
         a: 'set[complex]'  # pylint: disable=unused-variable
-        a = {1+1j, 2+2j, 3+3j, 4+4j}
+        a = {1+1j, 2+2j, 3+3j, 1-1j}
         return len(a)
     epyc_homogeneous_set_annotation = epyccel(homogeneous_set_annotation, language=language)
     assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
