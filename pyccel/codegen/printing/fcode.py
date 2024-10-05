@@ -24,7 +24,7 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonList, PythonSet
 
-from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
@@ -37,7 +37,7 @@ from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
 from pyccel.ast.datatypes import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType, DictType
-from pyccel.ast.datatypes import PythonNativeInt
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type, PyccelType
 
@@ -571,7 +571,10 @@ class FCodePrinter(CodePrinter):
                         complex_tool_import = Import('pyc_tools_f90', Module('pyc_tools_f90',(),()))
                         self.add_import(complex_tool_import)
                         imports_and_macros.append(complex_tool_import)
-                        lt_def = PyccelAssociativeParenthesis(PyccelLt(NumpyAbs(tmpVar_x), NumpyAbs(tmpVar_y)))
+                        compare_func = FunctionDef('complex_comparison',
+                                                   [FunctionDefArgument(tmpVar_x), FunctionDefArgument(tmpVar_y)],
+                                                   [FunctionDefResult(Variable(PythonNativeBool(), 'c'))], [])
+                        lt_def = FunctionCall(compare_func, [tmpVar_x, tmpVar_y])
                     else:
                         lt_def = PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y))
                     imports_and_macros.extend([MacroDefinition('T', element_type.primitive_type),
