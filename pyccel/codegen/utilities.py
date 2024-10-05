@@ -40,6 +40,7 @@ internal_libs = {
     "ndarrays"        : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
     "pyc_math_f90"    : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
     "pyc_math_c"      : ("math", CompileObj("pyc_math_c.c",folder="math")),
+    "pyc_tools_f90"   : ("tools", CompileObj("pyc_tools_f90.f90",folder="tools")),
     "cwrapper"        : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
     "numpy_f90"       : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
     "numpy_c"         : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
