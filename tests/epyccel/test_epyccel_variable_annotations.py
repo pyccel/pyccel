@@ -325,7 +325,7 @@ def test_dict_complex_float(language):
     def dict_int_float():
         # Not valid in Python 3.8
         a : dict[complex, float] #pylint: disable=unsubscriptable-object,unused-variable
-        a = {1j:1.0, 2j:2.0}
+        a = {1j:1.0, -1j:2.0}
         return len(a)
 
     epyc_dict_int_float = epyccel(dict_int_float, language = language)
