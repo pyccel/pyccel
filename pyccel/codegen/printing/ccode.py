@@ -1535,7 +1535,6 @@ class CCodePrinter(CodePrinter):
                     args = f'{self._print(start)}, {self._print(stop)}'
                     if idx.step:
                         args += f', {self._print(idx.step)}'
-                        self._additional_code += f'printf("stride: %ld\\n", {self._print(idx.step)});\n'
                     if args == '0, c_END':
                         args = 'c_ALL'
                     indices.append('{'+args+'}')

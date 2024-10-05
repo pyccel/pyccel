@@ -45,7 +45,7 @@ from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
-from pyccel.ast.operators     import PyccelLt, IfTernaryOperator
+from pyccel.ast.operators     import PyccelLt, IfTernaryOperator, PyccelMul
 from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
@@ -1549,7 +1549,7 @@ class CToPythonWrapper(Wrapper):
 
             shape = parts['shape']
             strides = parts['strides']
-            shape_elements = [IndexedElement(shape, i) for i in range(orig_var.rank)]
+            shape_elements = [PyccelMul(IndexedElement(shape, i), IndexedElement(strides, i)) for i in range(orig_var.rank)]
             indices = [Slice(None, None, IndexedElement(strides, i)) for i in range(orig_var.rank)]
             check_func, err = self._get_check_function(collect_arg, orig_var, True)
 
