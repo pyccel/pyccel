@@ -335,13 +335,19 @@ def execute_pyccel(fname, *,
                               verbose  = verbose)
 
             mod_obj.add_dependencies(stdlib)
-
+            modules.append(stdlib)
 
     # Iterate over the external_libs list and determine if the printer
     # requires an external lib to be included.
     for key, import_node in codegen.get_printer_imports().items():
         try:
-            deps = generate_extension_modules(key, import_node, pyccel_dirpath, language)
+            deps = generate_extension_modules(key, import_node, pyccel_dirpath,
+                                              includes     = includes,
+                                              libs         = compile_libs,
+                                              libdirs      = libdirs,
+                                              dependencies = modules,
+                                              accelerators = accelerators,
+                                              language = language)
         except NotImplementedError as error:
             errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
                 severity='error',

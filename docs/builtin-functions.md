@@ -92,6 +92,27 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `reverse` | No |
 | `sort` | Python-only |
 
+## Set methods
+
+| Method | Supported |
+|----------|-----------|
+| `add` | Python-only |
+| `clear` | Python-only |
+| `copy` | Python-only |
+| `difference` | No |
+| `difference_update` | No |
+| `discard` | Python-only |
+| `intersection` | No |
+| `intersection_update` | No |
+| `isdisjoint` | No |
+| `issubset` | No |
+| `issuperset` | No |
+| `pop` | Python-only |
+| `remove` | Python-only |
+| `symmetric_difference` | No |
+| `symmetric_difference_update` | No |
+| `union` | No |
+| `update` | Python-only |
 
 ## Dictionary methods
 

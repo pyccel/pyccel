@@ -40,6 +40,7 @@ internal_libs = {
     "ndarrays"        : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
     "pyc_math_f90"    : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
     "pyc_math_c"      : ("math", CompileObj("pyc_math_c.c",folder="math")),
+    "pyc_tools_f90"   : ("tools", CompileObj("pyc_tools_f90.f90",folder="tools")),
     "cwrapper"        : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
     "numpy_f90"       : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
     "numpy_c"         : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
@@ -180,7 +181,9 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     return lib_dest_path
 
 #==============================================================================
-def generate_extension_modules(import_key, import_node, pyccel_dirpath, language):
+def generate_extension_modules(import_key, import_node, pyccel_dirpath,
+                               includes, libs, libdirs, dependencies,
+                               accelerators, language):
     """
     Generate any new modules that describe extensions.
 
@@ -196,6 +199,16 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath, language
         be printed).
     pyccel_dirpath : str
         The folder where files are being saved.
+    includes : iterable of strs
+        Include directories paths.
+    libs : iterable of strs
+        Required libraries.
+    libdirs : iterable of strs
+        Paths to directories containing the required libraries.
+    dependencies : iterable of CompileObjs
+        Objects which must also be compiled in order to compile this module/program.
+    accelerators : iterable of str
+        Tool used to accelerate the code (e.g. openmp openacc).
     language : str
         The language in which code is being printed.
 
@@ -221,7 +234,9 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath, language
                 f.write(code)
 
         new_dependencies.append(CompileObj(os.path.basename(filename), folder=folder,
-                            includes=(os.path.join(pyccel_dirpath, 'gFTL'),)))
+                            includes=(os.path.join(pyccel_dirpath, 'gFTL'), *includes),
+                            libs=libs, libdirs=libdirs, dependencies=dependencies,
+                            accelerators=accelerators))
 
     if lib_name in external_libs:
         copy_internal_library(lib_name, pyccel_dirpath)
