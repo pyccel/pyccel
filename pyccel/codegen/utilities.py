@@ -199,6 +199,16 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         be printed).
     pyccel_dirpath : str
         The folder where files are being saved.
+    includes : iterable of strs
+        Include directories paths.
+    libs : iterable of strs
+        Required libraries.
+    libdirs : iterable of strs
+        Paths to directories containing the required libraries.
+    dependencies : iterable of CompileObjs
+        Objects which must also be compiled in order to compile this module/program.
+    accelerators : iterable of str
+        Tool used to accelerate the code (e.g. openmp openacc).
     language : str
         The language in which code is being printed.
 
