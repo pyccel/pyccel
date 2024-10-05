@@ -8,7 +8,9 @@ from pyccel import epyccel
 from modules import functionals
 
 @pytest.fixture( params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="Fortran does not support list comprehensions. See #1948 (now applicable to Fortran)"),
+            pytest.mark.fortran]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="C does not support list comprehensions. See #1948"),
             pytest.mark.c]),
