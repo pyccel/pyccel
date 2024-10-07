@@ -64,10 +64,10 @@ class CodePrinter:
 
         Returns
         -------
-        iterable[str]
-            An iterable of the include strings.
+        dict[str, Import]
+            A dictionary mapping the include strings to the import module.
         """
-        return self._additional_imports.keys()
+        return self._additional_imports
 
     def add_import(self, import_obj):
         """
