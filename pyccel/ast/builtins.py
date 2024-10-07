@@ -908,6 +908,9 @@ class PythonDict(PyccelFunction):
         args = ', '.join(f'{repr(k)}: {repr(v)}' for k,v in self)
         return f'PythonDict({args})'
 
+    def __len__(self):
+        return len(self._keys)
+
     @property
     def keys(self):
         """

@@ -301,22 +301,32 @@ def test_homogeneous_list_annotation_embedded_complex(stc_language):
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation()))
 
-def test_dict_int_float(stc_language):
+def test_dict_int_float(language):
     def dict_int_float():
         # Not valid in Python 3.8
         a : dict[int, float] #pylint: disable=unsubscriptable-object,unused-variable
         a = {1:1.0, 2:2.0}
+        return len(a)
 
-    epyc_dict_int_float = epyccel(dict_int_float, language = stc_language)
-    epyc_dict_int_float()
-    dict_int_float()
+    epyc_dict_int_float = epyccel(dict_int_float, language = language)
+    assert epyc_dict_int_float() == dict_int_float()
 
-def test_dict_empty_init(stc_language):
+def test_dict_empty_init(language):
     def dict_empty_init():
         # Not valid in Python 3.8
         a : dict[int, float] #pylint: disable=unsubscriptable-object,unused-variable
         a = {}
+        return len(a)
 
-    epyc_dict_empty_init = epyccel(dict_empty_init, language = stc_language)
-    epyc_dict_empty_init()
-    dict_empty_init()
+    epyc_dict_empty_init = epyccel(dict_empty_init, language = language)
+    assert epyc_dict_empty_init() == dict_empty_init()
+
+def test_dict_complex_float(language):
+    def dict_int_float():
+        # Not valid in Python 3.8
+        a : dict[complex, float] #pylint: disable=unsubscriptable-object,unused-variable
+        a = {1j:1.0, -1j:2.0}
+        return len(a)
+
+    epyc_dict_int_float = epyccel(dict_int_float, language = language)
+    assert epyc_dict_int_float() == dict_int_float()

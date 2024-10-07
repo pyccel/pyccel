@@ -11,6 +11,7 @@ from .basic import PyccelAstNode
 from .datatypes import PyccelType
 
 __all__ = ('IteratorType',
+           'PairType',
            'MacroDefinition')
 
 #------------------------------------------------------------------------------
@@ -39,6 +40,51 @@ class IteratorType(PyccelType, metaclass=ArgumentSingleton):
         The type of the iterable object whose elements are accessed via this type.
         """
         return self._iterable_type
+
+#------------------------------------------------------------------------------
+class PairType(PyccelType, metaclass=ArgumentSingleton):
+    """
+    The type of an element of a dictionary type.
+
+    The type of an element of a dictionary type.
+
+    Parameters
+    ----------
+    key_type : PyccelType
+        The type of the keys of the homogeneous dictionary.
+    value_type : PyccelType
+        The type of the values of the homogeneous dictionary.
+    """
+    __slots__ = ('_key_type', '_value_type')
+    _name = 'pair'
+    _container_rank = 0
+    _order = None
+
+    def __init__(self, key_type, value_type):
+        self._key_type = key_type
+        self._value_type = value_type
+        super().__init__()
+
+    @property
+    def key_type(self):
+        """
+        The type of the keys of the object.
+
+        The type of the keys of the object.
+        """
+        return self._key_type
+
+    @property
+    def value_type(self):
+        """
+        The type of the values of the object.
+
+        The type of the values of the object.
+        """
+        return self._value_type
+
+    def __str__(self):
+        return f'pair[{self._key_type}, {self._value_type}]'
 
 #------------------------------------------------------------------------------
 class MacroDefinition(PyccelAstNode):
