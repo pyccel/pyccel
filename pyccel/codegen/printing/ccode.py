@@ -412,6 +412,7 @@ class CCodePrinter(CodePrinter):
         str
             A string containing the code which allocates and copies the data.
         """
+        raise NotImplementedError("TODO")
         rhs = expr.rhs
         lhs = expr.lhs
         if rhs.rank == 0:
@@ -1526,12 +1527,18 @@ class CCodePrinter(CodePrinter):
                 base = base.base
 
         if expr.rank > 0:
+            if allow_negative_indexes:
+                raise NotImplementedError("TODO")
             c_type = self.get_c_type(expr.class_type)
             indices = []
-            for idx in inds:
+            for i,idx in enumerate(inds):
                 if isinstance(idx, Slice):
-                    start = idx.start or '0'
+                    start = idx.start or LiteralInteger(0)
                     stop = idx.stop or 'c_END'
+                    if is_literal_integer(start) and int(start) < 0:
+                        start = PyccelMinus(base_shape[i], start.args[0], simplify = True)
+                    if is_literal_integer(stop) and int(stop) < 0:
+                        stop = PyccelMinus(base_shape[i], stop.args[0], simplify = True)
                     args = f'{self._print(start)}, {self._print(stop)}'
                     if idx.step:
                         args += f', {self._print(idx.step)}'
@@ -1545,7 +1552,7 @@ class CCodePrinter(CodePrinter):
             return f'cspan_slice({c_type}, {base_code}, {indices_code})'
 
         for i, ind in enumerate(inds):
-            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
+            if is_literal_integer(ind) and int(ind) < 0:
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0], simplify = True)
             else:
                 #indices of indexedElement of len==1 shouldn't be a tuple
