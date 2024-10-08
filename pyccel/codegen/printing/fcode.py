@@ -1547,8 +1547,11 @@ class FCodePrinter(CodePrinter):
     def _print_PythonComplex(self, expr):
         kind = self.print_kind(expr)
         if expr.is_cast:
-            var = self._print(expr.internal_var)
-            code = f'cmplx({var}, kind = {kind})'
+            var = expr.internal_var
+            if isinstance(var.class_type.primitive_type, PrimitiveBooleanType):
+                var = PythonInt(var)
+            var_code = self._print(var)
+            code = f'cmplx({var_code}, kind = {kind})'
         else:
             real = self._print(expr.real)
             imag = self._print(expr.imag)
