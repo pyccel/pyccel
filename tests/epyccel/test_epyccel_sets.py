@@ -61,7 +61,7 @@ def test_clear_float(language):
     def clear_float():
         se = {7.2, 2.1, 9.8, 6.4}
         se.clear()
-        return se
+        return len(se)
     epyccel_clear = epyccel(clear_float, language = language)
     pyccel_result = epyccel_clear()
     python_result = clear_float()
@@ -71,7 +71,7 @@ def test_clear_complex(language):
     def clear_complex():
         se = {3j, 6j, 2j}
         se.clear()
-        return se
+        return len(se)
     epyccel_clear = epyccel(clear_complex, language = language)
     pyccel_result = epyccel_clear()
     python_result = clear_complex()
@@ -382,35 +382,4 @@ def test_Pop_complex(language_without_fortran):
     epyccel_remove = epyccel(Pop_complex, language = language_without_fortran)
     pyccel_result = set(epyccel_remove())
     python_result = set(Pop_complex())
-    assert python_result == pyccel_result
-  
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran",marks = [
-            pytest.mark.skip(reason="pop method not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
-
-def test_clear_int_elem(language):
-    def clear_int_elem():
-        a = {1, 2, 1} #pylint: disable=duplicate-value
-        a.clear()
-        size_1 = len(a)
-        return size_1
-    epyccel_remove = epyccel(clear_int_elem, language = language)
-    pyccel_result = epyccel_remove()
-    python_result = clear_int_elem()
-    assert python_result == pyccel_result
-
-def test_clear_float_elem(language):
-    def clear_float_elem():
-        a = {4.6, 2.8, 8.4}
-        a.clear()
-        size_1 = len(a)
-        return size_1
-    epyccel_remove = epyccel(clear_float_elem, language = language)
-    pyccel_result = epyccel_remove()
-    python_result = clear_float_elem()
     assert python_result == pyccel_result
