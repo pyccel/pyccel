@@ -411,7 +411,6 @@ class CCodePrinter(CodePrinter):
         str
             A string containing the code which allocates and copies the data.
         """
-        raise NotImplementedError("TODO")
         rhs = expr.rhs
         lhs = expr.lhs
         if rhs.rank == 0:
@@ -422,6 +421,7 @@ class CCodePrinter(CodePrinter):
         # If the data is copied from a Variable rather than a list or tuple
         # use the function array_copy_data directly
         if isinstance(arg, Variable):
+            raise NotImplementedError("TODO")
             return f"array_copy_data({lhs_address}, {self._print(arg)}, 0);\n"
 
         order = lhs.order
@@ -467,6 +467,7 @@ class CCodePrinter(CodePrinter):
             current_element = flattened_list[i]
             # Copy an array element
             if isinstance(current_element, (Variable, IndexedElement)) and current_element.rank >= 1:
+                raise NotImplementedError("TODO")
                 elem_name = self._print(current_element)
                 target = self._print(ObjectAddress(copy_to))
                 operations += f"array_copy_data({target}, {elem_name}, {offset_str});\n"
@@ -491,6 +492,7 @@ class CCodePrinter(CodePrinter):
 
                 copy_to_data = self._print(copy_to_data_var)
                 #nelems = NumpySize(copy_to)
+                raise NotImplementedError("TODO")
                 operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * sizeof({declare_dtype}));\n"
 
                 i += lenSubset
@@ -498,6 +500,7 @@ class CCodePrinter(CodePrinter):
                     operations += self._print(AugAssign(offset_var, '+', LiteralInteger(lenSubset)))
 
         if order == "F":
+            raise NotImplementedError("TODO")
             operations += f"array_copy_data({lhs_address}, {self._print(copy_to)}, 0);\n" + self._print(Deallocate(copy_to))
         return operations
 
@@ -523,6 +526,7 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.get_c_type(rhs.dtype)
 
         if rhs.fill_value is not None:
+            raise NotImplementedError("TODO")
             if isinstance(rhs.fill_value, Literal):
                 code_init += 'array_fill(({0}){1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
             else:
@@ -1525,27 +1529,14 @@ class CCodePrinter(CodePrinter):
                 inds = list(base.indices) + inds
                 base = base.base
 
-        if expr.rank > 0:
-            if allow_negative_indexes:
-                raise NotImplementedError("TODO")
+        if expr.rank > 0 and isinstance(base, (NumpyNDArrayType, HomogeneousTupleType)):
             c_type = self.get_c_type(expr.class_type)
             indices = []
             for i,idx in enumerate(inds):
                 if isinstance(idx, Slice):
-                    start = idx.start or LiteralInteger(0)
-                    stop = idx.stop or 'c_END'
-                    if is_literal_integer(start) and int(start) < 0:
-                        start = PyccelMinus(base_shape[i], start.args[0], simplify = True)
-                    if is_literal_integer(stop) and int(stop) < 0:
-                        stop = PyccelMinus(base_shape[i], stop.args[0], simplify = True)
-                    args = f'{self._print(start)}, {self._print(stop)}'
-                    if idx.step:
-                        args += f', {self._print(idx.step)}'
-                    if args == '0, c_END':
-                        args = 'c_ALL'
-                    indices.append('{'+args+'}')
-                else:
-                    indices.append('{'+self._print(idx)+'}')
+                    idx = self._new_slice_with_processed_arguments(idx, PyccelArrayShapeElement(base, i),
+                        allow_negative_indexes)
+                indices.append('{'+self._print(idx)+'}')
             indices_code = ', '.join(indices)
             base_code = self._print(ObjectAddress(base))
             return f'cspan_slice({c_type}, {base_code}, {indices_code})'
@@ -1773,11 +1764,19 @@ class CCodePrinter(CodePrinter):
             return f'free({variable_address});\n'
 
     def _print_Slice(self, expr):
-        start = self._print(expr.start)
-        stop = self._print(expr.stop)
-        step = self._print(expr.step)
-        slice_type = 'RANGE' if expr.slice_type == Slice.Range else 'ELEMENT'
-        return f'new_slice({start}, {stop}, {step}, {slice_type})'
+        start = expr.start
+        stop = expr.stop
+        if start == None and stop == None:
+            return 'c_ALL'
+        else:
+            start = start or LiteralInteger(0)
+            stop = stop or 'c_END'
+            assert not(is_literal_integer(start) and int(start) < 0)
+            assert not(is_literal_integer(stop) and int(stop) < 0)
+            args = (start, stop)
+            if expr.step:
+                args += (expr.step, )
+            return ', '.join(self._print(a) for a in args)
 
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C
