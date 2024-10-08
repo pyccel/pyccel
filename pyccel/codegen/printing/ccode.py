@@ -1549,7 +1549,7 @@ class CCodePrinter(CodePrinter):
                 inds = list(base.indices) + inds
                 base = base.base
 
-        if expr.rank > 0 and isinstance(base, (NumpyNDArrayType, HomogeneousTupleType)):
+        if expr.rank > 0 and isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             c_type = self.get_c_type(expr.class_type)
             indices = []
             for i,idx in enumerate(inds):
