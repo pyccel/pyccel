@@ -1516,8 +1516,7 @@ class SemanticParser(BasicParser):
                                 self.current_ast_node.col_offset))
                         status='unknown'
                     elif isinstance(lhs.class_type, HomogeneousContainerType):
-                        print(type(rhs))
-                        if isinstance(rhs, (FunctionalFor, Variable)):
+                        if isinstance(rhs, (FunctionalFor)):
                             status = 'unallocated'
                         else:
                             status = 'allocated'
