@@ -28,9 +28,12 @@ All notable changes to this project will be documented in this file.
 -   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
 -   #1944 : Add the appropriate C language equivalent for declaring a Python `dict` container using the STC library.
 -   #1657 : Add the appropriate Fortran language equivalent for declaring a Python `list` container using the gFTL library.
+-   #1658 : Add the appropriate Fortran language equivalent for declaring a Python `set` container using the gFTL library.
+-   #1944 : Add the appropriate Fortran language equivalent for declaring a Python `dict` container using the gFTL library.
 -   #1874 : Add C and Fortran support for the `len()` function for the `list` container.
 -   #1875 : Add C and Fortran support for the `len()` function for the `set` container.
 -   #1908 : Add C and Fortran support for the `len()` function for the `dict` container.
+-   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C support for list method `pop()`.
 -   #1877 : Add C Support for set method `pop()`.
