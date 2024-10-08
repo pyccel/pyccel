@@ -512,7 +512,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : TypedAstNode
+        expr : Assign
             The Assign Node used to get the lhs and rhs.
 
         Returns
@@ -523,14 +523,16 @@ class CCodePrinter(CodePrinter):
         rhs = expr.rhs
         lhs = expr.lhs
         code_init = ''
-        declare_dtype = self.get_c_type(rhs.dtype)
 
         if rhs.fill_value is not None:
-            raise NotImplementedError("TODO")
-            if isinstance(rhs.fill_value, Literal):
-                code_init += 'array_fill(({0}){1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
-            else:
-                code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), self._print(lhs))
+            lhs_code = self._print(lhs)
+            fill_val = self._print(rhs.fill_value)
+            c_type = self.get_c_type(lhs.class_type)
+            loop_scope = self.scope.create_new_loop_scope()
+            iter_var_name = loop_scope.get_new_name()
+            code_init += f'c_foreach({iter_var_name}, {c_type}, {lhs_code})  {{\n'
+            code_init += f'*({iter_var_name}.ref) = {fill_val};\n'
+            code_init += '}\n'
         return code_init
 
     def _init_stack_array(self, expr):
@@ -2295,8 +2297,9 @@ class CCodePrinter(CodePrinter):
             iter_var_name = loop_scope.get_new_name()
 
             return (f'{lhs} = {zero};\n'
-                    f'c_foreach({iter_var_name}, {c_type}, {sum_arg}) '
-                    f'{lhs} += (*{iter_var_name}.ref);\n')
+                    f'c_foreach({iter_var_name}, {c_type}, {sum_arg}) {{\n'
+                    f'{lhs} += *({iter_var_name}.ref);\n'
+                     '}\n')
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
         lhs = self._print(expr.lhs)
