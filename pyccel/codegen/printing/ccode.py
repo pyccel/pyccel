@@ -42,6 +42,8 @@ from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil, convert_to_literal
 
+from pyccel.ast.low_level_tools  import IteratorType
+
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum
@@ -421,8 +423,20 @@ class CCodePrinter(CodePrinter):
         # If the data is copied from a Variable rather than a list or tuple
         # use the function array_copy_data directly
         if isinstance(arg, Variable):
-            raise NotImplementedError("TODO")
-            return f"array_copy_data({lhs_address}, {self._print(arg)}, 0);\n"
+            if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+                rhs_address = self._print(ObjectAddress(lhs))
+                lhs_c_type = self.get_c_type(lhs.class_type)
+                rhs_c_type = self.get_c_type(rhs.class_type)
+                iter_var_name1 = self._print(self.scope.get_temporary_variable(IteratorType(lhs.class_type)))
+                iter_var_name2 = self._print(self.scope.get_temporary_variable(IteratorType(rhs.class_type)))
+                return (f'for({iter_var_name1} = {lhs_c_type}_begin({lhs_address}),'
+                        f' {iter_var_name2} = {rhs_c_type}_begin({rhs_address});\n'
+                        f'    {iter_var_name1}.ref && {iter_var_name2}.ref;\n'
+                        f'    {lhs_c_type}_next(&{iter_var_name1}), {rhs_c_type}_next(&{iter_var_name2}))\n{{\n'
+                        f'*({iter_var_name1}.ref) = *({iter_var_name2}.ref);\n'
+                         '}\n')
+            else:
+                raise NotImplementedError(f"Can't copy variable of type {arg.class_type}")
 
         order = lhs.order
         lhs_dtype = lhs.dtype
@@ -530,7 +544,7 @@ class CCodePrinter(CodePrinter):
             c_type = self.get_c_type(lhs.class_type)
             loop_scope = self.scope.create_new_loop_scope()
             iter_var_name = loop_scope.get_new_name()
-            code_init += f'c_foreach({iter_var_name}, {c_type}, {lhs_code})  {{\n'
+            code_init += f'c_foreach({iter_var_name}, {c_type}, {lhs_code}) {{\n'
             code_init += f'*({iter_var_name}.ref) = {fill_val};\n'
             code_init += '}\n'
         return code_init
@@ -1299,6 +1313,10 @@ class CCodePrinter(CodePrinter):
             i_type = f'{container_type}_{key_type}_{val_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
+
+        elif isinstance(dtype, IteratorType):
+            iter_type = self.get_c_type(dtype.iterable_type)
+            return f'{iter_type}_iter'
 
         else:
             key = dtype
@@ -2715,20 +2733,30 @@ class CCodePrinter(CodePrinter):
 
 
     def indent_code(self, code):
-        """Accepts a string of code or a list of code lines"""
+        """
+        Add the necessary indentation to a string of code or a list of code lines.
+
+        Add the necessary indentation to a string of code or a list of code lines.
+
+        Parameters
+        ----------
+        code : str | iterable[str]
+            The code which needs indenting.
+
+        Returns
+        -------
+        str | list[str]
+            The indented code. The type matches the type of the argument.
+        """
 
         if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
         tab = " "*self._default_settings["tabwidth"]
-        inc_token = ('{', '(', '{\n', '(\n')
-        dec_token = ('}', ')')
 
-        code = [ line.lstrip(' \t') for line in code ]
-
-        increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
-        decrease = [ int(any(map(line.startswith, dec_token)))
+        increase = [ int(line.endswith('{\n')) for line in code ]
+        decrease = [ int(any(map(line.startswith, '}\n')))
                      for line in code ]
 
         pretty = []
@@ -2738,7 +2766,8 @@ class CCodePrinter(CodePrinter):
                 pretty.append(line)
                 continue
             level -= decrease[n]
-            pretty.append("%s%s" % (tab*level, line))
+            indent = tab*level
+            pretty.append(f"{indent}{line}")
             level += increase[n]
         return pretty
 
