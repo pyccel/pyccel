@@ -340,8 +340,7 @@ class CCodePrinter(CodePrinter):
         stc_imports.sort()
         dependent_imports.sort()
         non_stc_imports.sort()
-        sorted_imports = [imports[import_src.index(name)] for name in chain(non_stc_imports, dependent_imports, stc_imports)]
-        import_sorted_src = [str(i.source) for i in sorted_imports]
+        sorted_imports = [imports[import_src.index(name)] for name in chain(non_stc_imports, stc_imports, dependent_imports)]
         return sorted_imports
 
     def _format_code(self, lines):
