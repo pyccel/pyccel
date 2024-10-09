@@ -6,12 +6,17 @@
 import functools
 from itertools import chain
 import re
+from packaging.version import Version
+
+import numpy as np
 
 from pyccel.ast.basic     import ScopedAstNode
 
+from pyccel.ast.bind_c    import BindCPointer
+
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
-from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict
+from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
@@ -21,13 +26,13 @@ from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName
 
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
-from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
-from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
+from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
+from pyccel.ast.c_concepts import CStackArray
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
-from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
+from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
+from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType, DictType
 
@@ -46,17 +51,18 @@ from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type,
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
+from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
+
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
-from pyccel.ast.utilities import expand_to_loops
+from pyccel.ast.utilities import expand_to_loops, is_literal_integer
 
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
-from pyccel.ast.variable import InhomogeneousTupleVariable
-
-from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -64,6 +70,7 @@ from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
 
+numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 errors = Errors()
 
@@ -95,9 +102,6 @@ numpy_ufunc_to_c_float = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
-    'NumpyIsInf':'isinf',
-    'NumpyIsFinite':'isfinite',
-    'NumpyIsNan':'isnan',
 }
 
 numpy_ufunc_to_c_complex = {
@@ -238,10 +242,10 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdio',
                  "inttypes",
                  'stdbool',
-                 'assert',
-                 'numpy_c']}
+                 'assert']}
 
-import_header_guard_prefix = {'Set_extensions' : '_TOOLS_SET'}
+import_header_guard_prefix = {'Set_extensions'  : '_TOOLS_SET',
+                              'List_extensions' : '_TOOLS_LIST'}
 
 class CCodePrinter(CodePrinter):
     """
@@ -310,28 +314,6 @@ class CCodePrinter(CodePrinter):
         self._temporary_args = []
         self._current_module = None
         self._in_header = False
-
-    def get_additional_imports(self):
-        """return the additional imports collected in printing stage"""
-        return self._additional_imports.keys()
-
-    def add_import(self, import_obj):
-        """
-        Add a new import to the current context.
-
-        Add a new import to the current context. This allows the import to be recognised
-        at the compiling/linking stage. If the source of the import is not new then any
-        new targets are added to the Import object.
-
-        Parameters
-        ----------
-        import_obj : Import
-            The AST node describing the import.
-        """
-        if import_obj.source not in self._additional_imports:
-            self._additional_imports[import_obj.source] = import_obj
-        elif import_obj.target:
-            self._additional_imports[import_obj.source].define_target(import_obj.target)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -1017,7 +999,7 @@ class CCodePrinter(CodePrinter):
             code = ''
             for t in expr.target:
                 dtype = t.object.class_type
-                container_type = t.target
+                container_type = t.local_alias
                 if isinstance(dtype, DictType):
                     container_key_key = self.get_c_type(dtype.key_type)
                     container_val_key = self.get_c_type(dtype.value_type)
@@ -1150,7 +1132,8 @@ class CCodePrinter(CodePrinter):
 
         for i, f in enumerate(orig_args):
             f = f.value
-            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple)):
+
+            if isinstance(f, PythonTuple):
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
@@ -1342,6 +1325,8 @@ class CCodePrinter(CodePrinter):
             if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType, DictType)):
                 dtype = self.get_c_type(expr.class_type)
                 return dtype
+            if isinstance(expr.class_type, CStackArray):
+                return self.get_c_type(expr.class_type.element_type)
             if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
@@ -1379,20 +1364,31 @@ class CCodePrinter(CodePrinter):
         return f'{ret_type} (*{name})({arg_code});\n'
 
     def _print_Declare(self, expr):
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+        var = expr.variable
+        if isinstance(var.class_type, InhomogeneousTupleType):
+            return ''
 
-        declaration_type = self.get_declare_type(expr.variable)
-        variable = self._print(expr.variable.name)
+        declaration_type = self.get_declare_type(var)
+        variable = self._print(var.name)
 
-        if expr.variable.is_stack_array:
-            preface, init = self._init_stack_array(expr.variable,)
+        init = f' = {self._print(expr.value)}' if expr.value is not None else ''
+
+        if isinstance(var.class_type, CStackArray):
+            assert init == ''
+            preface = ''
+            if isinstance(var.alloc_shape[0], (int, LiteralInteger)):
+                init = f'[{var.alloc_shape[0]}]'
+            else:
+                declaration_type += '*'
+                init = ''
+        elif var.is_stack_array:
+            preface, init = self._init_stack_array(var)
         elif declaration_type == 't_ndarray' and not self._in_header:
+            assert init == ''
             preface = ''
             init    = ' = {.shape = NULL}'
         else:
             preface = ''
-            init    = ''
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
@@ -1635,9 +1631,19 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelArrayShapeElement(self, expr):
         arg = expr.arg
-        if self.is_c_pointer(arg):
-            return '{}->shape[{}]'.format(self._print(ObjectAddress(arg)), self._print(expr.index))
-        return '{}.shape[{}]'.format(self._print(arg), self._print(expr.index))
+        if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            idx = self._print(expr.index)
+            if self.is_c_pointer(arg):
+                arg_code = self._print(ObjectAddress(arg))
+                return f'{arg_code}->shape[{idx}]'
+            arg_code = self._print(arg)
+            return f'{arg_code}.shape[{idx}]'
+        elif isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            c_type = self.get_c_type(arg.class_type)
+            arg_code = self._print(ObjectAddress(arg))
+            return f'{c_type}_size({arg_code})'
+        else:
+            raise NotImplementedError(f"Don't know how to represent shape of object of type {arg.class_type}")
 
     def _print_Allocate(self, expr):
         free_code = ''
@@ -1682,7 +1688,7 @@ class CCodePrinter(CodePrinter):
             variable_address = self._print(ObjectAddress(expr.variable))
             container_type = self.get_c_type(expr.variable.class_type)
             return f'{container_type}_drop({variable_address});\n'
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
+        if isinstance(expr.variable.class_type, InhomogeneousTupleType):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
         variable_address = self._print(ObjectAddress(expr.variable))
         if isinstance(expr.variable.dtype, CustomDataType):
@@ -1767,7 +1773,7 @@ class CCodePrinter(CodePrinter):
             numpy.sign(x) => csign(x)   (x is complex)
 
         """
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['pyc_math_c'])
         primitive_type = expr.dtype.primitive_type
         func = ''
         if isinstance(primitive_type, PrimitiveIntegerType):
@@ -1775,7 +1781,7 @@ class CCodePrinter(CodePrinter):
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
             func = 'fsign'
         elif isinstance(primitive_type, PrimitiveComplexType):
-            func = 'csign'
+            func = 'csgn' if numpy_v1 else 'csign'
 
         return f'{func}({self._print(expr.args[0])})'
 
@@ -1784,7 +1790,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isfinite function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isfinite({code_arg})"
 
@@ -1793,7 +1799,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isinf function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isinf({code_arg})"
 
@@ -1802,7 +1808,7 @@ class CCodePrinter(CodePrinter):
         Convert a Python expression with a numpy isnan function call to C function call
         """
 
-        self.add_import(c_imports['numpy_c'])
+        self.add_import(c_imports['math'])
         code_arg = self._print(expr.arg)
         return f"isnan({code_arg})"
 
@@ -2023,7 +2029,8 @@ class CCodePrinter(CodePrinter):
             self._additional_args.append(results)
 
         body  = self._print(expr.body)
-        decs  = [Declare(i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
+        decs = [Declare(i, value=(Nil() if i.is_alias and isinstance(i.class_type, (VoidType, BindCPointer)) else None))
+                if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
 
         if len(results) == 1 :
             res = results[0]
@@ -2231,14 +2238,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
             return prefix_code+self.init_stc_container(rhs, expr)
         rhs = self._print(expr.rhs)
-        return prefix_code+'{} = {};\n'.format(lhs, rhs)
-
-    def _print_SetPop(self, expr):
-        dtype = expr.set_variable.class_type
-        var_type = self.get_c_type(dtype)
-        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(dtype), var_type)))
-        set_var = self._print(ObjectAddress(expr.set_variable))
-        return f'{var_type}_pop({set_var})'
+        return prefix_code+f'{lhs} = {rhs};\n'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
@@ -2519,6 +2519,12 @@ class CCodePrinter(CodePrinter):
     def _print_EmptyNode(self, expr):
         return ''
 
+    def _print_SetAdd(self, expr):
+        var_type = self.get_declare_type(expr.set_variable)
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        arg = self._print(expr.args[0])
+        return f'{var_type}_push({set_var}, {arg});\n'
+
     #=================== OMP ==================
 
     def _print_OmpAnnotatedComment(self, expr):
@@ -2578,6 +2584,39 @@ class CCodePrinter(CodePrinter):
         interfaces = ''.join(self._print(function) for interface in expr.interfaces for function in interface.functions)
 
         return methods + interfaces
+
+    #================== List methods ==================
+    def _print_ListAppend(self, expr):
+        target = expr.list_obj
+        class_type = target.class_type
+        c_type = self.get_c_type(class_type)
+        arg = self._print(expr.args[0])
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        return f'{c_type}_push({list_obj}, {arg});\n'
+
+    def _print_ListPop(self, expr):
+        class_type = expr.list_obj.class_type
+        c_type = self.get_c_type(class_type)
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        if expr.index_element:
+            self.add_import(Import('List_extensions', AsName(VariableTypeAnnotation(class_type), c_type)))
+            if is_literal_integer(expr.index_element) and int(expr.index_element) < 0:
+                idx_code = self._print(PyccelAdd(PythonLen(expr.list_obj), expr.index_element, simplify=True))
+            else:
+                idx_code = self._print(expr.index_element)
+            return f'{c_type}_pull_elem({list_obj}, {idx_code})'
+        else:
+            return f'{c_type}_pull({list_obj})'
+
+    #================== Set methods ==================
+
+    def _print_SetPop(self, expr):
+        dtype = expr.set_variable.class_type
+        var_type = self.get_c_type(dtype)
+        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(dtype), var_type)))
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        return f'{var_type}_pop({set_var})'
+
     #=================== MACROS ==================
 
     def _print_MacroShape(self, expr):

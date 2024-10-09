@@ -30,7 +30,7 @@ from .c_concepts import ObjectAddress, CNativeInt
 
 from .internals import PyccelFunction
 
-from .literals  import LiteralString, LiteralInteger
+from .literals  import LiteralString, LiteralInteger, Nil
 
 from .numpytypes import NumpyNDArrayType
 
@@ -946,7 +946,8 @@ class PyModInitFunc(FunctionDef):
 
         Returns the declarations of the variables.
         """
-        return [Declare(v, static=(v in self._static_vars)) \
+        return [Declare(v, static=(v in self._static_vars),
+                        value = (Nil() if isinstance(v.class_type, (VoidType, BindCPointer)) else None)) \
                 for v in self.scope.variables.values()]
 
 #-------------------------------------------------------------------

@@ -23,7 +23,7 @@ from .datatypes import (PyccelType, SymbolicType, HomogeneousTupleType,
 
 from .internals import PyccelSymbol, PyccelFunction, apply_pickle
 
-from .literals  import Nil, LiteralFalse, LiteralInteger
+from .literals  import Nil, LiteralFalse, LiteralInteger, LiteralString
 from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
@@ -116,7 +116,7 @@ class AsName(PyccelAstNode):
     ----------
     obj : PyccelAstNode or PyccelAstNodeType
         The variable, function, or module being renamed.
-    target : str
+    local_alias : str
         Name of variable or function in this context.
 
     Examples
@@ -129,16 +129,16 @@ class AsName(PyccelAstNode):
     >>> AsName(NumpyFull, 'fill_func')
     full as fill_func
     """
-    __slots__ = ('_obj', '_target')
+    __slots__ = ('_obj', '_local_alias')
     _attribute_nodes = ()
 
-    def __init__(self, obj, target):
+    def __init__(self, obj, local_alias):
         if pyccel_stage != "syntactic":
             assert (isinstance(obj, PyccelAstNode) and \
                     not isinstance(obj, PyccelSymbol)) or \
                    (isinstance(obj, type) and issubclass(obj, PyccelAstNode))
         self._obj = obj
-        self._target = target
+        self._local_alias = local_alias
         super().__init__()
 
     @property
@@ -152,10 +152,13 @@ class AsName(PyccelAstNode):
             return obj.name
 
     @property
-    def target(self):
-        """ The target name of the object
+    def local_alias(self):
         """
-        return self._target
+        The local_alias name of the object.
+
+        The name used to identify the object in the local scope.
+        """
+        return self._local_alias
 
     @property
     def object(self):
@@ -164,13 +167,13 @@ class AsName(PyccelAstNode):
         return self._obj
 
     def __repr__(self):
-        return f'{self.object} as {self.target}'
+        return f'{self.object} as {self.local_alias}'
 
     def __eq__(self, string):
         if isinstance(string, str):
-            return string == self.target
+            return string == self.local_alias
         elif isinstance(string, AsName):
-            return string.target == self.target
+            return string.local_alias == self.local_alias
         else:
             return self is string
 
@@ -178,7 +181,7 @@ class AsName(PyccelAstNode):
         return not self == string
 
     def __hash__(self):
-        return hash(self.target)
+        return hash(self.local_alias)
 
 
 class Duplicate(TypedAstNode):
@@ -646,10 +649,10 @@ class CodeBlock(PyccelAstNode):
 
 class AliasAssign(PyccelAstNode):
     """
-    Representing assignment of an alias to its target.
+    Representing assignment of an alias to its local_alias.
 
     Represents aliasing for code generation. An alias is any statement of the
-    form `lhs := rhs` where lhs is a pointer and rhs is a target. In other words
+    form `lhs := rhs` where lhs is a pointer and rhs is a local_alias. In other words
     the contents of `lhs` will change if the contents of `rhs` are modfied.
 
     Parameters
@@ -664,7 +667,7 @@ class AliasAssign(PyccelAstNode):
            Variable.
 
     rhs : PyccelSymbol | Variable, IndexedElement
-        The target of the assignment. A PyccelSymbol in the syntactic stage,
+        The local_alias of the assignment. A PyccelSymbol in the syntactic stage,
         a Variable or a Slice of an array in the semantic stage.
 
     Examples
@@ -978,6 +981,10 @@ class Module(ScopedAstNode):
     scope : Scope
         The scope of the module.
 
+    is_external : bool
+        Indicates if the Module's definition is found elsewhere.
+        This is notably the case for gFTL extensions.
+
     Examples
     --------
     >>> from pyccel.ast.variable import Variable
@@ -1005,7 +1012,8 @@ class Module(ScopedAstNode):
     """
     __slots__ = ('_name','_variables','_funcs','_interfaces',
                  '_classes','_imports','_init_func','_free_func',
-                 '_program','_variable_inits','_internal_dictionary')
+                 '_program','_variable_inits','_internal_dictionary',
+                 '_is_external')
     _attribute_nodes = ('_variables','_funcs','_interfaces',
                         '_classes','_imports','_init_func',
                         '_free_func','_program','_variable_inits')
@@ -1021,7 +1029,8 @@ class Module(ScopedAstNode):
         interfaces=(),
         classes=(),
         imports=(),
-        scope = None
+        scope = None,
+        is_external = False
         ):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
@@ -1067,8 +1076,10 @@ class Module(ScopedAstNode):
         imports = list(imports)
         for i in classes:
             imports += i.imports
-        imports = set(imports)  # for unicity
-        imports = tuple(imports)
+        imports = {i: None for i in imports} # for unicity and ordering
+        imports = tuple(imports.keys())
+
+        assert isinstance(is_external, bool)
 
         self._name = name
         self._variables = variables
@@ -1080,13 +1091,15 @@ class Module(ScopedAstNode):
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
+        self._is_external = is_external
 
         if pyccel_stage != "syntactic":
             self._internal_dictionary = {v.name:v for v in variables}
             self._internal_dictionary.update({f.name:f for f in funcs})
             self._internal_dictionary.update({i.name:i for i in interfaces})
             self._internal_dictionary.update({c.name:c for c in classes})
-            import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
+            import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] \
+                                for i in imports if isinstance(i, Import)}
             self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
             if init_func:
@@ -1205,6 +1218,15 @@ class Module(ScopedAstNode):
         """ Returns the names of all objects accessible directly in this module
         """
         return self._internal_dictionary.keys()
+
+    @property
+    def is_external(self):
+        """
+        Indicate if the Module's definition is found elsewhere.
+
+        This is notably the case for gFTL extensions.
+        """
+        return self._is_external
 
 class ModuleHeader(PyccelAstNode):
     """
@@ -2054,6 +2076,16 @@ class FunctionCall(TypedAstNode):
         """ The name of the interface called by this function call
         """
         return self._interface_name
+
+    @property
+    def is_alias(self):
+        """
+        Check if the result of the function call is an alias type.
+
+        Check if the result of the function call is an alias type.
+        """
+        assert len(self._funcdef.results) == 1
+        return self._funcdef.results[0].var.is_alias
 
     def __repr__(self):
         args = ', '.join(str(a) for a in self.args)
@@ -3768,7 +3800,7 @@ class Import(PyccelAstNode):
                 return DottedName(*i.split('.'))
             else:
                 return PyccelSymbol(i)
-        if isinstance(i, (DottedName, AsName, PyccelSymbol)):
+        if isinstance(i, (DottedName, AsName, PyccelSymbol, LiteralString)):
             return i
         else:
             raise TypeError(f'Expecting a string, PyccelSymbol DottedName, given {type(i)}')
@@ -3828,9 +3860,25 @@ class Import(PyccelAstNode):
             self._target[new_target] = None
 
     def find_module_target(self, new_target):
+        """
+        Find the specified target amongst the targets of the Import.
+
+        Find the specified target amongst the targets of the Import.
+
+        Parameters
+        ----------
+        new_target : str
+            The name of the target that has been imported.
+
+        Returns
+        -------
+        str
+            The name of the target in the local scope or None if the
+            target is not found.
+        """
         for t in self._target:
             if isinstance(t, AsName) and new_target == t.name:
-                return t.target
+                return t.local_alias
             elif new_target == t:
                 return t
         return None

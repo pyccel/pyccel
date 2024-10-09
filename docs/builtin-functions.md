@@ -78,7 +78,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 
 | Method | Supported |
 |----------|-----------|
-| `append` | Python-only |
+| **`append`** | **Yes** |
 | `clear` | Python-only |
 | `copy` | Python-only |
 | `count` | No |
@@ -87,11 +87,32 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `insert` | Python-only |
 | `max` | No |
 | `min` | No |
-| `pop` | Python-only |
+| `pop` | Python and C only |
 | `remove` | Python-only |
 | `reverse` | No |
 | `sort` | Python-only |
 
+## Set methods
+
+| Method | Supported |
+|----------|-----------|
+| **`add`** | **Yes** |
+| `clear` | Python-only |
+| `copy` | Python-only |
+| `difference` | No |
+| `difference_update` | No |
+| `discard` | Python-only |
+| `intersection` | No |
+| `intersection_update` | No |
+| `isdisjoint` | No |
+| `issubset` | No |
+| `issuperset` | No |
+| `pop` | Python-only |
+| `remove` | Python-only |
+| `symmetric_difference` | No |
+| `symmetric_difference_update` | No |
+| `union` | No |
+| `update` | Python-only |
 
 ## Dictionary methods
 
@@ -101,11 +122,11 @@ Python contains a limited number of builtin functions defined [here](https://doc
 |----------|-----------|
 | `clear` | No |
 | `copy` | No |
-| `get` | No |
+| `get` | Python-only |
 | `items` | No |
 | `keys` | No |
 | `pop` | Python-only |
-| `popitem` | No |
+| `popitem` | Python-only |
 | `reversed` | No |
 | `setdefault` | No |
 | `update` | No |

@@ -90,7 +90,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if isinstance(a.dtype, (WrapperCustomDataType, BindCPointer)):
             return True
-        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create)):
+        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create, LiteralString)):
             return True
         else:
             return CCodePrinter.is_c_pointer(self,a)
@@ -503,14 +503,16 @@ class CWrapperCodePrinter(CCodePrinter):
 
             variable = self._print(expr.variable.name)
 
+            init = f' = {self._print(expr.value)}' if expr.value is not None else ''
+
             if var.rank == 0:
-                return f'{static}{external}{declaration_type} {variable};\n'
+                return f'{static}{external}{declaration_type} {variable}{init};\n'
 
             size = var.alloc_shape[0]
             if isinstance(size, int):
                 return f'{static}{external}{declaration_type} {variable}[{size}];\n'
             else:
-                return f'{static}{external}{declaration_type}* {variable};\n'
+                return f'{static}{external}{declaration_type}* {variable}{init};\n'
         else:
             return CCodePrinter._print_Declare(self, expr)
 
