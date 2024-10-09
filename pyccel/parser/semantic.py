@@ -1337,9 +1337,6 @@ class SemanticParser(BasicParser):
                         insertion_scope = insertion_scope)
                 elem_vars.append(var)
 
-            if any(v.is_alias for v in elem_vars):
-                d_lhs['memory_handling'] = 'alias'
-
             lhs = Variable(class_type, name, **d_lhs, is_temp=is_temp)
 
             for i, v in enumerate(elem_vars):
