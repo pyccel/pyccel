@@ -1657,7 +1657,7 @@ class CToPythonWrapper(Wrapper):
         if isinstance(orig_var.class_type, NumpyNDArrayType):
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
             c_res = orig_var.clone(name, class_type = orig_var.class_type.get_alias_equivalent(),
-                                   is_argument = False)
+                                   is_argument = False, memory_handling = 'alias')
             self._wrapping_arrays = True
             body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])),
                     Deallocate(c_res)]
