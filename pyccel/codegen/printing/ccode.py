@@ -1649,7 +1649,13 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         variable = expr.variable
         if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-            return ''
+            if expr.status == 'unallocated':
+                size = self._print(variable.alloc_shape[0])
+                variable_address = self._print(ObjectAddress(expr.variable))
+                container_type = self.get_c_type(expr.variable.class_type)
+                return f'{container_type}_reserve({variable_address}, {size});\n'
+            else:
+                return ''
         if variable.rank > 0:
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):

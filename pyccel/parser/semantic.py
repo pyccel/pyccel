@@ -1515,6 +1515,11 @@ class SemanticParser(BasicParser):
                             bounding_box=(self.current_ast_node.lineno,
                                 self.current_ast_node.col_offset))
                         status='unknown'
+                    elif isinstance(lhs.class_type, HomogeneousContainerType):
+                        if isinstance(rhs, (FunctionalFor)):
+                            status = 'unallocated'
+                        else:
+                            status = 'allocated'
                     else:
                         # Array defined outside of a loop will be allocated only once
                         status='unallocated'
@@ -1584,7 +1589,10 @@ class SemanticParser(BasicParser):
                 # declared
                 if isinstance(lhs, DottedName):
                     lhs = var.clone(var.name, new_class = DottedVariable, lhs = self._visit(lhs.name[0]))
+                    lhs = var
                 else:
+                    if isinstance(var.class_type, HomogeneousContainerType):
+                        new_expressions.append(Deallocate(var))
                     lhs = var
         else:
             lhs_type = str(type(lhs))
