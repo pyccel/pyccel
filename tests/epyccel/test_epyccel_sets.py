@@ -47,32 +47,32 @@ def test_add_variable_int(language):
     python_result = add_element_range()
     assert python_result == pyccel_result
 
-def test_clear_int(python_only_language):
+def test_clear_int(language):
     def clear_int():
         se = {1,2,4,5}
         se.clear()
-        return se
-    epyccel_clear = epyccel(clear_int, language = python_only_language)
+        return len(se)
+    epyccel_clear = epyccel(clear_int, language = language)
     pyccel_result = epyccel_clear()
     python_result = clear_int()
     assert python_result == pyccel_result
 
-def test_clear_float(python_only_language):
+def test_clear_float(language):
     def clear_float():
         se = {7.2, 2.1, 9.8, 6.4}
         se.clear()
-        return se
-    epyccel_clear = epyccel(clear_float, language = python_only_language)
+        return len(se)
+    epyccel_clear = epyccel(clear_float, language = language)
     pyccel_result = epyccel_clear()
     python_result = clear_float()
     assert python_result == pyccel_result
 
-def test_clear_complex(python_only_language):
+def test_clear_complex(language):
     def clear_complex():
         se = {3j, 6j, 2j}
         se.clear()
-        return se
-    epyccel_clear = epyccel(clear_complex, language = python_only_language)
+        return len(se)
+    epyccel_clear = epyccel(clear_complex, language = language)
     pyccel_result = epyccel_clear()
     python_result = clear_complex()
     assert python_result == pyccel_result

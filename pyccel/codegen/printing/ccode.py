@@ -2617,6 +2617,11 @@ class CCodePrinter(CodePrinter):
         set_var = self._print(ObjectAddress(expr.set_variable))
         return f'{var_type}_pop({set_var})'
 
+    def _print_SetClear(self, expr):
+        var_type = self.get_declare_type(expr.set_variable)
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        return f'{var_type}_clear({set_var});\n'
+
     #=================== MACROS ==================
 
     def _print_MacroShape(self, expr):
