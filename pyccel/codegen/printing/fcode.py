@@ -1243,7 +1243,12 @@ class FCodePrinter(CodePrinter):
         return f'call {target} % push_back({arg})\n'
 
 
+    #========================== Set Methods ================================#
 
+    def _print_SetAdd(self, expr):
+        var = self._print(expr.set_variable)
+        insert_obj = self._print(expr.args[0])
+        return f'call {var} % insert( {insert_obj} )\n'
 
     #========================== Numpy Elements ===============================#
 
