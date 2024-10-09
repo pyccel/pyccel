@@ -45,6 +45,11 @@ class NumpyNumericType(FixedSizeNumericType):
     Base class representing a scalar numeric datatype defined in the numpy module.
 
     Base class representing a scalar numeric datatype defined in the numpy module.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
 
@@ -82,6 +87,11 @@ class NumpyIntType(NumpyNumericType):
     Super class representing NumPy's integer types.
 
     Super class representing NumPy's integer types.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _primitive_type = PrimitiveIntegerType()
@@ -112,6 +122,11 @@ class NumpyInt8Type(NumpyIntType):
     Class representing NumPy's int8 type.
 
     Class representing NumPy's int8 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.int8'
@@ -123,6 +138,11 @@ class NumpyInt16Type(NumpyIntType):
     Class representing NumPy's int16 type.
 
     Class representing NumPy's int16 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.int16'
@@ -134,6 +154,11 @@ class NumpyInt32Type(NumpyIntType):
     Class representing NumPy's int32 type.
 
     Class representing NumPy's int32 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.int32'
@@ -145,6 +170,11 @@ class NumpyInt64Type(NumpyIntType):
     Class representing NumPy's int64 type.
 
     Class representing NumPy's int64 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.int64'
@@ -157,6 +187,11 @@ class NumpyFloat32Type(NumpyNumericType):
     Class representing NumPy's float32 type.
 
     Class representing NumPy's float32 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.float32'
@@ -169,6 +204,11 @@ class NumpyFloat64Type(NumpyNumericType):
     Class representing NumPy's float64 type.
 
     Class representing NumPy's float64 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.float64'
@@ -181,6 +221,11 @@ class NumpyFloat128Type(NumpyNumericType):
     Class representing NumPy's float128 type.
 
     Class representing NumPy's float128 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.float128'
@@ -194,6 +239,11 @@ class NumpyComplex64Type(NumpyNumericType):
     Class representing NumPy's complex64 type.
 
     Class representing NumPy's complex64 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.complex64'
@@ -216,6 +266,11 @@ class NumpyComplex128Type(NumpyNumericType):
     Class representing NumPy's complex128 type.
 
     Class representing NumPy's complex128 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.complex128'
@@ -238,6 +293,11 @@ class NumpyComplex256Type(NumpyNumericType):
     Class representing NumPy's complex256 type.
 
     Class representing NumPy's complex256 type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'numpy.complex256'
@@ -271,17 +331,19 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         The rank of the new NumPy array.
     order : str
         The order of the memory layout for the new NumPy array.
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
     __slots__ = ('_element_type', '_container_rank', '_order')
     _name = 'numpy.ndarray'
 
-    def __new__(cls, dtype, rank, order):
+    def __new__(cls, dtype, rank, order, *, is_alias = False):
         if rank == 0:
             return dtype
         else:
             return super().__new__(cls)
 
-    def __init__(self, dtype, rank, order):
+    def __init__(self, dtype, rank, order, *, is_alias = False):
         assert isinstance(rank, int)
         assert order in (None, 'C', 'F')
         assert rank < 2 or order is not None
@@ -292,7 +354,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         self._element_type = dtype
         self._container_rank = rank
         self._order = order
-        super().__init__()
+        super().__init__(is_alias = is_alias)
 
     @lru_cache
     def __add__(self, other):
@@ -398,6 +460,20 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         """
         order = None if self._order is None else ('C' if self._order == 'F' else 'F')
         return NumpyNDArrayType(self.element_type, self._container_rank, order)
+
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+
+        Returns
+        -------
+        NumpyNDArrayType
+            A type which is an aliased version of this type.
+        """
+        cls = type(self)
+        return cls(self.element_type, self.rank, self.order, is_alias = True)
 
     @property
     def rank(self):

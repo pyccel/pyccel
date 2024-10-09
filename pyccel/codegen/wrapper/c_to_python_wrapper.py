@@ -107,15 +107,13 @@ class CToPythonWrapper(Wrapper):
             The new variable.
         """
         if isinstance(dtype, CustomDataType):
-            var = Variable(self._python_object_map[dtype],
+            var = Variable(self._python_object_map[dtype].get_alias_equivalent(),
                            self.scope.get_new_name(name),
-                           memory_handling='alias',
                            cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
                            is_temp=is_temp)
         else:
             var = Variable(PyccelPyObject(),
                            self.scope.get_new_name(name),
-                           memory_handling='alias',
                            is_temp=is_temp)
         self.scope.insert_variable(var)
         return var
@@ -281,7 +279,7 @@ class CToPythonWrapper(Wrapper):
                         symbol=arg, severity='fatal')
             func = FunctionDef(name = cast_function,
                                body      = [],
-                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
+                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o'))],
                                results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
 
             func_call = FunctionCall(func, [py_obj])
@@ -722,8 +720,7 @@ class CToPythonWrapper(Wrapper):
 
         API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
         API_var = Variable(CStackArray(BindCPointer()), API_var_name, shape = (None,),
-                                    cls_base = StackArrayClass,
-                                    memory_handling = 'alias')
+                                    cls_base = StackArrayClass)
         self.scope.insert_variable(API_var)
 
         func_scope = self.scope.new_child_scope(func_name)
@@ -733,8 +730,8 @@ class CToPythonWrapper(Wrapper):
         error_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
 
         # Create variables to temporarily modify the Python path so the file will be discovered
-        current_path = func_scope.get_temporary_variable(PyccelPyObject(), 'current_path', memory_handling='alias')
-        stash_path = func_scope.get_temporary_variable(PyccelPyObject(), 'stash_path', memory_handling='alias')
+        current_path = func_scope.get_temporary_variable(PyccelPyObject(), 'current_path')
+        stash_path = func_scope.get_temporary_variable(PyccelPyObject(), 'stash_path')
 
         body = [AliasAssign(current_path, FunctionCall(PySys_GetObject, [LiteralString("path")])),
                 AliasAssign(stash_path, FunctionCall(PyList_GetItem, [current_path, LiteralInteger(0, dtype=CNativeInt())])),
@@ -816,8 +813,7 @@ class CToPythonWrapper(Wrapper):
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
-        self_var = Variable(PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
-                              memory_handling='alias')
+        self_var = Variable(PyccelPyTypeObject(), name=self.scope.get_new_name('self'))
         self.scope.insert_variable(self_var, 'self')
         func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
         func_args = [FunctionDefArgument(a) for a in func_args]
@@ -1038,10 +1034,9 @@ class CToPythonWrapper(Wrapper):
              - strides : a Variable describing a stack array in which the strides are stored.
         """
         collect_arg = self._python_object_map[expr]
-        pyarray_collect_arg = PointerCast(collect_arg, Variable(PyccelPyArrayObject(), '_', memory_handling = 'alias'))
+        pyarray_collect_arg = PointerCast(collect_arg, Variable(PyccelPyArrayObject(), '_'))
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
-        data_var = Variable(VoidType(), self.scope.get_new_name(orig_var.name + '_data'),
-                            memory_handling='alias')
+        data_var = Variable(VoidType(is_alias = True), self.scope.get_new_name(orig_var.name + '_data'))
         shape_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_shape'),
                             shape = (orig_var.rank,))
         stride_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_strides'),
@@ -1491,15 +1486,19 @@ class CToPythonWrapper(Wrapper):
 
         if orig_var.is_ndarray:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
-                                    memory_handling='alias', new_class = Variable)
+                                    class_type = orig_var.class_type.get_alias_equivalent(),
+                                    new_class = Variable, memory_handling='alias')
             self._wrapping_arrays = orig_var.is_ndarray
             self.scope.insert_variable(arg_var, orig_var.name)
         else:
             kwargs = {'is_argument': False}
-            if isinstance(orig_var.dtype, CustomDataType):
+            class_type = orig_var.class_type
+            if isinstance(class_type, CustomDataType):
                 kwargs['memory_handling']='alias'
                 if isinstance(expr, BindCFunctionDefArgument):
-                    kwargs['class_type'] = VoidType()
+                    kwargs['class_type'] = VoidType(is_alias=True)
+                else:
+                    kwargs['class_type'] = class_type.get_alias_equivalent()
 
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
                                     **kwargs)
@@ -1525,9 +1524,8 @@ class CToPythonWrapper(Wrapper):
                 cast_type = collect_arg
                 cast = []
             else:
-                cast_type = Variable(self._python_object_map[dtype],
+                cast_type = Variable(self._python_object_map[dtype].get_alias_equivalent(),
                                     self.scope.get_new_name(collect_arg.name),
-                                    memory_handling='alias',
                                     cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True))
                 self.scope.insert_variable(cast_type)
                 cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type))]
@@ -1541,7 +1539,7 @@ class CToPythonWrapper(Wrapper):
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
             cast_func = FunctionDef(name = cast_function,
                                body      = [],
-                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
+                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o'))],
                                results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
             cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
         else:
@@ -1658,7 +1656,8 @@ class CToPythonWrapper(Wrapper):
         # Create a variable to store the C-compatible result.
         if isinstance(orig_var.class_type, NumpyNDArrayType):
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
-            c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
+            c_res = orig_var.clone(name, class_type = orig_var.class_type.get_alias_equivalent(),
+                                   is_argument = False, memory_handling = 'alias')
             self._wrapping_arrays = True
             body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])),
                     Deallocate(c_res)]
@@ -1719,9 +1718,9 @@ class CToPythonWrapper(Wrapper):
 
         if isinstance(orig_var.class_type, NumpyNDArrayType):
             # Result of calling the bind-c function
-            data_var = Variable(VoidType(), self.scope.get_new_name(orig_var_name+'_data'), memory_handling='alias')
+            data_var = Variable(VoidType(is_alias = True), self.scope.get_new_name(orig_var_name+'_data'))
             shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(orig_var_name+'_shape'),
-                            shape = (orig_var.rank,), memory_handling='alias')
+                            shape = (orig_var.rank,))
             typenum = numpy_dtype_registry[orig_var.dtype]
             # Save so we can find by iterating over func.results
             self.scope.insert_variable(data_var)
@@ -1786,7 +1785,7 @@ class CToPythonWrapper(Wrapper):
             self._wrapping_arrays = True
 
         # Create the resulting Variable with datatype `PyccelPyObject`
-        py_equiv = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
+        py_equiv = self.scope.get_temporary_variable(PyccelPyObject())
         # Save the Variable so it can be located later
         self._python_object_map[expr] = py_equiv
 
@@ -1823,8 +1822,8 @@ class CToPythonWrapper(Wrapper):
         v = expr.original_variable
 
         # Get pointer to store raw array data
-        var = self.scope.get_temporary_variable(dtype_or_var = VoidType(),
-                name = v.name + '_data', memory_handling = 'alias')
+        var = self.scope.get_temporary_variable(dtype_or_var = VoidType(is_alias=True),
+                name = v.name + '_data')
         # Create variables to store the shape of the array
         shape = [self.scope.get_temporary_variable(PythonNativeInt(),
                 v.name+'_size') for _ in range(v.rank)]
@@ -1835,11 +1834,12 @@ class CToPythonWrapper(Wrapper):
 
         # Create ndarray to store array data
         nd_var = self.scope.get_temporary_variable(dtype_or_var = v,
+                class_type = v.class_type.get_alias_equivalent(),
                 name = v.name, memory_handling = 'alias')
         alloc = Allocate(nd_var, shape=shape, status='unallocated')
         # Save raw_data into ndarray to obtain useable pointer
-        set_data = AliasAssign(DottedVariable(VoidType(), 'raw_data',
-                memory_handling = 'alias', lhs=nd_var), var)
+        set_data = AliasAssign(DottedVariable(VoidType(is_alias=True), 'raw_data',
+                lhs=nd_var), var)
 
         # Save the ndarray to vars_to_wrap to be handled as if it came from C
         body = [call, alloc, set_data] + self._wrap_Variable(nd_var)
@@ -1884,13 +1884,13 @@ class CToPythonWrapper(Wrapper):
         getter_scope = self.scope.new_child_scope(getter_name)
         self.scope = getter_scope
         getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
-                       getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+                       getter_scope.get_temporary_variable(VoidType(is_alias=True))]
         self.scope.insert_symbol(expr.name)
         getter_result = self.get_new_PyObject(expr.name, dtype = expr.dtype)
         get_val_result = FunctionDefResult(expr.clone(expr.name, new_class = Variable))
         self._python_object_map[get_val_result] = getter_result
 
-        class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
+        class_obj = Variable(lhs.dtype.get_alias_equivalent(), self.scope.get_new_name('self'))
         self.scope.insert_variable(class_obj, 'self')
 
         attrib = expr.clone(expr.name, lhs = class_obj)
@@ -1933,14 +1933,14 @@ class CToPythonWrapper(Wrapper):
         self.scope = setter_scope
         setter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        self.get_new_PyObject(f'{expr.name}_obj'),
-                       setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+                       setter_scope.get_temporary_variable(VoidType(is_alias=True))]
         setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))]
         self.scope.insert_symbol(expr.name)
         new_set_val_arg = FunctionDefArgument(expr.clone(expr.name, new_class = Variable))
         self._python_object_map[new_set_val_arg] = setter_args[1]
 
         if isinstance(expr.class_type, FixedSizeNumericType) or expr.is_alias:
-            class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
+            class_obj = Variable(lhs.dtype.get_alias_equivalent(), self.scope.get_new_name('self'))
             self.scope.insert_variable(class_obj, 'self')
 
             attrib = expr.clone(expr.name, lhs = class_obj)
@@ -2018,7 +2018,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_symbol(r.var.name)
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
-                       getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+                       getter_scope.get_temporary_variable(VoidType(is_alias=True))]
         getter_result = self.get_new_PyObject(f'{name}_obj',
                                         dtype = getattr(get_val_result, 'original_function_result_variable', get_val_result.var).dtype)
 
@@ -2072,7 +2072,7 @@ class CToPythonWrapper(Wrapper):
 
         setter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        self.get_new_PyObject(f'{name}_obj'),
-                       setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+                       setter_scope.get_temporary_variable(VoidType(is_alias=True))]
         setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))]
 
         self._python_object_map[self_arg] = setter_args[0]
@@ -2131,6 +2131,7 @@ class CToPythonWrapper(Wrapper):
 
         self._python_object_map[expr] = wrapped_class
         self._python_object_map[orig_cls_dtype] = dtype
+        self._python_object_map[orig_cls_dtype.get_alias_equivalent()] = dtype
 
         self.scope.insert_class(wrapped_class, name)
         orig_scope = expr.scope
@@ -2206,6 +2207,7 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class = PyClassDef(t, struct_name, type_name, Scope(), class_type = dtype)
                 self._python_object_map[t] = wrapped_class
                 self._python_object_map[t.class_type] = dtype
+                self._python_object_map[t.class_type.get_alias_equivalent()] = dtype
                 self.scope.imports['classes'][t.name] = wrapped_class
                 import_wrapper = True
 

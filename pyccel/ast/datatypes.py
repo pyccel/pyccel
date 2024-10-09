@@ -196,14 +196,24 @@ class PyccelType:
 
 #==============================================================================
 
-class FixedSizeType(PyccelType, metaclass=Singleton):
+class FixedSizeType(PyccelType):
     """
     Base class representing a built-in scalar datatype.
 
     The base class representing a built-in scalar datatype which can be
     represented in memory. E.g. int32, int64.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
-    __slots__ = ()
+    __slots__ = ('_is_alias',)
+
+    def __init__(self, *, is_alias = False):
+        assert isinstance(is_alias, bool)
+        self._is_alias = is_alias
+        super().__init__()
 
     @property
     def datatype(self):
@@ -280,12 +290,40 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
         assert isinstance(new_type, FixedSizeType)
         return new_type
 
-class FixedSizeNumericType(FixedSizeType):
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return self._is_alias
+
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+
+        Returns
+        -------
+        FixedSizeType
+            A type which is an aliased version of this type.
+        """
+        cls = type(self)
+        return cls(is_alias = True)
+
+class FixedSizeNumericType(FixedSizeType, metaclass=ArgumentSingleton):
     """
     Base class representing a scalar numeric datatype.
 
     The base class representing a scalar numeric datatype which can be
     represented in memory. E.g. int32, int64.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
 
@@ -312,6 +350,11 @@ class PythonNativeNumericType(FixedSizeNumericType):
     Base class representing a built-in scalar numeric datatype.
 
     Base class representing a built-in scalar numeric datatype.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
 
@@ -320,6 +363,11 @@ class PythonNativeBool(PythonNativeNumericType):
     Class representing Python's native boolean type.
 
     Class representing Python's native boolean type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'bool'
@@ -349,6 +397,11 @@ class PythonNativeInt(PythonNativeNumericType):
     Class representing Python's native integer type.
 
     Class representing Python's native integer type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'int'
@@ -376,6 +429,11 @@ class PythonNativeFloat(PythonNativeNumericType):
     Class representing Python's native floating point type.
 
     Class representing Python's native floating point type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'float'
@@ -396,6 +454,11 @@ class PythonNativeComplex(PythonNativeNumericType):
     Class representing Python's native complex type.
 
     Class representing Python's native complex type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ('_element_type',)
     _name = 'complex'
@@ -419,19 +482,24 @@ class PythonNativeComplex(PythonNativeNumericType):
         """
         return PythonNativeFloat()
 
-class VoidType(FixedSizeType):
+class VoidType(FixedSizeType, metaclass=ArgumentSingleton):
     """
     Class representing a void datatype.
 
     Class representing a void datatype. This class is especially useful
     in the C-Python wrapper when a `void*` type is needed to collect
     pointers from Fortran.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'void'
     _primitive_type = None
 
-class GenericType(FixedSizeType):
+class GenericType(FixedSizeType, metaclass=Singleton):
     """
     Class representing a generic datatype.
 
@@ -443,6 +511,9 @@ class GenericType(FixedSizeType):
     _name = 'Generic'
     _primitive_type = None
 
+    def __init__(self):
+        super().__init__(is_alias = False)
+
     @lru_cache
     def __add__(self, other):
         return other
@@ -453,7 +524,7 @@ class GenericType(FixedSizeType):
     def __hash__(self):
         return hash(self.__class__)
 
-class SymbolicType(FixedSizeType):
+class SymbolicType(FixedSizeType, metaclass=Singleton):
     """
     Class representing the datatype of a placeholder symbol.
 
@@ -465,12 +536,20 @@ class SymbolicType(FixedSizeType):
     _name = 'Symbolic'
     _primitive_type = None
 
-class CharType(FixedSizeType):
+    def __init__(self):
+        super().__init__(is_alias = False)
+
+class CharType(FixedSizeType, metaclass=ArgumentSingleton):
     """
     Class representing a char type in C/Fortran.
 
     Class representing a char type in C/Fortran. This datatype is
     useful for describing strings.
+
+    Parameters
+    ----------
+    is_alias : bool
+        Indicates if the type describes an alias.
     """
     __slots__ = ()
     _name = 'char'
@@ -521,8 +600,18 @@ class HomogeneousContainerType(ContainerType):
 
     Base class representing a datatype which contains multiple elements of a given type.
     This is the case for objects such as arrays, lists, etc.
+
+    Parameters
+    ----------
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
-    __slots__ = ()
+    __slots__ = ('_is_alias',)
+
+    def __init__(self, *, is_alias = False):
+        assert isinstance(is_alias, bool)
+        self._is_alias = is_alias
+        super().__init__()
 
     @property
     def datatype(self):
@@ -675,6 +764,15 @@ class HomogeneousContainerType(ContainerType):
         """
         return self._order # pylint: disable=no-member
 
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return self._is_alias
+
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.element_type == other.element_type
 
@@ -686,6 +784,11 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
     Class representing Python's native string type.
 
     Class representing Python's native string type.
+
+    Parameters
+    ----------
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
     __slots__ = ()
     _name = 'str'
@@ -757,15 +860,31 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
     ----------
     element_type : PyccelType
         The type of the elements of the homogeneous tuple.
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
     __slots__ = ('_element_type', '_order')
     _container_rank = 1
 
-    def __init__(self, element_type):
+    def __init__(self, element_type, *, is_alias = False):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
         self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
-        super().__init__()
+        super().__init__(is_alias = is_alias)
+
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+
+        Returns
+        -------
+        HomogeneousTupleType
+            A type which is an aliased version of this type.
+        """
+        cls = type(self)
+        return cls(self._element_type, is_alias = True)
 
     def __str__(self):
         return f'{self._name}[{self._element_type}, ...]'
@@ -781,18 +900,34 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
     ----------
     element_type : PyccelType
         The type which is stored in the homogeneous list.
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
     __slots__ = ('_element_type', '_order')
     _name = 'list'
     _container_rank = 1
 
-    def __init__(self, element_type):
+    def __init__(self, element_type, *, is_alias = False):
         assert isinstance(element_type, PyccelType)
         if element_type.rank > 0:
             errors.report("Nested lists are not yet fully supported. Using containers in lists may lead to bugs such as memory leaks", symbol=self, severity="warning")
         self._element_type = element_type
         self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
-        super().__init__()
+        super().__init__(is_alias = is_alias)
+
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+
+        Returns
+        -------
+        HomogeneousListType
+            A type which is an aliased version of this type.
+        """
+        cls = type(self)
+        return cls(self._element_type, is_alias = True)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self._element_type == other._element_type \
@@ -812,16 +947,32 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
     ----------
     element_type : PyccelType
         The type which is stored in the homogeneous set.
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
     __slots__ = ('_element_type',)
     _name = 'set'
     _container_rank = 1
     _order = None
 
-    def __init__(self, element_type):
+    def __init__(self, element_type, *, is_alias = False):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
-        super().__init__()
+        super().__init__(is_alias = is_alias)
+
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+
+        Returns
+        -------
+        HomogeneousSetType
+            A type which is an aliased version of this type.
+        """
+        cls = type(self)
+        return cls(self._element_type, is_alias = True)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self._element_type == other._element_type
@@ -831,14 +982,24 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
 
 #==============================================================================
 
-class CustomDataType(ContainerType, metaclass=Singleton):
+class CustomDataType(ContainerType, metaclass=ArgumentSingleton):
     """
     Class from which user-defined types inherit.
 
     A general class for custom data types which is used as a
     base class when a user defines their own type using classes.
+
+    Parameters
+    ----------
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
-    __slots__ = ()
+    __slots__ = ('_is_alias',)
+
+    def __init__(self, *, is_alias = False):
+        assert isinstance(is_alias, bool)
+        self._is_alias = is_alias
+        super().__init__()
 
     @property
     def datatype(self):
@@ -885,6 +1046,35 @@ class CustomDataType(ContainerType, metaclass=Singleton):
         this function returns None.
         """
         return None
+
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+
+        Returns
+        -------
+        CustomDataType
+            A type which is an aliased version of this type.
+        """
+        cls = type(self)
+        return cls(is_alias = True)
+
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return self._is_alias
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__)
+
+    def __hash__(self):
+        return hash((self.__class__, self._is_alias))
 
 class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingleton):
     """
@@ -1001,6 +1191,15 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         """
         return self._order
 
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return False
+
 class DictType(ContainerType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous dictionary type.
@@ -1014,15 +1213,18 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
         The type of the keys of the homogeneous dictionary.
     value_type : PyccelType
         The type of the values of the homogeneous dictionary.
+    is_alias : bool, default: True
+        Indicates if the type stores an alias.
     """
-    __slots__ = ('_key_type', '_value_type')
+    __slots__ = ('_key_type', '_value_type', '_is_alias')
     _name = 'dict'
     _container_rank = 1
     _order = None
 
-    def __init__(self, key_type, value_type):
+    def __init__(self, key_type, value_type, *, is_alias = False):
         self._key_type = key_type
         self._value_type = value_type
+        self._is_alias = is_alias
         super().__init__()
 
     def __str__(self):
@@ -1102,6 +1304,29 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
         """
         return None
 
+    @property
+    def is_alias(self):
+        """
+        Indicates if the type is an alias to the equivalent non-alias type.
+
+        Indicates if the type is an alias to the equivalent non-alias type.
+        """
+        return self._is_alias
+
+    def get_alias_equivalent(self):
+        """
+        Get a type which is an alias to this type.
+
+        Get a type which is an alias to this type.
+
+        Returns
+        -------
+        DictType
+            A type which is an aliased version of this type.
+        """
+        cls = type(self)
+        return cls(self.key_type, self.value_type, is_alias = True)
+
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.key_type == other.key_type \
                 and self.value_type == other.value_type
@@ -1139,6 +1364,7 @@ def DataTypeFactory(name, argnames = (), *, BaseClass=CustomDataType):
         """
         The __init__ function for the new CustomDataType class.
         """
+        is_alias = kwargs.pop('is_alias', False)
         for key, value in kwargs.items():
             # here, the argnames variable is the one passed to the
             # DataTypeFactory call
@@ -1146,7 +1372,7 @@ def DataTypeFactory(name, argnames = (), *, BaseClass=CustomDataType):
                 raise TypeError(f"Argument {key} not valid for {self.__class__.__name__}")
             setattr(self, key, value)
 
-        BaseClass.__init__(self) # pylint: disable=unnecessary-dunder-call
+        BaseClass.__init__(self, is_alias = is_alias) # pylint: disable=unnecessary-dunder-call
 
     assert iterable(argnames)
     assert all(isinstance(a, str) for a in argnames)

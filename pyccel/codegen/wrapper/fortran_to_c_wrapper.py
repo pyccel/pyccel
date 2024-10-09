@@ -341,7 +341,8 @@ class FortranToCWrapper(Wrapper):
         if var.is_ndarray or var.is_optional or isinstance(var.dtype, CustomDataType):
             new_var = Variable(BindCPointer(), self.scope.get_new_name(f'bound_{name}'),
                                 is_argument = True, is_optional = False, memory_handling='alias')
-            arg_var = var.clone(collisionless_name, is_argument = False, is_optional = False,
+            arg_var = var.clone(collisionless_name, class_type = var.class_type.get_alias_equivalent(),
+                                is_argument = False, is_optional = False,
                                 memory_handling = 'alias', allows_negative_indexes=False,
                                 new_class = Variable)
             self.scope.insert_variable(arg_var)
@@ -392,9 +393,14 @@ class FortranToCWrapper(Wrapper):
         scope.insert_symbol(name)
         wrap_dotted = isinstance(var, DottedVariable)
         stored_in_c_ptr = var.rank or isinstance(var.dtype, CustomDataType)
-        memory_handling = 'alias' if wrap_dotted and stored_in_c_ptr else var.memory_handling
+        if wrap_dotted and stored_in_c_ptr:
+            memory_handling = 'alias'
+            class_type = var.class_type.get_alias_equivalent()
+        else:
+            memory_handling = var.memory_handling
+            class_type = var.class_type
         local_var = var.clone(scope.get_expected_name(name), new_class = Variable,
-                            memory_handling = memory_handling)
+                            class_type = class_type, memory_handling = memory_handling)
 
         if stored_in_c_ptr:
             # Allocatable is not returned so it must appear in local scope
@@ -413,8 +419,8 @@ class FortranToCWrapper(Wrapper):
 
             if not (var.is_alias or wrap_dotted):
                 # Create an array variable which can be passed to CLocFunc
-                ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
-                                    memory_handling='alias')
+                ptr_var = var.clone(scope.get_new_name(name+'_ptr'), memory_handling='alias',
+                                    class_type = var.class_type.get_alias_equivalent())
                 scope.insert_variable(ptr_var)
 
                 # Define the additional steps necessary to define and fill ptr_var
@@ -598,8 +604,8 @@ class FortranToCWrapper(Wrapper):
         func_name = self.scope.get_new_name(f'{name}_bind_c_alloc'.lower())
         func_scope = self.scope.new_child_scope(func_name)
 
-        local_var = Variable(expr.class_type, func_scope.get_new_name(f'{name}_obj'),
-                             cls_base = expr, memory_handling='alias')
+        local_var = Variable(expr.class_type.get_alias_equivalent(), func_scope.get_new_name(f'{name}_obj'),
+                             cls_base = expr)
 
         # Allocatable is not returned so it must appear in local scope
         func_scope.insert_variable(local_var)

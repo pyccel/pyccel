@@ -14,6 +14,7 @@ from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
+from pyccel.ast.datatypes  import VoidType
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
 from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
 from pyccel.ast.c_concepts import ObjectAddress
@@ -51,7 +52,8 @@ class CWrapperCodePrinter(CCodePrinter):
     dtype_registry = {**CCodePrinter.dtype_registry,
                       PyccelPyObject() : 'PyObject',
                       PyccelPyArrayObject() : 'PyArrayObject',
-                      PyccelPyTypeObject() : 'PyTypeObject',
+                      PyccelPyTypeObject() : 'PyTypeObject*',
+                      VoidType(is_alias=True) : 'void',
                       BindCPointer()  : 'void'}
 
     def __init__(self, filename, target_language, **settings):
@@ -506,8 +508,8 @@ class CWrapperCodePrinter(CCodePrinter):
             if var.rank == 0:
                 return f'{static}{external}{declaration_type} {variable}{init};\n'
 
-            size = var.shape[0]
-            if isinstance(size, LiteralInteger):
+            size = var.alloc_shape[0]
+            if isinstance(size, int):
                 return f'{static}{external}{declaration_type} {variable}[{size}];\n'
             else:
                 return f'{static}{external}{declaration_type}* {variable}{init};\n'

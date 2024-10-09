@@ -21,11 +21,17 @@ __all__ = ('CMacro',
 
 #------------------------------------------------------------------------------
 
-class CNativeInt(FixedSizeType):
+class CNativeInt(FixedSizeType, metaclass=ArgumentSingleton):
     """
     Class representing C's native integer type.
 
     Class representing C's native integer type.
+
+    Parameters
+    ----------
+    is_alias : bool
+        True if the object stores a reference to a PyccelPyClassType defined
+        elsewhere. False otherwise.
     """
     __slots__ = ()
     _name = 'int'
@@ -53,7 +59,7 @@ class CStackArray(HomogeneousContainerType, metaclass=ArgumentSingleton):
     def __init__(self, element_type):
         assert isinstance(element_type, FixedSizeType)
         self._element_type = element_type
-        super().__init__()
+        super().__init__(is_alias = True)
 
 #------------------------------------------------------------------------------
 class ObjectAddress(TypedAstNode):
