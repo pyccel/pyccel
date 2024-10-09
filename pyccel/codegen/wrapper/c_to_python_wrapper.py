@@ -309,12 +309,13 @@ class CToPythonWrapper(Wrapper):
                 flag = numpy_flag_c_contig
 
             if raise_error:
-                check_func = pyarray_check
-                func_call = FunctionCall(check_func, [ObjectAddress(LiteralString(arg.name)), py_obj, type_ref, LiteralInteger(rank), flag])
+                type_check_condition = FunctionCall(pyarray_check,
+                                [ObjectAddress(LiteralString(arg.name)), py_obj, type_ref,
+                                 LiteralInteger(rank), flag])
             else:
-                check_func = is_numpy_array
+                type_check_condition = FunctionCall(is_numpy_array,
+                                [py_obj, type_ref, LiteralInteger(rank), flag])
 
-            type_check_condition = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
         elif isinstance(arg.class_type, HomogeneousTupleType):
             # Create type check result variable
             type_check_condition = self.scope.get_temporary_variable(PythonNativeBool(), 'is_homog_tuple')
@@ -1561,11 +1562,7 @@ class CToPythonWrapper(Wrapper):
 
         # Create any necessary type checks and errors
         if expr.has_default:
-            #check_func, err = self._get_type_check_condition(collect_arg, orig_var, False, body)
-            #body.append(If( IfSection(check_func, cast),
-            #            IfSection(PyccelIsNot(collect_arg, Py_None), [*err, Return([self._error_exit_code])])
-            #            ))
-            check_func, err = self._get_check_function(collect_arg, orig_var, True)
+            check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body)
             body.append(If( IfSection(PyccelIsNot(collect_arg, Py_None), [
                                 If(IfSection(check_func, cast), IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])]))])))
         elif not (in_interface or bound_argument):
@@ -1610,12 +1607,13 @@ class CToPythonWrapper(Wrapper):
             self._wrapping_arrays = True
             collect_arg = self._python_object_map[expr]
             parts = self._get_array_parts(expr)
-            body = parts['body']
+            array_body = parts['body']
             shape = parts['shape']
             strides = parts['strides']
             args = [parts['data']] + [IndexedElement(shape, i) for i in range(orig_var.rank)] \
                     + [IndexedElement(strides, i) for i in range(orig_var.rank)]
-            check_func, err = self._get_check_function(collect_arg, orig_var, True)
+            body = []
+            check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body)
 
             if_sections = []
             if orig_var.is_optional:
@@ -1623,9 +1621,9 @@ class CToPythonWrapper(Wrapper):
                         [Assign(IndexedElement(shape, i), 0) for i in range(orig_var.rank)] + \
                         [Assign(IndexedElement(strides, i), 1) for i in range(orig_var.rank)]
                 if_sections = [IfSection(PyccelIs(collect_arg, Py_None), default_body)]
-            if_sections += [IfSection(check_func, body),
+            if_sections += [IfSection(check_func, array_body),
                         IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])])]
-            body = [If(*if_sections)]
+            body += [If(*if_sections)]
             return {'body': body, 'args': args}
         else:
             raise NotImplementedError(f"Wrapping is not yet handled for type {orig_var.class_type}")
