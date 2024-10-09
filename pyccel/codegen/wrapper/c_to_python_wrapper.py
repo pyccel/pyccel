@@ -109,7 +109,6 @@ class CToPythonWrapper(Wrapper):
         if isinstance(dtype, CustomDataType):
             var = Variable(self._python_object_map[dtype].get_alias_equivalent(),
                            self.scope.get_new_name(name),
-                           memory_handling='alias',
                            cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
                            is_temp=is_temp)
         else:
@@ -280,7 +279,7 @@ class CToPythonWrapper(Wrapper):
                         symbol=arg, severity='fatal')
             func = FunctionDef(name = cast_function,
                                body      = [],
-                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
+                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o'))],
                                results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
 
             func_call = FunctionCall(func, [py_obj])
@@ -721,8 +720,7 @@ class CToPythonWrapper(Wrapper):
 
         API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
         API_var = Variable(CStackArray(BindCPointer()), API_var_name, shape = (None,),
-                                    cls_base = StackArrayClass,
-                                    memory_handling = 'alias')
+                                    cls_base = StackArrayClass)
         self.scope.insert_variable(API_var)
 
         func_scope = self.scope.new_child_scope(func_name)
@@ -732,8 +730,8 @@ class CToPythonWrapper(Wrapper):
         error_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
 
         # Create variables to temporarily modify the Python path so the file will be discovered
-        current_path = func_scope.get_temporary_variable(PyccelPyObject(), 'current_path', memory_handling='alias')
-        stash_path = func_scope.get_temporary_variable(PyccelPyObject(), 'stash_path', memory_handling='alias')
+        current_path = func_scope.get_temporary_variable(PyccelPyObject(), 'current_path')
+        stash_path = func_scope.get_temporary_variable(PyccelPyObject(), 'stash_path')
 
         body = [AliasAssign(current_path, FunctionCall(PySys_GetObject, [LiteralString("path")])),
                 AliasAssign(stash_path, FunctionCall(PyList_GetItem, [current_path, LiteralInteger(0, dtype=CNativeInt())])),
@@ -1036,10 +1034,9 @@ class CToPythonWrapper(Wrapper):
              - strides : a Variable describing a stack array in which the strides are stored.
         """
         collect_arg = self._python_object_map[expr]
-        pyarray_collect_arg = PointerCast(collect_arg, Variable(PyccelPyArrayObject(), '_', memory_handling = 'alias'))
+        pyarray_collect_arg = PointerCast(collect_arg, Variable(PyccelPyArrayObject(), '_'))
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
-        data_var = Variable(VoidType(), self.scope.get_new_name(orig_var.name + '_data'),
-                            memory_handling='alias')
+        data_var = Variable(VoidType(is_alias = True), self.scope.get_new_name(orig_var.name + '_data'))
         shape_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_shape'),
                             shape = (orig_var.rank,))
         stride_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_strides'),
@@ -1542,7 +1539,7 @@ class CToPythonWrapper(Wrapper):
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
             cast_func = FunctionDef(name = cast_function,
                                body      = [],
-                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
+                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o'))],
                                results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
             cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
         else:
@@ -1660,7 +1657,7 @@ class CToPythonWrapper(Wrapper):
         if isinstance(orig_var.class_type, NumpyNDArrayType):
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
             c_res = orig_var.clone(name, class_type = orig_var.class_type.get_alias_equivalent(),
-                                   is_argument = False, memory_handling='alias')
+                                   is_argument = False)
             self._wrapping_arrays = True
             body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])),
                     Deallocate(c_res)]
@@ -1721,9 +1718,9 @@ class CToPythonWrapper(Wrapper):
 
         if isinstance(orig_var.class_type, NumpyNDArrayType):
             # Result of calling the bind-c function
-            data_var = Variable(VoidType(), self.scope.get_new_name(orig_var_name+'_data'), memory_handling='alias')
+            data_var = Variable(VoidType(is_alias = True), self.scope.get_new_name(orig_var_name+'_data'))
             shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(orig_var_name+'_shape'),
-                            shape = (orig_var.rank,), memory_handling='alias')
+                            shape = (orig_var.rank,))
             typenum = numpy_dtype_registry[orig_var.dtype]
             # Save so we can find by iterating over func.results
             self.scope.insert_variable(data_var)
@@ -1788,7 +1785,7 @@ class CToPythonWrapper(Wrapper):
             self._wrapping_arrays = True
 
         # Create the resulting Variable with datatype `PyccelPyObject`
-        py_equiv = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
+        py_equiv = self.scope.get_temporary_variable(PyccelPyObject())
         # Save the Variable so it can be located later
         self._python_object_map[expr] = py_equiv
 

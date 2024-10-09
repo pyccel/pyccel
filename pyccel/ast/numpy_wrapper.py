@@ -92,13 +92,13 @@ def get_numpy_max_acceptable_version_file():
 
 PyArray_Check = FunctionDef(name      = 'PyArray_Check',
                             body      = [],
-                            arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling = 'alias'))],
+                            arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o'))],
                             results   = [FunctionDefResult(Variable(PythonNativeBool(), name='b'))])
 
 # NumPy array to c ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_to_ndarray = FunctionDef(
                 name      = 'pyarray_to_ndarray',
-                arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling = 'alias'))],
+                arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'a'))],
                 body      = [],
                 results   = [FunctionDefResult(Variable(NumpyNDArrayType(GenericType(), 1, None), 'array'))])
 
@@ -106,7 +106,7 @@ pyarray_to_ndarray = FunctionDef(
 pyarray_check = FunctionDef(
                 name      = 'pyarray_check',
                 arguments = [
-                        FunctionDefArgument(Variable(CharType(), 'name', memory_handling='alias')),
+                        FunctionDefArgument(Variable(CharType(is_alias = True), 'name')),
                         FunctionDefArgument(Variable(PyccelPyObject(), 'a')),
                         FunctionDefArgument(Variable(CNativeInt(), 'dtype')),
                         FunctionDefArgument(Variable(CNativeInt(), 'rank')),
@@ -129,17 +129,17 @@ is_numpy_array = FunctionDef(
 get_strides_and_shape_from_numpy_array = FunctionDef(
         name = 'get_strides_and_shape_from_numpy_array',
         arguments = [
-            FunctionDefArgument(Variable(PyccelPyObject(), 'arr', memory_handling='alias')),
-            FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'shape', memory_handling='alias')),
-            FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'strides', memory_handling='alias'))
+            FunctionDefArgument(Variable(PyccelPyObject(), 'arr')),
+            FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'shape')),
+            FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'strides'))
             ],
         body = [],
         results = [])
 
 PyArray_DATA = FunctionDef(name = 'PyArray_DATA',
         body = [],
-        arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), 'arr', memory_handling='alias'))],
-        results = [FunctionDefResult(Variable(VoidType(), 'data', memory_handling='alias'))])
+        arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), 'arr'))],
+        results = [FunctionDefResult(Variable(VoidType(is_alias = True), 'data'))])
 
 # Return the shape of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_dim  = FunctionDef(name    = 'nd_ndim',
@@ -164,23 +164,23 @@ array_get_f_step = FunctionDef(name    = 'nd_nstep_F',
 array_get_data  = FunctionDef(name   = 'nd_data',
                            body      = [],
                            arguments = [FunctionDefArgument(Variable(NumpyNDArrayType(GenericType(), 1, None), name = 'o', is_optional=True))],
-                           results   = [FunctionDefResult(Variable(BindCPointer(), name = 'v', memory_handling='alias'))])
+                           results   = [FunctionDefResult(Variable(BindCPointer(), name = 'v'))])
 
 PyArray_SetBaseObject = FunctionDef(name   = 'PyArray_SetBaseObject',
                                     body      = [],
-                                    arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'arr', memory_handling='alias')),
-                                                 FunctionDefArgument(Variable(PyccelPyObject(), name = 'obj', memory_handling='alias'))],
+                                    arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'arr')),
+                                                 FunctionDefArgument(Variable(PyccelPyObject(), name = 'obj'))],
                                     results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
 
 to_pyarray = FunctionDef(name = 'to_pyarray',
                          body = [],
                          arguments = [FunctionDefArgument(Variable(CNativeInt(), name = 'nd')),
                                       FunctionDefArgument(Variable(CNativeInt(), name = 'typenum')),
-                                      FunctionDefArgument(Variable(VoidType(), name = 'data', memory_handling='alias')),
+                                      FunctionDefArgument(Variable(VoidType(is_alias = True), name = 'data')),
                                       FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'shape')),
                                       FunctionDefArgument(Variable(PythonNativeBool(), 'c_order')),
                                       FunctionDefArgument(Variable(PythonNativeBool(), 'release_memory'))],
-                         results = [FunctionDefResult(Variable(PyccelPyObject(), name = 'arr', memory_handling='alias'))]
+                         results = [FunctionDefResult(Variable(PyccelPyObject(), name = 'arr'))]
                          )
 
 
