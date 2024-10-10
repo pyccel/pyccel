@@ -288,8 +288,7 @@ class PythonComplex(PyccelFunction):
         return super().__new__(cls)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
-        self._is_cast = isinstance(arg0.dtype.primitive_type, PrimitiveComplexType) and \
-                        isinstance(arg1, Literal) and arg1.python_value == 0
+        self._is_cast = isinstance(arg1, Literal) and arg1.python_value == 0
 
         if self._is_cast:
             self._real_part = self._real_cast(arg0)
@@ -622,6 +621,10 @@ class PythonLen(PyccelFunction):
     be calculated in the generated code, but in an inhomogeneous object
     the integer value of the shape must be returned.
 
+    If the shape is unknown and cannot be determined at compile time then
+    the first element of the shape is a `PyccelArrayShapeElement` which
+    can be used to generate the equivalent C code using the `STC` library.
+
     Parameters
     ----------
     arg : TypedAstNode
@@ -726,8 +729,10 @@ class PythonListFunction(PyccelFunction):
     __slots__ = ('_class_type', '_shape')
     _attribute_nodes = ()
 
-    def __new__(cls, arg):
-        if isinstance(arg, PythonList):
+    def __new__(cls, arg = None):
+        if arg is None:
+            return PythonList()
+        elif isinstance(arg, PythonList):
             return arg
         elif isinstance(arg.shape[0], LiteralInteger):
             return PythonList(*[arg[i] for i in range(arg.shape[0])])
@@ -770,6 +775,11 @@ class PythonSet(TypedAstNode):
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
+        elif len(args) == 0:
+            self._shape = (LiteralInteger(0),)
+            self._class_type = HomogeneousSetType(GenericType())
+            return
+
         arg0 = args[0]
         is_homogeneous = arg0.class_type is not GenericType() and \
                          all(a.class_type is not GenericType() and \
@@ -825,8 +835,10 @@ class PythonSetFunction(PyccelFunction):
 
     __slots__ = ('_shape', '_class_type')
     name = 'set'
-    def __new__(cls, arg):
-        if isinstance(arg.class_type, HomogeneousSetType):
+    def __new__(cls, arg = None):
+        if arg is None:
+            return PythonSet()
+        elif isinstance(arg.class_type, HomogeneousSetType):
             return arg
         elif isinstance(arg, (PythonList, PythonSet, PythonTuple)):
             return PythonSet(*arg)
@@ -894,6 +906,9 @@ class PythonDict(PyccelFunction):
     def __repr__(self):
         args = ', '.join(f'{repr(k)}: {repr(v)}' for k,v in self)
         return f'PythonDict({args})'
+
+    def __len__(self):
+        return len(self._keys)
 
     @property
     def keys(self):

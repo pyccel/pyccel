@@ -20,6 +20,7 @@ from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
 from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
+from pyccel.codegen.utilities      import generate_extension_modules
 from pyccel.codegen.utilities      import internal_libs
 from pyccel.codegen.utilities      import external_libs
 from pyccel.codegen.python_wrapper import create_shared_library
@@ -190,7 +191,7 @@ def execute_pyccel(fname, *,
     # Get compiler object
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
     src_compiler = Compiler(compiler, language, debug)
-    wrapper_compiler = Compiler('GNU', 'c', debug)
+    wrapper_compiler = Compiler(compiler, 'c', debug)
 
     # Export the compiler information if requested
     if compiler_export_file:
@@ -334,14 +335,33 @@ def execute_pyccel(fname, *,
                               verbose  = verbose)
 
             mod_obj.add_dependencies(stdlib)
-
+            modules.append(stdlib)
 
     # Iterate over the external_libs list and determine if the printer
     # requires an external lib to be included.
-    for key in codegen.get_printer_imports():
-        lib_name = key.split("/", 1)[0]
-        if lib_name in external_libs:
-            lib_dest_path = copy_internal_library(lib_name, pyccel_dirpath)
+    for key, import_node in codegen.get_printer_imports().items():
+        try:
+            deps = generate_extension_modules(key, import_node, pyccel_dirpath,
+                                              includes     = includes,
+                                              libs         = compile_libs,
+                                              libdirs      = libdirs,
+                                              dependencies = modules,
+                                              accelerators = accelerators,
+                                              language = language)
+        except NotImplementedError as error:
+            errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+                severity='error',
+                traceback=error.__traceback__)
+            handle_error('code generation (wrapping)')
+            raise PyccelCodegenError(msg) from None
+        except PyccelError:
+            handle_error('code generation (wrapping)')
+            raise
+        for d in deps:
+            recompile_object(d,
+                              compiler = src_compiler,
+                              verbose  = verbose)
+            mod_obj.add_dependencies(d)
 
     if convert_only:
         # Change working directory back to starting point
