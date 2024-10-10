@@ -290,27 +290,29 @@ def test_set_with_set(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_init_with_set(python_only_language):
+def test_init_with_set(language):
     def init_with_set():
         b = set({4.6, 7.9, 2.5})
-        return b
+        return len(b), b.pop(), b.pop(), b.pop()
 
-    epyc_init_with_set = epyccel(init_with_set, language = python_only_language)
+    epyc_init_with_set = epyccel(init_with_set, language = language)
     pyccel_result = epyc_init_with_set()
     python_result = init_with_set()
     assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_set_init_with_list(python_only_language):
+def test_set_init_with_list(language):
     def init_with_list():
         b = set([4.6, 7.9, 2.5])
-        return b
+        return len(b), b.pop(), b.pop(), b.pop()
 
-    epyc_init_with_list = epyccel(init_with_list, language = python_only_language)
+    epyc_init_with_list = epyccel(init_with_list, language = language)
     pyccel_result = epyc_init_with_list()
     python_result = init_with_list()
     assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 
 def test_set_copy_from_arg1(python_only_language):
