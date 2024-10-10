@@ -262,7 +262,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
         The order requested in the type annotation.
     """
     __slots__ = ('_dtype', '_order')
-    _attribute_nodes = ()
+    _attribute_nodes = ('_dtype',)
     def __init__(self, dtype, order = None):
         if not isinstance(dtype, (str, DottedName, IndexedElement)):
             raise ValueError("Syntactic datatypes should be strings")
