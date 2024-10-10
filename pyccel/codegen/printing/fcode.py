@@ -670,9 +670,10 @@ class FCodePrinter(CodePrinter):
         # Get the type used in the dict for compatible types (e.g. float vs float64)
         matching_expr_type = next((t for t in self._generated_gFTL_types if expr_type == t), None)
         matching_expr_extensions = next((t for t in self._generated_gFTL_extensions if expr_type == t), None)
+        typename = self._print(expr_type)
+        mod_name = f'{typename}_extensions_mod'
         if matching_expr_extensions:
             module = self._generated_gFTL_extensions[matching_expr_extensions]
-            mod_name = f'{module.name}_extensions'
         else:
             if matching_expr_type is None:
                 matching_expr_type = self._build_gFTL_module(expr_type)
@@ -681,16 +682,15 @@ class FCodePrinter(CodePrinter):
             type_module = matching_expr_type.source_module
 
             if isinstance(expr_type, HomogeneousSetType):
+                set_filename = LiteralString('set/template.inc')
                 imports_and_macros = [Import(LiteralString('Set_extensions.inc'), Module('_', (), ())) \
-                                        if getattr(i, 'source', LiteralString('')).python_value.startswith('set/') else i \
+                                        if getattr(i, 'source', None) == set_filename else i \
                                         for i in type_module.imports]
                 imports_and_macros.insert(0, matching_expr_type)
                 self.add_import(Import('gFTL_functions/Set_extensions', Module('_', (), ()), ignore_at_print = True))
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
 
-            typename = self._print(expr_type)
-            mod_name = f'{typename}_extensions_mod'
             module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
                                        is_external = True)
 
