@@ -1187,7 +1187,7 @@ class CCodePrinter(CodePrinter):
                                  unravelled = True)
                 code += self._print(body)
             elif isinstance(f, LiteralString):
-                args_format += sep + f.python_value
+                args_format.append(f.python_value)
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
