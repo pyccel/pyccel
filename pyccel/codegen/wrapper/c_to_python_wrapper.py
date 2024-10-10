@@ -299,10 +299,10 @@ class CToPythonWrapper(Wrapper):
             except KeyError:
                 errors.report(f"Can't check the type of an array of {dtype}\n"+PYCCEL_RESTRICTION_TODO,
                         symbol=arg, severity='fatal')
+            self._wrapping_arrays = True
 
             # order flag
             if rank == 1:
-                self._wrapping_arrays = True
                 flag     = no_order_check
             elif arg.order == 'F':
                 flag = numpy_flag_f_contig
@@ -310,7 +310,6 @@ class CToPythonWrapper(Wrapper):
                 flag = numpy_flag_c_contig
 
             if raise_error:
-                self._wrapping_arrays = True
                 type_check_condition = FunctionCall(pyarray_check,
                                 [ObjectAddress(LiteralString(arg.name)), py_obj, type_ref,
                                  LiteralInteger(rank), flag])
