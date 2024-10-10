@@ -1527,7 +1527,6 @@ class CToPythonWrapper(Wrapper):
         bound_argument = getattr(expr, 'wrapping_bound_argument', expr.bound_argument)
 
         # Collect the function which casts from a Python object to a C object
-        dtype = orig_var.dtype
         arg_extraction = self._extract_FunctionDefArgument(orig_var, collect_arg, bound_argument, is_bind_c_argument)
 
         body = []
@@ -1536,12 +1535,17 @@ class CToPythonWrapper(Wrapper):
 
         # Initialise to any default value
         if expr.has_default:
-            arg_var = arg_vars[0]
-            default_val = expr.value
-            if isinstance(default_val, Nil):
-                body.insert(0, AliasAssign(arg_var, default_val))
+            if 'default_init' in arg_extraction:
+                for i, l in enumerate(arg_extraction['default_init']):
+                    body.insert(i, l)
             else:
-                body.insert(0, Assign(arg_var, default_val))
+                assert len(arg_vars) == 1
+                arg_var = arg_vars[0]
+                default_val = expr.value
+                if isinstance(default_val, Nil):
+                    body.insert(0, AliasAssign(arg_var, default_val))
+                else:
+                    body.insert(0, Assign(arg_var, default_val))
 
         # Create any necessary type checks and errors
         if expr.has_default:
@@ -2387,13 +2391,10 @@ class CToPythonWrapper(Wrapper):
             args = [parts['data']] + [IndexedElement(shape, i) for i in range(orig_var.rank)] \
                     + [IndexedElement(strides, i) for i in range(orig_var.rank)]
 
-            if_sections = []
-            if orig_var.is_optional:
-                default_body = [AliasAssign(parts['data'], Nil())] + \
-                        [Assign(IndexedElement(shape, i), 0) for i in range(orig_var.rank)] + \
-                        [Assign(IndexedElement(strides, i), 1) for i in range(orig_var.rank)]
-                if_sections = [IfSection(PyccelIs(collect_arg, Py_None), default_body)]
-            return {'body': body, 'args': args}
+            default_body = [AliasAssign(parts['data'], Nil())] + \
+                    [Assign(IndexedElement(shape, i), 0) for i in range(orig_var.rank)] + \
+                    [Assign(IndexedElement(strides, i), 1) for i in range(orig_var.rank)]
+            return {'body': body, 'args': args, 'default_init': default_body}
         else:
             assert not bound_argument
             self._wrapping_arrays = True
