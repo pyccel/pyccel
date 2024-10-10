@@ -1677,8 +1677,10 @@ class CCodePrinter(CodePrinter):
             var_code = self._print(ObjectAddress(variable))
             if expr.like:
                 declaration_type = self.get_declare_type(expr.like)
-                shape = ' * '.join(self._print(s) for s in expr.shape)
-                return f'{var_code} = malloc(sizeof({declaration_type}) * {shape});\n'
+                malloc_size = f'sizeof({declaration_type})'
+                if variable.rank:
+                    malloc_size = ' * '.join([malloc_size, *(self._print(s) for s in expr.shape)])
+                return f'{var_code} = malloc({malloc_size});\n'
             else:
                 raise NotImplementedError(f"Allocate not implemented for {variable}")
         else:
