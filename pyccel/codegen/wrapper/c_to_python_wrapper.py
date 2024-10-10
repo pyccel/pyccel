@@ -2459,12 +2459,12 @@ class CToPythonWrapper(Wrapper):
             errors.report("Optional tuples are not yet supported",
                     severity='fatal', symbol=orig_var)
 
-        data_var = Variable(CStackArray(orig_var.class_type.element_type), self.scope.get_new_name(orig_var.name + '_data'),
-                            memory_handling='alias')
         size_var = self.scope.get_temporary_variable(PythonNativeInt(), self.scope.get_new_name(f'{orig_var.name}_size'))
-        self.scope.insert_variable(data_var)
 
         if is_bind_c_argument:
+            data_var = Variable(CStackArray(orig_var.class_type.element_type), self.scope.get_new_name(orig_var.name + '_data'),
+                                memory_handling='alias')
+            self.scope.insert_variable(data_var)
             arg_vars = [data_var, size_var]
             fill_var = data_var
         else:
