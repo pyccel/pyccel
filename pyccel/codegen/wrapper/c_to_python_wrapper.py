@@ -302,6 +302,7 @@ class CToPythonWrapper(Wrapper):
 
             # order flag
             if rank == 1:
+                self._wrapping_arrays = True
                 flag     = no_order_check
             elif arg.order == 'F':
                 flag = numpy_flag_f_contig
