@@ -2386,7 +2386,6 @@ class CToPythonWrapper(Wrapper):
             strides = parts['strides']
             args = [parts['data']] + [IndexedElement(shape, i) for i in range(orig_var.rank)] \
                     + [IndexedElement(strides, i) for i in range(orig_var.rank)]
-            check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body)
 
             if_sections = []
             if orig_var.is_optional:
@@ -2450,29 +2449,40 @@ class CToPythonWrapper(Wrapper):
         list[PyccelAstNode]
             A list of expressions which extract the argument from collect_arg into arg_var.
         """
-        if arg_var is None:
+        assert arg_var is None
+
+        if orig_var.rank > 1:
+            errors.report("Wrapping multi-level tuples is not yet supported",
+                    severity='fatal', symbol=orig_var)
+
+        if orig_var.is_optional:
+            errors.report("Optional tuples are not yet supported",
+                    severity='fatal', symbol=orig_var)
+
+        data_var = Variable(CStackArray(orig_var.class_type.element_type), self.scope.get_new_name(orig_var.name + '_data'),
+                            memory_handling='alias')
+        size_var = self.scope.get_temporary_variable(PythonNativeInt(), self.scope.get_new_name(f'{orig_var.name}_size'))
+        self.scope.insert_variable(data_var)
+
+        if is_bind_c_argument:
+            arg_vars = [data_var, size_var]
+            fill_var = data_var
+        else:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     memory_handling='heap', new_class = Variable)
             self._wrapping_arrays = True
             self.scope.insert_variable(arg_var, orig_var.name)
-
-        if arg_var.rank > 1:
-            errors.report("Wrapping multi-level tuples is not yet supported",
-                    severity='fatal', symbol=orig_var)
-
-        if arg_var.is_optional:
-            errors.report("Optional tuples are not yet supported",
-                    severity='fatal', symbol=orig_var)
+            arg_vars = [arg_var]
+            fill_var = arg_var
 
         assert not bound_argument
         idx = self.scope.get_temporary_variable(CNativeInt())
-        size_var = self.scope.get_temporary_variable(PythonNativeInt(), f'{orig_var.name}_size')
         indexed_orig_var = IndexedElement(orig_var, idx)
-        indexed_arg_var = IndexedElement(arg_var, idx)
+        indexed_arg_var = IndexedElement(fill_var, idx)
         indexed_collect_arg = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
 
-        cast = [Assign(size_var, FunctionCall(PyTuple_Size, [collect_arg])),
-                Allocate(arg_var, shape = (size_var,), status = 'unallocated')]
+        body = [Assign(size_var, FunctionCall(PyTuple_Size, [collect_arg])),
+                Allocate(fill_var, shape = (size_var,), status = 'unallocated', like=indexed_orig_var)]
 
         for_scope = self.scope.create_new_loop_scope()
         self.scope = for_scope
@@ -2481,5 +2491,7 @@ class CToPythonWrapper(Wrapper):
                                     bound_argument, is_bind_c_argument, arg_var = indexed_arg_var)['body']
         self.exit_scope()
 
-        cast.append(For(idx, Iterable(PythonRange(size_var)), for_body, scope = for_scope))
-        return {'body': cast, 'args': [arg_var]}
+        body.append(For(idx, Iterable(PythonRange(size_var)), for_body, scope = for_scope))
+
+
+        return {'body': body, 'args': arg_vars}
