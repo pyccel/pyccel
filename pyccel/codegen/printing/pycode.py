@@ -11,7 +11,7 @@ from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, 
 from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, VoidType
+from pyccel.ast.datatypes  import HomogeneousTupleType, VoidType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpyext   import numpy_target_swap
