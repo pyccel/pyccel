@@ -1045,36 +1045,6 @@ class CCodePrinter(CodePrinter):
                                .replace("'", "\\'")
         return '"{}"'.format(format_str)
 
-    def _undo_print_LiteralString(self, expr):
-        """
-        Undo the changes done by _print_LiteralString() function on the given string.
-
-        This is required so that escape characters are displayed correctly in the string.
-
-        Parameters
-        ----------
-        expr : str
-            String to undo the effect of _print_LiteralString() function.
-
-        Returns
-        -------
-        str
-            The resultant string after the effects of _print_LiteralString() function
-            is reverted.
-        """
-        expr = str(expr)
-        expr = expr.replace("\\\\", "\\")\
-                    .replace('\\b', '\b')\
-                    .replace('\a', '\\a')\
-                    .replace('\f', '\\f')\
-                    .replace("\n", "\\n")\
-                    .replace('\r', '\\r')\
-                    .replace('\t', '\\t')\
-                    .replace('\v', '\\v')\
-                    .replace('\\"', '"')\
-                    .replace("\\'", "'")
-        return expr
-
     def get_print_format_and_arg(self, var):
         """
         Get the C print format string for the object var.
@@ -1217,10 +1187,7 @@ class CCodePrinter(CodePrinter):
                                  unravelled = True)
                 code += self._print(body)
             elif isinstance(f, LiteralString):
-                arg_format, arg = self.get_print_format_and_arg(f)
-                if isinstance(arg, str):
-                    arg = self._undo_print_LiteralString(arg)
-                    args_format.append(arg[1:-1])
+                args_format += sep + f.python_value
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
