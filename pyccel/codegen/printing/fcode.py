@@ -547,7 +547,6 @@ class FCodePrinter(CodePrinter):
             mod_name = module.name
         else:
             if isinstance(expr_type, HomogeneousListType):
-                include = Import(LiteralString('vector/template.inc'), Module('_', (), ()))
                 element_type = expr_type.element_type
                 if isinstance(element_type, FixedSizeNumericType):
                     imports_and_macros = [MacroDefinition('T', element_type.primitive_type),
@@ -560,8 +559,8 @@ class FCodePrinter(CodePrinter):
                     raise NotImplementedError("Support for lists of types defined in other modules is not yet implemented")
                 imports_and_macros.append(MacroDefinition('Vector', expr_type))
                 imports_and_macros.append(MacroDefinition('VectorIterator', IteratorType(expr_type)))
+                imports_and_macros.append(Import(LiteralString('vector/template.inc'), Module('_', (), ())))
             elif isinstance(expr_type, HomogeneousSetType):
-                include = Import(LiteralString('set/template.inc'), Module('_', (), ()))
                 element_type = expr_type.element_type
                 imports_and_macros = []
                 if isinstance(element_type, FixedSizeNumericType):
@@ -580,12 +579,14 @@ class FCodePrinter(CodePrinter):
                     imports_and_macros.extend([MacroDefinition('T', element_type.primitive_type),
                               MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type)),
                               MacroDefinition('T_LT(x,y)', lt_def)])
+                    self.add_import(Import('gFTL_Extensions/Set_extensions', Module('_', (), ()), ignore_at_print = True))
                 else:
                     raise NotImplementedError("Support for sets of types which define their own < operator is not yet implemented")
                 imports_and_macros.append(MacroDefinition('Set', expr_type))
                 imports_and_macros.append(MacroDefinition('SetIterator', IteratorType(expr_type)))
+                imports_and_macros.append(Import(LiteralString('set/template.inc'), Module('_', (), ())))
+                imports_and_macros.append(Import(LiteralString('gFTL_Extensions/Set_extensions.inc'), Module('_', (), ())))
             elif isinstance(expr_type, DictType):
-                include = Import(LiteralString('map/template.inc'), Module('_', (), ()))
                 key_type = expr_type.key_type
                 value_type = expr_type.value_type
                 imports_and_macros = []
@@ -615,12 +616,13 @@ class FCodePrinter(CodePrinter):
                 imports_and_macros.append(MacroDefinition('Pair', PairType(key_type, value_type)))
                 imports_and_macros.append(MacroDefinition('Map', expr_type))
                 imports_and_macros.append(MacroDefinition('MapIterator', IteratorType(expr_type)))
+                imports_and_macros.append(Import(LiteralString('map/template.inc'), Module('_', (), ())))
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
 
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
-            module = Module(mod_name, (), (), scope = Scope(), imports = [*imports_and_macros, include],
+            module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
                                        is_external = True)
 
             self._generated_gFTL_extensions[expr_type] = module
