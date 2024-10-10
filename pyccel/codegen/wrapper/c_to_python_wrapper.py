@@ -2267,7 +2267,7 @@ class CToPythonWrapper(Wrapper):
 
         body = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
 
-        if arg_var.is_optional:
+        if getattr(orig_var, 'is_optional', False):
             memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
             body.insert(0, AliasAssign(arg_var, memory_var))
 
@@ -2477,8 +2477,8 @@ class CToPythonWrapper(Wrapper):
         for_scope = self.scope.create_new_loop_scope()
         self.scope = for_scope
         for_body = [AliasAssign(indexed_collect_arg, FunctionCall(PyTuple_GetItem, [collect_arg, idx]))]
-        for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_arg_var, indexed_collect_arg,
-                                    bound_argument, is_bind_c_argument)['body']
+        for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_collect_arg,
+                                    bound_argument, is_bind_c_argument, arg_var = indexed_arg_var)['body']
         self.exit_scope()
 
         cast.append(For(idx, Iterable(PythonRange(size_var)), for_body, scope = for_scope))
