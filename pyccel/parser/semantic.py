@@ -2888,6 +2888,18 @@ class SemanticParser(BasicParser):
         else:
             return PyccelPow(base, exponent)
 
+    def _visit_PyccelIn(self, expr):
+        element = self._visit(expr.element)
+        container = self._visit(expr.container)
+        container_type = container.class_type
+        container_base = self.scope.find(str(container_type), 'classes') or get_cls_base(container_type)
+        contains_method = container_base.get_method('__contains__', raise_error = isinstance(container_type, CustomDataType))
+        if contains_method:
+            return contains_method(container, element)
+        else:
+            raise errors.report(f"In operator is not yet implemented for type {container_type}",
+                    severity='fatal', symbol=expr)
+
     def _visit_Lambda(self, expr):
         errors.report("Lambda functions are not currently supported",
                 symbol=expr, severity='fatal')
