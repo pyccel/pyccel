@@ -288,8 +288,7 @@ class PythonComplex(PyccelFunction):
         return super().__new__(cls)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
-        self._is_cast = isinstance(arg0.dtype.primitive_type, PrimitiveComplexType) and \
-                        isinstance(arg1, Literal) and arg1.python_value == 0
+        self._is_cast = isinstance(arg1, Literal) and arg1.python_value == 0
 
         if self._is_cast:
             self._real_part = self._real_cast(arg0)
@@ -907,6 +906,9 @@ class PythonDict(PyccelFunction):
     def __repr__(self):
         args = ', '.join(f'{repr(k)}: {repr(v)}' for k,v in self)
         return f'PythonDict({args})'
+
+    def __len__(self):
+        return len(self._keys)
 
     @property
     def keys(self):
