@@ -420,3 +420,24 @@ def test_set_union_2_args(language):
     python_result = union_int()
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Can't use a pointer to a temporary object."),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_temporary_set_union(language):
+    def union_int():
+        a = {1,2}
+        b = {2}
+        d = a.union(b).pop()
+        return d
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result == pyccel_result
