@@ -1566,7 +1566,7 @@ class SemanticParser(BasicParser):
                 know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape) \
                         or isinstance(lhs.class_type, StringType)
 
-                if not know_lhs_shape:
+                if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType)) and not know_lhs_shape:
                     msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
