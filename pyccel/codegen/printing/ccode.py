@@ -651,11 +651,11 @@ class CCodePrinter(CodePrinter):
         ----------
         expr : TypedAstNode
             The object representing the container being printed (e.g., PythonList, PythonSet).
-    
+
         assignment_var : Assign
-            The assignment node where the Python container (rhs) is being initialized 
+            The assignment node where the Python container (rhs) is being initialized
             and saved into a variable (lhs).
-        
+
         Returns
         -------
         str
@@ -678,7 +678,7 @@ class CCodePrinter(CodePrinter):
         Rename class methods from user-defined imports.
 
         This function is responsible for renaming methods of classes from
-        the imported modules, ensuring that the names are correct 
+        the imported modules, ensuring that the names are correct
         by prefixing them with their class names.
 
         Parameters
@@ -1188,6 +1188,8 @@ class CCodePrinter(CodePrinter):
                                                 file=expr.file)],
                                  unravelled = True)
                 code += self._print(body)
+            elif isinstance(f, LiteralString):
+                args_format.append(f.python_value)
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
@@ -2692,4 +2694,3 @@ class CCodePrinter(CodePrinter):
             pretty.append("%s%s" % (tab*level, line))
             level += increase[n]
         return pretty
-
