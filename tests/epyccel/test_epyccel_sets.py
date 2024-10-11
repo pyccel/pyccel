@@ -379,23 +379,26 @@ def test_set_union_int(language):
         a = {1,2,3,4}
         b = {5,6,7,2}
         c = a.union(b)
-        return len(c)
+        return len(c), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop()
 
     epyccel_func = epyccel(union_int, language = language)
     pyccel_result = epyccel_func()
     python_result = union_int()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 def test_set_union_no_args(language):
     def union_int():
         a = {1,2,3,4}
         c = a.union()
-        return len(c)
+        a.add(5)
+        return len(c), c.pop(), c.pop(), c.pop(), c.pop()
 
     epyccel_func = epyccel(union_int, language = language)
     pyccel_result = epyccel_func()
     python_result = union_int()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 def test_set_union_2_args(language):
     def union_int():
@@ -403,9 +406,10 @@ def test_set_union_2_args(language):
         b = {5,6,7}
         c = {8,9,10,4}
         d = a.union(b, c)
-        return len(d)
+        return len(d), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop()
 
     epyccel_func = epyccel(union_int, language = language)
     pyccel_result = epyccel_func()
     python_result = union_int()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
