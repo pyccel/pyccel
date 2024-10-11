@@ -2624,12 +2624,16 @@ class CCodePrinter(CodePrinter):
         return f'{var_type}_clear({set_var});\n'
 
     def _print_SetUnion(self, expr):
+        assign_base = expr.get_direct_user_nodes(lambda n: isinstance(n, Assign))
+        if not assign_base:
+            errors.report("The result of the union call must be saved into a variable",
+                    severity='error', symbol=expr)
         class_type = expr.set_variable.class_type
         var_type = self.get_c_type(class_type)
         self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(class_type), var_type)))
         set_var = self._print(ObjectAddress(expr.set_variable))
         args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
-        return f'{var_type}_union({set_var}, {args});\n'
+        return f'{var_type}_union({set_var}, {args})'
 
     #=================== MACROS ==================
 
