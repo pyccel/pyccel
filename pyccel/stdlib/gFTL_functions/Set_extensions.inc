@@ -22,16 +22,4 @@ contains
   
   end function __IDENTITY(Set)_pop
 
-  function __IDENTITY(Set)_union(my_set, other_set) result(union_set)
-    class(Set), intent(in) :: my_set
-    class(Set), intent(in) :: other_set
-    type(Set) :: union_set
-    type(SetIterator) :: iter
-
-    union_set = Set( my_set )
-
-    call union_set % insert( my_set % begin(), my_set % end())
-
-  end function __IDENTITY(Set)_union
-
 #include <set/tail.inc>
