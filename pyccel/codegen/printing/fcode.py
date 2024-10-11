@@ -264,7 +264,7 @@ class FCodePrinter(CodePrinter):
         self._constantImports = {}
         self._current_class    = None
 
-        self._additional_code = None
+        self._additional_code = ''
 
         self.prefix_module = prefix_module
 
@@ -427,8 +427,6 @@ class FCodePrinter(CodePrinter):
             # Everything before the return node needs handling before the line
             # which calls the inline function is executed
             code = self._print(body)
-            if (not self._additional_code):
-                self._additional_code = ''
             self._additional_code += code
 
             # Collect statements from results to return object
@@ -1278,14 +1276,12 @@ class FCodePrinter(CodePrinter):
     def _print_DottedVariable(self, expr):
         if isinstance(expr.lhs, FunctionCall):
             base = expr.lhs.funcdef.results[0].var
-            if (not self._additional_code):
-                self._additional_code = ''
             var_name = self.scope.get_new_name()
             var = base.clone(var_name)
 
             self.scope.insert_variable(var)
 
-            self._additional_code = self._additional_code + self._print(Assign(var,expr.lhs)) + '\n'
+            self._additional_code += self._print(Assign(var,expr.lhs)) + '\n'
             return self._print(var) + '%' +self._print(expr.name)
         else:
             return self._print(expr.lhs) + '%' +self._print(expr.name)
@@ -1692,12 +1688,10 @@ class FCodePrinter(CodePrinter):
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
 
-        if (not self._additional_code):
-            self._additional_code = ''
         var = self.scope.get_temporary_variable(expr.dtype, memory_handling = 'stack',
                 shape = expr.shape)
 
-        self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
+        self._additional_code += self._print(Assign(var,expr)) + '\n'
         return self._print(var)
 
     def _print_NumpyRandint(self, expr):
@@ -1995,9 +1989,9 @@ class FCodePrinter(CodePrinter):
         body_stmts = []
         for b in body_exprs :
             line = self._print(b)
-            if (self._additional_code):
+            if self._additional_code:
                 body_stmts.append(self._additional_code)
-                self._additional_code = None
+                self._additional_code = ''
             body_stmts.append(line)
         return ''.join(self._print(b) for b in body_stmts)
 
@@ -3414,17 +3408,13 @@ class FCodePrinter(CodePrinter):
             args = args[1:]
             if isinstance(class_variable, FunctionCall):
                 base = class_variable.funcdef.results[0].var
-                if (not self._additional_code):
-                    self._additional_code = ''
                 var = self.scope.get_temporary_variable(base)
 
-                self._additional_code = self._additional_code + self._print(Assign(var, class_variable)) + '\n'
+                self._additional_code += self._print(Assign(var, class_variable)) + '\n'
                 f_name = f'{self._print(var)} % {f_name}'
             else:
                 f_name = f'{self._print(class_variable)} % {f_name}'
 
-        if (not self._additional_code):
-            self._additional_code = ''
         if parent_assign:
             lhs = parent_assign[0].lhs
             if len(func_results) == 1:
