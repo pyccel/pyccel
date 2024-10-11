@@ -24,6 +24,8 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonList, PythonSet
 
+from pyccel.ast.builtin_methods.set_methods import SetUnion
+
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
@@ -1332,6 +1334,26 @@ class FCodePrinter(CodePrinter):
         self.add_import(self._build_gFTL_extension_module(expr_type))
         return f'{type_name}_pop({var_code})\n'
 
+    def _print_SetUnion(self, expr):
+        assign_base = expr.get_direct_user_nodes(lambda n: isinstance(n, Assign))
+        var = expr.set_variable
+        if not assign_base:
+            result = self._print(self.scope.get_temporary_variable(var))
+        else:
+            result = self._print(assign_base[0].lhs)
+        expr_type = var.class_type
+        var_code = self._print(expr.set_variable)
+        type_name = self._print(expr_type)
+        self.add_import(self._build_gFTL_extension_module(expr_type))
+        args = [self._print(a) for a in expr.args]
+        args_insert = '\n'.join(f'call {result} % insert({a} % begin (), {a} % end())\n' for a in args)
+        code = f'{result} = {type_name}({var_code})\n' + args_insert
+        if assign_base:
+            return code
+        else:
+            self._additional_code += code
+            return result
+
     #========================== Numpy Elements ===============================#
 
     def _print_NumpySum(self, expr):
@@ -1995,7 +2017,7 @@ class FCodePrinter(CodePrinter):
     def _print_Assign(self, expr):
         rhs = expr.rhs
 
-        if isinstance(rhs, FunctionCall):
+        if isinstance(rhs, (FunctionCall, SetUnion)):
             return self._print(rhs)
 
         lhs_code = self._print(expr.lhs)
