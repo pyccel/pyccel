@@ -227,6 +227,8 @@ class SetUpdate(SetMethod):
     """
     __slots__ = ()
     name = 'update'
+    _shape = None
+    _class_type = VoidType()
 
     def __init__(self, set_obj, iterable) -> None:
         super().__init__(set_obj, iterable)
@@ -247,7 +249,7 @@ class SetUnion(SetMethod):
     others : TypedAstNode
         The sets which will be combined with this set.
     """
-    __slots__ = ('_other',)
+    __slots__ = ('_other','_class_type', '_shape')
     name = 'union'
 
     def __new__(cls, set_obj, *others):
@@ -261,4 +263,6 @@ class SetUnion(SetMethod):
             other, = others
         else:
             other = SetUnion(*others)
+        self._class_type = set_obj.class_type
+        self._shape = (None,)*self._class_type.rank
         super().__init__(set_obj, other)
