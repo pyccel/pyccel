@@ -371,3 +371,39 @@ def test_Pop_complex(stc_language):
     pyccel_result = set(epyccel_remove())
     python_result = set(Pop_complex())
     assert python_result == pyccel_result
+
+def test_set_union_int(language):
+    def union_int():
+        a = {1,2,3,4}
+        b = {5,6,7,2}
+        c = a.union(b)
+        return len(c)
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result == pyccel_result
+
+def test_set_union_no_args(language):
+    def union_int():
+        a = {1,2,3,4}
+        c = a.union()
+        return len(c)
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result == pyccel_result
+
+def test_set_union_2_args(language):
+    def union_int():
+        a = {1,2,3,4}
+        b = {5,6,7}
+        c = {8,9,10,4}
+        d = a.union(b, c)
+        return len(d)
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result == pyccel_result
