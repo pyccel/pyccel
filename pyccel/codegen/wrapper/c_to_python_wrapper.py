@@ -2430,10 +2430,6 @@ class CToPythonWrapper(Wrapper):
             An object representing the variable or an element of the variable from the
             FunctionDefArgument being wrapped.
 
-        arg_var : Variable | IndexedElement
-            A variable or an element of the variable representing the argument that
-            will be passed to the low-level function call.
-
         collect_arg : Variable
             A variable with type PythonObject* holding the Python argument from which the
             C-compatible argument should be collected.
@@ -2444,6 +2440,10 @@ class CToPythonWrapper(Wrapper):
 
         is_bind_c_argument : bool
             True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+
+        arg_var : Variable | IndexedElement, optional
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
 
         Returns
         -------
