@@ -230,3 +230,35 @@ class SetUpdate(SetMethod):
 
     def __init__(self, set_obj, iterable) -> None:
         super().__init__(set_obj, iterable)
+
+#==============================================================================
+class SetUnion(SetMethod):
+    """
+    Represents a call to the set method .union.
+
+    Represents a call to the set method .union. This method combines to sets
+    by including all elements which appear in at least one of the sets.
+
+    Paramters
+    ---------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+        The argument passed to update() method.
+    others : TypedAstNode
+        The sets which will be combined with this set.
+    """
+    __slots__ = ('_other',)
+    name = 'union'
+
+    def __new__(cls, set_obj, *others):
+        if len(others) == 0:
+            return SetCopy(set_obj)
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, set_obj, *others):
+        if len(others) == 1:
+            other, = others
+        else:
+            other = SetUnion(*others)
+        super().__init__(set_obj, other)
