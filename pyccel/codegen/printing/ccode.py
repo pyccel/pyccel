@@ -18,6 +18,8 @@ from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
+from pyccel.ast.builtin_methods.set_methods import SetUnion
+
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
 from pyccel.ast.core      import Allocate, Deallocate
@@ -2223,22 +2225,21 @@ class CCodePrinter(CodePrinter):
         return f'{lhs_code} {op}= {rhs_code};\n'
 
     def _print_Assign(self, expr):
-        prefix_code = ''
         lhs = expr.lhs
         rhs = expr.rhs
         if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, TupleType):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
-            return prefix_code+'{};\n'.format(self._print(rhs))
+            return '{};\n'.format(self._print(rhs))
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
-            return prefix_code+self.copy_NumpyArray_Data(expr)
+            return self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
-            return prefix_code+self.arrayFill(expr)
+            return self.arrayFill(expr)
         lhs = self._print(expr.lhs)
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
-            return prefix_code+self.init_stc_container(rhs, expr)
+            return self.init_stc_container(rhs, expr)
         rhs = self._print(expr.rhs)
-        return prefix_code+f'{lhs} = {rhs};\n'
+        return f'{lhs} = {rhs};\n'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
@@ -2621,6 +2622,14 @@ class CCodePrinter(CodePrinter):
         var_type = self.get_declare_type(expr.set_variable)
         set_var = self._print(ObjectAddress(expr.set_variable))
         return f'{var_type}_clear({set_var});\n'
+
+    def _print_SetUnion(self, expr):
+        class_type = expr.set_variable.class_type
+        var_type = self.get_c_type(class_type)
+        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(class_type), var_type)))
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
+        return f'{var_type}_union({set_var}, {args});\n'
 
     #=================== MACROS ==================
 
