@@ -11,7 +11,7 @@ from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, 
 from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType
+from pyccel.ast.datatypes  import HomogeneousTupleType, VoidType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpyext   import numpy_target_swap
@@ -841,9 +841,9 @@ class PythonCodePrinter(CodePrinter):
         key = self._print(expr.key)
         if expr.default_value:
             val = self._print(expr.default_value)
-            return f"{dict_obj}.pop({key}, {val})\n"
+            return f"{dict_obj}.pop({key}, {val})"
         else:
-            return f"{dict_obj}.pop({key})\n"
+            return f"{dict_obj}.pop({key})"
 
     def _print_DictGet(self, expr):
         dict_obj = self._print(expr.dict_obj)
@@ -871,7 +871,11 @@ class PythonCodePrinter(CodePrinter):
         name = expr.name
         args = "" if len(expr.args) == 0 or expr.args[-1] is None \
             else ', '.join(self._print(a) for a in expr.args)
-        return f"{set_var}.{name}({args})\n"
+        code = f"{set_var}.{name}({args})"
+        if expr.class_type is VoidType():
+            return f'{code}\n'
+        else:
+            return code
 
     def _print_Nil(self, expr):
         return 'None'

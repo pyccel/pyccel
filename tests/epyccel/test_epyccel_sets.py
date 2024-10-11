@@ -290,27 +290,29 @@ def test_set_with_set(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_init_with_set(python_only_language):
+def test_init_with_set(language):
     def init_with_set():
         b = set({4.6, 7.9, 2.5})
-        return b
+        return len(b), b.pop(), b.pop(), b.pop()
 
-    epyc_init_with_set = epyccel(init_with_set, language = python_only_language)
+    epyc_init_with_set = epyccel(init_with_set, language = language)
     pyccel_result = epyc_init_with_set()
     python_result = init_with_set()
     assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_set_init_with_list(python_only_language):
+def test_set_init_with_list(language):
     def init_with_list():
         b = set([4.6, 7.9, 2.5])
-        return b
+        return len(b), b.pop(), b.pop(), b.pop()
 
-    epyc_init_with_list = epyccel(init_with_list, language = python_only_language)
+    epyc_init_with_list = epyccel(init_with_list, language = language)
     pyccel_result = epyc_init_with_list()
     python_result = init_with_list()
     assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 
 def test_set_copy_from_arg1(python_only_language):
@@ -335,39 +337,39 @@ def test_set_copy_from_arg2(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_Pop_int(stc_language):
+def test_Pop_int(language):
     def Pop_int():
         se = {2, 4, 9}
         el1 = se.pop()
         el2 = se.pop()
         el3 = se.pop()
         return el1, el2, el3
-    epyccel_remove = epyccel(Pop_int, language = stc_language)
+    epyccel_remove = epyccel(Pop_int, language = language)
     pyccel_result = set(epyccel_remove())
     python_result = set(Pop_int())
     assert python_result == pyccel_result
 
-def test_Pop_float(stc_language):
+def test_Pop_float(language):
     def Pop_float():
         se = {2.3 , 4.1, 9.5}
         el1 = se.pop()
         el2 = se.pop()
         el3 = se.pop()
         return el1, el2, el3
-    epyccel_remove = epyccel(Pop_float, language = stc_language)
+    epyccel_remove = epyccel(Pop_float, language = language)
     pyccel_result = set(epyccel_remove())
     python_result = set(Pop_float())
     assert python_result == pyccel_result
 
 
-def test_Pop_complex(stc_language):
+def test_Pop_complex(language):
     def Pop_complex():
         se = {4j , 1j, 7j}
         el1 = se.pop()
         el2 = se.pop()
         el3 = se.pop()
         return el1, el2, el3
-    epyccel_remove = epyccel(Pop_complex, language = stc_language)
+    epyccel_remove = epyccel(Pop_complex, language = language)
     pyccel_result = set(epyccel_remove())
     python_result = set(Pop_complex())
     assert python_result == pyccel_result
