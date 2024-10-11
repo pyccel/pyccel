@@ -151,9 +151,9 @@ class MacroUndef(PyccelAstNode):
     @property
     def macro_name(self):
         """
-        The name of the macro being defined.
+        The name of the macro being undefined.
 
-        The name of the macro being defined.
+        The name of the macro being undefined.
         """
         return self._macro_name
 
