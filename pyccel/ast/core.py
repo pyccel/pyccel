@@ -2766,7 +2766,9 @@ class FunctionDef(ScopedAstNode):
         return self._result_pointer_map
 
     def __call__(self, *args, **kwargs):
-        return FunctionCall(self, *args, **kwargs)
+        arguments = [FunctionCallArgument(a) for a in args]
+        arguments += [FunctionCallArgument(a, keyword=key) for key, a in kwargs.items()]
+        return FunctionCall(self, arguments)
 
 class InlineFunctionDef(FunctionDef):
     """
@@ -3612,7 +3614,7 @@ class ClassDef(ScopedAstNode):
         interface.set_current_user_node(self)
         self._interfaces += (interface,)
 
-    def get_method(self, name):
+    def get_method(self, name, raise_error = True):
         """
         Get the method `name` of the current class.
 
@@ -3625,6 +3627,10 @@ class ClassDef(ScopedAstNode):
         ----------
         name : str
             The name of the attribute we are looking for.
+
+        raise_error : bool, default=True
+            True if an error should be found if the method is not found.
+            False if None can be returned instead.
 
         Returns
         -------
@@ -3656,7 +3662,7 @@ class ClassDef(ScopedAstNode):
                 except StopIteration:
                     method = None
 
-        if method is None:
+        if method is None and raise_error:
             errors.report(f"Can't find method {name} in class {self.name}",
                     severity='fatal', symbol=self)
 
