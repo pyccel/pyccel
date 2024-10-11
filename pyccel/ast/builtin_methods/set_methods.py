@@ -252,17 +252,7 @@ class SetUnion(SetMethod):
     __slots__ = ('_other','_class_type', '_shape')
     name = 'union'
 
-    def __new__(cls, set_obj, *others):
-        if len(others) == 0:
-            return SetCopy(set_obj)
-        else:
-            return super().__new__(cls)
-
     def __init__(self, set_obj, *others):
-        if len(others) == 1:
-            other, = others
-        else:
-            other = SetUnion(*others)
         self._class_type = set_obj.class_type
         self._shape = (None,)*self._class_type.rank
-        super().__init__(set_obj, other)
+        super().__init__(set_obj, *others)
