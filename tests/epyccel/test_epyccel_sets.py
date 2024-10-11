@@ -406,7 +406,7 @@ def test_set_union_2_args(language):
         b = {5,6,7}
         c = {8,9,10,4}
         d = a.union(b, c)
-        return len(d), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop()
+        return len(d), d.pop(), d.pop(), d.pop(), d.pop(), d.pop(), d.pop(), d.pop(), d.pop(), d.pop(), d.pop()
 
     epyccel_func = epyccel(union_int, language = language)
     pyccel_result = epyccel_func()
