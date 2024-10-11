@@ -21,6 +21,7 @@ __all__ = (
     'SetMethod',
     'SetPop',
     'SetRemove',
+    'SetUnion',
     'SetUpdate'
 )
 
