@@ -21,6 +21,8 @@ from sympy import ceiling
 from pyccel.utilities.strings import random_string
 from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
 
+from pyccel.ast.bitwise_operators import PyccelBitOr, PyccelLShift, PyccelRShift, PyccelBitAnd
+
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
 from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
@@ -95,7 +97,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
-from pyccel.ast.operators import PyccelNot, PyccelAdd, PyccelMul, PyccelPow
+from pyccel.ast.operators import PyccelNot, PyccelAdd, PyccelMinus, PyccelMul, PyccelPow
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
@@ -168,6 +170,18 @@ def _get_name(var):
     msg = f'Name of Object : {name} cannot be determined'
     return errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
                 severity='fatal')
+
+magic_method_map = {
+        PyccelAdd: '__add__',
+        PyccelMinus: '__sub__',
+        PyccelMul: '__mul__',
+        PyccelDiv: '__truediv__',
+        PyccelPow: '__pow__',
+        PyccelLShift: '__lshift__',
+        PyccelRShift: '__rshift__',
+        PyccelBitAnd : '__and__',
+        PyccelBitOr: '__or__',
+        }
 
 #==============================================================================
 
@@ -905,11 +919,40 @@ class SemanticParser(BasicParser):
         PyccelOperator
             The new operator.
         """
-        try:
-            expr_new = type(expr)(*visited_args)
-        except PyccelSemanticError as err:
-            msg = str(err)
-            errors.report(msg, symbol=expr, severity='fatal')
+        arg1 = visited_args[0]
+        class_type = arg1.class_type
+        class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+        magic_method_name = magic_method_map.get(type(expr), None)
+        magic_err = None
+        magic_method = None
+        if magic_method_name:
+            try:
+                magic_method = class_base.get_method(magic_method_name)
+            except PyccelSemanticError as err:
+                magic_err = err
+        if magic_err and len(visited_args) == 2:
+            arg2 = visited_args[1]
+            class_type = arg2.class_type
+            class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+            magic_method_name = '__r'+magic_method_name[2:]
+            try:
+                magic_method = class_base.get_method(magic_method_name)
+            except PyccelSemanticError as err:
+                pass
+        if magic_method:
+            expr_new = magic_method(*visited_args)
+        else:
+            try:
+                expr_new = type(expr)(*visited_args)
+            except PyccelSemanticError as err:
+                errors.report(str(err), symbol=expr, severity='fatal')
+            except TypeError as err:
+                if magic_err:
+                    errors.report(magic_err, symbol=expr, severity='fatal')
+                else:
+                    types = ', '.join(str(a.class_type) for a in visited_args)
+                    errors.report(f"Operator {type(expr)} between objects of type ({types}) is not yet handled\n"
+                            + PYCCEL_RESTRICTION_TODO, symbol=expr, severity='fatal')
         return expr_new
 
     def _create_Duplicate(self, val, length):
