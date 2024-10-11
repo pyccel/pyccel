@@ -184,7 +184,8 @@ def test_update_basic(python_only_language):
     epyccel_update = epyccel(update_basic, language=python_only_language)
     pyccel_result = epyccel_update()
     python_result =  update_basic()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 def test_update_multiple(language):
     def update_multiple():
@@ -197,7 +198,8 @@ def test_update_multiple(language):
     epyccel_update = epyccel(update_multiple, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_multiple()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 
 def test_update_boolean_tuple(language):
@@ -209,7 +211,8 @@ def test_update_boolean_tuple(language):
     epyccel_update = epyccel(update_boolean_tuple, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_boolean_tuple()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 
 def test_update_complex_list(language):
@@ -221,7 +224,8 @@ def test_update_complex_list(language):
     epyccel_update = epyccel(update_complex_list, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_complex_list()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 def test_update_range(language):
     def update_range():
@@ -231,7 +235,8 @@ def test_update_range(language):
     epyccel_update = epyccel(update_range, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_range()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 def test_update_set_as_arg(language):
     def update_set_as_arg():
@@ -242,7 +247,8 @@ def test_update_set_as_arg(language):
     epyccel_update = epyccel(update_set_as_arg, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_set_as_arg()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 def test_update_tuple_as_arg(language):
     def update_tuple_as_arg():
@@ -252,7 +258,8 @@ def test_update_tuple_as_arg(language):
     epyccel_update = epyccel(update_tuple_as_arg, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_tuple_as_arg()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 def test_set_with_list(python_only_language):
     def set_With_list():
