@@ -242,12 +242,12 @@ class SetUnion(SetMethod):
     Represents a call to the set method .union. This method combines to sets
     by including all elements which appear in at least one of the sets.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     set_obj : TypedAstNode
         The set object which the method is called from.
         The argument passed to update() method.
-    others : TypedAstNode
+    *others : TypedAstNode
         The sets which will be combined with this set.
     """
     __slots__ = ('_other','_class_type', '_shape')
