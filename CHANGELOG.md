@@ -36,7 +36,7 @@ All notable changes to this project will be documented in this file.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C support for list method `pop()`.
--   #1877 : Add C Support for set method `pop()`.
+-   #1877 : Add C and Fortran Support for set method `pop()`.
 -   #1917 : Add C and Fortran support for set method `add()`.
 -   #1918 : Add C and Fortran support for set method `clear()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
@@ -63,6 +63,7 @@ All notable changes to this project will be documented in this file.
 -   #1913 : Fix function calls to renamed functions.
 -   #1930 : Preserve ordering of import targets.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
+-   #1972 : Simplified `printf` statement for Literal String.
 
 ### Changed
 
