@@ -26,13 +26,13 @@ static inline i_key _c_MEMB(_pop)(i_type* self) {
  */
 static inline void _c_MEMB(_intersection_update)(i_type* self, i_type* other) {
     _c_MEMB(_iter) itr = _c_MEMB(_begin)(self);
-    while (itr != _c_MEMB(_end)(self))
+    while (itr.ref)
     {
         i_key val = (*itr.ref);
-        if (_c_MEMB(_contains)(others[i], val)) {
-            _c_MEMB(_next)(&it)
+        if (_c_MEMB(_contains)(other, val)) {
+            _c_MEMB(_next)(&itr);
         } else {
-            itr = _c_MEMB(_erase_at)(&intersection, val);
+            itr = _c_MEMB(_erase_at)(self, itr);
         }
     }
 }
