@@ -20,37 +20,21 @@ static inline i_key _c_MEMB(_pop)(i_type* self) {
 }
 
 /**
- * This function represents a call to the .intersection() method.
- * @param self : The set instance.
- * @param n : The number of variadic arguments passed to the method.
- * @param ... : The variadic arguments. These are the other sets in which elements must be found.
+ * This function represents a call to the .intersection_update() method.
+ * @param self : The set instance to modify.
+ * @param other : The other set in which elements must be found.
  */
-static inline i_type _c_MEMB(_intersection)(i_type* self, int n, ...) {
-    i_type intersection = _c_MEMB(_init)();
-
-    i_type* others[n];
-
-    va_list args;
-    va_start(args, n);
-    for (int i=0; i<n; ++i) {
-        others[i] = va_arg(args, i_type*);
-    }
-    va_end(args);
-
-    c_foreach (elem, i_type, self) {
-        i_key val = (*elem.ref);
-        bool in_intersection(true);
-        int i=0;
-        while (i<n && in_intersection) {
-            in_intersection = in_intersection && _c_MEMB(_contains)(others[i], val);
-            i++;
-        }
-        if (in_intersection) {
-            _c_MEMB(_insert)(&intersection, val);
+static inline void _c_MEMB(_intersection_update)(i_type* self, i_type* other) {
+    _c_MEMB(_iter) itr = _c_MEMB(_begin)(self);
+    while (itr != _c_MEMB(_end)(self))
+    {
+        i_key val = (*itr.ref);
+        if (_c_MEMB(_contains)(others[i], val)) {
+            _c_MEMB(_next)(&it)
+        } else {
+            itr = _c_MEMB(_erase_at)(&intersection, val);
         }
     }
-
-    return intersection;
 }
 
 #undef i_type
