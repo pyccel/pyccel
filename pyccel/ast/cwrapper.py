@@ -971,12 +971,6 @@ PyUnicode_FromString = FunctionDef(name = 'PyUnicode_FromString',
                         arguments = [FunctionDefArgument(Variable(StringType(), name='_'))],
                         results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
-PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
-                        body = [],
-                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
-                                     FunctionDefArgument(Variable(CNativeInt(), name='i'))],
-                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
-
 #-------------------------------------------------------------------
 
 #using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
