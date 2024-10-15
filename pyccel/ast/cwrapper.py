@@ -1103,7 +1103,7 @@ PyList_Size = FunctionDef(name = 'PyList_Size',
 PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
-                                     FunctionDefArgument(Variable(CNativeInt(), name='i')),
+                                     FunctionDefArgument(Variable(PythonNativeInt(), name='i')),
                                      FunctionDefArgument(Variable(PyccelPyObject(), name='new_item', memory_handling='alias'))],
                         results = [])
 
@@ -1120,7 +1120,7 @@ PyTuple_New = FunctionDef(name = 'PyTuple_New',
 # https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Check
 PyTuple_Check = FunctionDef(name = 'PyTuple_Check',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'tuple', memory_handling='alias'))],
-                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    results = [FunctionDefResult(Variable(CNativeInt(), 'i'))],
                     body = [])
 
 # https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Size
@@ -1133,7 +1133,7 @@ PyTuple_Size = FunctionDef(name = 'PyTuple_Size',
 PyTuple_GetItem = FunctionDef(name = 'PyTuple_GetItem',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='tuple', memory_handling='alias')),
-                                     FunctionDefArgument(Variable(CNativeInt(), name='i'))],
+                                     FunctionDefArgument(Variable(PythonNativeInt(), name='i'))],
                         results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
 
