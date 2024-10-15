@@ -29,7 +29,7 @@ from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
-from pyccel.ast.builtin_methods.set_methods  import SetMethod, SetAdd
+from pyccel.ast.builtin_methods.set_methods  import SetMethod, SetAdd, SetCopy, SetIntersectionUpdate
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -1095,6 +1095,7 @@ class SemanticParser(BasicParser):
                             new_expr = FunctionCall(func, args)
                         new_expr.set_current_ast(expr.python_ast)
                         pyccel_stage.set_stage('semantic')
+                        new_expr.set_current_user_node(expr.current_user_node)
                         expr = new_expr
                     return getattr(self, annotation_method)(expr)
 
@@ -3068,7 +3069,6 @@ class SemanticParser(BasicParser):
                 insert_scope.insert_variable(semantic_lhs_var)
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
-
 
         # Steps before visiting
         if isinstance(rhs, GeneratorComprehension):
@@ -5068,3 +5068,31 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
 
+    def _build_SetIntersection(self, expr):
+        """
+        Method to visit a SetIntersection node.
+
+        The purpose of this `_build` method is to construct multiple nodes to represent
+        the single DottedName node representing the call to SetIntersection. It
+        replaces the call with a call to copy followed by multiple calls to
+        SetIntersectionUpdate.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represent the call to `.intersection()`.
+
+        Returns
+        -------
+        CodeBlock
+            CodeBlock containing SetCopy and SetIntersectionUpdate objects.
+        """
+        start_set = expr.name[0]
+        set_args = [self._visit(a.value) for a in expr.name[1].args]
+        lhs = expr.get_user_nodes(Assign)[0].lhs
+        pyccel_stage.set_stage('syntactic')
+        assign_node = Assign(lhs, DottedName(start_set, FunctionCall('copy', ())), python_ast = expr.python_ast)
+        pyccel_stage.set_stage('semantic')
+        body = [self._visit(assign_node)]
+        body += [SetIntersectionUpdate(lhs, s) for s in set_args]
+        return CodeBlock(body)

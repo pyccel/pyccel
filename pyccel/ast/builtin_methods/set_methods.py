@@ -232,11 +232,11 @@ class SetUpdate(SetMethod):
         super().__init__(set_obj, iterable)
 
 #==============================================================================
-class SetIntersection(SetMethod):
+class SetIntersectionUpdate(SetMethod):
     """
-    Represents a call to the .intersection() method.
+    Represents a call to the .intersection_update() method.
 
-    Represents a call to the set method .intersection(). This method combines
+    Represents a call to the set method .intersection_update(). This method combines
     two sets by including all elements which appear in all of the sets.
 
     Parameters
@@ -246,10 +246,34 @@ class SetIntersection(SetMethod):
     *others : TypedAstNode
         The sets which will be combined with this set.
     """
-    __slots__ = ('_other','_class_type', '_shape')
+    __slots__ = ()
     name = 'union'
+    _class_type = VoidType()
+    _shape = None
 
     def __init__(self, set_obj, *others):
-        self._class_type = set_obj.class_type
-        self._shape = (None,)*self._class_type.rank
+        super().__init__(set_obj, *others)
+
+#==============================================================================
+class SetIntersection(SetMethod):
+    """
+    Represents a call to the .intersection() method.
+
+    Represents a call to the set method .intersection(). This method combines
+    two sets by including all elements which appear in all of the sets.
+
+    This class should never be instantiated; it's only purpose is to help
+    construct the annotation_method `_build_SetIntersection`.
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    *others : TypedAstNode
+        The sets which will be combined with this set.
+    """
+    __slots__ = ()
+    name = 'intersection'
+
+    def __init__(self, set_obj, *others):
         super().__init__(set_obj, *others)
