@@ -1341,9 +1341,14 @@ class FCodePrinter(CodePrinter):
         var_code = self._print(expr.set_variable)
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
-        args = [self._print(a) for a in expr.args]
-        args_insert = '\n'.join(f'call {result} % insert({a} % begin (), {a} % end())\n' for a in args)
-        code = f'{result} = {type_name}({var_code})\n' + args_insert
+        args_insert = []
+        for arg in expr.args:
+            a = self._print(arg)
+            if arg.class_type == expr_type:
+                args_insert.append(f'call {result} % merge({a})\n')
+            else:
+                errors.report(PYCCEL_RESTRICTION_TODO, severity = 'error', symbol = expr)
+        code = f'{result} = {type_name}({var_code})\n' + ''.join(args_insert)
         if assign_base:
             return code
         else:
