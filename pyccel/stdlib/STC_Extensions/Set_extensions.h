@@ -19,6 +19,12 @@ static inline i_key _c_MEMB(_pop)(i_type* self) {
     return *(itr.ref); // Return the element that is being popped.
 }
 
+/*
+ * This function represents a call to the .union() method.
+ * @param self : The set instance
+ * @param n : The number of variadic arguments passed to the method.
+ * @param ... : The variadic arguments. These are the other sets in which elements may be found
+ */
 static inline i_type _c_MEMB(_union)(i_type* self, int n, ...) {
     i_type union_result = _c_MEMB(_clone)(*self);
 
