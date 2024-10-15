@@ -29,7 +29,7 @@ from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
-from pyccel.ast.builtin_methods.set_methods  import SetMethod, SetAdd
+from pyccel.ast.builtin_methods.set_methods  import SetMethod, SetAdd, SetUnion
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -1095,6 +1095,7 @@ class SemanticParser(BasicParser):
                             new_expr = FunctionCall(func, args)
                         new_expr.set_current_ast(expr.python_ast)
                         pyccel_stage.set_stage('semantic')
+                        new_expr.set_current_user_node(expr.current_user_node)
                         expr = new_expr
                     return getattr(self, annotation_method)(expr)
 
@@ -3158,13 +3159,7 @@ class SemanticParser(BasicParser):
                     symbol=expr, severity='error')
 
         # Checking for the result of _visit_ListExtend
-        if isinstance(rhs, For) or (isinstance(rhs, CodeBlock) and
-            isinstance(rhs.body[0], (ListMethod, SetMethod))):
-            return rhs
-        if isinstance(rhs, ConstructorCall):
-            return rhs
-
-        elif isinstance(rhs, CodeBlock) and len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
+        if isinstance(rhs, (For, CodeBlock, ConstructorCall)):
             return rhs
 
         elif isinstance(rhs, FunctionCall):
@@ -5068,3 +5063,29 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
 
+    def _build_SetUnion(self, expr):
+        syntactic_set_obj = expr.name[0]
+        syntactic_args = expr.name[1].args
+        set_obj = self._visit(expr.name[0])
+        args = [self._visit(a.value) for a in expr.name[1].args]
+        class_type = set_obj.class_type
+        if all(a.class_type == class_type for a in args):
+            return SetUnion(set_obj, *args)
+        else:
+            element_type = class_type.element_type
+            if any(a.class_type.element_type != element_type for a in args):
+                errors.report(("Containers containing objects of a different type cannot be used as "
+                               f"arguments to {class_type}.union"),
+                        severity='fatal', symbol=expr)
+
+            lhs = expr.get_user_nodes(Assign)[0].lhs
+            pyccel_stage.set_stage('syntactic')
+            body = [Assign(lhs, DottedName(syntactic_set_obj, FunctionCall('copy', ())),
+                           python_ast = expr.python_ast)]
+            update_calls = [DottedName(lhs, FunctionCall('update', (s_a,))) for s_a in syntactic_args]
+            for c in update_calls:
+                c.set_current_ast(expr.python_ast)
+            body += [Assign(PyccelSymbol('_', is_temp=True), c, python_ast = expr.python_ast)
+                     for c in update_calls]
+            pyccel_stage.set_stage('semantic')
+            return CodeBlock([self._visit(b) for b in body])
