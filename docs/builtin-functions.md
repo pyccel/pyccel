@@ -103,7 +103,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `difference_update` | No |
 | `discard` | Python-only |
 | **`intersection`** | **Yes** |
-| `intersection_update` | No |
+| **`intersection_update`** | **Yes** |
 | `isdisjoint` | No |
 | `issubset` | No |
 | `issuperset` | No |
