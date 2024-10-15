@@ -441,3 +441,29 @@ def test_temporary_set_union(language):
     pyccel_result = epyccel_func()
     python_result = union_int()
     assert python_result == pyccel_result
+
+def test_set_union_list(language):
+    def union_list():
+        a = {1.2, 2.3}
+        b = [1.2, 5.0]
+        d = a.union(b)
+        return len(d), d.pop(), d.pop(), d.pop()
+
+    epyccel_func = epyccel(union_list, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_list()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_union_tuple(language):
+    def union_tuple():
+        a = {True}
+        b = (False,)
+        d = a.union(b)
+        return len(d), d.pop(), d.pop(), d.pop()
+
+    epyccel_func = epyccel(union_tuple, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_tuple()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
