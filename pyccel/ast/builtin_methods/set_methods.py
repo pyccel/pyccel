@@ -254,5 +254,9 @@ class SetUnion(SetMethod):
 
     def __init__(self, set_obj, *others):
         self._class_type = set_obj.class_type
+        element_type = self._class_type.element_type
+        for o in others:
+            if element_type != o.class_type.element_type:
+                raise TypeError(f"Argument of type {o.class_type} cannot be used to build set of type {self._class_type}")
         self._shape = (None,)*self._class_type.rank
         super().__init__(set_obj, *others)
