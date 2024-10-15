@@ -549,18 +549,18 @@ PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 
 The following Python code:
 ```python
-def my_tuple_int(a : 'tuple[int,...]'):
+def get_first_element_of_tuple(a : 'tuple[int,...]'):
     return a[0]
 ```
 
 leads to C code with the following prototype (as homogeneous tuples are treated like arrays):
 ```c
-int64_t my_tuple_int(t_ndarray a);
+int64_t get_first_element_of_tuple(t_ndarray a);
 ```
 
 which is then wrapped as follows:
 ```c
-static PyObject* my_tuple_int_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* get_first_element_of_tuple_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     PyObject* a_obj;
     t_ndarray a = {.shape = NULL};
@@ -610,7 +610,7 @@ static PyObject* my_tuple_int_wrapper(PyObject* self, PyObject* args, PyObject* 
         PyErr_SetString(PyExc_TypeError, "Expected an argument of type tuple[int, ...] for argument a");
         return NULL;
     }
-    Out_0001 = my_tuple_int(a);
+    Out_0001 = get_first_element_of_tuple(a);
     Out_0001_obj = Int64_to_PyLong(&Out_0001);
     return Out_0001_obj;
 }
