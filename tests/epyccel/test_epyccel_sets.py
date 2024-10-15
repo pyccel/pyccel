@@ -460,7 +460,7 @@ def test_set_union_tuple(language):
         a = {True}
         b = (False,)
         d = a.union(b)
-        return len(d), d.pop(), d.pop(), d.pop()
+        return len(d), d.pop(), d.pop()
 
     epyccel_func = epyccel(union_tuple, language = language)
     pyccel_result = epyccel_func()
