@@ -239,7 +239,7 @@ class SetUnion(SetMethod):
     """
     Represents a call to the set method .union.
 
-    Represents a call to the set method .union. This method combines to sets
+    Represents a call to the set method .union. This method combines two sets
     by including all elements which appear in at least one of the sets.
 
     Parameters
