@@ -12,7 +12,8 @@ from .datatypes import PyccelType
 
 __all__ = ('IteratorType',
            'PairType',
-           'MacroDefinition')
+           'MacroDefinition',
+           'MacroUndef')
 
 #------------------------------------------------------------------------------
 class IteratorType(PyccelType, metaclass=ArgumentSingleton):
@@ -126,4 +127,33 @@ class MacroDefinition(PyccelAstNode):
         The object that will define the macro.
         """
         return self._obj
+
+#------------------------------------------------------------------------------
+class MacroUndef(PyccelAstNode):
+    """
+    A class for undefining a macro in a file.
+
+    A class for undefining a macro in a file.
+
+    Parameters
+    ----------
+    macro_name : str
+        The name of the macro.
+    """
+    _attribute_nodes = ()
+    __slots__ = ('_macro_name',)
+
+    def __init__(self, macro_name):
+        assert isinstance(macro_name, str)
+        self._macro_name = macro_name
+        super().__init__()
+
+    @property
+    def macro_name(self):
+        """
+        The name of the macro being undefined.
+
+        The name of the macro being undefined.
+        """
+        return self._macro_name
 
