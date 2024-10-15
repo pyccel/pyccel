@@ -81,26 +81,30 @@ def test_copy_int(language):
     def copy_int():
         se = {1, 2, 4, 5}
         cop = se.copy()
-        return len(cop), cop.pop(), cop.pop(), cop.pop(), cop.pop()
+        size = len(cop)
+        a,b,c,d = cop.pop(), cop.pop(), cop.pop(), cop.pop()
+        return size, len(se), a,b,c,d
     epyccel_copy = epyccel(copy_int, language = language)
     pyccel_result = epyccel_copy()
     python_result = copy_int()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result[0] == pyccel_result[0]
-    assert set(python_result[1:]) == set(pyccel_result[1:])
+    assert python_result[1] == pyccel_result[1]
+    assert set(python_result[2:]) == set(pyccel_result[2:])
 
 
 def test_copy_float(language):
     def copy_float():
         se = {5.7, 6.2, 4.3, 9.8}
         cop = se.copy()
-        return len(cop), cop.pop(), cop.pop(), cop.pop(), cop.pop()
+        return len(cop), cop.pop(), cop.pop(), cop.pop(), cop.pop(), len(se)
     epyccel_copy = epyccel(copy_float, language = language)
     pyccel_result = epyccel_copy()
     python_result = copy_float()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result[0] == pyccel_result[0]
-    assert set(python_result[1:]) == set(pyccel_result[1:])
+    assert python_result[-1] == pyccel_result[-1]
+    assert set(python_result[1:-1]) == set(pyccel_result[1:-1])
 
 def test_copy_complex(language):
     def copy_complex():
