@@ -246,7 +246,6 @@ class SetUnion(SetMethod):
     ----------
     set_obj : TypedAstNode
         The set object which the method is called from.
-        The argument passed to update() method.
     *others : TypedAstNode
         The sets which will be combined with this set.
     """
