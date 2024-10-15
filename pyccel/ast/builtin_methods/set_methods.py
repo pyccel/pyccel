@@ -230,3 +230,26 @@ class SetUpdate(SetMethod):
 
     def __init__(self, set_obj, iterable) -> None:
         super().__init__(set_obj, iterable)
+
+#==============================================================================
+class SetIntersection(SetMethod):
+    """
+    Represents a call to the .intersection() method.
+
+    Represents a call to the set method .intersection(). This method combines
+    two sets by including all elements which appear in all of the sets.
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    *others : TypedAstNode
+        The sets which will be combined with this set.
+    """
+    __slots__ = ('_other','_class_type', '_shape')
+    name = 'union'
+
+    def __init__(self, set_obj, *others):
+        self._class_type = set_obj.class_type
+        self._shape = (None,)*self._class_type.rank
+        super().__init__(set_obj, *others)
