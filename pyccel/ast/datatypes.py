@@ -768,7 +768,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
         super().__init__()
 
     def __str__(self):
-        return f'{self._name}[{self._element_type}, ...]'
+        return f'tuple[{self._element_type}, ...]'
 
 class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     """

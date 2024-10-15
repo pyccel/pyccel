@@ -1652,7 +1652,7 @@ class CCodePrinter(CodePrinter):
         variable = expr.variable
         if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             return ''
-        if variable.rank > 0:
+        if isinstance(variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
                 shape_var = DottedVariable(VoidType(), 'shape', lhs = variable)
@@ -1679,7 +1679,10 @@ class CCodePrinter(CodePrinter):
             var_code = self._print(ObjectAddress(variable))
             if expr.like:
                 declaration_type = self.get_declare_type(expr.like)
-                return f'{var_code} = malloc(sizeof({declaration_type}));\n'
+                malloc_size = f'sizeof({declaration_type})'
+                if variable.rank:
+                    malloc_size = ' * '.join([malloc_size, *(self._print(s) for s in expr.shape)])
+                return f'{var_code} = malloc({malloc_size});\n'
             else:
                 raise NotImplementedError(f"Allocate not implemented for {variable}")
         else:

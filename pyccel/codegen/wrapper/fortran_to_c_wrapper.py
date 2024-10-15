@@ -17,9 +17,11 @@ from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
-from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType, TupleType
+from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
+from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
+from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.operators import PyccelIsNot, PyccelMul
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
 from pyccel.ast.numpyext import NumpyNDArrayType
@@ -98,6 +100,9 @@ class FortranToCWrapper(Wrapper):
             body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa].base, s)
                     for fa,s in zip(func_def_args, orig_size)
                     if isinstance(func_arg_to_call_arg[fa], IndexedElement)]
+            body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa], [fa.shape[0]])
+                    for fa in func_def_args
+                    if isinstance(fa.original_function_argument_variable.class_type, HomogeneousTupleType)]
             body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa])
                      for fa in func_def_args
                      if not isinstance(func_arg_to_call_arg[fa], IndexedElement) \
@@ -338,7 +343,8 @@ class FortranToCWrapper(Wrapper):
         name = var.name
         self.scope.insert_symbol(name)
         collisionless_name = self.scope.get_expected_name(var.name)
-        if var.is_ndarray or var.is_optional or isinstance(var.dtype, CustomDataType):
+        if isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)) or \
+                var.is_optional or isinstance(var.dtype, CustomDataType):
             new_var = Variable(BindCPointer(), self.scope.get_new_name(f'bound_{name}'),
                                 is_argument = True, is_optional = False, memory_handling='alias')
             arg_var = var.clone(collisionless_name, is_argument = False, is_optional = False,
