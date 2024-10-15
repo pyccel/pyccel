@@ -3158,13 +3158,7 @@ class SemanticParser(BasicParser):
                     symbol=expr, severity='error')
 
         # Checking for the result of _visit_ListExtend
-        if isinstance(rhs, For) or (isinstance(rhs, CodeBlock) and
-            isinstance(rhs.body[0], (ListMethod, SetMethod))):
-            return rhs
-        if isinstance(rhs, ConstructorCall):
-            return rhs
-
-        elif isinstance(rhs, CodeBlock) and len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
+        if isinstance(rhs, (For, CodeBlock, ConstructorCall)):
             return rhs
 
         elif isinstance(rhs, FunctionCall):
