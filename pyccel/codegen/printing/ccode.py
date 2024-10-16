@@ -992,7 +992,7 @@ class CCodePrinter(CodePrinter):
         else:
             source = expr.source
         if isinstance(source, DottedName):
-            source = source.name[-1]
+            source = source.name[-1].python_value
         else:
             source = self._print(source)
         if source.startswith('stc/') or source in import_header_guard_prefix:
