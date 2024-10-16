@@ -4946,7 +4946,7 @@ class SemanticParser(BasicParser):
         self.insert_import('math', AsName(MathAtan2, 'atan2'))
         return PythonTuple(r,t)
 
-    def _build_CmathRect(self, func_call):
+    def _build_CmathRect(self, func_call, func_call_args):
         """
         Method for building the node created by a call to `cmath.rect`.
 
@@ -4964,7 +4964,7 @@ class SemanticParser(BasicParser):
         TypedAstNode
             A node describing the result of a call to the `cmath.rect` function.
         """
-        arg_r, arg_phi = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
+        arg_r, arg_phi = func_call_args
         r = arg_r.value
         phi = arg_phi.value
         x = PyccelMul(r, MathCos(phi))
