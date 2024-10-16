@@ -12,6 +12,9 @@ from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 from pyccel.utilities.stage   import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
+
+from .bitwise_operators import PyccelBitOr, PyccelBitAnd
+
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 
@@ -789,7 +792,10 @@ class AugAssign(Assign):
             '-' : PyccelMinus,
             '*' : PyccelMul,
             '/' : PyccelDiv,
-            '%' : PyccelMod}
+            '%' : PyccelMod,
+            '|' : PyccelBitOr,
+            '&' : PyccelBitAnd,
+        }
 
     def __init__(
         self,
@@ -813,6 +819,10 @@ class AugAssign(Assign):
     @property
     def op(self):
         return self._op
+
+    @property
+    def pyccel_operator(self):
+        return self._accepted_operators[self._op]
 
     def to_basic_assign(self):
         """
