@@ -524,8 +524,8 @@ class PythonCodePrinter(CodePrinter):
         return ''
 
     def _print_DottedName(self, expr):
-        # A DottedName can only contain LiteralStrings at the printing stage
-        return '.'.join(n.python_value for n in expr.name)
+        # A DottedName can only contain LiteralStrings or PyccelSymbols at the printing stage
+        return '.'.join(str(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
