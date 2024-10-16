@@ -36,8 +36,8 @@ All notable changes to this project will be documented in this file.
 -   #1690 : Add C support for list method `pop()`.
 -   #1877 : Add C and Fortran Support for set method `pop()`.
 -   #1917 : Add C and Fortran support for set method `add()`.
--   #1918 : Add for set method `clear()`.
--   #1918 : Add for set method `copy()`.
+-   #1918 : Add support for set method `clear()`.
+-   #1918 : Add support for set method `copy()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
