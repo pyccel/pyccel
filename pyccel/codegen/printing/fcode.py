@@ -1330,6 +1330,11 @@ class FCodePrinter(CodePrinter):
         self.add_import(self._build_gFTL_extension_module(expr_type))
         return f'{type_name}_pop({var_code})\n'
 
+    def _print_SetCopy(self, expr):
+        var_code = self._print(expr.set_variable)
+        type_name = self._print(expr.class_type)
+        return f'{type_name}({var_code})'
+
     def _print_SetUnion(self, expr):
         assign_base = expr.get_direct_user_nodes(lambda n: isinstance(n, Assign))
         var = expr.set_variable
