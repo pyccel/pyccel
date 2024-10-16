@@ -3668,9 +3668,10 @@ class ClassDef(ScopedAstNode):
             n_classes = len(self.superclasses)
             while method is None and i<n_classes:
                 try:
-                    method = self.superclasses[i].get_method(name)
+                    method = self.superclasses[i].get_method(name, raise_error)
                 except StopIteration:
                     method = None
+                i += 1
 
         if method is None and raise_error:
             errors.report(f"Can't find method {name} in class {self.name}",
