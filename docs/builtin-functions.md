@@ -98,7 +98,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 |----------|-----------|
 | **`add`** | **Yes** |
 | **`clear`** | **Yes** |
-| `copy` | Python-only |
+| **`copy`** | **Yes** |
 | `difference` | No |
 | `difference_update` | No |
 | `discard` | Python-only |
@@ -107,7 +107,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `isdisjoint` | No |
 | `issubset` | No |
 | `issuperset` | No |
-| `pop` | C and Python |
+| **`pop`** | **Yes** |
 | `remove` | Python-only |
 | `symmetric_difference` | No |
 | `symmetric_difference_update` | No |
