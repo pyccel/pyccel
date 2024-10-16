@@ -940,7 +940,7 @@ class SemanticParser(BasicParser):
             except PyccelSemanticError as err:
                 pass
         if magic_method:
-            expr_new = magic_method(*visited_args)
+            expr_new = self._handle_function(expr, magic_method, visited_args)
         else:
             try:
                 expr_new = type(expr)(*visited_args)
@@ -1140,7 +1140,7 @@ class SemanticParser(BasicParser):
                         pyccel_stage.set_stage('semantic')
                         new_expr.set_current_user_node(expr.current_user_node)
                         expr = new_expr
-                    return getattr(self, annotation_method)(expr)
+                    return getattr(self, annotation_method)(expr, args)
 
             argument_description = func.argument_description
             func = func.cls_name
@@ -1417,7 +1417,8 @@ class SemanticParser(BasicParser):
             d_lhs['memory_handling'] = 'alias'
             rhs.base.is_target = not rhs.base.is_alias
 
-    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False):
+    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign = False,
+            arr_in_multirets=False):
         """
         Create a variable from the left-hand side (lhs) of an assignment.
         
@@ -1441,12 +1442,12 @@ class SemanticParser(BasicParser):
             A list which allows collection of any additional expressions
             resulting from this operation (e.g. Allocation).
 
-        is_augassign : bool
+        is_augassign : bool, default=False
             Indicates whether this is an assign ( = ) or an augassign ( += / -= / etc )
             This is necessary as the restrictions on the dtype are less strict in this
             case.
 
-        arr_in_multirets : bool
+        arr_in_multirets : bool, default=False
             If True, rhs has an array in its results, otherwise, it should be set to False.
             It helps when we don't need lhs to be a pointer in case of a returned array in
             a tuple of results.
@@ -3278,7 +3279,7 @@ class SemanticParser(BasicParser):
                     errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
                         severity='error')
                     return None
-            lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign))
+            lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions)
 
         # Handle assignment to multiple variables
         elif isinstance(lhs, (PythonTuple, PythonList)):
@@ -3287,7 +3288,7 @@ class SemanticParser(BasicParser):
                 r_iter = [r.var for r in rhs.funcdef.results]
                 for i,(l,r) in enumerate(zip(lhs,r_iter)):
                     d = self._infer_type(r)
-                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign),
+                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions,
                                                     arr_in_multirets=r.rank>0 ) )
                 lhs = PythonTuple(*new_lhs)
             else:
@@ -3419,6 +3420,45 @@ class SemanticParser(BasicParser):
             result = CodeBlock(new_expressions)
             return result
 
+    def _visit_AugAssign(self, expr):
+        lhs = self._visit(expr.lhs)
+        rhs = self._visit(expr.rhs)
+        operator = expr.pyccel_operator
+        new_expressions = []
+        try:
+            test_node = operator(lhs, rhs)
+        except TypeError:
+            test_node = None
+        if test_node:
+            lhs = self._assign_lhs_variable(expr.lhs, self._infer_type(test_node), test_node,
+                    new_expressions, is_augassign = True)
+            lhs.remove_user_node(test_node, invalidate = False)
+            rhs.remove_user_node(test_node, invalidate = False)
+            aug_assign = AugAssign(lhs, expr.op, rhs)
+        else:
+            magic_method_name = magic_method_map[operator]
+            increment_magic_method_name = '__i' + magic_method_name[2:]
+            class_type = lhs.class_type
+            class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+            try:
+                increment_magic_method = class_base.get_method(increment_magic_method_name, False)
+            except PyccelSemanticError:
+                increment_magic_method = None
+            if increment_magic_method:
+                return self._handle_function(expr, increment_magic_method, [lhs, rhs])
+            try:
+                magic_method = class_base.get_method(magic_method_name, False)
+            except PyccelSemanticError as err:
+                print(err)
+            operator_node = self._handle_function(expr, magic_method, [lhs, rhs])
+            lhs = self._assign_lhs_variable(expr.lhs, self._infer_type(operator_node), test_node,
+                    new_expressions, is_augassign = True)
+            aug_assign = Assign(lhs, operator_node)
+        if new_expressions:
+            return CodeBlock(new_expressions + [aug_assign])
+        else:
+            return aug_assign
+
     def _visit_For(self, expr):
 
         scope = self.create_new_loop_scope()
@@ -3446,8 +3486,7 @@ class SemanticParser(BasicParser):
             index = self.check_for_variable(syntactic_index)
             if index is None:
                 index = self._assign_lhs_variable(syntactic_index, iterator_d_var,
-                                rhs=start, new_expressions=new_expr,
-                                is_augassign=False)
+                                rhs=start, new_expressions=new_expr)
             iterable.set_loop_counter(index)
 
         if isinstance(iterator, PyccelSymbol):
@@ -3455,14 +3494,12 @@ class SemanticParser(BasicParser):
             iterator_d_var = self._infer_type(iterator_rhs)
 
             target = self._assign_lhs_variable(iterator, iterator_d_var,
-                            rhs=iterator_rhs, new_expressions=new_expr,
-                            is_augassign=False)
+                            rhs=iterator_rhs, new_expressions=new_expr)
 
         elif isinstance(iterator, PythonTuple):
             iterator_rhs = iterable.get_target_from_range()
             target = [self._assign_lhs_variable(it, self._infer_type(rhs),
-                                rhs=rhs, new_expressions=new_expr,
-                                is_augassign=False)
+                                rhs=rhs, new_expressions=new_expr)
                         for it, rhs in zip(iterator, iterator_rhs)]
         else:
 
@@ -3665,7 +3702,7 @@ class SemanticParser(BasicParser):
         # ...
         lhs_symbol = expr.lhs.base
         ne = []
-        lhs = self._assign_lhs_variable(lhs_symbol, d_var, rhs=expr, new_expressions=ne, is_augassign=False)
+        lhs = self._assign_lhs_variable(lhs_symbol, d_var, rhs=expr, new_expressions=ne)
         lhs_alloc = ne[0]
 
         if isinstance(target, PythonTuple) and not target.is_homogeneous:
@@ -4670,7 +4707,7 @@ class SemanticParser(BasicParser):
     #                 _build functions
     #====================================================
 
-    def _build_NumpyWhere(self, func_call):
+    def _build_NumpyWhere(self, func_call, annotated_args):
         """
         Method for building the node created by a call to `numpy.where`.
 
@@ -4697,7 +4734,7 @@ class SemanticParser(BasicParser):
             return self._build_NumpyNonZero(func_call)
         return NumpyWhere(*args, **kwargs)
 
-    def _build_NumpyNonZero(self, func_call):
+    def _build_NumpyNonZero(self, func_call, func_call_args):
         """
         Method for building the node created by a call to `numpy.nonzero`.
 
@@ -4715,7 +4752,6 @@ class SemanticParser(BasicParser):
         TypedAstNode
             A node describing the result of a call to the `numpy.nonzero` function.
         """
-        func_call_args = self._handle_function_args(func_call.args)
         # expr is a FunctionCall
         arg = func_call_args[0].value
         if not isinstance(arg, Variable):
@@ -4729,7 +4765,7 @@ class SemanticParser(BasicParser):
             arg = self._visit(new_symbol)
         return NumpyWhere(arg)
 
-    def _build_ListExtend(self, expr):
+    def _build_ListExtend(self, expr, args):
         """
         Method to navigate the syntactic DottedName node of an `extend()` call.
 
@@ -4776,7 +4812,7 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
 
-    def _build_MathSqrt(self, func_call):
+    def _build_MathSqrt(self, func_call, func_call_args):
         """
         Method for building the node created by a call to `math.sqrt`.
 
@@ -4796,7 +4832,7 @@ class SemanticParser(BasicParser):
             A node describing the result of a call to the `cmath.sqrt` function.
         """
         func = self.scope.find(func_call.funcdef, 'functions')
-        arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
+        arg = func_call_args[0]
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
             if mul1 is mul2:
@@ -4830,7 +4866,7 @@ class SemanticParser(BasicParser):
 
         return self._handle_function(func_call, func, (arg,), use_build_functions = False)
 
-    def _build_CmathSqrt(self, func_call):
+    def _build_CmathSqrt(self, func_call, func_call_args):
         """
         Method for building the node created by a call to `cmath.sqrt`.
 
@@ -4850,7 +4886,7 @@ class SemanticParser(BasicParser):
             A node describing the result of a call to the `cmath.sqrt` function.
         """
         func = self.scope.find(func_call.funcdef, 'functions')
-        arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
+        arg = func_call_args[0]
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
             is_abs = False
@@ -4878,7 +4914,7 @@ class SemanticParser(BasicParser):
 
         return self._handle_function(func_call, func, (arg,), use_build_functions = False)
 
-    def _build_CmathPolar(self, func_call):
+    def _build_CmathPolar(self, func_call, func_call_args):
         """
         Method for building the node created by a call to `cmath.polar`.
 
@@ -4896,7 +4932,7 @@ class SemanticParser(BasicParser):
         TypedAstNode
             A node describing the result of a call to the `cmath.polar` function.
         """
-        arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
+        arg = func_call_args[0]
         z = arg.value
         x = PythonReal(z)
         y = PythonImag(z)
@@ -4937,7 +4973,7 @@ class SemanticParser(BasicParser):
         self.insert_import('math', AsName(MathSin, 'sin'))
         return PyccelAdd(x, PyccelMul(y, LiteralImaginaryUnit()))
 
-    def _build_CmathPhase(self, func_call):
+    def _build_CmathPhase(self, func_call, func_call_args):
         """
         Method for building the node created by a call to `cmath.phase`.
 
@@ -4955,7 +4991,7 @@ class SemanticParser(BasicParser):
         TypedAstNode
             A node describing the result of a call to the `cmath.phase` function.
         """
-        arg, = self._handle_function_args(func_call.args) #pylint: disable=unbalanced-tuple-unpacking
+        arg = func_call_args[0]
         var = arg.value
         if not isinstance(var.dtype.primitive_type, PrimitiveComplexType):
             return LiteralFloat(0.0)
@@ -4963,7 +4999,7 @@ class SemanticParser(BasicParser):
             self.insert_import('math', AsName(MathAtan2, 'atan2'))
             return MathAtan2(PythonImag(var), PythonReal(var))
 
-    def _build_PythonTupleFunction(self, func_call):
+    def _build_PythonTupleFunction(self, func_call, func_args):
         """
         Method for building the node created by a call to `tuple()`.
 
@@ -4981,7 +5017,6 @@ class SemanticParser(BasicParser):
         PythonTuple
             A node describing the result of a call to the `tuple()` function.
         """
-        func_args = self._handle_function_args(func_call.args)
         arg = func_args[0].value
         if isinstance(arg, PythonTuple):
             return arg
@@ -4990,7 +5025,7 @@ class SemanticParser(BasicParser):
         else:
             raise TypeError(f"Can't unpack {arg} into a tuple")
 
-    def _build_NumpyArray(self, expr):
+    def _build_NumpyArray(self, expr, args):
         """
         Method for building the node created by a call to `numpy.array`.
 
@@ -5059,7 +5094,7 @@ class SemanticParser(BasicParser):
 
         return NumpyArray(arg, dtype, order, ndmin)
 
-    def _build_SetUpdate(self, expr):
+    def _build_SetUpdate(self, expr, args):
         """
         Method to navigate the syntactic DottedName node of an `update()` call.
 
@@ -5073,7 +5108,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : DottedName
+        expr : DottedName | AugAssign
             The syntactic DottedName node that represent the call to `.update()`.
 
         Returns
@@ -5081,9 +5116,17 @@ class SemanticParser(BasicParser):
         PyccelAstNode
             CodeBlock or For containing SetAdd objects.
         """
-        iterable = expr.name[1].args[0].value
+        if isinstance(expr, DottedName):
+            iterable = expr.name[1].args[0].value
+            set_obj = expr.name[0]
+        elif isinstance(expr, AugAssign):
+            iterable = expr.rhs
+            set_obj = expr.lhs
+        else:
+            raise NotImplementedError(f"Function doesn't handle {type(expr)}")
+
         if isinstance(iterable, (PythonList, PythonSet, PythonTuple)):
-            list_variable = self._visit(expr.name[0])
+            list_variable = self._visit(set_obj)
             added_list = self._visit(iterable)
             try:
                 store = [SetAdd(list_variable, a) for a in added_list]
@@ -5096,7 +5139,7 @@ class SemanticParser(BasicParser):
             for_target = self.scope.get_new_name()
             arg = FunctionCallArgument(for_target)
             func_call = FunctionCall('add', [arg])
-            dotted = DottedName(expr.name[0], func_call)
+            dotted = DottedName(set_obj, func_call)
             lhs = PyccelSymbol('_', is_temp=True)
             assign = Assign(lhs, dotted)
             assign.set_current_ast(expr.python_ast)
@@ -5105,7 +5148,7 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
 
-    def _build_SetUnion(self, expr):
+    def _build_SetUnion(self, expr, args):
         """
         Method to navigate the syntactic DottedName node of a `set.union()` call.
 
@@ -5124,10 +5167,17 @@ class SemanticParser(BasicParser):
         SetUnion | CodeBlock
             The nodes describing the union operator.
         """
-        syntactic_set_obj = expr.name[0]
-        syntactic_args = expr.name[1].args
-        set_obj = self._visit(expr.name[0])
-        args = [self._visit(a.value) for a in expr.name[1].args]
+        if isinstance(expr, DottedName):
+            syntactic_set_obj = expr.name[0]
+            syntactic_args = [a.value for a in expr.name[1].args]
+        elif isinstance(expr, PyccelBitOr):
+            syntactic_set_obj = expr.args[0]
+            syntactic_args = expr.args[1:]
+        else:
+            raise NotImplementedError(f"Function doesn't handle {type(expr)}")
+
+        set_obj = self._visit(syntactic_set_obj)
+        args = [self._visit(a) for a in syntactic_args]
         class_type = set_obj.class_type
         if all(a.class_type == class_type for a in args):
             return SetUnion(set_obj, *args)
