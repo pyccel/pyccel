@@ -490,7 +490,7 @@ def test_set_union_augoperator(language):
         a = {1,2,3,4}
         b = {5,6,7,2}
         a |= b
-        return len(c), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop()
+        return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
 
     epyccel_func = epyccel(union_int, language = language)
     pyccel_result = epyccel_func()
