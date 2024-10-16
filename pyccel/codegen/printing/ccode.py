@@ -2524,12 +2524,6 @@ class CCodePrinter(CodePrinter):
     def _print_EmptyNode(self, expr):
         return ''
 
-    def _print_SetAdd(self, expr):
-        var_type = self.get_declare_type(expr.set_variable)
-        set_var = self._print(ObjectAddress(expr.set_variable))
-        arg = self._print(expr.args[0])
-        return f'{var_type}_push({set_var}, {arg});\n'
-
     #=================== OMP ==================
 
     def _print_OmpAnnotatedComment(self, expr):
@@ -2626,6 +2620,17 @@ class CCodePrinter(CodePrinter):
         var_type = self.get_declare_type(expr.set_variable)
         set_var = self._print(ObjectAddress(expr.set_variable))
         return f'{var_type}_clear({set_var});\n'
+
+    def _print_SetAdd(self, expr):
+        var_type = self.get_declare_type(expr.set_variable)
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        arg = self._print(expr.args[0])
+        return f'{var_type}_push({set_var}, {arg});\n'
+
+    def _print_SetCopy(self, expr):
+        var_type = self.get_declare_type(expr.set_variable)
+        set_var = self._print(expr.set_variable)
+        return f'{var_type}_clone({set_var})'
 
     #=================== MACROS ==================
 
