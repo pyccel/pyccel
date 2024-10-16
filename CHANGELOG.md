@@ -12,8 +12,6 @@ All notable changes to this project will be documented in this file.
 -   #1700 : Add Python support for list method `sort()`.
 -   #1696 : Add Python support for list method `copy()`.
 -   #1693 : Add Python support for list method `remove()`.
--   #1739 : Add Python support for set method `clear()`.
--   #1740 : Add Python support for set method `copy()`.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1743 : Add Python support for set method `discard()`.
 -   #1754 : Add Python support for set method `update()`.
@@ -38,7 +36,8 @@ All notable changes to this project will be documented in this file.
 -   #1690 : Add C support for list method `pop()`.
 -   #1877 : Add C and Fortran Support for set method `pop()`.
 -   #1917 : Add C and Fortran support for set method `add()`.
--   #1918 : Add C and Fortran support for set method `clear()`.
+-   #1918 : Add support for set method `clear()`.
+-   #1918 : Add support for set method `copy()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.

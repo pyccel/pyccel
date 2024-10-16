@@ -1332,6 +1332,11 @@ class FCodePrinter(CodePrinter):
         self.add_import(self._build_gFTL_extension_module(expr_type))
         return f'{type_name}_pop({var_code})\n'
 
+    def _print_SetCopy(self, expr):
+        var_code = self._print(expr.set_variable)
+        type_name = self._print(expr.class_type)
+        return f'{type_name}({var_code})'
+
     #========================== Numpy Elements ===============================#
 
     def _print_NumpySum(self, expr):
