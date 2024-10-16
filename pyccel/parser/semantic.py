@@ -3430,10 +3430,10 @@ class SemanticParser(BasicParser):
         except TypeError:
             test_node = None
         if test_node:
-            lhs = self._assign_lhs_variable(expr.lhs, self._infer_type(test_node), test_node,
-                    new_expressions, is_augassign = True)
             lhs.remove_user_node(test_node, invalidate = False)
             rhs.remove_user_node(test_node, invalidate = False)
+            lhs = self._assign_lhs_variable(expr.lhs, self._infer_type(test_node), test_node,
+                    new_expressions, is_augassign = True)
             aug_assign = AugAssign(lhs, expr.op, rhs)
         else:
             magic_method_name = magic_method_map[operator]
