@@ -29,7 +29,7 @@ from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
-from pyccel.ast.builtin_methods.set_methods  import SetMethod, SetAdd, SetUnion
+from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -5027,7 +5027,7 @@ class SemanticParser(BasicParser):
         elements of the iterable. If not, it attempts to construct a syntactic `For` 
         loop to iterate over the iterable object and added its elements to the set 
         object. Finally, it passes to a `_visit()` call for semantic parsing.
-    
+
         Parameters
         ----------
         expr : DottedName
@@ -5063,6 +5063,24 @@ class SemanticParser(BasicParser):
             return self._visit(for_obj)
 
     def _build_SetUnion(self, expr):
+        """
+        Method to navigate the syntactic DottedName node of a `set.union()` call.
+
+        The purpose of this `_build` method is to construct new nodes from a syntactic
+        DottedName node. It creates a SetUnion node if the type of the arguments matches
+        the type of the original set. Otherwise it uses `set.copy` and `set.update` to
+        handle iterators.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represent the call to `.union()`.
+
+        Returns
+        -------
+        SetUnion | CodeBlock
+            The nodes describing the union operator.
+        """
         syntactic_set_obj = expr.name[0]
         syntactic_args = expr.name[1].args
         set_obj = self._visit(expr.name[0])
