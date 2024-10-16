@@ -888,7 +888,7 @@ class FCodePrinter(CodePrinter):
 
         source = expr.source
         if isinstance(source, DottedName):
-            source = source.name[-1]
+            source = source.name[-1].python_value
         elif isinstance(source, LiteralString):
             source = source.python_value
         else:
