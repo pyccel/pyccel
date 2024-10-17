@@ -1126,7 +1126,7 @@ class CToPythonWrapper(Wrapper):
             else:
                 return Assign(res, func_call)
         else:
-            return Assign(results, func(*args)
+            return Assign(results, func(*args))
 
     #--------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1298,7 +1298,7 @@ class CToPythonWrapper(Wrapper):
 
         self.scope = func_scope
         # Build the body of the function
-        body.append(Assign(type_indicator, type_check_func(*python_arg_objs))
+        body.append(Assign(type_indicator, type_check_func(*python_arg_objs)))
 
         functions = []
         if_sections = []
@@ -1458,7 +1458,7 @@ class CToPythonWrapper(Wrapper):
         if n_py_results == 0:
             res = Py_None
             func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
-            body.append(Py_INCREF(res)))
+            body.append(Py_INCREF(res))
         elif n_py_results == 1:
             res = python_result_variables[0]
             func_results = [FunctionDefResult(res)]
@@ -1466,7 +1466,7 @@ class CToPythonWrapper(Wrapper):
             res = self.get_new_PyObject("result")
             body.append(AliasAssign(res, PyBuildValueNode([ObjectAddress(r) for r in python_result_variables])))
             for r in python_result_variables:
-                body.append(Py_DECREF(r)))
+                body.append(Py_DECREF(r))
             func_results = [FunctionDefResult(res)]
         body.append(Return([res]))
 
