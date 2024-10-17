@@ -119,10 +119,10 @@ class FortranToCWrapper(Wrapper):
 
             if len(results) == 1:
                 res = results[0]
-                func_call = AliasAssign(res, FunctionCall(func, args)) if res.is_alias else \
-                            Assign(res, FunctionCall(func, args))
+                func_call = AliasAssign(res, func(*args)) if res.is_alias else \
+                            Assign(res, func(*args))
             else:
-                func_call = Assign(results, FunctionCall(func, args))
+                func_call = Assign(results, func(*args))
             return body + [func_call]
 
     def _get_call_argument(self, bind_c_arg):
