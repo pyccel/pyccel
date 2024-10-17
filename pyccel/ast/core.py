@@ -12,6 +12,9 @@ from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 from pyccel.utilities.stage   import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
+
+from .bitwise_operators import PyccelBitOr, PyccelBitAnd
+
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 
@@ -789,7 +792,10 @@ class AugAssign(Assign):
             '-' : PyccelMinus,
             '*' : PyccelMul,
             '/' : PyccelDiv,
-            '%' : PyccelMod}
+            '%' : PyccelMod,
+            '|' : PyccelBitOr,
+            '&' : PyccelBitAnd,
+        }
 
     def __init__(
         self,
@@ -813,6 +819,10 @@ class AugAssign(Assign):
     @property
     def op(self):
         return self._op
+
+    @property
+    def pyccel_operator(self):
+        return self._accepted_operators[self._op]
 
     def to_basic_assign(self):
         """
@@ -2765,6 +2775,11 @@ class FunctionDef(ScopedAstNode):
         """
         return self._result_pointer_map
 
+    def __call__(self, *args, **kwargs):
+        arguments = [FunctionCallArgument(a) for a in args]
+        arguments += [FunctionCallArgument(a, keyword=key) for key, a in kwargs.items()]
+        return FunctionCall(self, arguments)
+
 class InlineFunctionDef(FunctionDef):
     """
     Represents a function definition for an inline function.
@@ -2954,6 +2969,9 @@ class PyccelFunctionDef(FunctionDef):
             'decorators':self._decorators,
             'argument_description':self._argument_description}
         return args, kwargs
+
+    def __call__(self, *args, **kwargs):
+        return self._cls_name(*args, **kwargs)
 
 class Interface(PyccelAstNode):
     """
@@ -3606,7 +3624,7 @@ class ClassDef(ScopedAstNode):
         interface.set_current_user_node(self)
         self._interfaces += (interface,)
 
-    def get_method(self, name):
+    def get_method(self, name, raise_error = True):
         """
         Get the method `name` of the current class.
 
@@ -3619,6 +3637,10 @@ class ClassDef(ScopedAstNode):
         ----------
         name : str
             The name of the attribute we are looking for.
+
+        raise_error : bool, default=True
+            True if an error should be found if the method is not found.
+            False if None can be returned instead.
 
         Returns
         -------
@@ -3646,11 +3668,12 @@ class ClassDef(ScopedAstNode):
             n_classes = len(self.superclasses)
             while method is None and i<n_classes:
                 try:
-                    method = self.superclasses[i].get_method(name)
+                    method = self.superclasses[i].get_method(name, raise_error)
                 except StopIteration:
                     method = None
+                i += 1
 
-        if method is None:
+        if method is None and raise_error:
             errors.report(f"Can't find method {name} in class {self.name}",
                     severity='fatal', symbol=self)
 
