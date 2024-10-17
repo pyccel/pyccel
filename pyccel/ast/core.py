@@ -2765,6 +2765,11 @@ class FunctionDef(ScopedAstNode):
         """
         return self._result_pointer_map
 
+   def __call__(self, *args, **kwargs):
+        arguments = [FunctionCallArgument(a) for a in args]
+        arguments += [FunctionCallArgument(a, keyword=key) for key, a in kwargs.items()]
+        return FunctionCall(self, arguments)
+
 class InlineFunctionDef(FunctionDef):
     """
     Represents a function definition for an inline function.
@@ -2954,6 +2959,9 @@ class PyccelFunctionDef(FunctionDef):
             'decorators':self._decorators,
             'argument_description':self._argument_description}
         return args, kwargs
+
+   def __call__(self, *args, **kwargs):
+        return self._cls_name(*args, **kwargs)
 
 class Interface(PyccelAstNode):
     """
