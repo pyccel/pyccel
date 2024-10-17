@@ -1090,9 +1090,9 @@ class SemanticParser(BasicParser):
                     if isinstance(expr, DottedName):
                         pyccel_stage.set_stage('syntactic')
                         if is_method:
-                            new_expr = DottedName(args[0].value, func(*args[1:]))
+                            new_expr = DottedName(args[0].value, FunctionCall(func, args[1:]))
                         else:
-                            new_expr = func(*args)
+                            new_expr = FunctionCall(func, args)
                         new_expr.set_current_ast(expr.python_ast)
                         pyccel_stage.set_stage('semantic')
                         expr = new_expr
@@ -2743,7 +2743,7 @@ class SemanticParser(BasicParser):
                         if hasattr(func, 'clone') and not isinstance(func, PyccelFunctionDef):
                             func  = func.clone(new_name)
                     pyccel_stage.set_stage('syntactic')
-                    syntactic_call = func(*args)
+                    syntactic_call = FunctionCall(func, args)
                     pyccel_stage.set_stage('semantic')
                     return self._handle_function(syntactic_call, func, args)
                 elif isinstance(rhs, Constant):
@@ -2878,9 +2878,9 @@ class SemanticParser(BasicParser):
                 new_import = Import('math',imp_name)
             self._visit(new_import)
             if isinstance(expr.args[0], PyccelAssociativeParenthesis):
-                new_call = sqrt_name(expr.args[0].args[0])
+                new_call = FunctionCall(sqrt_name, [expr.args[0].args[0]])
             else:
-                new_call = sqrt_name(expr.args[0])
+                new_call = FunctionCall(sqrt_name, [expr.args[0]])
 
             pyccel_stage.set_stage('semantic')
 
@@ -4767,7 +4767,7 @@ class SemanticParser(BasicParser):
                 fabs_name = self.scope.get_new_name('fabs')
                 imp_name = AsName('fabs', fabs_name)
                 new_import = Import('math',imp_name)
-                new_call = fabs_name(mul1)
+                new_call = FunctionCall(fabs_name, [mul1])
 
                 pyccel_stage.set_stage('semantic')
 
@@ -4782,7 +4782,7 @@ class SemanticParser(BasicParser):
                 fabs_name = self.scope.get_new_name('fabs')
                 imp_name = AsName('fabs', fabs_name)
                 new_import = Import('math',imp_name)
-                new_call = fabs_name(base)
+                new_call = FunctionCall(fabs_name, [base])
 
                 pyccel_stage.set_stage('semantic')
 
@@ -4829,7 +4829,7 @@ class SemanticParser(BasicParser):
                 abs_name = self.scope.get_new_name('abs')
                 imp_name = AsName('abs', abs_name)
                 new_import = Import('numpy',imp_name)
-                new_call = abs_name(abs_arg)
+                new_call = FunctionCall(abs_name, [abs_arg])
 
                 pyccel_stage.set_stage('semantic')
 
