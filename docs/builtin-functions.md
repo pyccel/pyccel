@@ -112,7 +112,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `symmetric_difference` | No |
 | `symmetric_difference_update` | No |
 | `union` | No |
-| `update` | Python-only |
+| **`update`** | **Yes** |
 
 ## Dictionary methods
 
