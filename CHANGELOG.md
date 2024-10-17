@@ -14,7 +14,6 @@ All notable changes to this project will be documented in this file.
 -   #1693 : Add Python support for list method `remove()`.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1743 : Add Python support for set method `discard()`.
--   #1754 : Add Python support for set method `update()`.
 -   #1893 : Add Python support for set initialisation with `set()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
@@ -38,6 +37,7 @@ All notable changes to this project will be documented in this file.
 -   #1917 : Add C and Fortran support for set method `add()`.
 -   #1918 : Add support for set method `clear()`.
 -   #1918 : Add support for set method `copy()`.
+-   #1754 : Add support for set method `update()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
