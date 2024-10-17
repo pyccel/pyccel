@@ -1387,6 +1387,9 @@ class CCodePrinter(CodePrinter):
             assert init == ''
             preface = ''
             init    = ' = {.shape = NULL}'
+        elif isinstance(var.class_type, HomogeneousContainerType):
+            preface = ''
+            init = ' = {0}'
         else:
             preface = ''
 
