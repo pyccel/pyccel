@@ -239,15 +239,16 @@ class SetUnion(SetMethod):
     """
     Represents a call to the set method .union.
 
-    Represents a call to the set method .union. This method combines two sets
-    by including all elements which appear in at least one of the sets.
+    Represents a call to the set method .union. This method builds a new set
+    by including all elements which appear in at least one of the iterables
+    (the set object and the arguments).
 
     Parameters
     ----------
     set_obj : TypedAstNode
         The set object which the method is called from.
     *others : TypedAstNode
-        The sets which will be combined with this set.
+        The iterables which will be combined with this set.
     """
     __slots__ = ('_other','_class_type', '_shape')
     name = 'union'
