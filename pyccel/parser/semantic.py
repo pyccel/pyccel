@@ -3434,6 +3434,7 @@ class SemanticParser(BasicParser):
             rhs.remove_user_node(test_node, invalidate = False)
             lhs = self._assign_lhs_variable(expr.lhs, self._infer_type(test_node), test_node,
                     new_expressions, is_augassign = True)
+            lhs = self._optional_params.get(lhs, lhs)
             aug_assign = AugAssign(lhs, expr.op, rhs)
         else:
             magic_method_name = magic_method_map[operator]
@@ -3445,6 +3446,7 @@ class SemanticParser(BasicParser):
             except PyccelSemanticError:
                 increment_magic_method = None
             if increment_magic_method:
+                lhs = self._optional_params.get(lhs, lhs)
                 return self._handle_function(expr, increment_magic_method, [lhs, rhs])
             try:
                 magic_method = class_base.get_method(magic_method_name, False)
@@ -3453,6 +3455,7 @@ class SemanticParser(BasicParser):
             operator_node = self._handle_function(expr, magic_method, [lhs, rhs])
             lhs = self._assign_lhs_variable(expr.lhs, self._infer_type(operator_node), test_node,
                     new_expressions, is_augassign = True)
+            lhs = self._optional_params.get(lhs, lhs)
             aug_assign = Assign(lhs, operator_node)
         if new_expressions:
             return CodeBlock(new_expressions + [aug_assign])
