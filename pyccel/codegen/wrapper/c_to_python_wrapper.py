@@ -1732,7 +1732,7 @@ class CToPythonWrapper(Wrapper):
 
         # Cast the C variable into a Python variable
         wrapper_function = C_to_Python(expr)
-        return [AliasAssign(py_equiv, wrapper_function(*expr))]
+        return [AliasAssign(py_equiv, wrapper_function(expr))]
 
     def _wrap_BindCArrayVariable(self, expr):
         """
