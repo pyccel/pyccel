@@ -21,6 +21,7 @@ __all__ = (
     'SetMethod',
     'SetPop',
     'SetRemove',
+    'SetUnion',
     'SetUpdate'
 )
 
@@ -227,6 +228,36 @@ class SetUpdate(SetMethod):
     """
     __slots__ = ()
     name = 'update'
+    _shape = None
+    _class_type = VoidType()
 
     def __init__(self, set_obj, iterable) -> None:
         super().__init__(set_obj, iterable)
+
+#==============================================================================
+class SetUnion(SetMethod):
+    """
+    Represents a call to the set method .union.
+
+    Represents a call to the set method .union. This method builds a new set
+    by including all elements which appear in at least one of the iterables
+    (the set object and the arguments).
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    *others : TypedAstNode
+        The iterables which will be combined with this set.
+    """
+    __slots__ = ('_other','_class_type', '_shape')
+    name = 'union'
+
+    def __init__(self, set_obj, *others):
+        self._class_type = set_obj.class_type
+        element_type = self._class_type.element_type
+        for o in others:
+            if element_type != o.class_type.element_type:
+                raise TypeError(f"Argument of type {o.class_type} cannot be used to build set of type {self._class_type}")
+        self._shape = (None,)*self._class_type.rank
+        super().__init__(set_obj, *others)
