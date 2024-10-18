@@ -3181,6 +3181,11 @@ class Interface(PyccelAstNode):
                         severity='fatal')
         return  self._functions[j]
 
+    def __call__(self, *args, **kwargs):
+        arguments = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
+        arguments += [FunctionCallArgument(a, keyword=key) for key, a in kwargs.items()]
+        return FunctionCall(self, arguments)
+
 class FunctionAddress(FunctionDef):
     """
     Represents a function address.
