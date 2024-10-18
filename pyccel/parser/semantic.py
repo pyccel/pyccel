@@ -2224,7 +2224,7 @@ class SemanticParser(BasicParser):
             if deallocs or import_frees:
                 # If there is anything that needs deallocating when the module goes out of scope
                 # create a deallocation function
-                import_free_calls = [FunctionCall(f,[],[]) for f in import_frees if f is not None]
+                import_free_calls = [f() for f in import_frees if f is not None]
                 free_func_body = If(IfSection(init_var,
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 # Ensure that the function is correctly defined within the namespaces
@@ -2302,11 +2302,11 @@ class SemanticParser(BasicParser):
             container['imports'][mod_name] = Import(self.scope.get_python_name(mod_name), mod)
 
             if init_func:
-                import_init  = FunctionCall(init_func, [], [])
+                import_init  = init_func()
                 program_body.insert2body(import_init, back=False)
 
             if free_func:
-                import_free  = FunctionCall(free_func,[],[])
+                import_free  = free_func()
                 program_body.insert2body(import_free)
 
             program = Program(prog_name,
@@ -4481,7 +4481,7 @@ class SemanticParser(BasicParser):
                 if new_name != old_name:
                     import_init = import_init.clone(new_name)
 
-                result  = FunctionCall(import_init,[],[])
+                result  = import_init()
 
             if import_free:
                 old_name = import_free.name
@@ -4567,7 +4567,7 @@ class SemanticParser(BasicParser):
 
         master_args = [get_arg(a,m) for a,m in zip(func.arguments, expr.master_arguments)]
 
-        master = FunctionCall(func, master_args)
+        master = func(*master_args)
         macro   = MacroFunction(name, args, master, master_args,
                                 results=expr.results, results_shapes=expr.results_shapes)
         self.scope.insert_macro(macro)
