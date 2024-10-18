@@ -1532,6 +1532,11 @@ class SemanticParser(BasicParser):
                                         shape=a.alloc_shape, status=status))
                             args = new_args
                             new_args = []
+                    elif isinstance(lhs.class_type, HomogeneousContainerType):
+                        alloc_type = 'dynamic'
+                        if isinstance(rhs, (PythonList, PythonDict, PythonSet)):
+                            alloc_type = 'static'
+                        new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status, alloc_type=alloc_type))
                     else:
                         new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status))
                 # ...
@@ -1700,6 +1705,12 @@ class SemanticParser(BasicParser):
                                 self.current_ast_node.col_offset))
 
                 else:
+                    alloc_type = None
+                    if isinstance(getattr(var,'class_type'), HomogeneousContainerType):
+                        if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
+                            alloc_type = 'static'
+                        else:
+                            alloc_type = 'dynamic'
                     if previous_allocations:
                         var.set_changeable_shape()
                         last_allocation = previous_allocations[-1]
@@ -1724,7 +1735,7 @@ class SemanticParser(BasicParser):
                     else:
                         status = 'unallocated'
 
-                    new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
+                    new_expressions.append(Allocate(var, shape=d_var['shape'], status=status, alloc_type=alloc_type))
 
                     if status == 'unallocated':
                         self._allocs[-1].add(var)
@@ -1738,7 +1749,7 @@ class SemanticParser(BasicParser):
                 # If previously allocated in If still under construction
                 status = previous_allocations[-1].status
 
-                new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
+                new_expressions.append(Allocate(var, shape=d_var['shape'], status=status, alloc_type=alloc_type))
             elif isinstance(var.class_type, CustomDataType) and not var.is_alias:
                 new_expressions.append(Deallocate(var))
 

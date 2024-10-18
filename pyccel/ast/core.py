@@ -395,16 +395,25 @@ class Allocate(PyccelAstNode):
         In C this provides the size which will be passed to malloc. In Fortran
         this provides the source argument of the allocate function.
 
+    alloc_type : str {'static'|'dynamic'}, optional
+        Defines the method of memory allocation for homogeneous containers. 
+        'static' refers to direct allocation with predefined data (e.g., `x = [1, 2, 4]`), 
+        while 'dynamic' is used for cases where the container's contents are generated 
+        dynamically (e.g., list comprehensions like `x = [i for i in range(3)]`). 
+        If not provided, the default behavior will be inferred from the context. 
+        This argument is optional and ensures proper memory allocation depending on how 
+        the container’s data is provided or generated.
+
     Notes
     -----
     An object of this class is immutable, although it contains a reference to a
     mutable Variable object.
     """
-    __slots__ = ('_variable', '_shape', '_order', '_status', '_like')
+    __slots__ = ('_variable', '_shape', '_order', '_status', '_like', '_alloc_type')
     _attribute_nodes = ('_variable', '_like')
 
     # ...
-    def __init__(self, variable, *, shape, status, like = None):
+    def __init__(self, variable, *, shape, status, like = None, alloc_type = None):
 
         if not isinstance(variable, (Variable, PointerCast)):
             raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
@@ -426,11 +435,16 @@ class Allocate(PyccelAstNode):
         if status not in ('allocated', 'unallocated', 'unknown'):
             raise ValueError(f"Value of 'status' not allowed: '{status}'")
 
+        if alloc_type:
+            if alloc_type not in ('static', 'dynamic'):
+                raise ValueError(f"Value of 'alloc_type' not allowed: '{alloc_type}'")
+
         self._variable = variable
         self._shape    = shape
         self._order    = variable.order
         self._status   = status
         self._like = like
+        self._alloc_type = alloc_type
         super().__init__()
     # ...
 
@@ -481,6 +495,18 @@ class Allocate(PyccelAstNode):
         this provides the source argument of the allocate function.
         """
         return self._like
+
+    @property
+    def alloc_type(self):
+        """
+        Determines the allocation type for homogeneous containers.
+
+        Returns a string that indicates the allocation type used for memory allocation.
+        The value is either 'static' for containers initialized with predefined data, 
+        or 'dynamic' for containers populated through generated data (e.g., list 
+        comprehensions or loops).
+        """
+        return self._alloc_type
 
     def __str__(self):
         return f'Allocate({self.variable}, shape={self.shape}, order={self.order}, status={self.status})'
