@@ -424,7 +424,7 @@ class CCodePrinter(CodePrinter):
         # use the function array_copy_data directly
         if isinstance(arg, Variable):
             if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
-                rhs_address = self._print(ObjectAddress(lhs))
+                rhs_address = self._print(ObjectAddress(arg))
                 lhs_c_type = self.get_c_type(lhs.class_type)
                 rhs_c_type = self.get_c_type(rhs.class_type)
                 iter_var_name1 = self._print(self.scope.get_temporary_variable(IteratorType(lhs.class_type)))
@@ -1587,11 +1587,11 @@ class CCodePrinter(CodePrinter):
             return f"(*{container_type}_at({list_var},{index}))"
 
         indices = ", ".join(self._print(i) for i in inds)
-        if isinstance(base.class_type, NumpyNDArrayType):
+        if isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             #TODO Handle slices
             return f'(*cspan_at({self._print(ObjectAddress(base))}, {indices}))'
         elif isinstance(base.class_type, CStackArray):
-            return f'{self._print(base)}[{indices}]'
+            return f'{self._print(ObjectAddress(base))}[{indices}]'
         else:
             raise NotImplementedError(f"Indexing not implemented for {base.class_type}")
 
