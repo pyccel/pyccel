@@ -3422,6 +3422,10 @@ class SemanticParser(BasicParser):
 
     def _visit_AugAssign(self, expr):
         lhs = self._visit(expr.lhs)
+        if lhs.is_const:
+            errors.report("Cannot modify 'const' variable",
+                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                symbol=lhs, severity='error')
         rhs = self._visit(expr.rhs)
         operator = expr.pyccel_operator
         new_expressions = []
