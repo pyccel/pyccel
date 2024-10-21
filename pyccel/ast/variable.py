@@ -561,7 +561,7 @@ class DottedName(PyccelAstNode):
     pyccel.stdlib.parallel
     """
     __slots__ = ('_name',)
-    _attribute_nodes = ()
+    _attribute_nodes = ('_name',)
 
     def __new__(cls, *args):
         if len(args) == 1:
