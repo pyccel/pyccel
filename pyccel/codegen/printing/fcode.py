@@ -553,7 +553,7 @@ class FCodePrinter(CodePrinter):
             compare_func = FunctionDef('complex_comparison',
                                        [FunctionDefArgument(tmpVar_x), FunctionDefArgument(tmpVar_y)],
                                        [FunctionDefResult(Variable(PythonNativeBool(), 'c'))], [])
-            lt_def = FunctionCall(compare_func, [tmpVar_x, tmpVar_y])
+            lt_def = compare_func(tmpVar_x, tmpVar_y)
         else:
             lt_def = PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y))
 
@@ -1331,6 +1331,11 @@ class FCodePrinter(CodePrinter):
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
         return f'{type_name}_pop({var_code})\n'
+
+    def _print_SetCopy(self, expr):
+        var_code = self._print(expr.set_variable)
+        type_name = self._print(expr.class_type)
+        return f'{type_name}({var_code})'
 
     #========================== Numpy Elements ===============================#
 
