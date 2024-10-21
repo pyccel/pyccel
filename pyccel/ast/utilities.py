@@ -10,27 +10,24 @@ from itertools import chain
 from collections import namedtuple
 
 import pyccel.decorators as pyccel_decorators
-from pyccel.errors.errors import Errors, PyccelError
+from pyccel.errors.errors import Errors
 
-from .core          import (AsName, Import, FunctionDef, FunctionCall,
-                            Allocate, Duplicate, Assign, For, CodeBlock,
-                            Concatenate, Module, PyccelFunctionDef)
-
-from .builtins      import (builtin_functions_dict,
-                            PythonRange, PythonList, PythonTuple, PythonSet)
+from .builtins      import PythonRange, PythonTuple
 from .cmathext      import cmath_mod
-from .datatypes     import HomogeneousTupleType, InhomogeneousTupleType, PythonNativeInt
+from .core          import (AsName, Import, FunctionCall, AugAssign,
+                            Duplicate, Assign, For, CodeBlock,
+                            Concatenate, Module, PyccelFunctionDef)
+from .datatypes     import PythonNativeInt
 from .internals     import PyccelFunction, Slice
 from .itertoolsext  import itertools_mod
-from .literals      import LiteralInteger, LiteralEllipsis, Nil
+from .literals      import LiteralInteger, LiteralEllipsis
 from .mathext       import math_mod
-from .sysext        import sys_mod
-
-from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
+from .numpyext      import (NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
-from .operators     import PyccelUnarySub
+from .operators     import PyccelUnarySub, PyccelOperator
 from .scipyext      import scipy_mod
+from .sysext        import sys_mod
 from .typingext     import typing_mod
 from .variable      import Variable, IndexedElement
 
@@ -40,7 +37,6 @@ errors = Errors()
 
 __all__ = (
     'LoopCollection',
-    'builtin_function',
     'builtin_import',
     'builtin_import_registry',
     'split_positional_keyword_arguments',
@@ -412,16 +408,11 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
     if result is None:
         result = []
     current_level = 0
-    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet)
-    is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
-                                or (isinstance(f, PyccelFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
-                                    and not isinstance(f, (NumpyTranspose))))
     for line in block:
 
-        if (isinstance(line, Assign) and
-                not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
-                not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
-                not is_function_call(line.rhs)): # not a basic function call
+        if isinstance(line, AugAssign) or (isinstance(line, Assign) and
+                isinstance(line.lhs, Variable) and
+                isinstance(line.rhs, PyccelOperator)):
 
             # Collect lhs variable
             # This is needed to know what has already been modified in the loop
@@ -687,62 +678,6 @@ def insert_fors(blocks, indices, scope, level = 0):
                     scope = loop_scope)]
 
 #==============================================================================
-def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
-    """
-    Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines.
-
-    Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines.
-    These changes are carried out in-place.
-
-    Parameters
-    ----------
-    block : CodeBlock
-        The expression to be modified.
-
-    language_has_vectors : bool, default=False
-        Indicates whether the target language has built-in support for vector operations.
-
-    Examples
-    --------
-    >>> from pyccel.ast.builtins  import PythonTuple
-    >>> from pyccel.ast.core      import Assign, CodeBlock
-    >>> from pyccel.ast.datatypes import PythonNativeInt
-    >>> from pyccel.ast.literals  import LiteralInteger
-    >>> from pyccel.ast.utilities import expand_to_loops
-    >>> from pyccel.ast.variable  import Variable
-    >>> a = Variable(PythonNativeInt(), 'a')
-    >>> b = Variable(PythonNativeInt(), 'b')
-    >>> c = Variable(PythonNativeInt(), 'c')
-    >>> expr = [Assign(PythonTuple(a,b,c),PythonTuple(LiteralInteger(0),LiteralInteger(1),LiteralInteger(2))]
-    >>> expand_inhomog_tuple_assignments(CodeBlock(expr))
-    [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
-    """
-    if not language_has_vectors:
-        allocs_to_unravel = [a for a in block.get_attribute_nodes(Assign) \
-                    if isinstance(a.lhs, Variable) \
-                    and isinstance(a.lhs.class_type, HomogeneousTupleType) \
-                    and isinstance(a.rhs.class_type, HomogeneousTupleType)]
-        new_allocs = [(Assign(a.lhs, NumpyEmpty(a.lhs.shape,
-                                     dtype=a.lhs.dtype,
-                                     order=a.lhs.order)
-                    ), a) if getattr(a.lhs, 'on_stack', False)
-                    else (a) if getattr(a.lhs, 'on_heap', False)
-                    else (Allocate(a.lhs,
-                            shape=a.lhs.shape,
-                            order = a.lhs.order,
-                            status="unknown"), a)
-                    for a in allocs_to_unravel]
-        block.substitute(allocs_to_unravel, new_allocs)
-
-    assigns = [a for a in block.get_attribute_nodes(Assign) \
-                if isinstance(a.lhs.class_type, InhomogeneousTupleType) \
-                and isinstance(a.rhs, (PythonTuple, Variable))]
-    if len(assigns) != 0:
-        new_assigns = [[Assign(l,r) for l,r in zip(a.lhs, a.rhs)] for a in assigns]
-        block.substitute(assigns, new_assigns)
-        expand_inhomog_tuple_assignments(block)
-
-#==============================================================================
 def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     """
     Re-write a list of expressions to include explicit loops where necessary.
@@ -790,8 +725,6 @@ def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     >>> expand_to_loops(expr, language_has_vectors = False)
     [For(i_0, PythonRange(0, LiteralInteger(4), LiteralInteger(1)), CodeBlock([IndexedElement(c, i_0) := PyccelAdd(IndexedElement(a, i_0), IndexedElement(b, i_0))]), [])]
     """
-    expand_inhomog_tuple_assignments(block)
-
     indices = []
     res = collect_loops(block.body, indices, new_index, language_has_vectors)
 
