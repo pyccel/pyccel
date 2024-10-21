@@ -2372,35 +2372,31 @@ class CToPythonWrapper(Wrapper):
         list[PyccelAstNode]
             A list of expressions which extract the argument from collect_arg into arg_var.
         """
+        assert arg_var is None
+        parts = self._get_array_parts(orig_var, collect_arg)
+        body = parts['body']
+        shape = parts['shape']
+        strides = parts['strides']
+        shape_elems = [IndexedElement(shape, i) for i in range(orig_var.rank)]
+        stride_elems = [IndexedElement(strides, i) for i in range(orig_var.rank)]
+        args = [parts['data']] + shape_elems + stride_elems
+        default_body = [AliasAssign(parts['data'], Nil())] + \
+                [Assign(s, 0) for s in shape_elems] + \
+                [Assign(s, 1) for s in stride_elems]
+
         if is_bind_c_argument:
-            assert arg_var is None
-            parts = self._get_array_parts(orig_var, collect_arg)
-            body = parts['body']
-            shape = parts['shape']
-            strides = parts['strides']
-            args = [parts['data']] + [IndexedElement(shape, i) for i in range(orig_var.rank)] \
-                    + [IndexedElement(strides, i) for i in range(orig_var.rank)]
-
-            default_body = [AliasAssign(parts['data'], Nil())] + \
-                    [Assign(IndexedElement(shape, i), 0) for i in range(orig_var.rank)] + \
-                    [Assign(IndexedElement(strides, i), 1) for i in range(orig_var.rank)]
             return {'body': body, 'args': args, 'default_init': default_body}
-        else:
-            assert not bound_argument
-            self._wrapping_arrays = True
-            if arg_var is None:
-                arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
-                                        memory_handling='alias', new_class = Variable)
-                self.scope.insert_variable(arg_var, orig_var.name)
 
-            body = [Assign(arg_var, pyarray_to_ndarray(collect_arg))]
+        arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+                                memory_handling='alias', new_class = Variable)
+        #sliced_arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+        #                        memory_handling='alias', new_class = Variable)
+        self.scope.insert_variable(arg_var, orig_var.name)
 
-            if orig_var.is_optional:
-                memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
-                body.insert(0, AliasAssign(arg_var, memory_var))
-
-            return {'body': body,
-                    'args': [arg_var]}
+        body.append(Allocate(arg_var, shape=shape_elems, status='unallocated', like=args[0]))
+        #body.append(Assign(sliced_arg_var, IndexedElement(arg_var, *stride_elems)))
+        #return {'body': body, 'args': [sliced_arg_var], 'default_init': default_body}
+        return {'body': body, 'args': [arg_var], 'default_init': default_body}
 
     def _extract_HomogeneousTupleType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
             is_bind_c_argument, *, arg_var = None):
