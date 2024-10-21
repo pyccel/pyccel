@@ -513,11 +513,3 @@ class CWrapperCodePrinter(CCodePrinter):
                 return f'{static}{external}{declaration_type}* {variable}{init};\n'
         else:
             return CCodePrinter._print_Declare(self, expr)
-
-    def _print_IndexedElement(self, expr):
-        if isinstance(expr.base.class_type, CStackArray):
-            base = self._print(expr.base)
-            idxs = ''.join(f'[{self._print(a)}]' for a in expr.indices)
-            return f'{base}{idxs}'
-        else:
-            return CCodePrinter._print_IndexedElement(self, expr)
