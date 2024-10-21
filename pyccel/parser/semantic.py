@@ -937,7 +937,7 @@ class SemanticParser(BasicParser):
             magic_method_name = '__r'+magic_method_name[2:]
             try:
                 magic_method = class_base.get_method(magic_method_name, False)
-            except PyccelSemanticError as err:
+            except PyccelSemanticError:
                 pass
         if magic_method:
             expr_new = self._handle_function(expr, magic_method, visited_args)
