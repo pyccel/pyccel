@@ -112,7 +112,7 @@ Instead they are recognised via the function [`pyccel.ast.utilities.builtin_func
 Functions from supported libraries are saved in an object of type [`pyccel.ast.core.PyccelFunctionDef`](../pyccel/ast/core.py) when they are imported.
 These functions are handled one of two ways.
 If there is special treatment which requires functions from the `SemanticParser` (e.g. handling inhomogeneous tuples or adding new imports) then a `_build_X` function should be created.
-Differently than the `_visit_X` functions, a `_build_X` function does not take an object of type `X` as argument, but rather a `FunctionCall` to the class `X`. In other words it does not visit `X`, but rather the call `X()`. If `X` represents a method of a class then `_build_X` takes a `DottedName` instead of a `FunctionCall`.
+Differently than the `_visit_X` functions, a `_build_X` function does not take an object of type `X` as argument, but rather a `FunctionCall` to the class `X` and the visited `FunctionCallArgument` objects. In other words it does not visit `X`, but rather the call `X()`. If `X` represents a method of a class then `_build_X` takes a `DottedName` instead of a `FunctionCall`.
 The `SemanticParser._visit_FunctionCall` function will call this visitation function internally if it exists.
 Otherwise the object will be created in the `SemanticParser._handle_function` function and its type will be determined by its constructor.
 
