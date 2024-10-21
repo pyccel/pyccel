@@ -1785,6 +1785,7 @@ class CCodePrinter(CodePrinter):
                 data_ptr_code = self._print(ObjectAddress(data_ptr))
                 return f'free({data_ptr_code});\n{data_ptr_code} = NULL;\n'
         else:
+            variable_address = self._print(ObjectAddress(expr.variable))
             return f'free({variable_address});\n'
 
     def _print_Slice(self, expr):
