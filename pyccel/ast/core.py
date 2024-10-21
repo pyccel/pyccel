@@ -2776,7 +2776,7 @@ class FunctionDef(ScopedAstNode):
         return self._result_pointer_map
 
     def __call__(self, *args, **kwargs):
-        arguments = [FunctionCallArgument(a) for a in args]
+        arguments = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
         arguments += [FunctionCallArgument(a, keyword=key) for key, a in kwargs.items()]
         return FunctionCall(self, arguments)
 
@@ -3190,6 +3190,11 @@ class Interface(PyccelAstNode):
             errors.report(f'Arguments types provided to {self.name} are incompatible',
                         severity='fatal')
         return  self._functions[j]
+
+    def __call__(self, *args, **kwargs):
+        arguments = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
+        arguments += [FunctionCallArgument(a, keyword=key) for key, a in kwargs.items()]
+        return FunctionCall(self, arguments)
 
 class FunctionAddress(FunctionDef):
     """
