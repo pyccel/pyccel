@@ -1970,7 +1970,7 @@ class FunctionCall(TypedAstNode):
             self._interface = None
             self._funcdef   = func
             self._arguments = tuple(args)
-            self._func_name = func
+            self._func_name = getattr(func, 'name', func)
             super().__init__()
             return
 
