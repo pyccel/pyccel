@@ -505,8 +505,6 @@ class CCodePrinter(CodePrinter):
                 operations += f"{declare_dtype} {dummy_array_name}[] = {subset_str};\n"
 
                 copy_to_data = self._print(copy_to_data_var)
-                #nelems = NumpySize(copy_to)
-                raise NotImplementedError("TODO")
                 operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * sizeof({declare_dtype}));\n"
 
                 i += lenSubset
