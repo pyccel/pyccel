@@ -5182,7 +5182,7 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
 
-    def _build_SetUnion(self, expr, args):
+    def _build_SetUnion(self, expr, function_call_args):
         """
         Method to navigate the syntactic DottedName node of a `set.union()` call.
 
@@ -5196,7 +5196,7 @@ class SemanticParser(BasicParser):
         expr : DottedName
             The syntactic DottedName node that represent the call to `.union()`.
 
-        args : iterable[FunctionCallArgument]
+        function_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
 
         Returns
@@ -5207,9 +5207,11 @@ class SemanticParser(BasicParser):
         if isinstance(expr, DottedName):
             syntactic_set_obj = expr.name[0]
             syntactic_args = [a.value for a in expr.name[1].args]
+            args = [a.value for a in function_call_args]
         elif isinstance(expr, PyccelBitOr):
             syntactic_set_obj = expr.args[0]
             syntactic_args = expr.args[1:]
+            args = function_call_args
         else:
             raise NotImplementedError(f"Function doesn't handle {type(expr)}")
 
