@@ -2397,7 +2397,7 @@ class CToPythonWrapper(Wrapper):
         original_size = [PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems)]
 
         body.append(Allocate(arg_var, shape=original_size, status='unallocated', like=args[0]))
-        body.append(Assign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, None, s) for s in stride_elems])))
+        body.append(AliasAssign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, None, s) for s in stride_elems])))
         return {'body': body, 'args': [sliced_arg_var], 'default_init': default_body}
 
     def _extract_HomogeneousTupleType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
