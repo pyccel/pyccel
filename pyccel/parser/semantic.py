@@ -4710,7 +4710,7 @@ class SemanticParser(BasicParser):
     #                 _build functions
     #====================================================
 
-    def _build_NumpyWhere(self, func_call, annotated_args):
+    def _build_NumpyWhere(self, func_call, func_call_args):
         """
         Method for building the node created by a call to `numpy.where`.
 
@@ -4723,12 +4723,14 @@ class SemanticParser(BasicParser):
         func_call : FunctionCall
             The syntactic FunctionCall describing the call to `numpy.nonzero.
 
+        func_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
         Returns
         -------
         TypedAstNode
             A node describing the result of a call to the `numpy.nonzero` function.
         """
-        func_call_args = self._handle_function_args(func_call.args)
         # expr is a FunctionCall
         args = [a.value for a in func_call_args if not a.has_keyword]
         kwargs = {a.keyword: a.value for a in func_call.args if a.has_keyword}
@@ -4749,6 +4751,9 @@ class SemanticParser(BasicParser):
         ----------
         func_call : FunctionCall
             The syntactic FunctionCall describing the call to `numpy.nonzero.
+
+        func_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
 
         Returns
         -------
@@ -4784,6 +4789,9 @@ class SemanticParser(BasicParser):
         ----------
         expr : DottedName
             The syntactic DottedName node that represent the call to `.extend()`.
+
+        args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
 
         Returns
         -------
@@ -4828,6 +4836,9 @@ class SemanticParser(BasicParser):
         ----------
         func_call : FunctionCall
             The syntactic FunctionCall describing the call to `cmath.sqrt`.
+
+        func_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
 
         Returns
         -------
@@ -4883,6 +4894,9 @@ class SemanticParser(BasicParser):
         func_call : FunctionCall
             The syntactic FunctionCall describing the call to `cmath.sqrt`.
 
+        func_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
         Returns
         -------
         TypedAstNode
@@ -4929,6 +4943,9 @@ class SemanticParser(BasicParser):
         ----------
         func_call : FunctionCall
             The syntactic FunctionCall describing the call to `cmath.polar`.
+
+        func_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
 
         Returns
         -------
@@ -4989,6 +5006,9 @@ class SemanticParser(BasicParser):
         func_call : FunctionCall
             The syntactic FunctionCall describing the call to `cmath.phase`.
 
+        func_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
         Returns
         -------
         TypedAstNode
@@ -5015,6 +5035,9 @@ class SemanticParser(BasicParser):
         func_call : FunctionCall
             The syntactic FunctionCall describing the call to `tuple()`.
 
+        func_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
         Returns
         -------
         PythonTuple
@@ -5028,7 +5051,7 @@ class SemanticParser(BasicParser):
         else:
             raise TypeError(f"Can't unpack {arg} into a tuple")
 
-    def _build_NumpyArray(self, expr, args):
+    def _build_NumpyArray(self, expr, func_call_args):
         """
         Method for building the node created by a call to `numpy.array`.
 
@@ -5041,6 +5064,9 @@ class SemanticParser(BasicParser):
         expr : FunctionCall | DottedName
             The syntactic FunctionCall describing the call to `numpy.array`.
             If `numpy.array` is called via a call to `numpy.copy` then this is a DottedName describing the call.
+
+        func_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
 
         Returns
         -------
@@ -5056,7 +5082,6 @@ class SemanticParser(BasicParser):
             func_call_args = func_call.args
             order = func_call_args[0].value if func_call_args else func.argument_description['order']
         else:
-            func_call_args = self._handle_function_args(expr.args)
             args, kwargs = split_positional_keyword_arguments(*func_call_args)
 
             def unpack_args(arg, dtype = None, order = 'K', ndmin = None):
@@ -5114,6 +5139,9 @@ class SemanticParser(BasicParser):
         expr : DottedName | AugAssign
             The syntactic DottedName node that represent the call to `.update()`.
 
+        args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
         Returns
         -------
         PyccelAstNode
@@ -5165,6 +5193,9 @@ class SemanticParser(BasicParser):
         expr : DottedName
             The syntactic DottedName node that represent the call to `.union()`.
 
+        args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
         Returns
         -------
         SetUnion | CodeBlock
@@ -5180,7 +5211,6 @@ class SemanticParser(BasicParser):
             raise NotImplementedError(f"Function doesn't handle {type(expr)}")
 
         set_obj = self._visit(syntactic_set_obj)
-        args = [self._visit(a) for a in syntactic_args]
         class_type = set_obj.class_type
         if all(a.class_type == class_type for a in args):
             return SetUnion(set_obj, *args)
