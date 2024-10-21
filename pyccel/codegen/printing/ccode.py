@@ -1588,7 +1588,6 @@ class CCodePrinter(CodePrinter):
 
         indices = ", ".join(self._print(i) for i in inds)
         if isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
-            #TODO Handle slices
             return f'(*cspan_at({self._print(ObjectAddress(base))}, {indices}))'
         elif isinstance(base.class_type, CStackArray):
             return f'{self._print(ObjectAddress(base))}[{indices}]'

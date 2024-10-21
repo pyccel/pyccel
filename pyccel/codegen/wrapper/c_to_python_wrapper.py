@@ -2387,16 +2387,18 @@ class CToPythonWrapper(Wrapper):
         if is_bind_c_argument:
             return {'body': body, 'args': args, 'default_init': default_body}
 
-        arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+        arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False,
                                 memory_handling='alias', new_class = Variable)
-        #sliced_arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
-        #                        memory_handling='alias', new_class = Variable)
-        self.scope.insert_variable(arg_var, orig_var.name)
+        sliced_arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+                                memory_handling='alias', new_class = Variable)
+        self.scope.insert_variable(arg_var)
+        self.scope.insert_variable(sliced_arg_var, orig_var.name)
 
-        body.append(Allocate(arg_var, shape=shape_elems, status='unallocated', like=args[0]))
-        #body.append(Assign(sliced_arg_var, IndexedElement(arg_var, *stride_elems)))
-        #return {'body': body, 'args': [sliced_arg_var], 'default_init': default_body}
-        return {'body': body, 'args': [arg_var], 'default_init': default_body}
+        original_size = [PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems)]
+
+        body.append(Allocate(arg_var, shape=original_size, status='unallocated', like=args[0]))
+        body.append(Assign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, None, s) for s in stride_elems])))
+        return {'body': body, 'args': [sliced_arg_var], 'default_init': default_body}
 
     def _extract_HomogeneousTupleType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
             is_bind_c_argument, *, arg_var = None):
