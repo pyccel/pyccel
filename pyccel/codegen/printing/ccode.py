@@ -1686,12 +1686,14 @@ class CCodePrinter(CodePrinter):
         elif isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
             start = PyccelMinus(array_size, LiteralInteger(1), simplify = True) if _slice.start is None else start
             stop = LiteralInteger(0) if _slice.stop is None else stop
+            raise NotImplementedError("Negative step not yet handled")
 
         # variable step in slice
         elif allow_negative_index and step and not isinstance(step, LiteralInteger):
             og_start = start
             start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, PyccelMinus(stop, LiteralInteger(1), simplify = True))
             stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, og_start)
+            raise NotImplementedError("Negative step not yet handled")
 
         return Slice(start, stop, step)
 
