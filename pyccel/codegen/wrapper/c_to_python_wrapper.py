@@ -34,18 +34,20 @@ from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CN
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
 from pyccel.ast.datatypes     import TupleType
+from pyccel.ast.internals     import Slice
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
 from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type
-from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array, PyccelPyArrayObject
 from pyccel.ast.numpy_wrapper import PyArray_DATA
+from pyccel.ast.numpy_wrapper import get_strides_and_size_from_numpy_array
+from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
-from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, to_pyarray
+from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, PyccelPyArrayObject, to_pyarray
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
-from pyccel.ast.operators     import PyccelLt, IfTernaryOperator, PyccelAnd
+from pyccel.ast.operators     import PyccelLt, IfTernaryOperator, PyccelMul, PyccelAnd
 from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
@@ -73,8 +75,6 @@ class CToPythonWrapper(Wrapper):
     def __init__(self, file_location):
         # A map used to find the Python-compatible Variable equivalent to an object in the AST
         self._python_object_map = {}
-        # Indicate if arrays were wrapped.
-        self._wrapping_arrays = False
         # The object that should be returned to indicate an error
         self._error_exit_code = Nil()
 
@@ -1177,7 +1177,6 @@ class CToPythonWrapper(Wrapper):
 
         self.exit_scope()
 
-        imports += cwrapper_ndarray_imports if self._wrapping_arrays else []
         if not isinstance(expr, BindCModule):
             imports.append(Import(mod_scope.get_python_name(expr.name), expr))
         original_mod = getattr(expr, 'original_module', expr)
@@ -1599,7 +1598,6 @@ class CToPythonWrapper(Wrapper):
         if isinstance(orig_var.class_type, NumpyNDArrayType):
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
             c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
-            self._wrapping_arrays = True
             body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])),
                     Deallocate(c_res)]
         elif isinstance(orig_var.dtype, CustomDataType):
@@ -1720,10 +1718,6 @@ class CToPythonWrapper(Wrapper):
         list of pyccel.ast.basic.PyccelAstNode
             The code which translates the Variable to a Python-compatible variable.
         """
-
-        # Ensure that cwrapper_ndarrays is imported
-        if expr.rank > 0:
-            self._wrapping_arrays = True
 
         # Create the resulting Variable with datatype `PyccelPyObject`
         py_equiv = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
@@ -2378,35 +2372,31 @@ class CToPythonWrapper(Wrapper):
         list[PyccelAstNode]
             A list of expressions which extract the argument from collect_arg into arg_var.
         """
+        assert arg_var is None
+        parts = self._get_array_parts(orig_var, collect_arg)
+        body = parts['body']
+        shape = parts['shape']
+        strides = parts['strides']
+        shape_elems = [IndexedElement(shape, i) for i in range(orig_var.rank)]
+        stride_elems = [IndexedElement(strides, i) for i in range(orig_var.rank)]
+        args = [parts['data']] + shape_elems + stride_elems
+        default_body = [AliasAssign(parts['data'], Nil())] + \
+                [Assign(s, 0) for s in shape_elems] + \
+                [Assign(s, 1) for s in stride_elems]
+
         if is_bind_c_argument:
-            assert arg_var is None
-            parts = self._get_array_parts(orig_var, collect_arg)
-            body = parts['body']
-            shape = parts['shape']
-            strides = parts['strides']
-            args = [parts['data']] + [IndexedElement(shape, i) for i in range(orig_var.rank)] \
-                    + [IndexedElement(strides, i) for i in range(orig_var.rank)]
-
-            default_body = [AliasAssign(parts['data'], Nil())] + \
-                    [Assign(IndexedElement(shape, i), 0) for i in range(orig_var.rank)] + \
-                    [Assign(IndexedElement(strides, i), 1) for i in range(orig_var.rank)]
             return {'body': body, 'args': args, 'default_init': default_body}
-        else:
-            assert not bound_argument
-            self._wrapping_arrays = True
-            if arg_var is None:
-                arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
-                                        memory_handling='alias', new_class = Variable)
-                self.scope.insert_variable(arg_var, orig_var.name)
 
-            body = [Assign(arg_var, pyarray_to_ndarray(collect_arg))]
+        arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+                                memory_handling='alias', new_class = Variable)
+        #sliced_arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+        #                        memory_handling='alias', new_class = Variable)
+        self.scope.insert_variable(arg_var, orig_var.name)
 
-            if orig_var.is_optional:
-                memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
-                body.insert(0, AliasAssign(arg_var, memory_var))
-
-            return {'body': body,
-                    'args': [arg_var]}
+        body.append(Allocate(arg_var, shape=shape_elems, status='unallocated', like=args[0]))
+        #body.append(Assign(sliced_arg_var, IndexedElement(arg_var, *stride_elems)))
+        #return {'body': body, 'args': [sliced_arg_var], 'default_init': default_body}
+        return {'body': body, 'args': [arg_var], 'default_init': default_body}
 
     def _extract_HomogeneousTupleType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
             is_bind_c_argument, *, arg_var = None):

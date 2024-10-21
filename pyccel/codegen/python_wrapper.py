@@ -197,7 +197,8 @@ def create_shared_library(codegen,
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
     #--------------------------------------------------------
     start_compile_libs = time.time()
-    for lib_name in ("ndarrays", "cwrapper_ndarrays"):
+    #for lib_name in ("ndarrays", "cwrapper_ndarrays"):
+    for lib_name in ("cwrapper_ndarrays",):
         if lib_name in wrapper_codegen.get_additional_imports():
             stdlib_folder, stdlib = internal_libs[lib_name]
 
