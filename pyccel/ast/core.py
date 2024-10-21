@@ -818,10 +818,20 @@ class AugAssign(Assign):
 
     @property
     def op(self):
+        """
+        Get the string describing the operator which modifies the lhs variable.
+
+        Get the string describing the operator which modifies the lhs variable.
+        """
         return self._op
 
     @property
     def pyccel_operator(self):
+        """
+        Get the PyccelOperator which modifies the lhs variable.
+
+        Get the PyccelOperator which modifies the lhs variable.
+        """
         return self._accepted_operators[self._op]
 
     def to_basic_assign(self):
