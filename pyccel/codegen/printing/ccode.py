@@ -1727,7 +1727,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
-                data_ptr = DottedVariable(VoidType(), 'data', lhs = var, memory_handling='alias')
+                data_ptr = DottedVariable(VoidType(), 'data', lhs = variable, memory_handling='alias')
                 free_code = f'if ({self._print(data_ptr)} != NULL)\n'
                 free_code += ''.join(("{\n", self._print(Deallocate(variable)), "}\n"))
             elif (expr.status == 'allocated'):
