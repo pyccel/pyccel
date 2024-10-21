@@ -4979,6 +4979,9 @@ class SemanticParser(BasicParser):
         func_call : FunctionCall
             The syntactic FunctionCall describing the call to `cmath.rect`.
 
+        func_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
         Returns
         -------
         TypedAstNode
