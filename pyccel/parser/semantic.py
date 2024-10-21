@@ -4736,7 +4736,7 @@ class SemanticParser(BasicParser):
         kwargs = {a.keyword: a.value for a in func_call.args if a.has_keyword}
         nargs = len(args)+len(kwargs)
         if nargs == 1:
-            return self._build_NumpyNonZero(func_call)
+            return self._build_NumpyNonZero(func_call, func_call_args)
         return NumpyWhere(*args, **kwargs)
 
     def _build_NumpyNonZero(self, func_call, func_call_args):
