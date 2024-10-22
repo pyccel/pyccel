@@ -944,7 +944,8 @@ class SemanticParser(BasicParser):
             except TypeError as err:
                 types = ', '.join(str(a.class_type) for a in visited_args)
                 errors.report(f"Operator {type(expr)} between objects of type ({types}) is not yet handled\n"
-                        + PYCCEL_RESTRICTION_TODO, symbol=expr, severity='fatal')
+                        + PYCCEL_RESTRICTION_TODO, symbol=expr, severity='fatal',
+                        traceback = err.__traceback__)
         return expr_new
 
     def _create_Duplicate(self, val, length):
