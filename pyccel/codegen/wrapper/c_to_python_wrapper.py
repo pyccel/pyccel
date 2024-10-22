@@ -2477,7 +2477,7 @@ class CToPythonWrapper(Wrapper):
         indexed_collect_arg = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
 
         body = [Assign(size_var, PyTuple_Size(collect_arg)),
-                Allocate(fill_var, shape = (size_var,), status = 'unallocated', like=indexed_orig_var)]
+                Allocate(fill_var, shape = (size_var,), status = 'unallocated')]
 
         for_scope = self.scope.create_new_loop_scope()
         self.scope = for_scope

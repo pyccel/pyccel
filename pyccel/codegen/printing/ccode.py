@@ -1718,9 +1718,13 @@ class CCodePrinter(CodePrinter):
             element_type = self.get_c_type(variable.class_type.element_type)
 
             if expr.like:
-                assert isinstance(expr.like.class_type, VoidType)
-                dummy_array_name = self._print(ObjectAddress(expr.like))
                 buffer_array = ''
+                if isinstance(expr.like.class_type, VoidType):
+                    dummy_array_name = self._print(ObjectAddress(expr.like))
+                elif isinstance(expr.like.class_type, BindCPointer):
+                    dummy_array_name = self._print(expr.like)
+                else:
+                    raise NotImplementedError("Unexpected type passed to like argument")
             else:
                 dummy_array_name = self.scope.get_new_name(f'{variable.name}_ptr')
                 buffer_array_var = Variable(variable.class_type.element_type, dummy_array_name, memory_handling='alias')
