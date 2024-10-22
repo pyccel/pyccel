@@ -22,13 +22,13 @@ runs:
           echo "DEBUG=1" >> $GITHUB_ENV
           export FLAGS="-xsv --log-cli-level DEBUG"
         else
-          export FLAGS=""
+          export FLAGS="-v"
         fi
         echo "FLAGS=${FLAGS}" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
     - name: Test C translation
-      run: python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" --ignore=ndarrays 2>&1 | tee s1_outfile.out
+      run: python -m pytest -n 1 -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" --ignore=ndarrays 2>&1 | tee s1_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
       id: pytest_1
