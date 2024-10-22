@@ -1595,10 +1595,17 @@ class CToPythonWrapper(Wrapper):
 
         # Create a variable to store the C-compatible result.
         if isinstance(orig_var.class_type, NumpyNDArrayType):
-            # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
             c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
-            body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])),
-                    Deallocate(c_res)]
+            typenum = numpy_dtype_registry[orig_var.dtype]
+            data_var = DottedVariable(VoidType(), 'data', memory_handling='alias',
+                        lhs=c_res)
+            shape_var = DottedVariable(CStackArray(PythonNativeInt()), 'shape',
+                        lhs=c_res)
+            release_memory = False
+            body = [AliasAssign(python_res, to_pyarray(
+                             LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
+                             convert_to_literal(orig_var.order != 'F'),
+                             convert_to_literal(release_memory)))]
         elif isinstance(orig_var.dtype, CustomDataType):
             scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
