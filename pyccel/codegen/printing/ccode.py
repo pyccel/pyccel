@@ -348,13 +348,6 @@ class CCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return self.indent_code(lines)
 
-    def _flatten_list(self, irregular_list):
-        if isinstance(irregular_list, (PythonList, PythonTuple)):
-            f_list = [element for item in irregular_list for element in self._flatten_list(item)]
-            return f_list
-        else:
-            return [irregular_list]
-
     def is_c_pointer(self, a):
         """
         Indicate whether the object is a pointer in C code.
@@ -393,6 +386,15 @@ class CCodePrinter(CodePrinter):
                 or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
+    def _flatten_list(self, irregular_list, order):
+        def to_list(arg):
+            if isinstance(arg, (PythonList, PythonTuple)):
+                return [to_list(a) for a in arg.args]
+            else:
+                return arg
+        f_list = np.array(to_list(irregular_list), order=order)
+        return f_list.ravel(order=order)
+
     #========================== Numpy Elements ===============================#
     def copy_NumpyArray_Data(self, expr):
         """
@@ -419,11 +421,15 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(str(expr))
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         lhs_address = self._print(ObjectAddress(lhs))
+        order = lhs.order
+
+        variables = [v for v in arg.get_attribute_nodes(Variable) if v.rank]
 
         # If the data is copied from a Variable rather than a list or tuple
         # use the function array_copy_data directly
         if isinstance(arg, Variable):
             if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+                # TODO : Create copy macro
                 rhs_address = self._print(ObjectAddress(arg))
                 lhs_c_type = self.get_c_type(lhs.class_type)
                 rhs_c_type = self.get_c_type(rhs.class_type)
@@ -437,8 +443,11 @@ class CCodePrinter(CodePrinter):
                          '}\n')
             else:
                 raise NotImplementedError(f"Can't copy variable of type {arg.class_type}")
+        elif not variables:
+            flattened_list = self._flatten_list(arg, order)
+        else:
+            raise NotImplementedError("TODO")
 
-        order = lhs.order
         lhs_dtype = lhs.dtype
         declare_dtype = self.get_c_type(lhs_dtype)
         if isinstance(lhs.class_type, NumpyNDArrayType):
@@ -448,21 +457,12 @@ class CCodePrinter(CodePrinter):
             dtype = self.find_in_ndarray_type_registry(numpy_precision_map[
                         (lhs_dtype.primitive_type, lhs_dtype.precision)])
         else:
-            raise NotImplementedError(f"Don't know how to index {lhs.class_type} type")
+            raise NotImplementedError(f"NumpyArray function not defined to create objects of type {lhs.class_type}")
 
-        flattened_list = self._flatten_list(arg)
         operations = ""
 
         # Get the variable where the data will be copied
-        if order == "F":
-            # If the order is F then the data should be copied non-contiguously so a temporary
-            # variable is required to pass to array_copy_data
-            new_dtype = lhs.class_type.swap_order()
-            temp_var = self.scope.get_temporary_variable(lhs, class_type=new_dtype)
-            operations += self._print(Allocate(temp_var, shape=lhs.shape, status="unallocated"))
-            copy_to = temp_var
-        else:
-            copy_to = lhs
+        copy_to = lhs
         copy_to_data_var = ObjectAddress(DottedVariable(VoidType(), 'data',
                                          memory_handling='alias', lhs=copy_to))
 
@@ -511,9 +511,6 @@ class CCodePrinter(CodePrinter):
                 if i < num_elements:
                     operations += self._print(AugAssign(offset_var, '+', LiteralInteger(lenSubset)))
 
-        if order == "F":
-            raise NotImplementedError("TODO")
-            operations += f"array_copy_data({lhs_address}, {self._print(copy_to)}, 0);\n" + self._print(Deallocate(copy_to))
         return operations
 
     def arrayFill(self, expr):
@@ -1700,10 +1697,8 @@ class CCodePrinter(CodePrinter):
         return Slice(start, stop, step)
 
     def _print_PyccelArraySize(self, expr):
-        arg = expr.arg
-        if self.is_c_pointer(arg):
-            return '{}->length'.format(self._print(ObjectAddress(arg)))
-        return '{}.length'.format(self._print(arg))
+        arg = self._print(ObjectAddress(expr.arg))
+        return f'cspan_size({arg})'
 
     def _print_PyccelArrayShapeElement(self, expr):
         arg = expr.arg
@@ -2091,9 +2086,17 @@ class CCodePrinter(CodePrinter):
 
     def _print_NumpyArray(self, expr):
         declare_type = self.get_c_type(expr.class_type)
-        values = ', '.join(self._print(a) for a in expr.arg)
+        arg = expr.arg
+        variables = arg.get_attribute_nodes(Variable)
+        if variables:
+            raise NotImplementedError("TODO")
+        tmp_var = self.scope.get_new_name()
+        self.scope.insert_variable(Constant(CStackArray(expr.class_type.element_type),
+                    tmp_var, rank=1,
+                    value = PythonTuple(self._flatten_list(arg, expr.order))))
         init_list = '{'+values+'}'
-        return f'cspan_init({declare_type}, {init_list})'
+        shape = ', '.join(self._print(s) for s in arg.alloc_shape)
+        return f'cspan_md({tmp_var}, {shape})'
 
     def _print_Interface(self, expr):
         return ""
