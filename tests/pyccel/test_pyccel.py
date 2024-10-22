@@ -821,6 +821,7 @@ def test_basic_header():
                                         "scripts/classes/class_temporary_in_constructor.py",
                                         "scripts/classes/class_with_non_target_array_arg.py",
                                         "scripts/classes/class_pointer.py",
+                                        "scripts/classes/class_magic.py",
                                         ] )
 def test_classes( test_file , language):
     pyccel_test(test_file, language=language)
