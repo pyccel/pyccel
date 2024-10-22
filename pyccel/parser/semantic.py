@@ -5221,14 +5221,13 @@ class SemanticParser(BasicParser):
         if isinstance(expr, DottedName):
             syntactic_set_obj = expr.name[0]
             syntactic_args = [a.value for a in expr.name[1].args]
-            args = [a.value for a in function_call_args]
         elif isinstance(expr, PyccelBitOr):
             syntactic_set_obj = expr.args[0]
             syntactic_args = expr.args[1:]
-            args = function_call_args
         else:
             raise NotImplementedError(f"Function doesn't handle {type(expr)}")
 
+        args = [a.value for a in function_call_args]
         set_obj = self._visit(syntactic_set_obj)
         class_type = set_obj.class_type
         if all(a.class_type == class_type for a in args):
