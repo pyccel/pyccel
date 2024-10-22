@@ -1391,11 +1391,10 @@ class CCodePrinter(CodePrinter):
         class_type = expr.class_type
         rank = expr.rank
 
-        if rank > 0:
-            if isinstance(expr.class_type, CStackArray):
-                dtype = self.get_c_type(expr.class_type.element_type)
-            if isinstance(expr.class_type, (HomogeneousContainerType, DictType)):
-                dtype = self.get_c_type(expr.class_type)
+        if isinstance(expr.class_type, CStackArray):
+            return self.get_c_type(expr.class_type.element_type)
+        elif isinstance(expr.class_type, (HomogeneousContainerType, DictType)):
+            dtype = self.get_c_type(expr.class_type)
         elif not isinstance(class_type, CustomDataType):
             dtype = self.get_c_type(expr.dtype)
         else:
@@ -2067,6 +2066,7 @@ class CCodePrinter(CodePrinter):
         return code
 
     def _print_NumpyArray(self, expr):
+        raise NotImplementedError("Is this used?")
         declare_type = self.get_c_type(expr.class_type)
         arg = expr.arg
         variables = arg.get_attribute_nodes(Variable)
