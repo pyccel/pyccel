@@ -2328,16 +2328,19 @@ class CCodePrinter(CodePrinter):
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
         if isinstance(lhs_var, Variable) and lhs_var.is_ndarray and not lhs_var.is_optional:
-            rhs = self._print(rhs_var)
+            lhs = self._print(lhs_var)
 
             if isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
-                lhs = self._print(lhs_address)
-                if lhs_var.order == rhs_var.order:
-                    return 'alias_assign({}, {});\n'.format(lhs, rhs)
-                else:
-                    return 'transpose_alias_assign({}, {});\n'.format(lhs, rhs)
+                lhs_ptr = self._print(lhs_address)
+                rhs = self._print(rhs_address)
+                rhs_type = self.get_c_type(rhs_var.class_type)
+                slicing = ', '.join(['{c_ALL}']*lhs_var.rank)
+                code = f'{lhs} = cspan_slice({rhs_type}, {rhs}, {slicing});\n'
+                if lhs_var.order != rhs_var.order:
+                    code += f'cspan_transpose({lhs_ptr});\n'
+                return code
             else:
-                lhs = self._print(lhs_var)
+                rhs = self._print(rhs_var)
                 return f'{lhs} = {rhs};\n'
         else:
             lhs = self._print(lhs_address)
