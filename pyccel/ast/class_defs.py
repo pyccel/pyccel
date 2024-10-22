@@ -166,6 +166,8 @@ SetClass = ClassDef('set',
             PyccelFunctionDef('remove', func_class = SetRemove),
             PyccelFunctionDef('union', func_class = SetUnion),
             PyccelFunctionDef('update', func_class = SetUpdate),
+            PyccelFunctionDef('__or__', func_class = SetUnion),
+            PyccelFunctionDef('__ior__', func_class = SetUpdate),
         ])
 
 #=======================================================================================
