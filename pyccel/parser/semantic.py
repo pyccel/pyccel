@@ -3437,18 +3437,13 @@ class SemanticParser(BasicParser):
             increment_magic_method_name = '__i' + magic_method_name[2:]
             class_type = lhs.class_type
             class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
-            try:
-                increment_magic_method = class_base.get_method(increment_magic_method_name, False)
-            except PyccelSemanticError:
-                increment_magic_method = None
+            increment_magic_method = class_base.get_method(increment_magic_method_name, False)
+            args = [FunctionCallArgument(lhs), FunctionCallArgument(rhs)]
             if increment_magic_method:
                 lhs = self._optional_params.get(lhs, lhs)
-                return self._handle_function(expr, increment_magic_method, [lhs, rhs])
-            try:
-                magic_method = class_base.get_method(magic_method_name, False)
-            except PyccelSemanticError as err:
-                print(err)
-            operator_node = self._handle_function(expr, magic_method, [lhs, rhs])
+                return self._handle_function(expr, increment_magic_method, args)
+            magic_method = class_base.get_method(magic_method_name)
+            operator_node = self._handle_function(expr, magic_method, args)
             lhs = self._assign_lhs_variable(expr.lhs, self._infer_type(operator_node), test_node,
                     new_expressions, is_augassign = True)
             lhs = self._optional_params.get(lhs, lhs)
@@ -3836,7 +3831,22 @@ class SemanticParser(BasicParser):
         if isinstance(f_name, DottedName):
             f_name = f_name.name[-1]
 
-        return_objs = self.scope.find(f_name, 'functions').results
+        func = self.scope.find(f_name, 'functions')
+
+        original_name = self.scope.get_python_name(f_name)
+        if original_name.startswith('__i') and ('__'+original_name[3:]) in magic_method_map.values():
+            valid_return = len(expr.expr) == 1 and expr.stmt is None and len(func.arguments) > 0
+            if valid_return:
+                out = self._visit(expr.expr[0])
+                expected = func.arguments[0].var
+                valid_return &= (out == expected)
+            if valid_return:
+                return EmptyNode()
+            else:
+                errors.report("Increment functions must return the class instance",
+                        severity='fatal', symbol=expr)
+
+        return_objs = func.results
         assigns     = []
         for o,r in zip(return_objs, results):
             v = o.var
@@ -4068,6 +4078,7 @@ class SemanticParser(BasicParser):
             self._check_pointer_targets(results)
 
             results = [self._visit(a) for a in results]
+            results = [r for r in results if not isinstance(r, EmptyNode)]
 
             # Determine local and global variables
             global_vars = list(self.get_variables(self.scope.parent_scope))
@@ -4689,6 +4700,11 @@ class SemanticParser(BasicParser):
         return Assert(test)
 
     def _visit_FunctionDefResult(self, expr):
+        f_name      = self._current_function
+        original_name = self.scope.get_python_name(f_name)
+        if original_name.startswith('__i') and ('__'+original_name[3:]) in magic_method_map.values():
+            return EmptyNode()
+
         var = self._visit(expr.var)
         if isinstance(var, list):
             n_types = len(var)
