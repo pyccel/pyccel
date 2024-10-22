@@ -4701,6 +4701,8 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDefResult(self, expr):
         f_name      = self._current_function
+        if isinstance(f_name, DottedName):
+            f_name = f_name.name[-1]
         original_name = self.scope.get_python_name(f_name)
         if original_name.startswith('__i') and ('__'+original_name[3:]) in magic_method_map.values():
             return EmptyNode()
