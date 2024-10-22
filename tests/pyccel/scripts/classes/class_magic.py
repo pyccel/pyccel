@@ -7,14 +7,31 @@ class A:
     def __add__(self, other : int):
         return A(self.x+other)
 
+    def __mul__(self, other : int):
+        return A(self.x*other)
+
     def __radd__(self, other : int):
         return A(self.x+other)
+
+    def __iadd__(self, other : int):
+        self.x += other
+        return self
 
 if __name__ == '__main__':
     my_a = A(4)
     left_add = my_a + 5
     right_add = 7 + my_a
+    left_mul = my_a * 2
 
     print(my_a.x)
     print(left_add.x)
     print(right_add.x)
+    print(left_mul.x)
+
+    my_a += 6
+
+    print(my_a.x)
+
+    my_a *= 3
+
+    print(my_a.x)
