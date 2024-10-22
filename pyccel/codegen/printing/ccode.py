@@ -1393,17 +1393,9 @@ class CCodePrinter(CodePrinter):
 
         if rank > 0:
             if isinstance(expr.class_type, CStackArray):
-                return self.get_c_type(expr.class_type.element_type)
+                dtype = self.get_c_type(expr.class_type.element_type)
             if isinstance(expr.class_type, (HomogeneousContainerType, DictType)):
                 dtype = self.get_c_type(expr.class_type)
-                return dtype
-            if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
-                if expr.rank > 15:
-                    errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
-                #self.add_import(c_imports['ndarrays'])
-                dtype = 't_ndarray'
-            else:
-                errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
         elif not isinstance(class_type, CustomDataType):
             dtype = self.get_c_type(expr.dtype)
         else:
@@ -1453,23 +1445,13 @@ class CCodePrinter(CodePrinter):
                 init = ''
         elif var.is_stack_array:
             preface, init = self._init_stack_array(var)
-        elif declaration_type == 't_ndarray' and not self._in_header:
-            assert init == ''
-            preface = ''
-            init    = ' = {.shape = NULL}'
         else:
             preface = ''
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
 
-        if isinstance(var.class_type, NumpyNDArrayType):
-            #order = 'c_COLMAJOR' if var.order == 'F' else 'c_ROWMAJOR'
-            #shape = ', '.join('0'*var.rank)
-            #init = f' = cspan_md_layout({order}, NULL, {shape})'
-            pass
-
-        return f'{static}{external}{declaration_type} {var.name}{init};\n'
+        return f'{preface}{static}{external}{declaration_type} {var.name}{init};\n'
 
     def function_signature(self, expr, print_arg_names = True):
         """
