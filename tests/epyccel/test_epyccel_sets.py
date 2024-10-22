@@ -384,3 +384,90 @@ def test_Pop_complex(language):
     pyccel_result = set(epyccel_remove())
     python_result = set(Pop_complex())
     assert python_result == pyccel_result
+
+def test_set_union_int(language):
+    def union_int():
+        a = {1,2,3,4}
+        b = {5,6,7,2}
+        c = a.union(b)
+        return len(c), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop()
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_union_no_args(language):
+    def union_int():
+        a = {1,2,3,4}
+        c = a.union()
+        a.add(5)
+        return len(c), c.pop(), c.pop(), c.pop(), c.pop()
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_union_2_args(language):
+    def union_int():
+        a = {1,2,3,4}
+        b = {5,6,7}
+        c = {8,9,10,4}
+        d = a.union(b, c)
+        return len(d), d.pop(), d.pop(), d.pop(), d.pop(), d.pop(), d.pop(), d.pop(), d.pop(), d.pop(), d.pop()
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Can't use a pointer to a temporary object."),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_temporary_set_union(language):
+    def union_int():
+        a = {1,2}
+        b = {2}
+        d = a.union(b).pop()
+        return d
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result == pyccel_result
+
+def test_set_union_list(language):
+    def union_list():
+        a = {1.2, 2.3}
+        b = [1.2, 5.0]
+        d = a.union(b)
+        return len(d), d.pop(), d.pop(), d.pop()
+
+    epyccel_func = epyccel(union_list, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_list()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_union_tuple(language):
+    def union_tuple():
+        a = {True}
+        b = (False,)
+        d = a.union(b)
+        return len(d), d.pop(), d.pop()
+
+    epyccel_func = epyccel(union_tuple, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_tuple()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])

@@ -1970,7 +1970,7 @@ class FunctionCall(TypedAstNode):
             self._interface = None
             self._funcdef   = func
             self._arguments = tuple(args)
-            self._func_name = func
+            self._func_name = getattr(func, 'name', func)
             super().__init__()
             return
 
@@ -2765,6 +2765,11 @@ class FunctionDef(ScopedAstNode):
         """
         return self._result_pointer_map
 
+    def __call__(self, *args, **kwargs):
+        arguments = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
+        arguments += [FunctionCallArgument(a, keyword=key) for key, a in kwargs.items()]
+        return FunctionCall(self, arguments)
+
 class InlineFunctionDef(FunctionDef):
     """
     Represents a function definition for an inline function.
@@ -2954,6 +2959,9 @@ class PyccelFunctionDef(FunctionDef):
             'decorators':self._decorators,
             'argument_description':self._argument_description}
         return args, kwargs
+
+    def __call__(self, *args, **kwargs):
+        return self._cls_name(*args, **kwargs)
 
 class Interface(PyccelAstNode):
     """
@@ -3172,6 +3180,11 @@ class Interface(PyccelAstNode):
             errors.report(f'Arguments types provided to {self.name} are incompatible',
                         severity='fatal')
         return  self._functions[j]
+
+    def __call__(self, *args, **kwargs):
+        arguments = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
+        arguments += [FunctionCallArgument(a, keyword=key) for key, a in kwargs.items()]
+        return FunctionCall(self, arguments)
 
 class FunctionAddress(FunctionDef):
     """
