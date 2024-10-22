@@ -56,6 +56,7 @@ __all__ = (
     'Relational',
     'PyccelIs',
     'PyccelIsNot',
+    'PyccelIn',
     'IfTernaryOperator'
 )
 
@@ -1282,6 +1283,46 @@ class PyccelIsNot(PyccelIs):
         # or the lhs is an  optional variable
         else:
             return "unknown"
+
+#==============================================================================
+
+class PyccelIn(PyccelBooleanOperator):
+    """
+    Represents an `in` expression in the code.
+
+    Represents an `in` expression in the code.
+
+    Parameters
+    ----------
+    element : TypedAstNode
+        The first argument passed to the operator.
+
+    container : TypedAstNode
+        The first argument passed to the operator.
+    """
+    __slots__ = ()
+    _precedence = 7
+
+    def __init__(self, element, container):
+        super().__init__(element, container)
+
+    @property
+    def element(self):
+        """
+        First operator argument.
+
+        First operator argument.
+        """
+        return self._args[0]
+
+    @property
+    def container(self):
+        """
+        Second operator argument.
+
+        Second operator argument.
+        """
+        return self._args[1]
 
 #==============================================================================
 
