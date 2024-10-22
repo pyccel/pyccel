@@ -923,36 +923,28 @@ class SemanticParser(BasicParser):
         class_type = arg1.class_type
         class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
         magic_method_name = magic_method_map.get(type(expr), None)
-        magic_err = None
         magic_method = None
         if magic_method_name:
-            try:
+            magic_method = class_base.get_method(magic_method_name, False)
+            if magic_method is None:
+                arg2 = visited_args[1]
+                class_type = arg2.class_type
+                class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+                magic_method_name = '__r'+magic_method_name[2:]
                 magic_method = class_base.get_method(magic_method_name, False)
-            except PyccelSemanticError as err:
-                magic_err = err
-        if magic_err and len(visited_args) == 2:
-            arg2 = visited_args[1]
-            class_type = arg2.class_type
-            class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
-            magic_method_name = '__r'+magic_method_name[2:]
-            try:
-                magic_method = class_base.get_method(magic_method_name, False)
-            except PyccelSemanticError:
-                pass
+                if magic_method:
+                    visited_args = [visited_args[1], visited_args[0]]
         if magic_method:
-            expr_new = self._handle_function(expr, magic_method, visited_args)
+            expr_new = self._handle_function(expr, magic_method, [FunctionCallArgument(v) for v in visited_args])
         else:
             try:
                 expr_new = type(expr)(*visited_args)
             except PyccelSemanticError as err:
                 errors.report(str(err), symbol=expr, severity='fatal')
             except TypeError as err:
-                if magic_err:
-                    errors.report(magic_err, symbol=expr, severity='fatal')
-                else:
-                    types = ', '.join(str(a.class_type) for a in visited_args)
-                    errors.report(f"Operator {type(expr)} between objects of type ({types}) is not yet handled\n"
-                            + PYCCEL_RESTRICTION_TODO, symbol=expr, severity='fatal')
+                types = ', '.join(str(a.class_type) for a in visited_args)
+                errors.report(f"Operator {type(expr)} between objects of type ({types}) is not yet handled\n"
+                        + PYCCEL_RESTRICTION_TODO, symbol=expr, severity='fatal')
         return expr_new
 
     def _create_Duplicate(self, val, length):
