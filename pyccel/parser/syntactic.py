@@ -1104,6 +1104,9 @@ class SyntaxParser(BasicParser):
                 func = FunctionCall(func, args)
         elif isinstance(func, DottedName):
             func_attr = FunctionCall(func.name[-1], args)
+            for n in func.name:
+                if isinstance(n, PyccelAstNode):
+                    n.clear_syntactic_user_nodes()
             func = DottedName(*func.name[:-1], func_attr)
         else:
             raise NotImplementedError(f' Unknown function type {type(func)}')

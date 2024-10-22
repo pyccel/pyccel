@@ -29,7 +29,7 @@ from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
-from pyccel.ast.builtin_methods.set_methods  import SetMethod, SetAdd
+from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -1095,6 +1095,7 @@ class SemanticParser(BasicParser):
                             new_expr = FunctionCall(func, args)
                         new_expr.set_current_ast(expr.python_ast)
                         pyccel_stage.set_stage('semantic')
+                        new_expr.set_current_user_node(expr.current_user_node)
                         expr = new_expr
                     return getattr(self, annotation_method)(expr)
 
@@ -1566,7 +1567,7 @@ class SemanticParser(BasicParser):
                 know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape) \
                         or isinstance(lhs.class_type, StringType)
 
-                if not know_lhs_shape:
+                if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType)) and not know_lhs_shape:
                     msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
@@ -2224,7 +2225,7 @@ class SemanticParser(BasicParser):
             if deallocs or import_frees:
                 # If there is anything that needs deallocating when the module goes out of scope
                 # create a deallocation function
-                import_free_calls = [FunctionCall(f,[],[]) for f in import_frees if f is not None]
+                import_free_calls = [f() for f in import_frees if f is not None]
                 free_func_body = If(IfSection(init_var,
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 # Ensure that the function is correctly defined within the namespaces
@@ -2302,11 +2303,11 @@ class SemanticParser(BasicParser):
             container['imports'][mod_name] = Import(self.scope.get_python_name(mod_name), mod)
 
             if init_func:
-                import_init  = FunctionCall(init_func, [], [])
+                import_init  = init_func()
                 program_body.insert2body(import_init, back=False)
 
             if free_func:
-                import_free  = FunctionCall(free_func,[],[])
+                import_free  = free_func()
                 program_body.insert2body(import_free)
 
             program = Program(prog_name,
@@ -3170,13 +3171,7 @@ class SemanticParser(BasicParser):
                     symbol=expr, severity='error')
 
         # Checking for the result of _visit_ListExtend
-        if isinstance(rhs, For) or (isinstance(rhs, CodeBlock) and
-            isinstance(rhs.body[0], (ListMethod, SetMethod))):
-            return rhs
-        if isinstance(rhs, ConstructorCall):
-            return rhs
-
-        elif isinstance(rhs, CodeBlock) and len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
+        if isinstance(rhs, (For, CodeBlock, ConstructorCall)):
             return rhs
 
         elif isinstance(rhs, FunctionCall):
@@ -4493,7 +4488,7 @@ class SemanticParser(BasicParser):
                 if new_name != old_name:
                     import_init = import_init.clone(new_name)
 
-                result  = FunctionCall(import_init,[],[])
+                result  = import_init()
 
             if import_free:
                 old_name = import_free.name
@@ -4579,7 +4574,7 @@ class SemanticParser(BasicParser):
 
         master_args = [get_arg(a,m) for a,m in zip(func.arguments, expr.master_arguments)]
 
-        master = FunctionCall(func, master_args)
+        master = func(*master_args)
         macro   = MacroFunction(name, args, master, master_args,
                                 results=expr.results, results_shapes=expr.results_shapes)
         self.scope.insert_macro(macro)
@@ -5044,7 +5039,7 @@ class SemanticParser(BasicParser):
         elements of the iterable. If not, it attempts to construct a syntactic `For` 
         loop to iterate over the iterable object and added its elements to the set 
         object. Finally, it passes to a `_visit()` call for semantic parsing.
-    
+
         Parameters
         ----------
         expr : DottedName
@@ -5079,3 +5074,47 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
 
+    def _build_SetUnion(self, expr):
+        """
+        Method to navigate the syntactic DottedName node of a `set.union()` call.
+
+        The purpose of this `_build` method is to construct new nodes from a syntactic
+        DottedName node. It creates a SetUnion node if the type of the arguments matches
+        the type of the original set. Otherwise it uses `set.copy` and `set.update` to
+        handle iterators.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represent the call to `.union()`.
+
+        Returns
+        -------
+        SetUnion | CodeBlock
+            The nodes describing the union operator.
+        """
+        syntactic_set_obj = expr.name[0]
+        syntactic_args = expr.name[1].args
+        set_obj = self._visit(expr.name[0])
+        args = [self._visit(a.value) for a in expr.name[1].args]
+        class_type = set_obj.class_type
+        if all(a.class_type == class_type for a in args):
+            return SetUnion(set_obj, *args)
+        else:
+            element_type = class_type.element_type
+            if any(a.class_type.element_type != element_type for a in args):
+                errors.report(("Containers containing objects of a different type cannot be used as "
+                               f"arguments to {class_type}.union"),
+                        severity='fatal', symbol=expr)
+
+            lhs = expr.get_user_nodes(Assign)[0].lhs
+            pyccel_stage.set_stage('syntactic')
+            body = [Assign(lhs, DottedName(syntactic_set_obj, FunctionCall('copy', ())),
+                           python_ast = expr.python_ast)]
+            update_calls = [DottedName(lhs, FunctionCall('update', (s_a,))) for s_a in syntactic_args]
+            for c in update_calls:
+                c.set_current_ast(expr.python_ast)
+            body += [Assign(PyccelSymbol('_', is_temp=True), c, python_ast = expr.python_ast)
+                     for c in update_calls]
+            pyccel_stage.set_stage('semantic')
+            return CodeBlock([self._visit(b) for b in body])

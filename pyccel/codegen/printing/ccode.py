@@ -992,7 +992,7 @@ class CCodePrinter(CodePrinter):
         else:
             source = expr.source
         if isinstance(source, DottedName):
-            source = source.name[-1]
+            source = source.name[-1].python_value
         else:
             source = self._print(source)
         if source.startswith('stc/') or source in import_header_guard_prefix:
@@ -2228,22 +2228,21 @@ class CCodePrinter(CodePrinter):
         return f'{lhs_code} {op}= {rhs_code};\n'
 
     def _print_Assign(self, expr):
-        prefix_code = ''
         lhs = expr.lhs
         rhs = expr.rhs
         if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, TupleType):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
-            return prefix_code+'{};\n'.format(self._print(rhs))
+            return f'{self._print(rhs)};\n'
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
-            return prefix_code+self.copy_NumpyArray_Data(expr)
+            return self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
-            return prefix_code+self.arrayFill(expr)
+            return self.arrayFill(expr)
         lhs = self._print(expr.lhs)
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
-            return prefix_code+self.init_stc_container(rhs, expr)
+            return self.init_stc_container(rhs, expr)
         rhs = self._print(expr.rhs)
-        return prefix_code+f'{lhs} = {rhs};\n'
+        return f'{lhs} = {rhs};\n'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
@@ -2631,6 +2630,18 @@ class CCodePrinter(CodePrinter):
         var_type = self.get_declare_type(expr.set_variable)
         set_var = self._print(expr.set_variable)
         return f'{var_type}_clone({set_var})'
+
+    def _print_SetUnion(self, expr):
+        assign_base = expr.get_direct_user_nodes(lambda n: isinstance(n, Assign))
+        if not assign_base:
+            errors.report("The result of the union call must be saved into a variable",
+                    severity='error', symbol=expr)
+        class_type = expr.set_variable.class_type
+        var_type = self.get_c_type(class_type)
+        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(class_type), var_type)))
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
+        return f'{var_type}_union({set_var}, {args})'
 
     #=================== MACROS ==================
 
