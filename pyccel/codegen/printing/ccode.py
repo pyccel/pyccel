@@ -1395,7 +1395,7 @@ class CCodePrinter(CodePrinter):
         if rank > 0:
             if isinstance(expr.class_type, CStackArray):
                 return self.get_c_type(expr.class_type.element_type)
-            if isinstance(expr.class_type, HomogeneousContainerType):
+            if isinstance(expr.class_type, (HomogeneousContainerType, DictType)):
                 dtype = self.get_c_type(expr.class_type)
                 return dtype
             if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
