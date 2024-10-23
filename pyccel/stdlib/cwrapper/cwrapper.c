@@ -302,32 +302,13 @@ static char* _check_pyarray_order(PyArrayObject *a, int flag)
 	if (flag == NO_ORDER_CHECK)
 		return NULL;
 
-    int nd = PyArray_NDIM(a);
-    npy_intp* strides = PyArray_STRIDES(a);
-    char* error = (char *)malloc(200);
-    for (int i = 0; i<nd; ++i) {
-        printf("%ld ", strides[i]);
-    }
-    if (flag == NPY_ARRAY_F_CONTIGUOUS) {
-        bool f_order = true;
-        for (int i = 1; i<nd; ++i) {
-            f_order &= strides[i-1] <= strides[i];
-        }
-        if (!f_order) {
-            sprintf(error, "argument does not have the expected ordering (F)");
-		    return error;
-        }
-    }
-    else {
-        bool c_order = true;
-        for (int i = 1; i<nd; ++i) {
-            c_order &= strides[i-1] >= strides[i];
-        }
-        if (!c_order) {
-            sprintf(error, "argument does not have the expected ordering (C)");
-		    return error;
-        }
-    }
+	if (!PyArray_CHKFLAGS(a, flag))
+	{
+		char order = (flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : (flag == NPY_ARRAY_F_CONTIGUOUS ? 'F' : '?'));
+        char* error = (char *)malloc(200);
+		sprintf(error, "argument does not have the expected ordering (%c)", order);
+		return error;
+	}
 
 	return NULL;
 }
