@@ -20,7 +20,7 @@ gfort_info = {'exec' : 'gfortran',
               'language': 'fortran',
               'module_output_flag': '-J',
               'debug_flags': ("-fcheck=bounds","-g","-O0"),
-              'release_flags': ("-O3","-funroll-loops",),
+              'release_flags': ("-O3","-funroll-loops","-Werror=uninitialized"),
               'general_flags' : ('-fPIC',),
               'standard_flags' : ('-std=f2003',),
               'mpi': {
