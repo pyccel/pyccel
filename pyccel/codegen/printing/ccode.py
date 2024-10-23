@@ -2782,6 +2782,8 @@ class CCodePrinter(CodePrinter):
 
         tab = " "*self._default_settings["tabwidth"]
 
+        code = [ line.lstrip(' \t') for line in code ]
+
         increase = [ int(line.endswith('{\n')) for line in code ]
         decrease = [ int(any(map(line.startswith, '}\n')))
                      for line in code ]
