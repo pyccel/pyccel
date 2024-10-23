@@ -14,7 +14,7 @@ from pyccel.ast.basic     import ScopedAstNode
 
 from pyccel.ast.bind_c    import BindCPointer
 
-from pyccel.ast.builtins  import PythonRange, PythonComplex
+from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonMin, PythonMax
 from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
@@ -48,6 +48,7 @@ from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
+from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
 
 from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
@@ -730,6 +731,45 @@ class CCodePrinter(CodePrinter):
                 for func in interface.functions:
                     if not func.is_inline:
                         class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
+
+    def _handle_numpy_functional(self, expr, ElementExpression, start_val = None):
+        assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+        if assign_node:
+            lhs_var = assign_node[0].lhs
+            arg_var = expr.arg
+            class_type = expr.arg.class_type
+
+            lhs = self._print(lhs_var)
+            arg = self._print(arg_var)
+            c_type = self.get_c_type(class_type)
+            if start_val is None:
+                arg_address = self._print(ObjectAddress(arg_var))
+                start = f'*cspan_front({arg_address})'
+            else:
+                start = self._print(start_val)
+
+            loop_scope = self.scope.create_new_loop_scope()
+            iter_var_name = loop_scope.get_new_name()
+            iter_var = Variable(IteratorType(class_type), iter_var_name)
+            iter_ref_var = DottedVariable(arg_var.class_type.element_type, 'ref',
+                        memory_handling='alias', lhs=iter_var)
+
+            tmp_additional_code = self._additional_code
+            self._additional_code = ''
+            node = self._print(ElementExpression(lhs_var, iter_ref_var))
+            body = self._additional_code + f'{lhs} = {node};\n'
+            self._additional_code = tmp_additional_code
+
+            return (f'{lhs} = {start};\n'
+                    f'c_foreach({iter_var_name}, {c_type}, {arg}) {{\n'
+                    f'{body}'
+                     '}\n')
+        else:
+            tmp_var = self.scope.get_temporary_variable(expr.class_type)
+            assign_node = Assign(tmp_var, expr)
+            self._additional_code += self._handle_numpy_functional(expr,
+                            ElementExpression, start_val)
+            return self._print(tmp_var)
 
     # ============ Elements ============ #
 
@@ -1888,26 +1928,6 @@ class CCodePrinter(CodePrinter):
         code_arg = self._print(expr.arg)
         return f"isnan({code_arg})"
 
-    def _print_NumpySum(self, expr):
-        assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
-        if assign_node:
-            lhs = self._print(assign_node[0].lhs)
-            sum_arg = self._print(expr.arg)
-            c_type = self.get_c_type(expr.arg.class_type)
-            zero = self._print(convert_to_literal(0, expr.class_type))
-            loop_scope = self.scope.create_new_loop_scope()
-            iter_var_name = loop_scope.get_new_name()
-
-            return (f'{lhs} = {zero};\n'
-                    f'c_foreach({iter_var_name}, {c_type}, {sum_arg}) {{\n'
-                    f'{lhs} += *({iter_var_name}.ref);\n'
-                     '}\n')
-        else:
-            tmp_var = self.scope.get_temporary_variable(expr.class_type)
-            assign_node = Assign(tmp_var, expr)
-            self._additional_code += self._print(expr)
-            return self._print(tmp_var)
-
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
         function call
@@ -2030,35 +2050,16 @@ class CCodePrinter(CodePrinter):
         '''
         Convert a call to numpy.max to the equivalent function in C.
         '''
-        dtype = expr.arg.dtype
-        primitive_type = dtype.primitive_type
-        prec  = dtype.precision
-        name  = self._print(expr.arg)
-        if isinstance(primitive_type, PrimitiveIntegerType):
-            return f'numpy_amax_int{prec * 8}({name})'
-        elif isinstance(primitive_type, PrimitiveFloatingPointType):
-            return f'numpy_amax_float{prec * 8}({name})'
-        elif isinstance(primitive_type, PrimitiveComplexType):
-            return f'numpy_amax_complex{prec * 16}({name})'
-        elif isinstance(primitive_type, PrimitiveBooleanType):
-            return f'numpy_amax_bool({name})'
+        return self._handle_numpy_functional(expr, PythonMax)
 
     def _print_NumpyAmin(self, expr):
         '''
         Convert a call to numpy.min to the equivalent function in C.
         '''
-        dtype = expr.arg.dtype
-        primitive_type = dtype.primitive_type
-        prec  = dtype.precision
-        name  = self._print(expr.arg)
-        if isinstance(primitive_type, PrimitiveIntegerType):
-            return f'numpy_amin_int{prec * 8}({name})'
-        elif isinstance(primitive_type, PrimitiveFloatingPointType):
-            return f'numpy_amin_float{prec * 8}({name})'
-        elif isinstance(primitive_type, PrimitiveComplexType):
-            return f'numpy_amin_complex{prec * 16}({name})'
-        elif isinstance(primitive_type, PrimitiveBooleanType):
-            return f'numpy_amin_bool({name})'
+        return self._handle_numpy_functional(expr, PythonMin)
+
+    def _print_NumpySum(self, expr):
+        return self._handle_numpy_functional(expr, PythonMin, convert_to_literal(0, expr.class_type))
 
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
@@ -2322,7 +2323,7 @@ class CCodePrinter(CodePrinter):
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)) and (not lhs.on_stack or lhs.rank!=1):
             return prefix_code+self.copy_NumpyArray_Data(expr)
-        if isinstance(rhs, NumpySum):
+        if isinstance(rhs, (NumpySum, NumpyAmax, NumpyAmin)):
             return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
