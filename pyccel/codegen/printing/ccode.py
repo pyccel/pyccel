@@ -2060,7 +2060,7 @@ class CCodePrinter(CodePrinter):
         return self._handle_numpy_functional(expr, PythonMin)
 
     def _print_NumpySum(self, expr):
-        return self._handle_numpy_functional(expr, PythonMin, convert_to_literal(0, expr.class_type))
+        return self._handle_numpy_functional(expr, PyccelAdd, convert_to_literal(0, expr.class_type))
 
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
