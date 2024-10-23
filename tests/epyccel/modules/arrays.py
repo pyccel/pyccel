@@ -1592,8 +1592,8 @@ def array_2d_C_slice_stride_23(a : 'int[:,:]'):
 
 def copy_to_slice_issue_1218(n : int):
     from numpy import zeros, array
-    x = 1
-    arr = zeros((2, n))
+    x = 2
+    arr = zeros((3, n))
     arr[0:x, 0:6:2] = array([2, 5, 6])
     return arr
 
