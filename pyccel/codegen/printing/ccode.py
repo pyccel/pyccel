@@ -434,9 +434,9 @@ class CCodePrinter(CodePrinter):
                 # TODO : Create copy macro
                 rhs_address = self._print(ObjectAddress(arg))
                 lhs_c_type = self.get_c_type(lhs.class_type)
-                rhs_c_type = self.get_c_type(rhs.class_type)
+                rhs_c_type = self.get_c_type(arg.class_type)
                 iter_var_name1 = self._print(self.scope.get_temporary_variable(IteratorType(lhs.class_type)))
-                iter_var_name2 = self._print(self.scope.get_temporary_variable(IteratorType(rhs.class_type)))
+                iter_var_name2 = self._print(self.scope.get_temporary_variable(IteratorType(arg.class_type)))
                 return (f'for({iter_var_name1} = {lhs_c_type}_begin({lhs_address}),'
                         f' {iter_var_name2} = {rhs_c_type}_begin({rhs_address});\n'
                         f'    {iter_var_name1}.ref && {iter_var_name2}.ref;\n'
