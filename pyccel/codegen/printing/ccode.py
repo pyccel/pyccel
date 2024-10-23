@@ -1888,6 +1888,12 @@ class CCodePrinter(CodePrinter):
         code_arg = self._print(expr.arg)
         return f"isnan({code_arg})"
 
+    def _print_NumpySum(self, expr):
+        tmp_var = self.scope.get_temporary_variable(expr.class_type)
+        assign_node = Assign(tmp_var, expr)
+        self._additional_code += self._print(assign_node)
+        return self._print(tmp_var)
+
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
         function call
