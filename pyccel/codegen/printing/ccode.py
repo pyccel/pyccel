@@ -37,6 +37,7 @@ from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, Pri
 from pyccel.ast.datatypes import HomogeneousContainerType, DictType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement, PyccelSymbol
+from pyccel.ast.internals import PyccelFunction
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
@@ -424,7 +425,7 @@ class CCodePrinter(CodePrinter):
         lhs_address = self._print(ObjectAddress(lhs))
         order = lhs.order
 
-        variables = [v for v in arg.get_attribute_nodes(Variable) if v.rank]
+        variables = [v for v in arg.get_attribute_nodes((Variable, FunctionCall, PyccelFunction)) if v.rank]
 
         # If the data is copied from a Variable rather than a list or tuple
         # use the function array_copy_data directly
