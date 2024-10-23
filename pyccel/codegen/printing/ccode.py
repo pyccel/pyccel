@@ -1889,10 +1889,24 @@ class CCodePrinter(CodePrinter):
         return f"isnan({code_arg})"
 
     def _print_NumpySum(self, expr):
-        tmp_var = self.scope.get_temporary_variable(expr.class_type)
-        assign_node = Assign(tmp_var, expr)
-        self._additional_code += self._print(assign_node)
-        return self._print(tmp_var)
+        assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+        if assign_node:
+            lhs = self._print(assign_node[0].lhs)
+            sum_arg = self._print(expr.arg)
+            c_type = self.get_c_type(expr.arg.class_type)
+            zero = self._print(convert_to_literal(0, expr.class_type))
+            loop_scope = self.scope.create_new_loop_scope()
+            iter_var_name = loop_scope.get_new_name()
+
+            return (f'{lhs} = {zero};\n'
+                    f'c_foreach({iter_var_name}, {c_type}, {sum_arg}) {{\n'
+                    f'{lhs} += *({iter_var_name}.ref);\n'
+                     '}\n')
+        else:
+            tmp_var = self.scope.get_temporary_variable(expr.class_type)
+            assign_node = Assign(tmp_var, expr)
+            self._additional_code += self._print(expr)
+            return self._print(tmp_var)
 
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
@@ -2309,17 +2323,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, (NumpyArray, PythonTuple)) and (not lhs.on_stack or lhs.rank!=1):
             return prefix_code+self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, NumpySum):
-            sum_arg = self._print(rhs.arg)
-            c_type = self.get_c_type(rhs.arg.class_type)
-            lhs = self._print(lhs)
-            zero = self._print(convert_to_literal(0, rhs.class_type))
-            loop_scope = self.scope.create_new_loop_scope()
-            iter_var_name = loop_scope.get_new_name()
-
-            return (f'{lhs} = {zero};\n'
-                    f'c_foreach({iter_var_name}, {c_type}, {sum_arg}) {{\n'
-                    f'{lhs} += *({iter_var_name}.ref);\n'
-                     '}\n')
+            return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
         lhs = self._print(expr.lhs)
