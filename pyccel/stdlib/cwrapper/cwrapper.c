@@ -235,9 +235,6 @@ static char*	_check_pyarray_dtype(PyArrayObject *a, int dtype)
 	if (current_dtype != dtype)
 	{
         char* error = (char *)malloc(200);
-        printf("argument dtype must be %s, not %s",
-			dataTypes[dtype],
-			dataTypes[current_dtype]);
         sprintf(error, "argument dtype must be %s, not %s",
 			dataTypes[dtype],
 			dataTypes[current_dtype]);
@@ -270,9 +267,6 @@ static char* _check_pyarray_rank(PyArrayObject *a, int rank)
 	if (current_rank != rank)
 	{
         char* error = (char *)malloc(200);
-        printf("argument rank must be %d, not %d",
-			rank,
-			current_rank);
         sprintf(error, "argument rank must be %d, not %d",
 			rank,
 			current_rank);
@@ -334,8 +328,6 @@ static char* _check_pyarray_type(PyObject *a)
 	if (!PyArray_Check(a))
 	{
         char* error = (char *)malloc(200);
-        printf("argument must be numpy.ndarray, not %s",
-			 a == Py_None ? "None" : Py_TYPE(a)->tp_name);
         sprintf(error, "argument must be numpy.ndarray, not %s",
 			 a == Py_None ? "None" : Py_TYPE(a)->tp_name);
         return error;
