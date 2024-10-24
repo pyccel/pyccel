@@ -246,7 +246,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdio',
                  "inttypes",
                  'stdbool',
-                 'assert']}
+                 'assert',
+                 'CSpan_extensions']}
 
 import_header_guard_prefix = {'Set_extensions'  : '_TOOLS_SET',
                               'List_extensions' : '_TOOLS_LIST'}
@@ -435,14 +436,9 @@ class CCodePrinter(CodePrinter):
                 rhs_address = self._print(ObjectAddress(arg))
                 lhs_c_type = self.get_c_type(lhs.class_type)
                 rhs_c_type = self.get_c_type(arg.class_type)
-                iter_var_name1 = self._print(self.scope.get_temporary_variable(IteratorType(lhs.class_type)))
-                iter_var_name2 = self._print(self.scope.get_temporary_variable(IteratorType(arg.class_type)))
-                return (f'for({iter_var_name1} = {lhs_c_type}_begin({lhs_address}),'
-                        f' {iter_var_name2} = {rhs_c_type}_begin({rhs_address});\n'
-                        f'    {iter_var_name1}.ref && {iter_var_name2}.ref;\n'
-                        f'    {lhs_c_type}_next(&{iter_var_name1}), {rhs_c_type}_next(&{iter_var_name2}))\n{{\n'
-                        f'*({iter_var_name1}.ref) = *({iter_var_name2}.ref);\n'
-                         '}\n')
+                cast_type = self.get_c_type(lhs.class_type.element_type)
+                self.add_import(c_imports['CSpan_extensions'])
+                return f'cspan_copy({cast_type}, {lhs_c_type}, {rhs_c_type}, {lhs_address}, {rhs_address});\n'
             else:
                 raise NotImplementedError(f"Can't copy variable of type {arg.class_type}")
         elif not variables:
