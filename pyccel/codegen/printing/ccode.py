@@ -714,6 +714,8 @@ class CCodePrinter(CodePrinter):
             return "fmin({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
+            if isinstance(arg[0], Variable) and isinstance(arg[1], Variable):
+                return f"({self._print(arg[0])} < {self._print(arg[1])} ? {self._print(arg[0])} : {self._print(arg[1])})"
             arg1 = self.scope.get_temporary_variable(PythonNativeInt())
             arg2 = self.scope.get_temporary_variable(PythonNativeInt())
             assign1 = Assign(arg1, arg[0])
@@ -732,6 +734,8 @@ class CCodePrinter(CodePrinter):
             return "fmax({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
+            if isinstance(arg[0], Variable) and isinstance(arg[1], Variable):
+                return f"({self._print(arg[0])} > {self._print(arg[1])} ? {self._print(arg[0])} : {self._print(arg[1])})"
             arg1 = self.scope.get_temporary_variable(PythonNativeInt())
             arg2 = self.scope.get_temporary_variable(PythonNativeInt())
             assign1 = Assign(arg1, arg[0])
