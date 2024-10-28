@@ -714,12 +714,22 @@ class CCodePrinter(CodePrinter):
             return "fmin({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
-            arg1 = self.scope.get_temporary_variable(PythonNativeInt())
-            arg2 = self.scope.get_temporary_variable(PythonNativeInt())
-            assign1 = Assign(arg1, arg[0])
-            assign2 = Assign(arg2, arg[1])
-            self._additional_code += self._print(assign1)
-            self._additional_code += self._print(assign2)
+            if isinstance(arg[0], Variable):
+                arg1 = self._print(arg[0])
+            else:
+                arg1_temp = self.scope.get_temporary_variable(PythonNativeInt())
+                assign1 = Assign(arg1_temp, arg[0])
+                self._additional_code += self._print(assign1)
+                arg1 = self._print(arg1_temp)
+
+            if isinstance(arg[1], Variable):
+                arg2 = self._print(arg[1])
+            else:
+                arg2_temp = self.scope.get_temporary_variable(PythonNativeInt())
+                assign2 = Assign(arg2_temp, arg[1])
+                self._additional_code += self._print(assign2)
+                arg2 = self._print(arg2_temp)
+
             return f"({arg1} < {arg2} ? {arg1} : {arg2})"
         else:
             return errors.report("min in C is only supported for 2 scalar arguments", symbol=expr,
@@ -732,12 +742,22 @@ class CCodePrinter(CodePrinter):
             return "fmax({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
-            arg1 = self.scope.get_temporary_variable(PythonNativeInt())
-            arg2 = self.scope.get_temporary_variable(PythonNativeInt())
-            assign1 = Assign(arg1, arg[0])
-            assign2 = Assign(arg2, arg[1])
-            self._additional_code += self._print(assign1)
-            self._additional_code += self._print(assign2)
+            if isinstance(arg[0], Variable):
+                arg1 = self._print(arg[0])
+            else:
+                arg1_temp = self.scope.get_temporary_variable(PythonNativeInt())
+                assign1 = Assign(arg1_temp, arg[0])
+                self._additional_code += self._print(assign1)
+                arg1 = self._print(arg1_temp)
+
+            if isinstance(arg[1], Variable):
+                arg2 = self._print(arg[1])
+            else:
+                arg2_temp = self.scope.get_temporary_variable(PythonNativeInt())
+                assign2 = Assign(arg2_temp, arg[1])
+                self._additional_code += self._print(assign2)
+                arg2 = self._print(arg2_temp)
+
             return f"({arg1} > {arg2} ? {arg1} : {arg2})"
         else:
             return errors.report("max in C is only supported for 2 scalar arguments", symbol=expr,
