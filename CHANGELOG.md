@@ -38,6 +38,7 @@ All notable changes to this project will be documented in this file.
 -   #1917 : Add C and Fortran support for set method `add()`.
 -   #1918 : Add support for set method `clear()`.
 -   #1918 : Add support for set method `copy()`.
+-   #1753 : Add support for set method `union()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
@@ -51,6 +52,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #2025 : Optimise min/max to avoid unnecessary temporary variables.
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
 -   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
 -   Fix some cases where a Python built-in type is returned in place of a NumPy type.
@@ -65,6 +67,7 @@ All notable changes to this project will be documented in this file.
 -   #1930 : Preserve ordering of import targets.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
 -   #1972 : Simplified `printf` statement for Literal String.
+-   #2026 : Fix missing loop in slice assignment.
 
 ### Changed
 
