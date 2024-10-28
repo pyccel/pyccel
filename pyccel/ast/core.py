@@ -3654,7 +3654,8 @@ class ClassDef(ScopedAstNode):
             The name of the attribute we are looking for.
 
         raise_error : bool, default=True
-            True if an error should be found if the method is not found.
+            True if an error should be raised, False if None should be returned if
+            the method is not found.
             False if None can be returned instead.
 
         Returns
