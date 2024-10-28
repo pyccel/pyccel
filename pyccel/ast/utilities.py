@@ -571,13 +571,19 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             lhs = line.lhs
             rhs = line.rhs
             if lhs.rank > rhs.rank:
-                for index_depth in range(lhs.rank-rhs.rank):
+                loop_len = []
+                n_new_loops = lhs.rank-rhs.rank
+                for index_depth in range(n_new_loops):
+                    loop_len.append(lhs.shape[0])
                     # If an index exists at the same depth, reuse it if not create one
                     if index_depth >= len(indices):
                         indices.append(new_index('int', 'i'))
                     index = indices[index_depth]
                     lhs = insert_index(lhs, index_depth, index)
-                collect_loops([Assign(lhs, rhs)], indices, new_index, language_has_vectors, result = result)
+                block = collect_loops([Assign(lhs, rhs)], indices, new_index, language_has_vectors)
+                for s in loop_len:
+                    block = LoopCollection(block, s, set([lhs]))
+                result.append(block)
 
             elif not language_has_vectors:
                 if isinstance(rhs, NumpyArray):
