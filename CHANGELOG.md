@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   #2025 : Optimise min/max to avoid temp variables when exist
+-   #2025 : Optimise min/max to avoid unnecessary temporary variables.
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1787 : Ensure STC is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
