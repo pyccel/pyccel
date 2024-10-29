@@ -29,7 +29,6 @@ class IteratorType(PyccelType, metaclass=ArgumentSingleton):
         The container that is iterated over.
     """
     __slots__ = ('_iterable_type',)
-    rank = 0
     def __init__(self, iterable_type):
         self._iterable_type = iterable_type
         super().__init__()
@@ -45,6 +44,36 @@ class IteratorType(PyccelType, metaclass=ArgumentSingleton):
 
     def __str__(self):
         return f'Iter[{self._iterable_type}]'
+
+    @property
+    def datatype(self):
+        """
+        The datatype of the object.
+
+        The datatype of the object.
+        """
+        return self
+
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+        """
+        return 0
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return None
 
 #------------------------------------------------------------------------------
 class PairType(PyccelType, metaclass=ArgumentSingleton):
