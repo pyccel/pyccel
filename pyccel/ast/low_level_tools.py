@@ -29,6 +29,7 @@ class IteratorType(PyccelType, metaclass=ArgumentSingleton):
         The container that is iterated over.
     """
     __slots__ = ('_iterable_type',)
+    rank = 0
     def __init__(self, iterable_type):
         self._iterable_type = iterable_type
         super().__init__()
