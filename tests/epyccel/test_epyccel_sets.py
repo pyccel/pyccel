@@ -183,80 +183,87 @@ def test_update_basic(python_only_language):
         a = {1, 2, 3}
         b = {4, 5, 6}
         a.update(b)
-        return a
+        return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
 
     epyccel_update = epyccel(update_basic, language=python_only_language)
     pyccel_result = epyccel_update()
     python_result =  update_basic()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_update_multiple(python_only_language):
+def test_update_multiple(language):
     def update_multiple():
         a = {1, 2, 3}
         a.update({4, 5})
         a.update({6, 7, 8, 9})
         a.update({10})
-        return a
+        return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
 
-    epyccel_update = epyccel(update_multiple, language=python_only_language)
+    epyccel_update = epyccel(update_multiple, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_multiple()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 
-def test_update_boolean_tuple(python_only_language):
+def test_update_boolean_tuple(language):
     def update_boolean_tuple():
         a = {True}
         b = (False, True, False)
         a.update(b)
-        return a
-    epyccel_update = epyccel(update_boolean_tuple, language=python_only_language)
+        return len(a), a.pop(), a.pop()
+    epyccel_update = epyccel(update_boolean_tuple, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_boolean_tuple()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 
-def test_update_complex_list(python_only_language):
+def test_update_complex_list(language):
     def update_complex_list():
         a = {1j, 2 + 3j, 0 + 0j}
         b = [4j, 5j, 1 + 6j]
         a.update(b)
-        return a
-    epyccel_update = epyccel(update_complex_list, language=python_only_language)
+        return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
+    epyccel_update = epyccel(update_complex_list, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_complex_list()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_update_range(python_only_language):
+def test_update_range(language):
     def update_range():
         a = {1, 2, 3}
         a.update(range(4, 9))
-        return a
-    epyccel_update = epyccel(update_range, language=python_only_language)
+        return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
+    epyccel_update = epyccel(update_range, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_range()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_update_set_as_arg(python_only_language):
+def test_update_set_as_arg(language):
     def update_set_as_arg():
         a = {1, 2, 3}
         a.update({4, 5, 6})
-        return a
+        return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
 
-    epyccel_update = epyccel(update_set_as_arg, language=python_only_language)
+    epyccel_update = epyccel(update_set_as_arg, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_set_as_arg()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_update_tuple_as_arg(python_only_language):
+def test_update_tuple_as_arg(language):
     def update_tuple_as_arg():
         a = {1, 2, 3}
         a.update((4, 5, 6))
-        return a
-    epyccel_update = epyccel(update_tuple_as_arg, language=python_only_language)
+        return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
+    epyccel_update = epyccel(update_tuple_as_arg, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_tuple_as_arg()
-    assert python_result == pyccel_result
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
 
 def test_set_with_list(python_only_language):
     def set_With_list():
@@ -462,5 +469,43 @@ def test_set_union_tuple(language):
     epyccel_func = epyccel(union_tuple, language = language)
     pyccel_result = epyccel_func()
     python_result = union_tuple()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_union_operator(language):
+    def union_int():
+        a = {1,2,3,4}
+        b = {5,6,7,2}
+        c = a | b
+        return len(c), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop()
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Update not fully implemented yet. See #2022"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Update not fully implemented yet. See #2022"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_set_union_augoperator(language):
+    def union_int():
+        a = {1,2,3,4}
+        b = {5,6,7,2}
+        a |= b
+        return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])

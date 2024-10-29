@@ -14,7 +14,6 @@ All notable changes to this project will be documented in this file.
 -   #1693 : Add Python support for list method `remove()`.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1743 : Add Python support for set method `discard()`.
--   #1754 : Add Python support for set method `update()`.
 -   #1893 : Add Python support for set initialisation with `set()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
@@ -45,9 +44,11 @@ All notable changes to this project will be documented in this file.
 -   #1583 : Allow inhomogeneous tuples in classes.
 -   #738 : Add support for homogeneous tuples with scalar elements as arguments.
 -   Add a warning about containers in lists.
+-   #2016 : Add support for translating arithmetic magic methods (methods cannot yet be used from Python).
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
+-   \[INTERNALS\] Allow the use of magic methods to describe container methods.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
 ### Fixed
