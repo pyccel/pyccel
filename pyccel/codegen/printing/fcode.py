@@ -3077,6 +3077,17 @@ class FCodePrinter(CodePrinter):
             return '{} == 0'.format(a)
         return '.not. {}'.format(a)
 
+    def _print_PyccelIn(self, expr):
+        container_type = expr.container.class_type
+        element = self._print(expr.element)
+        container = self._print(expr.container)
+        if isinstance(container_type, (HomogeneousSetType, DictType)):
+            return f'{container} % count({element}) /= 0'
+        else:
+            raise errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr,
+                    severity='fatal')
+
     def _print_Header(self, expr):
         return ''
 
