@@ -188,6 +188,26 @@ def test_min_expr(language):
     assert np.array_equal(epyc_f(*int_args), f(*int_args))
     assert np.allclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
+def test_min_temp_var_first_arg(language):
+    def f(x: 'int', y: 'int'):
+        return min(x + 1, y)
+
+    epyc_f = epyccel(f, language=language)
+
+    x, y = randint(min_int, max_int), randint(min_int, max_int)
+
+    assert epyc_f(x, y) == f(x, y)
+
+def test_min_temp_var_second_arg(language):
+    def f(x: 'int', y: 'int'):
+        return min(x, y + 2)
+
+    epyc_f = epyccel(f, language=language)
+
+    x, y = randint(min_int, max_int), randint(min_int, max_int)
+
+    assert epyc_f(x, y) == f(x, y)
+
 def test_max_2_args_i(language):
     def f(x : 'int', y : 'int'):
         return max(x, y)
@@ -286,6 +306,26 @@ def test_max_expr(language):
 
     assert np.array_equal(epyc_f(*int_args), f(*int_args))
     assert np.allclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
+
+def test_max_temp_var_first_arg(language):
+    def f(x: 'int', y: 'int'):
+        return max(x + 1, y)
+
+    epyc_f = epyccel(f, language=language)
+
+    x, y = randint(min_int, max_int), randint(min_int, max_int)
+
+    assert epyc_f(x, y) == f(x, y)
+
+def test_max_temp_var_second_arg(language):
+    def f(x: 'int', y: 'int'):
+        return max(x, y + 2)
+
+    epyc_f = epyccel(f, language=language)
+
+    x, y = randint(min_int, max_int), randint(min_int, max_int)
+
+    assert epyc_f(x, y) == f(x, y)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),

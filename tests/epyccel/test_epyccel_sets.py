@@ -471,3 +471,41 @@ def test_set_union_tuple(language):
     python_result = union_tuple()
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_union_operator(language):
+    def union_int():
+        a = {1,2,3,4}
+        b = {5,6,7,2}
+        c = a | b
+        return len(c), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop(), c.pop()
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Update not fully implemented yet. See #2022"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Update not fully implemented yet. See #2022"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_set_union_augoperator(language):
+    def union_int():
+        a = {1,2,3,4}
+        b = {5,6,7,2}
+        a |= b
+        return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])

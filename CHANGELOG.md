@@ -45,13 +45,16 @@ All notable changes to this project will be documented in this file.
 -   #1583 : Allow inhomogeneous tuples in classes.
 -   #738 : Add support for homogeneous tuples with scalar elements as arguments.
 -   Add a warning about containers in lists.
+-   #2016 : Add support for translating arithmetic magic methods (methods cannot yet be used from Python).
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
+-   \[INTERNALS\] Allow the use of magic methods to describe container methods.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
 ### Fixed
 
+-   #2025 : Optimise min/max to avoid unnecessary temporary variables.
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
 -   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
 -   Fix some cases where a Python built-in type is returned in place of a NumPy type.
@@ -66,6 +69,7 @@ All notable changes to this project will be documented in this file.
 -   #1930 : Preserve ordering of import targets.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
 -   #1972 : Simplified `printf` statement for Literal String.
+-   #2026 : Fix missing loop in slice assignment.
 
 ### Changed
 
