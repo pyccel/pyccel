@@ -524,12 +524,12 @@ class FCodePrinter(CodePrinter):
                         scope.rename_function(f, suggested_name)
                     f.cls_name = scope.get_new_name(f'{name}_{f.name}')
 
-    def _get_comparison_operators(self, element_type, imports_and_macros, element_name):
+    def _define_gFTL_element(self, element_type, imports_and_macros, element_name):
         """
-        Get an AST node describing a comparison operator between two objects of the same type.
+        Get lists of nodes describing comparison operators between two objects of the same type.
 
-        Get an AST node describing a comparison operator between two objects of the same type.
-        This is useful when defining gFTL modules.
+        Get lists of nodes describing a comparison operators between two objects of the same type.
+        This is necessary when defining gFTL modules.
 
         Parameters
         ----------
@@ -549,23 +549,37 @@ class FCodePrinter(CodePrinter):
         undefs : list[MacroUndef]
             A list of nodes which undefine the macros.
         """
-        tmpVar_x = Variable(element_type, 'x')
-        tmpVar_y = Variable(element_type, 'y')
-        if isinstance(element_type.primitive_type, PrimitiveComplexType):
-            complex_tool_import = Import('pyc_tools_f90', Module('pyc_tools_f90',(),()))
-            self.add_import(complex_tool_import)
-            imports_and_macros.append(complex_tool_import)
-            compare_func = FunctionDef('complex_comparison',
-                                       [FunctionDefArgument(tmpVar_x), FunctionDefArgument(tmpVar_y)],
-                                       [FunctionDefResult(Variable(PythonNativeBool(), 'c'))], [])
-            lt_def = compare_func(tmpVar_x, tmpVar_y)
-        else:
-            lt_def = PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y))
+        if isinstance(element_type, FixedSizeNumericType):
+            tmpVar_x = Variable(element_type, 'x')
+            tmpVar_y = Variable(element_type, 'y')
+            if isinstance(element_type.primitive_type, PrimitiveComplexType):
+                complex_tool_import = Import('pyc_tools_f90', Module('pyc_tools_f90',(),()))
+                self.add_import(complex_tool_import)
+                imports_and_macros.append(complex_tool_import)
+                compare_func = FunctionDef('complex_comparison',
+                                           [FunctionDefArgument(tmpVar_x), FunctionDefArgument(tmpVar_y)],
+                                           [FunctionDefResult(Variable(PythonNativeBool(), 'c'))], [])
+                lt_def = compare_func(tmpVar_x, tmpVar_y)
+            else:
+                lt_def = PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y))
 
-        defs = [MacroDefinition(f'{element_name}_LT(x,y)', lt_def),
-                MacroDefinition(f'{element_name}_EQ(x,y)', PyccelAssociativeParenthesis(PyccelEq(tmpVar_x, tmpVar_y)))]
-        undefs = [MacroUndef(f'{element_name}_LT'),
-                  MacroUndef(f'{element_name}_EQ')]
+            defs = [MacroDefinition(element_name, element_type.primitive_type),
+                    MacroDefinition(f'{element_name}_KINDLEN(context)', KindSpecification(element_type)),
+                    MacroDefinition(f'{element_name}_LT(x,y)', lt_def),
+                    MacroDefinition(f'{element_name}_EQ(x,y)', PyccelAssociativeParenthesis(PyccelEq(tmpVar_x, tmpVar_y)))]
+            undefs = [MacroUndef(element_name),
+                      MacroUndef(f'{element_name}_KINDLEN'),
+                      MacroUndef(f'{element_name}_LT'),
+                      MacroUndef(f'{element_name}_EQ')]
+        else:
+            defs = [MacroDefinition(element_name, element_type)]
+            undefs = [MacroUndef(element_name)]
+
+        if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            defs.append(MacroDefinition(f'{element_name}_rank', element_type.rank))
+            undefs.append(MacroUndef(f'{element_name}_rank'))
+        elif not isinstance(element_type, FixedSizeNumericType):
+            raise NotImplementedError("Support for containers of types defined in other modules is not yet implemented")
         return defs, undefs
 
     def _build_gFTL_module(self, expr_type):
@@ -592,78 +606,40 @@ class FCodePrinter(CodePrinter):
             module = self._generated_gFTL_types[matching_expr_type]
             mod_name = module.name
         else:
-            if isinstance(expr_type, HomogeneousListType):
+            if isinstance(expr_type, (HomogeneousListType, HomogeneousSetType)):
                 element_type = expr_type.element_type
-                imports_and_macros = []
-                if isinstance(element_type, FixedSizeNumericType):
-                    comp_defs, comp_undefs = self._get_comparison_operators(element_type, imports_and_macros, 'T')
-                    imports_and_macros.extend([MacroDefinition('T', element_type.primitive_type),
-                              MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type)),
-                              *comp_defs])
-                    undefs = [MacroUndef('T'),
-                              MacroUndef('T_KINDLEN'),
-                              *comp_undefs]
+                if isinstance(expr_type, HomogeneousSetType):
+                    type_name = 'Set'
+                    if not isinstance(element_type, FixedSizeNumericType):
+                        raise NotImplementedError("Support for sets of types which define their own < operator is not yet implemented")
                 else:
-                    imports_and_macros = [MacroDefinition('T', element_type)]
-                    undefs = [MacroUndef('T')]
-                if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
-                    imports_and_macros.append(MacroDefinition('T_rank', element_type.rank))
-                    undefs.append(MacroUndef('T_rank'))
-                elif not isinstance(element_type, FixedSizeNumericType):
-                    raise NotImplementedError("Support for lists of types defined in other modules is not yet implemented")
-                imports_and_macros.extend([MacroDefinition('Vector', expr_type),
-                                           MacroDefinition('VectorIterator', IteratorType(expr_type)),
-                                           Import(LiteralString('vector/template.inc'), Module('_', (), ())),
-                                           MacroUndef('Vector'),
-                                           MacroUndef('VectorIterator'),
+                    type_name = 'Vector'
+                imports_and_macros = []
+                defs, undefs = self._define_gFTL_element(element_type, imports_and_macros, 'T')
+                imports_and_macros.extend([*defs,
+                                           MacroDefinition(type_name, expr_type),
+                                           MacroDefinition(f'{type_name}Iterator', IteratorType(expr_type)),
+                                           Import(LiteralString(f'{type_name.lower()}/template.inc'), Module('_', (), ())),
+                                           MacroUndef(type_name),
+                                           MacroUndef(f'{type_name}Iterator'),
                                            *undefs])
-            elif isinstance(expr_type, HomogeneousSetType):
-                element_type = expr_type.element_type
-                imports_and_macros = []
-                if isinstance(element_type, FixedSizeNumericType):
-                    comp_defs, comp_undefs = self._get_comparison_operators(element_type, imports_and_macros, 'T')
-                    imports_and_macros.extend([MacroDefinition('T', element_type.primitive_type),
-                              MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type)),
-                              *comp_defs])
-                    undefs = [MacroUndef('T'),
-                              MacroUndef('T_KINDLEN'),
-                              *comp_undefs]
-                else:
-                    raise NotImplementedError("Support for sets of types which define their own < operator is not yet implemented")
-                imports_and_macros.extend([MacroDefinition('Set', expr_type),
-                                           MacroDefinition('SetIterator', IteratorType(expr_type)),
-                                           Import(LiteralString('set/template.inc'), Module('_', (), ())),
-                                           MacroUndef('Set'),
-                                           MacroUndef('SetIterator'),
-                                           *comp_undefs])
             elif isinstance(expr_type, DictType):
                 key_type = expr_type.key_type
                 value_type = expr_type.value_type
                 imports_and_macros = []
-                if isinstance(key_type, FixedSizeNumericType):
-                    comp_defs, comp_undefs = self._get_comparison_operators(key_type, imports_and_macros, 'KEY')
-                    imports_and_macros.extend([MacroDefinition('Key', key_type.primitive_type),
-                                   MacroDefinition('Key_KINDLEN(context)', KindSpecification(key_type)),
-                                   *comp_defs])
-                    undefs = [MacroUndef('Key'),
-                              MacroUndef('Key_KINDLEN'),
-                              *comp_undefs]
-                else:
+                if not isinstance(key_type, FixedSizeNumericType):
                     raise NotImplementedError("Support for dicts whose keys define their own < operator is not yet implemented")
-                if isinstance(value_type, FixedSizeNumericType):
-                    imports_and_macros.extend([MacroDefinition('T', value_type.primitive_type),
-                                   MacroDefinition('T_KINDLEN(context)', KindSpecification(value_type))])
-                    undefs.extend([MacroUndef('T'), MacroUndef('T_KINDLEN')])
-                else:
-                    raise NotImplementedError(f"Support for dictionary values of type {value_type} not yet implemented")
-                imports_and_macros.extend([MacroDefinition('Pair', PairType(key_type, value_type)),
+                key_defs, key_undefs = self._define_gFTL_element(key_type, imports_and_macros, 'Key')
+                val_defs, val_undefs = self._define_gFTL_element(value_type, imports_and_macros, 'T')
+                imports_and_macros.extend([*key_defs, *val_defs,
+                                           MacroDefinition('Pair', PairType(key_type, value_type)),
                                            MacroDefinition('Map', expr_type),
                                            MacroDefinition('MapIterator', IteratorType(expr_type)),
                                            Import(LiteralString('map/template.inc'), Module('_', (), ())),
                                            MacroUndef('Pair'),
                                            MacroUndef('Map'),
                                            MacroUndef('MapIterator'),
-                                           *undefs])
+                                           *key_undefs, *val_undefs])
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
 
