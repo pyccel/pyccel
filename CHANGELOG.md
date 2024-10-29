@@ -52,6 +52,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #2025 : Optimise min/max to avoid unnecessary temporary variables.
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
 -   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
 -   Fix some cases where a Python built-in type is returned in place of a NumPy type.
@@ -66,6 +67,7 @@ All notable changes to this project will be documented in this file.
 -   #1930 : Preserve ordering of import targets.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
 -   #1972 : Simplified `printf` statement for Literal String.
+-   #2026 : Fix missing loop in slice assignment.
 
 ### Changed
 
