@@ -17,6 +17,7 @@ __all__ = ('DictGet',
            'DictMethod',
            'DictPop',
            'DictPopitem',
+            'DictClear',
            )
 
 #==============================================================================
@@ -175,5 +176,22 @@ class DictGet(DictMethod):
         The value that should be returned if the key is not present in the dictionary.
         """
         return self._args[1]
+#==============================================================================
+class DictClear(DictMethod) :
+    """
+    Represents a call to the .clear() method.
 
+    The clear() method removes all items from the dictionary.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+    """
+    __slots__ = ()
+    _shape = None
+    name = 'clear'
+
+    def __init__(self, dict_obj):
+        super().__init__(dict_obj)
 
