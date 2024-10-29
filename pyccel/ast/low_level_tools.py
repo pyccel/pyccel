@@ -43,6 +43,9 @@ class IteratorType(PyccelType, metaclass=ArgumentSingleton):
         """
         return self._iterable_type
 
+    def __str__(self):
+        return f'Iter[{self._iterable_type}]'
+
 #------------------------------------------------------------------------------
 class PairType(PyccelType, metaclass=ArgumentSingleton):
     """
