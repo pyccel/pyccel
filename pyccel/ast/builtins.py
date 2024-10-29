@@ -1154,7 +1154,7 @@ class PythonZip(PyccelFunction):
     *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
-    __slots__ = ('_length',)
+    __slots__ = ('_length', '_class_type')
     name = 'zip'
 
     def __init__(self, *args):
@@ -1172,6 +1172,7 @@ class PythonZip(PyccelFunction):
                 self._length = min(lengths)
             else:
                 self._length = self.args[0].shape[0]
+            self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
 
     @property
     def length(self):
