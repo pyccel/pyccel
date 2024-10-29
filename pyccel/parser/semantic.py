@@ -2931,7 +2931,11 @@ class SemanticParser(BasicParser):
         container = self._visit(expr.container)
         container_type = container.class_type
         if isinstance(container_type, (DictType, HomogeneousSetType, HomogeneousListType)):
-            return PyccelIn(element, container)
+            element_type = container_type.key_type if isinstance(container_type, DictType) else container_type.element_type
+            if element.class_type == element_type:
+                return PyccelIn(element, container)
+            else:
+                return LiteralFalse()
 
         container_base = self.scope.find(str(container_type), 'classes') or get_cls_base(container_type)
         contains_method = container_base.get_method('__contains__', raise_error = isinstance(container_type, CustomDataType))
