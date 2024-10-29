@@ -530,7 +530,7 @@ def test_set_iter_prod(language):
         a = {1,2,3,4,5,6,7,8,9,12}
         b = {2.0, 4.0, 9.0, 2.5, 8.3}
         assemble = 0.0
-        for ai, bi in product(a):
+        for ai, bi in product(a,b):
             assemble += ai*bi
         return assemble
 
