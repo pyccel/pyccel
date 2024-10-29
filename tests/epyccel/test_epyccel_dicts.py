@@ -181,3 +181,13 @@ def test_get_default_str_keys(language) :
     python_result = get_default_str_keys()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
+
+def test_dict_contains(language):
+    def dict_contains():
+        a = {1:1.0, 2:2.0, 3:3.0}
+        return (1 in a), (5 in a)
+    epyc_func = epyccel(dict_contains, language = language)
+    pyccel_result = epyc_func()
+    python_result = dict_contains()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
