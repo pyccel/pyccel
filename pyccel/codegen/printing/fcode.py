@@ -1864,7 +1864,7 @@ class FCodePrinter(CodePrinter):
         # ... print datatype
         if isinstance(expr_type, (CustomDataType, IteratorType, HomogeneousListType, HomogeneousSetType, DictType)):
             name   = self._print(expr_type)
-            if isinstance(expr_type, HomogeneousContainerType):
+            if isinstance(expr_type, (HomogeneousContainerType, DictType)):
                 self.add_import(self._build_gFTL_module(expr_type))
 
             if var.is_argument:
