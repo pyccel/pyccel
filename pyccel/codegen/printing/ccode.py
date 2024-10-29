@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 import functools
-from itertools import chain
+from itertools import chain, product
 import re
 from packaging.version import Version
 
@@ -389,17 +389,16 @@ class CCodePrinter(CodePrinter):
                 or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
-    def _flatten_list(self, irregular_list, order):
+    def _flatten_list(self, irregular_list):
         def to_list(arg):
             if isinstance(arg, (PythonList, PythonTuple)):
-                return [to_list(a) for a in arg.args]
+                return [ai for a in arg.args for ai in to_list(a)]
             else:
-                return arg
-        f_list = np.array(to_list(irregular_list), order=order)
-        return f_list.ravel(order=order)
+                return [arg]
+        return to_list(irregular_list)
 
     #========================== Numpy Elements ===============================#
-    def copy_NumpyArray_Data(self, expr):
+    def copy_NumpyArray_Data(self, lhs, rhs):
         """
         Get code which copies data from a Ndarray or a homogeneous tuple into a Ndarray.
 
@@ -418,8 +417,6 @@ class CCodePrinter(CodePrinter):
         str
             A string containing the code which allocates and copies the data.
         """
-        rhs = expr.rhs
-        lhs = expr.lhs
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
@@ -441,73 +438,24 @@ class CCodePrinter(CodePrinter):
                 return f'cspan_copy({cast_type}, {lhs_c_type}, {rhs_c_type}, {lhs_address}, {rhs_address});\n'
             else:
                 raise NotImplementedError(f"Can't copy variable of type {arg.class_type}")
-        elif not variables:
-            flattened_list = self._flatten_list(arg, order)
-        else:
-            raise NotImplementedError("TODO")
+        elif variables:
+            body = ''
+            for li, ri in zip(lhs, arg):
+                li_slice_var = self.scope.get_temporary_variable(li.class_type,
+                        shape = ri.shape, memory_handling='heap')
+                body += self._print(AliasAssign(li_slice_var, li))
+                body += self.copy_NumpyArray_Data(li_slice_var, ri)
+            return body
 
-        lhs_dtype = lhs.dtype
-        declare_dtype = self.get_c_type(lhs_dtype)
-        if isinstance(lhs.class_type, NumpyNDArrayType):
-            #set dtype to the C struct types
-            dtype = self.find_in_ndarray_type_registry(lhs_dtype)
-        elif isinstance(lhs.class_type, HomogeneousTupleType):
-            dtype = self.find_in_ndarray_type_registry(numpy_precision_map[
-                        (lhs_dtype.primitive_type, lhs_dtype.precision)])
-        else:
-            raise NotImplementedError(f"NumpyArray function not defined to create objects of type {lhs.class_type}")
+        flattened_args = self._flatten_list(arg)
+        flattened_lhs = [IndexedElement(lhs, *elems) for elems in product(*[range(s) for s in lhs.shape])]
 
-        operations = ""
+        operations = ''
+        for li, ri in zip(flattened_lhs, flattened_args):
+            operations += f'{self._print(li)} = {self._print(ri)};\n'
 
         # Get the variable where the data will be copied
         copy_to = lhs
-        copy_to_data_var = ObjectAddress(DottedVariable(VoidType(), 'data',
-                                         memory_handling='alias', lhs=copy_to))
-
-        num_elements = len(flattened_list)
-        # Get the offset variable if it is needed
-        if num_elements != 1 and not all(v.rank == 0 for v in flattened_list):
-            offset_var = self.scope.get_temporary_variable(PythonNativeInt(), 'offset')
-            operations += self._print(Assign(offset_var, LiteralInteger(0)))
-        else:
-            offset_var = LiteralInteger(0)
-        offset_str = self._print(offset_var)
-
-        # Copy each of the elements
-        i = 0
-        while i < num_elements:
-            current_element = flattened_list[i]
-            # Copy an array element
-            if isinstance(current_element, (Variable, IndexedElement)) and current_element.rank >= 1:
-                raise NotImplementedError("TODO")
-                elem_name = self._print(current_element)
-                target = self._print(ObjectAddress(copy_to))
-                operations += f"array_copy_data({target}, {elem_name}, {offset_str});\n"
-                i += 1
-                if i < num_elements:
-                    operations += self._print(AugAssign(offset_var, '+', NumpySize(current_element)))
-
-            # Copy multiple scalar elements
-            else:
-                self.add_import(c_imports['string'])
-                remaining_elements = flattened_list[i:]
-                lenSubset = next((i for i,v in enumerate(remaining_elements) if v.rank != 0), len(remaining_elements))
-                if lenSubset == 0:
-                    errors.report(f"Can't copy {rhs} into {lhs}", symbol=expr,
-                            severity='fatal')
-                subset = remaining_elements[:lenSubset]
-
-                # Declare list of consecutive elements
-                subset_str = "{" + ', '.join(self._print(elem) for elem in subset) + "}"
-                dummy_array_name = self.scope.get_new_name()
-                operations += f"{declare_dtype} {dummy_array_name}[] = {subset_str};\n"
-
-                copy_to_data = self._print(copy_to_data_var)
-                operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * sizeof({declare_dtype}));\n"
-
-                i += lenSubset
-                if i < num_elements:
-                    operations += self._print(AugAssign(offset_var, '+', LiteralInteger(lenSubset)))
 
         return operations
 
@@ -2338,7 +2286,7 @@ class CCodePrinter(CodePrinter):
             return f'{self._print(rhs)};\n'
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
-            return self.copy_NumpyArray_Data(expr)
+            return self.copy_NumpyArray_Data(lhs, rhs)
         if isinstance(rhs, (NumpySum, NumpyAmax, NumpyAmin)):
             return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
