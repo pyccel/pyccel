@@ -514,7 +514,7 @@ def test_set_contains(language):
     def union_int():
         a = {1,2,3,4,5,6,7,8}
         b = 2 in a
-        return b, (4 in a)
+        return b, (4 in a), (9 in a)
 
     epyccel_func = epyccel(union_int, language = language)
     pyccel_result = epyccel_func()

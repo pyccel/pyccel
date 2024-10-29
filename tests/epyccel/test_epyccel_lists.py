@@ -748,8 +748,8 @@ def test_homogenous_list_unknown_size_copy(limited_language):
 
 def test_list_contains(language):
     def list_contains():
-        a = [1, 3, 4, 7, 10]
-        return (1 in a), (5 in a)
+        a = [1, 3, 4, 7, 10, 3]
+        return (1 in a), (5 in a), (3 in a)
 
     epyc_list_contains = epyccel(list_contains, language = language)
     pyccel_result = epyc_list_contains()
