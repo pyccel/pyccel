@@ -98,7 +98,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
 
 from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelAdd, PyccelMinus, PyccelMul, PyccelPow
-from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv, PyccelIn
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -2930,6 +2930,9 @@ class SemanticParser(BasicParser):
         element = self._visit(expr.element)
         container = self._visit(expr.container)
         container_type = container.class_type
+        if isinstance(container_type, (DictType, HomogeneousSetType, HomogeneousListType)):
+            return PyccelIn(element, container)
+
         container_base = self.scope.find(str(container_type), 'classes') or get_cls_base(container_type)
         contains_method = container_base.get_method('__contains__', raise_error = isinstance(container_type, CustomDataType))
         if contains_method:
