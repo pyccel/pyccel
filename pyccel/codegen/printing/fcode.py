@@ -1862,8 +1862,10 @@ class FCodePrinter(CodePrinter):
         rankstr   = ''
 
         # ... print datatype
-        if isinstance(expr_type, CustomDataType):
-            name   = expr_type.name
+        if isinstance(expr_type, (CustomDataType, IteratorType, HomogeneousListType, HomogeneousSetType, DictType)):
+            name   = self._print(expr_type)
+            if isinstance(expr_type, HomogeneousContainerType):
+                self.add_import(self._build_gFTL_module(expr_type))
 
             if var.is_argument:
                 sig = 'class'
@@ -1891,10 +1893,6 @@ class FCodePrinter(CodePrinter):
                     raise NotImplementedError("Fortran rank string undetermined")
                 rankstr = f'({rankstr})'
 
-        elif isinstance(expr_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-            self.add_import(self._build_gFTL_module(expr_type))
-            typename = self._print(expr_type)
-            dtype_str = f'type({typename})'
         elif isinstance(dtype, StringType):
             dtype_str = self._print(dtype)
 
@@ -2227,6 +2225,9 @@ class FCodePrinter(CodePrinter):
     def _print_IteratorType(self, expr):
         iterable_type = self._print(expr.iterable_type)
         return f"{iterable_type}_Iterator"
+
+    def _print_CustomDataType(self, expr):
+        return expr.name
 
     def _print_DataType(self, expr):
         return self._print(expr.name)
@@ -2565,27 +2566,40 @@ class FCodePrinter(CodePrinter):
     def _print_For(self, expr):
         self.set_scope(expr.scope)
 
+        iterable = expr.iterable
+        iterable_type = iterable.iterable.class_type
         indices = expr.iterable.loop_counters
-        index = indices[0] if indices else expr.target
-        if expr.iterable.num_loop_counters_required:
-            self.scope.insert_variable(index)
 
-        target   = index
-        my_range = expr.iterable.get_range()
+        if isinstance(iterable_type, (DictType, HomogeneousSetType)):
+            if isinstance(iterable.iterable, Variable):
+                suggested_name = iterable.iterable.name + '_'
+            else:
+                suggested_name = ''
+            iterable = self._print(iterable.iterable)
+            iterator = self.scope.get_temporary_variable(IteratorType(iterable_type),
+                    name = suggested_name + 'iter')
+            last = self.scope.get_temporary_variable(IteratorType(iterable_type),
+                    name = suggested_name + 'last')
+            target = self._print(expr.target)
+            prolog = (f'{iterator} = {iterable} % begin()\n'
+                      f'{last} = {iterable} % end()\n'
+                      f'do while ({iterator} /= {last})\n'
+                      f'{target} = {iterator} % of()\n')
+            epilog = f'call {iterator} % next()\nend do\n'
+        else:
+            index = indices[0] if indices else expr.target
+            if iterable.num_loop_counters_required:
+                self.scope.insert_variable(index)
 
-        if not isinstance(my_range, PythonRange):
-            # Only iterable currently supported is PythonRange
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal')
+            my_range = iterable.get_range()
 
-        tar        = self._print(target)
-        range_code = self._print(my_range)
+            target     = self._print(index)
+            range_code = self._print(my_range)
 
-        prolog = 'do {0} = {1}\n'.format(tar, range_code)
-        epilog = 'end do\n'
+            prolog = f'do {target} = {range_code}\n'
+            epilog = 'end do\n'
 
-        additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
-        prolog += self._print(additional_assign)
+            prolog += self._print(CodeBlock(iterable.get_assigns(expr.target)))
 
         body = self._print(expr.body)
 
@@ -2595,9 +2609,7 @@ class FCodePrinter(CodePrinter):
 
         self.exit_scope()
 
-        return ('{prolog}'
-                '{body}'
-                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
+        return prolog + body + epilog
 
     # .....................................................
     #               Print OpenMP AnnotatedComment
