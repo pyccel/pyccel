@@ -745,3 +745,14 @@ def test_homogenous_list_unknown_size_copy(limited_language):
     print(python_out)
 
     assert python_out == pyccel_out
+
+def test_list_contains(language):
+    def list_contains():
+        a = [1, 3, 4, 7, 10, 3]
+        return (1 in a), (5 in a), (3 in a)
+
+    epyc_list_contains = epyccel(list_contains, language = language)
+    pyccel_result = epyc_list_contains()
+    python_result = list_contains()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result

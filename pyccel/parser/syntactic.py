@@ -49,7 +49,7 @@ from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, Pyc
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
-from pyccel.ast.operators import PyccelIs, PyccelIsNot
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, PyccelIn
 from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
@@ -715,6 +715,8 @@ class SyntaxParser(BasicParser):
             return PyccelIs(first, second)
         if isinstance(op, ast.IsNot):
             return PyccelIsNot(first, second)
+        if isinstance(op, ast.In):
+            return PyccelIn(first, second)
 
         return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt,

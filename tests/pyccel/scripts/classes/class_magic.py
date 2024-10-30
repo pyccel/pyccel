@@ -17,6 +17,9 @@ class A:
         self.x += other
         return self
 
+    def __contains__(self, other : int):
+        return self.x == other
+
 if __name__ == '__main__':
     my_a = A(4)
     left_add = my_a + 5
@@ -35,3 +38,6 @@ if __name__ == '__main__':
     my_a *= 3
 
     print(my_a.x)
+
+    print(3 in my_a)
+    print(30 in my_a)
