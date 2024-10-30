@@ -1387,7 +1387,7 @@ class CCodePrinter(CodePrinter):
             assert init == ''
             preface = ''
             init    = ' = {.shape = NULL}'
-        elif isinstance(var.class_type, HomogeneousContainerType):
+        elif isinstance(var.class_type, (HomogeneousContainerType,DictType)):
             preface = ''
             init = ' = {0}'
         else:
@@ -1655,7 +1655,7 @@ class CCodePrinter(CodePrinter):
             if expr.status in ('allocated', 'unknown'):
                 free_code = f'{self._print(Deallocate(variable))}\n'
             if expr.alloc_type == 'dynamic':
-                size = self._print(variable.alloc_shape[0])
+                size = self._print(expr.shape[0])
                 variable_address = self._print(ObjectAddress(expr.variable))
                 container_type = self.get_c_type(expr.variable.class_type)
                 return free_code + f'{container_type}_reserve({variable_address}, {size});\n'
