@@ -974,6 +974,20 @@ class CCodePrinter(CodePrinter):
         a = self._print(expr.args[0])
         return '!{}'.format(a)
 
+    def _print_PyccelIn(self, expr):
+        container_type = expr.container.class_type
+        element = self._print(expr.element)
+        container = self._print(ObjectAddress(expr.container))
+        c_type = self.get_c_type(expr.container.class_type)
+        if isinstance(container_type, (HomogeneousSetType, DictType)):
+            return f'{c_type}_contains({container}, {element})'
+        elif isinstance(container_type, HomogeneousListType):
+            return f'{c_type}_find({container}, {element}).ref != {c_type}_end({container}).ref'
+        else:
+            raise errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr,
+                    severity='fatal')
+
     def _print_PyccelMod(self, expr):
         self.add_import(c_imports['math'])
         self.add_import(c_imports['pyc_math_c'])
@@ -1020,16 +1034,19 @@ class CCodePrinter(CodePrinter):
         if source.startswith('stc/') or source in import_header_guard_prefix:
             code = ''
             for t in expr.target:
-                dtype = t.object.class_type
+                class_type = t.object.class_type
                 container_type = t.local_alias
-                if isinstance(dtype, DictType):
-                    container_key_key = self.get_c_type(dtype.key_type)
-                    container_val_key = self.get_c_type(dtype.value_type)
+                if isinstance(class_type, DictType):
+                    container_key_key = self.get_c_type(class_type.key_type)
+                    container_val_key = self.get_c_type(class_type.value_type)
                     container_key = f'{container_key_key}_{container_val_key}'
                     element_decl = f'#define i_key {container_key_key}\n#define i_val {container_val_key}\n'
                 else:
-                    container_key = self.get_c_type(dtype.element_type)
+                    container_key = self.get_c_type(class_type.element_type)
                     element_decl = f'#define i_key {container_key}\n'
+                if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
+                        and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
+                    element_decl += '#define i_use_cmp\n'
                 header_guard_prefix = import_header_guard_prefix.get(source, '')
                 header_guard = f'{header_guard_prefix}_{container_type.upper()}'
                 code += ''.join((f'#ifndef {header_guard}\n',

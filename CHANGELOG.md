@@ -27,13 +27,14 @@ All notable changes to this project will be documented in this file.
 -   #1657 : Add the appropriate Fortran language equivalent for declaring a Python `list` container using the gFTL library.
 -   #1658 : Add the appropriate Fortran language equivalent for declaring a Python `set` container using the gFTL library.
 -   #1944 : Add the appropriate Fortran language equivalent for declaring a Python `dict` container using the gFTL library.
--   #2023 : Add support for iterating over a `set`.
+-   #2009 : Add support for `in` operator for `list`, `set`, `dict` and class containers.
 -   #1874 : Add C and Fortran support for the `len()` function for the `list` container.
 -   #1875 : Add C and Fortran support for the `len()` function for the `set` container.
 -   #1908 : Add C and Fortran support for the `len()` function for the `dict` container.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C support for list method `pop()`.
+-   #2023 : Add support for iterating over a `set`.
 -   #1877 : Add C and Fortran Support for set method `pop()`.
 -   #1917 : Add C and Fortran support for set method `add()`.
 -   #1918 : Add support for set method `clear()`.

@@ -510,6 +510,17 @@ def test_set_union_augoperator(language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
+def test_set_contains(language):
+    def union_int():
+        a = {1,2,3,4,5,6,7,8}
+        b = 2 in a
+        return b, (4 in a), (9 in a)
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result == pyccel_result
+
 def test_set_iter(language):
     def set_sum_int():
         a =  {1,2,3,4,5,6,7,8,9,12}
