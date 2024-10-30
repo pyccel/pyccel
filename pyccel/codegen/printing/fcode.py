@@ -2575,6 +2575,8 @@ class FCodePrinter(CodePrinter):
                 suggested_name = iterable.iterable.name + '_'
             else:
                 suggested_name = ''
+                errors.report("Iterating over a temporary object. This may cause compilation issues or cause calculations to be carried out twice",
+                        severity='warning', symbol=expr)
             iterable = self._print(iterable.iterable)
             iterator = self.scope.get_temporary_variable(IteratorType(iterable_type),
                     name = suggested_name + 'iter')
