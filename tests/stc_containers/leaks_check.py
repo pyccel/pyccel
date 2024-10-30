@@ -1,42 +1,43 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
 def create_list():
-    a = [1,2,3]
+    a = [1,2,3]# pylint: disable=missing-function-docstring, missing-module-docstring
 
 def create_set():
-    a = {1,2,3}
+    a = {1,2,3}# pylint: disable=missing-function-docstring, missing-module-docstring
 
 def create_dict():
-    a = {1:1,2:2,3:3}
+    a = {1:1,2:2,3:3}# pylint: disable=missing-function-docstring, missing-module-docstring
 
 def list_reassign():
-    a = [1,2,3]
-    a = [1,2,3,4]
+    a = [1,2,3]# pylint: disable=missing-function-docstring, missing-module-docstring
+    a = [1,2,3,4]# pylint: disable=missing-function-docstring, missing-module-docstring
 
 def set_reassign():
-    a = {1,2,3}
-    a = {1,2}
-    a = {1,2,3,4}
-    a = {1,2,3,4,5}
+    a = {1,2,3}# pylint: disable=missing-function-docstring, missing-module-docstring
+    a = {1,2}# pylint: disable=missing-function-docstring, missing-module-docstring
+    a = {1,2,3,4}# pylint: disable=missing-function-docstring, missing-module-docstring
+    a = {1,2,3,4,5}# pylint: disable=missing-function-docstring, missing-module-docstring
 
 def dict_reassign():
-    a = {1:1,2:2,3:3}
-    a = {1:1,2:2,3:3,4:4}
-    a = {1:1,2:2}
-    a = {1:1,2:2,3:3,4:4,5:5}
+    a = {1:1,2:2,3:3}# pylint: disable=missing-function-docstring, missing-module-docstring
+    a = {1:1,2:2,3:3,4:4}# pylint: disable=missing-function-docstring, missing-module-docstring
+    a = {1:1,2:2}# pylint: disable=missing-function-docstring, missing-module-docstring
+    a = {1:1,2:2,3:3,4:4,5:5}# pylint: disable=missing-function-docstring, missing-module-docstring
 
 def conditional_list(b1: bool):
     if (b1):
-        a = [1,2,3]
-    a = [1,2,3,4]
+        a = [1,2,3]# pylint: disable=missing-function-docstring, missing-module-docstring
+    a = [1,2,3,4]# pylint: disable=missing-function-docstring, missing-module-docstring
 
 def conditional_set(b1: bool):
     if (b1):
-        a = {1,2,3}
-    a = {1,2,3,4}
+        a = {1,2,3}# pylint: disable=missing-function-docstring, missing-module-docstring
+    a = {1,2,3,4}# pylint: disable=missing-function-docstring, missing-module-docstring
 
 def conditional_dict(b1: bool):
     if (b1):
-        a = {1:1,2:2,3:3}
-    a = {1:1,2:2,3:3,4:4,5:5}
+        a = {1:1,2:2,3:3}# pylint: disable=missing-function-docstring, missing-module-docstring
+    a = {1:1,2:2,3:3,4:4,5:5}# pylint: disable=missing-function-docstring, missing-module-docstring
 
 if __name__ == '__main__':
     create_list()
