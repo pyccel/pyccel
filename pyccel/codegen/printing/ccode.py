@@ -649,11 +649,11 @@ class CCodePrinter(CodePrinter):
         ----------
         expr : TypedAstNode
             The object representing the container being printed (e.g., PythonList, PythonSet).
-    
+
         assignment_var : Assign
-            The assignment node where the Python container (rhs) is being initialized 
+            The assignment node where the Python container (rhs) is being initialized
             and saved into a variable (lhs).
-        
+
         Returns
         -------
         str
@@ -676,7 +676,7 @@ class CCodePrinter(CodePrinter):
         Rename class methods from user-defined imports.
 
         This function is responsible for renaming methods of classes from
-        the imported modules, ensuring that the names are correct 
+        the imported modules, ensuring that the names are correct
         by prefixing them with their class names.
 
         Parameters
@@ -714,12 +714,22 @@ class CCodePrinter(CodePrinter):
             return "fmin({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
-            arg1 = self.scope.get_temporary_variable(PythonNativeInt())
-            arg2 = self.scope.get_temporary_variable(PythonNativeInt())
-            assign1 = Assign(arg1, arg[0])
-            assign2 = Assign(arg2, arg[1])
-            self._additional_code += self._print(assign1)
-            self._additional_code += self._print(assign2)
+            if isinstance(arg[0], Variable):
+                arg1 = self._print(arg[0])
+            else:
+                arg1_temp = self.scope.get_temporary_variable(PythonNativeInt())
+                assign1 = Assign(arg1_temp, arg[0])
+                self._additional_code += self._print(assign1)
+                arg1 = self._print(arg1_temp)
+
+            if isinstance(arg[1], Variable):
+                arg2 = self._print(arg[1])
+            else:
+                arg2_temp = self.scope.get_temporary_variable(PythonNativeInt())
+                assign2 = Assign(arg2_temp, arg[1])
+                self._additional_code += self._print(assign2)
+                arg2 = self._print(arg2_temp)
+
             return f"({arg1} < {arg2} ? {arg1} : {arg2})"
         else:
             return errors.report("min in C is only supported for 2 scalar arguments", symbol=expr,
@@ -732,12 +742,22 @@ class CCodePrinter(CodePrinter):
             return "fmax({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
-            arg1 = self.scope.get_temporary_variable(PythonNativeInt())
-            arg2 = self.scope.get_temporary_variable(PythonNativeInt())
-            assign1 = Assign(arg1, arg[0])
-            assign2 = Assign(arg2, arg[1])
-            self._additional_code += self._print(assign1)
-            self._additional_code += self._print(assign2)
+            if isinstance(arg[0], Variable):
+                arg1 = self._print(arg[0])
+            else:
+                arg1_temp = self.scope.get_temporary_variable(PythonNativeInt())
+                assign1 = Assign(arg1_temp, arg[0])
+                self._additional_code += self._print(assign1)
+                arg1 = self._print(arg1_temp)
+
+            if isinstance(arg[1], Variable):
+                arg2 = self._print(arg[1])
+            else:
+                arg2_temp = self.scope.get_temporary_variable(PythonNativeInt())
+                assign2 = Assign(arg2_temp, arg[1])
+                self._additional_code += self._print(assign2)
+                arg2 = self._print(arg2_temp)
+
             return f"({arg1} > {arg2} ? {arg1} : {arg2})"
         else:
             return errors.report("max in C is only supported for 2 scalar arguments", symbol=expr,
@@ -952,6 +972,20 @@ class CCodePrinter(CodePrinter):
         a = self._print(expr.args[0])
         return '!{}'.format(a)
 
+    def _print_PyccelIn(self, expr):
+        container_type = expr.container.class_type
+        element = self._print(expr.element)
+        container = self._print(ObjectAddress(expr.container))
+        c_type = self.get_c_type(expr.container.class_type)
+        if isinstance(container_type, (HomogeneousSetType, DictType)):
+            return f'{c_type}_contains({container}, {element})'
+        elif isinstance(container_type, HomogeneousListType):
+            return f'{c_type}_find({container}, {element}).ref != {c_type}_end({container}).ref'
+        else:
+            raise errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr,
+                    severity='fatal')
+
     def _print_PyccelMod(self, expr):
         self.add_import(c_imports['math'])
         self.add_import(c_imports['pyc_math_c'])
@@ -992,22 +1026,25 @@ class CCodePrinter(CodePrinter):
         else:
             source = expr.source
         if isinstance(source, DottedName):
-            source = source.name[-1]
+            source = source.name[-1].python_value
         else:
             source = self._print(source)
         if source.startswith('stc/') or source in import_header_guard_prefix:
             code = ''
             for t in expr.target:
-                dtype = t.object.class_type
+                class_type = t.object.class_type
                 container_type = t.local_alias
-                if isinstance(dtype, DictType):
-                    container_key_key = self.get_c_type(dtype.key_type)
-                    container_val_key = self.get_c_type(dtype.value_type)
+                if isinstance(class_type, DictType):
+                    container_key_key = self.get_c_type(class_type.key_type)
+                    container_val_key = self.get_c_type(class_type.value_type)
                     container_key = f'{container_key_key}_{container_val_key}'
                     element_decl = f'#define i_key {container_key_key}\n#define i_val {container_val_key}\n'
                 else:
-                    container_key = self.get_c_type(dtype.element_type)
+                    container_key = self.get_c_type(class_type.element_type)
                     element_decl = f'#define i_key {container_key}\n'
+                if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
+                        and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
+                    element_decl += '#define i_use_cmp\n'
                 header_guard_prefix = import_header_guard_prefix.get(source, '')
                 header_guard = f'{header_guard_prefix}_{container_type.upper()}'
                 code += ''.join((f'#ifndef {header_guard}\n',
@@ -1186,6 +1223,8 @@ class CCodePrinter(CodePrinter):
                                                 file=expr.file)],
                                  unravelled = True)
                 code += self._print(body)
+            elif isinstance(f, LiteralString):
+                args_format.append(f.python_value)
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
@@ -1662,7 +1701,7 @@ class CCodePrinter(CodePrinter):
             elif expr.alloc_type == 'resize':
                 return f'{container_type}_resize({variable_address}, {size}, {0});\n' 
             return free_code
-        if variable.rank > 0:
+        if isinstance(variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
                 shape_var = DottedVariable(VoidType(), 'shape', lhs = variable)
@@ -1689,7 +1728,10 @@ class CCodePrinter(CodePrinter):
             var_code = self._print(ObjectAddress(variable))
             if expr.like:
                 declaration_type = self.get_declare_type(expr.like)
-                return f'{var_code} = malloc(sizeof({declaration_type}));\n'
+                malloc_size = f'sizeof({declaration_type})'
+                if variable.rank:
+                    malloc_size = ' * '.join([malloc_size, *(self._print(s) for s in expr.shape)])
+                return f'{var_code} = malloc({malloc_size});\n'
             else:
                 raise NotImplementedError(f"Allocate not implemented for {variable}")
         else:
@@ -2235,22 +2277,21 @@ class CCodePrinter(CodePrinter):
         return f'{lhs_code} {op}= {rhs_code};\n'
 
     def _print_Assign(self, expr):
-        prefix_code = ''
         lhs = expr.lhs
         rhs = expr.rhs
         if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, TupleType):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
-            return prefix_code+'{};\n'.format(self._print(rhs))
+            return f'{self._print(rhs)};\n'
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
-            return prefix_code+self.copy_NumpyArray_Data(expr)
+            return self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
-            return prefix_code+self.arrayFill(expr)
+            return self.arrayFill(expr)
         lhs = self._print(expr.lhs)
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
-            return prefix_code+self.init_stc_container(rhs, expr)
+            return self.init_stc_container(rhs, expr)
         rhs = self._print(expr.rhs)
-        return prefix_code+f'{lhs} = {rhs};\n'
+        return f'{lhs} = {rhs};\n'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
@@ -2623,6 +2664,34 @@ class CCodePrinter(CodePrinter):
         set_var = self._print(ObjectAddress(expr.set_variable))
         return f'{var_type}_pop({set_var})'
 
+    def _print_SetClear(self, expr):
+        var_type = self.get_declare_type(expr.set_variable)
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        return f'{var_type}_clear({set_var});\n'
+
+    def _print_SetAdd(self, expr):
+        var_type = self.get_declare_type(expr.set_variable)
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        arg = self._print(expr.args[0])
+        return f'{var_type}_push({set_var}, {arg});\n'
+
+    def _print_SetCopy(self, expr):
+        var_type = self.get_declare_type(expr.set_variable)
+        set_var = self._print(expr.set_variable)
+        return f'{var_type}_clone({set_var})'
+
+    def _print_SetUnion(self, expr):
+        assign_base = expr.get_direct_user_nodes(lambda n: isinstance(n, Assign))
+        if not assign_base:
+            errors.report("The result of the union call must be saved into a variable",
+                    severity='error', symbol=expr)
+        class_type = expr.set_variable.class_type
+        var_type = self.get_c_type(class_type)
+        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(class_type), var_type)))
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
+        return f'{var_type}_union({set_var}, {args})'
+
     #=================== MACROS ==================
 
     def _print_MacroShape(self, expr):
@@ -2684,4 +2753,3 @@ class CCodePrinter(CodePrinter):
             pretty.append("%s%s" % (tab*level, line))
             level += increase[n]
         return pretty
-

@@ -24,6 +24,8 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonList, PythonSet
 
+from pyccel.ast.builtin_methods.set_methods import SetUnion
+
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
@@ -52,6 +54,7 @@ from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
 from pyccel.ast.literals  import Nil
 
 from pyccel.ast.low_level_tools  import MacroDefinition, IteratorType, PairType
+from pyccel.ast.low_level_tools  import MacroUndef
 
 from pyccel.ast.mathext  import math_constants
 
@@ -66,7 +69,7 @@ from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 
 from pyccel.ast.numpytypes import NumpyNDArrayType
 
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd, PyccelEq
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
@@ -261,10 +264,11 @@ class FCodePrinter(CodePrinter):
         self._constantImports = {}
         self._current_class    = None
 
-        self._additional_code = None
+        self._additional_code = ''
 
         self.prefix_module = prefix_module
 
+        self._generated_gFTL_types = {}
         self._generated_gFTL_extensions = {}
 
     def print_constant_imports(self):
@@ -423,8 +427,6 @@ class FCodePrinter(CodePrinter):
             # Everything before the return node needs handling before the line
             # which calls the inline function is executed
             code = self._print(body)
-            if (not self._additional_code):
-                self._additional_code = ''
             self._additional_code += code
 
             # Collect statements from results to return object
@@ -522,6 +524,64 @@ class FCodePrinter(CodePrinter):
                         scope.rename_function(f, suggested_name)
                     f.cls_name = scope.get_new_name(f'{name}_{f.name}')
 
+    def _define_gFTL_element(self, element_type, imports_and_macros, element_name):
+        """
+        Get lists of nodes describing comparison operators between two objects of the same type.
+
+        Get lists of nodes describing a comparison operators between two objects of the same type.
+        This is necessary when defining gFTL modules.
+
+        Parameters
+        ----------
+        element_type : PyccelType
+            The data type to be compared.
+
+        imports_and_macros : list
+            A list of imports or macros for the gFTL module.
+
+        element_name : str
+            The name of the element whose properties are being specified.
+
+        Returns
+        -------
+        defs : list[MacroDefinition]
+            A list of nodes describing the macros defining comparison operator.
+        undefs : list[MacroUndef]
+            A list of nodes which undefine the macros.
+        """
+        if isinstance(element_type, FixedSizeNumericType):
+            tmpVar_x = Variable(element_type, 'x')
+            tmpVar_y = Variable(element_type, 'y')
+            if isinstance(element_type.primitive_type, PrimitiveComplexType):
+                complex_tool_import = Import('pyc_tools_f90', Module('pyc_tools_f90',(),()))
+                self.add_import(complex_tool_import)
+                imports_and_macros.append(complex_tool_import)
+                compare_func = FunctionDef('complex_comparison',
+                                           [FunctionDefArgument(tmpVar_x), FunctionDefArgument(tmpVar_y)],
+                                           [FunctionDefResult(Variable(PythonNativeBool(), 'c'))], [])
+                lt_def = compare_func(tmpVar_x, tmpVar_y)
+            else:
+                lt_def = PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y))
+
+            defs = [MacroDefinition(element_name, element_type.primitive_type),
+                    MacroDefinition(f'{element_name}_KINDLEN(context)', KindSpecification(element_type)),
+                    MacroDefinition(f'{element_name}_LT(x,y)', lt_def),
+                    MacroDefinition(f'{element_name}_EQ(x,y)', PyccelAssociativeParenthesis(PyccelEq(tmpVar_x, tmpVar_y)))]
+            undefs = [MacroUndef(element_name),
+                      MacroUndef(f'{element_name}_KINDLEN'),
+                      MacroUndef(f'{element_name}_LT'),
+                      MacroUndef(f'{element_name}_EQ')]
+        else:
+            defs = [MacroDefinition(element_name, element_type)]
+            undefs = [MacroUndef(element_name)]
+
+        if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            defs.append(MacroDefinition(f'{element_name}_rank', element_type.rank))
+            undefs.append(MacroUndef(f'{element_name}_rank'))
+        elif not isinstance(element_type, FixedSizeNumericType):
+            raise NotImplementedError("Support for containers of types defined in other modules is not yet implemented")
+        return defs, undefs
+
     def _build_gFTL_module(self, expr_type):
         """
         Build the gFTL module to create container types.
@@ -541,86 +601,100 @@ class FCodePrinter(CodePrinter):
             The import which allows the new type to be accessed.
         """
         # Get the type used in the dict for compatible types (e.g. float vs float64)
-        matching_expr_type = next((t for t in self._generated_gFTL_extensions if expr_type == t), None)
+        matching_expr_type = next((t for t in self._generated_gFTL_types if expr_type == t), None)
         if matching_expr_type:
-            module = self._generated_gFTL_extensions[matching_expr_type]
+            module = self._generated_gFTL_types[matching_expr_type]
             mod_name = module.name
         else:
-            if isinstance(expr_type, HomogeneousListType):
-                include = Import(LiteralString('vector/template.inc'), Module('_', (), ()))
+            if isinstance(expr_type, (HomogeneousListType, HomogeneousSetType)):
                 element_type = expr_type.element_type
-                if isinstance(element_type, FixedSizeNumericType):
-                    imports_and_macros = [MacroDefinition('T', element_type.primitive_type),
-                              MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type))]
+                if isinstance(expr_type, HomogeneousSetType):
+                    type_name = 'Set'
+                    if not isinstance(element_type, FixedSizeNumericType):
+                        raise NotImplementedError("Support for sets of types which define their own < operator is not yet implemented")
                 else:
-                    imports_and_macros = [MacroDefinition('T', element_type)]
-                if isinstance(element_type, (NumpyNDArrayType, HomogeneousTupleType)):
-                    imports_and_macros.append(MacroDefinition('T_rank', element_type.rank))
-                elif not isinstance(element_type, FixedSizeNumericType):
-                    raise NotImplementedError("Support for lists of types defined in other modules is not yet implemented")
-                imports_and_macros.append(MacroDefinition('Vector', expr_type))
-                imports_and_macros.append(MacroDefinition('VectorIterator', IteratorType(expr_type)))
-            elif isinstance(expr_type, HomogeneousSetType):
-                include = Import(LiteralString('set/template.inc'), Module('_', (), ()))
-                element_type = expr_type.element_type
+                    type_name = 'Vector'
                 imports_and_macros = []
-                if isinstance(element_type, FixedSizeNumericType):
-                    tmpVar_x = Variable(element_type, 'x')
-                    tmpVar_y = Variable(element_type, 'y')
-                    if isinstance(element_type.primitive_type, PrimitiveComplexType):
-                        complex_tool_import = Import('pyc_tools_f90', Module('pyc_tools_f90',(),()))
-                        self.add_import(complex_tool_import)
-                        imports_and_macros.append(complex_tool_import)
-                        compare_func = FunctionDef('complex_comparison',
-                                                   [FunctionDefArgument(tmpVar_x), FunctionDefArgument(tmpVar_y)],
-                                                   [FunctionDefResult(Variable(PythonNativeBool(), 'c'))], [])
-                        lt_def = FunctionCall(compare_func, [tmpVar_x, tmpVar_y])
-                    else:
-                        lt_def = PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y))
-                    imports_and_macros.extend([MacroDefinition('T', element_type.primitive_type),
-                              MacroDefinition('T_KINDLEN(context)', KindSpecification(element_type)),
-                              MacroDefinition('T_LT(x,y)', lt_def)])
-                else:
-                    raise NotImplementedError("Support for sets of types which define their own < operator is not yet implemented")
-                imports_and_macros.append(MacroDefinition('Set', expr_type))
-                imports_and_macros.append(MacroDefinition('SetIterator', IteratorType(expr_type)))
+                defs, undefs = self._define_gFTL_element(element_type, imports_and_macros, 'T')
+                imports_and_macros.extend([*defs,
+                                           MacroDefinition(type_name, expr_type),
+                                           MacroDefinition(f'{type_name}Iterator', IteratorType(expr_type)),
+                                           Import(LiteralString(f'{type_name.lower()}/template.inc'), Module('_', (), ())),
+                                           MacroUndef(type_name),
+                                           MacroUndef(f'{type_name}Iterator'),
+                                           *undefs])
             elif isinstance(expr_type, DictType):
-                include = Import(LiteralString('map/template.inc'), Module('_', (), ()))
                 key_type = expr_type.key_type
                 value_type = expr_type.value_type
                 imports_and_macros = []
-                if isinstance(key_type, FixedSizeNumericType):
-                    tmpVar_x = Variable(key_type, 'x')
-                    tmpVar_y = Variable(key_type, 'y')
-                    if isinstance(key_type.primitive_type, PrimitiveComplexType):
-                        complex_tool_import = Import('pyc_tools_f90', Module('pyc_tools_f90',(),()))
-                        self.add_import(complex_tool_import)
-                        imports_and_macros.append(complex_tool_import)
-                        compare_func = FunctionDef('complex_comparison',
-                                                   [FunctionDefArgument(tmpVar_x), FunctionDefArgument(tmpVar_y)],
-                                                   [FunctionDefResult(Variable(PythonNativeBool(), 'c'))], [])
-                        lt_def = FunctionCall(compare_func, [tmpVar_x, tmpVar_y])
-                    else:
-                        lt_def = PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y))
-                    imports_and_macros.extend([MacroDefinition('Key', key_type.primitive_type),
-                                   MacroDefinition('Key_KINDLEN(context)', KindSpecification(key_type)),
-                                   MacroDefinition('Key_LT(x,y)', lt_def)])
-                else:
+                if not isinstance(key_type, FixedSizeNumericType):
                     raise NotImplementedError("Support for dicts whose keys define their own < operator is not yet implemented")
-                if isinstance(value_type, FixedSizeNumericType):
-                    imports_and_macros.extend([MacroDefinition('T', value_type.primitive_type),
-                                   MacroDefinition('T_KINDLEN(context)', KindSpecification(value_type))])
-                else:
-                    raise NotImplementedError(f"Support for dictionary values of type {value_type} not yet implemented")
-                imports_and_macros.append(MacroDefinition('Pair', PairType(key_type, value_type)))
-                imports_and_macros.append(MacroDefinition('Map', expr_type))
-                imports_and_macros.append(MacroDefinition('MapIterator', IteratorType(expr_type)))
+                key_defs, key_undefs = self._define_gFTL_element(key_type, imports_and_macros, 'Key')
+                val_defs, val_undefs = self._define_gFTL_element(value_type, imports_and_macros, 'T')
+                imports_and_macros.extend([*key_defs, *val_defs,
+                                           MacroDefinition('Pair', PairType(key_type, value_type)),
+                                           MacroDefinition('Map', expr_type),
+                                           MacroDefinition('MapIterator', IteratorType(expr_type)),
+                                           Import(LiteralString('map/template.inc'), Module('_', (), ())),
+                                           MacroUndef('Pair'),
+                                           MacroUndef('Map'),
+                                           MacroUndef('MapIterator'),
+                                           *key_undefs, *val_undefs])
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
 
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
-            module = Module(mod_name, (), (), scope = Scope(), imports = [*imports_and_macros, include],
+            module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
+                                       is_external = True)
+
+            self._generated_gFTL_types[expr_type] = module
+
+        return Import(f'gFTL_extensions/{mod_name}', module)
+
+    def _build_gFTL_extension_module(self, expr_type):
+        """
+        Build the gFTL module to create container extension functions.
+
+        Create a module which will import the gFTL include files
+        in order to create container types (e.g lists, sets, etc).
+        The name of the module is derived from the name of the type.
+
+        Parameters
+        ----------
+        expr_type : DataType
+            The data type for which extensions are required.
+
+        Returns
+        -------
+        Import
+            The import which allows the new type to be accessed.
+        """
+        # Get the type used in the dict for compatible types (e.g. float vs float64)
+        matching_expr_type = next((t for t in self._generated_gFTL_types if expr_type == t), None)
+        matching_expr_extensions = next((t for t in self._generated_gFTL_extensions if expr_type == t), None)
+        typename = self._print(expr_type)
+        mod_name = f'{typename}_extensions_mod'
+        if matching_expr_extensions:
+            module = self._generated_gFTL_extensions[matching_expr_extensions]
+        else:
+            if matching_expr_type is None:
+                matching_expr_type = self._build_gFTL_module(expr_type)
+                self.add_import(matching_expr_type)
+
+            type_module = matching_expr_type.source_module
+
+            if isinstance(expr_type, HomogeneousSetType):
+                set_filename = LiteralString('set/template.inc')
+                imports_and_macros = [Import(LiteralString('Set_extensions.inc'), Module('_', (), ())) \
+                                        if getattr(i, 'source', None) == set_filename else i \
+                                        for i in type_module.imports]
+                imports_and_macros.insert(0, matching_expr_type)
+                self.add_import(Import('gFTL_functions/Set_extensions', Module('_', (), ()), ignore_at_print = True))
+            else:
+                raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
+
+            module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
                                        is_external = True)
 
             self._generated_gFTL_extensions[expr_type] = module
@@ -817,7 +891,7 @@ class FCodePrinter(CodePrinter):
 
         source = expr.source
         if isinstance(source, DottedName):
-            source = source.name[-1]
+            source = source.name[-1].python_value
         elif isinstance(source, LiteralString):
             source = source.python_value
         else:
@@ -1205,14 +1279,12 @@ class FCodePrinter(CodePrinter):
     def _print_DottedVariable(self, expr):
         if isinstance(expr.lhs, FunctionCall):
             base = expr.lhs.funcdef.results[0].var
-            if (not self._additional_code):
-                self._additional_code = ''
             var_name = self.scope.get_new_name()
             var = base.clone(var_name)
 
             self.scope.insert_variable(var)
 
-            self._additional_code = self._additional_code + self._print(Assign(var,expr.lhs)) + '\n'
+            self._additional_code += self._print(Assign(var,expr.lhs)) + '\n'
             return self._print(var) + '%' +self._print(expr.name)
         else:
             return self._print(expr.lhs) + '%' +self._print(expr.name)
@@ -1242,8 +1314,54 @@ class FCodePrinter(CodePrinter):
         arg = self._print(expr.args[0])
         return f'call {target} % push_back({arg})\n'
 
+    #========================== Set Methods ================================#
 
+    def _print_SetAdd(self, expr):
+        var = self._print(expr.set_variable)
+        insert_obj = self._print(expr.args[0])
+        return f'call {var} % insert( {insert_obj} )\n'
 
+    def _print_SetClear(self, expr):
+        var = self._print(expr.set_variable)
+        return f'call {var} % clear()\n'
+
+    def _print_SetPop(self, expr):
+        var = expr.set_variable
+        expr_type = var.class_type
+        var_code = self._print(expr.set_variable)
+        type_name = self._print(expr_type)
+        self.add_import(self._build_gFTL_extension_module(expr_type))
+        return f'{type_name}_pop({var_code})\n'
+
+    def _print_SetCopy(self, expr):
+        var_code = self._print(expr.set_variable)
+        type_name = self._print(expr.class_type)
+        return f'{type_name}({var_code})'
+
+    def _print_SetUnion(self, expr):
+        assign_base = expr.get_direct_user_nodes(lambda n: isinstance(n, Assign))
+        var = expr.set_variable
+        if not assign_base:
+            result = self._print(self.scope.get_temporary_variable(var))
+        else:
+            result = self._print(assign_base[0].lhs)
+        expr_type = var.class_type
+        var_code = self._print(expr.set_variable)
+        type_name = self._print(expr_type)
+        self.add_import(self._build_gFTL_extension_module(expr_type))
+        args_insert = []
+        for arg in expr.args:
+            a = self._print(arg)
+            if arg.class_type == expr_type:
+                args_insert.append(f'call {result} % merge({a})\n')
+            else:
+                errors.report(PYCCEL_RESTRICTION_TODO, severity = 'error', symbol = expr)
+        code = f'{result} = {type_name}({var_code})\n' + ''.join(args_insert)
+        if assign_base:
+            return code
+        else:
+            self._additional_code += code
+            return result
 
     #========================== Numpy Elements ===============================#
 
@@ -1547,8 +1665,11 @@ class FCodePrinter(CodePrinter):
     def _print_PythonComplex(self, expr):
         kind = self.print_kind(expr)
         if expr.is_cast:
-            var = self._print(expr.internal_var)
-            code = f'cmplx({var}, kind = {kind})'
+            var = expr.internal_var
+            if isinstance(var.class_type.primitive_type, PrimitiveBooleanType):
+                var = PythonInt(var)
+            var_code = self._print(var)
+            code = f'cmplx({var_code}, kind = {kind})'
         else:
             real = self._print(expr.real)
             imag = self._print(expr.imag)
@@ -1580,12 +1701,10 @@ class FCodePrinter(CodePrinter):
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
 
-        if (not self._additional_code):
-            self._additional_code = ''
         var = self.scope.get_temporary_variable(expr.dtype, memory_handling = 'stack',
                 shape = expr.shape)
 
-        self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
+        self._additional_code += self._print(Assign(var,expr)) + '\n'
         return self._print(var)
 
     def _print_NumpyRandint(self, expr):
@@ -1883,9 +2002,9 @@ class FCodePrinter(CodePrinter):
         body_stmts = []
         for b in body_exprs :
             line = self._print(b)
-            if (self._additional_code):
+            if self._additional_code:
                 body_stmts.append(self._additional_code)
-                self._additional_code = None
+                self._additional_code = ''
             body_stmts.append(line)
         return ''.join(self._print(b) for b in body_stmts)
 
@@ -1905,7 +2024,7 @@ class FCodePrinter(CodePrinter):
     def _print_Assign(self, expr):
         rhs = expr.rhs
 
-        if isinstance(rhs, FunctionCall):
+        if isinstance(rhs, (FunctionCall, SetUnion)):
             return self._print(rhs)
 
         lhs_code = self._print(expr.lhs)
@@ -2961,6 +3080,19 @@ class FCodePrinter(CodePrinter):
             return '{} == 0'.format(a)
         return '.not. {}'.format(a)
 
+    def _print_PyccelIn(self, expr):
+        container_type = expr.container.class_type
+        element = self._print(expr.element)
+        container = self._print(expr.container)
+        if isinstance(container_type, (HomogeneousSetType, DictType)):
+            return f'{container} % count({element}) /= 0'
+        elif isinstance(container_type, HomogeneousListType):
+            return f'{container} % get_index({element}) /= 0'
+        else:
+            raise errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr,
+                    severity='fatal')
+
     def _print_Header(self, expr):
         return ''
 
@@ -3302,17 +3434,13 @@ class FCodePrinter(CodePrinter):
             args = args[1:]
             if isinstance(class_variable, FunctionCall):
                 base = class_variable.funcdef.results[0].var
-                if (not self._additional_code):
-                    self._additional_code = ''
                 var = self.scope.get_temporary_variable(base)
 
-                self._additional_code = self._additional_code + self._print(Assign(var, class_variable)) + '\n'
+                self._additional_code += self._print(Assign(var, class_variable)) + '\n'
                 f_name = f'{self._print(var)} % {f_name}'
             else:
                 f_name = f'{self._print(class_variable)} % {f_name}'
 
-        if (not self._additional_code):
-            self._additional_code = ''
         if parent_assign:
             lhs = parent_assign[0].lhs
             if len(func_results) == 1:
@@ -3584,6 +3712,10 @@ class FCodePrinter(CodePrinter):
         name = expr.macro_name
         obj = self._print(expr.object)
         return f'#define {name} {obj}\n'
+
+    def _print_MacroUndef(self, expr):
+        name = expr.macro_name
+        return f'#undef {name}\n'
 
     def _print_KindSpecification(self, expr):
         return f'(kind = {self.print_kind(expr.type_specifier)})'

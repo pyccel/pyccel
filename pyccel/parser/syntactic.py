@@ -49,7 +49,7 @@ from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, Pyc
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
-from pyccel.ast.operators import PyccelIs, PyccelIsNot
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, PyccelIn
 from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
@@ -440,6 +440,8 @@ class SyntaxParser(BasicParser):
             return AugAssign(lhs, '/', rhs)
         elif isinstance(stmt.op, ast.Mod):
             return AugAssign(lhs, '%', rhs)
+        elif isinstance(stmt.op, ast.BitOr):
+            return AugAssign(lhs, '|', rhs)
         else:
             return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
                     severity='error')
@@ -713,6 +715,8 @@ class SyntaxParser(BasicParser):
             return PyccelIs(first, second)
         if isinstance(op, ast.IsNot):
             return PyccelIsNot(first, second)
+        if isinstance(op, ast.In):
+            return PyccelIn(first, second)
 
         return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt,
@@ -1102,6 +1106,9 @@ class SyntaxParser(BasicParser):
                 func = FunctionCall(func, args)
         elif isinstance(func, DottedName):
             func_attr = FunctionCall(func.name[-1], args)
+            for n in func.name:
+                if isinstance(n, PyccelAstNode):
+                    n.clear_syntactic_user_nodes()
             func = DottedName(*func.name[:-1], func_attr)
         else:
             raise NotImplementedError(f' Unknown function type {type(func)}')
