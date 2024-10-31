@@ -1136,6 +1136,34 @@ PyTuple_GetItem = FunctionDef(name = 'PyTuple_GetItem',
                                      FunctionDefArgument(Variable(PythonNativeInt(), name='i'))],
                         results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
+#-------------------------------------------------------------------
+#                         Set functions
+#-------------------------------------------------------------------
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Check
+PySet_Check = FunctionDef(name = 'PySet_Check',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(CNativeInt(), 'i'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/tuple.html#c.PySet_Size
+PySet_Size = FunctionDef(name = 'PySet_Size',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/object.html#c.PyObject_GetIter
+PySet_GetIter = FunctionDef(name = 'PyObject_GetIter',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
+
+# https://docs.python.org/3/c-api/iter.html#c.PyIter_Check
+PyIter_Next = FunctionDef(name = 'PyIter_Next',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
+
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
