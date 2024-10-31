@@ -61,6 +61,7 @@ All notable changes to this project will be documented in this file.
 -   #1913 : Fix function calls to renamed functions.
 -   #1930 : Preserve ordering of import targets.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
+-   #1979 : Fix memory leaks due to homogeneous container redefinition
 
 ### Changed
 

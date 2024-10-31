@@ -395,14 +395,11 @@ class Allocate(PyccelAstNode):
         In C this provides the size which will be passed to malloc. In Fortran
         this provides the source argument of the allocate function.
 
-    alloc_type : str {'static'|'dynamic'}, optional
+    alloc_type : str {'init'|'reserve'|'resize'}, optional
         Defines the method of memory allocation for homogeneous containers. 
-        'static' refers to direct allocation with predefined data (e.g., `x = [1, 2, 4]`), 
-        while 'dynamic' is used for cases where the container's contents are generated 
-        dynamically (e.g., list comprehensions like `x = [i for i in range(3)]`). 
-        If not provided, the default behavior will be inferred from the context. 
-        This argument is optional and ensures proper memory allocation depending on how 
-        the container’s data is provided or generated.
+        - 'init' refers to direct allocation with predefined data (e.g., `x = [1, 2, 4]`).
+        - 'reserve' refers to cases where the container will be appended to.
+        - 'resize' referes to cases where the container is populated through its indexed elements.
 
     Notes
     -----
@@ -436,7 +433,7 @@ class Allocate(PyccelAstNode):
             raise ValueError(f"Value of 'status' not allowed: '{status}'")
 
         if alloc_type:
-            if alloc_type not in ('static', 'dynamic'):
+            if alloc_type not in ('init', 'reserve', 'resize'):
                 raise ValueError(f"Value of 'alloc_type' not allowed: '{alloc_type}'")
 
         self._variable = variable
@@ -502,9 +499,9 @@ class Allocate(PyccelAstNode):
         Determines the allocation type for homogeneous containers.
 
         Returns a string that indicates the allocation type used for memory allocation.
-        The value is either 'static' for containers initialized with predefined data, 
-        or 'dynamic' for containers populated through generated data (e.g., list 
-        comprehensions or loops).
+        The value is either 'init' for containers initialized with predefined data, 
+        'reserve' for containers populated through appending, and 'resize' for containers
+        populated through indexed element assignment.
         """
         return self._alloc_type
 

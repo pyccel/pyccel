@@ -1533,9 +1533,12 @@ class SemanticParser(BasicParser):
                             args = new_args
                             new_args = []
                     elif isinstance(lhs.class_type, HomogeneousContainerType):
-                        alloc_type = 'dynamic'
                         if isinstance(rhs, (PythonList, PythonDict, PythonSet)):
-                            alloc_type = 'static'
+                            alloc_type = 'init'
+                        elif rhs.get_attribute_nodes(IndexedElement):
+                            alloc_type = 'resize'
+                        else:
+                            alloc_type = 'reserve'
                         new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status, alloc_type=alloc_type))
                     else:
                         new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status))
@@ -1708,9 +1711,11 @@ class SemanticParser(BasicParser):
                     alloc_type = None
                     if isinstance(getattr(var,'class_type'), HomogeneousContainerType):
                         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
-                            alloc_type = 'static'
+                            alloc_type = 'init'
+                        elif rhs.get_attribute_nodes(IndexedElement):
+                            alloc_type = 'resize'
                         else:
-                            alloc_type = 'dynamic'
+                            alloc_type = 'reserve'
                     if previous_allocations:
                         var.set_changeable_shape()
                         last_allocation = previous_allocations[-1]
