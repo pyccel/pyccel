@@ -1532,7 +1532,7 @@ class SemanticParser(BasicParser):
                                         shape=a.alloc_shape, status=status))
                             args = new_args
                             new_args = []
-                    elif isinstance(lhs.class_type, HomogeneousContainerType):
+                    elif isinstance(lhs.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if isinstance(rhs, (PythonList, PythonDict, PythonSet)):
                             alloc_type = 'init'
                         elif rhs.get_attribute_nodes(IndexedElement):
@@ -1709,7 +1709,7 @@ class SemanticParser(BasicParser):
 
                 else:
                     alloc_type = None
-                    if isinstance(getattr(var,'class_type'), HomogeneousContainerType):
+                    if isinstance(getattr(var,'class_type'), (HomogeneousListType, HomogeneousSetType,DictType)):
                         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
                             alloc_type = 'init'
                         elif rhs.get_attribute_nodes(IndexedElement):
