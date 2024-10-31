@@ -12,7 +12,7 @@ def create_dict():
 def list_reassign():
     a = [1,2,3]# pylint: disable=unused-variable
     a = [1,2,3,4]# pylint: disable=unused-variable
-    a = [i for i in range(15)]# pylint: disable=unused-variable
+    a = [i for i in range(15)]# pylint: disable=unused-variable, unnecessary-comprehension
     a = [1,2]# pylint: disable=unused-variable
 
 def set_reassign():
