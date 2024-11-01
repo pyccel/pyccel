@@ -2582,7 +2582,7 @@ class CToPythonWrapper(Wrapper):
             self._wrapping_arrays = True
             self.scope.insert_variable(arg_var, orig_var.name)
             arg_vars = [arg_var]
-            body = [Assign(fill_var, PythonSet())]
+            body = [Assign(arg_var, PythonSet())]
             insert_func = SetAdd
 
         idx = self.scope.get_temporary_variable(CNativeInt())
