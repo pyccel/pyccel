@@ -1691,11 +1691,13 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         variable = expr.variable
         if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            if expr.status in ('allocated', 'unknown'):
+                free_code = f'{self._print(Deallocate(variable))}\n'
+            if expr.shape[0] == None:
+                return free_code
             size = self._print(expr.shape[0])
             variable_address = self._print(ObjectAddress(expr.variable))
             container_type = self.get_c_type(expr.variable.class_type)
-            if expr.status in ('allocated', 'unknown'):
-                free_code = f'{self._print(Deallocate(variable))}\n'
             if expr.alloc_type == 'reserve':
                 return free_code + f'{container_type}_reserve({variable_address}, {size});\n'
             elif expr.alloc_type == 'resize':

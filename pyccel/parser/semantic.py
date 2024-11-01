@@ -1792,7 +1792,7 @@ class SemanticParser(BasicParser):
                 # If previously allocated in If still under construction
                 status = previous_allocations[-1].status
 
-                new_expressions.append(Allocate(var, shape=d_var['shape'], status=status, alloc_type=alloc_type))
+                new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
             elif isinstance(var.class_type, CustomDataType) and not var.is_alias:
                 new_expressions.append(Deallocate(var))
 
