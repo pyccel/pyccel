@@ -1,5 +1,3 @@
-#ifndef SET_EXTENSIONS_H
-#define SET_EXTENSIONS_H
 #include <stdarg.h>
 
 #define _c_MEMB(name) c_JOIN(i_type, name)
@@ -44,4 +42,3 @@ static inline i_type _c_MEMB(_union)(i_type* self, int n, ...) {
 
 #undef i_type
 #undef i_key
-#endif
