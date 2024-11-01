@@ -36,7 +36,7 @@ from pyccel.ast.cwrapper      import PyIter_Next
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
-from pyccel.ast.datatypes     import TupleType, HomogeneousSetType, HomogeneousListType
+from pyccel.ast.datatypes     import TupleType, HomogeneousSetType
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
 from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type
@@ -2575,14 +2575,15 @@ class CToPythonWrapper(Wrapper):
         size_var = self.scope.get_temporary_variable(PythonNativeInt(), self.scope.get_new_name(f'{orig_var.name}_size'))
 
         if is_bind_c_argument:
-            errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
+            raise errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
         else:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     memory_handling='heap', new_class = Variable)
             self._wrapping_arrays = True
             self.scope.insert_variable(arg_var, orig_var.name)
             arg_vars = [arg_var]
-            fill_var = arg_var
+            body = [Assign(fill_var, PythonSet())]
+            insert_func = SetAdd
 
         idx = self.scope.get_temporary_variable(CNativeInt())
         indexed_orig_var = self.scope.get_temporary_variable(orig_var.class_type.element_type)
@@ -2590,16 +2591,15 @@ class CToPythonWrapper(Wrapper):
 
         iter_obj = self.scope.get_temporary_variable(PyccelPyObject(), 'iter', memory_handling='alias')
 
-        body = [Assign(size_var, PySet_Size(collect_arg)),
-                Assign(fill_var, PythonSet()),
-                AliasAssign(iter_obj, PySet_GetIter(collect_arg))]
+        body += [Assign(size_var, PySet_Size(collect_arg)),
+                 AliasAssign(iter_obj, PySet_GetIter(collect_arg))]
 
         for_scope = self.scope.create_new_loop_scope()
         self.scope = for_scope
         for_body = [AliasAssign(indexed_collect_arg, PyIter_Next(iter_obj))]
         for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_collect_arg,
                                     bound_argument, is_bind_c_argument, arg_var = indexed_orig_var)['body']
-        for_body.append(SetAdd(arg_var, indexed_orig_var))
+        for_body.append(insert_func(arg_var, indexed_orig_var))
         self.exit_scope()
 
         body.append(For(idx, Iterable(PythonRange(size_var)), for_body, scope = for_scope))
