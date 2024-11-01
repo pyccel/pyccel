@@ -1693,7 +1693,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             if expr.status in ('allocated', 'unknown'):
                 free_code = f'{self._print(Deallocate(variable))}\n'
-            if expr.shape[0] == None:
+            if expr.shape[0] is None:
                 return free_code
             size = self._print(expr.shape[0])
             variable_address = self._print(ObjectAddress(expr.variable))
