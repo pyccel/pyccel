@@ -3970,8 +3970,10 @@ class SemanticParser(BasicParser):
                 return [ann]
 
         # Filter out unused templates
-        templatable_args = [unpack(a.annotation) for a in expr.arguments if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation))]
-        arg_annotations = [annot for a in templatable_args for annot in a if isinstance(annot, SyntacticTypeAnnotation)]
+        templatable_args = [unpack(a.annotation) for a in expr.arguments \
+                if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation, TypingFinal))]
+        arg_annotations = [annot for a in templatable_args for annot in a \
+                if isinstance(annot, (SyntacticTypeAnnotation, TypingFinal))]
         used_type_names = set(t for a in arg_annotations for t in a.get_attribute_nodes(PyccelSymbol))
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
