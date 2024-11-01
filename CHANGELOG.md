@@ -34,6 +34,7 @@ All notable changes to this project will be documented in this file.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C support for list method `pop()`.
+-   #1663 : Add C support for sets as constant arguments.
 -   #1877 : Add C and Fortran Support for set method `pop()`.
 -   #1917 : Add C and Fortran support for set method `add()`.
 -   #1918 : Add support for set method `clear()`.
