@@ -17,6 +17,7 @@ __all__ = ('DictGet',
            'DictMethod',
            'DictPop',
            'DictPopitem',
+           'DictSetdefault',
            )
 
 #==============================================================================
@@ -176,4 +177,58 @@ class DictGet(DictMethod):
         """
         return self._args[1]
 
+#==============================================================================
 
+class DictSetdefault(DictMethod):
+    """
+    Represents a call to the .setdefault() method.
+
+    The setdefault() method set an element in the dict. The element is set
+    via a key and a value. If the value is not passed then default value is set
+    as the value.
+
+    If returns the value and if it is not present in the dictionary then the default
+    value is returned.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+
+    k : TypedAstNode
+        The key which is used to set the value from the dictionary.
+
+    d : TypedAstNode, optional
+        The value that should be returned. if the value is not present in the
+        dictionary then default value is returned.
+    """
+    __slots__ = ('_class_type',)
+    _shape = None
+    name = 'setdefault'
+
+    def __init__(self, dict_obj, k, d = None):
+        dict_type = dict_obj.class_type
+        self._class_type = dict_type.value_type
+        if k.class_type != dict_type.key_type:
+            raise TypeError(f"Key passed to setdefault method has type {k.class_type}. Expected {dict_type.key_type}")
+        if d and d.class_type != dict_type.value_type:
+            raise TypeError(f"Default value passed to setdefault method has type {d.class_type}. Expected {dict_type.value_type}")
+        super().__init__(dict_obj, k, d)
+
+    @property
+    def key(self):
+        """
+        The key that is used to select the element from the dict.
+
+        The key that is used to select the element from the dict.
+        """
+        return self._args[0]
+
+    @property
+    def default_value(self):
+        """
+        The value that should be returned if the key is not present in the dictionary.
+
+        The value that should be returned if the key is not present in the dictionary.
+        """
+        return self._args[1]
