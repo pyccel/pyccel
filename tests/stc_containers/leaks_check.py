@@ -44,7 +44,7 @@ def conditional_dict(b1: bool):
 
 def slice_assign():
     a = [1,2,3,4]
-    b = a[1:-1]
+    b = a[1:-1]# pylint: disable=unused-variable
 
 if __name__ == '__main__':
     create_list()
