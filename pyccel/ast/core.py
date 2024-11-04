@@ -34,6 +34,7 @@ from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
 
 from .variable import DottedName, IndexedElement
 from .variable import Variable, AnnotatedPyccelSymbol
+from .datatypes import HomogeneousSetType, HomogeneousListType, DictType
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -399,8 +400,10 @@ class Allocate(PyccelAstNode):
         this provides the source argument of the allocate function.
 
     alloc_type : str {'init'|'reserve'|'resize'}, optional
-        Defines the method of memory allocation exclusively for STC containers.
-        This parameter is irrelevant and should not be used for anything other than STC containers.
+        Specifies the memory allocation strategy for containers with dynamic memory management.
+        This parameter is relevant for any container type where memory allocation patterns 
+        need to be specified based on usage.
+
         - 'init' refers to direct allocation with predefined data (e.g., `x = [1, 2, 4]`).
         - 'reserve' refers to cases where the container will be appended to.
         - 'resize' referes to cases where the container is populated via indexed elements.
@@ -436,6 +439,7 @@ class Allocate(PyccelAstNode):
         if status not in ('allocated', 'unallocated', 'unknown'):
             raise ValueError(f"Value of 'status' not allowed: '{status}'")
 
+        assert alloc_type is None or isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType))
         assert alloc_type is None or alloc_type in ('init', 'reserve', 'resize')
 
         self._variable = variable

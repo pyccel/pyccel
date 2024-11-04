@@ -42,6 +42,10 @@ def conditional_dict(b1: bool):
         a = {1:1,2:2,3:3}# pylint: disable=unused-variable
     a = {1:1,2:2,3:3,4:4,5:5}# pylint: disable=unused-variable
 
+def slice_assign():
+    a = [1,2,3,4]
+    b = a[1:-1]
+
 if __name__ == '__main__':
     create_list()
     create_set()
@@ -55,3 +59,4 @@ if __name__ == '__main__':
     conditional_list(False)
     conditional_set(False)
     conditional_dict(False)
+    slice_assign()
