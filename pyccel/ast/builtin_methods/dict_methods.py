@@ -10,7 +10,7 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import InhomogeneousTupleType
+from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType
 from pyccel.ast.internals import PyccelFunction
 
 
@@ -18,7 +18,7 @@ __all__ = ('DictGet',
            'DictMethod',
            'DictPop',
            'DictPopitem',
-            'DictClear',
+           'DictClear',
            )
 
 #==============================================================================
@@ -191,7 +191,7 @@ class DictClear(DictMethod) :
     """
     __slots__ = ()
     _shape = None
-    _class_type = InhomogeneousTupleType()
+    _class_type = VoidType()
     name = 'clear'
 
     def __init__(self, dict_obj):
