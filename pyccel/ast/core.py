@@ -399,10 +399,11 @@ class Allocate(PyccelAstNode):
         this provides the source argument of the allocate function.
 
     alloc_type : str {'init'|'reserve'|'resize'}, optional
-        Defines the method of memory allocation for homogeneous containers. 
+        Defines the method of memory allocation exclusively for STC containers.
+        This parameter is irrelevant and should not be used for anything other than STC containers.
         - 'init' refers to direct allocation with predefined data (e.g., `x = [1, 2, 4]`).
         - 'reserve' refers to cases where the container will be appended to.
-        - 'resize' referes to cases where the container is populated through its indexed elements.
+        - 'resize' referes to cases where the container is populated via indexed elements.
 
     Notes
     -----
