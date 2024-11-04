@@ -557,7 +557,7 @@ class Bot:
             self.mark_as_draft()
             return False
 
-        if bot.is_user_trusted(user):
+        if self.is_user_trusted(user):
             states = self.run_tests(pr_test_keys)
 
             if 'failure' in states:
@@ -576,7 +576,7 @@ class Bot:
 
                 return True
         else:
-            bot.warn_untrusted()
+            self.warn_untrusted()
             return False
 
     def mark_as_ready(self, following_review):
