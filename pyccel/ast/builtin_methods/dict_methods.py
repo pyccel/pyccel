@@ -202,13 +202,15 @@ class DictSetdefault(DictMethod):
         The value that should be returned. if the value is not present in the
         dictionary then default value is returned.
     """
-    __slots__ = ('_class_type',)
-    _shape = None
+    __slots__ = ('_class_type', '_shape')
     name = 'setdefault'
 
     def __init__(self, dict_obj, k, d = None):
         dict_type = dict_obj.class_type
         self._class_type = dict_type.value_type
+
+        self._shape = (None) * self._class_type.rank if self._class_type.rank else None
+
         if k.class_type != dict_type.key_type:
             raise TypeError(f"Key passed to setdefault method has type {k.class_type}. Expected {dict_type.key_type}")
         if d and d.class_type != dict_type.value_type:
