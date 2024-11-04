@@ -436,8 +436,7 @@ class Allocate(PyccelAstNode):
         if status not in ('allocated', 'unallocated', 'unknown'):
             raise ValueError(f"Value of 'status' not allowed: '{status}'")
 
-        if alloc_type:
-            assert alloc_type in ('init', 'reserve', 'resize')
+        assert alloc_type is None or alloc_type in ('init', 'reserve', 'resize')
 
         self._variable = variable
         self._shape    = shape
