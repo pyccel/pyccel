@@ -854,10 +854,6 @@ class PythonCodePrinter(CodePrinter):
             return f"{dict_obj}.get({key}, {val})\n"
         else:
             return f"{dict_obj}.get({key})\n"
-        
-    def _print_DictClear(self, expr):
-        dict_obj = self._print(expr.dict_obj)
-        return f"{dict_obj}.clear()\n"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''

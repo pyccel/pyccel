@@ -13,6 +13,7 @@ This module contains objects which describe these methods within Pyccel's AST.
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.internals import PyccelFunction
 
+
 __all__ = ('DictGet',
            'DictMethod',
            'DictPop',
@@ -190,8 +191,8 @@ class DictClear(DictMethod) :
     """
     __slots__ = ()
     _shape = None
+    _class_type = InhomogeneousTupleType()
     name = 'clear'
 
     def __init__(self, dict_obj):
         super().__init__(dict_obj)
-
