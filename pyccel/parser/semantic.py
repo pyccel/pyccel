@@ -1747,7 +1747,7 @@ class SemanticParser(BasicParser):
 
                 else:
                     alloc_type = None
-                    if isinstance(getattr(var,'class_type'), (HomogeneousListType, HomogeneousSetType,DictType)):
+                    if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
                             alloc_type = 'init'
                         elif rhs.get_attribute_nodes(IndexedElement):
