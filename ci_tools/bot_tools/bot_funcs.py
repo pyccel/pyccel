@@ -54,7 +54,7 @@ review_stage_labels = ["needs_initial_review", "Ready_for_review", "Ready_to_mer
 
 senior_reviewer = ['yguclu', 'EmilyBourne']
 
-trust_givers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom']
+trust_givers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom', 'jalalium']
 
 comment_folder = os.path.join(os.path.dirname(__file__), '..', 'bot_messages')
 
@@ -516,13 +516,18 @@ class Bot:
         self.mark_as_draft()
         self._GAI.create_comment(self._pr_id, message_from_file('set_draft_changes.txt').format(author=author, reviewer=reviewer))
 
-    def request_mark_as_ready(self):
+    def request_mark_as_ready(self, user):
         """
         Remove the draft status from the pull request.
 
         Remove the draft status from the pull request specified in the constructor. This
         action is only carried out if the pull request has a description and all items
         on the checklist have been ticked off.
+
+        Parameters
+        ----------
+        user : str
+            The user who requested that the PR be marked as ready.
 
         Returns
         -------
@@ -552,23 +557,27 @@ class Bot:
             self.mark_as_draft()
             return False
 
-        states = self.run_tests(pr_test_keys)
+        if bot.is_user_trusted(user):
+            states = self.run_tests(pr_test_keys)
 
-        if 'failure' in states:
-            self.draft_due_to_failure()
-            return False
+            if 'failure' in states:
+                self.draft_due_to_failure()
+                return False
+            else:
+                cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
+
+                with subprocess.Popen(cmds) as p:
+                    _, err = p.communicate()
+                print(err)
+
+                print(states)
+                if all(s == 'success' for s in states):
+                    self.mark_as_ready(False)
+
+                return True
         else:
-            cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
-
-            with subprocess.Popen(cmds) as p:
-                _, err = p.communicate()
-            print(err)
-
-            print(states)
-            if all(s == 'success' for s in states):
-                self.mark_as_ready(False)
-
-            return True
+            bot.warn_untrusted()
+            return False
 
     def mark_as_ready(self, following_review):
         """
@@ -691,8 +700,8 @@ class Bot:
         print("User has no merged PRs")
         comments = self._GAI.get_comments(self._pr_id)
         comments_from_trust_givers = [c['body'].split() for c in comments if c['user']['login'] in trust_givers]
-        expected_trust_command = ['/bot', 'trust', 'user', user]
-        awarded_trust = any(c[:4] == expected_trust_command for c in comments_from_trust_givers)
+        expected_trust_command = (['/bot', 'trust', 'user', user], ['/bot', 'trust', 'user', f'@{user}'])
+        awarded_trust = any(c[:4] in expected_trust_command for c in comments_from_trust_givers)
         return awarded_trust
 
     def warn_untrusted(self):
