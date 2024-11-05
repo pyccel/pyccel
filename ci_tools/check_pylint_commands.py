@@ -21,7 +21,8 @@ accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):[
                             re.compile('tests/semantic/scripts/expressions.py'):['unused-variable'],
                             re.compile('tests/semantic/scripts/calls.py'):['unused-variable'],
                             re.compile('tests/pyccel/project_class_imports/.*'):['relative-beyond-top-level'], # ignore Codacy bad pylint call
-                            re.compile('tests/errors/syntax_errors/import_star.py'):['wildcard-import']
+                            re.compile('tests/errors/syntax_errors/import_star.py'):['wildcard-import'],
+                            re.compile('tests/stc_containers/leaks_check.py'):['unused-variable'],
                            }
 
 def run_pylint(file, flag, messages):

@@ -9,3 +9,10 @@ runs:
         valgrind --leak-check=full --error-exitcode=1 ./leaks_check
       shell: bash
       working-directory: ./tests/ndarrays
+    
+    - name: Test with valgrind for memory leaks in stc_containers
+      run: |
+        pyccel --language=c --flags="-g -O0" leaks_check.py
+        valgrind --leak-check=full --error-exitcode=1 ./leaks_check
+      shell: bash
+      working-directory: ./tests/stc_containers
