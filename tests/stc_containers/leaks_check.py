@@ -1,50 +1,50 @@
 
 # pylint: disable=missing-function-docstring, missing-module-docstring
 def create_list():
-    a = [1,2,3]# pylint: disable=unused-variable
+    a = [1,2,3]
 
 def create_set():
-    a = {1,2,3}# pylint: disable=unused-variable
+    a = {1,2,3}
 
 def create_dict():
-    a = {1:1,2:2,3:3}# pylint: disable=unused-variable
+    a = {1:1,2:2,3:3}
 
 def list_reassign():
-    a = [1,2,3]# pylint: disable=unused-variable
-    a = [1,2,3,4]# pylint: disable=unused-variable
-    a = [i for i in range(15)]# pylint: disable=unused-variable, unnecessary-comprehension
-    a = [1,2]# pylint: disable=unused-variable
+    a = [1,2,3]
+    a = [1,2,3,4]
+    a = [i for i in range(15)] # pylint: disable=unnecessary-comprehension
+    a = [1,2]
 
 def set_reassign():
-    a = {1,2,3}# pylint: disable=unused-variable
-    a = {1,2}# pylint: disable=unused-variable
-    a = {1,2,3,4}# pylint: disable=unused-variable
-    a = {1,2,3,4,5}# pylint: disable=unused-variable
+    a = {1,2,3}
+    a = {1,2}
+    a = {1,2,3,4}
+    a = {1,2,3,4,5}
 
 def dict_reassign():
-    a = {1:1,2:2,3:3}# pylint: disable=unused-variable
-    a = {1:1,2:2,3:3,4:4}# pylint: disable=unused-variable
-    a = {1:1,2:2}# pylint: disable=unused-variable
-    a = {1:1,2:2,3:3,4:4,5:5}# pylint: disable=unused-variable
+    a = {1:1,2:2,3:3}
+    a = {1:1,2:2,3:3,4:4}
+    a = {1:1,2:2}
+    a = {1:1,2:2,3:3,4:4,5:5}
 
 def conditional_list(b1: bool):
     if (b1):
-        a = [1,2,3]# pylint: disable=unused-variable
-    a = [1,2,3,4]# pylint: disable=unused-variable
+        a = [1,2,3]
+    a = [1,2,3,4]
 
 def conditional_set(b1: bool):
     if (b1):
-        a = {1,2,3}# pylint: disable=unused-variable
-    a = {1,2,3,4}# pylint: disable=unused-variable
+        a = {1,2,3}
+    a = {1,2,3,4}
 
 def conditional_dict(b1: bool):
     if (b1):
-        a = {1:1,2:2,3:3}# pylint: disable=unused-variable
-    a = {1:1,2:2,3:3,4:4,5:5}# pylint: disable=unused-variable
+        a = {1:1,2:2,3:3}
+    a = {1:1,2:2,3:3,4:4,5:5}
 
 def slice_assign():
     a = [1,2,3,4]
-    b = a[1:-1]# pylint: disable=unused-variable
+    b = a[1:-1]
 
 if __name__ == '__main__':
     create_list()
