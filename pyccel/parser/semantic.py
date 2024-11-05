@@ -1401,7 +1401,8 @@ class SemanticParser(BasicParser):
             d_lhs['memory_handling'] = 'alias'
             rhs.internal_var.is_target = True
 
-        if isinstance(rhs, Variable) and (rhs.rank > 0 or isinstance(rhs.class_type, CustomDataType)):
+        if isinstance(rhs, Variable) and (rhs.rank > 0 or isinstance(rhs.class_type, CustomDataType)) \
+                and not isinstance(rhs.class_type, TupleType):
             d_lhs['memory_handling'] = 'alias'
             rhs.is_target = not rhs.is_alias
 
