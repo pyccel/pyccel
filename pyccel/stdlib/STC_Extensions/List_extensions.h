@@ -2,8 +2,6 @@
 #define LIST_EXTENSIONS_H
 
 
-#define _c_MEMB(name) c_JOIN(i_type, name)
-
 // This function represents a call to the .pop() method.
 // i_type: Class type (e.g., hset_int64_t).
 // i_key: Data type of the elements in the set (e.g., int64_t).

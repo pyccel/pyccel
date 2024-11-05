@@ -244,8 +244,14 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdbool',
                  'assert']}
 
-import_header_guard_prefix = {'Set_extensions'  : '_TOOLS_SET',
-                              'List_extensions' : '_TOOLS_LIST'}
+import_header_guard_prefix = {'Set_extensions'    : '_TOOLS_SET',
+                              'List_extensions'   : '_TOOLS_LIST',
+                              'Common_extensions' : '_TOOLS_COMMON'}
+
+
+stc_header_mapping = {'List_extensions': 'stc/vec',
+                      'Set_extensions': 'stc/hset',
+                      'Common_extensions': 'stc/common'}
 
 class CCodePrinter(CodePrinter):
     """
@@ -315,6 +321,31 @@ class CCodePrinter(CodePrinter):
         self._current_module = None
         self._in_header = False
 
+    def sort_imports(self, imports):
+        """
+        Sort imports to avoid any errors due to bad ordering.
+        Sort imports. This is important so that types exist before they are used to create
+        container types. E.g. it is important that complex or inttypes be imported before
+        vec_int or vec_double_complex is declared.
+        Parameters
+        ----------
+        imports : list[Import]
+            A list of the imports.
+        Returns
+        -------
+        list[Import]
+            A sorted list of the imports.
+        """
+        import_src = [str(i.source) for i in imports]
+        stc_imports = [i for i in import_src if i.startswith('stc/')]
+        dependent_imports = [i for i in import_src if i in import_header_guard_prefix]
+        non_stc_imports = [i for i in import_src if i not in chain(stc_imports, dependent_imports)]
+        stc_imports.sort()
+        dependent_imports.sort()
+        non_stc_imports.sort()
+        sorted_imports = [imports[import_src.index(name)] for name in chain(non_stc_imports, stc_imports, dependent_imports)]
+        return sorted_imports
+    
     def _format_code(self, lines):
         return self.indent_code(lines)
 
@@ -671,6 +702,32 @@ class CCodePrinter(CodePrinter):
         init = f'{container_name} = c_init({dtype}, {keyraw});\n'
         return init
 
+    def invalidate_stc_headers(self, imports):
+        """
+        Invalidate STC headers when STC extension headers are present.
+    
+        This function iterates over the list of imports and removes any targets
+        from STC headers if the target is present in their corresponding
+        STC extension headers are present.
+        The STC extension headers take care of including the standard
+        headers making them redundant.
+    
+        Parameters
+        ----------
+        imports : list of Import
+            The list of Import objects representing the header files to include.
+    
+        Returns
+        -------
+        None
+            The function modifies the `imports` list in-place.
+        """
+        for imp in imports:
+            if imp.source in stc_header_mapping.keys():
+                for imp2 in imports:
+                    if imp2.source == stc_header_mapping[imp.source]:
+                        imp2.remove_target(imp.target)
+
     def rename_imported_methods(self, expr):
         """
         Rename class methods from user-defined imports.
@@ -731,6 +788,10 @@ class CCodePrinter(CodePrinter):
                 arg2 = self._print(arg2_temp)
 
             return f"({arg1} < {arg2} ? {arg1} : {arg2})"
+        elif len(arg) > 2:
+            key = self.dtype_registry[(arg.dtype.primitive_type, 8)]
+            self.add_import(Import('Common_extensions', AsName(VariableTypeAnnotation(key), 'i_key')))
+            return  f'{key}_min({len(arg)}, {", ".join(self._print(a) for a in arg)})'
         else:
             return errors.report("min in C is only supported for 2 scalar arguments", symbol=expr,
                     severity='fatal')
@@ -1032,6 +1093,18 @@ class CCodePrinter(CodePrinter):
         if source.startswith('stc/') or source in import_header_guard_prefix:
             code = ''
             for t in expr.target:
+                if 'Common' in source:
+                    element_decl = f'#define i_key {t.object.class_type}'
+                    header_guard_prefix = import_header_guard_prefix.get(source, '')
+                    header_guard = f'{header_guard_prefix}_{t.local_alias.upper()}'
+                    code += ''.join((f'#ifndef {header_guard}\n',
+                        f'#define {header_guard}\n',
+                        element_decl,
+                        '#define i_more\n' if source in import_header_guard_prefix else '',
+                        f'#include <{stc_header_mapping[source]}.h>\n' if source in import_header_guard_prefix else '', 
+                        f'#include <{source}.h>\n',
+                        f'#endif // {header_guard}\n\n'))
+                    return code 
                 class_type = t.object.class_type
                 container_type = t.local_alias
                 if isinstance(class_type, DictType):
@@ -1051,6 +1124,8 @@ class CCodePrinter(CodePrinter):
                         f'#define {header_guard}\n',
                         f'#define i_type {container_type}\n',
                         element_decl,
+                        '#define i_more\n' if source in import_header_guard_prefix else '',
+                        f'#include <{stc_header_mapping[source]}.h>\n' if source in import_header_guard_prefix else '', 
                         f'#include <{source}.h>\n',
                         f'#endif // {header_guard}\n\n'))
             return code
@@ -2593,6 +2668,8 @@ class CCodePrinter(CodePrinter):
         decs = ''.join(self._print(Declare(v)) for v in variables)
 
         imports = [*expr.imports, *self._additional_imports.values()]
+        imports = self.sort_imports(imports)
+        self.invalidate_stc_headers(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
