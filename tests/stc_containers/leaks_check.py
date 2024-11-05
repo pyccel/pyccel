@@ -1,5 +1,5 @@
 
-# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring, unused-variable
 def create_list():
     a = [1,2,3]
 
@@ -12,7 +12,7 @@ def create_dict():
 def list_reassign():
     a = [1,2,3]
     a = [1,2,3,4]
-    a = [i for i in range(15)] # pylint: disable=unnecessary-comprehension
+    a = [2 * i for i in range(15)]
     a = [1,2]
 
 def set_reassign():
