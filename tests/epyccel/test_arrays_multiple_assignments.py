@@ -274,11 +274,7 @@ def test_stack_array_if(language):
 
 #==============================================================================
 
-@pytest.mark.parametrize('lang',[
-    pytest.param('fortran', marks = pytest.mark.fortran),
-    pytest.param('python', marks = pytest.mark.python),
-    pytest.param('c'      , marks = pytest.mark.c)])
-def test_Assign_between_nested_If(lang):
+def test_Assign_between_nested_If(language):
 
     def f(b1 : bool, b2 : bool):
         import numpy as np
@@ -297,7 +293,7 @@ def test_Assign_between_nested_If(lang):
     errors = Errors()
 
     # epyccel should raise an Exception
-    f2 = epyccel(f, language=lang)
+    f2 = epyccel(f, language=language)
 
     # Check that we don't get a Pyccel warning
     assert not errors.has_warnings()
