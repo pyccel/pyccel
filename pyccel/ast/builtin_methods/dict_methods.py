@@ -177,6 +177,7 @@ class DictGet(DictMethod):
         The value that should be returned if the key is not present in the dictionary.
         """
         return self._args[1]
+
 #==============================================================================
 class DictClear(DictMethod) :
     """
