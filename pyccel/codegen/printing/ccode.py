@@ -697,6 +697,10 @@ class CCodePrinter(CodePrinter):
             class_type = expr.arg.class_type
 
             lhs = self._print(lhs_var)
+            if not isinstance(arg_var, Variable):
+                tmp = self.scope.get_temporary_variable(arg_var.class_type, shape = arg_var.shape)
+                self._additional_code += self._print(Assign(tmp, arg_var))
+                arg_var = tmp
             arg = self._print(arg_var)
             c_type = self.get_c_type(class_type)
             if start_val is None:
@@ -866,7 +870,8 @@ class CCodePrinter(CodePrinter):
             classes += "};\n"
         funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs if not f.is_inline)
 
-        global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
+        decls = [Declare(v, external=True, module_variable=True) for v in expr.module.variables if not v.is_private]
+        global_variables = ''.join(self._print(d) for d in decls)
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
@@ -1463,7 +1468,7 @@ class CCodePrinter(CodePrinter):
             preface, init = self._init_stack_array(var)
         else:
             preface = ''
-            if isinstance(var.class_type, HomogeneousContainerType):
+            if isinstance(var.class_type, HomogeneousContainerType) and not expr.external:
                 init = ' = {0}'
 
         external = 'extern ' if expr.external else ''
