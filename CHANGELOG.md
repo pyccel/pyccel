@@ -72,6 +72,7 @@ All notable changes to this project will be documented in this file.
 -   #1979 : Fix memory leaks in C due to homogeneous container redefinition.
 -   #1972 : Simplified `printf` statement for Literal String.
 -   #2026 : Fix missing loop in slice assignment.
+-   #2008 : Ensure list/set/dict assignment is recognised as a reference.
 
 ### Changed
 

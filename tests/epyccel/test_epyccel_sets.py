@@ -521,6 +521,18 @@ def test_set_contains(language):
     python_result = union_int()
     assert python_result == pyccel_result
 
+def test_set_ptr(language):
+    def set_ptr():
+        a = {1,2,3,4,5,6,7,8}
+        b = a
+        b.pop()
+        return len(a), len(b)
+
+    epyccel_func = epyccel(set_ptr, language = language)
+    pyccel_result = epyccel_func()
+    python_result = set_ptr()
+    assert python_result == pyccel_result
+
 def test_set_iter(language):
     def set_sum_int():
         a =  {1,2,3,4,5,6,7,8,9,12}

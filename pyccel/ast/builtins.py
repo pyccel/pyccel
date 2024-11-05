@@ -732,10 +732,8 @@ class PythonListFunction(PyccelFunction):
     def __new__(cls, arg = None):
         if arg is None:
             return PythonList()
-        elif isinstance(arg, PythonList):
-            return arg
         elif isinstance(arg.shape[0], LiteralInteger):
-            return PythonList(*[arg[i] for i in range(arg.shape[0])])
+            return PythonList(*arg)
         else:
             return super().__new__(cls)
 
@@ -838,8 +836,6 @@ class PythonSetFunction(PyccelFunction):
     def __new__(cls, arg = None):
         if arg is None:
             return PythonSet()
-        elif isinstance(arg.class_type, HomogeneousSetType):
-            return arg
         elif isinstance(arg, (PythonList, PythonSet, PythonTuple)):
             return PythonSet(*arg)
         else:
