@@ -1401,7 +1401,8 @@ class SemanticParser(BasicParser):
             d_lhs['memory_handling'] = 'alias'
             rhs.internal_var.is_target = True
 
-        if isinstance(rhs, Variable) and (rhs.is_ndarray or isinstance(rhs.class_type, CustomDataType)):
+        if isinstance(rhs, Variable) and (rhs.rank > 0 or isinstance(rhs.class_type, CustomDataType)) \
+                and not isinstance(rhs.class_type, (TupleType, StringType)):
             d_lhs['memory_handling'] = 'alias'
             rhs.is_target = not rhs.is_alias
 
@@ -1570,6 +1571,14 @@ class SemanticParser(BasicParser):
                                         shape=a.alloc_shape, status=status))
                             args = new_args
                             new_args = []
+                    elif isinstance(lhs.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
+                        if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
+                            alloc_type = 'init'
+                        elif isinstance(rhs, IndexedElement) or rhs.get_attribute_nodes(IndexedElement):
+                            alloc_type = 'resize'
+                        else:
+                            alloc_type = 'reserve'
+                        new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status, alloc_type=alloc_type))
                     else:
                         new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status))
                 # ...
@@ -1738,6 +1747,14 @@ class SemanticParser(BasicParser):
                                 self.current_ast_node.col_offset))
 
                 else:
+                    alloc_type = None
+                    if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
+                        if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
+                            alloc_type = 'init'
+                        elif isinstance(rhs, IndexedElement) or rhs.get_attribute_nodes(IndexedElement):
+                            alloc_type = 'resize'
+                        else:
+                            alloc_type = 'reserve'
                     if previous_allocations:
                         var.set_changeable_shape()
                         last_allocation = previous_allocations[-1]
@@ -1762,7 +1779,7 @@ class SemanticParser(BasicParser):
                     else:
                         status = 'unallocated'
 
-                    new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
+                    new_expressions.append(Allocate(var, shape=d_var['shape'], status=status, alloc_type=alloc_type))
 
                     if status == 'unallocated':
                         self._allocs[-1].add(var)

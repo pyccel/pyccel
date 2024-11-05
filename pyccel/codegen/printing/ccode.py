@@ -359,7 +359,7 @@ class CCodePrinter(CodePrinter):
 
         if not isinstance(a, Variable):
             return False
-        return (a.is_alias and not isinstance(a.class_type, HomogeneousContainerType)) \
+        return (a.is_alias and not isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType))) \
                 or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
@@ -1363,10 +1363,9 @@ class CCodePrinter(CodePrinter):
         if rank > 0:
             if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType, DictType)):
                 dtype = self.get_c_type(expr.class_type)
-                return dtype
-            if isinstance(expr.class_type, CStackArray):
+            elif isinstance(expr.class_type, CStackArray):
                 return self.get_c_type(expr.class_type.element_type)
-            if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
+            elif isinstance(expr.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
@@ -1426,6 +1425,9 @@ class CCodePrinter(CodePrinter):
             assert init == ''
             preface = ''
             init    = ' = {.shape = NULL}'
+        elif isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            preface = ''
+            init = ' = {0}'
         else:
             preface = ''
 
@@ -1688,7 +1690,18 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         variable = expr.variable
         if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-            return ''
+            if expr.status in ('allocated', 'unknown'):
+                free_code = f'{self._print(Deallocate(variable))}\n'
+            if expr.shape[0] is None:
+                return free_code
+            size = self._print(expr.shape[0])
+            variable_address = self._print(ObjectAddress(expr.variable))
+            container_type = self.get_c_type(expr.variable.class_type)
+            if expr.alloc_type == 'reserve':
+                return free_code + f'{container_type}_reserve({variable_address}, {size});\n'
+            elif expr.alloc_type == 'resize':
+                return f'{container_type}_resize({variable_address}, {size}, {0});\n'
+            return free_code
         if isinstance(variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
@@ -1727,6 +1740,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            if expr.variable.is_alias:
+                return ''
             variable_address = self._print(ObjectAddress(expr.variable))
             container_type = self.get_c_type(expr.variable.class_type)
             return f'{container_type}_drop({variable_address});\n'
