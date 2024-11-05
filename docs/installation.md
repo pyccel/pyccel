@@ -59,6 +59,7 @@ sudo apt install gfortran
 sudo apt install libblas-dev liblapack-dev
 sudo apt install libopenmpi-dev openmpi-bin
 sudo apt install libomp-dev libomp5
+sudo apt install cmake
 ```
 
 ### Linux Fedora-CentOS-RHEL
@@ -73,6 +74,7 @@ dnf install gfortran
 dnf install blas-devel lapack-devel
 dnf install openmpi-devel
 dnf install libgomp
+dnf install cmake
 exit
 ```
 
@@ -89,6 +91,7 @@ brew install openblas
 brew install lapack
 brew install open-mpi
 brew install libomp
+brew install cmake
 ```
 
 This requires that the Command Line Tools (CLT) for Xcode are installed.
@@ -103,6 +106,7 @@ In an Administrator prompt install git-bash (if needed), a Python3 distribution,
 choco install git
 choco install python3
 choco install mingw
+choco install cmake
 ```
 
 Download x64 BLAS and LAPACK DLLs from <https://icl.cs.utk.edu/lapack-for-windows/lapack/>:
