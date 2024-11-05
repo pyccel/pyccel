@@ -48,6 +48,24 @@ To declare a homogeneous tuple the syntax is as follows:
 a : tuple[int,...] = (1,2,3,4)
 ```
 
+## Sets
+
+Sets are in the process of being added to Pyccel. Homogeneous sets can be declared in Pyccel using the following syntax:
+```python
+a : set[int] = {1, 2}
+b : set[bool] = {False, True}
+c : set[float] = {}
+```
+So far sets can be declared as local variables or as constant arguments. An argument can be marked as constant using a string annotation or (in a module) using the `Final` qualifier:
+```python
+def f(a : 'const set[int]'):
+    pass
+
+from typing import Final
+def g(b : Final[set[bool]]):
+    pass
+```
+
 ## Dictionaries
 
 Dictionaries are in the process of being added to Pyccel. They cannot yet be used effectively however the type annotations are already supported.
