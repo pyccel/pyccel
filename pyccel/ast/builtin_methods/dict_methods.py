@@ -14,11 +14,11 @@ from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType
 from pyccel.ast.internals import PyccelFunction
 
 
-__all__ = ('DictGet',
+__all__ = ('DictClear',
+           'DictGet',
            'DictMethod',
            'DictPop',
            'DictPopitem',
-           'DictClear',
            )
 
 #==============================================================================
