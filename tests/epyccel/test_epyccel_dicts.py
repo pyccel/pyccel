@@ -214,3 +214,4 @@ def test_dict_clear(python_only_language):
     pyccel_result = epyc_dict_clear()
     python_result = dict_clear()
     assert python_result == pyccel_result
+
