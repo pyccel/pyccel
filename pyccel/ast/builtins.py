@@ -733,7 +733,7 @@ class PythonListFunction(PyccelFunction):
         if arg is None:
             return PythonList()
         elif isinstance(arg.shape[0], LiteralInteger):
-            return PythonList(*[arg[i] for i in range(arg.shape[0])])
+            return PythonList(*arg)
         else:
             return super().__new__(cls)
 
