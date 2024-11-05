@@ -756,7 +756,7 @@ class CCodePrinter(CodePrinter):
                 arg2 = self._print(arg2_temp)
 
             op = '<' if isinstance(expr, PythonMin) else '>'
-            return f"({arg1} < {arg2} ? {arg1} : {arg2})"
+            return f"({arg1} {op} {arg2} ? {arg1} : {arg2})"
         else:
             return errors.report(f"{expr.name} in C is only supported for 2 scalar arguments", symbol=expr,
                     severity='fatal')
