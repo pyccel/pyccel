@@ -447,8 +447,18 @@ class CCodePrinter(CodePrinter):
                 body += self.copy_NumpyArray_Data(li_slice_var, ri)
             return body
 
+        def get_indexed(base, elems):
+            """
+            Get an indexed object. This ensures the necessary levels are created for tuples.
+            """
+            while elems:
+                result = IndexedElement(base, *elems[:base.class_type.container_rank])
+                elems = elems[base.class_type.container_rank:]
+                base = result
+            return result
+
         flattened_args = self._flatten_list(arg)
-        flattened_lhs = [IndexedElement(lhs, *elems) for elems in product(*[range(s) for s in lhs.shape])]
+        flattened_lhs = [get_indexed(lhs, elems) for elems in product(*[range(s) for s in lhs.shape])]
 
         operations = ''
         for li, ri in zip(flattened_lhs, flattened_args):
