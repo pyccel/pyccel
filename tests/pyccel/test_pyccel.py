@@ -825,6 +825,10 @@ def test_basic_header():
 def test_classes( test_file , language):
     pyccel_test(test_file, language=language)
 
+def test_class_magic(language):
+    pyccel_test("scripts/classes/class_magic.py", language=language,
+            output_dtype = [int]*6 + [bool]*2)
+
 def test_tuples_in_classes(language):
     test_file = "scripts/classes/tuples_in_classes.py"
     pyccel_test(test_file, language=language, output_dtype = [float, float, float, bool])

@@ -14,7 +14,6 @@ All notable changes to this project will be documented in this file.
 -   #1693 : Add Python support for list method `remove()`.
 -   #1750 : Add Python support for set method `remove()`.
 -   #1743 : Add Python support for set method `discard()`.
--   #1754 : Add Python support for set method `update()`.
 -   #1893 : Add Python support for set initialisation with `set()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
@@ -28,6 +27,7 @@ All notable changes to this project will be documented in this file.
 -   #1657 : Add the appropriate Fortran language equivalent for declaring a Python `list` container using the gFTL library.
 -   #1658 : Add the appropriate Fortran language equivalent for declaring a Python `set` container using the gFTL library.
 -   #1944 : Add the appropriate Fortran language equivalent for declaring a Python `dict` container using the gFTL library.
+-   #2009 : Add support for `in` operator for `list`, `set`, `dict` and class containers.
 -   #1874 : Add C and Fortran support for the `len()` function for the `list` container.
 -   #1875 : Add C and Fortran support for the `len()` function for the `set` container.
 -   #1908 : Add C and Fortran support for the `len()` function for the `dict` container.
@@ -45,9 +45,11 @@ All notable changes to this project will be documented in this file.
 -   #1583 : Allow inhomogeneous tuples in classes.
 -   #738 : Add support for homogeneous tuples with scalar elements as arguments.
 -   Add a warning about containers in lists.
+-   #2016 : Add support for translating arithmetic magic methods (methods cannot yet be used from Python).
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
+-   \[INTERNALS\] Allow the use of magic methods to describe container methods.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 
 ### Fixed

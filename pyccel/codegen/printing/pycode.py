@@ -1091,6 +1091,11 @@ class PythonCodePrinter(CodePrinter):
     def _print_Concatenate(self, expr):
         return ' + '.join([self._print(a) for a in expr.args])
 
+    def _print_PyccelIn(self, expr):
+        element = self._print(expr.element)
+        container = self._print(expr.container)
+        return f'{element} in {container}'
+
     def _print_PyccelSymbol(self, expr):
         return expr
 
