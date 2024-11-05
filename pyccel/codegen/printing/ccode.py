@@ -1433,6 +1433,8 @@ class CCodePrinter(CodePrinter):
             preface, init = self._init_stack_array(var)
         else:
             preface = ''
+            if isinstance(var.class_type, HomogeneousContainerType):
+                init = ' = {0}'
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
