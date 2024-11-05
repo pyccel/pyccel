@@ -417,8 +417,7 @@ class CCodePrinter(CodePrinter):
         str
             A string containing the code which allocates and copies the data.
         """
-        if rhs.rank == 0:
-            return self._print(Assign(lhs, rhs))
+        assert rhs.rank != 0
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         lhs_address = self._print(ObjectAddress(lhs))
         order = lhs.order
@@ -441,10 +440,13 @@ class CCodePrinter(CodePrinter):
         elif variables:
             body = ''
             for li, ri in zip(lhs, arg):
-                li_slice_var = self.scope.get_temporary_variable(li.class_type,
-                        shape = ri.shape, memory_handling='heap')
-                body += self._print(AliasAssign(li_slice_var, li))
-                body += self.copy_NumpyArray_Data(li_slice_var, ri)
+                if li.rank:
+                    li_slice_var = self.scope.get_temporary_variable(li.class_type,
+                            shape = ri.shape, memory_handling='alias')
+                    body += self._print(AliasAssign(li_slice_var, li))
+                    body += self.copy_NumpyArray_Data(li_slice_var, ri)
+                else:
+                    body += self._print(Assign(li, ri))
             return body
 
         def get_indexed(base, elems):
