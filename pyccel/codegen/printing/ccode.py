@@ -1747,7 +1747,7 @@ class CCodePrinter(CodePrinter):
                 dummy_array_name = self.scope.get_new_name(f'{variable.name}_ptr')
                 buffer_array_var = Variable(variable.class_type.datatype, dummy_array_name, memory_handling='alias')
                 self.scope.insert_variable(buffer_array_var)
-                buffer_array = f"{dummy_array_name} = malloc(sizeof({element_type}) * {tot_shape});\n"
+                buffer_array = f"{dummy_array_name} = malloc(sizeof({element_type}) * ({tot_shape}));\n"
 
             order = 'c_COLMAJOR' if variable.order == 'F' else 'c_ROWMAJOR'
             shape = ", ".join(self._print(i) for i in expr.shape)
@@ -1759,7 +1759,9 @@ class CCodePrinter(CodePrinter):
                 declaration_type = self.get_declare_type(expr.like)
                 malloc_size = f'sizeof({declaration_type})'
                 if variable.rank:
-                    malloc_size = ' * '.join([malloc_size, *(self._print(s) for s in expr.shape)])
+                    tot_shape = self._print(functools.reduce(
+                        lambda x,y: PyccelMul(x,y,simplify=True), expr.shape))
+                    malloc_size = f'{malloc_size} * ({tot_shape})'
                 return f'{var_code} = malloc({malloc_size});\n'
             else:
                 raise NotImplementedError(f"Allocate not implemented for {variable}")
