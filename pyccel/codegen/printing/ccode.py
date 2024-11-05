@@ -1049,7 +1049,7 @@ class CCodePrinter(CodePrinter):
             for t in expr.target:
                 dtype = t.object.class_type
                 container_type = t.local_alias
-                element_type = self.get_c_type(dtype.element_type)
+                element_type = self.get_c_type(dtype.datatype)
                 rank = dtype.rank
                 native_int_c_type = self.get_c_type(PythonNativeInt())
                 header_guard_prefix = import_header_guard_prefix.get(source, '')
@@ -1307,7 +1307,7 @@ class CCodePrinter(CodePrinter):
             key = (primitive_type, dtype.precision)
 
         elif isinstance(dtype, (NumpyNDArrayType, HomogeneousTupleType)):
-            element_type = self.get_c_type(dtype.element_type).replace(' ', '_').rstrip('_t')
+            element_type = self.get_c_type(dtype.datatype).replace(' ', '_').rstrip('_t')
             i_type = f'array_{element_type}_{dtype.rank}d'
             self.add_import(Import(f'stc/cspan', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
@@ -1743,7 +1743,7 @@ class CCodePrinter(CodePrinter):
                     raise NotImplementedError("Unexpected type passed to like argument")
             else:
                 dummy_array_name = self.scope.get_new_name(f'{variable.name}_ptr')
-                buffer_array_var = Variable(variable.class_type.element_type, dummy_array_name, memory_handling='alias')
+                buffer_array_var = Variable(variable.class_type.datatype, dummy_array_name, memory_handling='alias')
                 self.scope.insert_variable(buffer_array_var)
                 buffer_array = f"{dummy_array_name} = malloc(sizeof({element_type}) * {tot_shape});\n"
 
