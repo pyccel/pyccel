@@ -1426,14 +1426,15 @@ class CToPythonWrapper(Wrapper):
         # Deallocate the C equivalent of any array arguments
         # The C equivalent is the same variable that is passed to the function unless the target language is Fortran.
         # In this case known-size stack arrays are used which are automatically deallocated when they go out of scope.
-        for a in original_c_args:
-            orig_var = getattr(a, 'original_function_argument_variable', a.var)
-            if not isinstance(a, BindCFunctionDefArgument) and orig_var.is_ndarray:
-                v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
-                if v.is_optional:
-                    body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
-                else:
-                    body.append(Deallocate(v))
+        #TODO: Uncomment when returning list/set/dict is supported
+        #for a in original_c_args:
+        #    orig_var = getattr(a, 'original_function_argument_variable', a.var)
+        #    if not isinstance(a, BindCFunctionDefArgument) and orig_var.is_ndarray:
+        #        v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
+        #        if v.is_optional:
+        #            body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
+        #        else:
+        #            body.append(Deallocate(v))
         body.extend(l  for r in wrapped_results for l in r['body'])
 
         for p_r, c_r in zip(python_result_variables, original_func.results):
@@ -2393,18 +2394,31 @@ class CToPythonWrapper(Wrapper):
         if is_bind_c_argument:
             return {'body': body, 'args': args, 'default_init': default_body}
 
-        arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False,
-                                memory_handling='alias', new_class = Variable)
-        sliced_arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+        arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False, is_optional=False,
                                 memory_handling='alias', new_class = Variable)
         self.scope.insert_variable(arg_var)
-        self.scope.insert_variable(sliced_arg_var, orig_var.name)
+        if orig_var.is_optional:
+            sliced_arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False,
+                                    is_optional=False, memory_handling='alias', new_class = Variable)
+            self.scope.insert_variable(sliced_arg_var)
+        else:
+            sliced_arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+                                    is_optional=False, memory_handling='alias', new_class = Variable)
+            self.scope.insert_variable(sliced_arg_var, orig_var.name)
 
         original_size = [PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems)]
 
         body.append(Allocate(arg_var, shape=original_size, status='unallocated', like=args[0]))
         body.append(AliasAssign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, None, s) for s in stride_elems])))
-        return {'body': body, 'args': [sliced_arg_var], 'default_init': default_body}
+
+        collect_arg = sliced_arg_var
+        if orig_var.is_optional:
+            optional_arg_var = sliced_arg_var.clone(self.scope.get_expected_name(orig_var.name), is_optional = True)
+            self.scope.insert_variable(optional_arg_var)
+            body.append(AliasAssign(optional_arg_var, sliced_arg_var))
+            default_body.append(AliasAssign(optional_arg_var, Nil()))
+            collect_arg = optional_arg_var
+        return {'body': body, 'args': [collect_arg], 'default_init': default_body}
 
     def _extract_HomogeneousTupleType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
             is_bind_c_argument, *, arg_var = None):
