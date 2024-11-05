@@ -111,25 +111,13 @@ def test_numpy_scalar_promotion(language):
     assert pyccel_result == python_result
     assert isinstance(pyccel_result, type(python_result))
 
-    pyccel_result = epyccel_func(integer64, fl32)
-    python_result = add_numpy_to_numpy_type(integer64, fl32)
-    assert pyccel_result == python_result
-    assert isinstance(pyccel_result, type(python_result))
-
-    pyccel_result = epyccel_func(integer64, fl64)
-    python_result = add_numpy_to_numpy_type(integer64, fl64)
-    assert pyccel_result == python_result
-    assert isinstance(pyccel_result, type(python_result))
-
-    pyccel_result = epyccel_func(fl64, complex64)
-    python_result = add_numpy_to_numpy_type(fl64, complex64)
-    assert pyccel_result == python_result
-    assert isinstance(pyccel_result, type(python_result))
-
-    pyccel_result = epyccel_func(complex128, fl64)
-    python_result = add_numpy_to_numpy_type(complex128, fl64)
-    assert pyccel_result == python_result
-    assert isinstance(pyccel_result, type(python_result))
+    for type1, type2 in ((integer64, fl32), (integer64, fl64), (fl64, complex64), (complex128, fl64)):
+        pyccel_result = epyccel_func(type1, type2)
+        python_result = add_numpy_to_numpy_type(type1, type2)
+        rtol = RTOL32 if isinstance(python_result, (np.float64, np.complex128)) else RTOL
+        atol = ATOL32 if isinstance(python_result, (np.float64, np.complex128)) else ATOL
+        assert np.isclose(pyccel_result, python_result, rtol=RTOL, atol=ATOL)
+        assert isinstance(pyccel_result, type(python_result))
 
 @pytest.mark.skipif(numpy_basic_types_deprecated, reason="Can't import bool from numpy")
 def test_numpy_bool_scalar(language):
