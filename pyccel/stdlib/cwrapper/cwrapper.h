@@ -228,29 +228,6 @@ static inline bool    PyIs_Complex64(PyObject *o)
     return PyArray_IsScalar(o, Complex64);
 }
 
-/*
- * Function: pyarray_to_ndarray
- * ----------------------------
- * A Cast function that convert numpy array variable into ndarray variable,
- * by copying its information and data to a new variable of type ndarray struct
- * and return this variable to be used inside c code.
- * Parameters :
- *     o : python array object
- *
- * Returns    :
- *     array : c ndarray
- *
- * reference of the used c/numpy api function
- * -------------------------------------------
- * https://numpy.org/doc/stable/reference/c-api/array.html
- */
-//enum NPY_TYPES get_numpy_type(t_ndarray o);
-//enum e_types get_ndarray_type(PyArrayObject *a);
-//t_ndarray	pyarray_to_ndarray(PyObject *o);
-//PyObject* ndarray_to_pyarray(t_ndarray o);
-//PyObject* c_ndarray_to_pyarray(t_ndarray o);
-//PyObject* fortran_ndarray_to_pyarray(t_ndarray o);
-
 
 /* arrays checkers and helpers */
 bool	pyarray_check(const char* name, PyObject *o, int dtype, int rank, int flag);
