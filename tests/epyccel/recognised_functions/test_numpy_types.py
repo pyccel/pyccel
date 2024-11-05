@@ -116,7 +116,7 @@ def test_numpy_scalar_promotion(language):
         python_result = add_numpy_to_numpy_type(type1, type2)
         rtol = RTOL32 if isinstance(python_result, (np.float64, np.complex128)) else RTOL
         atol = ATOL32 if isinstance(python_result, (np.float64, np.complex128)) else ATOL
-        assert np.isclose(pyccel_result, python_result, rtol=RTOL, atol=ATOL)
+        assert np.isclose(pyccel_result, python_result, rtol=rtol, atol=atol)
         assert isinstance(pyccel_result, type(python_result))
 
 @pytest.mark.skipif(numpy_basic_types_deprecated, reason="Can't import bool from numpy")
