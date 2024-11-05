@@ -418,7 +418,7 @@ class CCodePrinter(CodePrinter):
             A string containing the code which allocates and copies the data.
         """
         if rhs.rank == 0:
-            raise NotImplementedError(str(expr))
+            return self._print(Assign(lhs, rhs))
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         lhs_address = self._print(ObjectAddress(lhs))
         order = lhs.order
