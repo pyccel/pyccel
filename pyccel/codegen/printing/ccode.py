@@ -359,7 +359,7 @@ class CCodePrinter(CodePrinter):
 
         if not isinstance(a, Variable):
             return False
-        return (a.is_alias and not isinstance(a.class_type, HomogeneousContainerType)) \
+        return (a.is_alias and not isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType))) \
                 or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
@@ -1363,10 +1363,9 @@ class CCodePrinter(CodePrinter):
         if rank > 0:
             if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType, DictType)):
                 dtype = self.get_c_type(expr.class_type)
-                return dtype
-            if isinstance(expr.class_type, CStackArray):
+            elif isinstance(expr.class_type, CStackArray):
                 return self.get_c_type(expr.class_type.element_type)
-            if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
+            elif isinstance(expr.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
@@ -1741,6 +1740,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            if expr.variable.is_alias:
+                return ''
             variable_address = self._print(ObjectAddress(expr.variable))
             container_type = self.get_c_type(expr.variable.class_type)
             return f'{container_type}_drop({variable_address});\n'
