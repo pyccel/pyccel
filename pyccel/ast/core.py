@@ -34,6 +34,7 @@ from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
 
 from .variable import DottedName, IndexedElement
 from .variable import Variable, AnnotatedPyccelSymbol
+from .datatypes import HomogeneousSetType, HomogeneousListType, DictType
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -398,16 +399,25 @@ class Allocate(PyccelAstNode):
         In C this provides the size which will be passed to malloc. In Fortran
         this provides the source argument of the allocate function.
 
+    alloc_type : str {'init'|'reserve'|'resize'}, optional
+        Specifies the memory allocation strategy for containers with dynamic memory management.
+        This parameter is relevant for any container type where memory allocation patterns 
+        need to be specified based on usage.
+
+        - 'init' refers to direct allocation with predefined data (e.g., `x = [1, 2, 4]`).
+        - 'reserve' refers to cases where the container will be appended to.
+        - 'resize' referes to cases where the container is populated via indexed elements.
+
     Notes
     -----
     An object of this class is immutable, although it contains a reference to a
     mutable Variable object.
     """
-    __slots__ = ('_variable', '_shape', '_order', '_status', '_like')
+    __slots__ = ('_variable', '_shape', '_order', '_status', '_like', '_alloc_type')
     _attribute_nodes = ('_variable', '_like')
 
     # ...
-    def __init__(self, variable, *, shape, status, like = None):
+    def __init__(self, variable, *, shape, status, like = None, alloc_type = None):
 
         if not isinstance(variable, (Variable, PointerCast)):
             raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
@@ -429,11 +439,15 @@ class Allocate(PyccelAstNode):
         if status not in ('allocated', 'unallocated', 'unknown'):
             raise ValueError(f"Value of 'status' not allowed: '{status}'")
 
+        assert alloc_type is None or isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType))
+        assert alloc_type is None or alloc_type in ('init', 'reserve', 'resize')
+
         self._variable = variable
         self._shape    = shape
         self._order    = variable.order
         self._status   = status
         self._like = like
+        self._alloc_type = alloc_type
         super().__init__()
     # ...
 
@@ -484,6 +498,18 @@ class Allocate(PyccelAstNode):
         this provides the source argument of the allocate function.
         """
         return self._like
+
+    @property
+    def alloc_type(self):
+        """
+        Determines the allocation type for homogeneous containers.
+
+        Returns a string that indicates the allocation type used for memory allocation.
+        The value is either 'init' for containers initialized with predefined data, 
+        'reserve' for containers populated through appending, and 'resize' for containers
+        populated through indexed element assignment.
+        """
+        return self._alloc_type
 
     def __str__(self):
         return f'Allocate({self.variable}, shape={self.shape}, order={self.order}, status={self.status})'

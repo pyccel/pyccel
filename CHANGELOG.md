@@ -71,6 +71,7 @@ All notable changes to this project will be documented in this file.
 -   #1930 : Preserve ordering of import targets.
 -   #1951 : Fix return type for class whose argument cannot be wrapped.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
+-   #1979 : Fix memory leaks in C due to homogeneous container redefinition.
 -   #1972 : Simplified `printf` statement for Literal String.
 -   #2026 : Fix missing loop in slice assignment.
 
