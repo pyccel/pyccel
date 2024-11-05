@@ -856,7 +856,8 @@ class CCodePrinter(CodePrinter):
             if classDef.docstring is not None:
                 classes += self._print(classDef.docstring)
             classes += f"struct {classDef.name} {{\n"
-            classes += ''.join(self._print(Declare(var)) for var in classDef.attributes)
+            decls = [self._print(Declare(var)) for var in classDef.attributes]
+            classes += ''.join(d.split('=')[0].strip()+';\n' if '=' in d else d for d in decls)
             for method in classDef.methods:
                     funcs += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
