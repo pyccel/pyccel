@@ -280,5 +280,3 @@ class DictCopy(DictMethod):
         dict_type = dict_obj.class_type
         self._class_type = dict_type
         super().__init__(dict_obj)
-
-#==============================================================================
