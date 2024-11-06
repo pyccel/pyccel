@@ -51,7 +51,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
-
+-   #1980 Extend The C support for min and max to more than two variables
 ### Fixed
 
 -   #2025 : Optimise min/max to avoid unnecessary temporary variables.

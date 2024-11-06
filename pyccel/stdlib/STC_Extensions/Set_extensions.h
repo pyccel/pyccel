@@ -42,4 +42,5 @@ static inline i_type _c_MEMB(_union)(i_type* self, int n, ...) {
 
 #undef i_type
 #undef i_key
+#include "priv/template2.h"
 #endif

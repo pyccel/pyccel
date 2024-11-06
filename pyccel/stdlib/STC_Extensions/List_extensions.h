@@ -22,4 +22,5 @@ static inline i_key _c_MEMB(_pull_elem)(i_type* self, intptr_t pop_idx) {
 
 #undef i_type
 #undef i_key
+#include "priv/template2.h"
 #endif

@@ -345,7 +345,7 @@ class CCodePrinter(CodePrinter):
         non_stc_imports.sort()
         sorted_imports = [imports[import_src.index(name)] for name in chain(non_stc_imports, stc_imports, dependent_imports)]
         return sorted_imports
-    
+
     def _format_code(self, lines):
         return self.indent_code(lines)
 
@@ -705,18 +705,18 @@ class CCodePrinter(CodePrinter):
     def invalidate_stc_headers(self, imports):
         """
         Invalidate STC headers when STC extension headers are present.
-    
+
         This function iterates over the list of imports and removes any targets
         from STC headers if the target is present in their corresponding
         STC extension headers are present.
         The STC extension headers take care of including the standard
         headers making them redundant.
-    
+
         Parameters
         ----------
         imports : list of Import
             The list of Import objects representing the header files to include.
-    
+
         Returns
         -------
         None
@@ -788,12 +788,12 @@ class CCodePrinter(CodePrinter):
                 arg2 = self._print(arg2_temp)
 
             return f"({arg1} < {arg2} ? {arg1} : {arg2})"
-        elif len(arg) > 2:
-            key = self.dtype_registry[(arg.dtype.primitive_type, 8)]
-            self.add_import(Import('Common_extensions', AsName(VariableTypeAnnotation(key), 'i_key')))
+        elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
+            key = self.get_declare_type(arg[0])
+            self.add_import(Import('Common_extensions', AsName(VariableTypeAnnotation(arg.dtype), key)))
             return  f'{key}_min({len(arg)}, {", ".join(self._print(a) for a in arg)})'
         else:
-            return errors.report("min in C is only supported for 2 scalar arguments", symbol=expr,
+            return errors.report(f"min in C does not support arguments of type {arg.dtype}", symbol=expr,
                     severity='fatal')
 
     def _print_PythonMax(self, expr):
@@ -820,8 +820,12 @@ class CCodePrinter(CodePrinter):
                 arg2 = self._print(arg2_temp)
 
             return f"({arg1} > {arg2} ? {arg1} : {arg2})"
+        elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
+            key = self.get_declare_type(arg[0])
+            self.add_import(Import('Common_extensions', AsName(VariableTypeAnnotation(arg.dtype), key)))
+            return  f'{key}_max({len(arg)}, {", ".join(self._print(a) for a in arg)})'
         else:
-            return errors.report("max in C is only supported for 2 scalar arguments", symbol=expr,
+            return errors.report(f"max in C does not support arguments of type {arg.dtype}", symbol=expr,
                     severity='fatal')
 
     def _print_SysExit(self, expr):
@@ -1094,7 +1098,7 @@ class CCodePrinter(CodePrinter):
             code = ''
             for t in expr.target:
                 if 'Common' in source:
-                    element_decl = f'#define i_key {t.object.class_type}'
+                    element_decl = f'#define i_key {t.local_alias}\n'
                     header_guard_prefix = import_header_guard_prefix.get(source, '')
                     header_guard = f'{header_guard_prefix}_{t.local_alias.upper()}'
                     code += ''.join((f'#ifndef {header_guard}\n',
@@ -1104,30 +1108,30 @@ class CCodePrinter(CodePrinter):
                         f'#include <{stc_header_mapping[source]}.h>\n' if source in import_header_guard_prefix else '', 
                         f'#include <{source}.h>\n',
                         f'#endif // {header_guard}\n\n'))
-                    return code 
-                class_type = t.object.class_type
-                container_type = t.local_alias
-                if isinstance(class_type, DictType):
-                    container_key_key = self.get_c_type(class_type.key_type)
-                    container_val_key = self.get_c_type(class_type.value_type)
-                    container_key = f'{container_key_key}_{container_val_key}'
-                    element_decl = f'#define i_key {container_key_key}\n#define i_val {container_val_key}\n'
                 else:
-                    container_key = self.get_c_type(class_type.element_type)
-                    element_decl = f'#define i_key {container_key}\n'
-                if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
-                        and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
-                    element_decl += '#define i_use_cmp\n'
-                header_guard_prefix = import_header_guard_prefix.get(source, '')
-                header_guard = f'{header_guard_prefix}_{container_type.upper()}'
-                code += ''.join((f'#ifndef {header_guard}\n',
-                        f'#define {header_guard}\n',
-                        f'#define i_type {container_type}\n',
-                        element_decl,
-                        '#define i_more\n' if source in import_header_guard_prefix else '',
-                        f'#include <{stc_header_mapping[source]}.h>\n' if source in import_header_guard_prefix else '', 
-                        f'#include <{source}.h>\n',
-                        f'#endif // {header_guard}\n\n'))
+                    class_type = t.object.class_type
+                    container_type = t.local_alias
+                    if isinstance(class_type, DictType):
+                        container_key_key = self.get_c_type(class_type.key_type)
+                        container_val_key = self.get_c_type(class_type.value_type)
+                        container_key = f'{container_key_key}_{container_val_key}'
+                        element_decl = f'#define i_key {container_key_key}\n#define i_val {container_val_key}\n'
+                    else:
+                        container_key = self.get_c_type(class_type.element_type)
+                        element_decl = f'#define i_key {container_key}\n'
+                    if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
+                            and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
+                        element_decl += '#define i_use_cmp\n'
+                    header_guard_prefix = import_header_guard_prefix.get(source, '')
+                    header_guard = f'{header_guard_prefix}_{container_type.upper()}'
+                    code += ''.join((f'#ifndef {header_guard}\n',
+                            f'#define {header_guard}\n',
+                            f'#define i_type {container_type}\n',
+                            element_decl,
+                            '#define i_more\n' if source in import_header_guard_prefix else '',
+                            f'#include <{stc_header_mapping[source]}.h>\n' if source in import_header_guard_prefix else '', 
+                            f'#include <{source}.h>\n',
+                            f'#endif // {header_guard}\n\n'))
             return code
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
