@@ -41,8 +41,7 @@ from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type
 from pyccel.ast.numpy_wrapper import PyArray_DATA
 from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
-from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, PyccelPyArrayObject, to_pyarray
-from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
+from pyccel.ast.numpy_wrapper import PyccelPyArrayObject, to_pyarray
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs

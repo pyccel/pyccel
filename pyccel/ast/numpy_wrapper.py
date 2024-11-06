@@ -37,8 +37,6 @@ __all__ = (
     #------- CAST FUNCTIONS ------
     'pyarray_to_ndarray',
     #-------HELPERS ------
-    'array_get_dim',
-    'array_get_data',
     'array_get_c_step',
     'array_get_f_step',
     'PyArray_SetBaseObject',
@@ -167,31 +165,7 @@ PyArray_DATA = FunctionDef(name = 'PyArray_DATA',
         arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), 'arr', memory_handling='alias'))],
         results = [FunctionDefResult(Variable(VoidType(), 'data', memory_handling='alias'))])
 
-# Return the shape of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
-array_get_dim  = FunctionDef(name    = 'nd_ndim',
-                           body      = [],
-                           arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional = True)),
-                                        FunctionDefArgument(Variable(CNativeInt(), name = 'idx'))],
-                           results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
-
-# Return the stride of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
-array_get_c_step = FunctionDef(name    = 'nd_nstep_C',
-                           body      = [],
-                           arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional = True)),
-                                        FunctionDefArgument(Variable(CNativeInt(), name = 'idx'))],
-                           results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
-array_get_f_step = FunctionDef(name    = 'nd_nstep_F',
-                           body      = [],
-                           arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional = True)),
-                                        FunctionDefArgument(Variable(CNativeInt(), name = 'idx'))],
-                           results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
-
 # Return the data of ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
-array_get_data  = FunctionDef(name   = 'nd_data',
-                           body      = [],
-                           arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional=True))],
-                           results   = [FunctionDefResult(Variable(BindCPointer(), name = 'v', memory_handling='alias'))])
-
 PyArray_SetBaseObject = FunctionDef(name   = 'PyArray_SetBaseObject',
                                     body      = [],
                                     arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'arr', memory_handling='alias')),
