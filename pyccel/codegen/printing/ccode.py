@@ -1822,7 +1822,8 @@ class CCodePrinter(CodePrinter):
     def _print_Slice(self, expr):
         start = expr.start
         stop = expr.stop
-        if start == None and stop == None:
+        step = expr.step
+        if start == None and stop == None and (step == None or step == 1):
             return 'c_ALL'
         else:
             start = start or LiteralInteger(0)
@@ -1830,7 +1831,7 @@ class CCodePrinter(CodePrinter):
             assert not(is_literal_integer(start) and int(start) < 0)
             assert not(is_literal_integer(stop) and int(stop) < 0)
             args = (start, stop)
-            if expr.step:
+            if step and step != 1:
                 args += (expr.step, )
             return ', '.join(self._print(a) for a in args)
 
