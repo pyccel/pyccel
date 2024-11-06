@@ -251,7 +251,7 @@ import_header_guard_prefix = {'Set_extensions'    : '_TOOLS_SET',
 
 stc_header_mapping = {'List_extensions': 'stc/vec',
                       'Set_extensions': 'stc/hset',
-                      'Common_extensions': 'stc/common'}
+                      'Common_extensions': 'stc/ccommon'}
 
 class CCodePrinter(CodePrinter):
     """
@@ -324,9 +324,11 @@ class CCodePrinter(CodePrinter):
     def sort_imports(self, imports):
         """
         Sort imports to avoid any errors due to bad ordering.
+
         Sort imports. This is important so that types exist before they are used to create
         container types. E.g. it is important that complex or inttypes be imported before
         vec_int or vec_double_complex is declared.
+
         Parameters
         ----------
         imports : list[Import]
