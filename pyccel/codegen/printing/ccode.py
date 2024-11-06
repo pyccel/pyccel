@@ -466,7 +466,7 @@ class CCodePrinter(CodePrinter):
             return result
 
         flattened_args = self._flatten_list(arg)
-        flattened_lhs = [get_indexed(lhs, elems) for elems in product(*[range(s) for s in lhs.shape])]
+        flattened_lhs = [get_indexed(lhs, elems) for elems in product(*[range(s) for s in arg.shape])]
 
         operations = ''
         for li, ri in zip(flattened_lhs, flattened_args):
