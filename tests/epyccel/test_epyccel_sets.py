@@ -532,3 +532,33 @@ def test_set_ptr(language):
     pyccel_result = epyccel_func()
     python_result = set_ptr()
     assert python_result == pyccel_result
+
+def test_set_iter(language):
+    def set_sum_int():
+        a =  {1,2,3,4,5,6,7,8,9,12}
+        sum_a = 0
+        for ai in a:
+            sum_a += ai
+        return sum_a
+
+    epyccel_func = epyccel(set_sum_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = set_sum_int()
+    assert python_result == pyccel_result
+    assert isinstance(python_result, type(pyccel_result))
+
+def test_set_iter_prod(language):
+    def set_iter_prod():
+        from itertools import product
+        a = {1,2,3,4,5,6,7,8,9,12}
+        b = {2.0, 4.0, 9.0, 2.5, 8.3}
+        assemble = 0.0
+        for ai, bi in product(a,b):
+            assemble += ai*bi
+        return assemble
+
+    epyccel_func = epyccel(set_iter_prod, language = language)
+    pyccel_result = epyccel_func()
+    python_result = set_iter_prod()
+    assert python_result == pyccel_result
+    assert isinstance(python_result, type(pyccel_result))
