@@ -428,15 +428,19 @@ class CCodePrinter(CodePrinter):
 
         # If the data is copied from a Variable rather than a list or tuple
         # use the function array_copy_data directly
-        if isinstance(arg, Variable):
+        if isinstance(arg, (Variable, IndexedElement)):
+            prefix = ''
+            if isinstance(arg, IndexedElement):
+                arg_var = self.scope.get_temporary_variable(arg.class_type, memory_handling='heap')
+                prefix += self._print(Assign(arg_var, arg))
+                arg = arg_var
             if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
-                # TODO : Create copy macro
                 rhs_address = self._print(ObjectAddress(arg))
                 lhs_c_type = self.get_c_type(lhs.class_type)
                 rhs_c_type = self.get_c_type(arg.class_type)
                 cast_type = self.get_c_type(lhs.class_type.element_type)
                 self.add_import(c_imports['CSpan_extensions'])
-                return f'cspan_copy({cast_type}, {lhs_c_type}, {rhs_c_type}, {lhs_address}, {rhs_address});\n'
+                return prefix + f'cspan_copy({cast_type}, {lhs_c_type}, {rhs_c_type}, {lhs_address}, {rhs_address});\n'
             else:
                 raise NotImplementedError(f"Can't copy variable of type {arg.class_type}")
         elif variables:
