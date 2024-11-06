@@ -1112,6 +1112,15 @@ def test_function(language):
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Repeat calls to inline decorator can cause bad loop unravelling. See #2043"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
 
