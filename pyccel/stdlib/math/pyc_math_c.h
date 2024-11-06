@@ -7,6 +7,7 @@
 #define         PYC_MATH_C_H
 #include <math.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <complex.h>
 
 /*
