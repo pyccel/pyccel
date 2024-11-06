@@ -94,7 +94,7 @@ def test_creation_in_loop_heap(language):
     def f():
         import numpy as np
         for i in range(3):
-            x = np.ones(i, dtype=int)
+            x = np.ones(i+1, dtype=int)
         return x.sum()
 
     # Initialize singleton that stores Pyccel errors
@@ -122,7 +122,7 @@ def test_creation_in_loop_stack(language):
     def f():
         import numpy as np
         for i in range(3):
-            x = np.ones(i, dtype=int)
+            x = np.ones(i+1, dtype=int)
         return x.sum()
 
     # Initialize singleton that stores Pyccel errors
