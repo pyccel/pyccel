@@ -1682,27 +1682,28 @@ class CCodePrinter(CodePrinter):
         elif allow_negative_index and not isinstance(start, (LiteralInteger, PyccelArrayShapeElement)):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
                             PyccelMinus(array_size, start, simplify = True), start)
+        else:
+            start = _slice.start
 
         if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
             stop = PyccelMinus(array_size, stop.args[0], simplify = True)
         elif allow_negative_index and not isinstance(stop, (LiteralInteger, PyccelArrayShapeElement)):
             stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
                             PyccelMinus(array_size, stop, simplify = True), stop)
+        else:
+            stop = _slice.stop
 
         # steps in slices
         step = _slice.step
 
-        if step is None:
-            step = LiteralInteger(1)
-
         # negative step in slice
-        elif isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
+        if step and isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
             start = PyccelMinus(array_size, LiteralInteger(1), simplify = True) if _slice.start is None else start
             stop = LiteralInteger(0) if _slice.stop is None else stop
             raise NotImplementedError("Negative step not yet handled")
 
         # variable step in slice
-        elif allow_negative_index and step and not isinstance(step, LiteralInteger):
+        elif step and allow_negative_index and step and not isinstance(step, LiteralInteger):
             og_start = start
             start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, PyccelMinus(stop, LiteralInteger(1), simplify = True))
             stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, og_start)
