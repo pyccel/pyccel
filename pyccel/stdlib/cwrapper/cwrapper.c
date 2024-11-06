@@ -261,19 +261,28 @@ static char*	_check_pyarray_dtype(PyArrayObject *a, int dtype)
  */
 static char* _check_pyarray_rank(PyArrayObject *a, int rank)
 {
-	int	current_rank;
+    int current_rank;
 
-	current_rank = PyArray_NDIM(a);
-	if (current_rank != rank)
-	{
+    current_rank = PyArray_NDIM(a);
+    if (current_rank != rank)
+    {
         char* error = (char *)malloc(200);
         sprintf(error, "argument rank must be %d, not %d",
-			rank,
-			current_rank);
-		return error;
-	}
+            rank,
+            current_rank);
+        return error;
+    }
 
-	return NULL;
+    npy_intp* np_shape = PyArray_SHAPE(a);
+    for (int i = 0; i < rank; ++i) {
+        if (np_shape[i] == 0) {
+            char* error = (char *)malloc(200);
+            sprintf(error, "Array has size 0 in dimension %d", i);
+            return error;
+        }
+    }
+
+    return NULL;
 }
 
 /*
