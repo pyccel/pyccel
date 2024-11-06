@@ -779,7 +779,7 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['pyc_math_c'])
             arg1 = self._print(arg[0])
             arg2 = self._print(arg[1])
-            lt = f"complex_{expr.name}({arg1}, {arg2})"
+            return f"complex_{expr.name}({arg1}, {arg2})"
         else:
             return errors.report(f"{expr.name} in C is only supported for 2 scalar arguments", symbol=expr,
                     severity='fatal')
