@@ -98,7 +98,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
 
 from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelAdd, PyccelMinus, PyccelMul, PyccelPow
-from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv, PyccelIn
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -1401,7 +1401,8 @@ class SemanticParser(BasicParser):
             d_lhs['memory_handling'] = 'alias'
             rhs.internal_var.is_target = True
 
-        if isinstance(rhs, Variable) and (rhs.is_ndarray or isinstance(rhs.class_type, CustomDataType)):
+        if isinstance(rhs, Variable) and (rhs.rank > 0 or isinstance(rhs.class_type, CustomDataType)) \
+                and not isinstance(rhs.class_type, (TupleType, StringType)):
             d_lhs['memory_handling'] = 'alias'
             rhs.is_target = not rhs.is_alias
 
@@ -1570,6 +1571,14 @@ class SemanticParser(BasicParser):
                                         shape=a.alloc_shape, status=status))
                             args = new_args
                             new_args = []
+                    elif isinstance(lhs.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
+                        if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
+                            alloc_type = 'init'
+                        elif isinstance(rhs, IndexedElement) or rhs.get_attribute_nodes(IndexedElement):
+                            alloc_type = 'resize'
+                        else:
+                            alloc_type = 'reserve'
+                        new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status, alloc_type=alloc_type))
                     else:
                         new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status))
                 # ...
@@ -1738,6 +1747,14 @@ class SemanticParser(BasicParser):
                                 self.current_ast_node.col_offset))
 
                 else:
+                    alloc_type = None
+                    if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
+                        if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
+                            alloc_type = 'init'
+                        elif isinstance(rhs, IndexedElement) or rhs.get_attribute_nodes(IndexedElement):
+                            alloc_type = 'resize'
+                        else:
+                            alloc_type = 'reserve'
                     if previous_allocations:
                         var.set_changeable_shape()
                         last_allocation = previous_allocations[-1]
@@ -1762,7 +1779,7 @@ class SemanticParser(BasicParser):
                     else:
                         status = 'unallocated'
 
-                    new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
+                    new_expressions.append(Allocate(var, shape=d_var['shape'], status=status, alloc_type=alloc_type))
 
                     if status == 'unallocated':
                         self._allocs[-1].add(var)
@@ -2925,6 +2942,25 @@ class SemanticParser(BasicParser):
             return self._visit(new_call)
         else:
             return PyccelPow(base, exponent)
+
+    def _visit_PyccelIn(self, expr):
+        element = self._visit(expr.element)
+        container = self._visit(expr.container)
+        container_type = container.class_type
+        if isinstance(container_type, (DictType, HomogeneousSetType, HomogeneousListType)):
+            element_type = container_type.key_type if isinstance(container_type, DictType) else container_type.element_type
+            if element.class_type == element_type:
+                return PyccelIn(element, container)
+            else:
+                return LiteralFalse()
+
+        container_base = self.scope.find(str(container_type), 'classes') or get_cls_base(container_type)
+        contains_method = container_base.get_method('__contains__', raise_error = isinstance(container_type, CustomDataType))
+        if contains_method:
+            return contains_method(container, element)
+        else:
+            raise errors.report(f"In operator is not yet implemented for type {container_type}",
+                    severity='fatal', symbol=expr)
 
     def _visit_Lambda(self, expr):
         errors.report("Lambda functions are not currently supported",

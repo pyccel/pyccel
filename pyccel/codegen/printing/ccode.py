@@ -359,7 +359,7 @@ class CCodePrinter(CodePrinter):
 
         if not isinstance(a, Variable):
             return False
-        return (a.is_alias and not isinstance(a.class_type, HomogeneousContainerType)) \
+        return (a.is_alias and not isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType))) \
                 or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
@@ -972,6 +972,20 @@ class CCodePrinter(CodePrinter):
         a = self._print(expr.args[0])
         return '!{}'.format(a)
 
+    def _print_PyccelIn(self, expr):
+        container_type = expr.container.class_type
+        element = self._print(expr.element)
+        container = self._print(ObjectAddress(expr.container))
+        c_type = self.get_c_type(expr.container.class_type)
+        if isinstance(container_type, (HomogeneousSetType, DictType)):
+            return f'{c_type}_contains({container}, {element})'
+        elif isinstance(container_type, HomogeneousListType):
+            return f'{c_type}_find({container}, {element}).ref != {c_type}_end({container}).ref'
+        else:
+            raise errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr,
+                    severity='fatal')
+
     def _print_PyccelMod(self, expr):
         self.add_import(c_imports['math'])
         self.add_import(c_imports['pyc_math_c'])
@@ -1018,16 +1032,19 @@ class CCodePrinter(CodePrinter):
         if source.startswith('stc/') or source in import_header_guard_prefix:
             code = ''
             for t in expr.target:
-                dtype = t.object.class_type
+                class_type = t.object.class_type
                 container_type = t.local_alias
-                if isinstance(dtype, DictType):
-                    container_key_key = self.get_c_type(dtype.key_type)
-                    container_val_key = self.get_c_type(dtype.value_type)
+                if isinstance(class_type, DictType):
+                    container_key_key = self.get_c_type(class_type.key_type)
+                    container_val_key = self.get_c_type(class_type.value_type)
                     container_key = f'{container_key_key}_{container_val_key}'
                     element_decl = f'#define i_key {container_key_key}\n#define i_val {container_val_key}\n'
                 else:
-                    container_key = self.get_c_type(dtype.element_type)
+                    container_key = self.get_c_type(class_type.element_type)
                     element_decl = f'#define i_key {container_key}\n'
+                if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
+                        and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
+                    element_decl += '#define i_use_cmp\n'
                 header_guard_prefix = import_header_guard_prefix.get(source, '')
                 header_guard = f'{header_guard_prefix}_{container_type.upper()}'
                 code += ''.join((f'#ifndef {header_guard}\n',
@@ -1346,10 +1363,9 @@ class CCodePrinter(CodePrinter):
         if rank > 0:
             if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType, DictType)):
                 dtype = self.get_c_type(expr.class_type)
-                return dtype
-            if isinstance(expr.class_type, CStackArray):
+            elif isinstance(expr.class_type, CStackArray):
                 return self.get_c_type(expr.class_type.element_type)
-            if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
+            elif isinstance(expr.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
@@ -1409,6 +1425,9 @@ class CCodePrinter(CodePrinter):
             assert init == ''
             preface = ''
             init    = ' = {.shape = NULL}'
+        elif isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            preface = ''
+            init = ' = {0}'
         else:
             preface = ''
 
@@ -1671,7 +1690,18 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         variable = expr.variable
         if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-            return ''
+            if expr.status in ('allocated', 'unknown'):
+                free_code = f'{self._print(Deallocate(variable))}\n'
+            if expr.shape[0] is None:
+                return free_code
+            size = self._print(expr.shape[0])
+            variable_address = self._print(ObjectAddress(expr.variable))
+            container_type = self.get_c_type(expr.variable.class_type)
+            if expr.alloc_type == 'reserve':
+                return free_code + f'{container_type}_reserve({variable_address}, {size});\n'
+            elif expr.alloc_type == 'resize':
+                return f'{container_type}_resize({variable_address}, {size}, {0});\n'
+            return free_code
         if isinstance(variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
@@ -1710,6 +1740,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            if expr.variable.is_alias:
+                return ''
             variable_address = self._print(ObjectAddress(expr.variable))
             container_type = self.get_c_type(expr.variable.class_type)
             return f'{container_type}_drop({variable_address});\n'
