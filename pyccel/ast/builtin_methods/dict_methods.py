@@ -10,10 +10,12 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import InhomogeneousTupleType
+from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType
 from pyccel.ast.internals import PyccelFunction
 
-__all__ = ('DictGet',
+
+__all__ = ('DictClear',
+           'DictGet',
            'DictMethod',
            'DictPop',
            'DictPopitem',
@@ -178,7 +180,6 @@ class DictGet(DictMethod):
         return self._args[1]
 
 #==============================================================================
-
 class DictSetDefault(DictMethod):
     """
     Represents a call to the .setdefault() method.
@@ -236,3 +237,23 @@ class DictSetDefault(DictMethod):
         The value that should be returned if the key is not present in the dictionary.
         """
         return self._args[1]
+
+#==============================================================================
+class DictClear(DictMethod) :
+    """
+    Represents a call to the .clear() method.
+
+    The clear() method removes all items from the dictionary.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+    """
+    __slots__ = ()
+    _shape = None
+    _class_type = VoidType()
+    name = 'clear'
+
+    def __init__(self, dict_obj):
+        super().__init__(dict_obj)
