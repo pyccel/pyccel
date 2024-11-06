@@ -1775,30 +1775,28 @@ class CToPythonWrapper(Wrapper):
         """
         v = expr.original_variable
 
+        typenum = numpy_dtype_registry[v.dtype]
         # Get pointer to store raw array data
-        var = self.scope.get_temporary_variable(dtype_or_var = VoidType(),
+        data_var = self.scope.get_temporary_variable(dtype_or_var = VoidType(),
                 name = v.name + '_data', memory_handling = 'alias')
         # Create variables to store the shape of the array
-        shape = [self.scope.get_temporary_variable(PythonNativeInt(),
-                v.name+'_size') for _ in range(v.rank)]
+        shape_var = self.scope.get_temporary_variable(CStackArray(PythonNativeInt()), name = v.name+'_size',
+                shape = (v.rank,))
+        shape = [IndexedElement(shape_var, i) for i in range(v.rank)]
         # Get the bind_c function which wraps a fortran array and returns c objects
         var_wrapper = expr.wrapper_function
         # Call bind_c function
-        call = Assign(PythonTuple(ObjectAddress(var), *shape), var_wrapper())
+        call = Assign(PythonTuple(ObjectAddress(data_var), *shape), var_wrapper())
 
-        # Create ndarray to store array data
-        nd_var = self.scope.get_temporary_variable(dtype_or_var = v,
-                name = v.name, memory_handling = 'alias')
-        alloc = Allocate(nd_var, shape=shape, status='unallocated', like=var)
-
-        # Save the ndarray to vars_to_wrap to be handled as if it came from C
-        body = [call, alloc] + self._wrap_Variable(nd_var)
-
-        # Correct self._python_object_map key
-        py_equiv = self._python_object_map.pop(nd_var)
+        # Create the resulting Variable with datatype `PyccelPyObject`
+        py_equiv = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
         self._python_object_map[expr] = py_equiv
 
-        return body
+        release_memory = False
+        # Save the ndarray to vars_to_wrap to be handled as if it came from C
+        return [call, AliasAssign(py_equiv, to_pyarray(LiteralInteger(v.rank), typenum,
+                            data_var, shape_var,convert_to_literal(v.order != 'F'),
+                            convert_to_literal(release_memory)))]
 
     def _wrap_DottedVariable(self, expr):
         """
