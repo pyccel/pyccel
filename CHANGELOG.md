@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
 -   #1886 : Add Python support for dict method `pop()`.
 -   #1887 : Add Python support for dict method `popitem()`.
+-   #1888 : Add Python support for dict method `setdefault()`.
 -   #1885 : Add Python support for dict method `get()`.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
 -   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the STC library.
@@ -34,6 +35,7 @@ All notable changes to this project will be documented in this file.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C support for list method `pop()`.
+-   #2023 : Add support for iterating over a `set`.
 -   #1877 : Add C and Fortran Support for set method `pop()`.
 -   #1917 : Add C and Fortran support for set method `add()`.
 -   #1918 : Add support for set method `clear()`.
@@ -68,8 +70,10 @@ All notable changes to this project will be documented in this file.
 -   #1913 : Fix function calls to renamed functions.
 -   #1930 : Preserve ordering of import targets.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
+-   #1979 : Fix memory leaks in C due to homogeneous container redefinition.
 -   #1972 : Simplified `printf` statement for Literal String.
 -   #2026 : Fix missing loop in slice assignment.
+-   #2008 : Ensure list/set/dict assignment is recognised as a reference.
 
 ### Changed
 

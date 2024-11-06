@@ -756,3 +756,16 @@ def test_list_contains(language):
     python_result = list_contains()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
+
+def test_dict_ptr(language):
+    def list_ptr():
+        a = [1, 3, 4, 7, 10, 3]
+        b = a
+        b.append(22)
+        return len(a), len(b)
+
+    epyc_list_ptr = epyccel(list_ptr, language = language)
+    pyccel_result = epyc_list_ptr()
+    python_result = list_ptr()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
