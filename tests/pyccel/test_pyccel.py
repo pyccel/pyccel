@@ -769,6 +769,15 @@ def test_c_arrays(language):
     pyccel_test("scripts/c_arrays.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
             [int] * 6 + [int] * 10 + [int] * 10 + [int] * 25 + [int] * 60

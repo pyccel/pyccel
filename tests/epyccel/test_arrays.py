@@ -2243,6 +2243,15 @@ def test_multiple_negative_index_3(language):
     assert f1(-1, -1, -3) == f2(-1, -1, -3)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_argument_negative_index_1(language):
     a = arrays.a_1d
 
@@ -2251,6 +2260,15 @@ def test_argument_negative_index_1(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_argument_negative_index_2(language):
     a = arrays.a_1d
 
@@ -2259,6 +2277,15 @@ def test_argument_negative_index_2(language):
     assert f1(a, a) == f2(a, a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_c_order_argument_negative_index(language):
     a = np.random.randint(20, size=(3,4))
 
@@ -2267,6 +2294,15 @@ def test_c_order_argument_negative_index(language):
     assert f1(a, a) == f2(a, a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_f_order_argument_negative_index(language):
     a = np.array(np.random.randint(20, size=(3,4)), order='F')
 
@@ -2884,6 +2920,15 @@ def test_array_1d_slice_stride_3(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_1d_slice_stride_4(language):
     a = arrays.a_1d
 
@@ -3106,6 +3151,15 @@ def test_array_1d_slice_stride_22(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_1d_slice_stride_23(language):
     a = arrays.a_1d
 
@@ -3163,6 +3217,15 @@ def test_array_2d_F_slice_stride_4(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_2d_F_slice_stride_5(language):
     a = arrays.a_2d_f
 
@@ -3179,6 +3242,15 @@ def test_array_2d_F_slice_stride_6(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_2d_F_slice_stride_7(language):
     a = arrays.a_2d_f
 
@@ -3195,6 +3267,15 @@ def test_array_2d_F_slice_stride_8(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_2d_F_slice_stride_9(language):
     a = arrays.a_2d_f
 
