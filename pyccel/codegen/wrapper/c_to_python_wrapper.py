@@ -2481,6 +2481,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(data_var)
             arg_vars = [data_var, size_var]
             fill_var = data_var
+            like = Variable(orig_var.class_type.element_type, '_')
         else:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     memory_handling='heap', new_class = Variable)
@@ -2488,6 +2489,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(arg_var, orig_var.name)
             arg_vars = [arg_var]
             fill_var = arg_var
+            like = None
 
         assert not bound_argument
         idx = self.scope.get_temporary_variable(CNativeInt())
@@ -2496,7 +2498,7 @@ class CToPythonWrapper(Wrapper):
         indexed_collect_arg = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
 
         body = [Assign(size_var, PyTuple_Size(collect_arg)),
-                Allocate(fill_var, shape = (size_var,), status = 'unallocated')]
+                Allocate(fill_var, shape = (size_var,), status = 'unallocated', like = like)]
 
         for_scope = self.scope.create_new_loop_scope()
         self.scope = for_scope
