@@ -331,6 +331,7 @@ class CCodePrinter(CodePrinter):
         ----------
         imports : list[Import]
             A list of the imports.
+
         Returns
         -------
         list[Import]
