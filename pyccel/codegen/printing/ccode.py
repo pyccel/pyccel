@@ -723,7 +723,7 @@ class CCodePrinter(CodePrinter):
             The function modifies the `imports` list in-place.
         """
         for imp in imports:
-            if imp.source in stc_header_mapping.keys():
+            if imp.source in stc_header_mapping:
                 for imp2 in imports:
                     if imp2.source == stc_header_mapping[imp.source]:
                         imp2.remove_target(imp.target)
@@ -918,6 +918,8 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
+        imports = self.sort_imports(imports)
+        self.invalidate_stc_headers(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self._in_header = False
@@ -937,6 +939,7 @@ class CCodePrinter(CodePrinter):
         for item in expr.imports:
             if item.source_module and item.source_module is not self._current_module:
                 self.rename_imported_methods(item.source_module.classes)
+        self.invalidate_stc_headers(expr.imports)
         self.rename_imported_methods(expr.classes)
         body    = ''.join(self._print(i) for i in expr.body)
 

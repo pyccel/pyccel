@@ -3900,7 +3900,7 @@ class Import(PyccelAstNode):
             self._target.update({t: None for t in new_target})
         else:
             self._target[new_target] = None
-    
+
     def remove_target(self, target_to_remove):
         """
         Remove a target from the imports.
