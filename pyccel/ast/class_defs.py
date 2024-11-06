@@ -11,7 +11,7 @@ from pyccel.ast.builtin_methods.set_methods  import (SetAdd, SetClear, SetCopy, 
 from pyccel.ast.builtin_methods.list_methods import (ListAppend, ListInsert, ListPop,
                                                      ListClear, ListExtend, ListRemove,
                                                      ListCopy, ListSort)
-from pyccel.ast.builtin_methods.dict_methods  import DictPop, DictPopitem, DictGet, DictClear,
+from pyccel.ast.builtin_methods.dict_methods  import (DictPop, DictPopitem, DictGet, DictClear,
                                                      DictSetDefault)
 
 from .builtins   import PythonImag, PythonReal, PythonConjugate
