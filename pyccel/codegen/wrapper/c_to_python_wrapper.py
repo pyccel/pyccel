@@ -1731,9 +1731,21 @@ class CToPythonWrapper(Wrapper):
         # Save the Variable so it can be located later
         self._python_object_map[expr] = py_equiv
 
-        # Cast the C variable into a Python variable
-        wrapper_function = C_to_Python(expr)
-        return [AliasAssign(py_equiv, wrapper_function(expr))]
+        if isinstance(expr.class_type, NumpyNDArrayType):
+            # Cast the C variable into a Python variable
+            typenum = numpy_dtype_registry[expr.dtype]
+            data_var = DottedVariable(VoidType(), 'data', memory_handling='alias',
+                        lhs=expr)
+            shape_var = DottedVariable(CStackArray(PythonNativeInt()), 'shape',
+                        lhs=expr)
+            release_memory = False
+            return [AliasAssign(py_equiv, to_pyarray(
+                             LiteralInteger(expr.rank), typenum, data_var, shape_var,
+                             convert_to_literal(expr.order != 'F'),
+                             convert_to_literal(release_memory)))]
+        else:
+            wrapper_function = C_to_Python(expr)
+            return [AliasAssign(py_equiv, wrapper_function(expr))]
 
     def _wrap_BindCArrayVariable(self, expr):
         """
@@ -1777,13 +1789,10 @@ class CToPythonWrapper(Wrapper):
         # Create ndarray to store array data
         nd_var = self.scope.get_temporary_variable(dtype_or_var = v,
                 name = v.name, memory_handling = 'alias')
-        alloc = Allocate(nd_var, shape=shape, status='unallocated')
-        # Save raw_data into ndarray to obtain useable pointer
-        set_data = AliasAssign(DottedVariable(VoidType(), 'raw_data',
-                memory_handling = 'alias', lhs=nd_var), var)
+        alloc = Allocate(nd_var, shape=shape, status='unallocated', like=var)
 
         # Save the ndarray to vars_to_wrap to be handled as if it came from C
-        body = [call, alloc, set_data] + self._wrap_Variable(nd_var)
+        body = [call, alloc] + self._wrap_Variable(nd_var)
 
         # Correct self._python_object_map key
         py_equiv = self._python_object_map.pop(nd_var)
