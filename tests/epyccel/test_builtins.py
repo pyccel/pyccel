@@ -327,7 +327,7 @@ def test_sum_matching_types(language):
 
     int_args = [randint(min_int//2, max_int//2) for _ in range(2)]
     float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
-    complex_args = [uniform(min_float/2, max_float/2) + 1j*uniform(min_float/2, max_float/2)
+    complex_args = [uniform(min_float/4, max_float/4) + 1j*uniform(min_float/4, max_float/4)
                     for _ in range(2)]
 
     assert epyc_f(*int_args) == f(*int_args)

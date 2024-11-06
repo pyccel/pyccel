@@ -732,10 +732,8 @@ class PythonListFunction(PyccelFunction):
     def __new__(cls, arg = None):
         if arg is None:
             return PythonList()
-        elif isinstance(arg, PythonList):
-            return arg
         elif isinstance(arg.shape[0], LiteralInteger):
-            return PythonList(*[arg[i] for i in range(arg.shape[0])])
+            return PythonList(*arg)
         else:
             return super().__new__(cls)
 
@@ -838,8 +836,6 @@ class PythonSetFunction(PyccelFunction):
     def __new__(cls, arg = None):
         if arg is None:
             return PythonSet()
-        elif isinstance(arg.class_type, HomogeneousSetType):
-            return arg
         elif isinstance(arg, (PythonList, PythonSet, PythonTuple)):
             return PythonSet(*arg)
         else:
@@ -1154,7 +1150,7 @@ class PythonZip(PyccelFunction):
     *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
-    __slots__ = ('_length',)
+    __slots__ = ('_length', '_class_type')
     name = 'zip'
 
     def __init__(self, *args):
@@ -1172,6 +1168,7 @@ class PythonZip(PyccelFunction):
                 self._length = min(lengths)
             else:
                 self._length = self.args[0].shape[0]
+            self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
 
     @property
     def length(self):
