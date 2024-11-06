@@ -122,15 +122,6 @@ pyarray_to_ndarray = FunctionDef(
                 arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling = 'alias'))],
                 results   = [FunctionDefResult(Variable(NumpyNDArrayType(GenericType(), 1, None), 'array'))])
 
-get_strides_and_size_from_numpy_array = FunctionDef(
-                name = 'get_strides_and_size_from_numpy_array',
-                body      = [],
-                arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling = 'alias')),
-                             FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'ends', memory_handling = 'alias')),
-                             FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'steps', memory_handling = 'alias')),
-                             FunctionDefArgument(Variable(PythonNativeBool(), 'f_order'))],
-                results = [])
-
 numpy_to_stc_strides = FunctionDef(
                 name      = 'numpy_to_stc_strides',
                 arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],

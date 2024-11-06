@@ -39,7 +39,6 @@ from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInt
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
 from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type
 from pyccel.ast.numpy_wrapper import PyArray_DATA
-from pyccel.ast.numpy_wrapper import get_strides_and_size_from_numpy_array
 from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, PyccelPyArrayObject, to_pyarray
