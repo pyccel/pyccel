@@ -42,6 +42,8 @@ from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil
 
+from pyccel.ast.low_level_tools import IteratorType
+
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray
@@ -393,7 +395,7 @@ class CCodePrinter(CodePrinter):
 
         if not isinstance(a, Variable):
             return False
-        return (a.is_alias and not isinstance(a.class_type, HomogeneousContainerType)) \
+        return (a.is_alias and not isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType))) \
                 or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
@@ -1448,10 +1450,9 @@ class CCodePrinter(CodePrinter):
         if rank > 0:
             if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType, DictType)):
                 dtype = self.get_c_type(expr.class_type)
-                return dtype
-            if isinstance(expr.class_type, CStackArray):
+            elif isinstance(expr.class_type, CStackArray):
                 return self.get_c_type(expr.class_type.element_type)
-            if isinstance(expr.class_type,(HomogeneousTupleType, NumpyNDArrayType)):
+            elif isinstance(expr.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
@@ -1511,6 +1512,9 @@ class CCodePrinter(CodePrinter):
             assert init == ''
             preface = ''
             init    = ' = {.shape = NULL}'
+        elif isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            preface = ''
+            init = ' = {0}'
         else:
             preface = ''
 
@@ -1773,7 +1777,18 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         variable = expr.variable
         if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-            return ''
+            if expr.status in ('allocated', 'unknown'):
+                free_code = f'{self._print(Deallocate(variable))}\n'
+            if expr.shape[0] is None:
+                return free_code
+            size = self._print(expr.shape[0])
+            variable_address = self._print(ObjectAddress(expr.variable))
+            container_type = self.get_c_type(expr.variable.class_type)
+            if expr.alloc_type == 'reserve':
+                return free_code + f'{container_type}_reserve({variable_address}, {size});\n'
+            elif expr.alloc_type == 'resize':
+                return f'{container_type}_resize({variable_address}, {size}, {0});\n'
+            return free_code
         if isinstance(variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
@@ -1812,6 +1827,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            if expr.variable.is_alias:
+                return ''
             variable_address = self._print(ObjectAddress(expr.variable))
             container_type = self.get_c_type(expr.variable.class_type)
             return f'{container_type}_drop({variable_address});\n'
@@ -2396,45 +2413,44 @@ class CCodePrinter(CodePrinter):
     def _print_For(self, expr):
         self.set_scope(expr.scope)
 
-        indices = expr.iterable.loop_counters
-        index = indices[0] if indices else expr.target
-        if expr.iterable.num_loop_counters_required:
-            self.scope.insert_variable(index)
+        iterable = expr.iterable
+        iterable_type = iterable.iterable.class_type
+        indices = iterable.loop_counters
 
-        target   = index
-        iterable = expr.iterable.get_range()
+        if isinstance(iterable_type, (DictType, HomogeneousSetType, HomogeneousListType)):
+            counter = Variable(IteratorType(iterable_type), indices[0].name)
+            c_type = self.get_c_type(iterable_type)
+            iterable_code = self._print(iterable.iterable)
+            for_code = f'c_foreach ({self._print(counter)}, {c_type}, {iterable_code})'
+            additional_assign = CodeBlock([Assign(expr.target, DottedVariable(VoidType(), 'ref',
+                memory_handling='alias', lhs = counter))])
+        else:
+            index = indices[0] if indices else expr.target
+            if iterable.num_loop_counters_required:
+                self.scope.insert_variable(index)
 
-        if not isinstance(iterable, PythonRange):
-            # Only iterable currently supported is PythonRange
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal')
+            target   = index
+            counter  = self._print(target)
+            iterable = expr.iterable.get_range()
+            additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
 
-        counter    = self._print(target)
-        body       = self._print(expr.body)
+            step = iterable.step
+            start_code = self._print(iterable.start)
+            stop_code  = self._print(iterable.stop )
+            step_code  = self._print(iterable.step )
 
-        additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
-        body = self._print(additional_assign) + body
+            # testing if the step is a value or an expression
+            if is_literal_integer(step):
+                op = '>' if int(step) < 0 else '<'
+                stop_condition = f'{counter} {op} {stop_code}'
+            else:
+                stop_condition = f'({step_code} > 0) ? ({counter} < {stop_code}) : ({counter} > {stop_code})'
+            for_code = f'for ({counter} = {start_code}; {stop_condition}; {counter} += {step_code})\n'
 
-        start = self._print(iterable.start)
-        stop  = self._print(iterable.stop )
-        step  = self._print(iterable.step )
-
-        test_step = iterable.step
-        if isinstance(test_step, PyccelUnarySub):
-            test_step = iterable.step.args[0]
+        body = self._print(additional_assign) + self._print(expr.body)
 
         self.exit_scope()
-        # testing if the step is a value or an expression
-        if isinstance(test_step, Literal):
-            op = '>' if isinstance(iterable.step, PyccelUnarySub) else '<'
-            return ('for ({counter} = {start}; {counter} {op} {stop}; {counter} += '
-                        '{step})\n{{\n{body}}}\n').format(counter=counter, start=start, op=op,
-                                                          stop=stop, step=step, body=body)
-        else:
-            return (
-                'for ({counter} = {start}; ({step} > 0) ? ({counter} < {stop}) : ({counter} > {stop}); {counter} += '
-                '{step})\n{{\n{body}}}\n').format(counter=counter, start=start,
-                                                  stop=stop, step=step, body=body)
+        return for_code + '{\n' + body + '}\n'
 
     def _print_FunctionalFor(self, expr):
         loops = ''.join(self._print(i) for i in expr.loops)
