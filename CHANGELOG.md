@@ -75,6 +75,7 @@ All notable changes to this project will be documented in this file.
 -   #1972 : Simplified `printf` statement for Literal String.
 -   #2026 : Fix missing loop in slice assignment.
 -   #2008 : Ensure list/set/dict assignment is recognised as a reference.
+-   #2039 : Ensure expressions in the iterable of a for loops is calculated before the loop.
 
 ### Changed
 
