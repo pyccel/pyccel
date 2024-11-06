@@ -422,7 +422,6 @@ class CCodePrinter(CodePrinter):
         assert rhs.rank != 0
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         lhs_address = self._print(ObjectAddress(lhs))
-        order = lhs.order
 
         variables = [v for v in arg.get_attribute_nodes((Variable, FunctionCall, PyccelFunction)) if v.rank]
 
