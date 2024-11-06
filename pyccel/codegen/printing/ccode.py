@@ -20,7 +20,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict,
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
-from pyccel.ast.core      import Allocate, Deallocate
+from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
@@ -36,21 +36,19 @@ from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, Ho
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType, DictType
 
-from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement, PyccelSymbol
+from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 from pyccel.ast.internals import PyccelFunction
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
-from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
+from pyccel.ast.literals  import LiteralString, LiteralInteger
 from pyccel.ast.literals  import Nil, convert_to_literal
-
-from pyccel.ast.low_level_tools  import IteratorType
 
 from pyccel.ast.low_level_tools import IteratorType
 
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum
-from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
+from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
 
 from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
@@ -74,7 +72,7 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
-                                    PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
+                                    PYCCEL_RESTRICTION_IS_ISNOT)
 
 numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
@@ -82,7 +80,7 @@ errors = Errors()
 
 # TODO: add examples
 
-__all__ = ["CCodePrinter", "ccode"]
+__all__ = ["CCodePrinter"]
 
 # dictionary mapping numpy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
@@ -471,9 +469,6 @@ class CCodePrinter(CodePrinter):
         for li, ri in zip(flattened_lhs, flattened_args):
             operations += f'{self._print(li)} = {self._print(ri)};\n'
 
-        # Get the variable where the data will be copied
-        copy_to = lhs
-
         return operations
 
     def arrayFill(self, expr):
@@ -527,16 +522,9 @@ class CCodePrinter(CodePrinter):
         """
         var = expr
         dtype = self.get_c_type(var.dtype)
-        if isinstance(var.class_type, NumpyNDArrayType):
-            np_dtype = self.find_in_ndarray_type_registry(var.dtype)
-        elif isinstance(var.class_type, HomogeneousContainerType):
-            np_dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(var.dtype.primitive_type, var.dtype.precision)])
-        else:
-            raise NotImplementedError(f"Don't know how to index {expr.class_type} type")
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
         tot_shape = self._print(functools.reduce(
             lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
-        declare_dtype = self.get_c_type(NumpyInt64Type())
 
         order = 'c_COLMAJOR' if var.order == 'F' else 'c_ROWMAJOR'
 
@@ -872,7 +860,7 @@ class CCodePrinter(CodePrinter):
             classes += f"struct {classDef.name} {{\n"
             classes += ''.join(self._print(Declare(var, external=True)).removeprefix('extern ') for var in classDef.attributes)
             for method in classDef.methods:
-                    funcs += f"{self.function_signature(method)};\n"
+                funcs += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
                     funcs += f"{self.function_signature(func)};\n"
@@ -1074,7 +1062,7 @@ class CCodePrinter(CodePrinter):
                 code += ''.join((f'#ifndef {header_guard}\n',
                         f'#define {header_guard}\n',
                         f'#define STC_CSPAN_INDEX_TYPE {native_int_c_type}\n',
-                        f'#include <stc/cspan.h>\n',
+                         '#include <stc/cspan.h>\n',
                         f'using_cspan({container_type}, {element_type}, {rank});\n',
                         f'#endif // {header_guard}\n\n'))
             return code
@@ -1326,7 +1314,7 @@ class CCodePrinter(CodePrinter):
         elif isinstance(dtype, (NumpyNDArrayType, HomogeneousTupleType)):
             element_type = self.get_c_type(dtype.datatype).replace(' ', '_').rstrip('_t')
             i_type = f'array_{element_type}_{dtype.rank}d'
-            self.add_import(Import(f'stc/cspan', AsName(VariableTypeAnnotation(dtype), i_type)))
+            self.add_import(Import('stc/cspan', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
 
         elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
@@ -1460,7 +1448,6 @@ class CCodePrinter(CodePrinter):
             return ''
 
         declaration_type = self.get_declare_type(var)
-        variable = self._print(var.name)
 
         init = f' = {self._print(expr.value)}' if expr.value is not None else ''
 
@@ -1822,7 +1809,7 @@ class CCodePrinter(CodePrinter):
         start = expr.start
         stop = expr.stop
         step = expr.step
-        if start == None and stop == None and (step == None or step == 1):
+        if start is None and stop is None and (step in (None, 1)):
             return 'c_ALL'
         else:
             start = start or LiteralInteger(0)
@@ -2098,21 +2085,6 @@ class CCodePrinter(CodePrinter):
             code = init_value + ';\n' + cond_template.format(cond=self._print(expr.endpoint),stop = v)
 
         return code
-
-    def _print_NumpyArray(self, expr):
-        raise NotImplementedError("Is this used?")
-        declare_type = self.get_c_type(expr.class_type)
-        arg = expr.arg
-        variables = arg.get_attribute_nodes(Variable)
-        if variables:
-            raise NotImplementedError("TODO")
-        tmp_var = self.scope.get_new_name()
-        self.scope.insert_variable(Constant(CStackArray(expr.class_type.element_type),
-                    tmp_var, rank=1,
-                    value = PythonTuple(self._flatten_list(arg, expr.order))))
-        init_list = '{'+values+'}'
-        shape = ', '.join(self._print(s) for s in arg.alloc_shape)
-        return f'cspan_md({tmp_var}, {shape})'
 
     def _print_Interface(self, expr):
         return ""
