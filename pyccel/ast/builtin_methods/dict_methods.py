@@ -17,7 +17,7 @@ __all__ = ('DictGet',
            'DictMethod',
            'DictPop',
            'DictPopitem',
-           'DictSetdefault',
+           'DictSetDefault',
            )
 
 #==============================================================================
@@ -179,7 +179,7 @@ class DictGet(DictMethod):
 
 #==============================================================================
 
-class DictSetdefault(DictMethod):
+class DictSetDefault(DictMethod):
     """
     Represents a call to the .setdefault() method.
 
@@ -213,6 +213,8 @@ class DictSetdefault(DictMethod):
 
         if k.class_type != dict_type.key_type:
             raise TypeError(f"Key passed to setdefault method has type {k.class_type}. Expected {dict_type.key_type}")
+        if d is None:
+            raise TypeError("None cannot be used as the default argument for the setdefault method.")
         if d and d.class_type != dict_type.value_type:
             raise TypeError(f"Default value passed to setdefault method has type {d.class_type}. Expected {dict_type.value_type}")
         super().__init__(dict_obj, k, d)
