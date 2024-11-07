@@ -325,10 +325,7 @@ class Errors(metaclass = Singleton):
         if symbol is not None:
             if isinstance(symbol, ast.AST):
                 ast_node = symbol
-                if sys.version_info < (3, 9):
-                    symbol = ast.dump(ast_node)
-                else:
-                    symbol = ast.unparse(ast_node) # pylint: disable=no-member
+                symbol = ast.unparse(ast_node) # pylint: disable=no-member
             elif isinstance(symbol, PyccelAstNode):
                 ast_node = symbol.python_ast
 

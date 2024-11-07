@@ -25,7 +25,6 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
-from pyccel.parser.extend_tree import unparse
 
 errors = Errors()
 
@@ -277,7 +276,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionDef(self, expr):
         if expr.is_inline and not expr.is_semantic:
-            code = unparse(expr.python_ast) + '\n'
+            code = ast.unparse(expr.python_ast) + '\n'
             return code
 
         self.set_scope(expr.scope)
