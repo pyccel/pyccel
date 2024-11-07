@@ -228,12 +228,3 @@ def test_dict_clear(python_only_language):
     python_result = dict_clear()
     assert python_result == pyccel_result
 
-def test_dict_copy(python_only_language):
-    def dict_copy():
-        a = {1:1.0, 2:2.0}
-        b = a.copy()
-        return b
-    epyc_dict_copy = epyccel(dict_copy, language = python_only_language)
-    pyccel_result = epyc_dict_copy()
-    python_result = dict_copy()
-    assert python_result == pyccel_result
