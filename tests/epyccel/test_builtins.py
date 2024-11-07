@@ -222,7 +222,7 @@ def test_max_2_args_f(language):
 def test_max_3_args(language):
     @template('T', [int, float])
     def f(x : 'T', y : 'T', z : 'T'):
-        return min(x, y, z)
+        return max(x, y, z)
 
     epyc_f = epyccel(f, language=language)
 
