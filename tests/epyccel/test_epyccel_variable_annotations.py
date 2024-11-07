@@ -122,8 +122,7 @@ def test_final_annotation(language):
 
 def test_homogeneous_tuple_annotation(language):
     def homogeneous_tuple_annotation():
-        # Not valid in Python 3.8
-        a : tuple[int, ...] #pylint: disable=unsubscriptable-object
+        a : tuple[int, ...]
         a = (1,2,3)
         return a[0], a[1], a[2]
 
@@ -134,8 +133,7 @@ def test_homogeneous_tuple_annotation(language):
 
 def test_homogeneous_tuple_2_annotation(language):
     def homogeneous_tuple_annotation():
-        # Not valid in Python 3.8
-        a : tuple[tuple[int, ...], ...] #pylint: disable=unsubscriptable-object
+        a : tuple[tuple[int, ...], ...]
         a = ((1,2,3), (4,5,6))
         return a[0][0], a[1][0], a[0][2]
 
@@ -303,8 +301,7 @@ def test_homogeneous_list_annotation_embedded_complex(stc_language):
 
 def test_dict_int_float(language):
     def dict_int_float():
-        # Not valid in Python 3.8
-        a : dict[int, float] #pylint: disable=unsubscriptable-object,unused-variable
+        a : dict[int, float]
         a = {1:1.0, 2:2.0}
         return len(a)
 
@@ -313,8 +310,7 @@ def test_dict_int_float(language):
 
 def test_dict_empty_init(language):
     def dict_empty_init():
-        # Not valid in Python 3.8
-        a : dict[int, float] #pylint: disable=unsubscriptable-object,unused-variable
+        a : dict[int, float]
         a = {}
         return len(a)
 
@@ -323,8 +319,7 @@ def test_dict_empty_init(language):
 
 def test_dict_complex_float(language):
     def dict_int_float():
-        # Not valid in Python 3.8
-        a : dict[complex, float] #pylint: disable=unsubscriptable-object,unused-variable
+        a : dict[complex, float]
         a = {1j:1.0, -1j:2.0}
         return len(a)
 
