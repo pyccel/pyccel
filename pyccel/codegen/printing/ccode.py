@@ -253,7 +253,7 @@ import_header_guard_prefix = {'Set_extensions'    : '_TOOLS_SET',
 
 stc_header_mapping = {'List_extensions': 'stc/vec',
                       'Set_extensions': 'stc/hset',
-                      'Common_extensions': 'stc/ccommon'}
+                      'Common_extensions': 'stc/common'}
 
 class CCodePrinter(CodePrinter):
     """
@@ -795,6 +795,7 @@ class CCodePrinter(CodePrinter):
             return f"({arg1} < {arg2} ? {arg1} : {arg2})"
         elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
             key = self.get_declare_type(arg[0])
+            self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
             self.add_import(Import('Common_extensions', AsName(VariableTypeAnnotation(arg.dtype), key)))
             return  f'{key}_min({len(arg)}, {", ".join(self._print(a) for a in arg)})'
         else:
@@ -827,6 +828,7 @@ class CCodePrinter(CodePrinter):
             return f"({arg1} > {arg2} ? {arg1} : {arg2})"
         elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
             key = self.get_declare_type(arg[0])
+            self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
             self.add_import(Import('Common_extensions', AsName(VariableTypeAnnotation(arg.dtype), key)))
             return  f'{key}_max({len(arg)}, {", ".join(self._print(a) for a in arg)})'
         else:
