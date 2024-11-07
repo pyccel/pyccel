@@ -111,6 +111,7 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   #2008 : Remove support for Python 3.8.
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
