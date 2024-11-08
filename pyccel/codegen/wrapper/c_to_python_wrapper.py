@@ -1592,84 +1592,9 @@ class CToPythonWrapper(Wrapper):
              - results : a list of Variables which are returned from the function being wrapped.
         """
 
-        orig_var = expr.var
+        orig_var = getattr(expr, 'original_function_result_variable', expr.var)
 
-        return self._extract_FunctionDefResult(orig_var, False)
-
-        # Create a variable to store the C-compatible result.
-        if isinstance(orig_var.class_type, NumpyNDArrayType):
-            # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
-            c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
-            self._wrapping_arrays = True
-            body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])),
-                    Deallocate(c_res)]
-        else:
-            raise NotImplementedError(f"Wrapping function results is not implemented for type {orig_var.class_type}")
-
-        self.scope.insert_variable(c_res, orig_var.name)
-
-        return {'results': [c_res], 'body': body, 'setup': setup}
-
-    def _wrap_BindCFunctionDefResult(self, expr):
-        """
-        Get the code which translates a C-compatible `Variable` to a Python `FunctionDefResult`.
-
-        Get the code necessary to transform a Variable returned from a C-compatible function written in
-        Fortran to an object with datatype `PyccelPyObject`.
-
-        The relevant `PyccelPyObject` is collected from `self._python_object_map`.
-
-        The necessary steps are:
-        - Create a variable to store the C-compatible result.
-        - For arrays also create variables for the Fortran-compatible results.
-        - If necessary, pack the Fortran-compatible results into a C-compatible array.
-        - Cast the Python object to the C object using utility functions.
-        - Deallocate any unused memory (e.g. shapes of a C array).
-
-        Parameters
-        ----------
-        expr : FunctionDefArgument
-            The argument of the C function.
-
-        Returns
-        -------
-        dict[str, Any]
-            A dictionary with the keys:
-             - body : a list of PyccelAstNodes containing the code which translates the C-compatible variable
-                        to a `PyccelPyObject`.
-             - results : a list of Variables which are returned from the function being wrapped.
-        """
-
-        orig_var = expr.original_function_result_variable
-
-        return self._extract_FunctionDefResult(orig_var, True)
-
-        if isinstance(orig_var.class_type, NumpyNDArrayType):
-            # Result of calling the bind-c function
-            data_var = Variable(VoidType(), self.scope.get_new_name(orig_var_name+'_data'), memory_handling='alias')
-            shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(orig_var_name+'_shape'),
-                            shape = (orig_var.rank,), memory_handling='alias')
-            typenum = numpy_dtype_registry[orig_var.dtype]
-            # Save so we can find by iterating over func.results
-            self.scope.insert_variable(data_var)
-            self.scope.insert_variable(shape_var)
-
-            funcdef = expr.get_user_nodes(FunctionDef)
-            release_memory = False
-            if funcdef:
-                arg_targets = funcdef[0].result_pointer_map.get(orig_var, ())
-                release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
-
-            body = [AliasAssign(python_res, to_pyarray(
-                             LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
-                             convert_to_literal(orig_var.order != 'F'),
-                             convert_to_literal(release_memory)))]
-
-            shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
-            return {'results': [ObjectAddress(data_var)]+shape_vars, 'body': body}
-
-        else:
-            raise NotImplementedError(f"Wrapping is not yet handled for type {orig_var.class_type}")
+        return self._extract_FunctionDefResult(orig_var, isinstance(expr, BindCFunctionDefResult))
 
     def _wrap_Variable(self, expr):
         """
@@ -2513,13 +2438,48 @@ class CToPythonWrapper(Wrapper):
         self.scope.insert_variable(c_res)
 
         body = [AliasAssign(py_res, FunctionCall(C_to_Python(c_res), [c_res]))]
-        return {'c_results': [c_res], 'py_result': py_res, 'body': body, 'setup': []}
+        return {'c_results': [c_res], 'py_result': py_res, 'body': body}
+
+    def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var, is_bind_c, c_res = None):
+        name = orig_var.name
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        if is_bind_c:
+            # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
+            c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False, memory_handling='alias')
+            self._wrapping_arrays = True
+            body = [AliasAssign(py_res, FunctionCall(C_to_Python(c_res), [c_res])),
+                    Deallocate(c_res)]
+            c_result_vars = [c_res]
+        else:
+            # Result of calling the bind-c function
+            data_var = Variable(VoidType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
+            shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(name+'_shape'),
+                            shape = (orig_var.rank,), memory_handling='alias')
+            typenum = numpy_dtype_registry[orig_var.dtype]
+            # Save so we can find by iterating over func.results
+            self.scope.insert_variable(data_var)
+            self.scope.insert_variable(shape_var)
+
+            funcdef = None#expr.get_user_nodes(FunctionDef)
+            release_memory = False
+            if funcdef:
+                arg_targets = funcdef[0].result_pointer_map.get(orig_var, ())
+                release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
+
+            body = [AliasAssign(py_res, to_pyarray(
+                             LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
+                             convert_to_literal(orig_var.order != 'F'),
+                             convert_to_literal(release_memory)))]
+
+            shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
+            c_result_vars = [ObjectAddress(data_var)]+shape_vars
+        return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
     def _extract_InhomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, c_res = None):
         name = orig_var.name if isinstance(orig_var, Variable) else 'Out'
         extract_elems = [self._extract_FunctionDefResult(self._original_scope.collect_tuple_element(e), is_bind_c) for e in orig_var]
         body = [l for e in extract_elems for l in e['body']]
-        setup = [l for e in extract_elems for l in e['setup']]
+        setup = [l for e in extract_elems for l in e.get('setup', ())]
         c_result_vars = [r for e in extract_elems for r in e['c_results']]
         py_result_vars = [e['py_result'] for e in extract_elems]
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
