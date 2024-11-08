@@ -3352,11 +3352,11 @@ class FCodePrinter(CodePrinter):
                             PyccelAdd(_shape, ind, simplify = True), ind)
 
         if isinstance(base.class_type, HomogeneousListType):
-            if any(isinstance(i, Slice) for i in inds):
-                raise NotImplementedError("Slice indexing not implemented for lists")
-            inds = [PyccelAdd(i, LiteralInteger(1), simplify=True) for i in inds]
-            inds_code = ", ".join(self._print(i) for i in inds)
-            return f"{base_code}%of({inds_code})"
+            assert len(inds) == 1
+            assert not isinstance(ind, Slice)
+            ind = inds[0]
+            ind_code = self._print(PyccelAdd(inds[0], LiteralInteger(1), simplify=True))
+            return f"{base_code}%of({ind_code})"
         elif isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             inds_code = ", ".join(self._print(i) for i in inds)
             return f"{base_code}({inds_code})"
