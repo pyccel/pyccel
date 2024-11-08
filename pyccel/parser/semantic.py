@@ -1566,7 +1566,7 @@ class SemanticParser(BasicParser):
                             for a in args:
                                 if isinstance(a.class_type, InhomogeneousTupleType):
                                     new_args.extend(self.scope.collect_tuple_element(v) for v in a if v.rank>0)
-                                else:
+                                elif a.rank > 0:
                                     new_expressions.append(Allocate(a,
                                         shape=a.alloc_shape, status=status))
                             args = new_args
@@ -2712,8 +2712,9 @@ class SemanticParser(BasicParser):
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
                 cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+                shape = len(class_type) if isinstance(class_type, InhomogeneousTupleType) else None
                 v = var_class(class_type, name, cls_base = cls_base,
-                        shape = None,
+                        shape = shape,
                         is_const = t.is_const, is_optional = False,
                         memory_handling = array_memory_handling if class_type.rank > 0 else 'stack',
                         **kwargs)
