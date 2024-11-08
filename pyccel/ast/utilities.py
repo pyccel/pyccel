@@ -189,16 +189,16 @@ def split_positional_keyword_arguments(*args):
 #==============================================================================
 def compatible_operation(*args, language_has_vectors = True):
     """
-    Indicates whether an operation only uses compatible arguments.
+    Indicate whether an operation only uses compatible arguments.
 
-    Indicates whether an operation requires an index to be
+    Indicate whether an operation requires an index to be
     correctly interpreted in the target language or if the arguments
     are already compatible.
 
     Parameters
     ----------
-    args : list of TypedAstNode
-        The operator arguments
+    *args : list of TypedAstNode
+        The operator arguments.
     language_has_vectors : bool
         Indicates if the language has support for vector
         operations of the same shape.
