@@ -2444,13 +2444,6 @@ class CToPythonWrapper(Wrapper):
         name = orig_var.name
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         if is_bind_c:
-            # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
-            c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False, memory_handling='alias')
-            self._wrapping_arrays = True
-            body = [AliasAssign(py_res, FunctionCall(C_to_Python(c_res), [c_res])),
-                    Deallocate(c_res)]
-            c_result_vars = [c_res]
-        else:
             # Result of calling the bind-c function
             data_var = Variable(VoidType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
             shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(name+'_shape'),
@@ -2473,6 +2466,14 @@ class CToPythonWrapper(Wrapper):
 
             shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
             c_result_vars = [ObjectAddress(data_var)]+shape_vars
+        else:
+            # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
+            c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False, memory_handling='alias')
+            self.scope.insert_variable(c_res)
+            self._wrapping_arrays = True
+            body = [AliasAssign(py_res, FunctionCall(C_to_Python(c_res), [c_res])),
+                    Deallocate(c_res)]
+            c_result_vars = [c_res]
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
     def _extract_InhomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, c_res = None):
