@@ -203,7 +203,7 @@ def compatible_operation(*args, language_has_vectors = True):
         Indicates if the language has support for vector
         operations of the same shape.
 
-    Results
+    Returns
     -------
     bool
         A boolean indicating if the operation is compatible.
