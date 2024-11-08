@@ -1710,6 +1710,12 @@ class SemanticParser(BasicParser):
                 tmp_result = PyccelAdd(var, rhs)
                 result_type = tmp_result.class_type
                 raise_error = var.class_type != result_type
+            elif isinstance(var.class_type, InhomogeneousTupleType) and \
+                    isinstance(class_type, HomogeneousTupleType):
+                raise_error = any(a != class_type.element_type for a in var.class_type) or var.shape != d_var['shape']
+            elif isinstance(var.class_type, HomogeneousTupleType) and \
+                    isinstance(class_type, InhomogeneousTupleType):
+                raise_error = any(a != var.class_type.element_type for a in class_type)
             else:
                 raise_error = True
 
