@@ -28,6 +28,7 @@ from .sysext        import sys_mod
 
 from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
+from .numpytypes    import NumpyNDArrayType
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .operators     import PyccelUnarySub
 from .scipyext      import scipy_mod
@@ -203,7 +204,7 @@ def compatible_operation(*args, language_has_vectors = True):
     compatible : bool
                  A boolean indicating if the operation is compatible
     """
-    if language_has_vectors:
+    if language_has_vectors and isinstance(args[0].class_type, NumpyNDArrayType):
         # If the shapes don't match then an index must be required
         shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.rank != 0]
         shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
