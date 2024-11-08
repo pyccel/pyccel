@@ -44,6 +44,7 @@ internal_libs = {
     "cwrapper"        : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
     "numpy_f90"       : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
     "numpy_c"         : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
+    "stc/cstr"        : ("STC_Extensions", CompileObj("cstr.c", folder="STC_Extensions", includes=("stc",))),
     "Set_extensions"  : ("STC_Extensions", CompileObj("Set_Extensions.h", folder="STC_Extensions", has_target_file = False)),
     "List_extensions" : ("STC_Extensions", CompileObj("List_Extensions.h", folder="STC_Extensions", has_target_file = False)),
     "gFTL_functions/Set_extensions"  : ("gFTL_functions", CompileObj("Set_Extensions.inc", folder="gFTL_functions", has_target_file = False)),
@@ -246,8 +247,9 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
 
 #==============================================================================
 def recompile_object(compile_obj,
-                   compiler,
-                   verbose = False):
+                     compiler,
+                     pyccel_dirpath,
+                     verbose = False):
     """
     Compile the provided file if necessary.
 
@@ -262,9 +264,16 @@ def recompile_object(compile_obj,
     compiler : str
         The compiler used.
 
+    pyccel_dirpath : str
+        The Pyccel working directory.
+
     verbose : bool
         Indicates whether additional information should be printed.
     """
+    swapped = False
+    if "stc" in compile_obj.includes:
+        compile_obj.swap_include("stc", pyccel_dirpath)
+        swapped = True
 
     # compile library source files
     with compile_obj:
@@ -279,3 +288,6 @@ def recompile_object(compile_obj,
         compiler.compile_module(compile_obj=compile_obj,
                 output_folder=compile_obj.source_folder,
                 verbose=verbose)
+
+    if swapped:
+        compile_obj.swap_include(pyccel_dirpath, "stc")
