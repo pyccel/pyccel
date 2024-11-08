@@ -324,7 +324,7 @@ def test_dict_empty_init(language):
 def test_dict_complex_float(language):
     def dict_int_float():
         # Not valid in Python 3.8
-        a : dict[complex, float] #pylint: disable=unsubscriptable-object,unused-variable
+        a : dict[complex, float] #pylint: disable=unsubscriptable-object
         a = {1j:1.0, -1j:2.0}
         return len(a)
 
@@ -333,7 +333,7 @@ def test_dict_complex_float(language):
 
 def test_inhomogeneous_tuple_annotation_1(language):
     def inhomogeneous_tuple_annotation():
-        a : tuple[int, bool] = (1, True)
+        a : tuple[int, bool] = (1, True) #pylint: disable=unsubscriptable-object
         return a[0], a[1]
 
     epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
@@ -341,7 +341,7 @@ def test_inhomogeneous_tuple_annotation_1(language):
 
 def test_inhomogeneous_tuple_annotation_2(language):
     def inhomogeneous_tuple_annotation():
-        a : tuple[int] = (1,)
+        a : tuple[int] = (1,) #pylint: disable=unsubscriptable-object
         return a[0]
 
     epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
@@ -349,7 +349,7 @@ def test_inhomogeneous_tuple_annotation_2(language):
 
 def test_inhomogeneous_tuple_annotation_3(language):
     def inhomogeneous_tuple_annotation():
-        a : tuple[int,int,int] = (1,2,3)
+        a : tuple[int,int,int] = (1,2,3) #pylint: disable=unsubscriptable-object
         return a[0], a[1], a[2]
 
     epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
@@ -357,7 +357,7 @@ def test_inhomogeneous_tuple_annotation_3(language):
 
 def test_inhomogeneous_tuple_annotation_4(language):
     def inhomogeneous_tuple_annotation():
-        a : tuple[tuple[float,bool],tuple[int,complex]] = ((1.0, False), (1,2+3j))
+        a : tuple[tuple[float,bool],tuple[int,complex]] = ((1.0, False), (1,2+3j)) #pylint: disable=unsubscriptable-object
         return a[0][0], a[0][1], a[1][0], a[1][1]
 
     epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
