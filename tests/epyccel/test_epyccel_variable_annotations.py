@@ -330,3 +330,35 @@ def test_dict_complex_float(language):
 
     epyc_dict_int_float = epyccel(dict_int_float, language = language)
     assert epyc_dict_int_float() == dict_int_float()
+
+def test_inhomogeneous_tuple_annotation_1(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[int, bool] = (1, True)
+        return a[0], a[1]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
+def test_inhomogeneous_tuple_annotation_2(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[int] = (1,)
+        return a[0]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
+def test_inhomogeneous_tuple_annotation_3(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[int,int,int] = (1,2,3)
+        return a[0], a[1], a[2]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
+def test_inhomogeneous_tuple_annotation_4(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[tuple[float,bool],tuple[int,complex]] = ((1.0, False), (1,2+3j))
+        return a[0][0], a[0][1], a[1][0], a[1][1]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
