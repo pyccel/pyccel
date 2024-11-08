@@ -2302,11 +2302,13 @@ class CCodePrinter(CodePrinter):
             return self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)
-        lhs = self._print(expr.lhs)
+        lhs_code = self._print(lhs)
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
             return self.init_stc_container(rhs, expr)
-        rhs = self._print(expr.rhs)
-        return f'{lhs} = {rhs};\n'
+        rhs_code = self._print(rhs)
+        if isinstance(rhs, LiteralString):
+            rhs_code = f'cstr_lit({rhs_code})'
+        return f'{lhs_code} = {rhs_code};\n'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
