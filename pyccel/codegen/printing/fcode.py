@@ -2004,7 +2004,7 @@ class FCodePrinter(CodePrinter):
                 body_stmts.append(self._additional_code)
                 self._additional_code = ''
             body_stmts.append(line)
-        return ''.join(self._print(b) for b in body_stmts)
+        return ''.join(body_stmts)
 
     # TODO the ifs as they are are, is not optimal => use elif
     def _print_SymbolicAssign(self, expr):
@@ -2154,6 +2154,15 @@ class FCodePrinter(CodePrinter):
 
             return code
 
+        elif isinstance(class_type, HomogeneousListType):
+            if expr.alloc_type == 'resize':
+                var_code = self._print(expr.variable)
+                container_type = expr.variable.class_type
+                container = self._print(container_type)
+                size_code = self._print(expr.shape[0])
+                return f'{var_code} = {container}({size_code})\n'
+            else:
+                return ''
         elif isinstance(class_type, (HomogeneousContainerType, DictType)):
             return ''
 
