@@ -1412,7 +1412,7 @@ class CToPythonWrapper(Wrapper):
         # Get the code required to wrap the C-compatible results into Python objects
         # This function creates variables so it must be called before extracting them from the scope.
         if len(python_results) == 0:
-            wrapped_results = None
+            wrapped_results = {'c_results': [], 'py_result': Py_None, 'body': []}
         elif len(python_results) == 1:
             wrapped_results = self._wrap(python_results[0])
         else:
@@ -1463,7 +1463,7 @@ class CToPythonWrapper(Wrapper):
         #                body.extend(self._incref_return_pointer(collect_arg, p_r, c_r.var))
 
         # Pack the Python compatible results of the function into one argument.
-        if wrapped_results is None:
+        if python_result_variable is Py_None:
             res = Py_None
             func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
             body.append(Py_INCREF(res))
@@ -1806,7 +1806,7 @@ class CToPythonWrapper(Wrapper):
         # Cast the C variable into a Python variable
         result_wrapping = self._wrap(get_val_result)
         res_wrapper = result_wrapping['body']
-        new_res_val = result_wrapping['results'][0]
+        new_res_val = result_wrapping['c_results'][0]
         if new_res_val.rank > 0:
             body = [AliasAssign(new_res_val, attrib), *res_wrapper]
         elif isinstance(expr.dtype, CustomDataType):
