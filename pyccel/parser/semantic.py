@@ -2062,6 +2062,13 @@ class SemanticParser(BasicParser):
                 type_annotations = [VariableTypeAnnotation(DictType(k.class_type, v.class_type)) \
                                     for k,v in zip(key_types.type_list, val_types.type_list)]
                 return UnionTypeAnnotation(*type_annotations)
+            elif dtype_cls is PythonTupleFunction:
+                syntactic_annotations = [self._convert_syntactic_object_to_type_annotation(a) for a in args]
+                types = [self._visit(a).type_list for a in syntactic_annotations]
+                internal_datatypes = list(product(*types))
+                type_annotations = [VariableTypeAnnotation(InhomogeneousTupleType(*[ui.class_type for ui in u]), True)
+                                    for u in internal_datatypes]
+                return UnionTypeAnnotation(*type_annotations)
             else:
                 raise errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
