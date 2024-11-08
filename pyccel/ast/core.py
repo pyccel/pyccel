@@ -1939,10 +1939,10 @@ class FunctionDefResult(TypedAstNode):
         if pyccel_stage == 'syntactic':
             if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol)):
                 raise TypeError(f"Var must be a PyccelSymbol or an AnnotatedPyccelSymbol, not a {type(var)}")
-        elif not isinstance(var, Variable):
+        elif not isinstance(var, (Variable, PythonTuple)):
             raise TypeError(f"Var must be a Variable not a {type(var)}")
         else:
-            self._is_argument = var.is_argument
+            self._is_argument = getattr(var, 'is_argument', False)
 
         super().__init__()
 
