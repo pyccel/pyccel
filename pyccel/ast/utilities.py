@@ -208,14 +208,13 @@ def compatible_operation(*args, language_has_vectors = True):
     bool
         A boolean indicating if the operation is compatible.
     """
-    class_type = args[0].class_type
-    if language_has_vectors and isinstance(class_type, NumpyNDArrayType):
+    if language_has_vectors and any(isinstance(a.class_type, NumpyNDArrayType) for a in args):
         # If the shapes don't match then an index must be required
         shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.rank != 0]
         shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
         order  = set(a.order for a in args if a.order is not None)
         return len(shapes) <= 1 and len(order) <= 1
-    elif isinstance(class_type, StringType):
+    elif any(isinstance(a.class_type, StringType) for a in args):
         return True
     else:
         return all(a.rank == 0 for a in args)
