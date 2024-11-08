@@ -1463,7 +1463,7 @@ class CCodePrinter(CodePrinter):
             preface, init = self._init_stack_array(var)
         else:
             preface = ''
-            if isinstance(var.class_type, HomogeneousContainerType) and not expr.external:
+            if isinstance(var.class_type, (HomogeneousContainerType, DictType)) and not expr.external:
                 init = ' = {0}'
 
         external = 'extern ' if expr.external else ''
