@@ -1715,7 +1715,8 @@ class SemanticParser(BasicParser):
                 raise_error = any(a != class_type.element_type for a in var.class_type) or var.shape != d_var['shape']
             elif isinstance(var.class_type, HomogeneousTupleType) and \
                     isinstance(class_type, InhomogeneousTupleType):
-                raise_error = any(a != var.class_type.element_type for a in class_type)
+                # TODO: Remove isinstance(rhs, Variable) condition when tuples are saved like lists
+                raise_error = any(a != var.class_type.element_type for a in class_type) or not isinstance(rhs, Variable)
             else:
                 raise_error = True
 
