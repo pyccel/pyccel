@@ -189,20 +189,24 @@ def split_positional_keyword_arguments(*args):
 #==============================================================================
 def compatible_operation(*args, language_has_vectors = True):
     """
+    Indicates whether an operation only uses compatible arguments.
+
     Indicates whether an operation requires an index to be
-    correctly understood
+    correctly interpreted in the target language or if the arguments
+    are already compatible.
 
     Parameters
-    ==========
-    args      : list of TypedAstNode
-                The operator arguments
+    ----------
+    args : list of TypedAstNode
+        The operator arguments
     language_has_vectors : bool
-                Indicates if the language has support for vector
-                operations of the same shape
+        Indicates if the language has support for vector
+        operations of the same shape.
+
     Results
-    =======
-    compatible : bool
-                 A boolean indicating if the operation is compatible
+    -------
+    bool
+        A boolean indicating if the operation is compatible.
     """
     if language_has_vectors and isinstance(args[0].class_type, NumpyNDArrayType):
         # If the shapes don't match then an index must be required
