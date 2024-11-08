@@ -244,7 +244,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdio',
                  "inttypes",
                  'stdbool',
-                 'assert']}
+                 'assert',
+                 'stc/cstr']}
 
 import_header_guard_prefix = {'Set_extensions'  : '_TOOLS_SET',
                               'List_extensions' : '_TOOLS_LIST'}
@@ -1031,7 +1032,7 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1].python_value
         else:
             source = self._print(source)
-        if source.startswith('stc/') or source in import_header_guard_prefix:
+        if source != 'stc/cstr' and (source.startswith('stc/') or source in import_header_guard_prefix):
             code = ''
             for t in expr.target:
                 class_type = t.object.class_type
@@ -1362,12 +1363,15 @@ class CCodePrinter(CodePrinter):
         class_type = expr.class_type
         rank  = expr.rank
 
-        if rank > 0:
-            if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType, DictType)):
-                dtype = self.get_c_type(expr.class_type)
-            elif isinstance(expr.class_type, CStackArray):
-                return self.get_c_type(expr.class_type.element_type)
-            elif isinstance(expr.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
+        if isinstance(class_type, StringType):
+            self.add_import(c_imports['stc/cstr'])
+            dtype = 'cstr'
+        elif rank > 0:
+            if isinstance(class_type, (HomogeneousSetType, HomogeneousListType, DictType)):
+                dtype = self.get_c_type(class_type)
+            elif isinstance(class_type, CStackArray):
+                return self.get_c_type(class_type.element_type)
+            elif isinstance(class_type, (HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
@@ -1685,6 +1689,12 @@ class CCodePrinter(CodePrinter):
             c_type = self.get_c_type(arg.class_type)
             arg_code = self._print(ObjectAddress(arg))
             return f'{c_type}_size({arg_code})'
+        elif isinstance(arg.class_type, StringType):
+            if isinstance(arg, LiteralString):
+                return self._print(LiteralInteger(len(arg.python_value)))
+            else:
+                arg_code = self._print(ObjectAddress(arg))
+                return f'cstr_size({arg_code})'
         else:
             raise NotImplementedError(f"Don't know how to represent shape of object of type {arg.class_type}")
 
