@@ -2718,6 +2718,14 @@ class SemanticParser(BasicParser):
                         memory_handling = array_memory_handling if class_type.rank > 0 else 'stack',
                         **kwargs)
                 possible_args.append(v)
+                if isinstance(class_type, InhomogeneousTupleType):
+                    for i, t in enumerate(class_type):
+                        pyccel_stage.set_stage('syntactic')
+                        syntactic_elem = AnnotatedPyccelSymbol(self.scope.get_new_name( f'{name}_{i}'),
+                                                annotation = UnionTypeAnnotation(VariableTypeAnnotation(t)))
+                        pyccel_stage.set_stage('semantic')
+                        elem = self._visit(syntactic_elem)
+                        self.scope.insert_symbolic_alias(IndexedElement(v, i), elem[0])
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO + '\nUnrecoginsed type annotation',
                         severity='fatal', symbol=expr)
