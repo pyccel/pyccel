@@ -2161,6 +2161,10 @@ class FCodePrinter(CodePrinter):
                 container = self._print(container_type)
                 size_code = self._print(expr.shape[0])
                 return f'{var_code} = {container}({size_code})\n'
+            elif expr.alloc_type == 'reserve':
+                var_code = self._print(expr.variable)
+                size_code = self._print(expr.shape[0])
+                return '{var_code} % reserve({size_code})\n'
             else:
                 return ''
         elif isinstance(class_type, (HomogeneousContainerType, DictType)):
