@@ -1778,6 +1778,7 @@ class CToPythonWrapper(Wrapper):
 
         get_val_arg = expr.getter.arguments[0]
         self.scope.insert_symbol(get_val_arg.original_function_argument_variable.name)
+        get_val_result = expr.getter.bind_c_results[0]
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
@@ -1789,7 +1790,6 @@ class CToPythonWrapper(Wrapper):
         class_obj = wrapped_args['args'][0]
 
         # Cast the C variable into a Python variable
-        result_wrapping = self._wrap(get_val_result)
         get_val_result_var = getattr(get_val_result, 'original_function_result_variable', get_val_result.var)
         result_wrapping = self._extract_FunctionDefResult(get_val_result_var, True)
         res_wrapper = result_wrapping['body']
