@@ -2455,9 +2455,9 @@ class CToPythonWrapper(Wrapper):
         body.extend(Py_DECREF(r) for r in py_result_vars)
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body, 'setup': setup}
 
-    def _extract_HomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, c_res = None):
+    def _extract_HomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, funcdef, c_res = None):
         if isinstance(orig_var, PythonTuple):
-            return self._extract_InhomogeneousTupleType_FunctionDefResult(orig_var, is_bind_c, c_res)
+            return self._extract_InhomogeneousTupleType_FunctionDefResult(orig_var, is_bind_c, funcdef, c_res)
         else:
             return errors.report(f"Wrapping function results is not implemented for type {orig_var.class_type}. " + PYCCEL_RESTRICTION_TODO, symbol=orig_var,
                 severity='fatal')
