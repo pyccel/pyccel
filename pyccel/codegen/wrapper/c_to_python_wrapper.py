@@ -1403,10 +1403,10 @@ class CToPythonWrapper(Wrapper):
         if len(python_results) == 0:
             wrapped_results = {'c_results': [], 'py_result': Py_None, 'body': []}
         elif len(python_results) == 1:
-            orig_var = getattr(python_results[0], 'original_function_result_variable', python_results[0].var)
-            wrapped_results = self._extract_FunctionDefResult(orig_var, is_bind_c_function_def, expr)
+            wrapped_results = self._extract_FunctionDefResult(original_func.results[0].var, is_bind_c_function_def, expr)
         else:
-            wrapped_results = self._extract_FunctionDefResult(PythonTuple(*[r.var for r in python_results]), is_bind_c_function_def, expr)
+            wrapped_results = self._extract_FunctionDefResult(PythonTuple(*[r.var for r in original_func.results]),
+                                        is_bind_c_function_def, expr)
 
         # Get the arguments and results which should be used to call the c-compatible function
         func_call_args = [ca for a in wrapped_args for ca in a['args']]
