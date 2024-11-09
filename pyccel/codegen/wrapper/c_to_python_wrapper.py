@@ -1400,7 +1400,6 @@ class CToPythonWrapper(Wrapper):
             func_args = [FunctionDefArgument(a) for a in func_args]
 
         ## Get the results of the PyFunctionDef
-        #python_result_variables = self._get_python_result_variables(python_results)
         #for p_r, c_r in zip(python_result_variables, original_func.results):
         #    if isinstance(p_r.dtype, CustomDataType):
         #        body.extend(self._allocate_class_instance(p_r, p_r.cls_base.scope, c_r.var.is_alias))
@@ -1470,12 +1469,6 @@ class CToPythonWrapper(Wrapper):
         else:
             res = python_result_variable
             func_results = [FunctionDefResult(res)]
-        #else:
-        #    res = self.get_new_PyObject("result")
-        #    body.append(AliasAssign(res, PyBuildValueNode([ObjectAddress(r) for r in python_result_variables])))
-        #    for r in python_result_variables:
-        #        body.append(Py_DECREF(r))
-        #    func_results = [FunctionDefResult(res)]
         body.append(Return([res]))
 
         self.exit_scope()
@@ -1720,9 +1713,7 @@ class CToPythonWrapper(Wrapper):
         getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
         self.scope.insert_symbol(expr.name)
-        getter_result = self.get_new_PyObject(expr.name, dtype = expr.dtype)
         get_val_result = FunctionDefResult(expr.clone(expr.name, new_class = Variable))
-        self._python_object_map[get_val_result] = getter_result
 
         class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
         self.scope.insert_variable(class_obj, 'self')
@@ -1732,6 +1723,7 @@ class CToPythonWrapper(Wrapper):
         result_wrapping = self._wrap(get_val_result)
         res_wrapper = result_wrapping['body']
         new_res_val = result_wrapping['c_results'][0]
+        getter_result = result_wrapping['py_result']
         if new_res_val.rank > 0:
             body = [AliasAssign(new_res_val, attrib), *res_wrapper]
         elif isinstance(expr.dtype, CustomDataType):
@@ -1756,7 +1748,6 @@ class CToPythonWrapper(Wrapper):
         args = [FunctionDefArgument(a) for a in getter_args]
         getter = PyFunctionDef(getter_name, args, (FunctionDefResult(getter_result),), getter_body,
                                 original_function = expr, scope = getter_scope)
-        self._python_object_map.pop(get_val_result)
 
         # ----------------------------------------------------------------------------------
         #                        Create setter
@@ -1866,7 +1857,7 @@ class CToPythonWrapper(Wrapper):
         # Cast the C variable into a Python variable
         result_wrapping = self._wrap(get_val_result)
         res_wrapper = result_wrapping['body']
-        c_results = result_wrapping['results']
+        c_results = result_wrapping['c_results']
 
         call = self._call_wrapped_function(expr.getter, (class_obj,), c_results)
 
@@ -2416,20 +2407,25 @@ class CToPythonWrapper(Wrapper):
             severity='fatal')
 
     def _extract_CustomDataType_FunctionDefResult(self, orig_var, is_bind_c, c_res = None):
+        name = orig_var.name
+        python_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         if is_bind_c:
-            c_res = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False, memory_handling='alias')
+            c_res = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False,
+                                    memory_handling='alias', new_class = Variable)
             self.scope.insert_variable(c_res, orig_var.name)
+            scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             attrib_var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
             body = [AliasAssign(attrib_var, c_res)]
             setup = []
+            result = ObjectAddress(c_res)
         else:
             scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
             setup = [Allocate(c_res, shape=(), status='unallocated', like=orig_var)]
             result = PointerCast(c_res, cast_type = expr.var)
-        return {'results': [result], 'body': [], 'setup': setup}
+        return {'c_results': [result], 'py_result': python_res, 'body': [], 'setup': setup}
 
     def _extract_FixedSizeType_FunctionDefResult(self, orig_var, is_bind_c, c_res = None):
         name = orig_var.name
