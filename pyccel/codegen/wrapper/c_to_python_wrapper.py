@@ -11,7 +11,7 @@ import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
 from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
-from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen
+from pyccel.ast.builtins      import PythonTuple, PythonRange
 from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -1413,7 +1413,7 @@ class CToPythonWrapper(Wrapper):
 
         # Get the names of the results collected from the C-compatible function
         body.extend(l for l in wrapped_results.get('setup',()))
-        c_results = [r for r in wrapped_results['c_results']]
+        c_results =  wrapped_results['c_results']
         python_result_variable = wrapped_results['py_result']
 
         if class_dtype:
@@ -2350,9 +2350,9 @@ class CToPythonWrapper(Wrapper):
             return self._incref_return_pointer(collect_arg, python_res, orig_var)
         elif n_targets > 1:
             if isinstance(orig_var.class_type, NumpyNDArrayType):
-                raise errors.report((f"Can't determine the pointer target for the return object {c_r}. "
+                raise errors.report((f"Can't determine the pointer target for the return object {orig_var}. "
                             "Please avoid calling this function to prevent accidental creation of dangling pointers."),
-                        symbol = original_func, severity='warning')
+                        symbol = getattr(funcdef, 'original_function', funcdef), severity='warning')
             else:
                 body = []
                 for t in arg_targets:
