@@ -2419,7 +2419,7 @@ class CToPythonWrapper(Wrapper):
 
             release_memory = False
             if funcdef:
-                arg_targets = funcdef[0].result_pointer_map.get(orig_var, ())
+                arg_targets = funcdef.result_pointer_map.get(orig_var, ())
                 release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
 
             body = [AliasAssign(py_res, to_pyarray(
