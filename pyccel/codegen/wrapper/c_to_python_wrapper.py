@@ -1535,38 +1535,6 @@ class CToPythonWrapper(Wrapper):
 
         return {'body': body, 'args': arg_vars}
 
-    def _wrap_FunctionDefResult(self, expr):
-        """
-        Get the code which translates a C-compatible `Variable` to a Python `FunctionDefResult`.
-
-        Get the code necessary to transform a Variable returned from a C-compatible function to an object with
-        datatype `PyccelPyObject`.
-
-        The relevant `PyccelPyObject` is collected from `self._python_object_map`.
-
-        The necessary steps are:
-        - Create a variable to store the C-compatible result.
-        - Cast the C object to the Python object using utility functions.
-        - Deallocate any unused memory (e.g. shapes of a C array).
-
-        Parameters
-        ----------
-        expr : FunctionDefArgument
-            The argument of the C function.
-
-        Returns
-        -------
-        dict[str, Any]
-            A dictionary with the keys:
-             - body : a list of PyccelAstNodes containing the code which translates the C-compatible variable
-                        to a `PyccelPyObject`.
-             - results : a list of Variables which are returned from the function being wrapped.
-        """
-
-        orig_var = getattr(expr, 'original_function_result_variable', expr.var)
-
-        return self._extract_FunctionDefResult(orig_var, isinstance(expr, BindCFunctionDefResult))
-
     def _wrap_Variable(self, expr):
         """
         Get the code which translates a C-compatible module variable to an object with datatype `PyccelPyObject`.
@@ -1691,14 +1659,13 @@ class CToPythonWrapper(Wrapper):
         getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
         self.scope.insert_symbol(expr.name)
-        get_val_result = FunctionDefResult(expr.clone(expr.name, new_class = Variable))
 
         class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
         self.scope.insert_variable(class_obj, 'self')
 
         attrib = expr.clone(expr.name, lhs = class_obj)
         # Cast the C variable into a Python variable
-        result_wrapping = self._wrap(get_val_result)
+        result_wrapping = self._extract_FunctionDefResult(expr.clone(expr.name, new_class = Variable), False)
         res_wrapper = result_wrapping['body']
         new_res_val = result_wrapping['c_results'][0]
         getter_result = result_wrapping['py_result']
@@ -1815,11 +1782,6 @@ class CToPythonWrapper(Wrapper):
 
         get_val_arg = expr.getter.arguments[0]
         self.scope.insert_symbol(get_val_arg.original_function_argument_variable.name)
-        get_val_result = expr.getter.bind_c_results[0]
-        result_name = get_val_result.var.name
-        self.scope.insert_symbol(result_name)
-        for r in expr.getter.results:
-            self.scope.insert_symbol(r.var.name)
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
@@ -1832,6 +1794,8 @@ class CToPythonWrapper(Wrapper):
 
         # Cast the C variable into a Python variable
         result_wrapping = self._wrap(get_val_result)
+        get_val_result_var = getattr(get_val_result, 'original_function_result_variable', get_val_result.var)
+        result_wrapping = self._extract_FunctionDefResult(get_val_result_var, True)
         res_wrapper = result_wrapping['body']
         c_results = result_wrapping['c_results']
         getter_result = result_wrapping['py_result']
@@ -2377,7 +2341,7 @@ class CToPythonWrapper(Wrapper):
                 return body
         return []
 
-    def _extract_FunctionDefResult(self, orig_var, is_bind_c, funcdef, c_res = None):
+    def _extract_FunctionDefResult(self, orig_var, is_bind_c, funcdef = None, c_res = None):
         """
 
         Parameters
@@ -2426,7 +2390,8 @@ class CToPythonWrapper(Wrapper):
             result = PointerCast(c_res, cast_type = orig_var)
             body = []
 
-        body.extend(self.set_return_pointer(orig_var, python_res, funcdef, is_bind_c))
+        if funcdef:
+            body.extend(self.set_return_pointer(orig_var, python_res, funcdef, is_bind_c))
 
         return {'c_results': [result], 'py_result': python_res, 'body': body, 'setup': setup}
 
@@ -2473,7 +2438,8 @@ class CToPythonWrapper(Wrapper):
                     Deallocate(c_res)]
             c_result_vars = [c_res]
 
-        body.extend(self.set_return_pointer(orig_var, py_res, funcdef, is_bind_c))
+        if funcdef:
+            body.extend(self.set_return_pointer(orig_var, py_res, funcdef, is_bind_c))
 
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
