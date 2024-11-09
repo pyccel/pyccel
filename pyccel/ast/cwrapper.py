@@ -1136,14 +1136,6 @@ PyTuple_GetItem = FunctionDef(name = 'PyTuple_GetItem',
                                      FunctionDefArgument(Variable(PythonNativeInt(), name='i'))],
                         results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
-# https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SetItem
-PyTuple_SetItem = FunctionDef(name = 'PyTuple_SetItem',
-                        body = [],
-                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='tuple', memory_handling='alias')),
-                                     FunctionDefArgument(Variable(PythonNativeInt(), name='i')),
-                                     FunctionDefArgument(Variable(PyccelPyObject(), name='elem', memory_handling='alias'))],
-                        results = [])
-
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
