@@ -2018,8 +2018,8 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list[PyccelAstNode]
-            A list of expressions which extract the argument from collect_arg into arg_var.
+        dict
+            A dictionary describing the objects necessary to access the argument.
         """
         class_type = orig_var.class_type
 
@@ -2069,8 +2069,8 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list[PyccelAstNode]
-            A list of expressions which extract the argument from collect_arg into arg_var.
+        dict
+            A dictionary describing the objects necessary to access the argument.
         """
         assert not bound_argument
         if arg_var is None:
@@ -2133,8 +2133,8 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list[PyccelAstNode]
-            A list of expressions which extract the argument from collect_arg into arg_var.
+        dict
+            A dictionary describing the objects necessary to access the argument.
         """
         if arg_var is None:
             kwargs = {'is_argument': False}
@@ -2199,8 +2199,8 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list[PyccelAstNode]
-            A list of expressions which extract the argument from collect_arg into arg_var.
+        dict
+            A dictionary describing the objects necessary to access the argument.
         """
         if is_bind_c_argument:
             assert arg_var is None
@@ -2267,8 +2267,8 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list[PyccelAstNode]
-            A list of expressions which extract the argument from collect_arg into arg_var.
+        dict
+            A dictionary describing the objects necessary to access the argument.
         """
         assert arg_var is None
 
@@ -2317,7 +2317,31 @@ class CToPythonWrapper(Wrapper):
 
         return {'body': body, 'args': arg_vars}
 
-    def set_return_pointer(self, orig_var, python_res, funcdef, is_bind_c):
+    def connect_pointer_targets(self, orig_var, python_res, funcdef, is_bind_c):
+        """
+        Get the code to connect pointers to their targets.
+
+        Get the code to connect pointers to their targets. The connection is done via reference
+        counting to ensure that the target is not cleaned by the garbage collector before the
+        pointer.
+
+        Parameters
+        ----------
+        orig_var : Variable
+            The result of the function being wrapped.
+        python_res : Variable
+            The Python accessible result of the function being wrapped.
+        funcdef : FunctionDef
+            The function being wrapped.
+        is_bind_c : bool
+            True if the code is translated from a C-compatible language. False if the
+            translated code is in C.
+
+        Returns
+        -------
+        list
+            Any nodes which must be printed to increase reference counts.
+        """
         python_args = funcdef.bind_c_arguments if is_bind_c else funcdef.arguments
         arg_targets = funcdef.result_pointer_map.get(orig_var, ())
         n_targets = len(arg_targets)
@@ -2339,6 +2363,10 @@ class CToPythonWrapper(Wrapper):
 
     def _extract_FunctionDefResult(self, orig_var, is_bind_c, funcdef = None):
         """
+        Get the code which translates a C-compatible `Variable` to a Python `FunctionDefResult`.
+
+        Get the code necessary to transform a Variable returned from a C-compatible function written in
+        Fortran to an object with datatype `PyccelPyObject`.
 
         Parameters
         ----------
@@ -2347,11 +2375,21 @@ class CToPythonWrapper(Wrapper):
             FunctionDefResult being wrapped.
 
         is_bind_c : bool
-            True if the argument was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+
+        funcdef : FunctionDef
+            The function being wrapped.
 
         Returns
         -------
-        dict
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates the C-compatible variable
+                        to a `PyccelPyObject`.
+             - c_results : a list of Variables which are returned from the function being wrapped.
+             - py_result : the Variable returned to Python.
+             - setup : An optional key containing a list of PyccelAstNodes with code which should be
+                        run before calling the function being wrapped.
         """
         class_type = orig_var.class_type
 
@@ -2366,6 +2404,26 @@ class CToPythonWrapper(Wrapper):
             severity='fatal')
 
     def _extract_CustomDataType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+        """
+        Get the code which translates a `Variable` containing a class instance to a PyObject.
+
+        Get the code which translates a `Variable` containing a class instance to a PyObject.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        is_bind_c : bool
+            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
         name = orig_var.name
         python_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         setup = self._allocate_class_instance(python_res, python_res.cls_base.scope, orig_var.is_alias)
@@ -2387,11 +2445,31 @@ class CToPythonWrapper(Wrapper):
             body = []
 
         if funcdef:
-            body.extend(self.set_return_pointer(orig_var, python_res, funcdef, is_bind_c))
+            body.extend(self.connect_pointer_targets(orig_var, python_res, funcdef, is_bind_c))
 
         return {'c_results': [result], 'py_result': python_res, 'body': body, 'setup': setup}
 
     def _extract_FixedSizeType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+        """
+        Get the code which translates a `Variable` containing a scalar to a PyObject.
+
+        Get the code which translates a `Variable` containing a scalar to a PyObject.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        is_bind_c : bool
+            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
         name = orig_var.name
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         c_res = Variable(orig_var.class_type, self.scope.get_new_name(name))
@@ -2401,6 +2479,26 @@ class CToPythonWrapper(Wrapper):
         return {'c_results': [c_res], 'py_result': py_res, 'body': body}
 
     def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+        """
+        Get the code which translates a `Variable` containing an array to a PyObject.
+
+        Get the code which translates a `Variable` containing an array to a PyObject.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        is_bind_c : bool
+            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
         name = orig_var.name
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         if is_bind_c:
@@ -2435,11 +2533,31 @@ class CToPythonWrapper(Wrapper):
             c_result_vars = [c_res]
 
         if funcdef:
-            body.extend(self.set_return_pointer(orig_var, py_res, funcdef, is_bind_c))
+            body.extend(self.connect_pointer_targets(orig_var, py_res, funcdef, is_bind_c))
 
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
     def _extract_InhomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+        """
+        Get the code which translates a `Variable` containing an inhomogeneous tuple to a PyObject.
+
+        Get the code which translates a `Variable` containing an inhomogeneous tuple to a PyObject.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        is_bind_c : bool
+            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
         name = orig_var.name if isinstance(orig_var, Variable) else 'Out'
         original_func = getattr(funcdef, 'original_function', funcdef)
         extract_elems = [self._extract_FunctionDefResult(original_func.scope.collect_tuple_element(e),
@@ -2454,6 +2572,28 @@ class CToPythonWrapper(Wrapper):
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body, 'setup': setup}
 
     def _extract_HomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+        """
+        Get the code which translates a `Variable` containing a homogeneous tuple to a PyObject.
+
+        Get the code which translates a `Variable` containing a homogeneous tuple to a PyObject.
+        For now this function does not handle homogeneous tuples but merely allows multiple
+        returns of the same type to be outputted neatly.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        is_bind_c : bool
+            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
         if isinstance(orig_var, PythonTuple):
             return self._extract_InhomogeneousTupleType_FunctionDefResult(orig_var, is_bind_c, funcdef)
         else:
