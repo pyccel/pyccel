@@ -2341,7 +2341,7 @@ class CToPythonWrapper(Wrapper):
                 return body
         return []
 
-    def _extract_FunctionDefResult(self, orig_var, is_bind_c, funcdef = None, c_res = None):
+    def _extract_FunctionDefResult(self, orig_var, is_bind_c, funcdef = None):
         """
 
         Parameters
@@ -2363,13 +2363,13 @@ class CToPythonWrapper(Wrapper):
         for cls in classes:
             annotation_method = f'_extract_{cls.__name__}_FunctionDefResult'
             if hasattr(self, annotation_method):
-                return getattr(self, annotation_method)(orig_var, is_bind_c, funcdef, c_res)
+                return getattr(self, annotation_method)(orig_var, is_bind_c, funcdef)
 
         # Unknown object, we raise an error.
         return errors.report(f"Wrapping function results is not implemented for type {class_type}. " + PYCCEL_RESTRICTION_TODO, symbol=orig_var,
             severity='fatal')
 
-    def _extract_CustomDataType_FunctionDefResult(self, orig_var, is_bind_c, funcdef, c_res = None):
+    def _extract_CustomDataType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
         name = orig_var.name
         python_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         setup = self._allocate_class_instance(python_res, python_res.cls_base.scope, orig_var.is_alias)
@@ -2395,7 +2395,7 @@ class CToPythonWrapper(Wrapper):
 
         return {'c_results': [result], 'py_result': python_res, 'body': body, 'setup': setup}
 
-    def _extract_FixedSizeType_FunctionDefResult(self, orig_var, is_bind_c, funcdef, c_res = None):
+    def _extract_FixedSizeType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
         name = orig_var.name
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         c_res = Variable(orig_var.class_type, self.scope.get_new_name(name))
@@ -2404,7 +2404,7 @@ class CToPythonWrapper(Wrapper):
         body = [AliasAssign(py_res, FunctionCall(C_to_Python(c_res), [c_res]))]
         return {'c_results': [c_res], 'py_result': py_res, 'body': body}
 
-    def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var, is_bind_c, funcdef, c_res = None):
+    def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
         name = orig_var.name
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         if is_bind_c:
@@ -2443,7 +2443,7 @@ class CToPythonWrapper(Wrapper):
 
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
-    def _extract_InhomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, funcdef, c_res = None):
+    def _extract_InhomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
         name = orig_var.name if isinstance(orig_var, Variable) else 'Out'
         extract_elems = [self._extract_FunctionDefResult(self._original_scope.collect_tuple_element(e), is_bind_c, funcdef) for e in orig_var]
         body = [l for e in extract_elems for l in e['body']]
@@ -2455,9 +2455,9 @@ class CToPythonWrapper(Wrapper):
         body.extend(Py_DECREF(r) for r in py_result_vars)
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body, 'setup': setup}
 
-    def _extract_HomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, funcdef, c_res = None):
+    def _extract_HomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
         if isinstance(orig_var, PythonTuple):
-            return self._extract_InhomogeneousTupleType_FunctionDefResult(orig_var, is_bind_c, funcdef, c_res)
+            return self._extract_InhomogeneousTupleType_FunctionDefResult(orig_var, is_bind_c, funcdef)
         else:
             return errors.report(f"Wrapping function results is not implemented for type {orig_var.class_type}. " + PYCCEL_RESTRICTION_TODO, symbol=orig_var,
                 severity='fatal')
