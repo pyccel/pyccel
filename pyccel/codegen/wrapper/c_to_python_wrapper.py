@@ -78,8 +78,6 @@ class CToPythonWrapper(Wrapper):
         # The object that should be returned to indicate an error
         self._error_exit_code = Nil()
 
-        self._original_scope = None
-
         self._file_location = file_location
         super().__init__()
 
@@ -1347,7 +1345,6 @@ class CToPythonWrapper(Wrapper):
             The function which can be called from Python.
         """
         original_func = getattr(expr, 'original_function', expr)
-        self._original_scope = original_func.scope
         func_name = self.scope.get_new_name(expr.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
@@ -2444,7 +2441,9 @@ class CToPythonWrapper(Wrapper):
 
     def _extract_InhomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
         name = orig_var.name if isinstance(orig_var, Variable) else 'Out'
-        extract_elems = [self._extract_FunctionDefResult(self._original_scope.collect_tuple_element(e), is_bind_c, funcdef) for e in orig_var]
+        original_func = getattr(funcdef, 'original_function', funcdef)
+        extract_elems = [self._extract_FunctionDefResult(original_func.scope.collect_tuple_element(e),
+                                                         is_bind_c, funcdef) for e in orig_var]
         body = [l for e in extract_elems for l in e['body']]
         setup = [l for e in extract_elems for l in e.get('setup', ())]
         c_result_vars = [r for e in extract_elems for r in e['c_results']]
