@@ -347,31 +347,6 @@ class Assign(PyccelAstNode):
         cond = cond or isinstance(rhs, Variable) and rhs.is_alias
         return cond
 
-    @property
-    def is_symbolic_alias(self):
-        """
-        Returns True if the assignment is a symbolic alias.
-
-        Returns True if the assignment is a symbolic alias.
-        """
-
-        # TODO to be improved when handling classes
-        # TODO: Is this useful?
-
-        lhs = self.lhs
-        rhs = self.rhs
-        if isinstance(lhs, Variable):
-            return isinstance(lhs.class_type, SymbolicType)
-        elif isinstance(lhs, PyccelSymbol):
-            if isinstance(rhs, PythonRange):
-                return True
-            elif isinstance(rhs, Variable):
-                return isinstance(rhs.class_type, SymbolicType)
-            elif isinstance(rhs, PyccelSymbol):
-                return True
-
-        return False
-
 #------------------------------------------------------------------------------
 class Allocate(PyccelAstNode):
     """
