@@ -47,16 +47,47 @@ def test_dict_empty_init(python_only_language):
     assert python_result == pyccel_result
 
 def test_dict_copy(python_only_language):
-    def dict_copy():
-        a = {1:1.0,2:2.0}
-        b = dict(a)
+    # Caso 1: Dicionário simples com inteiros e floats
+    def dict_copy_simple():
+        a = {1: 1.0, 2: 2.0}
+        b = dict(a)()
         return b
 
-    epyc_dict_copy = epyccel(dict_copy, language = python_only_language)
-    pyccel_result = epyc_dict_copy()
-    python_result = dict_copy()
-    assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
+    # Compilando a função simples
+    epyc_dict_copy_simple = epyccel(dict_copy_simple, language=python_only_language)
+    pyccel_result_simple = epyc_dict_copy_simple()
+    python_result_simple = dict_copy_simple()
+
+    # Verificação para o dicionário simples
+    assert isinstance(python_result_simple, type(pyccel_result_simple))
+    assert python_result_simple == pyccel_result_simple
+
+    # Caso 2: Dicionário com diferentes tipos de chave e valor
+    def dict_copy_mixed():
+        a = {'a': 1, 2: 'b', 3.5: [1, 2, 3]}
+        b = dict(a)()
+        return b
+
+    # Compilando a função para dicionário misto
+    epyc_dict_copy_mixed = epyccel(dict_copy_mixed, language=python_only_language)
+    pyccel_result_mixed = epyc_dict_copy_mixed()
+    python_result_mixed = dict_copy_mixed()
+
+    # Verificação para o dicionário misto
+    assert isinstance(python_result_mixed, type(pyccel_result_mixed))
+    assert python_result_mixed == pyccel_result_mixed
+
+    # Caso 3: Verificação de tipo e inicialização da classe
+    a = {1: 'x', 2: 'y'}
+    dict_copy_instance = DictCopy(a)
+    assert dict_copy_instance.dict_obj == a
+    assert dict_copy_instance._class_type == type(a)
+
+    # Verificação da cópia manual
+    copied_dict = dict_copy_instance()
+    assert copied_dict == a
+    assert copied_dict is not a  # Deve ser uma cópia nova
+
 
 def test_dict_kwarg_init(python_only_language):
     def kwarg_init():
