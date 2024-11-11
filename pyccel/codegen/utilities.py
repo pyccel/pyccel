@@ -13,6 +13,7 @@ import shutil
 from filelock import FileLock
 import pyccel.stdlib as stdlib_folder
 import pyccel.extensions as ext_folder
+from pyccel.errors.errors import Errors
 
 from .codegen              import printer_registry
 from .compiling.basic      import CompileObj
@@ -23,6 +24,8 @@ stdlib_path = os.path.dirname(stdlib_folder.__file__)
 
 # get path to pyccel/extensions/lib_name
 ext_path = os.path.dirname(ext_folder.__file__)
+
+errors = Errors()
 
 __all__ = ['copy_internal_library','recompile_object']
 
@@ -279,3 +282,52 @@ def recompile_object(compile_obj,
         compiler.compile_module(compile_obj=compile_obj,
                 output_folder=compile_obj.source_folder,
                 verbose=verbose)
+
+def manage_dependencies(printer, compiler, pyccel_dirpath, includes, compile_libs, libdirs, mod_obj, modules, accelerators, language, verbose, convert_only = False):
+    # Iterate over the internal_libs list and determine if the printer
+    # requires an internal lib to be included.
+    for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
+        if lib_name in printer.get_additional_imports():
+
+            lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
+
+            # stop after copying lib to __pyccel__ directory for
+            # convert only
+            if convert_only:
+                continue
+
+            # Pylint determines wrong type
+            stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
+            # get the include folder path and library files
+            recompile_object(stdlib,
+                              compiler = compiler,
+                              verbose  = verbose)
+
+            mod_obj.add_dependencies(stdlib)
+            modules.append(stdlib)
+
+    # Iterate over the external_libs list and determine if the printer
+    # requires an external lib to be included.
+    for key, import_node in printer.get_additional_imports().items():
+        try:
+            deps = generate_extension_modules(key, import_node, pyccel_dirpath,
+                                              includes     = includes,
+                                              libs         = compile_libs,
+                                              libdirs      = libdirs,
+                                              dependencies = modules,
+                                              accelerators = accelerators,
+                                              language = language)
+        except NotImplementedError as error:
+            errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+                severity='error',
+                traceback=error.__traceback__)
+            handle_error('code generation (wrapping)')
+            raise PyccelCodegenError(msg) from None
+        except PyccelError:
+            handle_error('code generation (wrapping)')
+            raise
+        for d in deps:
+            recompile_object(d,
+                              compiler = compiler,
+                              verbose  = verbose)
+            mod_obj.add_dependencies(d)
