@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C support for list method `pop()`.
 -   #2023 : Add support for iterating over a `set`.
+-   #1664 : Add C support for returning a `set`.
 -   #1877 : Add C and Fortran Support for set method `pop()`.
 -   #1917 : Add C and Fortran support for set method `add()`.
 -   #1918 : Add support for set method `clear()`.
