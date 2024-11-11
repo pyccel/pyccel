@@ -20,7 +20,7 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
 
 from .c_concepts import PointerCast
 
-from .datatypes import (PyccelType, HomogeneousTupleType, VoidType
+from .datatypes import (PyccelType, HomogeneousTupleType, VoidType,
                         PythonNativeBool, InhomogeneousTupleType)
 
 from .internals import PyccelSymbol, PyccelFunction, apply_pickle
