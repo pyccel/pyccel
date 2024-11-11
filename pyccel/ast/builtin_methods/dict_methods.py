@@ -265,14 +265,14 @@ class DictCopy(DictMethod):
     """
     Represents a call to the .copy() method.
 
-    This class provides a manual copy implementation for compatibility with Pyccel.
+    The copy() method returns a shallow copy of the dictionary.
 
     Parameters
     ----------
     dict_obj : TypedAstNode
-        The dictionary object from which the method is called.
+        The object from which the method is called.
     """
-    __slots__ = ('_class_type', 'dict_obj')
+    __slots__ = ('_class_type',)
     _shape = None
     name = 'copy'
 
@@ -282,9 +282,9 @@ class DictCopy(DictMethod):
         super().__init__(dict_obj)
         self.dict_obj = dict_obj
 
-    def __call__(self):
+    def copy(self):
         """
-        Perform a manual copy of the dictionary.
+        Manually copy the dictionary, replacing the default .copy() method.
 
         Returns
         -------
@@ -295,3 +295,4 @@ class DictCopy(DictMethod):
         for key in self.dict_obj:
             copied_dict[key] = self.dict_obj[key]
         return copied_dict
+

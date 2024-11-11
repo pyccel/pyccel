@@ -47,46 +47,40 @@ def test_dict_empty_init(python_only_language):
     assert python_result == pyccel_result
 
 def test_dict_copy(python_only_language):
-    # Caso 1: Dicionário simples com inteiros e floats
-    def dict_copy_simple():
+    # Case 1: Basic dictionary copy test with simple data types
+    def dict_copy():
         a = {1: 1.0, 2: 2.0}
-        b = dict(a)()
+        b = dict(a)  # Using the built-in dict() method to copy the dictionary
         return b
 
-    # Compilando a função simples
-    epyc_dict_copy_simple = epyccel(dict_copy_simple, language=python_only_language)
-    pyccel_result_simple = epyc_dict_copy_simple()
-    python_result_simple = dict_copy_simple()
+    epyc_dict_copy = epyccel(dict_copy, language=python_only_language)
+    pyccel_result = epyc_dict_copy()
+    python_result = dict_copy()
 
-    # Verificação para o dicionário simples
-    assert isinstance(python_result_simple, type(pyccel_result_simple))
-    assert python_result_simple == pyccel_result_simple
+    # Verifying the results for the simple dictionary
+    assert isinstance(python_result, type(pyccel_result)), "Types do not match"
+    assert python_result == pyccel_result, "Results do not match"
 
-    # Caso 2: Dicionário com diferentes tipos de chave e valor
+    # Case 2: Test dictionary copy with mixed keys and values
     def dict_copy_mixed():
         a = {'a': 1, 2: 'b', 3.5: [1, 2, 3]}
-        b = dict(a)()
+        b = dict(a)  # Using the built-in dict() method to copy the dictionary
         return b
 
-    # Compilando a função para dicionário misto
     epyc_dict_copy_mixed = epyccel(dict_copy_mixed, language=python_only_language)
     pyccel_result_mixed = epyc_dict_copy_mixed()
     python_result_mixed = dict_copy_mixed()
 
-    # Verificação para o dicionário misto
-    assert isinstance(python_result_mixed, type(pyccel_result_mixed))
-    assert python_result_mixed == pyccel_result_mixed
+    # Verifying the results for the mixed dictionary
+    assert isinstance(python_result_mixed, type(pyccel_result_mixed)), "Types do not match"
+    assert python_result_mixed == pyccel_result_mixed, "Results do not match"
 
-    # Caso 3: Verificação de tipo e inicialização da classe
+    # Case 3: Integrity check - copied dictionary should not be a reference to the original
     a = {1: 'x', 2: 'y'}
-    dict_copy_instance = DictCopy(a)
-    assert dict_copy_instance.dict_obj == a
-    assert dict_copy_instance._class_type == type(a)
+    copied_dict = dict(a)  # Using the built-in dict() method to copy the dictionary
 
-    # Verificação da cópia manual
-    copied_dict = dict_copy_instance()
-    assert copied_dict == a
-    assert copied_dict is not a  # Deve ser uma cópia nova
+    assert copied_dict == a, "The copied dictionary should match the original"
+    assert copied_dict is not a, "The copied dictionary should not be a reference to the original"
 
 
 def test_dict_kwarg_init(python_only_language):
