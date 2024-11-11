@@ -1149,11 +1149,6 @@ class FCodePrinter(CodePrinter):
 
         return arg_format, arg
 
-    def _print_SymbolicPrint(self, expr):
-        # for every expression we will generate a print
-        code = '\n'.join(f"print *, 'sympy> {a}'" for a in expr.expr)
-        return code + '\n'
-
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
         return '!' + comments + '\n'

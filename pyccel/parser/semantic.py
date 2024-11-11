@@ -45,7 +45,6 @@ from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
 from pyccel.ast.core import Module
 from pyccel.ast.core import While
-from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import Program
 from pyccel.ast.core import EmptyNode
@@ -4290,20 +4289,7 @@ class SemanticParser(BasicParser):
 #                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
 #                   severity='fatal')
 
-        if is_symbolic(args[0]):
-            _args = []
-            for a in args:
-                f = self.scope.find(a.name, 'symbolic_functions')
-                if f is None:
-                    _args.append(a)
-                else:
-
-                    # TODO improve: how can we print SymbolicAssign as  lhs = rhs
-
-                    _args.append(f)
-            return SymbolicPrint(_args)
-        else:
-            return PythonPrint(args)
+        return PythonPrint(args)
 
     def _visit_ClassDef(self, expr):
         # TODO - improve the use and def of interfaces
