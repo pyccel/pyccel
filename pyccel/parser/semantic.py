@@ -3426,13 +3426,7 @@ class SemanticParser(BasicParser):
                     else:
                         self._indicate_pointer_target(l, r, expr)
 
-                elif new_expr.is_symbolic_alias:
-                    new_expr = SymbolicAssign(l, r)
-
-                    # in a symbolic assign, the rhs can be a lambda expression
-                    # it is then treated as a def node
-
-                    F = self.scope.find(l, 'symbolic_functions')
+                elif isinstance(l.class_type, SymbolicType):
                     errors.report(PYCCEL_RESTRICTION_TODO,
                                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                                   severity='fatal')
