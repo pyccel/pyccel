@@ -90,7 +90,6 @@ __all__ = (
     'Return',
     'SeparatorComment',
     'StarredArguments',
-    'SymbolicAssign',
     'SympyFunction',
     'While',
     'With',
@@ -725,47 +724,6 @@ class AliasAssign(PyccelAstNode):
 
     def __str__(self):
         return f'{self.lhs} := {self.rhs}'
-
-    @property
-    def lhs(self):
-        return self._lhs
-
-    @property
-    def rhs(self):
-        return self._rhs
-
-
-class SymbolicAssign(PyccelAstNode):
-
-    """Represents symbolic aliasing for code generation. An alias is any statement of the
-    form `lhs := rhs` where
-
-    Parameters
-    ----------
-    lhs : PyccelSymbol
-
-    rhs : Range
-
-    Examples
-    --------
-    >>> from pyccel.ast.internals import PyccelSymbol
-    >>> from pyccel.ast.core import SymbolicAssign
-    >>> from pyccel.ast.core import Range
-    >>> r = Range(0, 3)
-    >>> y = PyccelSymbol('y')
-    >>> SymbolicAssign(y, r)
-
-    """
-    __slots__ = ('_lhs', '_rhs')
-    _attribute_nodes = ('_lhs', '_rhs')
-
-    def __init__(self, lhs, rhs):
-        self._lhs = lhs
-        self._rhs = rhs
-        super().__init__()
-
-    def __str__(self):
-        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
     @property
     def lhs(self):

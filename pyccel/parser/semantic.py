@@ -36,7 +36,7 @@ from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
-from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
+from pyccel.ast.core import Assign, AliasAssign
 from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import ConstructorCall, InlineFunctionDef

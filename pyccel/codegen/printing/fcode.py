@@ -2001,14 +2001,6 @@ class FCodePrinter(CodePrinter):
             body_stmts.append(line)
         return ''.join(self._print(b) for b in body_stmts)
 
-    # TODO the ifs as they are are, is not optimal => use elif
-    def _print_SymbolicAssign(self, expr):
-        errors.report(FOUND_SYMBOLIC_ASSIGN,
-                      symbol=expr.lhs, severity='warning')
-
-        stmt = Comment(str(expr))
-        return self._print_Comment(stmt)
-
     def _print_NumpyReal(self, expr):
         value = self._print(expr.internal_var)
         code = 'Real({0}, {1})'.format(value, self.print_kind(expr))
