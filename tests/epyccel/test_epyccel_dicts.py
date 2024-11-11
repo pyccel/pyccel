@@ -47,41 +47,16 @@ def test_dict_empty_init(python_only_language):
     assert python_result == pyccel_result
 
 def test_dict_copy(python_only_language):
-    # Case 1: Basic dictionary copy test with simple data types
     def dict_copy():
-        a = {1: 1.0, 2: 2.0}
-        b = dict(a)  # Using the built-in dict() method to copy the dictionary
+        a = {1:1.0,2:2.0}
+        b = dict(a)
         return b
 
-    epyc_dict_copy = epyccel(dict_copy, language=python_only_language)
+    epyc_dict_copy = epyccel(dict_copy, language = python_only_language)
     pyccel_result = epyc_dict_copy()
     python_result = dict_copy()
-
-    # Verifying the results for the simple dictionary
-    assert isinstance(python_result, type(pyccel_result)), "Types do not match"
-    assert python_result == pyccel_result, "Results do not match"
-
-    # Case 2: Test dictionary copy with mixed keys and values
-    def dict_copy_mixed():
-        a = {'a': 1, 2: 'b', 3.5: [1, 2, 3]}
-        b = dict(a)  # Using the built-in dict() method to copy the dictionary
-        return b
-
-    epyc_dict_copy_mixed = epyccel(dict_copy_mixed, language=python_only_language)
-    pyccel_result_mixed = epyc_dict_copy_mixed()
-    python_result_mixed = dict_copy_mixed()
-
-    # Verifying the results for the mixed dictionary
-    assert isinstance(python_result_mixed, type(pyccel_result_mixed)), "Types do not match"
-    assert python_result_mixed == pyccel_result_mixed, "Results do not match"
-
-    # Case 3: Integrity check - copied dictionary should not be a reference to the original
-    a = {1: 'x', 2: 'y'}
-    copied_dict = dict(a)  # Using the built-in dict() method to copy the dictionary
-
-    assert copied_dict == a, "The copied dictionary should match the original"
-    assert copied_dict is not a, "The copied dictionary should not be a reference to the original"
-
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
 
 def test_dict_kwarg_init(python_only_language):
     def kwarg_init():

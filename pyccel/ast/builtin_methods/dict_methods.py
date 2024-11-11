@@ -280,19 +280,3 @@ class DictCopy(DictMethod):
         dict_type = dict_obj.class_type
         self._class_type = dict_type
         super().__init__(dict_obj)
-        self.dict_obj = dict_obj
-
-    def copy(self):
-        """
-        Manually copy the dictionary, replacing the default .copy() method.
-
-        Returns
-        -------
-        dict
-            A new dictionary with copied key-value pairs.
-        """
-        copied_dict = {}
-        for key in self.dict_obj:
-            copied_dict[key] = self.dict_obj[key]
-        return copied_dict
-
