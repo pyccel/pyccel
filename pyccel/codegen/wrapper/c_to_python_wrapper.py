@@ -2625,6 +2625,8 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to collect the result.
         """
+        if is_bind_c:
+            raise NotImplementedError("Support for returning sets from Fortran code is not yet available")
         name = getattr(orig_var, 'name', 'tmp')
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)

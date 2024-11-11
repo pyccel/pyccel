@@ -1136,6 +1136,22 @@ PyTuple_GetItem = FunctionDef(name = 'PyTuple_GetItem',
                                      FunctionDefArgument(Variable(PythonNativeInt(), name='i'))],
                         results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
+#-------------------------------------------------------------------
+#                          Set functions
+#-------------------------------------------------------------------
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_New
+PySet_New = FunctionDef(name = 'PySet_New',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'iterable', memory_handling='alias'), value = Nil())],
+                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Add
+PySet_Add = FunctionDef(name = 'PySet_Add',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'key', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    body = [])
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
