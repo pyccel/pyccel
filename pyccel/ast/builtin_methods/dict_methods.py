@@ -10,7 +10,8 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType
+from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType, SymbolicType
+from pyccel.ast.builtins  import PythonRange, PythonLen
 from pyccel.ast.internals import PyccelFunction
 
 
@@ -260,7 +261,6 @@ class DictClear(DictMethod) :
         super().__init__(dict_obj)
 
 #==============================================================================
-
 class DictCopy(DictMethod):
     """
     Represents a call to the .copy() method.
@@ -280,3 +280,23 @@ class DictCopy(DictMethod):
         dict_type = dict_obj.class_type
         self._class_type = dict_type
         super().__init__(dict_obj)
+
+#==============================================================================
+class DictItems(DictMethod):
+    """
+    Represents a call to the .items() method.
+    """
+    __slots__ = ()
+    _shape = None
+    _class_type = SymbolicType()
+    name = 'items'
+
+    def __init__(self, dict_obj):
+        super().__init__(dict_obj)
+
+    @property
+    def n_indices(self):
+        return 1
+
+    def to_range(self):
+        return PythonRange(PythonLen(dict_obj))
