@@ -562,3 +562,15 @@ def test_set_iter_prod(language):
     python_result = set_iter_prod()
     assert python_result == pyccel_result
     assert isinstance(python_result, type(pyccel_result))
+
+def test_set_return(stc_language):
+￼    def set_return():
+￼        a = {1,2,3,4,5}
+￼        return a
+￼
+￼    epyccel_func = epyccel(set_return, language = stc_language)
+￼    pyccel_result = epyccel_func()
+￼    python_result = set_return()
+￼    assert python_result == pyccel_result
+￼    assert isinstance(python_result, type(pyccel_result))
+￼    assert isinstance(python_result.pop(), type(pyccel_result.pop()))
