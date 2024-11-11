@@ -15,9 +15,6 @@ from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 
 from .bitwise_operators import PyccelBitOr, PyccelBitAnd
 
-from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
-                        PythonRange, PythonZip, PythonBool)
-
 from .c_concepts import PointerCast
 
 from .datatypes import (PyccelType, HomogeneousTupleType, VoidType,
@@ -105,6 +102,8 @@ __all__ = (
 
 #==============================================================================
 
+
+from .builtins  import (PythonRange, PythonBool)
 
 class AsName(PyccelAstNode):
     """
@@ -310,8 +309,7 @@ class Assign(PyccelAstNode):
         *,
         python_ast = None
         ):
-        if isinstance(lhs, (tuple, list)):
-            lhs = PythonTuple(*lhs)
+        assert isinstance(lhs, TypedAstNode)
         self._lhs = lhs
         self._rhs = rhs
         super().__init__()
@@ -1371,12 +1369,10 @@ class Iterable(PyccelAstNode):
                - n_indices
                - to_range
     """
-    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, PythonRange, IndexedElement)
-    __slots__ = ('_iterable','_indices','_num_indices_required')
-    _attribute_nodes = ('_iterable','_indices')
+    __slots__ = ('_indices',)
+    _attribute_nodes = ('_indices',)
 
-    def __init__(self, iterable):
-        self._iterable = iterable
+    def __init__(self):
         self._indices  = None
 
         if isinstance(iterable, PythonRange):
