@@ -1721,12 +1721,12 @@ class FunctionDefResult(TypedAstNode):
         self._annotation = annotation
 
         if pyccel_stage == 'syntactic':
-            if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol)):
+            if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol, Nil)):
                 raise TypeError(f"Var must be a PyccelSymbol or an AnnotatedPyccelSymbol, not a {type(var)}")
-        elif not isinstance(var, Variable):
+        elif not isinstance(var, (Variable, Nil)):
             raise TypeError(f"Var must be a Variable not a {type(var)}")
         else:
-            self._is_argument = var.is_argument
+            self._is_argument = getattr(var, 'is_argument', False)
 
         super().__init__()
 
@@ -2047,11 +2047,11 @@ class FunctionDef(ScopedAstNode):
     arguments : iterable of FunctionDefArgument
         The arguments to the function.
 
-    results : iterable
-        The direct outputs of the function.
-
     body : iterable
         The body of the function.
+
+    results : FunctionDefResult, optional
+        The direct outputs of the function.
 
     global_vars : list of Symbols
         Variables which will not be passed into the function.
@@ -2161,8 +2161,8 @@ class FunctionDef(ScopedAstNode):
         self,
         name,
         arguments,
-        results,
         body,
+        results = None,
         global_vars=(),
         cls_name=None,
         is_static=False,
@@ -2214,11 +2214,9 @@ class FunctionDef(ScopedAstNode):
             raise TypeError('body must be an iterable or a CodeBlock')
 
         # results
-
-        if not iterable(results):
-            raise TypeError('results must be an iterable')
-        if not all(isinstance(r, FunctionDefResult) for r in results):
-            raise TypeError('results must be all be FunctionDefResults')
+        if results is None:
+            results = FunctionDefResult(Nil())
+        assert isinstance(results, FunctionDefResult)
 
         if cls_name:
 
@@ -2759,9 +2757,8 @@ class PyccelFunctionDef(FunctionDef):
                 issubclass(func_class, (PyccelFunction, TypedAstNode, Iterable))
         assert isinstance(argument_description, dict)
         arguments = ()
-        results = ()
         body = ()
-        super().__init__(name, arguments, results, body, decorators=decorators)
+        super().__init__(name, arguments, body, decorators=decorators)
         self._cls_name = func_class
         self._argument_description = argument_description
 
