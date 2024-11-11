@@ -16,13 +16,12 @@ from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 from .bitwise_operators import PyccelBitOr, PyccelBitAnd
 
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
-                        PythonRange, PythonZip, PythonBool, Lambda)
+                        PythonRange, PythonZip, PythonBool)
 
 from .c_concepts import PointerCast
 
-from .datatypes import (PyccelType, SymbolicType, HomogeneousTupleType,
-                        PythonNativeBool, InhomogeneousTupleType,
-                        VoidType)
+from .datatypes import (PyccelType, HomogeneousTupleType, VoidType
+                        PythonNativeBool, InhomogeneousTupleType)
 
 from .internals import PyccelSymbol, PyccelFunction, apply_pickle
 
