@@ -308,7 +308,7 @@ class Assign(PyccelAstNode):
         *,
         python_ast = None
         ):
-        assert isinstance(lhs, TypedAstNode)
+        assert isinstance(lhs, (TypedAstNode, PyccelSymbol))
         self._lhs = lhs
         self._rhs = rhs
         super().__init__()
