@@ -11,7 +11,7 @@ To avoid circular imports this file should only import from basic, datatypes, an
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, Immutable
-from .datatypes import PythonNativeInt, PrimitiveIntegerType
+from .datatypes import PythonNativeInt, PrimitiveIntegerType, VoidType
 from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
@@ -468,6 +468,22 @@ class Iterable(PyccelAstNode):
         """ Returns the iterator(s) of the generated range
         """
         return self._indices
+
+class VariableIterator(Iterable):
+    __slots__ = ('_var',)
+    def __init__(self, var):
+        assert isinstance(var, TypedAstNode)
+        assert var.class_type is not VoidType()
+        assert var.rank > 0
+        self._var = var
+        super().__init__(1)
+
+    def __getitem__(self, idx):
+        return self._var[idx]
+
+    @property
+    def variable(self):
+        return self._var
 
 
 def symbols(names):
