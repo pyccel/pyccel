@@ -445,8 +445,8 @@ class PythonCodePrinter(CodePrinter):
         else:
             return '{}({}+{}*1j)'.format(name, self._print(expr.real), self._print(expr.imag))
 
-    def _print_Iterable(self, expr):
-        return self._print(expr.iterable)
+    def _print_VariableIterator(self, expr):
+        return self._print(expr.variable)
 
     def _print_PythonRange(self, expr):
         return 'range({start}, {stop}, {step})'.format(
