@@ -468,6 +468,10 @@ class PythonCodePrinter(CodePrinter):
                 func = self._print(expr.func.name),
                 args = self._print(expr.func_args))
 
+    def _print_PythonZip(self, expr):
+        args = ', '.join(self._print(a) for a in expr.args)
+        return f'zip({args})'
+
     def _print_PythonReal(self, expr):
         if isinstance(expr.internal_var, Variable):
             return '{}.real'.format(self._print(expr.internal_var))
