@@ -15,7 +15,7 @@ from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 
 from .bitwise_operators import PyccelBitOr, PyccelBitAnd
 
-from .builtins  import PythonBool
+from .builtins  import PythonBool, PythonTuple
 
 from .c_concepts import PointerCast
 
@@ -307,7 +307,8 @@ class Assign(PyccelAstNode):
         *,
         python_ast = None
         ):
-        assert pyccel_stage == 'syntactic' or isinstance(lhs, (TypedAstNode, PyccelSymbol))
+        if isinstance(lhs, (tuple, list)):
+            lhs = PythonTuple(*lhs)
         self._lhs = lhs
         self._rhs = rhs
         super().__init__()
