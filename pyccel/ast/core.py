@@ -22,7 +22,7 @@ from .c_concepts import PointerCast
 from .datatypes import (PyccelType, HomogeneousTupleType, VoidType,
                         PythonNativeBool, InhomogeneousTupleType)
 
-from .internals import PyccelSymbol, PyccelFunction, apply_pickle
+from .internals import PyccelSymbol, PyccelFunction, apply_pickle, Iterable
 
 from .literals  import Nil, LiteralFalse, LiteralInteger, LiteralString
 from .literals  import NilArgument, LiteralTrue
@@ -2759,7 +2759,7 @@ class PyccelFunctionDef(FunctionDef):
     __slots__ = ('_argument_description',)
     def __init__(self, name, func_class, *, decorators = {}, argument_description = {}):
         assert isinstance(func_class, type) and \
-                issubclass(func_class, (PyccelFunction, TypedAstNode))
+                issubclass(func_class, (PyccelFunction, TypedAstNode, Iterable))
         assert isinstance(argument_description, dict)
         arguments = ()
         results = ()
