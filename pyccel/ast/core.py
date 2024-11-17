@@ -78,7 +78,6 @@ __all__ = (
     'InProgram',
     'InlineFunctionDef',
     'Interface',
-    'Iterable',
     'Module',
     'ModuleHeader',
     'Pass',
@@ -1393,11 +1392,7 @@ class For(ScopedAstNode):
         body,
         scope = None
         ):
-        if pyccel_stage != "syntactic":
-            if not isinstance(iter_obj, Iterable):
-                iter_obj = Iterable(iter_obj)
-                if iter_obj.num_loop_counters_required!=0:
-                    raise TypeError('iter_obj must be an iterable')
+        assert pyccel_stage == "syntactic" or isinstance(iter_obj, Iterable)
 
         if iterable(body):
             body = CodeBlock(body)
