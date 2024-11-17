@@ -73,7 +73,7 @@ from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol
-from pyccel.ast.internals import Iterable
+from pyccel.ast.internals import Iterable, VariableIterator
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -1825,7 +1825,7 @@ class SemanticParser(BasicParser):
         new_expr = []
         while isinstance(loop, For):
             nlevels+=1
-            iterable = Iterable(self._visit(loop.iterable))
+            iterable = self._get_iterable(loop.iterable)
             n_index = max(1, iterable.num_loop_counters_required)
             # Set dummy indices to iterable object in order to be able to
             # obtain a target with a deducible dtype
@@ -2102,6 +2102,24 @@ class SemanticParser(BasicParser):
             class_def.add_new_attribute(lhs)
 
         return lhs
+
+    def _get_iterable(self, syntactic_iterable):
+        iterable = self._visit(syntactic_iterable)
+        if isinstance(iterable, (Variable, IndexedElement)):
+            iterable = VariableIterator(iterable)
+        elif isinstance(iterable, TypedAstNode):
+            pyccel_stage.set_stage('syntactic')
+            tmp_var = self.scope.get_new_name()
+            syntactic_assign = Assign(tmp_var, iterable, python_ast = expr.iterable.python_ast)
+            pyccel_stage.set_stage('semantic')
+            assign = self._visit(syntactic_assign)
+            self._additional_exprs[-1].append(assign)
+            iterable = VariableIterator(tmp_var)
+        elif not isinstance(iterable, Iterable):
+            errors.report(f"{iterable} is not handled as the iterable of a for loop",
+                    symbol=expr, severity='fatal')
+
+        return iterable
 
     #====================================================
     #                 _visit functions
@@ -3488,8 +3506,7 @@ class SemanticParser(BasicParser):
         scope = self.create_new_loop_scope()
 
         # treatment of the index/indices
-        iterable = self._visit(expr.iterable)
-        assert isinstance(iterable, Iterable)
+        iterable = self._get_iterable(expr.iterable)
 
         new_expr = []
 
@@ -3503,7 +3520,7 @@ class SemanticParser(BasicParser):
                         for i in range(iterable.num_loop_counters_required)]
             iterable.set_loop_counter(*indices)
         else:
-            if isinstance(iterable.iterable, PythonEnumerate):
+            if isinstance(iterable, PythonEnumerate):
                 syntactic_index = iterator[0]
             else:
                 syntactic_index = iterator
@@ -3542,7 +3559,7 @@ class SemanticParser(BasicParser):
 
             for t, i, r, s in zip(target[::-1], iterable.loop_counters[::-1], iterable.get_target_from_range()[::-1], scopes[::-1]):
                 # Create Variable iterable
-                loop_iter = Iterable(r.base)
+                loop_iter = VariableIterator(r.base)
                 loop_iter.set_loop_counter(i)
 
                 # Create a For loop for each level of the Product
