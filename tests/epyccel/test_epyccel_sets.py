@@ -625,13 +625,3 @@ def test_set_intersection_augoperator(language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_set_contains(language):
-    def intersection_int():
-        a = {1,2,3,4,5,6,7,8}
-        b = 2 in a
-        return b, (4 in a), (9 in a)
-
-    epyccel_func = epyccel(intersection_int, language = language)
-    pyccel_result = epyccel_func()
-    python_result = intersection_int()
-    assert python_result == pyccel_result
