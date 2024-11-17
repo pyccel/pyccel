@@ -54,7 +54,6 @@ from pyccel.ast.core import AsName
 from pyccel.ast.core import With
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
-from pyccel.ast.core import Iterable
 from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
@@ -74,6 +73,7 @@ from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol
+from pyccel.ast.internals import Iterable
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -3488,7 +3488,8 @@ class SemanticParser(BasicParser):
         scope = self.create_new_loop_scope()
 
         # treatment of the index/indices
-        iterable = Iterable(self._visit(expr.iterable))
+        iterable = self._visit(expr.iterable)
+        assert isinstance(iterable, Iterable)
 
         new_expr = []
 
@@ -3535,7 +3536,7 @@ class SemanticParser(BasicParser):
 
         self.exit_loop_scope()
 
-        if isinstance(iterable.iterable, Product):
+        if isinstance(iterable, Product):
             for_expr = body
             scopes = self.scope.create_product_loop_scope(scope, len(target))
 
