@@ -362,7 +362,9 @@ class Iterable(PyccelAstNode):
     _attribute_nodes = ('_indices',)
 
     def __init__(self, num_indices_required):
+        assert isinstance(num_indices_required, int)
         self._indices  = None
+        self._num_indices_required = num_indices_required
 
         #if isinstance(iterable, PythonRange):
         #    self._num_indices_required = 0
@@ -415,7 +417,6 @@ class Iterable(PyccelAstNode):
         assigns : list of Assign
                   The assignments necessary to define target
         """
-        iterable = self._iterable
         range_element = self.get_target_from_range()
         if self.num_loop_counters_required == 0:
             target = target[1:]
@@ -432,8 +433,7 @@ class Iterable(PyccelAstNode):
         loop iterator)
         """
         idx = self._indices[0] if len(self._indices)==1 else self._indices
-        range_base = self._iterable[idx]
-        return range_base
+        return self[idx]
 
     def get_range(self):
         """
@@ -462,12 +462,6 @@ class Iterable(PyccelAstNode):
             if callable(length):
                 length = length()
             return PythonRange(length)
-
-    @property
-    def iterable(self):
-        """ Returns the iterable being wrapped
-        """
-        return self._iterable
 
     @property
     def loop_counters(self):
