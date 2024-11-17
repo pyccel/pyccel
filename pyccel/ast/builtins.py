@@ -15,14 +15,13 @@ from pyccel.errors.errors import PyccelError
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
-from .core      import Iterable
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from .datatypes import GenericType, PythonNativeComplex, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
 from .datatypes import DictType
-from .internals import PyccelFunction, Slice, PyccelArrayShapeElement
+from .internals import PyccelFunction, Slice, PyccelArrayShapeElement, Iterable
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
@@ -348,7 +347,7 @@ class PythonComplex(PyccelFunction):
         return f"complex({self.real}, {self.imag})"
 
 #==============================================================================
-class PythonEnumerate(PyccelFunction):
+class PythonEnumerate(Iterable):
     """
     Represents a call to Python's native `enumerate()` function.
 
@@ -374,7 +373,7 @@ class PythonEnumerate(PyccelFunction):
             raise TypeError('Expecting an arg of valid type')
         self._element = arg
         self._start   = start or LiteralInteger(0)
-        super().__init__()
+        super().__init__(int(self.start != 0))
 
     @property
     def element(self):
@@ -976,7 +975,7 @@ class PythonDictFunction(PyccelFunction):
         return self._args[0]
 
 #==============================================================================
-class PythonMap(PyccelFunction):
+class PythonMap(Iterable):
     """
     Class representing a call to Python's builtin map function.
 
@@ -999,7 +998,7 @@ class PythonMap(PyccelFunction):
     def __init__(self, func, func_args):
         self._func = func
         self._func_args = func_args
-        super().__init__()
+        super().__init__(1)
 
     @property
     def func(self):
@@ -1021,6 +1020,16 @@ class PythonMap(PyccelFunction):
         """ Return the length of the resulting object
         """
         return PythonLen(self.func_args)
+
+    def get_target_from_range(self):
+        """ Returns an element of the range indexed with the iterators
+        previously provided via the set_loop_counters method
+        (useful for get_assigns and to determine the dtype etc of the
+        loop iterator)
+        """
+        idx = self._indices[0] if len(self._indices)==1 else self._indices
+        range_base = self[idx]
+        return range_base[0]([range_base[1]])
 
 #==============================================================================
 class PythonPrint(PyccelAstNode):
@@ -1083,8 +1092,6 @@ class PythonRange(Iterable):
     __slots__ = ('_start','_stop','_step')
     _attribute_nodes = ('_start', '_stop', '_step')
     name = 'range'
-    _class_type = SymbolicType()
-    _shape = ()
 
     def __init__(self, *args):
         # Define default values
@@ -1105,7 +1112,7 @@ class PythonRange(Iterable):
         else:
             raise ValueError('Range has at most 3 arguments')
 
-        super().__init__()
+        super().__init__(1)
 
     @property
     def start(self):
@@ -1138,9 +1145,15 @@ class PythonRange(Iterable):
     def __getitem__(self, index):
         return index
 
+    def get_assigns(self, target):
+        return []
+
+    def get_range(self):
+        return self
+
 
 #==============================================================================
-class PythonZip(PyccelFunction):
+class PythonZip(Iterable):
     """
     Represents a call to Python `zip` for code generation.
 
@@ -1151,7 +1164,7 @@ class PythonZip(PyccelFunction):
     *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
-    __slots__ = ('_length', '_class_type')
+    __slots__ = ('_length', '_class_type','_args')
     name = 'zip'
 
     def __init__(self, *args):
@@ -1159,7 +1172,7 @@ class PythonZip(PyccelFunction):
             raise TypeError('args must be a list or tuple')
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
-        super().__init__(*args)
+        self._args = args
         if pyccel_stage == 'syntactic':
             self._length = None
             return
@@ -1170,6 +1183,7 @@ class PythonZip(PyccelFunction):
             else:
                 self._length = self.args[0].shape[0]
             self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
+        super().__init__(1)
 
     @property
     def length(self):
@@ -1179,6 +1193,15 @@ class PythonZip(PyccelFunction):
 
     def __getitem__(self, index):
         return [a[index] for a in self.args]
+
+    @property
+    def args(self):
+        """
+        The arguments passed to the function.
+
+        Tuple containing all the arguments passed to the function call.
+        """
+        return self._args
 
 #==============================================================================
 class PythonAbs(PyccelFunction):

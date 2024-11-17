@@ -7,14 +7,14 @@ This module represent a call to the itertools functions for code generation.
 """
 from .builtins  import PythonLen, PythonRange
 from .core      import PyccelFunctionDef, Module
-from .internals import PyccelFunction
+from .internals import Iterable
 
 __all__ = (
     'Product',
     'itertools_mod',
 )
 
-class Product(PyccelFunction):
+class Product(Iterable):
     """
     Represents a call to itertools.product for code generation.
 
@@ -38,7 +38,7 @@ class Product(PyccelFunction):
 
     def __init__(self, *args):
         self._elements = args
-        super().__init__(args)
+        super().__init__(len(args))
 
     @property
     def elements(self):
