@@ -2340,27 +2340,31 @@ class CCodePrinter(CodePrinter):
             additional_assign = CodeBlock([Assign(expr.target, DottedVariable(VoidType(), 'ref',
                 memory_handling='alias', lhs = counter))])
         else:
-            index = indices[0] if indices else expr.target
-            if iterable.num_loop_counters_required:
-                self.scope.insert_variable(index)
+            range_iterable = iterable.get_range()
+            if indices:
+                index = indices[0]
+                if iterable.num_loop_counters_required and index.is_temp:
+                    self.scope.insert_variable(index)
+            else:
+                index = expr.target
 
-            target   = index
-            counter  = self._print(target)
-            iterable = expr.iterable.get_range()
-            additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
+            targets = iterable.get_assign_targets()
+            additional_assign = CodeBlock([AliasAssign(i, t) if i.is_alias else Assign(i, t) \
+                                    for i,t in zip(expr.target[-len(targets):], targets)])
 
-            step = iterable.step
-            start_code = self._print(iterable.start)
-            stop_code  = self._print(iterable.stop )
-            step_code  = self._print(iterable.step )
+            index_code = self._print(index)
+            step = range_iterable.step
+            start_code = self._print(range_iterable.start)
+            stop_code  = self._print(range_iterable.stop )
+            step_code  = self._print(range_iterable.step )
 
             # testing if the step is a value or an expression
             if is_literal_integer(step):
                 op = '>' if int(step) < 0 else '<'
-                stop_condition = f'{counter} {op} {stop_code}'
+                stop_condition = f'{index_code} {op} {stop_code}'
             else:
-                stop_condition = f'({step_code} > 0) ? ({counter} < {stop_code}) : ({counter} > {stop_code})'
-            for_code = f'for ({counter} = {start_code}; {stop_condition}; {counter} += {step_code})\n'
+                stop_condition = f'({step_code} > 0) ? ({index_code} < {stop_code}) : ({index_code} > {stop_code})'
+            for_code = f'for ({index_code} = {start_code}; {stop_condition}; {index_code} += {step_code})\n'
 
         body = self._print(additional_assign) + self._print(expr.body)
 

@@ -3535,8 +3535,8 @@ class SemanticParser(BasicParser):
             iterator_rhs = iterable.get_target_from_range()
             iterator_d_var = self._infer_type(iterator_rhs)
 
-            target = self._assign_lhs_variable(iterator, iterator_d_var,
-                            rhs=iterator_rhs, new_expressions=new_expr)
+            target = (self._assign_lhs_variable(iterator, iterator_d_var,
+                            rhs=iterator_rhs, new_expressions=new_expr),)
 
         elif isinstance(iterator, PythonTuple):
             iterator_rhs = iterable.get_target_from_range()

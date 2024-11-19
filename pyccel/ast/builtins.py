@@ -390,15 +390,30 @@ class PythonEnumerate(Iterable):
         """
         return self._start
 
-    def __getitem__(self, index):
-        return [PyccelAdd(index, self.start, simplify=True),
-                self.element[index]]
-
     @property
     def length(self):
         """ Return the length of the enumerated object
         """
         return PythonLen(self.element)
+
+    def get_target_from_range(self):
+        """ Returns an element of the range indexed with the iterators
+        previously provided via the set_loop_counters method
+        (useful for get_assigns and to determine the dtype etc of the
+        loop iterator)
+        """
+        index = self._indices[0]
+        return [PyccelAdd(index, self.start, simplify=True),
+                self.element[index]]
+
+    def get_assign_targets(self):
+        if self.num_loop_counters_required:
+            return self.get_target_from_range()
+        else:
+            return [self.element[self._indices[0]]]
+
+    def get_range(self):
+        return PythonRange(PythonLen(self.element))
 
 #==============================================================================
 class PythonFloat(PyccelFunction):
@@ -1151,7 +1166,6 @@ class PythonRange(Iterable):
     def get_range(self):
         return self
 
-
 #==============================================================================
 class PythonZip(Iterable):
     """
@@ -1447,6 +1461,17 @@ class VariableIterator(Iterable):
 
     def get_range(self):
         return PythonRange(self.variable.shape[0])
+
+    def get_target_from_range(self):
+        """ Returns an element of the range indexed with the iterators
+        previously provided via the set_loop_counters method
+        (useful for get_assigns and to determine the dtype etc of the
+        loop iterator)
+        """
+        return self[self._indices[0]]
+
+    def get_assign_targets(self):
+        return [self[self._indices[0]]]
 
 #==============================================================================
 

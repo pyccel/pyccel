@@ -426,15 +426,6 @@ class Iterable(PyccelAstNode):
         else:
             return [AliasAssign(target, range_element) if target.is_alias else Assign(target, range_element)]
 
-    def get_target_from_range(self):
-        """ Returns an element of the range indexed with the iterators
-        previously provided via the set_loop_counters method
-        (useful for get_assigns and to determine the dtype etc of the
-        loop iterator)
-        """
-        idx = self._indices[0] if len(self._indices)==1 else self._indices
-        return self[idx]
-
     def get_range(self):
         """
         Get the range required for this iterable.
