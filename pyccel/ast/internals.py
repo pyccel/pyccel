@@ -447,44 +447,20 @@ class Iterable(PyccelAstNode):
         PythonRange
             The range which should be used in the code.
         """
-        if isinstance(self._iterable, PythonRange):
-            return self._iterable
-        elif hasattr(self._iterable, 'to_range'):
-            return self._iterable.to_range()
-        else:
-            length = getattr(self._iterable, '__len__',
-                    getattr(self._iterable, 'length', None))
+        length = getattr(self, '__len__',
+                getattr(self, 'length', None))
 
-            # Only create PythonLen if length is None to avoid unnecessary TypeErrors
-            if length is None:
-                length = PythonLen(self._iterable)
+        assert length is not None
 
-            if callable(length):
-                length = length()
-            return PythonRange(length)
+        if callable(length):
+            length = length()
+        return PythonRange(length)
 
     @property
     def loop_counters(self):
         """ Returns the iterator(s) of the generated range
         """
         return self._indices
-
-class VariableIterator(Iterable):
-    __slots__ = ('_var',)
-    def __init__(self, var):
-        assert isinstance(var, TypedAstNode)
-        assert var.class_type is not VoidType()
-        assert var.rank > 0
-        self._var = var
-        super().__init__(1)
-
-    def __getitem__(self, idx):
-        return self._var[idx]
-
-    @property
-    def variable(self):
-        return self._var
-
 
 def symbols(names):
     """

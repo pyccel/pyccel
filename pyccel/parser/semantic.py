@@ -26,7 +26,7 @@ from pyccel.ast.bitwise_operators import PyccelBitOr, PyccelLShift, PyccelRShift
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
 from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
-from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
+from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet, VariableIterator
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
@@ -73,7 +73,7 @@ from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol
-from pyccel.ast.internals import Iterable, VariableIterator
+from pyccel.ast.internals import Iterable
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse

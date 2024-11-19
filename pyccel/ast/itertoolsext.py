@@ -48,7 +48,7 @@ class Product(Iterable):
     def __getitem__(self, indices):
         return [elem[idx] for idx, elem in zip(indices, self.elements)]
 
-    def to_range(self):
+    def get_range(self):
         """ Get the range iterator(s) needed to access all elements of Product
         """
         lengths = [getattr(e, '__len__',

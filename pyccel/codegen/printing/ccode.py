@@ -15,7 +15,7 @@ from pyccel.ast.basic     import ScopedAstNode
 from pyccel.ast.bind_c    import BindCPointer
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
-from pyccel.ast.builtins  import PythonPrint, PythonType
+from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
 from pyccel.ast.core      import Declare, For, CodeBlock
@@ -2329,13 +2329,13 @@ class CCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
         iterable = expr.iterable
-        iterable_type = iterable.iterable.class_type
         indices = iterable.loop_counters
 
-        if isinstance(iterable_type, (DictType, HomogeneousSetType, HomogeneousListType)):
+        if isinstance(iterable, VariableIterator) and isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
+            iterable_type = iterable.variable.class_type
             counter = Variable(IteratorType(iterable_type), indices[0].name)
             c_type = self.get_c_type(iterable_type)
-            iterable_code = self._print(iterable.iterable)
+            iterable_code = self._print(iterable)
             for_code = f'c_foreach ({self._print(counter)}, {c_type}, {iterable_code})'
             additional_assign = CodeBlock([Assign(expr.target, DottedVariable(VoidType(), 'ref',
                 memory_handling='alias', lhs = counter))])

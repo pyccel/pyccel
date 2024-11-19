@@ -20,7 +20,7 @@ from .datatypes import GenericType, PythonNativeComplex, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
-from .datatypes import DictType
+from .datatypes import DictType, VoidType
 from .internals import PyccelFunction, Slice, PyccelArrayShapeElement, Iterable
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
@@ -1427,6 +1427,26 @@ class PythonType(PyccelFunction):
         then be easily printed in each language.
         """
         return LiteralString(f"<class '{self._type}'>")
+
+#==============================================================================
+class VariableIterator(Iterable):
+    __slots__ = ('_var',)
+    def __init__(self, var):
+        assert isinstance(var, TypedAstNode)
+        assert var.class_type is not VoidType()
+        assert var.rank > 0
+        self._var = var
+        super().__init__(1)
+
+    def __getitem__(self, idx):
+        return self._var[idx]
+
+    @property
+    def variable(self):
+        return self._var
+
+    def get_range(self):
+        return PythonRange(self.variable.shape[0])
 
 #==============================================================================
 
