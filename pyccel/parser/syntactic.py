@@ -442,6 +442,8 @@ class SyntaxParser(BasicParser):
             return AugAssign(lhs, '%', rhs)
         elif isinstance(stmt.op, ast.BitOr):
             return AugAssign(lhs, '|', rhs)
+        elif isinstance(stmt.op, ast.BitAnd):
+            return AugAssign(lhs, '&', rhs)
         else:
             return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
                     severity='error')
