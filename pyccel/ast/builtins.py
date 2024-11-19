@@ -1127,7 +1127,7 @@ class PythonRange(Iterable):
         else:
             raise ValueError('Range has at most 3 arguments')
 
-        super().__init__(1)
+        super().__init__(0)
 
     @property
     def start(self):
@@ -1165,6 +1165,17 @@ class PythonRange(Iterable):
 
     def get_range(self):
         return self
+
+    def get_target_from_range(self):
+        """ Returns an element of the range indexed with the iterators
+        previously provided via the set_loop_counters method
+        (useful for get_assigns and to determine the dtype etc of the
+        loop iterator)
+        """
+        return self._indices[0]
+
+    def get_assign_targets(self):
+        return []
 
 #==============================================================================
 class PythonZip(Iterable):
