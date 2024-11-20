@@ -1394,6 +1394,7 @@ class For(ScopedAstNode):
         scope = None
         ):
         assert pyccel_stage == "syntactic" or isinstance(iter_obj, Iterable)
+        assert pyccel_stage == "syntactic" or iterable(target)
 
         if iterable(body):
             body = CodeBlock(body)
