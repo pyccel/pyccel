@@ -3563,7 +3563,7 @@ class SemanticParser(BasicParser):
                 loop_iter.set_loop_counter(i)
 
                 # Create a For loop for each level of the Product
-                for_expr = For(t, loop_iter, for_expr, scope=s)
+                for_expr = For((t,), loop_iter, for_expr, scope=s)
                 for_expr.end_annotation = expr.end_annotation
                 for_expr = [for_expr]
             for_expr = for_expr[0]
