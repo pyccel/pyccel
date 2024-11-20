@@ -2346,7 +2346,7 @@ class CCodePrinter(CodePrinter):
                 if iterable.num_loop_counters_required and index.is_temp:
                     self.scope.insert_variable(index)
             else:
-                index = expr.target
+                index = expr.target[0]
 
             targets = iterable.get_assign_targets()
             additional_assign = CodeBlock([AliasAssign(i, t) if i.is_alias else Assign(i, t) \
