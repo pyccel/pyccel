@@ -194,10 +194,7 @@ def test_enumerate_on_1d_array_with_start(language):
             pytest.mark.skip(reason="list comprehension not supported yet, related issue #1948"),
             pytest.mark.fortran]
         ),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
-            pytest.mark.c]
-        ),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     )
 )
