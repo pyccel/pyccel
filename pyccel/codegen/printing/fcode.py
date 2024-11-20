@@ -22,7 +22,7 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefAr
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
-from pyccel.ast.builtins import PythonBool, PythonList, PythonSet
+from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableIterator
 
 from pyccel.ast.builtin_methods.set_methods import SetUnion
 
@@ -2557,17 +2557,18 @@ class FCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
         iterable = expr.iterable
-        iterable_type = iterable.iterable.class_type
-        indices = expr.iterable.loop_counters
+        indices = iterable.loop_counters
 
-        if isinstance(iterable_type, (DictType, HomogeneousSetType)):
-            if isinstance(iterable.iterable, Variable):
+        if isinstance(iterable, VariableIterator) and isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType)):
+            var = iterable.variable
+            iterable_type = var.class_type
+            if isinstance(var, Variable):
                 suggested_name = iterable.iterable.name + '_'
             else:
                 suggested_name = ''
                 errors.report("Iterating over a temporary object. This may cause compilation issues or cause calculations to be carried out twice",
                         severity='warning', symbol=expr)
-            iterable = self._print(iterable.iterable)
+            iterable = self._print(iterable)
             iterator = self.scope.get_temporary_variable(IteratorType(iterable_type),
                     name = suggested_name + 'iter')
             last = self.scope.get_temporary_variable(IteratorType(iterable_type),
@@ -2591,7 +2592,10 @@ class FCodePrinter(CodePrinter):
             prolog = f'do {target} = {range_code}\n'
             epilog = 'end do\n'
 
-            prolog += self._print(CodeBlock(iterable.get_assigns(expr.target)))
+            targets = iterable.get_assign_targets()
+            additional_assign = CodeBlock([AliasAssign(i, t) if i.is_alias else Assign(i, t) \
+                                    for i,t in zip(expr.target[-len(targets):], targets)])
+            prolog += self._print(additional_assign)
 
         body = self._print(expr.body)
 
