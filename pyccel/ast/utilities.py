@@ -687,7 +687,7 @@ def insert_fors(blocks, indices, scope, level = 0):
     else:
         body = CodeBlock(body, unravelled = True)
         loop_scope = scope.create_new_loop_scope()
-        return [For(indices[level],
+        return [For([indices[level]],
                     PythonRange(0,blocks.length),
                     body,
                     scope = loop_scope)]
