@@ -1206,15 +1206,9 @@ class PythonZip(Iterable):
             if lengths:
                 self._length = min(lengths)
             else:
-                self._length = self.args[0].shape[0]
+                self._length = PythonMin(*[PythonLen(a) for a in self.args])
             self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
         super().__init__(1)
-
-    @property
-    def length(self):
-        """ Length of the shortest zip argument
-        """
-        return self._length
 
     def __getitem__(self, index):
         return [a[index] for a in self.args]
@@ -1227,6 +1221,22 @@ class PythonZip(Iterable):
         Tuple containing all the arguments passed to the function call.
         """
         return self._args
+
+    def get_target_from_range(self):
+        """ Returns an element of the range indexed with the iterators
+        previously provided via the set_loop_counters method
+        (useful for get_assigns and to determine the dtype etc of the
+        loop iterator)
+        """
+        index = self._indices[0]
+        return [a[index] for a in self.args]
+
+    def get_assign_targets(self):
+        index = self._indices[0]
+        return [a[index] for a in self.args]
+
+    def get_range(self):
+        return PythonRange(self._length)
 
 #==============================================================================
 class PythonAbs(PyccelFunction):
@@ -1479,10 +1489,10 @@ class VariableIterator(Iterable):
         (useful for get_assigns and to determine the dtype etc of the
         loop iterator)
         """
-        return self[self._indices[0]]
+        return self._var[self._indices[0]]
 
     def get_assign_targets(self):
-        return [self[self._indices[0]]]
+        return [self._var[self._indices[0]]]
 
 #==============================================================================
 
