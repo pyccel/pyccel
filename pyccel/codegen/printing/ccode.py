@@ -2332,12 +2332,13 @@ class CCodePrinter(CodePrinter):
         indices = iterable.loop_counters
 
         if isinstance(iterable, VariableIterator) and isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
-            iterable_type = iterable.variable.class_type
+            var = iterable.variable
+            iterable_type = var.class_type
             counter = Variable(IteratorType(iterable_type), indices[0].name)
             c_type = self.get_c_type(iterable_type)
-            iterable_code = self._print(iterable)
+            iterable_code = self._print(var)
             for_code = f'c_foreach ({self._print(counter)}, {c_type}, {iterable_code})'
-            additional_assign = CodeBlock([Assign(expr.target, DottedVariable(VoidType(), 'ref',
+            additional_assign = CodeBlock([Assign(expr.target[0], DottedVariable(VoidType(), 'ref',
                 memory_handling='alias', lhs = counter))])
         else:
             range_iterable = iterable.get_range()

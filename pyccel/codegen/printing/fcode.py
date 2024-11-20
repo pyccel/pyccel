@@ -2563,17 +2563,17 @@ class FCodePrinter(CodePrinter):
             var = iterable.variable
             iterable_type = var.class_type
             if isinstance(var, Variable):
-                suggested_name = iterable.iterable.name + '_'
+                suggested_name = var.name + '_'
             else:
                 suggested_name = ''
                 errors.report("Iterating over a temporary object. This may cause compilation issues or cause calculations to be carried out twice",
                         severity='warning', symbol=expr)
-            iterable = self._print(iterable)
+            iterable = self._print(var)
             iterator = self.scope.get_temporary_variable(IteratorType(iterable_type),
                     name = suggested_name + 'iter')
             last = self.scope.get_temporary_variable(IteratorType(iterable_type),
                     name = suggested_name + 'last')
-            target = self._print(expr.target)
+            target = self._print(expr.target[0])
             prolog = (f'{iterator} = {iterable} % begin()\n'
                       f'{last} = {iterable} % end()\n'
                       f'do while ({iterator} /= {last})\n'
