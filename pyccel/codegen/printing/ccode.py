@@ -2367,6 +2367,10 @@ class CCodePrinter(CodePrinter):
                 stop_condition = f'({step_code} > 0) ? ({index_code} < {stop_code}) : ({index_code} > {stop_code})'
             for_code = f'for ({index_code} = {start_code}; {stop_condition}; {index_code} += {step_code})\n'
 
+        if self._additional_code:
+            for_code = self._additional_code + for_code
+            self._additional_code = ''
+
         body = self._print(additional_assign) + self._print(expr.body)
 
         self.exit_scope()
