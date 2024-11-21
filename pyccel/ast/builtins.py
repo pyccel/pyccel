@@ -362,7 +362,7 @@ class PythonEnumerate(Iterable):
         The start value of the enumeration index.
     """
     __slots__ = ('_element','_start')
-    _attribute_nodes = ('_element','_start')
+    _attribute_nodes = Iterable._attribute_nodes + ('_element','_start')
     name = 'enumerate'
     _class_type = SymbolicType()
     _shape = ()
@@ -1005,7 +1005,7 @@ class PythonMap(Iterable):
         The arguments to which the function will be applied.
     """
     __slots__ = ('_func','_func_args')
-    _attribute_nodes = ('_func','_func_args')
+    _attribute_nodes = Iterable._attribute_nodes + ('_func','_func_args')
     name = 'map'
     _class_type = SymbolicType()
     _shape = ()
@@ -1105,7 +1105,7 @@ class PythonRange(Iterable):
         If three arguments are passed then they represent the start, end and step of the interval.
     """
     __slots__ = ('_start','_stop','_step')
-    _attribute_nodes = ('_start', '_stop', '_step')
+    _attribute_nodes = Iterable._attribute_nodes + ('_start', '_stop', '_step')
     name = 'range'
 
     def __init__(self, *args):
@@ -1190,6 +1190,7 @@ class PythonZip(Iterable):
         The arguments passed to the function.
     """
     __slots__ = ('_length', '_class_type','_args')
+    _attribute_nodes = Iterable._attribute_nodes + ('_args', '_length')
     name = 'zip'
 
     def __init__(self, *args):
@@ -1466,6 +1467,8 @@ class PythonType(PyccelFunction):
 #==============================================================================
 class VariableIterator(Iterable):
     __slots__ = ('_var',)
+    _attribute_nodes = Iterable._attribute_nodes + ('_var',)
+
     def __init__(self, var):
         assert isinstance(var, TypedAstNode)
         assert var.class_type is not VoidType()
