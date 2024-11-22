@@ -391,22 +391,50 @@ class PythonEnumerate(Iterable):
         return self._start
 
     def get_python_iterable_item(self):
-        """ Returns an element of the range indexed with the iterators
-        previously provided via the set_loop_counters method
-        (useful for get_assigns and to determine the dtype etc of the
-        loop iterator)
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns two objects that could be elements of the enumerate.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
         """
         index = self._indices[0]
-        return [PyccelAdd(index, self.start, simplify=True),
-                self.element[index]]
+        return [index, self.element[index]]
 
     def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the enumerate targets.
+
+        Get objects that should be assigned to variables to use the enumerate targets.
+        If the start of the enumerate is 0 then the only object that needs to be assigned
+        is the element of the variable, however if the indexing is offset compared to
+        the variable then both the index and the variable need to be created.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
         if self.num_loop_counters_required:
-            return self.get_python_iterable_item()
+            return [PyccelAdd(index, self.start, simplify=True),
+                    self.element[index]]
         else:
             return [self.element[self._indices[0]]]
 
     def get_range(self):
+        """
+        Get a range that can be used to iterate over the enumerate iterable.
+
+        Get a range that can be used to iterate over the enumerate iterable.
+
+        Returns
+        -------
+        PythonRange
+            A range that can be used to iterate over the enumerate iterable.
+        """
         return PythonRange(PythonLen(self.element))
 
 #==============================================================================
