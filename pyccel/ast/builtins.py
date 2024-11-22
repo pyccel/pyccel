@@ -1046,6 +1046,10 @@ class PythonMap(Iterable):
         range_base = self[idx]
         return range_base[0]([range_base[1]])
 
+    def get_range(self):
+        return PythonRange(PythonLen(self.func_args))
+
+
 #==============================================================================
 class PythonPrint(PyccelAstNode):
     """

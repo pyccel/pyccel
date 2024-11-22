@@ -403,28 +403,11 @@ class Iterable(PyccelAstNode):
             i.remove_user_node(self, invalidate)
         self._indices = None
 
-    def get_assigns(self, target):
-        """ Returns a list containing any assigns necessary to initialise
-        the loop iterators/targets when using a range iterable
-
-        Parameters
-        ----------
-        target : Variable or list of Variables
-                 The index(es) over which the loop iterates
-
-        Results
-        -------
-        assigns : list of Assign
-                  The assignments necessary to define target
+    @property
+    def loop_counters(self):
+        """ Returns the iterator(s) of the generated range
         """
-        range_element = self.get_target_from_range()
-        if self.num_loop_counters_required == 0:
-            target = target[1:]
-            range_element = range_element[1:]
-        if isinstance(target, (tuple, list)):
-            return [AliasAssign(t, r) if t.is_alias else Assign(t, r) for t, r in zip(target, range_element)]
-        else:
-            return [AliasAssign(target, range_element) if target.is_alias else Assign(target, range_element)]
+        return self._indices
 
     def get_range(self):
         """
@@ -438,20 +421,7 @@ class Iterable(PyccelAstNode):
         PythonRange
             The range which should be used in the code.
         """
-        length = getattr(self, '__len__',
-                getattr(self, 'length', None))
-
-        assert length is not None
-
-        if callable(length):
-            length = length()
-        return PythonRange(length)
-
-    @property
-    def loop_counters(self):
-        """ Returns the iterator(s) of the generated range
-        """
-        return self._indices
+        raise NotImplementedError(f"Class {type(self)} needs to implement the get_range method")
 
 def symbols(names):
     """

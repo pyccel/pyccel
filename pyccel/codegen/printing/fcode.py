@@ -1012,7 +1012,7 @@ class FCodePrinter(CodePrinter):
                     print_body.append(space_end)
 
                 for_body = [PythonPrint(print_body, file=expr.file)]
-                for_loop = For(for_index, for_range, for_body, scope=loop_scope)
+                for_loop = For((for_index,), for_range, for_body, scope=loop_scope)
                 for_end_char = LiteralString(']')
                 for_end = FunctionCallArgument(for_end_char,
                                                keyword='end')
@@ -2580,7 +2580,7 @@ class FCodePrinter(CodePrinter):
                       f'{target} = {iterator} % of()\n')
             epilog = f'call {iterator} % next()\nend do\n'
         else:
-            index = indices[0] if indices else expr.target
+            index = indices[0] if indices else expr.target[0]
             if iterable.num_loop_counters_required:
                 self.scope.insert_variable(index)
 
