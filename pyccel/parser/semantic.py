@@ -1834,7 +1834,7 @@ class SemanticParser(BasicParser):
             iterator = loop.target
 
             # Collect a target with a deducible dtype
-            iterator_rhs = iterable.get_target_from_range()
+            iterator_rhs = iterable.get_python_iterable_item()
             # Use _visit_Assign to create the requested iterator with the correct type
             # The result of this operation is not stored, it is just used to declare
             # iterator with the correct dtype to allow correct dtype deductions later
@@ -3533,14 +3533,14 @@ class SemanticParser(BasicParser):
             iterable.set_loop_counter(index)
 
         if isinstance(iterator, PyccelSymbol):
-            iterator_rhs = iterable.get_target_from_range()
+            iterator_rhs = iterable.get_python_iterable_item()
             iterator_d_var = self._infer_type(iterator_rhs)
 
             target = (self._assign_lhs_variable(iterator, iterator_d_var,
                             rhs=iterator_rhs, new_expressions=new_expr),)
 
         elif isinstance(iterator, PythonTuple):
-            iterator_rhs = iterable.get_target_from_range()
+            iterator_rhs = iterable.get_python_iterable_item()
             target = [self._assign_lhs_variable(it, self._infer_type(rhs),
                                 rhs=rhs, new_expressions=new_expr)
                         for it, rhs in zip(iterator, iterator_rhs)]
@@ -3558,7 +3558,7 @@ class SemanticParser(BasicParser):
             for_expr = body
             scopes = self.scope.create_product_loop_scope(scope, len(target))
 
-            for t, i, r, s in zip(target[::-1], iterable.loop_counters[::-1], iterable.get_target_from_range()[::-1], scopes[::-1]):
+            for t, i, r, s in zip(target[::-1], iterable.loop_counters[::-1], iterable.get_python_iterable_item()[::-1], scopes[::-1]):
                 # Create Variable iterable
                 loop_iter = VariableIterator(r.base)
                 loop_iter.set_loop_counter(i)

@@ -390,7 +390,7 @@ class PythonEnumerate(Iterable):
         """
         return self._start
 
-    def get_target_from_range(self):
+    def get_python_iterable_item(self):
         """ Returns an element of the range indexed with the iterators
         previously provided via the set_loop_counters method
         (useful for get_assigns and to determine the dtype etc of the
@@ -402,7 +402,7 @@ class PythonEnumerate(Iterable):
 
     def get_assign_targets(self):
         if self.num_loop_counters_required:
-            return self.get_target_from_range()
+            return self.get_python_iterable_item()
         else:
             return [self.element[self._indices[0]]]
 
@@ -1021,7 +1021,7 @@ class PythonMap(Iterable):
         """
         return self._func_args
 
-    def get_target_from_range(self):
+    def get_python_iterable_item(self):
         """ Returns an element of the range indexed with the iterators
         previously provided via the set_loop_counters method
         (useful for get_assigns and to determine the dtype etc of the
@@ -1035,7 +1035,7 @@ class PythonMap(Iterable):
         return PythonRange(PythonLen(self.func_args))
 
     def get_assign_targets(self):
-        return (self.get_target_from_range(),)
+        return (self.get_python_iterable_item(),)
 
 #==============================================================================
 class PythonPrint(PyccelAstNode):
@@ -1151,7 +1151,7 @@ class PythonRange(Iterable):
     def get_range(self):
         return self
 
-    def get_target_from_range(self):
+    def get_python_iterable_item(self):
         """ Returns an element of the range indexed with the iterators
         previously provided via the set_loop_counters method
         (useful for get_assigns and to determine the dtype etc of the
@@ -1205,7 +1205,7 @@ class PythonZip(Iterable):
         """
         return self._args
 
-    def get_target_from_range(self):
+    def get_python_iterable_item(self):
         """ Returns an element of the range indexed with the iterators
         previously provided via the set_loop_counters method
         (useful for get_assigns and to determine the dtype etc of the
@@ -1215,7 +1215,7 @@ class PythonZip(Iterable):
         return [a[index] for a in self.args]
 
     def get_assign_targets(self):
-        return self.get_target_from_range()
+        return self.get_python_iterable_item()
 
     def get_range(self):
         return PythonRange(self._length)
@@ -1467,7 +1467,7 @@ class VariableIterator(Iterable):
     def get_range(self):
         return PythonRange(self.variable.shape[0])
 
-    def get_target_from_range(self):
+    def get_python_iterable_item(self):
         """ Returns an element of the range indexed with the iterators
         previously provided via the set_loop_counters method
         (useful for get_assigns and to determine the dtype etc of the
@@ -1476,7 +1476,7 @@ class VariableIterator(Iterable):
         return self._var[self._indices[0]]
 
     def get_assign_targets(self):
-        return self.get_target_from_range()
+        return self.get_python_iterable_item()
 
 #==============================================================================
 

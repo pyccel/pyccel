@@ -45,7 +45,7 @@ class Product(Iterable):
         """get expression's elements"""
         return self._elements
 
-    def get_target_from_range(self):
+    def get_python_iterable_item(self):
         return [elem[idx] for idx, elem in zip(self._indices, self.elements)]
 
     def get_range(self):
@@ -55,12 +55,6 @@ class Product(Iterable):
                 getattr(e, 'length', PythonLen(e))) for e in self.elements]
         lengths = [l() if callable(l) else l for l in lengths]
         return [PythonRange(l) for l in lengths]
-
-    @property
-    def n_indices(self):
-        """ Number of indices required
-        """
-        return len(self._elements)
 
 #==============================================================================
 itertools_mod = Module('itertools',(),

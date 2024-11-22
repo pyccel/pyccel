@@ -293,7 +293,3 @@ class DictItems(DictMethod):
 
     def __init__(self, dict_obj):
         super().__init__(dict_obj)
-
-    @property
-    def n_indices(self):
-        return 1
