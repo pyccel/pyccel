@@ -418,11 +418,12 @@ class PythonEnumerate(Iterable):
         list[TypedAstNode]
             A list of objects that should be assigned to variables.
         """
+        index = self._indices[0]
         if self.num_loop_counters_required:
             return [PyccelAdd(index, self.start, simplify=True),
                     self.element[index]]
         else:
-            return [self.element[self._indices[0]]]
+            return [self.element[index]]
 
     def get_range(self):
         """
@@ -1062,7 +1063,7 @@ class PythonMap(Iterable):
             A list of objects that should be assigned to variables.
         """
         idx = self._indices[0] if len(self._indices)==1 else self._indices
-        return self.func[0](IndexedElement(self.func_args, index))
+        return self.func[0](IndexedElement(self.func_args, idx))
 
     def get_range(self):
         """
