@@ -3532,15 +3532,19 @@ class SemanticParser(BasicParser):
                                 rhs=start, new_expressions=new_expr)
             iterable.set_loop_counter(index)
 
+        iterator_rhs = iterable.get_python_iterable_item()
         if isinstance(iterator, PyccelSymbol):
-            iterator_rhs = iterable.get_python_iterable_item()
+            if len(iterator_rhs) != 1:
+                iterator_rhs = PythonTuple(*iterator_rhs)
+            else:
+                iterator_rhs = iterator_rhs[0]
+
             iterator_d_var = self._infer_type(iterator_rhs)
 
             target = (self._assign_lhs_variable(iterator, iterator_d_var,
                             rhs=iterator_rhs, new_expressions=new_expr),)
 
         elif isinstance(iterator, PythonTuple):
-            iterator_rhs = iterable.get_python_iterable_item()
             target = [self._assign_lhs_variable(it, self._infer_type(rhs),
                                 rhs=rhs, new_expressions=new_expr)
                         for it, rhs in zip(iterator, iterator_rhs)]
