@@ -46,15 +46,18 @@ class Product(Iterable):
         return self._elements
 
     def get_python_iterable_item(self):
-        return [elem[idx] for idx, elem in zip(self._indices, self.elements)]
-
-    def get_range(self):
-        """ Get the range iterator(s) needed to access all elements of Product
         """
-        lengths = [getattr(e, '__len__',
-                getattr(e, 'length', PythonLen(e))) for e in self.elements]
-        lengths = [l() if callable(l) else l for l in lengths]
-        return [PythonRange(l) for l in lengths]
+        Get the item of the iterable that will be saved to the loop targets.
+
+        This is an element from each of the variables indexed using the
+        iterators previously provided via the set_loop_counters method.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        return [elem[idx] for idx, elem in zip(self._indices, self.elements)]
 
 #==============================================================================
 itertools_mod = Module('itertools',(),
