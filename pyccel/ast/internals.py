@@ -361,8 +361,7 @@ class Iterable(TypedAstNode):
     __slots__ = ('_indices', '_num_indices_required')
     _attribute_nodes = ('_indices',)
     _class_type = SymbolicType()
-    _rank = 1
-    _shape = (None,)
+    _shape = None
 
     def __init__(self, num_indices_required):
         assert isinstance(num_indices_required, int)
