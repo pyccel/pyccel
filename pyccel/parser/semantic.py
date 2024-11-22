@@ -2104,6 +2104,22 @@ class SemanticParser(BasicParser):
         return lhs
 
     def _get_iterable(self, syntactic_iterable):
+        """
+        Get an Iterable obect from a syntatic object that is used in an iterable context.
+
+        Get an Iterable obect from a syntatic object that is used in an iterable context.
+        A typical example of an iterable context is the iterable of a for loop.
+
+        Parameters
+        ----------
+        syntactic_iterable : PyccelAstNode
+            The syntatic object that should be usable as an iterable.
+
+        Returns
+        -------
+        Iterable
+            A semantic Iterable object.
+        """
         iterable = self._visit(syntactic_iterable)
         if isinstance(iterable, (Variable, IndexedElement)):
             iterable = VariableIterator(iterable)
@@ -2118,7 +2134,7 @@ class SemanticParser(BasicParser):
                 iterable = VariableIterator(tmp_var)
             else:
                 errors.report(f"{iterable} is not handled as the iterable of a for loop",
-                        symbol=expr, severity='fatal')
+                        symbol=syntactic_iterable, severity='fatal')
 
         return iterable
 
