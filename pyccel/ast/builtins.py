@@ -390,12 +390,6 @@ class PythonEnumerate(Iterable):
         """
         return self._start
 
-    @property
-    def length(self):
-        """ Return the length of the enumerated object
-        """
-        return PythonLen(self.element)
-
     def get_target_from_range(self):
         """ Returns an element of the range indexed with the iterators
         previously provided via the set_loop_counters method
@@ -1027,15 +1021,6 @@ class PythonMap(Iterable):
         """
         return self._func_args
 
-    def __getitem__(self, index):
-        return self.func, IndexedElement(self.func_args, index)
-
-    @property
-    def length(self):
-        """ Return the length of the resulting object
-        """
-        return PythonLen(self.func_args)
-
     def get_target_from_range(self):
         """ Returns an element of the range indexed with the iterators
         previously provided via the set_loop_counters method
@@ -1163,12 +1148,6 @@ class PythonRange(Iterable):
         """
         return self._step
 
-    def __getitem__(self, index):
-        return index
-
-    def get_assigns(self, target):
-        return []
-
     def get_range(self):
         return self
 
@@ -1217,9 +1196,6 @@ class PythonZip(Iterable):
             self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
         super().__init__(1)
 
-    def __getitem__(self, index):
-        return [a[index] for a in self.args]
-
     @property
     def args(self):
         """
@@ -1239,8 +1215,7 @@ class PythonZip(Iterable):
         return [a[index] for a in self.args]
 
     def get_assign_targets(self):
-        index = self._indices[0]
-        return [a[index] for a in self.args]
+        return self.get_target_from_range()
 
     def get_range(self):
         return PythonRange(self._length)
@@ -1501,7 +1476,7 @@ class VariableIterator(Iterable):
         return self._var[self._indices[0]]
 
     def get_assign_targets(self):
-        return [self._var[self._indices[0]]]
+        return self.get_target_from_range()
 
 #==============================================================================
 

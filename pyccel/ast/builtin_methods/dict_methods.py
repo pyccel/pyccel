@@ -297,6 +297,3 @@ class DictItems(DictMethod):
     @property
     def n_indices(self):
         return 1
-
-    def to_range(self):
-        return PythonRange(PythonLen(dict_obj))

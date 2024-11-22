@@ -368,17 +368,6 @@ class Iterable(TypedAstNode):
         self._indices  = None
         self._num_indices_required = num_indices_required
 
-        #if isinstance(iterable, PythonRange):
-        #    self._num_indices_required = 0
-        #elif isinstance(iterable, PythonEnumerate):
-        #    self._num_indices_required = int(iterable.start != 0)
-        #elif isinstance(iterable, self.acceptable_iterator_types):
-        #    self._num_indices_required = 1
-        #elif hasattr(iterable, 'n_indices') and hasattr(iterable, 'to_range'):
-        #    self._num_indices_required = iterable.n_indices
-        #else:
-        #    raise TypeError(f"Unknown iterator type {type(iterable)}")
-
         super().__init__()
 
     @property
@@ -410,20 +399,6 @@ class Iterable(TypedAstNode):
         """ Returns the iterator(s) of the generated range
         """
         return self._indices
-
-    def get_range(self):
-        """
-        Get the range required for this iterable.
-
-        Returns the range which is necessary in a low-level language to iterate over
-        the wrapped iterable.
-
-        Returns
-        -------
-        PythonRange
-            The range which should be used in the code.
-        """
-        raise NotImplementedError(f"Class {type(self)} needs to implement the get_range method")
 
 def symbols(names):
     """
