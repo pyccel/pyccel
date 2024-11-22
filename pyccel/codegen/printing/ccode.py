@@ -1215,7 +1215,7 @@ class CCodePrinter(CodePrinter):
 
                 for_body  = [PythonPrint(print_body, file=expr.file)]
                 for_scope = self.scope.create_new_loop_scope()
-                for_loop  = For(for_index, for_range, for_body, scope=for_scope)
+                for_loop  = For((for_index,), for_range, for_body, scope=for_scope)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
                 body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end],
