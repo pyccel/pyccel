@@ -1050,19 +1050,46 @@ class PythonMap(Iterable):
         return self._func_args
 
     def get_python_iterable_item(self):
-        """ Returns an element of the range indexed with the iterators
-        previously provided via the set_loop_counters method
-        (useful for get_assigns and to determine the dtype etc of the
-        loop iterator)
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        This is the function calling the element of the variable that is found
+        at the index.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
         """
         idx = self._indices[0] if len(self._indices)==1 else self._indices
-        range_base = self[idx]
-        return range_base[0]([range_base[1]])
+        return self.func[0](IndexedElement(self.func_args, index))
 
     def get_range(self):
+        """
+        Get a range that can be used to iterate over the map iterable.
+
+        Get a range that can be used to iterate over the map iterable.
+
+        Returns
+        -------
+        PythonRange
+            A range that can be used to iterate over the map iterable.
+        """
         return PythonRange(PythonLen(self.func_args))
 
     def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the map target.
+
+        Get objects that should be assigned to variables to use the map targets.
+        This is the function calling the element of the variable that is found
+        at the index.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
         return (self.get_python_iterable_item(),)
 
 #==============================================================================
@@ -1177,17 +1204,46 @@ class PythonRange(Iterable):
         return self._step
 
     def get_range(self):
+        """
+        Get this range.
+
+        Get this range. This method is used to allow this class to be handled
+        like other iterables which can be converted to PythonRange objects.
+
+        Returns
+        -------
+        PythonRange
+            This object.
+        """
         return self
 
     def get_python_iterable_item(self):
-        """ Returns an element of the range indexed with the iterators
-        previously provided via the set_loop_counters method
-        (useful for get_assigns and to determine the dtype etc of the
-        loop iterator)
         """
-        return self._indices[0]
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns an element of the range indexed with the iterators
+        previously provided via the set_loop_counters method
+        (useful to determine the dtype etc of the loop iterator).
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        return self._indices
 
     def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the range.
+
+        This method is used to allow this class to be handled like other iterables
+        which can be converted to PythonRange objects.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            An empty list.
+        """
         return []
 
 #==============================================================================
@@ -1234,18 +1290,45 @@ class PythonZip(Iterable):
         return self._args
 
     def get_python_iterable_item(self):
-        """ Returns an element of the range indexed with the iterators
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns an element of the zip indexed with the iterators
         previously provided via the set_loop_counters method
-        (useful for get_assigns and to determine the dtype etc of the
-        loop iterator)
+        (useful to determine the dtype etc of the loop iterator).
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
         """
         index = self._indices[0]
         return [a[index] for a in self.args]
 
     def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the zip targets.
+
+        Get objects that should be assigned to variables to use the zip targets.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
         return self.get_python_iterable_item()
 
     def get_range(self):
+        """
+        Get a range that can be used to iterate over the zip iterable.
+
+        Get a range that can be used to iterate over the zip iterable.
+
+        Returns
+        -------
+        PythonRange
+            A range that can be used to iterate over the zip iterable.
+        """
         return PythonRange(self._length)
 
 #==============================================================================
@@ -1475,6 +1558,17 @@ class PythonType(PyccelFunction):
 
 #==============================================================================
 class VariableIterator(Iterable):
+    """
+    Represents a call to Python's `iter` function on a variable.
+
+    Represents a call to Python's `iter` function on a variable. This is
+    useful for for loops as this function is called implicitly.
+
+    Parameters
+    ----------
+    var : Variable
+        The Variable that is iterated over.
+    """
     __slots__ = ('_var',)
     _attribute_nodes = Iterable._attribute_nodes + ('_var',)
 
@@ -1485,25 +1579,55 @@ class VariableIterator(Iterable):
         self._var = var
         super().__init__(1)
 
-    def __getitem__(self, idx):
-        return self._var[idx]
-
     @property
     def variable(self):
+        """
+        The variable being iterated over.
+
+        The variable being iterated over.
+        """
         return self._var
 
     def get_range(self):
+        """
+        Get a range that can be used to iterate over the variable.
+
+        Get a range that can be used to iterate over the variable.
+
+        Returns
+        -------
+        PythonRange
+            A range that can be used to iterate over the enumerate iterable.
+        """
         return PythonRange(self.variable.shape[0])
 
     def get_python_iterable_item(self):
-        """ Returns an element of the range indexed with the iterators
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns an element of the variable indexed with the iterators
         previously provided via the set_loop_counters method
-        (useful for get_assigns and to determine the dtype etc of the
-        loop iterator)
+        (useful to determine the dtype etc of the loop iterator).
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
         """
         return self._var[self._indices[0]]
 
     def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the variable iterator targets.
+
+        Returns an element of the variable indexed with the iterators
+        previously provided via the set_loop_counters method.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
         return self.get_python_iterable_item()
 
 #==============================================================================
