@@ -11,7 +11,6 @@ This module contains objects which describe these methods within Pyccel's AST.
 """
 
 from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType, SymbolicType
-from pyccel.ast.builtins  import PythonRange, PythonLen
 from pyccel.ast.internals import PyccelFunction
 
 
