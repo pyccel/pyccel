@@ -2110,7 +2110,7 @@ class SemanticParser(BasicParser):
         elif isinstance(iterable, TypedAstNode):
             pyccel_stage.set_stage('syntactic')
             tmp_var = self.scope.get_new_name()
-            syntactic_assign = Assign(tmp_var, iterable, python_ast = expr.iterable.python_ast)
+            syntactic_assign = Assign(tmp_var, iterable, python_ast = iterable.python_ast)
             pyccel_stage.set_stage('semantic')
             assign = self._visit(syntactic_assign)
             self._additional_exprs[-1].append(assign)
