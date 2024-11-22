@@ -60,6 +60,7 @@ __all__ = (
     'PythonTupleFunction',
     'PythonType',
     'PythonZip',
+    'VariableIterator',
     'builtin_functions_dict',
 )
 

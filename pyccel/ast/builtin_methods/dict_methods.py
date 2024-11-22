@@ -17,6 +17,7 @@ from pyccel.ast.internals import PyccelFunction
 __all__ = ('DictClear',
            'DictCopy',
            'DictGet',
+           'DictItems',
            'DictMethod',
            'DictPop',
            'DictPopitem',

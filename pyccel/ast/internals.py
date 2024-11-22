@@ -17,6 +17,7 @@ from .literals  import LiteralInteger
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'Iterable',
     'PrecomputedCode',
     'PyccelArrayShapeElement',
     'PyccelArraySize',
