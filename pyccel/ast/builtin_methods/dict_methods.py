@@ -11,7 +11,7 @@ This module contains objects which describe these methods within Pyccel's AST.
 """
 
 from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType, SymbolicType
-from pyccel.ast.internals import PyccelFunction
+from pyccel.ast.internals import PyccelFunction, Iterable
 
 
 __all__ = ('DictClear',
@@ -282,14 +282,23 @@ class DictCopy(DictMethod):
         super().__init__(dict_obj)
 
 #==============================================================================
-class DictItems(DictMethod):
+class DictItems(Iterable):
     """
     Represents a call to the .items() method.
+
+    Represents a call to the .items() method which iterates over a dictionary.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
     """
-    __slots__ = ()
+    __slots__ = ('_dict_obj',)
+    _attribute_nodes = Iterable._attribute_nodes + ("_dict_obj",)
     _shape = None
     _class_type = SymbolicType()
     name = 'items'
 
     def __init__(self, dict_obj):
-        super().__init__(dict_obj)
+        self._dict_obj = dict_obj
+        super().__init__(1)
