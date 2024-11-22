@@ -11,7 +11,7 @@ To avoid circular imports this file should only import from basic, datatypes, an
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, Immutable
-from .datatypes import PythonNativeInt, PrimitiveIntegerType, VoidType, SymbolicType
+from .datatypes import PythonNativeInt, PrimitiveIntegerType, SymbolicType
 from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
