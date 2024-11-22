@@ -2107,17 +2107,18 @@ class SemanticParser(BasicParser):
         iterable = self._visit(syntactic_iterable)
         if isinstance(iterable, (Variable, IndexedElement)):
             iterable = VariableIterator(iterable)
-        elif isinstance(iterable, TypedAstNode):
-            pyccel_stage.set_stage('syntactic')
-            tmp_var = self.scope.get_new_name()
-            syntactic_assign = Assign(tmp_var, iterable, python_ast = iterable.python_ast)
-            pyccel_stage.set_stage('semantic')
-            assign = self._visit(syntactic_assign)
-            self._additional_exprs[-1].append(assign)
-            iterable = VariableIterator(tmp_var)
         elif not isinstance(iterable, Iterable):
-            errors.report(f"{iterable} is not handled as the iterable of a for loop",
-                    symbol=expr, severity='fatal')
+            if isinstance(iterable, TypedAstNode):
+                pyccel_stage.set_stage('syntactic')
+                tmp_var = self.scope.get_new_name()
+                syntactic_assign = Assign(tmp_var, iterable, python_ast = iterable.python_ast)
+                pyccel_stage.set_stage('semantic')
+                assign = self._visit(syntactic_assign)
+                self._additional_exprs[-1].append(assign)
+                iterable = VariableIterator(tmp_var)
+            else:
+                errors.report(f"{iterable} is not handled as the iterable of a for loop",
+                        symbol=expr, severity='fatal')
 
         return iterable
 
@@ -3760,8 +3761,8 @@ class SemanticParser(BasicParser):
             assert isinstance(l, For)
             # Sub in indices as defined here for coherent naming
             if idx.is_temp:
-                self.scope.remove_variable(l.target)
-                l.substitute(l.target, idx_subs[idx])
+                self.scope.remove_variable(l.target[0])
+                l.substitute(l.target[0], idx_subs[idx])
             l = l.body.body[-1]
 
         #self.exit_loop_scope()
