@@ -1049,6 +1049,8 @@ class PythonMap(Iterable):
     def get_range(self):
         return PythonRange(PythonLen(self.func_args))
 
+    def get_assign_targets(self):
+        return (self.get_target_from_range(),)
 
 #==============================================================================
 class PythonPrint(PyccelAstNode):
