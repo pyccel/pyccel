@@ -11,7 +11,7 @@ To avoid circular imports this file should only import from basic, datatypes, an
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, Immutable
-from .datatypes import PythonNativeInt, PrimitiveIntegerType, VoidType
+from .datatypes import PythonNativeInt, PrimitiveIntegerType, VoidType, SymbolicType
 from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
@@ -342,7 +342,7 @@ class PrecomputedCode(PyccelAstNode):
         return self._code
 
 
-class Iterable(PyccelAstNode):
+class Iterable(TypedAstNode):
     """
     Wrapper around iterable types helping to convert between those types and a range.
 
@@ -360,6 +360,9 @@ class Iterable(PyccelAstNode):
     """
     __slots__ = ('_indices', '_num_indices_required')
     _attribute_nodes = ('_indices',)
+    _class_type = SymbolicType()
+    _rank = 1
+    _shape = (None,)
 
     def __init__(self, num_indices_required):
         assert isinstance(num_indices_required, int)
