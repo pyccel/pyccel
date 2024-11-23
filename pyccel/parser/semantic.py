@@ -2116,7 +2116,7 @@ class SemanticParser(BasicParser):
                 pyccel_stage.set_stage('semantic')
                 assign = self._visit(syntactic_assign)
                 self._additional_exprs[-1].append(assign)
-                iterable = VariableIterator(tmp_var)
+                iterable = VariableIterator(self._visit(tmp_var))
             else:
                 errors.report(f"{iterable} is not handled as the iterable of a for loop",
                         symbol=syntactic_iterable, severity='fatal')
