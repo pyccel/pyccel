@@ -1616,7 +1616,7 @@ class VariableIterator(Iterable):
         list[TypedAstNode]
             A list of objects that should be assigned to variables.
         """
-        return self._var[self._indices[0]]
+        return [self._var[self._indices[0]]]
 
     def get_assign_targets(self):
         """
