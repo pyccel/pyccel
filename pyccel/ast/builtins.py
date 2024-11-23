@@ -420,7 +420,7 @@ class PythonEnumerate(Iterable):
             A list of objects that should be assigned to variables.
         """
         index = self._indices[0]
-        if self.num_loop_counters_required:
+        if index.is_temp:
             return [PyccelAdd(index, self.start, simplify=True),
                     self.element[index]]
         else:
