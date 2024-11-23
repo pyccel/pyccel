@@ -2188,8 +2188,7 @@ class SemanticParser(BasicParser):
                                 rhs=rhs, new_expressions=new_expr)
                         for it, rhs in zip(iterator, iterator_rhs)]
         else:
-
-            errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
+            raise errors.report(INVALID_FOR_ITERABLE, symbol=iterator,
                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                    severity='error')
 
