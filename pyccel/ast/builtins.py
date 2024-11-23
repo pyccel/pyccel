@@ -530,12 +530,15 @@ class PythonTuple(TypedAstNode):
     ----------
     *args : tuple of TypedAstNode
         The arguments passed to the tuple function.
+    prefer_inhomogeneous : bool, default=False
+        A boolean that can be used to ensure that the tuple is stocked as an
+        inhomogeneous object even if it could be homogeneous.
     """
     __slots__ = ('_args','_is_homogeneous', '_shape', '_class_type')
     _iterable = True
     _attribute_nodes = ('_args',)
 
-    def __init__(self, *args):
+    def __init__(self, *args, prefer_inhomogeneous = False):
         self._args = args
         super().__init__()
         if pyccel_stage == 'syntactic':
@@ -560,7 +563,7 @@ class PythonTuple(TypedAstNode):
                                for i in range(rank))
         else:
             shapes = ()
-        is_homogeneous = len(dtypes) == 1 and len(ranks) == 1 and \
+        is_homogeneous = (not prefer_inhomogeneous) and len(dtypes) == 1 and len(ranks) == 1 and \
                          len(orders) == 1 and all(len(s) <= 1 for s in shapes)
         contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
                             not isinstance(a.class_type, HomogeneousTupleType) for a in args)
