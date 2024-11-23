@@ -2155,7 +2155,9 @@ class SemanticParser(BasicParser):
             iterable.set_loop_counter(*indices)
         else:
             if isinstance(iterable, PythonEnumerate):
-                syntactic_index = iterator[0]
+                pyccel_stage.set_stage('syntactic')
+                syntactic_index = IndexedElement(iterator,0)
+                pyccel_stage.set_stage('semantic')
             else:
                 syntactic_index = iterator
 
@@ -2163,8 +2165,11 @@ class SemanticParser(BasicParser):
             if index is None:
                 start = LiteralInteger(0)
                 d_var = self._infer_type(start)
-                index = self._assign_lhs_variable(syntactic_index, d_var,
-                                rhs=start, new_expressions=new_expr)
+                if isinstance(syntactic_index, PyccelSymbol):
+                    index = self._assign_lhs_variable(syntactic_index, d_var,
+                                    rhs=start, new_expressions=new_expr)
+                else:
+                    index = self.scope.get_temporary_variable(PythonNativeInt())
             iterable.set_loop_counter(index)
 
         # Collect a target with a deducible dtype
@@ -2175,14 +2180,18 @@ class SemanticParser(BasicParser):
         # iterator with the correct dtype to allow correct dtype deductions later
         if isinstance(iterator, PyccelSymbol):
             if len(iterator_rhs) != 1:
-                iterator_rhs = PythonTuple(*iterator_rhs)
+                iterator_rhs = PythonTuple(*iterator_rhs, prefer_inhomogeneous=True)
             else:
                 iterator_rhs = iterator_rhs[0]
 
             iterator_d_var = self._infer_type(iterator_rhs)
 
-            target = (self._assign_lhs_variable(iterator, iterator_d_var,
-                            rhs=iterator_rhs, new_expressions=new_expr),)
+            target = self._assign_lhs_variable(iterator, iterator_d_var,
+                            rhs=iterator_rhs, new_expressions=new_expr)
+            if isinstance(target.class_type, InhomogeneousTupleType):
+                target = [self.scope.collect_tuple_element(v) for v in target]
+            else:
+                target = [target]
 
         elif isinstance(iterator, PythonTuple):
             target = [self._assign_lhs_variable(it, self._infer_type(rhs),
