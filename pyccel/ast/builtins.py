@@ -1064,7 +1064,7 @@ class PythonMap(Iterable):
             A list of objects that should be assigned to variables.
         """
         idx = self._indices[0] if len(self._indices)==1 else self._indices
-        return self.func[0](IndexedElement(self.func_args, idx))
+        return [self.func(IndexedElement(self.func_args, idx))]
 
     def get_range(self):
         """
@@ -1092,7 +1092,7 @@ class PythonMap(Iterable):
         list[TypedAstNode]
             A list of objects that should be assigned to variables.
         """
-        return (self.get_python_iterable_item(),)
+        return self.get_python_iterable_item()
 
 #==============================================================================
 class PythonPrint(PyccelAstNode):
