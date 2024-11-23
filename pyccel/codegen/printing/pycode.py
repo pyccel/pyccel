@@ -859,6 +859,12 @@ class PythonCodePrinter(CodePrinter):
         else:
             return f"{dict_obj}.get({key})\n"
 
+    def _print_DictItems(self, expr):
+        method_name = expr.name
+        dict_obj = self._print(expr.variable)
+
+        return f"{dict_obj}.items()"
+
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
         stop  = self._print(expr.stop)  if expr.stop  else ''

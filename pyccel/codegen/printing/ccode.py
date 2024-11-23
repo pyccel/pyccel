@@ -18,6 +18,8 @@ from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
+from pyccel.ast.builtin_methods.dict_methods  import DictItems
+
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
 from pyccel.ast.core      import Allocate, Deallocate
@@ -2331,15 +2333,21 @@ class CCodePrinter(CodePrinter):
         iterable = expr.iterable
         indices = iterable.loop_counters
 
-        if isinstance(iterable, VariableIterator) and isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
+        if isinstance(iterable, (VariableIterator, DictItems)) and \
+                isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
             var = iterable.variable
             iterable_type = var.class_type
             counter = Variable(IteratorType(iterable_type), indices[0].name)
             c_type = self.get_c_type(iterable_type)
             iterable_code = self._print(var)
             for_code = f'c_foreach ({self._print(counter)}, {c_type}, {iterable_code})'
-            additional_assign = CodeBlock([Assign(expr.target[0], DottedVariable(VoidType(), 'ref',
-                memory_handling='alias', lhs = counter))])
+            tmp_ref = DottedVariable(VoidType(), 'ref', memory_handling='alias', lhs = counter)
+            if isinstance(iterable, DictItems):
+                assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'first', lhs = tmp_ref)),
+                           Assign(expr.target[1], DottedVariable(VoidType(), 'second', lhs = tmp_ref))]
+            else:
+                assigns = [Assign(expr.target[0], tmp_ref)]
+            additional_assign = CodeBlock(assigns)
         else:
             range_iterable = iterable.get_range()
             if indices:

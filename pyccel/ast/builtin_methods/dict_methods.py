@@ -12,6 +12,7 @@ This module contains objects which describe these methods within Pyccel's AST.
 
 from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType, SymbolicType
 from pyccel.ast.internals import PyccelFunction, Iterable
+from pyccel.ast.variable  import IndexedElement
 
 
 __all__ = ('DictClear',
@@ -302,3 +303,16 @@ class DictItems(Iterable):
     def __init__(self, dict_obj):
         self._dict_obj = dict_obj
         super().__init__(1)
+
+    @property
+    def variable(self):
+        """
+        Get the object representing the dict.
+
+        Get the object representing the dict.
+        """
+        return self._dict_obj
+
+    def get_python_iterable_item(self):
+        item = DictPopitem(self._dict_obj)
+        return [IndexedElement(item, 0), IndexedElement(item, 1)]

@@ -24,6 +24,8 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableIterator
 
+from pyccel.ast.builtin_methods.dict_methods import DictItems
+
 from pyccel.ast.builtin_methods.set_methods import SetUnion
 
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -2559,7 +2561,8 @@ class FCodePrinter(CodePrinter):
         iterable = expr.iterable
         indices = iterable.loop_counters
 
-        if isinstance(iterable, VariableIterator) and isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType)):
+        if isinstance(iterable, (VariableIterator, DictItems)) and \
+                isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType)):
             var = iterable.variable
             iterable_type = var.class_type
             if isinstance(var, Variable):
@@ -2568,16 +2571,24 @@ class FCodePrinter(CodePrinter):
                 suggested_name = ''
                 errors.report("Iterating over a temporary object. This may cause compilation issues or cause calculations to be carried out twice",
                         severity='warning', symbol=expr)
-            iterable = self._print(var)
+            var_code = self._print(var)
             iterator = self.scope.get_temporary_variable(IteratorType(iterable_type),
                     name = suggested_name + 'iter')
             last = self.scope.get_temporary_variable(IteratorType(iterable_type),
                     name = suggested_name + 'last')
-            target = self._print(expr.target[0])
-            prolog = (f'{iterator} = {iterable} % begin()\n'
-                      f'{last} = {iterable} % end()\n'
-                      f'do while ({iterator} /= {last})\n'
-                      f'{target} = {iterator} % of()\n')
+            if isinstance(iterable, DictItems):
+                key = self._print(expr.target[0])
+                val = self._print(expr.target[1])
+                target_assign = (f'{key} = {iterator} % first()\n'
+                                 f'{val} = {iterator} % second()\n')
+            else:
+                target = self._print(expr.target[0])
+                target_assign = f'{target} = {iterator} % of()\n'
+
+            prolog = ''.join((f'{iterator} = {var_code} % begin()\n',
+                              f'{last} = {var_code} % end()\n',
+                              f'do while ({iterator} /= {last})\n',
+                              target_assign))
             epilog = f'call {iterator} % next()\nend do\n'
         else:
             index = indices[0] if indices else expr.target[0]
