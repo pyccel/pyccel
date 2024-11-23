@@ -860,7 +860,6 @@ class PythonCodePrinter(CodePrinter):
             return f"{dict_obj}.get({key})\n"
 
     def _print_DictItems(self, expr):
-        method_name = expr.name
         dict_obj = self._print(expr.variable)
 
         return f"{dict_obj}.items()"
