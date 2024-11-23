@@ -2123,6 +2123,29 @@ class SemanticParser(BasicParser):
         return iterable
 
     def _get_for_iterators(self, syntactic_iterable, iterator, new_expr):
+        """
+        Get the semantic target and iterable of a for loop.
+
+        Get the semantic target and iterable of a for loop. This method can be used to
+        handle generators, comprehension expressions or basic for loops.
+
+        Parameters
+        ----------
+        syntactic_iterable : TypedAstNode
+            The iterable that the for loop iterates over.
+        iterator : TypedAstNode
+            The syntactic iterator that takes the value of the elements of the iterable.
+        new_expr : list[PyccelAstNode]
+            A list which allows collection of any additional expressions
+            resulting from this operation (e.g. Allocation).
+
+        Returns
+        -------
+        target : TypedAstNode
+            The semantic iterator that takes the value of the elements of the iterable.
+        iterable : TypedAstNode
+            The semantic iterable that the for loop iterates over.
+        """
         iterable = self._get_iterable(syntactic_iterable)
 
         if iterable.num_loop_counters_required:
