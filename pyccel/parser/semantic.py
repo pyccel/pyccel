@@ -1825,7 +1825,7 @@ class SemanticParser(BasicParser):
         new_expr = []
         while isinstance(loop, For):
             nlevels+=1
-            target, iterable = self._get_for_iterators(loop.iterable, loop.target, new_expr)
+            self._get_for_iterators(loop.iterable, loop.target, new_expr)
 
             loop_elem = loop.body.body[0]
 
@@ -1846,6 +1846,7 @@ class SemanticParser(BasicParser):
                     loop.substitute(gen, assign.lhs)
                     loop_elem = loop.body.body[0]
             loop = loop_elem
+
         # Remove the throw-away variable from the scope
         self.scope.remove_variable(index)
 
