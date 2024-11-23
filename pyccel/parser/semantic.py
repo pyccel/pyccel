@@ -1825,23 +1825,7 @@ class SemanticParser(BasicParser):
         new_expr = []
         while isinstance(loop, For):
             nlevels+=1
-            iterable = self._get_iterable(loop.iterable)
-            n_index = max(1, iterable.num_loop_counters_required)
-            # Set dummy indices to iterable object in order to be able to
-            # obtain a target with a deducible dtype
-            iterable.set_loop_counter(*[index]*n_index)
-
-            iterator = loop.target
-
-            # Collect a target with a deducible dtype
-            iterator_rhs = iterable.get_python_iterable_item()
-            # Use _visit_Assign to create the requested iterator with the correct type
-            # The result of this operation is not stored, it is just used to declare
-            # iterator with the correct dtype to allow correct dtype deductions later
-            pyccel_stage.set_stage('syntactic')
-            syntactic_assign = Assign(iterator, iterator_rhs, python_ast=expr.python_ast)
-            pyccel_stage.set_stage('semantic')
-            self._visit(syntactic_assign)
+            target, iterable = self._get_for_iterators(loop.iterable, loop.target, new_expr)
 
             loop_elem = loop.body.body[0]
 
@@ -2137,6 +2121,56 @@ class SemanticParser(BasicParser):
                         symbol=syntactic_iterable, severity='fatal')
 
         return iterable
+
+    def _get_for_iterators(self, syntactic_iterable, iterator, new_expr):
+        iterable = self._get_iterable(syntactic_iterable)
+
+        if iterable.num_loop_counters_required:
+            indices = [Variable(PythonNativeInt(), self.scope.get_new_name(), is_temp=True)
+                        for i in range(iterable.num_loop_counters_required)]
+            iterable.set_loop_counter(*indices)
+        else:
+            if isinstance(iterable, PythonEnumerate):
+                syntactic_index = iterator[0]
+            else:
+                syntactic_index = iterator
+
+            index = self.check_for_variable(syntactic_index)
+            if index is None:
+                start = LiteralInteger(0)
+                d_var = self._infer_type(start)
+                index = self._assign_lhs_variable(syntactic_index, d_var,
+                                rhs=start, new_expressions=new_expr)
+            iterable.set_loop_counter(index)
+
+        # Collect a target with a deducible dtype
+        iterator_rhs = iterable.get_python_iterable_item()
+
+        # Use _visit_Assign to create the requested iterator with the correct type
+        # The result of this operation is not stored, it is just used to declare
+        # iterator with the correct dtype to allow correct dtype deductions later
+        if isinstance(iterator, PyccelSymbol):
+            if len(iterator_rhs) != 1:
+                iterator_rhs = PythonTuple(*iterator_rhs)
+            else:
+                iterator_rhs = iterator_rhs[0]
+
+            iterator_d_var = self._infer_type(iterator_rhs)
+
+            target = (self._assign_lhs_variable(iterator, iterator_d_var,
+                            rhs=iterator_rhs, new_expressions=new_expr),)
+
+        elif isinstance(iterator, PythonTuple):
+            target = [self._assign_lhs_variable(it, self._infer_type(rhs),
+                                rhs=rhs, new_expressions=new_expr)
+                        for it, rhs in zip(iterator, iterator_rhs)]
+        else:
+
+            errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
+                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                   severity='error')
+
+        return target, iterable
 
     #====================================================
     #                 _visit functions
@@ -3522,53 +3556,10 @@ class SemanticParser(BasicParser):
 
         scope = self.create_new_loop_scope()
 
-        # treatment of the index/indices
-        iterable = self._get_iterable(expr.iterable)
-
         new_expr = []
 
-        start = LiteralInteger(0)
-        iterator_d_var = self._infer_type(start)
-
-        iterator = expr.target
-
-        if iterable.num_loop_counters_required:
-            indices = [Variable(PythonNativeInt(), self.scope.get_new_name(), is_temp=True)
-                        for i in range(iterable.num_loop_counters_required)]
-            iterable.set_loop_counter(*indices)
-        else:
-            if isinstance(iterable, PythonEnumerate):
-                syntactic_index = iterator[0]
-            else:
-                syntactic_index = iterator
-
-            index = self.check_for_variable(syntactic_index)
-            if index is None:
-                index = self._assign_lhs_variable(syntactic_index, iterator_d_var,
-                                rhs=start, new_expressions=new_expr)
-            iterable.set_loop_counter(index)
-
-        iterator_rhs = iterable.get_python_iterable_item()
-        if isinstance(iterator, PyccelSymbol):
-            if len(iterator_rhs) != 1:
-                iterator_rhs = PythonTuple(*iterator_rhs)
-            else:
-                iterator_rhs = iterator_rhs[0]
-
-            iterator_d_var = self._infer_type(iterator_rhs)
-
-            target = (self._assign_lhs_variable(iterator, iterator_d_var,
-                            rhs=iterator_rhs, new_expressions=new_expr),)
-
-        elif isinstance(iterator, PythonTuple):
-            target = [self._assign_lhs_variable(it, self._infer_type(rhs),
-                                rhs=rhs, new_expressions=new_expr)
-                        for it, rhs in zip(iterator, iterator_rhs)]
-        else:
-
-            errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
-                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                   severity='error')
+        # treatment of the index/indices
+        target, iterable = self._get_for_iterators(expr.iterable, expr.target, new_expr)
 
         body = self._visit(expr.body)
 
