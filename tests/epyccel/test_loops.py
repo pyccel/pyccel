@@ -189,6 +189,15 @@ def test_enumerate_on_1d_array_with_start(language):
     assert np.array_equal( f1(z, 5), f2(z, 5) )
     assert np.array_equal( f1(z,-2), f2(z,-2) )
 
+def test_enumerate_on_1d_array_with_tuple(language):
+
+    f1 = loops.enumerate_on_1d_array_with_tuple
+    f2 = epyccel(f1, language=language)
+
+    z = np.arange( 7 )
+
+    assert np.array_equal( f1(z), f2(z) )
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
             pytest.mark.skip(reason="list comprehension not supported yet, related issue #1948"),

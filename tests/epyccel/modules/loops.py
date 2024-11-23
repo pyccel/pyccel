@@ -130,6 +130,15 @@ def enumerate_on_1d_array_with_start(z : 'int[:]', k : 'int'):
     return res
 
 # ...
+def enumerate_on_1d_array_with_tuple(z : 'int[:]'):
+
+    res = 0
+    for v in enumerate( z ):
+        res += v[0]*v[1]
+
+    return res
+
+# ...
 def zip_prod(m : int):
 
     x = [  i for i in range(m)]
