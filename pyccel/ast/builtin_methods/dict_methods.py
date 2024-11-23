@@ -314,5 +314,16 @@ class DictItems(Iterable):
         return self._dict_obj
 
     def get_python_iterable_item(self):
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns two objects that could be a key and a value of the dictionary.
+        These elements are used to determine the types of the loop targets.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
         item = DictPopitem(self._dict_obj)
         return [IndexedElement(item, 0), IndexedElement(item, 1)]
