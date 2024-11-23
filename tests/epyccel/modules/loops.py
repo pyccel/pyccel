@@ -254,4 +254,12 @@ def less_than_100(n : int):
             return True
     return False
 
+def for_expression():
+    import numpy as np
+    c = np.array([1,2,3,4,5])
+    d = np.array([2.0,3.0,1.0,9.0,11.0])
+    sum_e = 0.0
+    for ei in c+d:
+        sum_e = ei
 
+    return sum_e

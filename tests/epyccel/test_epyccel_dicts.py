@@ -257,3 +257,4 @@ def test_dict_items(language):
     assert python_result == pyccel_result
     assert isinstance(python_result[0], type(pyccel_result[0]))
     assert isinstance(python_result[1], type(pyccel_result[1]))
+

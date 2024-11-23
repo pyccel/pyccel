@@ -285,14 +285,8 @@ def test_less_than_100(language):
     assert f1(10) == f2(10)
     assert f1(101) == f2(101)
 
-##==============================================================================
-## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
-##==============================================================================
-#
-#def teardown_module():
-#    import os, glob
-#    dirname  = os.path.dirname( loops.__file__ )
-#    pattern  = os.path.join( dirname, '__epyccel__*' )
-#    filelist = glob.glob( pattern )
-#    for f in filelist:
-#        os.remove( f )
+def test_for_expression(language):
+    f1 = loops.for_expression
+    f2 = epyccel( f1, language = language )
+
+    assert f1() == f2()
