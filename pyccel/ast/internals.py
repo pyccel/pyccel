@@ -405,22 +405,6 @@ class Iterable(TypedAstNode):
             i.set_current_user_node(self)
         self._indices = indices
 
-    def unset_loop_counter(self, invalidate = True):
-        """
-        Remove the iterator(s) set for the generated range.
-
-        Remove the iterator(s) set for the generated range.
-
-        Parameters
-        ----------
-        invalidate : bool, default=True
-            Indicates whether the indices should be invalidated (so all attributes
-            are removed to allow them to be garbage collected).
-        """
-        for i in self._indices:
-            i.remove_user_node(self, invalidate)
-        self._indices = None
-
     @property
     def loop_counters(self):
         """
