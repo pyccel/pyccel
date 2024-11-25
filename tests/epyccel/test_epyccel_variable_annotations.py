@@ -363,6 +363,14 @@ def test_inhomogeneous_tuple_annotation_4(language):
     epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
     assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
 
+def test_inhomogeneous_tuple_annotation_5(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[tuple[int, float]] = ((1,0.2),)
+        return a[0][0], a[0][1]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
