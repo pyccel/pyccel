@@ -315,9 +315,18 @@ def execute_pyccel(fname, *,
     #         # Call same function on 'dep'
     #         pass
     #------------------------------------------------------
-
-    manage_dependencies(codegen.printer, src_compiler, pyccel_dirpath, mod_obj,
-            language, verbose, convert_only)
+    try:
+        manage_dependencies(codegen.printer, src_compiler, pyccel_dirpath, mod_obj,
+                language, verbose, convert_only)
+    except NotImplementedError as error:
+        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error',
+            traceback=error.__traceback__)
+        handle_error('code generation (wrapping)')
+        raise PyccelCodegenError(msg) from None
+    except PyccelError:
+        handle_error('code generation (wrapping)')
+        raise
 
     if convert_only:
         # Change working directory back to starting point

@@ -331,23 +331,13 @@ def manage_dependencies(printer, compiler, pyccel_dirpath, mod_obj, language, ve
     # Iterate over the external_libs list and determine if the printer
     # requires an external lib to be included.
     for key, import_node in printer.get_additional_imports().items():
-        try:
-            deps = generate_extension_modules(key, import_node, pyccel_dirpath,
-                                              includes     = mod_obj.includes,
-                                              libs         = mod_obj.libs,
-                                              libdirs      = mod_obj.libdirs,
-                                              dependencies = mod_obj.dependencies,
-                                              accelerators = mod_obj.accelerators,
-                                              language = language)
-        except NotImplementedError as error:
-            errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
-                severity='error',
-                traceback=error.__traceback__)
-            handle_error('code generation (wrapping)')
-            raise PyccelCodegenError(msg) from None
-        except PyccelError:
-            handle_error('code generation (wrapping)')
-            raise
+        deps = generate_extension_modules(key, import_node, pyccel_dirpath,
+                                          includes     = mod_obj.includes,
+                                          libs         = mod_obj.libs,
+                                          libdirs      = mod_obj.libdirs,
+                                          dependencies = mod_obj.dependencies,
+                                          accelerators = mod_obj.accelerators,
+                                          language = language)
         for d in deps:
             recompile_object(d,
                               compiler = compiler,
