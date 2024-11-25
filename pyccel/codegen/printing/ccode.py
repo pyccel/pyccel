@@ -14,7 +14,7 @@ from pyccel.ast.basic     import ScopedAstNode
 
 from pyccel.ast.bind_c    import BindCPointer
 
-from pyccel.ast.builtins  import PythonRange, PythonComplex
+from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonMin, PythonMax
 from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
@@ -766,72 +766,47 @@ class CCodePrinter(CodePrinter):
         else:
             func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
+    
+    def _print_PythonMinMax(self, expr):
+        arg = expr.args[0]
+        if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
+            self.add_import(c_imports['math'])
+            arg1 = self._print(arg[0])
+            arg2 = self._print(arg[1])
+            return f"f{expr.name}({arg1}, {arg2})"
+        elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
+            if isinstance(arg[0], Variable):
+                arg1 = self._print(arg[0])
+            else:
+                arg1_temp = self.scope.get_temporary_variable(PythonNativeInt())
+                assign1 = Assign(arg1_temp, arg[0])
+                self._additional_code += self._print(assign1)
+                arg1 = self._print(arg1_temp)
+
+            if isinstance(arg[1], Variable):
+                arg2 = self._print(arg[1])
+            else:
+                arg2_temp = self.scope.get_temporary_variable(PythonNativeInt())
+                assign2 = Assign(arg2_temp, arg[1])
+                self._additional_code += self._print(assign2)
+                arg2 = self._print(arg2_temp)
+            
+            op = '<' if isinstance(expr, PythonMin) else '>'
+            return f"({arg1} {op} {arg2} ? {arg1} : {arg2})"
+        elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
+            key = self.get_declare_type(arg[0])
+            self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
+            self.add_import(Import('Common_extensions', AsName(VariableTypeAnnotation(arg.dtype), key)))
+            return  f'{key}_{expr.name}({len(arg)}, {", ".join(self._print(a) for a in arg)})'
+        else:
+            return errors.report(f"{expr.name} in C does not support arguments of type {arg.dtype}", symbol=expr,
+                    severity='fatal')        
 
     def _print_PythonMin(self, expr):
-        arg = expr.args[0]
-        if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
-            self.add_import(c_imports['math'])
-            return "fmin({}, {})".format(self._print(arg[0]),
-                                         self._print(arg[1]))
-        elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
-            if isinstance(arg[0], Variable):
-                arg1 = self._print(arg[0])
-            else:
-                arg1_temp = self.scope.get_temporary_variable(PythonNativeInt())
-                assign1 = Assign(arg1_temp, arg[0])
-                self._additional_code += self._print(assign1)
-                arg1 = self._print(arg1_temp)
-
-            if isinstance(arg[1], Variable):
-                arg2 = self._print(arg[1])
-            else:
-                arg2_temp = self.scope.get_temporary_variable(PythonNativeInt())
-                assign2 = Assign(arg2_temp, arg[1])
-                self._additional_code += self._print(assign2)
-                arg2 = self._print(arg2_temp)
-
-            return f"({arg1} < {arg2} ? {arg1} : {arg2})"
-        elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
-            key = self.get_declare_type(arg[0])
-            self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
-            self.add_import(Import('Common_extensions', AsName(VariableTypeAnnotation(arg.dtype), key)))
-            return  f'{key}_min({len(arg)}, {", ".join(self._print(a) for a in arg)})'
-        else:
-            return errors.report(f"min in C does not support arguments of type {arg.dtype}", symbol=expr,
-                    severity='fatal')
+        return self._print_PythonMinMax(expr)
 
     def _print_PythonMax(self, expr):
-        arg = expr.args[0]
-        if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
-            self.add_import(c_imports['math'])
-            return "fmax({}, {})".format(self._print(arg[0]),
-                                         self._print(arg[1]))
-        elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
-            if isinstance(arg[0], Variable):
-                arg1 = self._print(arg[0])
-            else:
-                arg1_temp = self.scope.get_temporary_variable(PythonNativeInt())
-                assign1 = Assign(arg1_temp, arg[0])
-                self._additional_code += self._print(assign1)
-                arg1 = self._print(arg1_temp)
-
-            if isinstance(arg[1], Variable):
-                arg2 = self._print(arg[1])
-            else:
-                arg2_temp = self.scope.get_temporary_variable(PythonNativeInt())
-                assign2 = Assign(arg2_temp, arg[1])
-                self._additional_code += self._print(assign2)
-                arg2 = self._print(arg2_temp)
-
-            return f"({arg1} > {arg2} ? {arg1} : {arg2})"
-        elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
-            key = self.get_declare_type(arg[0])
-            self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
-            self.add_import(Import('Common_extensions', AsName(VariableTypeAnnotation(arg.dtype), key)))
-            return  f'{key}_max({len(arg)}, {", ".join(self._print(a) for a in arg)})'
-        else:
-            return errors.report(f"max in C does not support arguments of type {arg.dtype}", symbol=expr,
-                    severity='fatal')
+        return self._print_PythonMinMax(expr)
 
     def _print_SysExit(self, expr):
         code = ""
