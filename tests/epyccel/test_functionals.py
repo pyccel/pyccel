@@ -7,20 +7,6 @@ import pytest
 from pyccel import epyccel
 from modules import functionals
 
-@pytest.fixture( params=[
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="Fortran does not support list comprehensions. See #1948 (now applicable to Fortran)"),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="C does not support list comprehensions. See #1948"),
-            pytest.mark.c]),
-        pytest.param("python", marks = pytest.mark.python)
-    ],
-    scope = "module"
-)
-def language(request):
-    return request.param
-
 def compare_epyccel(f, language, *args):
     f2 = epyccel(f, language=language)
     out1 = f(*args)
@@ -62,11 +48,23 @@ def test_functional_for_2d_dependant_range(language):
     compare_epyccel(functionals.functional_for_2d_dependant_range_2, language)
     compare_epyccel(functionals.functional_for_2d_dependant_range_3, language)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="lists of tuples are not yes supported"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="lists of tuples are not yes supported"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_functional_for_2d_array_range(language):
     idx = randint(28)
     compare_epyccel(functionals.functional_for_2d_array_range, language,idx)
 
-def test_functional_for_2d_array_range_const(language):
+def test_functional_for_2d_range_const(language):
     compare_epyccel(functionals.functional_for_2d_range_const, language)
 
 def test_functional_for_3d_range(language):

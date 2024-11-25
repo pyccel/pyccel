@@ -330,3 +330,19 @@ def test_dict_complex_float(language):
 
     epyc_dict_int_float = epyccel(dict_int_float, language = language)
     assert epyc_dict_int_float() == dict_int_float()
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="C has no support for strings. See #2061"),
+            pytest.mark.c]),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_str_declaration(language):
+    def str_declaration():
+        a : str = 'hello here is a very long string with more than 128 characters. This used to be a Fortran limit but now I can hold lots more characters. There is no limit!'
+        return len(a)
+
+    epyc_str_declaration = epyccel(str_declaration, language = language)
+    assert str_declaration() == epyc_str_declaration()

@@ -4,8 +4,8 @@ All notable changes to this project will be documented in this file.
 ## \[UNRELEASED\]
 
 ### Added
-
--   #1880 : Add Python support for dict method `clear()`
+-   #1881 : Add Python support for dict method `copy()`.
+-   #1880 : Add Python support for dict method `clear()`.
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1787 : Ensure STC is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
@@ -75,6 +75,8 @@ All notable changes to this project will be documented in this file.
 -   #1972 : Simplified `printf` statement for Literal String.
 -   #2026 : Fix missing loop in slice assignment.
 -   #2008 : Ensure list/set/dict assignment is recognised as a reference.
+-   #2039 : Ensure any expressions in the iterable of a for loop are calculated before the loop.
+-   #2013 : Stop limiting the length of strings to 128 characters.
 
 ### Changed
 
