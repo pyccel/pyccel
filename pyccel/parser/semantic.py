@@ -36,7 +36,7 @@ from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
-from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
+from pyccel.ast.core import Assign, AliasAssign
 from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import ConstructorCall, InlineFunctionDef
@@ -45,7 +45,6 @@ from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
 from pyccel.ast.core import Module
 from pyccel.ast.core import While
-from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import Program
 from pyccel.ast.core import EmptyNode
@@ -3452,13 +3451,7 @@ class SemanticParser(BasicParser):
                     else:
                         self._indicate_pointer_target(l, r, expr)
 
-                elif new_expr.is_symbolic_alias:
-                    new_expr = SymbolicAssign(l, r)
-
-                    # in a symbolic assign, the rhs can be a lambda expression
-                    # it is then treated as a def node
-
-                    F = self.scope.find(l, 'symbolic_functions')
+                elif isinstance(l.class_type, SymbolicType):
                     errors.report(PYCCEL_RESTRICTION_TODO,
                                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                                   severity='fatal')
@@ -4315,20 +4308,7 @@ class SemanticParser(BasicParser):
 #                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
 #                   severity='fatal')
 
-        if is_symbolic(args[0]):
-            _args = []
-            for a in args:
-                f = self.scope.find(a.name, 'symbolic_functions')
-                if f is None:
-                    _args.append(a)
-                else:
-
-                    # TODO improve: how can we print SymbolicAssign as  lhs = rhs
-
-                    _args.append(f)
-            return SymbolicPrint(_args)
-        else:
-            return PythonPrint(args)
+        return PythonPrint(args)
 
     def _visit_ClassDef(self, expr):
         # TODO - improve the use and def of interfaces
