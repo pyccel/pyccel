@@ -1690,11 +1690,8 @@ class CCodePrinter(CodePrinter):
             arg_code = self._print(ObjectAddress(arg))
             return f'{c_type}_size({arg_code})'
         elif isinstance(arg.class_type, StringType):
-            if isinstance(arg, LiteralString):
-                return self._print(LiteralInteger(len(arg.python_value)))
-            else:
-                arg_code = self._print(ObjectAddress(arg))
-                return f'cstr_size({arg_code})'
+            arg_code = self._print(ObjectAddress(arg))
+            return f'cstr_size({arg_code})'
         else:
             raise NotImplementedError(f"Don't know how to represent shape of object of type {arg.class_type}")
 
