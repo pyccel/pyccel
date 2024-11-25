@@ -13,8 +13,7 @@ import shutil
 from filelock import FileLock
 import pyccel.stdlib as stdlib_folder
 import pyccel.extensions as ext_folder
-from pyccel.errors.errors import Errors, PyccelError, PyccelCodegenError
-from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.errors.errors import Errors
 
 from .codegen              import printer_registry
 from .compiling.basic      import CompileObj
