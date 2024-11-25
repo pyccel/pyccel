@@ -223,7 +223,7 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         the translated file.
     """
     new_dependencies = []
-    lib_name = import_key.split('/', 1)[0]
+    lib_name = str(import_key).split('/', 1)[0]
     if lib_name == 'gFTL_extensions':
         lib_name = 'gFTL'
         mod = import_node.source_module
