@@ -2007,7 +2007,7 @@ class FCodePrinter(CodePrinter):
                 body_stmts.append(self._additional_code)
                 self._additional_code = ''
             body_stmts.append(line)
-        return ''.join(self._print(b) for b in body_stmts)
+        return ''.join(body_stmts)
 
     # TODO the ifs as they are are, is not optimal => use elif
     def _print_SymbolicAssign(self, expr):
@@ -2157,6 +2157,19 @@ class FCodePrinter(CodePrinter):
 
             return code
 
+        elif isinstance(class_type, HomogeneousListType):
+            if expr.alloc_type == 'resize':
+                var_code = self._print(expr.variable)
+                container_type = expr.variable.class_type
+                container = self._print(container_type)
+                size_code = self._print(expr.shape[0])
+                return f'{var_code} = {container}({size_code})\n'
+            elif expr.alloc_type == 'reserve':
+                var_code = self._print(expr.variable)
+                size_code = self._print(expr.shape[0])
+                return '{var_code} % reserve({size_code})\n'
+            else:
+                return ''
         elif isinstance(class_type, (HomogeneousContainerType, DictType)):
             return ''
 
@@ -3341,11 +3354,11 @@ class FCodePrinter(CodePrinter):
                             PyccelAdd(_shape, ind, simplify = True), ind)
 
         if isinstance(base.class_type, HomogeneousListType):
-            if any(isinstance(i, Slice) for i in inds):
-                raise NotImplementedError("Slice indexing not implemented for lists")
-            inds = [PyccelAdd(i, LiteralInteger(1), simplify=True) for i in inds]
-            inds_code = ", ".join(self._print(i) for i in inds)
-            return f"{base_code}%of({inds_code})"
+            assert len(inds) == 1
+            ind = inds[0]
+            assert not isinstance(ind, Slice)
+            ind_code = self._print(PyccelAdd(inds[0], LiteralInteger(1), simplify=True))
+            return f"{base_code}%of({ind_code})"
         elif isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             inds_code = ", ".join(self._print(i) for i in inds)
             return f"{base_code}({inds_code})"
