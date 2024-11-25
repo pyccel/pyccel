@@ -15,6 +15,7 @@ from pyccel.ast.internals import PyccelFunction
 
 
 __all__ = ('DictClear',
+           'DictCopy',
            'DictGet',
            'DictMethod',
            'DictPop',
@@ -256,4 +257,26 @@ class DictClear(DictMethod) :
     name = 'clear'
 
     def __init__(self, dict_obj):
+        super().__init__(dict_obj)
+
+#==============================================================================
+
+class DictCopy(DictMethod):
+    """
+    Represents a call to the .copy() method.
+
+    The copy() method returns a shallow copy of the dictionary.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+    """
+    __slots__ = ('_class_type',)
+    _shape = None
+    name = 'copy'
+
+    def __init__(self, dict_obj):
+        dict_type = dict_obj.class_type
+        self._class_type = dict_type
         super().__init__(dict_obj)
