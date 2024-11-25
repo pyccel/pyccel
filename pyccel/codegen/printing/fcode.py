@@ -1641,6 +1641,8 @@ class FCodePrinter(CodePrinter):
             return f'size({arg_code}, {index}, {prec})'
         elif isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             return f'{arg_code} % size()'
+        elif isinstance(arg.class_type, StringType):
+            return f'len({arg_code})'
         else:
             raise NotImplementedError(f"Don't know how to represent shape of object of type {arg.class_type}")
 
@@ -1900,8 +1902,9 @@ class FCodePrinter(CodePrinter):
             dtype_str = self._print(dtype)
 
             if intent_in:
-                dtype_str = dtype_str[:9] +'(len =*)'
-                #TODO improve ,this is the case of character as argument
+                dtype_str += '(len = *)'
+            else:
+                dtype_str += '(len = :)'
         elif isinstance(dtype, BindCPointer):
             dtype_str = 'type(c_ptr)'
             self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
@@ -1934,11 +1937,11 @@ class FCodePrinter(CodePrinter):
                 intentstr = f', intent({intent})'
 
         # Compute allocatable string
-        if not is_static and not is_string:
+        if not is_static:
             if is_alias:
                 allocatablestr = ', pointer'
 
-            elif on_heap and not intent_in and isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            elif on_heap and not intent_in and isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType, StringType)):
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -2004,7 +2007,7 @@ class FCodePrinter(CodePrinter):
                 body_stmts.append(self._additional_code)
                 self._additional_code = ''
             body_stmts.append(line)
-        return ''.join(self._print(b) for b in body_stmts)
+        return ''.join(body_stmts)
 
     # TODO the ifs as they are are, is not optimal => use elif
     def _print_SymbolicAssign(self, expr):
@@ -2154,6 +2157,19 @@ class FCodePrinter(CodePrinter):
 
             return code
 
+        elif isinstance(class_type, HomogeneousListType):
+            if expr.alloc_type == 'resize':
+                var_code = self._print(expr.variable)
+                container_type = expr.variable.class_type
+                container = self._print(container_type)
+                size_code = self._print(expr.shape[0])
+                return f'{var_code} = {container}({size_code})\n'
+            elif expr.alloc_type == 'reserve':
+                var_code = self._print(expr.variable)
+                size_code = self._print(expr.shape[0])
+                return '{var_code} % reserve({size_code})\n'
+            else:
+                return ''
         elif isinstance(class_type, (HomogeneousContainerType, DictType)):
             return ''
 
@@ -2204,8 +2220,7 @@ class FCodePrinter(CodePrinter):
         return 'complex'
 
     def _print_StringType(self, expr):
-        return 'character(len=280)'
-        #TODO fix improve later
+        return 'character'
 
     def _print_FixedSizeNumericType(self, expr):
         return f'{self._print(expr.primitive_type)}{expr.precision}'
@@ -3339,11 +3354,11 @@ class FCodePrinter(CodePrinter):
                             PyccelAdd(_shape, ind, simplify = True), ind)
 
         if isinstance(base.class_type, HomogeneousListType):
-            if any(isinstance(i, Slice) for i in inds):
-                raise NotImplementedError("Slice indexing not implemented for lists")
-            inds = [PyccelAdd(i, LiteralInteger(1), simplify=True) for i in inds]
-            inds_code = ", ".join(self._print(i) for i in inds)
-            return f"{base_code}%of({inds_code})"
+            assert len(inds) == 1
+            ind = inds[0]
+            assert not isinstance(ind, Slice)
+            ind_code = self._print(PyccelAdd(inds[0], LiteralInteger(1), simplify=True))
+            return f"{base_code}%of({ind_code})"
         elif isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             inds_code = ", ".join(self._print(i) for i in inds)
             return f"{base_code}({inds_code})"
