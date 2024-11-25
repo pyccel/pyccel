@@ -349,7 +349,7 @@ class CToPythonWrapper(Wrapper):
             # Check if the object is a set
             set_check = PySet_Check(py_obj)
 
-            # If the tuple is an object check that the elements have the right type
+            # If the set is an object check that the elements have the right type
             for_scope = self.scope.create_new_loop_scope()
             size_var = self.scope.get_temporary_variable(PythonNativeInt(), 'size')
             idx = self.scope.get_temporary_variable(CNativeInt())
@@ -2192,7 +2192,7 @@ class CToPythonWrapper(Wrapper):
 
         Extract the C-compatible FunctionDefArgument from the PythonObject.
         The C-compatible argument is extracted from collect_arg which holds a Python
-        oject into arg_var.
+        object into arg_var.
 
         The extraction is done by finding the appropriate function
         _extract_X_FunctionDefArgument for the object expr. X is the class type of the
@@ -2246,7 +2246,7 @@ class CToPythonWrapper(Wrapper):
 
         Extract the C-compatible scalar FunctionDefArgument from the PythonObject.
         The C-compatible argument is extracted from collect_arg which holds a Python
-        oject into arg_var.
+        object into arg_var.
 
         The extraction is done by calling a function from the C-Python API. These functions
         are indexed in the dictionary `py_to_c_registry`.
@@ -2310,7 +2310,7 @@ class CToPythonWrapper(Wrapper):
 
         Extract the C-compatible class FunctionDefArgument from the PythonObject.
         The C-compatible argument is extracted from collect_arg which holds a Python
-        oject into arg_var.
+        object into arg_var.
 
         The extraction is done by accessing the pointer from the `instance` attribute of the
         Pyccel generated class definition.
@@ -2377,7 +2377,7 @@ class CToPythonWrapper(Wrapper):
 
         Extract the C-compatible NumPy array FunctionDefArgument from the PythonObject.
         The C-compatible argument is extracted from collect_arg which holds a Python
-        oject into arg_var.
+        object into arg_var.
 
         The extraction is done by calling the function `pyarray_to_ndarray` from the stdlib.
 
@@ -2444,7 +2444,7 @@ class CToPythonWrapper(Wrapper):
 
         Extract the C-compatible homogeneous tuple FunctionDefArgument from the PythonObject.
         The C-compatible argument is extracted from collect_arg which holds a Python
-        oject into arg_var.
+        object into arg_var.
 
         The extraction is done by allocating an array and filling the elements with values
         extracted from the indexed Python tuple in collect_arg.
@@ -2529,7 +2529,7 @@ class CToPythonWrapper(Wrapper):
 
         Extract the C-compatible homogeneous tuple FunctionDefArgument from the PythonObject.
         The C-compatible argument is extracted from collect_arg which holds a Python
-        oject into arg_var.
+        object into arg_var.
 
         The extraction is done by allocating an array and filling the elements with values
         extracted from the indexed Python tuple in collect_arg.
