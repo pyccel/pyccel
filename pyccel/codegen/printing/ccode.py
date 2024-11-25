@@ -898,8 +898,8 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
-        imports = self.sort_imports(imports)
         self.invalidate_stc_headers(imports)
+        imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self._in_header = False
@@ -919,7 +919,6 @@ class CCodePrinter(CodePrinter):
         for item in expr.imports:
             if item.source_module and item.source_module is not self._current_module:
                 self.rename_imported_methods(item.source_module.classes)
-        self.invalidate_stc_headers(expr.imports)
         self.rename_imported_methods(expr.classes)
         body    = ''.join(self._print(i) for i in expr.body)
 
@@ -1080,15 +1079,15 @@ class CCodePrinter(CodePrinter):
         if source.startswith('stc/') or source in import_header_guard_prefix:
             code = ''
             for t in expr.target:
-                if 'Common' in source:
+                if source == 'Common_extensions':
+                    print(source)
                     element_decl = f'#define i_key {t.local_alias}\n'
                     header_guard_prefix = import_header_guard_prefix.get(source, '')
                     header_guard = f'{header_guard_prefix}_{t.local_alias.upper()}'
                     code += ''.join((f'#ifndef {header_guard}\n',
                         f'#define {header_guard}\n',
                         element_decl,
-                        '#define i_more\n' if source in import_header_guard_prefix else '',
-                        f'#include <{stc_header_mapping[source]}.h>\n' if source in import_header_guard_prefix else '', 
+                        f'#include <{stc_header_mapping[source]}.h>\n', 
                         f'#include <{source}.h>\n',
                         f'#endif // {header_guard}\n\n'))
                 else:
@@ -2669,8 +2668,8 @@ class CCodePrinter(CodePrinter):
         decs = ''.join(self._print(Declare(v)) for v in variables)
 
         imports = [*expr.imports, *self._additional_imports.values()]
-        imports = self.sort_imports(imports)
         self.invalidate_stc_headers(imports)
+        imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
