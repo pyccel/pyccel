@@ -1149,11 +1149,6 @@ class FCodePrinter(CodePrinter):
 
         return arg_format, arg
 
-    def _print_SymbolicPrint(self, expr):
-        # for every expression we will generate a print
-        code = '\n'.join(f"print *, 'sympy> {a}'" for a in expr.expr)
-        return code + '\n'
-
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
         return '!' + comments + '\n'
@@ -2008,14 +2003,6 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = ''
             body_stmts.append(line)
         return ''.join(body_stmts)
-
-    # TODO the ifs as they are are, is not optimal => use elif
-    def _print_SymbolicAssign(self, expr):
-        errors.report(FOUND_SYMBOLIC_ASSIGN,
-                      symbol=expr.lhs, severity='warning')
-
-        stmt = Comment(str(expr))
-        return self._print_Comment(stmt)
 
     def _print_NumpyReal(self, expr):
         value = self._print(expr.internal_var)

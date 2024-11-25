@@ -16,13 +16,12 @@ from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 from .bitwise_operators import PyccelBitOr, PyccelBitAnd
 
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
-                        PythonRange, PythonZip, PythonBool, Lambda)
+                        PythonRange, PythonZip, PythonBool)
 
 from .c_concepts import PointerCast
 
-from .datatypes import (PyccelType, SymbolicType, HomogeneousTupleType,
-                        PythonNativeBool, InhomogeneousTupleType,
-                        VoidType)
+from .datatypes import (PyccelType, HomogeneousTupleType, VoidType,
+                        PythonNativeBool, InhomogeneousTupleType)
 
 from .internals import PyccelSymbol, PyccelFunction, apply_pickle
 
@@ -90,8 +89,6 @@ __all__ = (
     'Return',
     'SeparatorComment',
     'StarredArguments',
-    'SymbolicAssign',
-    'SymbolicPrint',
     'SympyFunction',
     'While',
     'With',
@@ -348,31 +345,6 @@ class Assign(PyccelAstNode):
         cond = cond and isinstance(lhs, PyccelSymbol)
         cond = cond or isinstance(rhs, Variable) and rhs.is_alias
         return cond
-
-    @property
-    def is_symbolic_alias(self):
-        """
-        Returns True if the assignment is a symbolic alias.
-
-        Returns True if the assignment is a symbolic alias.
-        """
-
-        # TODO to be improved when handling classes
-        # TODO: Is this useful?
-
-        lhs = self.lhs
-        rhs = self.rhs
-        if isinstance(lhs, Variable):
-            return isinstance(lhs.class_type, SymbolicType)
-        elif isinstance(lhs, PyccelSymbol):
-            if isinstance(rhs, PythonRange):
-                return True
-            elif isinstance(rhs, Variable):
-                return isinstance(rhs.class_type, SymbolicType)
-            elif isinstance(rhs, PyccelSymbol):
-                return True
-
-        return False
 
 #------------------------------------------------------------------------------
 class Allocate(PyccelAstNode):
@@ -726,47 +698,6 @@ class AliasAssign(PyccelAstNode):
 
     def __str__(self):
         return f'{self.lhs} := {self.rhs}'
-
-    @property
-    def lhs(self):
-        return self._lhs
-
-    @property
-    def rhs(self):
-        return self._rhs
-
-
-class SymbolicAssign(PyccelAstNode):
-
-    """Represents symbolic aliasing for code generation. An alias is any statement of the
-    form `lhs := rhs` where
-
-    Parameters
-    ----------
-    lhs : PyccelSymbol
-
-    rhs : Range
-
-    Examples
-    --------
-    >>> from pyccel.ast.internals import PyccelSymbol
-    >>> from pyccel.ast.core import SymbolicAssign
-    >>> from pyccel.ast.core import Range
-    >>> r = Range(0, 3)
-    >>> y = PyccelSymbol('y')
-    >>> SymbolicAssign(y, r)
-
-    """
-    __slots__ = ('_lhs', '_rhs')
-    _attribute_nodes = ('_lhs', '_rhs')
-
-    def __init__(self, lhs, rhs):
-        self._lhs = lhs
-        self._rhs = rhs
-        super().__init__()
-
-    def __str__(self):
-        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
     @property
     def lhs(self):
@@ -4157,44 +4088,6 @@ class Raise(PyccelAstNode):
     __slots__ = ()
     _attribute_nodes = ()
 
-
-
-class SymbolicPrint(PyccelAstNode):
-
-    """Represents a print function of symbolic expressions in the code.
-
-    Parameters
-    ----------
-    expr : TypedAstNode
-        The expression to print
-
-    Examples
-    --------
-    >>> from pyccel.ast.internals import symbols
-    >>> from pyccel.ast.core import Print
-    >>> n,m = symbols('n,m')
-    >>> Print(('results', n,m))
-    Print((results, n, m))
-    """
-    __slots__ = ('_expr',)
-    _attribute_nodes = ('_expr',)
-
-    def __init__(self, expr):
-        if not iterable(expr):
-            raise TypeError('Expecting an iterable')
-
-        for i in expr:
-            if not isinstance(i, (Lambda, SymbolicAssign,
-                              SympyFunction)):
-                raise TypeError('Expecting Lambda, SymbolicAssign, SympyFunction for {}'.format(i))
-
-        self._expr = expr
-
-        super().__init__()
-
-    @property
-    def expr(self):
-        return self._expr
 
 
 class Del(PyccelAstNode):
