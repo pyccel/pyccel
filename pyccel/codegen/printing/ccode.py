@@ -2379,6 +2379,10 @@ class CCodePrinter(CodePrinter):
             for_code = self._additional_code + for_code
             self._additional_code = ''
 
+        if self._additional_code:
+            for_code = self._additional_code + for_code
+            self._additional_code = ''
+
         body = self._print(additional_assign) + self._print(expr.body)
 
         self.exit_scope()
