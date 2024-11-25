@@ -316,7 +316,8 @@ def execute_pyccel(fname, *,
     #         pass
     #------------------------------------------------------
 
-    manage_dependencies(codegen.printer, src_compiler, pyccel_dirpath, includes, compile_libs, libdirs, mod_obj, modules, accelerators, language, verbose, convert_only)
+    manage_dependencies(codegen.printer, src_compiler, pyccel_dirpath, mod_obj,
+            language, verbose, convert_only)
 
     if convert_only:
         # Change working directory back to starting point

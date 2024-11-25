@@ -13,7 +13,8 @@ import shutil
 from filelock import FileLock
 import pyccel.stdlib as stdlib_folder
 import pyccel.extensions as ext_folder
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors import Errors, PyccelError, PyccelCodegenError
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
 from .codegen              import printer_registry
 from .compiling.basic      import CompileObj
@@ -283,7 +284,29 @@ def recompile_object(compile_obj,
                 output_folder=compile_obj.source_folder,
                 verbose=verbose)
 
-def manage_dependencies(printer, compiler, pyccel_dirpath, includes, compile_libs, libdirs, mod_obj, modules, accelerators, language, verbose, convert_only = False):
+def manage_dependencies(printer, compiler, pyccel_dirpath, mod_obj, language, verbose, convert_only = False):
+    """
+    Manage dependencies of the code to be compiled.
+
+    Manage dependencies of the code to be compiled.
+
+    Parameters
+    ----------
+    printer : CodePrinter
+        The printer that printed the code. This object describes dependencies from imports.
+    compiler : Compiler
+        A compiler that can be used to compile dependencies.
+    pyccel_dirpath : str
+        The path in which the Pyccel output is generated (__pyccel__).
+    mod_obj : CompileObj
+        The object that we are aiming to copile.
+    language : str
+        The language in which code is being printed.
+    verbose : bool
+        Indicates whether additional information should be printed.
+    convert_only : bool, default=False
+        Indicates if the compilation step is required or not.
+    """
     # Iterate over the internal_libs list and determine if the printer
     # requires an internal lib to be included.
     for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
@@ -304,18 +327,17 @@ def manage_dependencies(printer, compiler, pyccel_dirpath, includes, compile_lib
                               verbose  = verbose)
 
             mod_obj.add_dependencies(stdlib)
-            modules.append(stdlib)
 
     # Iterate over the external_libs list and determine if the printer
     # requires an external lib to be included.
     for key, import_node in printer.get_additional_imports().items():
         try:
             deps = generate_extension_modules(key, import_node, pyccel_dirpath,
-                                              includes     = includes,
-                                              libs         = compile_libs,
-                                              libdirs      = libdirs,
-                                              dependencies = modules,
-                                              accelerators = accelerators,
+                                              includes     = mod_obj.includes,
+                                              libs         = mod_obj.libs,
+                                              libdirs      = mod_obj.libdirs,
+                                              dependencies = mod_obj.dependencies,
+                                              accelerators = mod_obj.accelerators,
                                               language = language)
         except NotImplementedError as error:
             errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
