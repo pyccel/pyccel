@@ -25,6 +25,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
+    "astunparse >= 1.6.0",
     "coverage >= 3.1",
     "mpi4py >= 3.0.0",
     "pytest >= 7.0",
