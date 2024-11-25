@@ -713,9 +713,9 @@ class CCodePrinter(CodePrinter):
 
         This function iterates over the list of imports and removes any targets
         from STC headers if the target is present in their corresponding
-        STC extension headers are present.
+        STC extension headers.
         The STC extension headers take care of including the standard
-        headers making them redundant.
+        headers.
 
         Parameters
         ----------
