@@ -1641,6 +1641,8 @@ class FCodePrinter(CodePrinter):
             return f'size({arg_code}, {index}, {prec})'
         elif isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             return f'{arg_code} % size()'
+        elif isinstance(arg.class_type, StringType):
+            return f'len({arg_code})'
         else:
             raise NotImplementedError(f"Don't know how to represent shape of object of type {arg.class_type}")
 
@@ -1900,8 +1902,9 @@ class FCodePrinter(CodePrinter):
             dtype_str = self._print(dtype)
 
             if intent_in:
-                dtype_str = dtype_str[:9] +'(len =*)'
-                #TODO improve ,this is the case of character as argument
+                dtype_str += '(len = *)'
+            else:
+                dtype_str += '(len = :)'
         elif isinstance(dtype, BindCPointer):
             dtype_str = 'type(c_ptr)'
             self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
@@ -1934,11 +1937,11 @@ class FCodePrinter(CodePrinter):
                 intentstr = f', intent({intent})'
 
         # Compute allocatable string
-        if not is_static and not is_string:
+        if not is_static:
             if is_alias:
                 allocatablestr = ', pointer'
 
-            elif on_heap and not intent_in and isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            elif on_heap and not intent_in and isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType, StringType)):
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -2217,8 +2220,7 @@ class FCodePrinter(CodePrinter):
         return 'complex'
 
     def _print_StringType(self, expr):
-        return 'character(len=280)'
-        #TODO fix improve later
+        return 'character'
 
     def _print_FixedSizeNumericType(self, expr):
         return f'{self._print(expr.primitive_type)}{expr.precision}'
