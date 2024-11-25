@@ -2155,9 +2155,12 @@ class SemanticParser(BasicParser):
             iterable.set_loop_counter(*indices)
         else:
             if isinstance(iterable, PythonEnumerate):
-                pyccel_stage.set_stage('syntactic')
-                syntactic_index = IndexedElement(iterator,0)
-                pyccel_stage.set_stage('semantic')
+                if isinstance(iterator, PythonTuple):
+                    syntactic_index = iterator[0]
+                else:
+                    pyccel_stage.set_stage('syntactic')
+                    syntactic_index = IndexedElement(iterator,0)
+                    pyccel_stage.set_stage('semantic')
             else:
                 syntactic_index = iterator
 
