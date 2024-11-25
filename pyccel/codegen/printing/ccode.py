@@ -1080,7 +1080,6 @@ class CCodePrinter(CodePrinter):
             code = ''
             for t in expr.target:
                 if source == 'Common_extensions':
-                    print(source)
                     element_decl = f'#define i_key {t.local_alias}\n'
                     header_guard_prefix = import_header_guard_prefix.get(source, '')
                     header_guard = f'{header_guard_prefix}_{t.local_alias.upper()}'
