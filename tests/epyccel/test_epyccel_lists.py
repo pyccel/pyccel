@@ -771,13 +771,13 @@ def test_dict_ptr(language):
     assert python_result == pyccel_result
 
 def test_list_return(stc_language):
-￼    def list_return():
-￼        a = [1,2,3,4,5]
-￼        return a
-￼
-￼    epyccel_func = epyccel(list_return, language = stc_language)
-￼    pyccel_result = epyccel_func()
-￼    python_result = list_return()
-￼    assert python_result == pyccel_result
-￼    assert isinstance(python_result, type(pyccel_result))
-￼    assert isinstance(python_result.pop(), type(pyccel_result.pop()))
+    def list_return():
+        a = [1,2,3,4,5]
+        return a
+
+    epyccel_func = epyccel(list_return, language = stc_language)
+    pyccel_result = epyccel_func()
+    python_result = list_return()
+    assert python_result == pyccel_result
+    assert isinstance(python_result, type(pyccel_result))
+    assert isinstance(python_result.pop(), type(pyccel_result.pop()))
