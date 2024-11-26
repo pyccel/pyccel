@@ -365,7 +365,7 @@ def test_inhomogeneous_tuple_annotation_4(language):
 
 def test_inhomogeneous_tuple_annotation_5(language):
     def inhomogeneous_tuple_annotation():
-        a : tuple[tuple[int, float]] = ((1,0.2),)
+        a : tuple[tuple[int, float]] = ((1,0.2),) #pylint: disable=unsubscriptable-object
         return a[0][0], a[0][1]
 
     epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
@@ -373,7 +373,7 @@ def test_inhomogeneous_tuple_annotation_5(language):
 
 def test_inhomogeneous_tuple_annotation_6(language):
     def inhomogeneous_tuple_annotation():
-        a : tuple[tuple[tuple[int, float]]] = (((1,0.2),),)
+        a : tuple[tuple[tuple[int, float]]] = (((1,0.2),),) #pylint: disable=unsubscriptable-object
         return a[0][0][0], a[0][0][1]
 
     epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
