@@ -187,7 +187,7 @@ def test_multi_level_tuple_arg(language):
         assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
 
 def test_homogeneous_tuples_result(stc_language):
-    def my_tuple() -> tuple[int, ...]:
+    def my_tuple() -> 'tuple[int, ...]':
         a = (1,2,3,4,5)
         return a
 
