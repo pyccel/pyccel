@@ -355,8 +355,25 @@ class Iterable(TypedAstNode):
     - get_range : Returns the range required for the iteration.
     - get_python_iterable_item : Returns the item of the iterable that will be saved to the
         variables which are the loop targets.
+        E.g. for the loop:
+        >>> for idx, v in enumerate(var)
+
+        this function should return the range index `idx` (this may be set using
+        set_loop_counter) and var[idx].
+        These objects are used for type deductions.
     - get_assign_targets : Returns any objects that should be assigned to targets
-        (e.g. var[idx] for the iterable enumerate(var) with targets idx, var_idx).
+        E.g. for the loop:
+        >>> for idx, v in enumerate(var)
+
+        The object `var[idx]` is returned. The printer is then responsible for
+        creating the Assign(v, var[idx])
+        E.g. for the loop:
+        >>> for r,p in zip(r_var,p_var)
+
+        The objects `r_var[idx]` and `p_var[idx]` are returned. The index is retrieved
+        from this class where it was set using set_loop_counter.
+        The printer is then responsible for creating the Assign(r, r_var[idx]) and
+        Assign(p, p_var[idx]).
 
     Parameters
     ----------
