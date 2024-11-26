@@ -765,6 +765,7 @@ class CToPythonWrapper(Wrapper):
 
         ok_code = LiteralInteger(0, dtype=CNativeInt())
         error_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
+        self._error_exit_code = error_code
 
         # Create variables to temporarily modify the Python path so the file will be discovered
         current_path = func_scope.get_temporary_variable(PyccelPyObject(), 'current_path', memory_handling='alias')
@@ -785,6 +786,7 @@ class CToPythonWrapper(Wrapper):
 
         result = func_scope.get_temporary_variable(CNativeInt())
         self.exit_scope()
+        self._error_exit_code = Nil()
         import_func = FunctionDef(func_name, (), (FunctionDefResult(result),), body, is_static=True, scope = func_scope)
 
         return API_var, import_func
