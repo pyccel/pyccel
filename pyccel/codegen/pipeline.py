@@ -18,11 +18,6 @@ from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError
 from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
-from pyccel.codegen.utilities      import recompile_object
-from pyccel.codegen.utilities      import copy_internal_library
-from pyccel.codegen.utilities      import generate_extension_modules
-from pyccel.codegen.utilities      import internal_libs
-from pyccel.codegen.utilities      import external_libs
 from pyccel.codegen.utilities      import manage_dependencies
 from pyccel.codegen.python_wrapper import create_shared_library
 from pyccel.naming                 import name_clash_checkers
