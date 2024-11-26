@@ -3408,7 +3408,8 @@ class SemanticParser(BasicParser):
                 if isinstance(l.class_type, InhomogeneousTupleType) \
                         and not isinstance(r, (FunctionCall, PyccelFunction)):
                     new_lhs.extend(self.scope.collect_tuple_element(v) for v in l)
-                    new_rhs.extend(self.scope.collect_tuple_element(v) for v in r)
+                    new_rhs.extend(self.scope.collect_tuple_element(r[i]) \
+                            for i in range(len(l.class_type)))
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
                 elif isinstance(l, Variable) and isinstance(l.class_type, InhomogeneousTupleType):
