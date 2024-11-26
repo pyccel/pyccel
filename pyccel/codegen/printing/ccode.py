@@ -1736,9 +1736,9 @@ class CCodePrinter(CodePrinter):
                     malloc_size = ' * '.join([malloc_size, *(self._print(s) for s in expr.shape)])
                 return f'{var_code} = malloc({malloc_size});\n'
             else:
-                raise NotImplementedError(f"Allocate not implemented for {variable}")
+                raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
         else:
-            raise NotImplementedError(f"Allocate not implemented for {variable}")
+            raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
 
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
