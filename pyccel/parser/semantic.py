@@ -1711,7 +1711,24 @@ class SemanticParser(BasicParser):
                 raise_error = var.class_type != result_type
             elif isinstance(var.class_type, InhomogeneousTupleType) and \
                     isinstance(class_type, HomogeneousTupleType):
-                raise_error = any(a != class_type.element_type for a in var.class_type) or var.shape[0] != d_var['shape'][0]
+                raise_error = False
+                old_element_type = var.class_type
+                new_element_type = class_type
+                # Equate homogeneous tuples of size 1 with inhomogeneous tuples
+                for new_s in d_var['shape']:
+                    # If size is different then types don't match
+                    raise_error = (new_s != len(old_element_type))
+                    # If an error is raised then no need to keep searching
+                    # If types match then no error is needed
+                    if raise_error or old_element_type == new_element_type:
+                        break
+                    # If the new_element_type is not a HomogeneousTupleType then
+                    # we cannot check its elements as we are already incompatible
+                    if not isinstance(new_element_type, HomogeneousTupleType):
+                        raise_error = True
+                        break
+                    old_element_type = old_element_type[0]
+                    new_element_type = new_element_type.element_type
             elif isinstance(var.class_type, HomogeneousTupleType) and \
                     isinstance(class_type, InhomogeneousTupleType):
                 # TODO: Remove isinstance(rhs, Variable) condition when tuples are saved like lists
