@@ -15,8 +15,10 @@ from pyccel.ast.basic     import ScopedAstNode
 from pyccel.ast.bind_c    import BindCPointer
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
-from pyccel.ast.builtins  import PythonPrint, PythonType
+from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
+
+from pyccel.ast.builtin_methods.dict_methods  import DictItems
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
@@ -1215,7 +1217,7 @@ class CCodePrinter(CodePrinter):
 
                 for_body  = [PythonPrint(print_body, file=expr.file)]
                 for_scope = self.scope.create_new_loop_scope()
-                for_loop  = For(for_index, for_range, for_body, scope=for_scope)
+                for_loop  = For((for_index,), for_range, for_body, scope=for_scope)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
                 body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end],
@@ -2329,38 +2331,53 @@ class CCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
         iterable = expr.iterable
-        iterable_type = iterable.iterable.class_type
         indices = iterable.loop_counters
 
-        if isinstance(iterable_type, (DictType, HomogeneousSetType, HomogeneousListType)):
+        if isinstance(iterable, (VariableIterator, DictItems)) and \
+                isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
+            var = iterable.variable
+            iterable_type = var.class_type
             counter = Variable(IteratorType(iterable_type), indices[0].name)
             c_type = self.get_c_type(iterable_type)
-            iterable_code = self._print(iterable.iterable)
+            iterable_code = self._print(var)
             for_code = f'c_foreach ({self._print(counter)}, {c_type}, {iterable_code})'
-            additional_assign = CodeBlock([Assign(expr.target, DottedVariable(VoidType(), 'ref',
-                memory_handling='alias', lhs = counter))])
+            tmp_ref = DottedVariable(VoidType(), 'ref', memory_handling='alias', lhs = counter)
+            if isinstance(iterable, DictItems):
+                assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'first', lhs = tmp_ref)),
+                           Assign(expr.target[1], DottedVariable(VoidType(), 'second', lhs = tmp_ref))]
+            else:
+                assigns = [Assign(expr.target[0], tmp_ref)]
+            additional_assign = CodeBlock(assigns)
         else:
-            index = indices[0] if indices else expr.target
-            if iterable.num_loop_counters_required:
-                self.scope.insert_variable(index)
+            range_iterable = iterable.get_range()
+            if indices:
+                index = indices[0]
+                if iterable.num_loop_counters_required and index.is_temp:
+                    self.scope.insert_variable(index)
+            else:
+                index = expr.target[0]
 
-            target   = index
-            counter  = self._print(target)
-            iterable = expr.iterable.get_range()
-            additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
+            targets = iterable.get_assign_targets()
+            additional_assign = CodeBlock([AliasAssign(i, t) if i.is_alias else Assign(i, t) \
+                                    for i,t in zip(expr.target[-len(targets):], targets)])
 
-            step = iterable.step
-            start_code = self._print(iterable.start)
-            stop_code  = self._print(iterable.stop )
-            step_code  = self._print(iterable.step )
+            index_code = self._print(index)
+            step = range_iterable.step
+            start_code = self._print(range_iterable.start)
+            stop_code  = self._print(range_iterable.stop )
+            step_code  = self._print(range_iterable.step )
 
             # testing if the step is a value or an expression
             if is_literal_integer(step):
                 op = '>' if int(step) < 0 else '<'
-                stop_condition = f'{counter} {op} {stop_code}'
+                stop_condition = f'{index_code} {op} {stop_code}'
             else:
-                stop_condition = f'({step_code} > 0) ? ({counter} < {stop_code}) : ({counter} > {stop_code})'
-            for_code = f'for ({counter} = {start_code}; {stop_condition}; {counter} += {step_code})\n'
+                stop_condition = f'({step_code} > 0) ? ({index_code} < {stop_code}) : ({index_code} > {stop_code})'
+            for_code = f'for ({index_code} = {start_code}; {stop_condition}; {index_code} += {step_code})\n'
+
+        if self._additional_code:
+            for_code = self._additional_code + for_code
+            self._additional_code = ''
 
         if self._additional_code:
             for_code = self._additional_code + for_code
