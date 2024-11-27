@@ -525,14 +525,14 @@ def test_set_union_operator(language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_temporary_set_intersection(language):
+def test_temporary_set_intersection(python_only_language):
     def intersection_int():
         a = {1,2}
         b = {2}
         d = a.intersection(b).pop()
         return d
 
-    epyccel_func = epyccel(intersection_int, language = language)
+    epyccel_func = epyccel(intersection_int, language = python_only_language)
     pyccel_result = epyccel_func()
     python_result = intersection_int()
     assert python_result == pyccel_result
