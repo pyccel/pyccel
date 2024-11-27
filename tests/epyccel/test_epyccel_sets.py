@@ -537,40 +537,40 @@ def test_temporary_set_intersection(language):
     python_result = intersection_int()
     assert python_result == pyccel_result
 
-def test_set_intersection_list(language):
+def test_set_intersection_list(python_only_language):
     def intersection_list():
         a = {1.2, 2.3, 5.0}
         b = [1.2, 5.0, 4.0]
         d = a.intersection(b)
         return len(d), d.pop(), d.pop()
 
-    epyccel_func = epyccel(intersection_list, language = language)
+    epyccel_func = epyccel(intersection_list, language = python_only_language)
     pyccel_result = epyccel_func()
     python_result = intersection_list()
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_set_intersection_tuple(language):
+def test_set_intersection_tuple(python_only_language):
     def intersection_tuple():
         a = {True}
         b = (False, True)
         d = a.intersection(b)
         return len(d), d.pop()
 
-    epyccel_func = epyccel(intersection_tuple, language = language)
+    epyccel_func = epyccel(intersection_tuple, language = python_only_language)
     pyccel_result = epyccel_func()
     python_result = intersection_tuple()
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_set_intersection_operator(language):
+def test_set_intersection_operator(python_only_language):
     def intersection_int():
         a = {1,2,3,4,8}
         b = {5,2,3,7,8}
         c = a & b
         return len(c), c.pop(), c.pop(), c.pop()
 
-    epyccel_func = epyccel(intersection_int, language = language)
+    epyccel_func = epyccel(intersection_int, language = python_only_language)
     pyccel_result = epyccel_func()
     python_result = intersection_int()
     assert python_result[0] == pyccel_result[0]
