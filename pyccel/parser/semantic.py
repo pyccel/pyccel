@@ -3789,7 +3789,7 @@ class SemanticParser(BasicParser):
                 cls_base = get_cls_base(first.class_type)
                 if cls_base is None:
                     cls_base = self.scope.find(str(first.class_type), 'classes')
-                conversion_func = cls_base.get_method(rhs_name)
+                conversion_func = cls_base.get_method(target_type_name.name[-1])
         else:
             conversion_func = self.scope.find(target_type_name, 'functions')
             if conversion_func is None:
