@@ -1094,7 +1094,7 @@ class SyntaxParser(BasicParser):
         if len(args) == 0:
             args = ()
 
-        if len(args) == 1 and isinstance(args[0].value, GeneratorComprehension):
+        if len(args) == 1 and isinstance(args[0].value, (GeneratorComprehension, FunctionalFor)):
             return args[0].value
 
         func = self._visit(stmt.func)
@@ -1160,9 +1160,13 @@ class SyntaxParser(BasicParser):
 
         generators = list(self._visit(stmt.generators))
 
+        success = isinstance(self._context[-2],ast.Assign)
+        if not success and len(self._context) > 2:
+            success = isinstance(self._context[-3],ast.Assign) and isinstance(self._context[-2],ast.Call)
+
         assignment = next((c for c in reversed(self._context) if isinstance(c, ast.Assign)), None)
 
-        if assignment is None:
+        if not success:
             errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
                           symbol = stmt,
                           severity='error')
@@ -1173,6 +1177,12 @@ class SyntaxParser(BasicParser):
                 lhs = lhs[0]
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
+
+        parent = self._context[-2]
+        if isinstance(parent, ast.Call):
+            output_type = self._visit(parent.func)
+        else:
+            output_type = 'list'
 
         index = PyccelSymbol('_', is_temp=True)
 
@@ -1195,7 +1205,7 @@ class SyntaxParser(BasicParser):
         indices = indices[::-1]
 
         return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
-                             indices, index)
+                             indices, index, target_type = output_type)
 
     def _visit_GeneratorExp(self, stmt):
 
