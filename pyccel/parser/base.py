@@ -19,7 +19,6 @@ from pyccel.version import __version__
 
 from pyccel.ast.builtins import Lambda
 
-from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
 from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import Import, AsName
@@ -324,9 +323,6 @@ class BasicParser(object):
         container = self.scope.symbolic_functions
         if isinstance(func, SympyFunction):
             container[func.name] = func
-        elif isinstance(func, SymbolicAssign) and isinstance(func.rhs,
-                Lambda):
-            container[func.lhs] = func.rhs
         else:
             raise TypeError('Expected a symbolic_function')
 

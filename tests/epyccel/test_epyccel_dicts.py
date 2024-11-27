@@ -58,6 +58,7 @@ def test_dict_copy(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
+
 def test_dict_kwarg_init(python_only_language):
     def kwarg_init():
         b = dict(a=1, b=2) #pylint: disable=use-dict-literal
@@ -227,4 +228,33 @@ def test_dict_clear(python_only_language):
     pyccel_result = epyc_dict_clear()
     python_result = dict_clear()
     assert python_result == pyccel_result
+
+
+def test_dict_copy_method(python_only_language):
+    def dict_copy():
+        a = {1:1.0, 2:2.0}
+        b = a.copy()
+        return b
+    epyc_dict_copy = epyccel(dict_copy, language = python_only_language)
+    pyccel_result = epyc_dict_copy()
+    python_result = dict_copy()
+    assert python_result == pyccel_result
+
+def test_dict_items(language):
+    def dict_items():
+        a = {1:1.0, 2:2.0, 3:3.0, 5:4.7}
+        key_sum = 0
+        val_sum = 0.0
+        for key, val in a.items():
+            key_sum += key
+            val_sum += val
+
+        return key_sum, val_sum
+
+    epyc_dict_items = epyccel(dict_items, language = language)
+    pyccel_result = epyc_dict_items()
+    python_result = dict_items()
+    assert python_result == pyccel_result
+    assert isinstance(python_result[0], type(pyccel_result[0]))
+    assert isinstance(python_result[1], type(pyccel_result[1]))
 

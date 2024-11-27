@@ -459,3 +459,38 @@ def test_len_dict_int_float(stc_language):
     epyc_f = epyccel(f, language=stc_language)
 
     assert epyc_f() == f()
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="C has no support for strings. See #2061"),
+            pytest.mark.c]),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_len_string(language):
+    def f():
+        a = 'abcdefghij'
+        b = len(a)
+        return b
+
+    epyc_f = epyccel(f, language = language)
+
+    assert epyc_f() == f()
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="C has no support for strings. See #2061"),
+            pytest.mark.c]),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_len_literal_string(language):
+    def f():
+        b = len('abcd')
+        return b
+
+    epyc_f = epyccel(f, language = language)
+
+    assert epyc_f() == f()

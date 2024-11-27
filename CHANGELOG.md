@@ -4,8 +4,8 @@ All notable changes to this project will be documented in this file.
 ## \[UNRELEASED\]
 
 ### Added
-
--   #1880 : Add Python support for dict method `clear()`
+-   #1881 : Add Python support for dict method `copy()`.
+-   #1880 : Add Python support for dict method `clear()`.
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1787 : Ensure STC is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
@@ -42,6 +42,7 @@ All notable changes to this project will be documented in this file.
 -   #1918 : Add support for set method `clear()`.
 -   #1918 : Add support for set method `copy()`.
 -   #1753 : Add support for set method `union()`.
+-   #1884 : Add support for dict method `items()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
@@ -76,6 +77,8 @@ All notable changes to this project will be documented in this file.
 -   #1972 : Simplified `printf` statement for Literal String.
 -   #2026 : Fix missing loop in slice assignment.
 -   #2008 : Ensure list/set/dict assignment is recognised as a reference.
+-   #2039 : Ensure any expressions in the iterable of a for loop are calculated before the loop.
+-   #2013 : Stop limiting the length of strings to 128 characters.
 
 ### Changed
 
@@ -109,6 +112,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Stop using ndarrays as an intermediate step to call Fortran code.
 -   \[INTERNALS\] Stop using ndarrays as an intermediate step to return arrays from Fortran code.
 -   \[INTERNALS\] Unify the strategy for handling additional imports in the printing stage for different languages.
+-   \[INTERNALS\] Make `Iterable` into a super-class instead of a storage class.
 
 ### Deprecated
 
@@ -122,6 +126,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
+-   \[INTERNALS\] Remove unused classes `SymbolicAssign` and `SymbolicPrint`.
 
 ## \[1.12.1\] - 2024-10-01
 
