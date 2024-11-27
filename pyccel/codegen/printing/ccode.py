@@ -14,8 +14,8 @@ from pyccel.ast.basic     import ScopedAstNode
 
 from pyccel.ast.bind_c    import BindCPointer
 
-from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonMin, PythonMax
-from pyccel.ast.builtins  import PythonPrint, PythonType
+from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonMin
+from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
@@ -803,7 +803,7 @@ class CCodePrinter(CodePrinter):
             return  f'{key}_{expr.name}({len(arg)}, {", ".join(self._print(a) for a in arg)})'
         else:
             return errors.report(f"{expr.name} in C does not support arguments of type {arg.dtype}", symbol=expr,
-                    severity='fatal')        
+                    severity='fatal')
 
     def _print_PythonMin(self, expr):
         return self._print_PythonMinMax(expr)
