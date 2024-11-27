@@ -22,7 +22,9 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefAr
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
-from pyccel.ast.builtins import PythonBool, PythonList, PythonSet
+from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableIterator
+
+from pyccel.ast.builtin_methods.dict_methods import DictItems
 
 from pyccel.ast.builtin_methods.set_methods import SetUnion
 
@@ -1012,7 +1014,7 @@ class FCodePrinter(CodePrinter):
                     print_body.append(space_end)
 
                 for_body = [PythonPrint(print_body, file=expr.file)]
-                for_loop = For(for_index, for_range, for_body, scope=loop_scope)
+                for_loop = For((for_index,), for_range, for_body, scope=loop_scope)
                 for_end_char = LiteralString(']')
                 for_end = FunctionCallArgument(for_end_char,
                                                keyword='end')
@@ -1148,11 +1150,6 @@ class FCodePrinter(CodePrinter):
             errors.report(f"Printing {var_type} type is not supported currently", severity='fatal')
 
         return arg_format, arg
-
-    def _print_SymbolicPrint(self, expr):
-        # for every expression we will generate a print
-        code = '\n'.join(f"print *, 'sympy> {a}'" for a in expr.expr)
-        return code + '\n'
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
@@ -1641,6 +1638,8 @@ class FCodePrinter(CodePrinter):
             return f'size({arg_code}, {index}, {prec})'
         elif isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             return f'{arg_code} % size()'
+        elif isinstance(arg.class_type, StringType):
+            return f'len({arg_code})'
         else:
             raise NotImplementedError(f"Don't know how to represent shape of object of type {arg.class_type}")
 
@@ -1900,8 +1899,9 @@ class FCodePrinter(CodePrinter):
             dtype_str = self._print(dtype)
 
             if intent_in:
-                dtype_str = dtype_str[:9] +'(len =*)'
-                #TODO improve ,this is the case of character as argument
+                dtype_str += '(len = *)'
+            else:
+                dtype_str += '(len = :)'
         elif isinstance(dtype, BindCPointer):
             dtype_str = 'type(c_ptr)'
             self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
@@ -1934,11 +1934,11 @@ class FCodePrinter(CodePrinter):
                 intentstr = f', intent({intent})'
 
         # Compute allocatable string
-        if not is_static and not is_string:
+        if not is_static:
             if is_alias:
                 allocatablestr = ', pointer'
 
-            elif on_heap and not intent_in and isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            elif on_heap and not intent_in and isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType, StringType)):
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -2004,15 +2004,7 @@ class FCodePrinter(CodePrinter):
                 body_stmts.append(self._additional_code)
                 self._additional_code = ''
             body_stmts.append(line)
-        return ''.join(self._print(b) for b in body_stmts)
-
-    # TODO the ifs as they are are, is not optimal => use elif
-    def _print_SymbolicAssign(self, expr):
-        errors.report(FOUND_SYMBOLIC_ASSIGN,
-                      symbol=expr.lhs, severity='warning')
-
-        stmt = Comment(str(expr))
-        return self._print_Comment(stmt)
+        return ''.join(body_stmts)
 
     def _print_NumpyReal(self, expr):
         value = self._print(expr.internal_var)
@@ -2154,6 +2146,19 @@ class FCodePrinter(CodePrinter):
 
             return code
 
+        elif isinstance(class_type, HomogeneousListType):
+            if expr.alloc_type == 'resize':
+                var_code = self._print(expr.variable)
+                container_type = expr.variable.class_type
+                container = self._print(container_type)
+                size_code = self._print(expr.shape[0])
+                return f'{var_code} = {container}({size_code})\n'
+            elif expr.alloc_type == 'reserve':
+                var_code = self._print(expr.variable)
+                size_code = self._print(expr.shape[0])
+                return '{var_code} % reserve({size_code})\n'
+            else:
+                return ''
         elif isinstance(class_type, (HomogeneousContainerType, DictType)):
             return ''
 
@@ -2204,8 +2209,7 @@ class FCodePrinter(CodePrinter):
         return 'complex'
 
     def _print_StringType(self, expr):
-        return 'character(len=280)'
-        #TODO fix improve later
+        return 'character'
 
     def _print_FixedSizeNumericType(self, expr):
         return f'{self._print(expr.primitive_type)}{expr.precision}'
@@ -2570,29 +2574,39 @@ class FCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
         iterable = expr.iterable
-        iterable_type = iterable.iterable.class_type
-        indices = expr.iterable.loop_counters
+        indices = iterable.loop_counters
 
-        if isinstance(iterable_type, (DictType, HomogeneousSetType)):
-            if isinstance(iterable.iterable, Variable):
-                suggested_name = iterable.iterable.name + '_'
+        if isinstance(iterable, (VariableIterator, DictItems)) and \
+                isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType)):
+            var = iterable.variable
+            iterable_type = var.class_type
+            if isinstance(var, Variable):
+                suggested_name = var.name + '_'
             else:
                 suggested_name = ''
                 errors.report("Iterating over a temporary object. This may cause compilation issues or cause calculations to be carried out twice",
                         severity='warning', symbol=expr)
-            iterable = self._print(iterable.iterable)
+            var_code = self._print(var)
             iterator = self.scope.get_temporary_variable(IteratorType(iterable_type),
                     name = suggested_name + 'iter')
             last = self.scope.get_temporary_variable(IteratorType(iterable_type),
                     name = suggested_name + 'last')
-            target = self._print(expr.target)
-            prolog = (f'{iterator} = {iterable} % begin()\n'
-                      f'{last} = {iterable} % end()\n'
-                      f'do while ({iterator} /= {last})\n'
-                      f'{target} = {iterator} % of()\n')
+            if isinstance(iterable, DictItems):
+                key = self._print(expr.target[0])
+                val = self._print(expr.target[1])
+                target_assign = (f'{key} = {iterator} % first()\n'
+                                 f'{val} = {iterator} % second()\n')
+            else:
+                target = self._print(expr.target[0])
+                target_assign = f'{target} = {iterator} % of()\n'
+
+            prolog = ''.join((f'{iterator} = {var_code} % begin()\n',
+                              f'{last} = {var_code} % end()\n',
+                              f'do while ({iterator} /= {last})\n',
+                              target_assign))
             epilog = f'call {iterator} % next()\nend do\n'
         else:
-            index = indices[0] if indices else expr.target
+            index = indices[0] if indices else expr.target[0]
             if iterable.num_loop_counters_required:
                 self.scope.insert_variable(index)
 
@@ -2604,7 +2618,10 @@ class FCodePrinter(CodePrinter):
             prolog = f'do {target} = {range_code}\n'
             epilog = 'end do\n'
 
-            prolog += self._print(CodeBlock(iterable.get_assigns(expr.target)))
+            targets = iterable.get_assign_targets()
+            additional_assign = CodeBlock([AliasAssign(i, t) if i.is_alias else Assign(i, t) \
+                                    for i,t in zip(expr.target[-len(targets):], targets)])
+            prolog += self._print(additional_assign)
 
         body = self._print(expr.body)
 
@@ -3339,11 +3356,11 @@ class FCodePrinter(CodePrinter):
                             PyccelAdd(_shape, ind, simplify = True), ind)
 
         if isinstance(base.class_type, HomogeneousListType):
-            if any(isinstance(i, Slice) for i in inds):
-                raise NotImplementedError("Slice indexing not implemented for lists")
-            inds = [PyccelAdd(i, LiteralInteger(1), simplify=True) for i in inds]
-            inds_code = ", ".join(self._print(i) for i in inds)
-            return f"{base_code}%of({inds_code})"
+            assert len(inds) == 1
+            ind = inds[0]
+            assert not isinstance(ind, Slice)
+            ind_code = self._print(PyccelAdd(inds[0], LiteralInteger(1), simplify=True))
+            return f"{base_code}%of({ind_code})"
         elif isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             inds_code = ", ".join(self._print(i) for i in inds)
             return f"{base_code}({inds_code})"

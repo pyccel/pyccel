@@ -380,9 +380,9 @@ If the type does match then the value is unpacked into a C object. This is done 
 
 In order to create all the nodes necessary to describe the unpacking of the arguments we use functions named `_extract_X_FunctionDefArgument` where `X` is the type of the object being extracted from the `FunctionDefArgument`. This allows such functions to call each other recursively. This is notably useful for container types (tuples, lists, etc) whose elements may themselves be container types. The types of scalars are checked in the same way regardless of whether they are arguments or elements of a container so this also reduces code duplication.
 
-Once C objects have been retrieved the function is called normally.
+Similarly in order to create all the nodes necessary to describe the packing of the results we use functions named `_extract_X_FunctionDefResult` where `X` is the type of the object being packed from the `FunctionDefResult`. This allows such functions to call each other recursively. This is notably useful for container types (tuples, lists, etc) whose elements may themselves be container types.
 
-Finally all the arguments are packed into a Python tuple stored in a `PyObject` and are returned.
+Once C objects have been retrieved the function is called normally.
 
 The wrapper is attached to the module via a `PyMethodDef` (see C-API [docs](https://docs.python.org/3/c-api/structures.html#c.PyMethodDef)).
 

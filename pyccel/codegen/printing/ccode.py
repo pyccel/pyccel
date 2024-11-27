@@ -14,9 +14,12 @@ from pyccel.ast.basic     import ScopedAstNode
 
 from pyccel.ast.bind_c    import BindCPointer
 
-from pyccel.ast.builtins  import PythonRange, PythonComplex
-from pyccel.ast.builtins  import PythonPrint, PythonType
+from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonMin
+from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
+
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
+
+from pyccel.ast.builtin_methods.dict_methods  import DictItems
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
@@ -246,8 +249,14 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdbool',
                  'assert']}
 
-import_header_guard_prefix = {'Set_extensions'  : '_TOOLS_SET',
-                              'List_extensions' : '_TOOLS_LIST'}
+import_header_guard_prefix = {'Set_extensions'    : '_TOOLS_SET',
+                              'List_extensions'   : '_TOOLS_LIST',
+                              'Common_extensions' : '_TOOLS_COMMON'}
+
+
+stc_header_mapping = {'List_extensions': 'stc/vec',
+                      'Set_extensions': 'stc/hset',
+                      'Common_extensions': 'stc/common'}
 
 class CCodePrinter(CodePrinter):
     """
@@ -673,6 +682,32 @@ class CCodePrinter(CodePrinter):
         init = f'{container_name} = c_init({dtype}, {keyraw});\n'
         return init
 
+    def invalidate_stc_headers(self, imports):
+        """
+        Invalidate STC headers when STC extension headers are present.
+
+        This function iterates over the list of imports and removes any targets
+        from STC headers if the target is present in their corresponding
+        STC extension headers.
+        The STC extension headers take care of including the standard
+        headers.
+
+        Parameters
+        ----------
+        imports : list of Import
+            The list of Import objects representing the header files to include.
+
+        Returns
+        -------
+        None
+            The function modifies the `imports` list in-place.
+        """
+        for imp in imports:
+            if imp.source in stc_header_mapping:
+                for imp2 in imports:
+                    if imp2.source == stc_header_mapping[imp.source]:
+                        imp2.remove_target(imp.target)
+
     def rename_imported_methods(self, expr):
         """
         Rename class methods from user-defined imports.
@@ -709,12 +744,13 @@ class CCodePrinter(CodePrinter):
             func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
 
-    def _print_PythonMin(self, expr):
+    def _print_PythonMinMax(self, expr):
         arg = expr.args[0]
         if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
             self.add_import(c_imports['math'])
-            return "fmin({}, {})".format(self._print(arg[0]),
-                                         self._print(arg[1]))
+            arg1 = self._print(arg[0])
+            arg2 = self._print(arg[1])
+            return f"f{expr.name}({arg1}, {arg2})"
         elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
             if isinstance(arg[0], Variable):
                 arg1 = self._print(arg[0])
@@ -732,38 +768,22 @@ class CCodePrinter(CodePrinter):
                 self._additional_code += self._print(assign2)
                 arg2 = self._print(arg2_temp)
 
-            return f"({arg1} < {arg2} ? {arg1} : {arg2})"
+            op = '<' if isinstance(expr, PythonMin) else '>'
+            return f"({arg1} {op} {arg2} ? {arg1} : {arg2})"
+        elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
+            key = self.get_declare_type(arg[0])
+            self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
+            self.add_import(Import('Common_extensions', AsName(VariableTypeAnnotation(arg.dtype), key)))
+            return  f'{key}_{expr.name}({len(arg)}, {", ".join(self._print(a) for a in arg)})'
         else:
-            return errors.report("min in C is only supported for 2 scalar arguments", symbol=expr,
+            return errors.report(f"{expr.name} in C does not support arguments of type {arg.dtype}", symbol=expr,
                     severity='fatal')
+
+    def _print_PythonMin(self, expr):
+        return self._print_PythonMinMax(expr)
 
     def _print_PythonMax(self, expr):
-        arg = expr.args[0]
-        if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
-            self.add_import(c_imports['math'])
-            return "fmax({}, {})".format(self._print(arg[0]),
-                                         self._print(arg[1]))
-        elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
-            if isinstance(arg[0], Variable):
-                arg1 = self._print(arg[0])
-            else:
-                arg1_temp = self.scope.get_temporary_variable(PythonNativeInt())
-                assign1 = Assign(arg1_temp, arg[0])
-                self._additional_code += self._print(assign1)
-                arg1 = self._print(arg1_temp)
-
-            if isinstance(arg[1], Variable):
-                arg2 = self._print(arg[1])
-            else:
-                arg2_temp = self.scope.get_temporary_variable(PythonNativeInt())
-                assign2 = Assign(arg2_temp, arg[1])
-                self._additional_code += self._print(assign2)
-                arg2 = self._print(arg2_temp)
-
-            return f"({arg1} > {arg2} ? {arg1} : {arg2})"
-        else:
-            return errors.report("max in C is only supported for 2 scalar arguments", symbol=expr,
-                    severity='fatal')
+        return self._print_PythonMinMax(expr)
 
     def _print_SysExit(self, expr):
         code = ""
@@ -855,6 +875,7 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
+        self.invalidate_stc_headers(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self._in_header = False
@@ -1031,7 +1052,20 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1].python_value
         else:
             source = self._print(source)
-        if source.startswith('stc/') or source in import_header_guard_prefix:
+        if source == 'Common_extensions':
+            code = ''
+            for t in expr.target:
+                element_decl = f'#define i_key {t.local_alias}\n'
+                header_guard_prefix = import_header_guard_prefix.get(source, '')
+                header_guard = f'{header_guard_prefix}_{t.local_alias.upper()}'
+                code += ''.join((f'#ifndef {header_guard}\n',
+                     f'#define {header_guard}\n',
+                     element_decl,
+                     f'#include <{stc_header_mapping[source]}.h>\n', 
+                     f'#include <{source}.h>\n',
+                     f'#endif // {header_guard}\n\n'))
+            return code
+        elif source.startswith('stc/') or source in import_header_guard_prefix:
             code = ''
             for t in expr.target:
                 class_type = t.object.class_type
@@ -1053,6 +1087,8 @@ class CCodePrinter(CodePrinter):
                         f'#define {header_guard}\n',
                         f'#define i_type {container_type}\n',
                         element_decl,
+                        '#define i_more\n' if source in import_header_guard_prefix else '',
+                        f'#include <{stc_header_mapping[source]}.h>\n' if source in import_header_guard_prefix else '', 
                         f'#include <{source}.h>\n',
                         f'#endif // {header_guard}\n\n'))
             return code
@@ -1215,7 +1251,7 @@ class CCodePrinter(CodePrinter):
 
                 for_body  = [PythonPrint(print_body, file=expr.file)]
                 for_scope = self.scope.create_new_loop_scope()
-                for_loop  = For(for_index, for_range, for_body, scope=for_scope)
+                for_loop  = For((for_index,), for_range, for_body, scope=for_scope)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
                 body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end],
@@ -2329,38 +2365,57 @@ class CCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
         iterable = expr.iterable
-        iterable_type = iterable.iterable.class_type
         indices = iterable.loop_counters
 
-        if isinstance(iterable_type, (DictType, HomogeneousSetType, HomogeneousListType)):
+        if isinstance(iterable, (VariableIterator, DictItems)) and \
+                isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
+            var = iterable.variable
+            iterable_type = var.class_type
             counter = Variable(IteratorType(iterable_type), indices[0].name)
             c_type = self.get_c_type(iterable_type)
-            iterable_code = self._print(iterable.iterable)
+            iterable_code = self._print(var)
             for_code = f'c_foreach ({self._print(counter)}, {c_type}, {iterable_code})'
-            additional_assign = CodeBlock([Assign(expr.target, DottedVariable(VoidType(), 'ref',
-                memory_handling='alias', lhs = counter))])
+            tmp_ref = DottedVariable(VoidType(), 'ref', memory_handling='alias', lhs = counter)
+            if isinstance(iterable, DictItems):
+                assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'first', lhs = tmp_ref)),
+                           Assign(expr.target[1], DottedVariable(VoidType(), 'second', lhs = tmp_ref))]
+            else:
+                assigns = [Assign(expr.target[0], tmp_ref)]
+            additional_assign = CodeBlock(assigns)
         else:
-            index = indices[0] if indices else expr.target
-            if iterable.num_loop_counters_required:
-                self.scope.insert_variable(index)
+            range_iterable = iterable.get_range()
+            if indices:
+                index = indices[0]
+                if iterable.num_loop_counters_required and index.is_temp:
+                    self.scope.insert_variable(index)
+            else:
+                index = expr.target[0]
 
-            target   = index
-            counter  = self._print(target)
-            iterable = expr.iterable.get_range()
-            additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
+            targets = iterable.get_assign_targets()
+            additional_assign = CodeBlock([AliasAssign(i, t) if i.is_alias else Assign(i, t) \
+                                    for i,t in zip(expr.target[-len(targets):], targets)])
 
-            step = iterable.step
-            start_code = self._print(iterable.start)
-            stop_code  = self._print(iterable.stop )
-            step_code  = self._print(iterable.step )
+            index_code = self._print(index)
+            step = range_iterable.step
+            start_code = self._print(range_iterable.start)
+            stop_code  = self._print(range_iterable.stop )
+            step_code  = self._print(range_iterable.step )
 
             # testing if the step is a value or an expression
             if is_literal_integer(step):
                 op = '>' if int(step) < 0 else '<'
-                stop_condition = f'{counter} {op} {stop_code}'
+                stop_condition = f'{index_code} {op} {stop_code}'
             else:
-                stop_condition = f'({step_code} > 0) ? ({counter} < {stop_code}) : ({counter} > {stop_code})'
-            for_code = f'for ({counter} = {start_code}; {stop_condition}; {counter} += {step_code})\n'
+                stop_condition = f'({step_code} > 0) ? ({index_code} < {stop_code}) : ({index_code} > {stop_code})'
+            for_code = f'for ({index_code} = {start_code}; {stop_condition}; {index_code} += {step_code})\n'
+
+        if self._additional_code:
+            for_code = self._additional_code + for_code
+            self._additional_code = ''
+
+        if self._additional_code:
+            for_code = self._additional_code + for_code
+            self._additional_code = ''
 
         body = self._print(additional_assign) + self._print(expr.body)
 
@@ -2609,6 +2664,7 @@ class CCodePrinter(CodePrinter):
         decs = ''.join(self._print(Declare(v)) for v in variables)
 
         imports = [*expr.imports, *self._additional_imports.values()]
+        self.invalidate_stc_headers(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()

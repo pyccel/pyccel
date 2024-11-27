@@ -26,7 +26,7 @@ from pyccel.ast.bitwise_operators import PyccelBitOr, PyccelLShift, PyccelRShift
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
 from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
-from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
+from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet, VariableIterator
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
@@ -36,7 +36,7 @@ from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
-from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
+from pyccel.ast.core import Assign, AliasAssign
 from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import ConstructorCall, InlineFunctionDef
@@ -45,7 +45,6 @@ from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
 from pyccel.ast.core import Module
 from pyccel.ast.core import While
-from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import Program
 from pyccel.ast.core import EmptyNode
@@ -55,7 +54,6 @@ from pyccel.ast.core import AsName
 from pyccel.ast.core import With
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
-from pyccel.ast.core import Iterable
 from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
@@ -75,6 +73,7 @@ from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol
+from pyccel.ast.internals import Iterable
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -1826,23 +1825,7 @@ class SemanticParser(BasicParser):
         new_expr = []
         while isinstance(loop, For):
             nlevels+=1
-            iterable = Iterable(self._visit(loop.iterable))
-            n_index = max(1, iterable.num_loop_counters_required)
-            # Set dummy indices to iterable object in order to be able to
-            # obtain a target with a deducible dtype
-            iterable.set_loop_counter(*[index]*n_index)
-
-            iterator = loop.target
-
-            # Collect a target with a deducible dtype
-            iterator_rhs = iterable.get_target_from_range()
-            # Use _visit_Assign to create the requested iterator with the correct type
-            # The result of this operation is not stored, it is just used to declare
-            # iterator with the correct dtype to allow correct dtype deductions later
-            pyccel_stage.set_stage('syntactic')
-            syntactic_assign = Assign(iterator, iterator_rhs, python_ast=expr.python_ast)
-            pyccel_stage.set_stage('semantic')
-            self._visit(syntactic_assign)
+            self._get_for_iterators(loop.iterable, loop.target, new_expr)
 
             loop_elem = loop.body.body[0]
 
@@ -1863,6 +1846,7 @@ class SemanticParser(BasicParser):
                     loop.substitute(gen, assign.lhs)
                     loop_elem = loop.body.body[0]
             loop = loop_elem
+
         # Remove the throw-away variable from the scope
         self.scope.remove_variable(index)
 
@@ -2103,6 +2087,125 @@ class SemanticParser(BasicParser):
             class_def.add_new_attribute(lhs)
 
         return lhs
+
+    def _get_iterable(self, syntactic_iterable):
+        """
+        Get an Iterable obect from a syntatic object that is used in an iterable context.
+
+        Get an Iterable obect from a syntatic object that is used in an iterable context.
+        A typical example of an iterable context is the iterable of a for loop.
+
+        Parameters
+        ----------
+        syntactic_iterable : PyccelAstNode
+            The syntatic object that should be usable as an iterable.
+
+        Returns
+        -------
+        Iterable
+            A semantic Iterable object.
+        """
+        iterable = self._visit(syntactic_iterable)
+        if isinstance(iterable, (Variable, IndexedElement)):
+            iterable = VariableIterator(iterable)
+        elif not isinstance(iterable, Iterable):
+            if isinstance(iterable, TypedAstNode):
+                pyccel_stage.set_stage('syntactic')
+                tmp_var = self.scope.get_new_name()
+                syntactic_assign = Assign(tmp_var, iterable, python_ast = iterable.python_ast)
+                pyccel_stage.set_stage('semantic')
+                assign = self._visit(syntactic_assign)
+                self._additional_exprs[-1].append(assign)
+                iterable = VariableIterator(self._visit(tmp_var))
+            else:
+                errors.report(f"{iterable} is not handled as the iterable of a for loop",
+                        symbol=syntactic_iterable, severity='fatal')
+
+        return iterable
+
+    def _get_for_iterators(self, syntactic_iterable, iterator, new_expr):
+        """
+        Get the semantic target and iterable of a for loop.
+
+        Get the semantic target and iterable of a for loop. This method can be used to
+        handle generators, comprehension expressions or basic for loops.
+
+        Parameters
+        ----------
+        syntactic_iterable : TypedAstNode
+            The iterable that the for loop iterates over.
+        iterator : TypedAstNode
+            The syntactic iterator that takes the value of the elements of the iterable.
+        new_expr : list[PyccelAstNode]
+            A list which allows collection of any additional expressions
+            resulting from this operation (e.g. Allocation).
+
+        Returns
+        -------
+        target : TypedAstNode
+            The semantic iterator that takes the value of the elements of the iterable.
+        iterable : TypedAstNode
+            The semantic iterable that the for loop iterates over.
+        """
+        iterable = self._get_iterable(syntactic_iterable)
+
+        if iterable.num_loop_counters_required:
+            indices = [Variable(PythonNativeInt(), self.scope.get_new_name(), is_temp=True)
+                        for i in range(iterable.num_loop_counters_required)]
+            iterable.set_loop_counter(*indices)
+        else:
+            if isinstance(iterable, PythonEnumerate):
+                if isinstance(iterator, PythonTuple):
+                    syntactic_index = iterator[0]
+                else:
+                    pyccel_stage.set_stage('syntactic')
+                    syntactic_index = IndexedElement(iterator,0)
+                    pyccel_stage.set_stage('semantic')
+            else:
+                syntactic_index = iterator
+
+            index = self.check_for_variable(syntactic_index)
+            if index is None:
+                start = LiteralInteger(0)
+                d_var = self._infer_type(start)
+                if isinstance(syntactic_index, PyccelSymbol):
+                    index = self._assign_lhs_variable(syntactic_index, d_var,
+                                    rhs=start, new_expressions=new_expr)
+                else:
+                    index = self.scope.get_temporary_variable(PythonNativeInt())
+            iterable.set_loop_counter(index)
+
+        # Collect a target with a deducible dtype
+        iterator_rhs = iterable.get_python_iterable_item()
+
+        # Use _visit_Assign to create the requested iterator with the correct type
+        # The result of this operation is not stored, it is just used to declare
+        # iterator with the correct dtype to allow correct dtype deductions later
+        if isinstance(iterator, PyccelSymbol):
+            if len(iterator_rhs) != 1:
+                iterator_rhs = PythonTuple(*iterator_rhs, prefer_inhomogeneous=True)
+            else:
+                iterator_rhs = iterator_rhs[0]
+
+            iterator_d_var = self._infer_type(iterator_rhs)
+
+            target = self._assign_lhs_variable(iterator, iterator_d_var,
+                            rhs=iterator_rhs, new_expressions=new_expr)
+            if isinstance(target.class_type, InhomogeneousTupleType):
+                target = [self.scope.collect_tuple_element(v) for v in target]
+            else:
+                target = [target]
+
+        elif isinstance(iterator, PythonTuple):
+            target = [self._assign_lhs_variable(it, self._infer_type(rhs),
+                                rhs=rhs, new_expressions=new_expr)
+                        for it, rhs in zip(iterator, iterator_rhs)]
+        else:
+            raise errors.report(INVALID_FOR_ITERABLE, symbol=iterator,
+                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                   severity='error')
+
+        return target, iterable
 
     #====================================================
     #                 _visit functions
@@ -3427,13 +3530,7 @@ class SemanticParser(BasicParser):
                     else:
                         self._indicate_pointer_target(l, r, expr)
 
-                elif new_expr.is_symbolic_alias:
-                    new_expr = SymbolicAssign(l, r)
-
-                    # in a symbolic assign, the rhs can be a lambda expression
-                    # it is then treated as a def node
-
-                    F = self.scope.find(l, 'symbolic_functions')
+                elif isinstance(l.class_type, SymbolicType):
                     errors.report(PYCCEL_RESTRICTION_TODO,
                                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                                   severity='fatal')
@@ -3494,65 +3591,26 @@ class SemanticParser(BasicParser):
 
         scope = self.create_new_loop_scope()
 
-        # treatment of the index/indices
-        iterable = Iterable(self._visit(expr.iterable))
-
         new_expr = []
 
-        start = LiteralInteger(0)
-        iterator_d_var = self._infer_type(start)
-
-        iterator = expr.target
-
-        if iterable.num_loop_counters_required:
-            indices = [Variable(PythonNativeInt(), self.scope.get_new_name(), is_temp=True)
-                        for i in range(iterable.num_loop_counters_required)]
-            iterable.set_loop_counter(*indices)
-        else:
-            if isinstance(iterable.iterable, PythonEnumerate):
-                syntactic_index = iterator[0]
-            else:
-                syntactic_index = iterator
-
-            index = self.check_for_variable(syntactic_index)
-            if index is None:
-                index = self._assign_lhs_variable(syntactic_index, iterator_d_var,
-                                rhs=start, new_expressions=new_expr)
-            iterable.set_loop_counter(index)
-
-        if isinstance(iterator, PyccelSymbol):
-            iterator_rhs = iterable.get_target_from_range()
-            iterator_d_var = self._infer_type(iterator_rhs)
-
-            target = self._assign_lhs_variable(iterator, iterator_d_var,
-                            rhs=iterator_rhs, new_expressions=new_expr)
-
-        elif isinstance(iterator, PythonTuple):
-            iterator_rhs = iterable.get_target_from_range()
-            target = [self._assign_lhs_variable(it, self._infer_type(rhs),
-                                rhs=rhs, new_expressions=new_expr)
-                        for it, rhs in zip(iterator, iterator_rhs)]
-        else:
-
-            errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
-                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                   severity='error')
+        # treatment of the index/indices
+        target, iterable = self._get_for_iterators(expr.iterable, expr.target, new_expr)
 
         body = self._visit(expr.body)
 
         self.exit_loop_scope()
 
-        if isinstance(iterable.iterable, Product):
+        if isinstance(iterable, Product):
             for_expr = body
             scopes = self.scope.create_product_loop_scope(scope, len(target))
 
-            for t, i, r, s in zip(target[::-1], iterable.loop_counters[::-1], iterable.get_target_from_range()[::-1], scopes[::-1]):
+            for t, i, r, s in zip(target[::-1], iterable.loop_counters[::-1], iterable.get_python_iterable_item()[::-1], scopes[::-1]):
                 # Create Variable iterable
-                loop_iter = Iterable(r.base)
+                loop_iter = VariableIterator(r.base)
                 loop_iter.set_loop_counter(i)
 
                 # Create a For loop for each level of the Product
-                for_expr = For(t, loop_iter, for_expr, scope=s)
+                for_expr = For((t,), loop_iter, for_expr, scope=s)
                 for_expr.end_annotation = expr.end_annotation
                 for_expr = [for_expr]
             for_expr = for_expr[0]
@@ -3749,8 +3807,8 @@ class SemanticParser(BasicParser):
             assert isinstance(l, For)
             # Sub in indices as defined here for coherent naming
             if idx.is_temp:
-                self.scope.remove_variable(l.target)
-                l.substitute(l.target, idx_subs[idx])
+                self.scope.remove_variable(l.target[0])
+                l.substitute(l.target[0], idx_subs[idx])
             l = l.body.body[-1]
 
         #self.exit_loop_scope()
@@ -4290,20 +4348,7 @@ class SemanticParser(BasicParser):
 #                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
 #                   severity='fatal')
 
-        if is_symbolic(args[0]):
-            _args = []
-            for a in args:
-                f = self.scope.find(a.name, 'symbolic_functions')
-                if f is None:
-                    _args.append(a)
-                else:
-
-                    # TODO improve: how can we print SymbolicAssign as  lhs = rhs
-
-                    _args.append(f)
-            return SymbolicPrint(_args)
-        else:
-            return PythonPrint(args)
+        return PythonPrint(args)
 
     def _visit_ClassDef(self, expr):
         # TODO - improve the use and def of interfaces

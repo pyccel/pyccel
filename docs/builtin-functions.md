@@ -123,7 +123,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `clear` | Python-only |
 | `copy` | Python-only |
 | `get` | Python-only |
-| `items` | No |
+| `items` | **Yes** |
 | `keys` | No |
 | `pop` | Python-only |
 | `popitem` | Python-only |
@@ -132,3 +132,54 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `update` | No |
 | `values` | No |
 
+## String methods
+
+| Method | Supported |
+|----------|-----------|
+| `capitalize` | No |
+| `casefold` | No |
+| `center` | No |
+| `count` | No |
+| `encode` | No |
+| `endswith` | No |
+| `expandtabs` | No |
+| `find` | No |
+| `format` | No |
+| `format_map` | No |
+| `index` | No |
+| `isalnum` | No |
+| `isalpha` | No |
+| `isascii` | No |
+| `isdecimal` | No |
+| `isdigit` | No |
+| `isidentifier` | No |
+| `islower` | No |
+| `isnumeric` | No |
+| `isprintable` | No |
+| `isspace` | No |
+| `istitle` | No |
+| `isupper` | No |
+| `join` | No |
+| `ljust` | No |
+| `lower` | No |
+| `lstrip` | No |
+| `make_trans` | No |
+| `partition` | No |
+| `removeprefix` | No |
+| `removesufix` | No |
+| `replace` | No |
+| `rfind` | No |
+| `rindex` | No |
+| `rjust` | No |
+| `rpartition` | No |
+| `rsplit` | No |
+| `rstrip` | No |
+| `split` | No |
+| `splitlines` | No |
+| `startswith` | No |
+| `strip` | No |
+| `swapcase` | No |
+| `title` | No |
+| `translate` | No |
+| `upper` | No |
+| `zfill` | No |
