@@ -566,14 +566,13 @@ def test_set_iter_prod(language):
 def test_set_return(stc_language):
     def set_return():
         a = {1,2,3,4,5}
-        b = a.pop()
-        return a, b
+        b = {4,5,6}
+        c = a.union(b) # Use union to avoid #2084
+        return c
 
     epyccel_func = epyccel(set_return, language = stc_language)
     pyccel_result = epyccel_func()
     python_result = set_return()
-    assert python_result[0] == pyccel_result[0]
-    assert isinstance(python_result[0], type(pyccel_result[0]))
-    assert isinstance(python_result[0].pop(), type(pyccel_result[0].pop()))
-    assert python_result[1] == pyccel_result[1]
-    assert isinstance(python_result[1], type(pyccel_result[1]))
+    assert python_result == pyccel_result
+    assert isinstance(python_result, type(pyccel_result))
+    assert isinstance(python_result.pop(), type(pyccel_result.pop()))
