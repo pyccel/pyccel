@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring, reimported
 import numpy as np
 
 from pyccel.decorators import template, stack_array, allow_negative_index
