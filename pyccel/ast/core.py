@@ -3711,6 +3711,30 @@ class Import(PyccelAstNode):
         else:
             self._target[new_target] = None
 
+    def remove_target(self, target_to_remove):
+        """
+        Remove a target from the imports.
+
+        Remove a target from the imports.
+        I.e., if `imp` is an Import defined as:
+        >>> from numpy import ones, cos
+
+        and we call `imp.remove_target('cos')`
+        then it becomes:
+        >>> from numpy import ones
+
+        Parameters
+        ----------
+        target_to_remove : str | AsName | iterable[str | AsName]
+            The import target(s) to remove.
+        """
+        assert pyccel_stage != "syntactic"
+        if iterable(target_to_remove):
+            for t in target_to_remove:
+                self._target.pop(t, None)
+        else:
+            self._target.pop(target_to_remove, None)
+
     def find_module_target(self, new_target):
         """
         Find the specified target amongst the targets of the Import.
