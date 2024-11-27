@@ -49,6 +49,7 @@ internal_libs = {
     "numpy_c"         : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
     "Set_extensions"  : ("STC_Extensions", CompileObj("Set_Extensions.h", folder="STC_Extensions", has_target_file = False)),
     "List_extensions" : ("STC_Extensions", CompileObj("List_Extensions.h", folder="STC_Extensions", has_target_file = False)),
+    "Common_extensions" : ("STC_Extensions", CompileObj("Common_Extensions.h", folder="STC_Extensions", has_target_file = False)),
     "gFTL_functions/Set_extensions"  : ("gFTL_functions", CompileObj("Set_Extensions.inc", folder="gFTL_functions", has_target_file = False)),
 }
 internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_ndarrays.c",folder="cwrapper_ndarrays",

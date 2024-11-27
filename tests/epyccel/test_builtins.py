@@ -109,15 +109,6 @@ def test_min_2_args_f(language):
 
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="min not implemented in C for more than 2 args"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_3_args(language):
     @template('T', [int, float])
     def f(x : 'T', y : 'T', z : 'T'):
@@ -228,19 +219,10 @@ def test_max_2_args_f(language):
 
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="max not implemented in C for more than 2 args"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_max_3_args(language):
     @template('T', [int, float])
     def f(x : 'T', y : 'T', z : 'T'):
-        return min(x, y, z)
+        return max(x, y, z)
 
     epyc_f = epyccel(f, language=language)
 

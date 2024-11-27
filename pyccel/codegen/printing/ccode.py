@@ -14,8 +14,9 @@ from pyccel.ast.basic     import ScopedAstNode
 
 from pyccel.ast.bind_c    import BindCPointer
 
-from pyccel.ast.builtins  import PythonRange, PythonComplex
+from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonMin
 from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
+
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
 from pyccel.ast.builtin_methods.dict_methods  import DictItems
@@ -248,8 +249,14 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdbool',
                  'assert']}
 
-import_header_guard_prefix = {'Set_extensions'  : '_TOOLS_SET',
-                              'List_extensions' : '_TOOLS_LIST'}
+import_header_guard_prefix = {'Set_extensions'    : '_TOOLS_SET',
+                              'List_extensions'   : '_TOOLS_LIST',
+                              'Common_extensions' : '_TOOLS_COMMON'}
+
+
+stc_header_mapping = {'List_extensions': 'stc/vec',
+                      'Set_extensions': 'stc/hset',
+                      'Common_extensions': 'stc/common'}
 
 class CCodePrinter(CodePrinter):
     """
@@ -675,6 +682,32 @@ class CCodePrinter(CodePrinter):
         init = f'{container_name} = c_init({dtype}, {keyraw});\n'
         return init
 
+    def invalidate_stc_headers(self, imports):
+        """
+        Invalidate STC headers when STC extension headers are present.
+
+        This function iterates over the list of imports and removes any targets
+        from STC headers if the target is present in their corresponding
+        STC extension headers.
+        The STC extension headers take care of including the standard
+        headers.
+
+        Parameters
+        ----------
+        imports : list of Import
+            The list of Import objects representing the header files to include.
+
+        Returns
+        -------
+        None
+            The function modifies the `imports` list in-place.
+        """
+        for imp in imports:
+            if imp.source in stc_header_mapping:
+                for imp2 in imports:
+                    if imp2.source == stc_header_mapping[imp.source]:
+                        imp2.remove_target(imp.target)
+
     def rename_imported_methods(self, expr):
         """
         Rename class methods from user-defined imports.
@@ -711,12 +744,13 @@ class CCodePrinter(CodePrinter):
             func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
 
-    def _print_PythonMin(self, expr):
+    def _print_PythonMinMax(self, expr):
         arg = expr.args[0]
         if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
             self.add_import(c_imports['math'])
-            return "fmin({}, {})".format(self._print(arg[0]),
-                                         self._print(arg[1]))
+            arg1 = self._print(arg[0])
+            arg2 = self._print(arg[1])
+            return f"f{expr.name}({arg1}, {arg2})"
         elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
             if isinstance(arg[0], Variable):
                 arg1 = self._print(arg[0])
@@ -734,38 +768,22 @@ class CCodePrinter(CodePrinter):
                 self._additional_code += self._print(assign2)
                 arg2 = self._print(arg2_temp)
 
-            return f"({arg1} < {arg2} ? {arg1} : {arg2})"
+            op = '<' if isinstance(expr, PythonMin) else '>'
+            return f"({arg1} {op} {arg2} ? {arg1} : {arg2})"
+        elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
+            key = self.get_declare_type(arg[0])
+            self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
+            self.add_import(Import('Common_extensions', AsName(VariableTypeAnnotation(arg.dtype), key)))
+            return  f'{key}_{expr.name}({len(arg)}, {", ".join(self._print(a) for a in arg)})'
         else:
-            return errors.report("min in C is only supported for 2 scalar arguments", symbol=expr,
+            return errors.report(f"{expr.name} in C does not support arguments of type {arg.dtype}", symbol=expr,
                     severity='fatal')
+
+    def _print_PythonMin(self, expr):
+        return self._print_PythonMinMax(expr)
 
     def _print_PythonMax(self, expr):
-        arg = expr.args[0]
-        if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
-            self.add_import(c_imports['math'])
-            return "fmax({}, {})".format(self._print(arg[0]),
-                                         self._print(arg[1]))
-        elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
-            if isinstance(arg[0], Variable):
-                arg1 = self._print(arg[0])
-            else:
-                arg1_temp = self.scope.get_temporary_variable(PythonNativeInt())
-                assign1 = Assign(arg1_temp, arg[0])
-                self._additional_code += self._print(assign1)
-                arg1 = self._print(arg1_temp)
-
-            if isinstance(arg[1], Variable):
-                arg2 = self._print(arg[1])
-            else:
-                arg2_temp = self.scope.get_temporary_variable(PythonNativeInt())
-                assign2 = Assign(arg2_temp, arg[1])
-                self._additional_code += self._print(assign2)
-                arg2 = self._print(arg2_temp)
-
-            return f"({arg1} > {arg2} ? {arg1} : {arg2})"
-        else:
-            return errors.report("max in C is only supported for 2 scalar arguments", symbol=expr,
-                    severity='fatal')
+        return self._print_PythonMinMax(expr)
 
     def _print_SysExit(self, expr):
         code = ""
@@ -857,6 +875,7 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
+        self.invalidate_stc_headers(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self._in_header = False
@@ -1033,7 +1052,20 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1].python_value
         else:
             source = self._print(source)
-        if source.startswith('stc/') or source in import_header_guard_prefix:
+        if source == 'Common_extensions':
+            code = ''
+            for t in expr.target:
+                element_decl = f'#define i_key {t.local_alias}\n'
+                header_guard_prefix = import_header_guard_prefix.get(source, '')
+                header_guard = f'{header_guard_prefix}_{t.local_alias.upper()}'
+                code += ''.join((f'#ifndef {header_guard}\n',
+                     f'#define {header_guard}\n',
+                     element_decl,
+                     f'#include <{stc_header_mapping[source]}.h>\n', 
+                     f'#include <{source}.h>\n',
+                     f'#endif // {header_guard}\n\n'))
+            return code
+        elif source.startswith('stc/') or source in import_header_guard_prefix:
             code = ''
             for t in expr.target:
                 class_type = t.object.class_type
@@ -1055,6 +1087,8 @@ class CCodePrinter(CodePrinter):
                         f'#define {header_guard}\n',
                         f'#define i_type {container_type}\n',
                         element_decl,
+                        '#define i_more\n' if source in import_header_guard_prefix else '',
+                        f'#include <{stc_header_mapping[source]}.h>\n' if source in import_header_guard_prefix else '', 
                         f'#include <{source}.h>\n',
                         f'#endif // {header_guard}\n\n'))
             return code
@@ -2630,6 +2664,7 @@ class CCodePrinter(CodePrinter):
         decs = ''.join(self._print(Declare(v)) for v in variables)
 
         imports = [*expr.imports, *self._additional_imports.values()]
+        self.invalidate_stc_headers(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
