@@ -49,12 +49,12 @@ All notable changes to this project will be documented in this file.
 -   #738 : Add support for homogeneous tuples with scalar elements as arguments.
 -   Add a warning about containers in lists.
 -   #2016 : Add support for translating arithmetic magic methods (methods cannot yet be used from Python).
+-   #1980 Extend The C support for min and max to more than two variables
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
--   #1980 Extend The C support for min and max to more than two variables
 
 ### Fixed
 
