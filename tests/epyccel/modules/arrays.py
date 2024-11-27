@@ -71,6 +71,11 @@ def array_int_1d_initialization_3():
     b = np.array(a)
     return np.sum(b), b[0], b[-1]
 
+def array_int_1d_initialization_4():
+    import numpy as np
+    b = np.array([i*2 for i in range(10)])
+    return b
+
 #==============================================================================
 # 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================
