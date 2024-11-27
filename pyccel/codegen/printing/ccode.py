@@ -1052,7 +1052,9 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1].python_value
         else:
             source = self._print(source)
-        if source.startswith('stc/') or source in import_header_guard_prefix:
+        if source == 'Common_extensions':
+            ...
+        elif source.startswith('stc/') or source in import_header_guard_prefix:
             code = ''
             for t in expr.target:
                 if source == 'Common_extensions':
