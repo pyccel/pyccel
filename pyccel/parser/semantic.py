@@ -1729,6 +1729,13 @@ class SemanticParser(BasicParser):
                         break
                     old_element_type = old_element_type[0]
                     new_element_type = new_element_type.element_type
+            elif isinstance(var.class_type, InhomogeneousTupleType) and \
+                    isinstance(class_type, InhomogeneousTupleType):
+                for i, element_type in enumerate(class_type):
+                    rhs_elem = self.scope.collect_tuple_element(var[i])
+                    self._ensure_inferred_type_matches_existing(element_type,
+                            self._infer_type(rhs_elem), rhs_elem, is_augassign, new_expressions, rhs)
+                raise_error = False
             elif isinstance(var.class_type, HomogeneousTupleType) and \
                     isinstance(class_type, InhomogeneousTupleType):
                 # TODO: Remove isinstance(rhs, Variable) condition when tuples are saved like lists
