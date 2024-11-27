@@ -379,6 +379,14 @@ def test_inhomogeneous_tuple_annotation_6(language):
     epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
     assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
 
+def test_inhomogeneous_tuple_annotation_7(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[tuple[tuple[int, float]], int] = (((1,0.2),),1) #pylint: disable=unsubscriptable-object
+        return a[0][0][0], a[0][0][1], a[1]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
