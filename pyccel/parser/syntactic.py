@@ -1160,13 +1160,15 @@ class SyntaxParser(BasicParser):
 
         generators = list(self._visit(stmt.generators))
 
-        if not isinstance(self._context[-2],ast.Assign):
+        assignment = next((c for c in reversed(self._context) if isinstance(c, ast.Assign)), None)
+
+        if assignment is None:
             errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
                           symbol = stmt,
                           severity='error')
             lhs = PyccelSymbol('_', is_temp=True)
         else:
-            lhs = self._visit(self._context[-2].targets)
+            lhs = self._visit(assignment.targets)
             if len(lhs)==1:
                 lhs = lhs[0]
             else:
