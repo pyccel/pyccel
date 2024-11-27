@@ -42,7 +42,7 @@ All notable changes to this project will be documented in this file.
 -   #1918 : Add support for set method `clear()`.
 -   #1918 : Add support for set method `copy()`.
 -   #1753 : Add support for set method `union()`.
--   #1744 : Add support for set method `intersection()`.
+-   #1744 : Add Python support for set method `intersection()`.
 -   #1884 : Add support for dict method `items()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
