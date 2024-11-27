@@ -790,7 +790,7 @@ class CCodePrinter(CodePrinter):
                 assign2 = Assign(arg2_temp, arg[1])
                 self._additional_code += self._print(assign2)
                 arg2 = self._print(arg2_temp)
- 
+
             op = '<' if isinstance(expr, PythonMin) else '>'
             return f"({arg1} {op} {arg2} ? {arg1} : {arg2})"
         elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
