@@ -1030,7 +1030,7 @@ class SyntaxParser(BasicParser):
             if isinstance(visited_i, FunctionDef):
                 methods.append(visited_i)
                 visited_i.arguments[0].bound_argument = True
-            elif isinstance(visited_i, Pass):
+            elif isinstance(visited_i, (Pass, Comment)):
                 continue
             elif isinstance(visited_i, AnnotatedPyccelSymbol):
                 attributes.append(visited_i)
