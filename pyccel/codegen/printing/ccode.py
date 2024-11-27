@@ -1053,44 +1053,44 @@ class CCodePrinter(CodePrinter):
         else:
             source = self._print(source)
         if source == 'Common_extensions':
-            ...
+            code = ''
+            for t in expr.target:
+                element_decl = f'#define i_key {t.local_alias}\n'
+                header_guard_prefix = import_header_guard_prefix.get(source, '')
+                header_guard = f'{header_guard_prefix}_{t.local_alias.upper()}'
+                code += ''.join((f'#ifndef {header_guard}\n',
+                     f'#define {header_guard}\n',
+                     element_decl,
+                     f'#include <{stc_header_mapping[source]}.h>\n', 
+                     f'#include <{source}.h>\n',
+                     f'#endif // {header_guard}\n\n'))
+            return code
         elif source.startswith('stc/') or source in import_header_guard_prefix:
             code = ''
             for t in expr.target:
-                if source == 'Common_extensions':
-                    element_decl = f'#define i_key {t.local_alias}\n'
-                    header_guard_prefix = import_header_guard_prefix.get(source, '')
-                    header_guard = f'{header_guard_prefix}_{t.local_alias.upper()}'
-                    code += ''.join((f'#ifndef {header_guard}\n',
+                class_type = t.object.class_type
+                container_type = t.local_alias
+                if isinstance(class_type, DictType):
+                    container_key_key = self.get_c_type(class_type.key_type)
+                    container_val_key = self.get_c_type(class_type.value_type)
+                    container_key = f'{container_key_key}_{container_val_key}'
+                    element_decl = f'#define i_key {container_key_key}\n#define i_val {container_val_key}\n'
+                else:
+                    container_key = self.get_c_type(class_type.element_type)
+                    element_decl = f'#define i_key {container_key}\n'
+                if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
+                        and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
+                    element_decl += '#define i_use_cmp\n'
+                header_guard_prefix = import_header_guard_prefix.get(source, '')
+                header_guard = f'{header_guard_prefix}_{container_type.upper()}'
+                code += ''.join((f'#ifndef {header_guard}\n',
                         f'#define {header_guard}\n',
+                        f'#define i_type {container_type}\n',
                         element_decl,
-                        f'#include <{stc_header_mapping[source]}.h>\n', 
+                        '#define i_more\n' if source in import_header_guard_prefix else '',
+                        f'#include <{stc_header_mapping[source]}.h>\n' if source in import_header_guard_prefix else '', 
                         f'#include <{source}.h>\n',
                         f'#endif // {header_guard}\n\n'))
-                else:
-                    class_type = t.object.class_type
-                    container_type = t.local_alias
-                    if isinstance(class_type, DictType):
-                        container_key_key = self.get_c_type(class_type.key_type)
-                        container_val_key = self.get_c_type(class_type.value_type)
-                        container_key = f'{container_key_key}_{container_val_key}'
-                        element_decl = f'#define i_key {container_key_key}\n#define i_val {container_val_key}\n'
-                    else:
-                        container_key = self.get_c_type(class_type.element_type)
-                        element_decl = f'#define i_key {container_key}\n'
-                    if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
-                            and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
-                        element_decl += '#define i_use_cmp\n'
-                    header_guard_prefix = import_header_guard_prefix.get(source, '')
-                    header_guard = f'{header_guard_prefix}_{container_type.upper()}'
-                    code += ''.join((f'#ifndef {header_guard}\n',
-                            f'#define {header_guard}\n',
-                            f'#define i_type {container_type}\n',
-                            element_decl,
-                            '#define i_more\n' if source in import_header_guard_prefix else '',
-                            f'#include <{stc_header_mapping[source]}.h>\n' if source in import_header_guard_prefix else '', 
-                            f'#include <{source}.h>\n',
-                            f'#endif // {header_guard}\n\n'))
             return code
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
