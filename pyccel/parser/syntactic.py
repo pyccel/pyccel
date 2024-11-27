@@ -693,8 +693,7 @@ class SyntaxParser(BasicParser):
         first = self._visit(stmt.left)
         comparison = None
         for comparators, op in zip(stmt.comparators, stmt.ops):
-            second = self._visit(stmt.comparators[0])
-            op = stmt.ops[0]
+            second = self._visit(comparators)
 
             if isinstance(op, ast.Eq):
                 expr = PyccelEq(first, second)
