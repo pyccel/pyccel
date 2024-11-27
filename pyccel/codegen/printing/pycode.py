@@ -445,8 +445,8 @@ class PythonCodePrinter(CodePrinter):
         else:
             return '{}({}+{}*1j)'.format(name, self._print(expr.real), self._print(expr.imag))
 
-    def _print_Iterable(self, expr):
-        return self._print(expr.iterable)
+    def _print_VariableIterator(self, expr):
+        return self._print(expr.variable)
 
     def _print_PythonRange(self, expr):
         return 'range({start}, {stop}, {step})'.format(
@@ -467,6 +467,10 @@ class PythonCodePrinter(CodePrinter):
         return 'map({func}, {args})'.format(
                 func = self._print(expr.func.name),
                 args = self._print(expr.func_args))
+
+    def _print_PythonZip(self, expr):
+        args = ', '.join(self._print(a) for a in expr.args)
+        return f'zip({args})'
 
     def _print_PythonReal(self, expr):
         if isinstance(expr.internal_var, Variable):
@@ -854,6 +858,11 @@ class PythonCodePrinter(CodePrinter):
             return f"{dict_obj}.get({key}, {val})\n"
         else:
             return f"{dict_obj}.get({key})\n"
+
+    def _print_DictItems(self, expr):
+        dict_obj = self._print(expr.variable)
+
+        return f"{dict_obj}.items()"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
