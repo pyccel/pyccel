@@ -19,6 +19,7 @@ class Point(object):
         return self._x
 
     #--------------------------------------
+    #--------------------------------------
     def get_X(self):
         return self._X
 
