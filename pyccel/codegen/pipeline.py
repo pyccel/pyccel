@@ -18,11 +18,7 @@ from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError
 from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
-from pyccel.codegen.utilities      import recompile_object
-from pyccel.codegen.utilities      import copy_internal_library
-from pyccel.codegen.utilities      import generate_extension_modules
-from pyccel.codegen.utilities      import internal_libs
-from pyccel.codegen.utilities      import external_libs
+from pyccel.codegen.utilities      import manage_dependencies
 from pyccel.codegen.python_wrapper import create_shared_library
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
@@ -314,33 +310,18 @@ def execute_pyccel(fname, *,
     #         # Call same function on 'dep'
     #         pass
     #------------------------------------------------------
-
-    # Iterate over the external_libs list and determine if the printer
-    # requires an external lib to be included.
-    for key, import_node in codegen.get_printer_imports().items():
-        try:
-            deps = generate_extension_modules(key, import_node, pyccel_dirpath,
-                                              includes     = includes,
-                                              libs         = compile_libs,
-                                              libdirs      = libdirs,
-                                              dependencies = modules,
-                                              accelerators = accelerators,
-                                              language = language)
-        except NotImplementedError as error:
-            errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
-                severity='error',
-                traceback=error.__traceback__)
-            handle_error('code generation (wrapping)')
-            raise PyccelCodegenError(msg) from None
-        except PyccelError:
-            handle_error('code generation (wrapping)')
-            raise
-        for d in deps:
-            recompile_object(d,
-                              compiler = src_compiler,
-                              pyccel_dirpath = pyccel_dirpath,
-                              verbose  = verbose)
-            mod_obj.add_dependencies(d)
+    try:
+        manage_dependencies(codegen.printer, src_compiler, pyccel_dirpath, mod_obj,
+                language, verbose, convert_only)
+    except NotImplementedError as error:
+        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error',
+            traceback=error.__traceback__)
+        handle_error('code generation (wrapping)')
+        raise PyccelCodegenError(msg) from None
+    except PyccelError:
+        handle_error('code generation (wrapping)')
+        raise
 
     # Iterate over the internal_libs list and determine if the printer
     # requires an internal lib to be included.

@@ -76,10 +76,7 @@ if __name__ == '__main__':
             bot.warn_untrusted()
 
     elif command_words[:3] == ['mark', 'as', 'ready']:
-        if bot.is_user_trusted(event['comment']['user']['login']):
-            bot.request_mark_as_ready()
-        else:
-            bot.warn_untrusted()
+        bot.request_mark_as_ready(event['comment']['user']['login'])
 
     elif command_words[:2] == ['trust', 'user'] and len(command_words)==3 and event['comment']['user']['login'] in trust_givers:
 

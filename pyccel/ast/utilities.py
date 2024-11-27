@@ -25,13 +25,13 @@ from .internals     import PyccelFunction, Slice
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
 from .mathext       import math_mod
-from .sysext        import sys_mod
-
 from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
+from .numpytypes    import NumpyNDArrayType
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .operators     import PyccelUnarySub
 from .scipyext      import scipy_mod
+from .sysext        import sys_mod
 from .typingext     import typing_mod
 from .variable      import Variable, IndexedElement
 
@@ -189,27 +189,33 @@ def split_positional_keyword_arguments(*args):
 #==============================================================================
 def compatible_operation(*args, language_has_vectors = True):
     """
-    Indicates whether an operation requires an index to be
-    correctly understood
+    Indicate whether an operation only uses compatible arguments.
+
+    Indicate whether an operation requires an index to be
+    correctly interpreted in the target language or if the arguments
+    are already compatible.
 
     Parameters
-    ==========
-    args      : list of TypedAstNode
-                The operator arguments
+    ----------
+    *args : list of TypedAstNode
+        The operator arguments.
     language_has_vectors : bool
-                Indicates if the language has support for vector
-                operations of the same shape
-    Results
-    =======
-    compatible : bool
-                 A boolean indicating if the operation is compatible
+        Indicates if the language has support for vector
+        operations of the same shape.
+
+    Returns
+    -------
+    bool
+        A boolean indicating if the operation is compatible.
     """
-    if language_has_vectors:
+    if language_has_vectors and any(isinstance(a.class_type, NumpyNDArrayType) for a in args):
         # If the shapes don't match then an index must be required
         shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.rank != 0]
         shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
         order  = set(a.order for a in args if a.order is not None)
         return len(shapes) <= 1 and len(order) <= 1
+    elif any(isinstance(a.class_type, StringType) for a in args):
+        return True
     else:
         return all(a.rank == 0 for a in args)
 
@@ -693,7 +699,7 @@ def insert_fors(blocks, indices, scope, level = 0):
     else:
         body = CodeBlock(body, unravelled = True)
         loop_scope = scope.create_new_loop_scope()
-        return [For(indices[level],
+        return [For([indices[level]],
                     PythonRange(0,blocks.length),
                     body,
                     scope = loop_scope)]

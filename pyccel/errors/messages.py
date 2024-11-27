@@ -39,7 +39,6 @@ INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpol
 MUST_HAVE_NONE_RETURN_TYPE = 'The return type of "{}" must be None'
 INVALID_TUPLE_INDEX_TYPE = 'Invalid tuple index type'
 TUPLE_INDEX_OUT_OF_RANGE = 'Tuple index out of range'
-ITERABLE_EXPECTED = 'Iterable expected'
 INVALID_SLICE_INDEX = 'Slice index must be an integer or None'
 CANNOT_INFER_LAMBDA_TYPE = 'Cannot infer type of lambda'
 CANNOT_INFER_ITEM_TYPE = 'Cannot infer iterable item type'

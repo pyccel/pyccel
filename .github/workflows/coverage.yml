@@ -74,6 +74,11 @@ jobs:
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: cobertura.xml
+      - name: Add remote
+        if: env.PR_REPO != 'pyccel/pyccel'
+        run: |
+          git remote add -f pyccel git@github.com:pyccel/pyccel.git
+        shell: bash
       - name: Collect diff information
         run: |
           git fetch
