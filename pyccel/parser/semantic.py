@@ -3804,6 +3804,11 @@ class SemanticParser(BasicParser):
         try:
             class_type = type_container[conversion_func.cls_name](class_type)
         except TypeError:
+            if class_type.rank > 0:
+                errors.report("ND comprehension expressions cannot be saved directly to an array yet.\n"+PYCCEL_RESTRICTION_TODO,
+                              symbol=expr,
+                              severity='fatal')
+
             class_type = type_container[conversion_func.cls_name](numpy_process_dtype(class_type), rank=1, order=None)
         d_var['class_type'] = class_type
         shape = [dim]
