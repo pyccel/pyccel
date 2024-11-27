@@ -2647,6 +2647,6 @@ class CToPythonWrapper(Wrapper):
                                          [Return([self._error_exit_code])]))]
         body = [Assign(loop_size, PythonLen(c_res)),
                 AliasAssign(py_res, init),
-                For(idx, Iterable(PythonRange(loop_size)), for_body, for_scope)]
+                For((idx,), PythonRange(loop_size), for_body, for_scope)]
 
         return {'c_results': [c_res], 'py_result': py_res, 'body': body}
