@@ -1232,7 +1232,8 @@ class CToPythonWrapper(Wrapper):
                     external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_header = True, scope = Scope()))
             for a in c.attributes:
                 for f in (a.getter, a.setter):
-                    external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_header = True, scope = Scope()))
+                    if f:
+                        external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_header = True, scope = Scope()))
         pymod.external_funcs = external_funcs
 
         return pymod
@@ -1802,7 +1803,10 @@ class CToPythonWrapper(Wrapper):
         if isinstance(getter_result.dtype, CustomDataType):
             arg_code.append(Allocate(getter_result, shape=(), status='unallocated'))
 
-        wrapped_var = expr.getter.original_function
+        if isinstance(expr.getter.original_function, DottedVariable):
+            wrapped_var = expr.getter.original_function
+        else:
+            wrapped_var = expr.getter.original_function.results[0].var
         res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
 
         getter_body = [*setup,
@@ -1819,47 +1823,51 @@ class CToPythonWrapper(Wrapper):
         # ----------------------------------------------------------------------------------
         #                        Create setter
         # ----------------------------------------------------------------------------------
-        self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
-        setter_name = self.scope.get_new_name(f'{class_type.name}_{name}_setter')
-        setter_scope = self.scope.new_child_scope(setter_name)
-        self.scope = setter_scope
+        if expr.setter:
+            self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
+            setter_name = self.scope.get_new_name(f'{class_type.name}_{name}_setter')
+            setter_scope = self.scope.new_child_scope(setter_name)
+            self.scope = setter_scope
 
-        original_args = expr.setter.bind_c_arguments
-        f_wrapped_args = expr.setter.arguments
+            original_args = expr.setter.bind_c_arguments
+            f_wrapped_args = expr.setter.arguments
 
-        self_arg = original_args[0]
-        set_val_arg = original_args[1]
-        for a in f_wrapped_args:
-            self.scope.insert_symbol(a.var.name)
-        self.scope.insert_symbol(self_arg.original_function_argument_variable.name)
-        self.scope.insert_symbol(set_val_arg.original_function_argument_variable.name)
+            self_arg = original_args[0]
+            set_val_arg = original_args[1]
+            for a in f_wrapped_args:
+                self.scope.insert_symbol(a.var.name)
+            self.scope.insert_symbol(self_arg.original_function_argument_variable.name)
+            self.scope.insert_symbol(set_val_arg.original_function_argument_variable.name)
 
-        setter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
-                       self.get_new_PyObject(f'{name}_obj'),
-                       setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
-        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))]
+            setter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
+                           self.get_new_PyObject(f'{name}_obj'),
+                           setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+            setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))]
 
-        self._python_object_map[self_arg] = setter_args[0]
-        self._python_object_map[set_val_arg] = setter_args[1]
+            self._python_object_map[self_arg] = setter_args[0]
+            self._python_object_map[set_val_arg] = setter_args[1]
 
-        if isinstance(wrapped_var.class_type, FixedSizeNumericType) or wrapped_var.is_alias:
-            wrapped_args = [self._wrap(a) for a in original_args]
-            arg_code = [l for a in wrapped_args for l in a['body']]
-            func_call_args = [ca for a in wrapped_args for ca in a['args']]
+            if isinstance(wrapped_var.class_type, FixedSizeNumericType) or wrapped_var.is_alias:
+                wrapped_args = [self._wrap(a) for a in original_args]
+                arg_code = [l for a in wrapped_args for l in a['body']]
+                func_call_args = [ca for a in wrapped_args for ca in a['args']]
 
-            setter_body = [*arg_code,
-                           expr.setter(*func_call_args),
-                           *self._save_referenced_objects(expr.setter, setter_args),
-                           Return((LiteralInteger(0, dtype=CNativeInt()),))]
+                setter_body = [*arg_code,
+                               expr.setter(*func_call_args),
+                               *self._save_referenced_objects(expr.setter, setter_args),
+                               Return((LiteralInteger(0, dtype=CNativeInt()),))]
+            else:
+                setter_body = [PyErr_SetString(PyAttributeError,
+                                            LiteralString("Can't reallocate memory via Python interface.")),
+                            Return([self._error_exit_code])]
+            self.exit_scope()
+
+            args = [FunctionDefArgument(a) for a in setter_args]
+            setter = PyFunctionDef(setter_name, args, setter_result, setter_body,
+                                    original_function = expr, scope = setter_scope)
         else:
-            setter_body = [PyErr_SetString(PyAttributeError,
-                                        LiteralString("Can't reallocate memory via Python interface.")),
-                        Return([self._error_exit_code])]
-        self.exit_scope()
+            setter = None
 
-        args = [FunctionDefArgument(a) for a in setter_args]
-        setter = PyFunctionDef(setter_name, args, setter_result, setter_body,
-                                original_function = expr, scope = setter_scope)
         self._error_exit_code = Nil()
 
         return PyGetSetDefElement(expr.python_name, getter, setter,
