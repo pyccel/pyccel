@@ -188,6 +188,15 @@ def test_classes_6(language):
     assert p_py.get_attributes(3) == p_l.get_attributes(3)
     assert p_py.get_attributes(4.5) == p_l.get_attributes(4.5)
 
+def test_classes_8(language):
+    import classes.classes_8 as mod
+    modnew = epyccel(mod, language = language)
+
+    a_py = mod.A(3.0)
+    a_l = modnew.A(3.0)
+
+    assert a_py.get_y() == a_l.get_y()
+
 def test_generic_methods(language):
     import classes.generic_methods as mod
     modnew = epyccel(mod, language = language)
