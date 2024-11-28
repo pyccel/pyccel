@@ -11,7 +11,8 @@ import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
 from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
-from pyccel.ast.builtins      import PythonTuple, PythonRange
+from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen
+from pyccel.ast.builtin_methods.set_methods import SetPop
 from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -29,10 +30,13 @@ from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataT
 from pyccel.ast.cwrapper      import PyList_New, PyList_Append, PyList_GetItem, PyList_SetItem
 from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, PyCapsule_Import
 from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString, PyGetSetDefElement
-from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_GetItem
+from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_New
+from pyccel.ast.cwrapper      import PyTuple_GetItem, PyTuple_SetItem
+from pyccel.ast.cwrapper      import PySet_New, PySet_Add
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
+from pyccel.ast.datatypes     import HomogeneousSetType, HomogeneousListType
 from pyccel.ast.datatypes     import TupleType
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
@@ -761,6 +765,7 @@ class CToPythonWrapper(Wrapper):
 
         ok_code = LiteralInteger(0, dtype=CNativeInt())
         error_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
+        self._error_exit_code = error_code
 
         # Create variables to temporarily modify the Python path so the file will be discovered
         current_path = func_scope.get_temporary_variable(PyccelPyObject(), 'current_path', memory_handling='alias')
@@ -769,14 +774,19 @@ class CToPythonWrapper(Wrapper):
         body = [AliasAssign(current_path, PySys_GetObject(LiteralString("path"))),
                 AliasAssign(stash_path, PyList_GetItem(current_path, LiteralInteger(0, dtype=CNativeInt()))),
                 Py_INCREF(stash_path),
-                PyList_SetItem(current_path, LiteralInteger(0, dtype=CNativeInt()),
-                               PyUnicode_FromString(LiteralString(self._file_location))),
+                If(IfSection(PyccelEq(PyList_SetItem(current_path, LiteralInteger(0, dtype=CNativeInt()),
+                                                PyUnicode_FromString(LiteralString(self._file_location))),
+                                      PyccelUnarySub(LiteralInteger(1))),
+                             [Return([self._error_exit_code])])),
                 AliasAssign(API_var, PyCapsule_Import(self.scope.get_python_name(mod_name))),
-                PyList_SetItem(current_path, LiteralInteger(0, dtype=CNativeInt()), stash_path),
+                If(IfSection(PyccelEq(PyList_SetItem(current_path, LiteralInteger(0, dtype=CNativeInt()), stash_path),
+                                      PyccelUnarySub(LiteralInteger(1))),
+                             [Return([self._error_exit_code])])),
                 Return([IfTernaryOperator(PyccelIsNot(API_var, Nil()), ok_code, error_code)])]
 
         result = func_scope.get_temporary_variable(CNativeInt())
         self.exit_scope()
+        self._error_exit_code = Nil()
         import_func = FunctionDef(func_name, (), (FunctionDefResult(result),), body, is_static=True, scope = func_scope)
 
         return API_var, import_func
@@ -2470,7 +2480,7 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to collect the result.
         """
-        name = orig_var.name
+        name = getattr(orig_var, 'name', 'tmp')
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         c_res = Variable(orig_var.class_type, self.scope.get_new_name(name))
         self.scope.insert_variable(c_res)
@@ -2571,13 +2581,14 @@ class CToPythonWrapper(Wrapper):
         body.extend(Py_DECREF(r) for r in py_result_vars)
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body, 'setup': setup}
 
-    def _extract_HomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+    def _extract_HomogeneousContainerType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
         """
-        Get the code which translates a `Variable` containing a homogeneous tuple to a PyObject.
+        Get the code which translates a `Variable` containing a homogeneous container to a PyObject.
 
-        Get the code which translates a `Variable` containing a homogeneous tuple to a PyObject.
-        For now this function does not handle homogeneous tuples but merely allows multiple
-        returns of the same type to be outputted neatly.
+        Get the code which translates a `Variable` containing a homogeneous container to a PyObject.
+        This function handles lists, sets, and tuples.
+        The current implementation for tuples is not working correctly as Pyccel does not handle
+        function calls to functions returning tuples correctly.
 
         Parameters
         ----------
@@ -2596,6 +2607,46 @@ class CToPythonWrapper(Wrapper):
         """
         if isinstance(orig_var, PythonTuple):
             return self._extract_InhomogeneousTupleType_FunctionDefResult(orig_var, is_bind_c, funcdef)
+
+        if is_bind_c:
+            raise NotImplementedError("Support for returning sets from Fortran code is not yet available")
+
+        name = getattr(orig_var, 'name', 'tmp')
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)
+        loop_size = Variable(PythonNativeInt(), self.scope.get_new_name(f'{name}_size'))
+        idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+        self.scope.insert_variable(c_res)
+        self.scope.insert_variable(loop_size)
+        self.scope.insert_variable(idx)
+
+        for_scope = self.scope.create_new_loop_scope()
+        self.scope = for_scope
+        element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx), is_bind_c, funcdef)
+        self.exit_scope()
+
+        class_type = orig_var.class_type
+        if isinstance(class_type, HomogeneousSetType):
+            element = SetPop(c_res)
+            elem_set = PySet_Add(py_res, element_extraction['py_result'])
+            init = PySet_New()
+        elif isinstance(class_type, HomogeneousListType):
+            element = IndexedElement(c_res, idx)
+            elem_set = PyList_SetItem(py_res, idx, element_extraction['py_result'])
+            init = PyList_New(loop_size)
+        elif isinstance(class_type, HomogeneousTupleType):
+            element = IndexedElement(c_res, idx)
+            elem_set = PyTuple_SetItem(py_res, idx, element_extraction['py_result'])
+            init = PyTuple_New(loop_size)
         else:
-            return errors.report(f"Wrapping function results is not implemented for type {orig_var.class_type}. " + PYCCEL_RESTRICTION_TODO, symbol=orig_var,
-                severity='fatal')
+            raise NotImplementedError(f"Don't know how to return an object of type {class_type}")
+
+        for_body = [Assign(element_extraction['c_results'][0], element),
+                *element_extraction['body'],
+                If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
+                                         [Return([self._error_exit_code])]))]
+        body = [Assign(loop_size, PythonLen(c_res)),
+                AliasAssign(py_res, init),
+                For((idx,), PythonRange(loop_size), for_body, for_scope)]
+
+        return {'c_results': [c_res], 'py_result': py_res, 'body': body}
