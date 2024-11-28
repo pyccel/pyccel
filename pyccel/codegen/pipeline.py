@@ -323,29 +323,6 @@ def execute_pyccel(fname, *,
         handle_error('code generation (wrapping)')
         raise
 
-    # Iterate over the internal_libs list and determine if the printer
-    # requires an internal lib to be included.
-    for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
-        if lib_name in codegen.get_printer_imports():
-
-            lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
-
-            # stop after copying lib to __pyccel__ directory for
-            # convert only
-            if convert_only:
-                continue
-
-            # Pylint determines wrong type
-            stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
-            # get the include folder path and library files
-            recompile_object(stdlib,
-                              compiler = src_compiler,
-                              pyccel_dirpath = pyccel_dirpath,
-                              verbose  = verbose)
-
-            mod_obj.add_dependencies(stdlib)
-            modules.append(stdlib)
-
     if convert_only:
         # Change working directory back to starting point
         os.chdir(base_dirpath)

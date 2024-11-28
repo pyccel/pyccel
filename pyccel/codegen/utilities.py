@@ -335,8 +335,9 @@ def manage_dependencies(printer, compiler, pyccel_dirpath, mod_obj, language, ve
             stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
             # get the include folder path and library files
             recompile_object(stdlib,
-                              compiler = compiler,
-                              verbose  = verbose)
+                             compiler = compiler,
+                             pyccel_dirpath = pyccel_dirpath,
+                             verbose  = verbose)
 
             mod_obj.add_dependencies(stdlib)
 
@@ -352,6 +353,8 @@ def manage_dependencies(printer, compiler, pyccel_dirpath, mod_obj, language, ve
                                           language = language)
         for d in deps:
             recompile_object(d,
-                              compiler = compiler,
-                              verbose  = verbose)
+                             compiler = compiler,
+                             pyccel_dirpath = pyccel_dirpath,
+                             verbose  = verbose)
             mod_obj.add_dependencies(d)
+
