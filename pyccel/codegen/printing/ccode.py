@@ -249,14 +249,13 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdbool',
                  'assert']}
 
-import_header_guard_prefix = {'Set_extensions'    : '_TOOLS_SET',
-                              'List_extensions'   : '_TOOLS_LIST',
-                              'Common_extensions' : '_TOOLS_COMMON'}
+import_header_guard_prefix = {'stc/hset'    : '_TOOLS_SET',
+                              'stc/vec'   : '_TOOLS_LIST',
+                              'stc/common' : '_TOOLS_COMMON'}
 
-
-stc_header_mapping = {'List_extensions': 'stc/vec',
-                      'Set_extensions': 'stc/hset',
-                      'Common_extensions': 'stc/common'}
+stc_extension_mapping = {'stc/vec': 'List_extensions',
+                      'stc/hset' : 'Set_extensions',
+                      'stc/common' : 'Common_extensions'}
 
 class CCodePrinter(CodePrinter):
     """
@@ -682,32 +681,6 @@ class CCodePrinter(CodePrinter):
         init = f'{container_name} = c_init({dtype}, {keyraw});\n'
         return init
 
-    def invalidate_stc_headers(self, imports):
-        """
-        Invalidate STC headers when STC extension headers are present.
-
-        This function iterates over the list of imports and removes any targets
-        from STC headers if the target is present in their corresponding
-        STC extension headers.
-        The STC extension headers take care of including the standard
-        headers.
-
-        Parameters
-        ----------
-        imports : list of Import
-            The list of Import objects representing the header files to include.
-
-        Returns
-        -------
-        None
-            The function modifies the `imports` list in-place.
-        """
-        for imp in imports:
-            if imp.source in stc_header_mapping:
-                for imp2 in imports:
-                    if imp2.source == stc_header_mapping[imp.source]:
-                        imp2.remove_target(imp.target)
-
     def rename_imported_methods(self, expr):
         """
         Rename class methods from user-defined imports.
@@ -773,7 +746,9 @@ class CCodePrinter(CodePrinter):
         elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
             key = self.get_declare_type(arg[0])
             self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
-            self.add_import(Import('Common_extensions', AsName(VariableTypeAnnotation(arg.dtype), key)))
+            self.add_import(Import('Common_extensions',
+                                   AsName(VariableTypeAnnotation(arg.dtype), key),
+                                   ignore_at_print=True))
             return  f'{key}_{expr.name}({len(arg)}, {", ".join(self._print(a) for a in arg)})'
         else:
             return errors.report(f"{expr.name} in C does not support arguments of type {arg.dtype}", symbol=expr,
@@ -875,7 +850,6 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
-        self.invalidate_stc_headers(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self._in_header = False
@@ -1052,7 +1026,7 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1].python_value
         else:
             source = self._print(source)
-        if source == 'Common_extensions':
+        if source == 'stc/common':
             code = ''
             for t in expr.target:
                 element_decl = f'#define i_key {t.local_alias}\n'
@@ -1061,11 +1035,11 @@ class CCodePrinter(CodePrinter):
                 code += ''.join((f'#ifndef {header_guard}\n',
                      f'#define {header_guard}\n',
                      element_decl,
-                     f'#include <{stc_header_mapping[source]}.h>\n', 
                      f'#include <{source}.h>\n',
+                     f'#include <{stc_extension_mapping[source]}.h>\n', 
                      f'#endif // {header_guard}\n\n'))
             return code
-        elif source.startswith('stc/') or source in import_header_guard_prefix:
+        elif source.startswith('stc/'):
             code = ''
             for t in expr.target:
                 class_type = t.object.class_type
@@ -1087,11 +1061,12 @@ class CCodePrinter(CodePrinter):
                         f'#define {header_guard}\n',
                         f'#define i_type {container_type}\n',
                         element_decl,
-                        '#define i_more\n' if source in import_header_guard_prefix else '',
-                        f'#include <{stc_header_mapping[source]}.h>\n' if source in import_header_guard_prefix else '', 
-                        f'#include <{source}.h>\n',
+                        '#define i_more\n' if source in stc_extension_mapping else '',
+                        f'#include <{source}.h>\n', 
+                        f'#include <{stc_extension_mapping[source]}.h>\n' if source in stc_extension_mapping else '', 
                         f'#endif // {header_guard}\n\n'))
             return code
+
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
@@ -1316,6 +1291,9 @@ class CCodePrinter(CodePrinter):
             element_type = self.get_c_type(dtype.element_type).replace(' ', '_')
             i_type = f'{container_type}_{element_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
+            self.add_import(Import(f'{stc_extension_mapping["stc/" + container_type]}',
+                                   AsName(VariableTypeAnnotation(dtype), i_type),
+                                   ignore_at_print=True))
             return i_type
         elif isinstance(dtype, DictType):
             container_type = 'hmap'
@@ -1753,10 +1731,10 @@ class CCodePrinter(CodePrinter):
             if isinstance(variable.class_type, NumpyNDArrayType):
                 #set dtype to the C struct types
                 dtype = self.find_in_ndarray_type_registry(variable.dtype)
-            elif isinstance(variable.class_type, HomogeneousContainerType):
+            elif isinstance(variable.class_type, HomogeneousContainerType) and isinstance(variable.dtype, FixedSizeNumericType):
                 dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(variable.dtype.primitive_type, variable.dtype.precision)])
             else:
-                raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
+                raise NotImplementedError(f"The allocation of the type {variable.class_type} is not yet supported.")
             shape_dtype = self.get_c_type(NumpyInt64Type())
             shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
             is_view = 'false' if variable.on_heap else 'true'
@@ -1772,9 +1750,9 @@ class CCodePrinter(CodePrinter):
                     malloc_size = ' * '.join([malloc_size, *(self._print(s) for s in expr.shape)])
                 return f'{var_code} = malloc({malloc_size});\n'
             else:
-                raise NotImplementedError(f"Allocate not implemented for {variable}")
+                raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
         else:
-            raise NotImplementedError(f"Allocate not implemented for {variable}")
+            raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
 
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
@@ -2664,7 +2642,6 @@ class CCodePrinter(CodePrinter):
         decs = ''.join(self._print(Declare(v)) for v in variables)
 
         imports = [*expr.imports, *self._additional_imports.values()]
-        self.invalidate_stc_headers(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
@@ -2706,7 +2683,10 @@ class CCodePrinter(CodePrinter):
         c_type = self.get_c_type(class_type)
         list_obj = self._print(ObjectAddress(expr.list_obj))
         if expr.index_element:
-            self.add_import(Import('List_extensions', AsName(VariableTypeAnnotation(class_type), c_type)))
+            self.add_import(Import('stc/vec', AsName(VariableTypeAnnotation(class_type), c_type)))
+            self.add_import(Import('List_extensions',
+                                   AsName(VariableTypeAnnotation(class_type), c_type),
+                                   ignore_at_print=True))
             if is_literal_integer(expr.index_element) and int(expr.index_element) < 0:
                 idx_code = self._print(PyccelAdd(PythonLen(expr.list_obj), expr.index_element, simplify=True))
             else:
@@ -2720,7 +2700,10 @@ class CCodePrinter(CodePrinter):
     def _print_SetPop(self, expr):
         dtype = expr.set_variable.class_type
         var_type = self.get_c_type(dtype)
-        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(dtype), var_type)))
+        self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(dtype), var_type)))
+        self.add_import(Import('Set_extensions',
+                               AsName(VariableTypeAnnotation(dtype), var_type),
+                               ignore_at_print=True))
         set_var = self._print(ObjectAddress(expr.set_variable))
         return f'{var_type}_pop({set_var})'
 
@@ -2747,7 +2730,10 @@ class CCodePrinter(CodePrinter):
                     severity='error', symbol=expr)
         class_type = expr.set_variable.class_type
         var_type = self.get_c_type(class_type)
-        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(class_type), var_type)))
+        self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), var_type)))
+        self.add_import(Import('Set_extensions',
+                               AsName(VariableTypeAnnotation(class_type), var_type),
+                               ignore_at_print=True))
         set_var = self._print(ObjectAddress(expr.set_variable))
         args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
         return f'{var_type}_union({set_var}, {args})'
