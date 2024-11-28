@@ -3478,6 +3478,11 @@ class ClassDef(ScopedAstNode):
         ValueError
             Raised if the method cannot be found.
         """
+        method = next((i for i in chain(self.methods, self.interfaces) \
+                if i.name == name and i.pyccel_staging == 'syntactic'), None)
+        if method:
+            return method
+
         if self.scope is not None:
             # Collect translated name from scope
             try:
