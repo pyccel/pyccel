@@ -7,7 +7,7 @@
 """
 This file contains some useful functions to compile the generated fortran code
 """
-from itertools import chain
+
 import os
 import shutil
 from filelock import FileLock
@@ -15,7 +15,6 @@ from filelock import FileLock
 import pyccel.stdlib as stdlib_folder
 import pyccel.extensions as ext_folder
 from pyccel.errors.errors import Errors
-from pyccel.ast.core import Import
 
 from .codegen              import printer_registry
 from .compiling.basic      import CompileObj
@@ -276,9 +275,8 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
 
 #==============================================================================
 def recompile_object(compile_obj,
-                     compiler,
-                     pyccel_dirpath,
-                     verbose = False):
+                   compiler,
+                   verbose = False):
     """
     Compile the provided file if necessary.
 
@@ -293,13 +291,9 @@ def recompile_object(compile_obj,
     compiler : str
         The compiler used.
 
-    pyccel_dirpath : str
-        The Pyccel working directory.
-
     verbose : bool
         Indicates whether additional information should be printed.
     """
-    swapped = False
 
     # compile library source files
     with compile_obj:
@@ -352,15 +346,16 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
 
             lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
 
-            if stdlib.dependencies:
-                manage_dependencies({os.path.splitext(os.path.basename(d.source))[0]: None for d in stdlib.dependencies},
+            # Pylint thinks stdlib is a str
+            if stdlib.dependencies: # pylint: disable=E1101
+                manage_dependencies({os.path.splitext(os.path.basename(d.source))[0]: None for d in stdlib.dependencies}, # pylint: disable=E1101
                         compiler, pyccel_dirpath, stdlib, language, verbose, convert_only)
 
             # stop after copying lib to __pyccel__ directory for
             # convert only
             if convert_only:
                 continue
-            stdlib.reset_folder(lib_dest_path)
+            stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
 
             # get the include folder path and library files
             recompile_object(stdlib,
