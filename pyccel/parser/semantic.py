@@ -150,6 +150,7 @@ type_container = {
                    PythonTupleFunction : HomogeneousTupleType,
                    PythonListFunction : HomogeneousListType,
                    PythonSetFunction : HomogeneousSetType,
+                   NumpyArray : NumpyNDArrayType,
                   }
 
 #==============================================================================
@@ -3796,7 +3797,7 @@ class SemanticParser(BasicParser):
             dim = sympy_to_pyccel(dim, idx_subs)
         except TypeError:
             errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE + f'\n Deduced size : {dim}',
-                          bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                          symbol=expr,
                           severity='fatal')
 
         # TODO find a faster way to calculate dim
@@ -3816,7 +3817,35 @@ class SemanticParser(BasicParser):
                           severity='fatal')
 
         d_var['memory_handling'] = 'heap'
-        class_type = HomogeneousListType(class_type)
+        target_type_name = expr.target_type
+        if isinstance(target_type_name, DottedName):
+            lhs = target_type_name.name[0] if len(target_type_name.name) == 2 \
+                    else DottedName(*target_type_name.name[:-1])
+            first = self._visit(lhs)
+            if isinstance(first, Module):
+                conversion_func = first[target_type_name.name[-1]]
+            else:
+                conversion_func = None
+        else:
+            conversion_func = self.scope.find(target_type_name, 'functions')
+            if conversion_func is None:
+                if target_type_name in builtin_functions_dict:
+                    conversion_func = PyccelFunctionDef(target_type_name,
+                                            builtin_functions_dict[target_type_name])
+        if conversion_func is None:
+            errors.report("Unrecognised output type from functional for.\n"+PYCCEL_RESTRICTION_TODO,
+                          symbol=expr,
+                          severity='fatal')
+
+        try:
+            class_type = type_container[conversion_func.cls_name](class_type)
+        except TypeError:
+            if class_type.rank > 0:
+                errors.report("ND comprehension expressions cannot be saved directly to an array yet.\n"+PYCCEL_RESTRICTION_TODO,
+                              symbol=expr,
+                              severity='fatal')
+
+            class_type = type_container[conversion_func.cls_name](numpy_process_dtype(class_type), rank=1, order=None)
         d_var['class_type'] = class_type
         shape = [dim]
         if d_var['shape']:
