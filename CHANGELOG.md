@@ -87,6 +87,7 @@ All notable changes to this project will be documented in this file.
 -   #2013 : Stop limiting the length of strings to 128 characters.
 -   #2078 : Fix translation of classes containing comments.
 -   #2041 : Include all type extension methods by default.
+-   #2082 : Allow the use of a list comprehension to initialise an array.
 
 ### Changed
 
