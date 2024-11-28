@@ -1760,10 +1760,10 @@ class CCodePrinter(CodePrinter):
             if isinstance(variable.class_type, NumpyNDArrayType):
                 #set dtype to the C struct types
                 dtype = self.find_in_ndarray_type_registry(variable.dtype)
-            elif isinstance(variable.class_type, HomogeneousContainerType):
+            elif isinstance(variable.class_type, HomogeneousContainerType) and isinstance(variable.dtype, FixedSizeNumericType):
                 dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(variable.dtype.primitive_type, variable.dtype.precision)])
             else:
-                raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
+                raise NotImplementedError(f"The allocation of the type {variable.class_type} is not yet supported.")
             shape_dtype = self.get_c_type(NumpyInt64Type())
             shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
             is_view = 'false' if variable.on_heap else 'true'
@@ -1779,9 +1779,9 @@ class CCodePrinter(CodePrinter):
                     malloc_size = ' * '.join([malloc_size, *(self._print(s) for s in expr.shape)])
                 return f'{var_code} = malloc({malloc_size});\n'
             else:
-                raise NotImplementedError(f"Allocate not implemented for {variable}")
+                raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
         else:
-            raise NotImplementedError(f"Allocate not implemented for {variable}")
+            raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
 
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType, StringType)):
