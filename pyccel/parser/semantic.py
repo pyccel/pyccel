@@ -2928,7 +2928,6 @@ class SemanticParser(BasicParser):
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
-            method = cls_base.get_method(rhs_name)
             macro = self.scope.find(rhs_name, 'macros')
             if macro is not None:
                 master = macro.master
@@ -2938,7 +2937,15 @@ class SemanticParser(BasicParser):
                 args = macro.apply(args)
                 return FunctionCall(master, args, self._current_function)
 
+            method = cls_base.get_method(rhs_name)
+
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
+            if not method.is_semantic:
+                if not method.is_inline:
+                    method = self._annotate_the_called_function_def(method)
+                else:
+                    method = self._annotate_the_called_function_def(method, function_call_args=args)
+
             if cls_base.name == 'numpy.ndarray':
                 numpy_class = method.cls_name
                 self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
