@@ -267,7 +267,6 @@ class CWrapperCodePrinter(CCodePrinter):
         imports  = [*module_imports, *mod.imports]
         for i in imports:
             self.add_import(i)
-        self.invalidate_stc_headers(imports)
         imports  = ''.join(self._print(i) for i in imports)
 
         function_signatures = ''.join(self.function_signature(f, print_arg_names = False) + ';\n' for f in mod.external_funcs)
@@ -374,7 +373,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         pymod_name = f'{expr.name}_wrapper'
         imports = [Import(pymod_name, Module(pymod_name,(),())), *self._additional_imports.values()]
-        self.invalidate_stc_headers(imports)
         imports  = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
