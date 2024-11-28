@@ -10,13 +10,15 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType
-from pyccel.ast.internals import PyccelFunction
+from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType, SymbolicType
+from pyccel.ast.internals import PyccelFunction, Iterable
+from pyccel.ast.variable  import IndexedElement
 
 
 __all__ = ('DictClear',
            'DictCopy',
            'DictGet',
+           'DictItems',
            'DictMethod',
            'DictPop',
            'DictPopitem',
@@ -260,7 +262,6 @@ class DictClear(DictMethod) :
         super().__init__(dict_obj)
 
 #==============================================================================
-
 class DictCopy(DictMethod):
     """
     Represents a call to the .copy() method.
@@ -280,3 +281,49 @@ class DictCopy(DictMethod):
         dict_type = dict_obj.class_type
         self._class_type = dict_type
         super().__init__(dict_obj)
+
+#==============================================================================
+class DictItems(Iterable):
+    """
+    Represents a call to the .items() method.
+
+    Represents a call to the .items() method which iterates over a dictionary.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+    """
+    __slots__ = ('_dict_obj',)
+    _attribute_nodes = Iterable._attribute_nodes + ("_dict_obj",)
+    _shape = None
+    _class_type = SymbolicType()
+    name = 'items'
+
+    def __init__(self, dict_obj):
+        self._dict_obj = dict_obj
+        super().__init__(1)
+
+    @property
+    def variable(self):
+        """
+        Get the object representing the dict.
+
+        Get the object representing the dict.
+        """
+        return self._dict_obj
+
+    def get_python_iterable_item(self):
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns two objects that could be a key and a value of the dictionary.
+        These elements are used to determine the types of the loop targets.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        item = DictPopitem(self._dict_obj)
+        return [IndexedElement(item, 0), IndexedElement(item, 1)]

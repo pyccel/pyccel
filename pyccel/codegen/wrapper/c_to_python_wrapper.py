@@ -17,7 +17,7 @@ from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionC
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock, For
-from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, AsName, Iterable
+from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, AsName
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
@@ -333,7 +333,7 @@ class CToPythonWrapper(Wrapper):
             for_body = [indexed_init]
             internal_type_check_condition, _ = self._get_type_check_condition(indexed_py_obj, arg[0], False, for_body)
             for_body.append(Assign(type_check_condition, PyccelAnd(type_check_condition, internal_type_check_condition)))
-            internal_type_check = For(idx, Iterable(PythonRange(size_var)), for_body, scope = for_scope)
+            internal_type_check = For((idx,), PythonRange(size_var), for_body, scope = for_scope)
 
             tuple_checks = IfSection(tuple_check, [size_assign, Assign(type_check_condition, LiteralTrue()), internal_type_check])
             default_value = IfSection(LiteralTrue(), [Assign(type_check_condition, LiteralFalse())])
@@ -2312,7 +2312,7 @@ class CToPythonWrapper(Wrapper):
                                     bound_argument, is_bind_c_argument, arg_var = indexed_arg_var)['body']
         self.exit_scope()
 
-        body.append(For(idx, Iterable(PythonRange(size_var)), for_body, scope = for_scope))
+        body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
 
 
         return {'body': body, 'args': arg_vars}
