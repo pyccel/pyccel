@@ -4388,9 +4388,11 @@ class SemanticParser(BasicParser):
         self.scope.parent_scope.insert_class(cls)
 
         methods = list(expr.methods)
-        init_func = None
+        for (i, method) in enumerate(methods):
+            cls.add_new_method(method)
 
-        if not any(method.name == '__init__' for method in methods):
+        syntactic_init_func = next((method for method in methods if method.name == '__init__'), None)
+        if syntactic_init_func is None:
             argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
             self.scope.insert_symbol('__init__')
             scope = self.create_new_function_scope('__init__')
@@ -4399,32 +4401,22 @@ class SemanticParser(BasicParser):
             self.insert_function(init_func)
             cls.add_new_method(init_func)
             methods.append(init_func)
+        else:
+            self._visit(syntactic_init_func)
+            init_func = self.scope.functions.pop('__init__')
+            methods.remove(syntactic_init_func)
 
-        for (i, method) in enumerate(methods):
-            m_name = method.name
-            if m_name == '__init__':
-                if init_func is None:
-                    self._visit(method)
-                    init_func = self.scope.functions.pop(m_name)
+        if isinstance(init_func, Interface):
+            errors.report("Pyccel does not support interface constructor", symbol=method,
+                severity='fatal')
 
-                if isinstance(init_func, Interface):
-                    errors.report("Pyccel does not support interface constructor", symbol=method,
-                        severity='fatal')
-                methods.pop(i)
-
-                # create a new attribute to check allocation
-                deallocater_lhs = Variable(dtype, 'self', cls_base = cls, is_argument=True)
-                deallocater = DottedVariable(lhs = deallocater_lhs, name = self.scope.get_new_name('is_freed'),
-                                             class_type = PythonNativeBool(), is_private=True)
-                cls.add_new_attribute(deallocater)
-                deallocater_assign = Assign(deallocater, LiteralFalse())
-                init_func.body.insert2body(deallocater_assign, back=False)
-                break
-
-        if not init_func:
-            errors.report(UNDEFINED_INIT_METHOD, symbol=name,
-                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                   severity='error')
+        # create a new attribute to check allocation
+        deallocater_lhs = Variable(dtype, 'self', cls_base = cls, is_argument=True)
+        deallocater = DottedVariable(lhs = deallocater_lhs, name = self.scope.get_new_name('is_freed'),
+                                     class_type = PythonNativeBool(), is_private=True)
+        cls.add_new_attribute(deallocater)
+        deallocater_assign = Assign(deallocater, LiteralFalse())
+        init_func.body.insert2body(deallocater_assign, back=False)
 
         for i in methods:
             self._visit(i)
