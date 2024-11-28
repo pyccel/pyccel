@@ -232,25 +232,6 @@ class CompileObj:
             raise TypeError("Dependencies require necessary compile information")
         self._dependencies.update({a.module_target:a for a in args})
 
-    def swap_include(self, current_folder, updated_folder):
-        """
-        Swap out an include folder.
-
-        Swap out an include folder. This allows an include to be changed to be
-        relative to the generated folder.
-
-        Parameters
-        ----------
-        current_folder : str
-            The folder that is currently saved in this obejct.
-        updated_folder : str
-            The folder that should replace the current_folder.
-        """
-        assert current_folder in self._includes
-        assert updated_folder not in self._includes
-        self._includes.remove(current_folder)
-        self._includes.add(updated_folder)
-
     def __enter__(self):
         self.compilation_in_progress.acquire()
         self.acquire_lock()
