@@ -2961,6 +2961,11 @@ class SemanticParser(BasicParser):
             # class property?
             else:
                 method = cls_base.get_method(rhs_name)
+                if not method.is_semantic:
+                    if not method.is_inline:
+                        method = self._annotate_the_called_function_def(method)
+                    else:
+                        method = self._annotate_the_called_function_def(method, function_call_args=args)
                 assert 'property' in method.decorators
                 if cls_base.name == 'numpy.ndarray':
                     numpy_class = method.cls_name
