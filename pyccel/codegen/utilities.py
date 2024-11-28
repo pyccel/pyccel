@@ -53,8 +53,7 @@ internal_libs = {
     "Set_extensions"  : ("STC_Extensions", CompileObj("Set_Extensions.h", folder="STC_Extensions", has_target_file = False)),
     "List_extensions" : ("STC_Extensions", CompileObj("List_Extensions.h", folder="STC_Extensions", has_target_file = False)),
     "Common_extensions" : ("STC_Extensions", CompileObj("Common_Extensions.h", folder="STC_Extensions", has_target_file = False)),
-    "gFTL_functions/Set_extensions"  : ("gFTL_functions", CompileObj("Set_Extensions.inc", folder="gFTL_functions",
-                                                                includes=("gFTL",), has_target_file = False)),
+    "gFTL_functions/Set_extensions"  : ("gFTL_functions", CompileObj("Set_Extensions.inc", folder="gFTL_functions", has_target_file = False)),
     "gFTL" : ("gFTL", CompileObj("None.inc", folder="gFTL", has_target_file = False)),
 }
 internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_ndarrays.c",folder="cwrapper_ndarrays",
@@ -285,15 +284,8 @@ def recompile_object(compile_obj,
     """
     swapped = False
     if "stc" in compile_obj.includes:
-        lib_name = "stc"
-        lib_dir = pyccel_dirpath
-        compile_obj.swap_include(lib_name, lib_dir)
+        compile_obj.swap_include("stc", pyccel_dirpath)
         swapped = True
-    #elif "gFTL" in compile_obj.includes:
-    #    lib_name = "gFTL"
-    #    lib_dir = os.path.join(pyccel_dirpath, "gFTL")
-    #    compile_obj.swap_include(lib_name, lib_dir)
-    #    swapped = True
 
     # compile library source files
     with compile_obj:
@@ -310,7 +302,7 @@ def recompile_object(compile_obj,
                 verbose=verbose)
 
     if swapped:
-        compile_obj.swap_include(lib_dir, lib_name)
+        compile_obj.swap_include(pyccel_dirpath, "stc")
 
 def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, language, verbose, convert_only = False):
     """
