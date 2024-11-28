@@ -33,9 +33,11 @@ All notable changes to this project will be documented in this file.
 -   #1874 : Add C and Fortran support for the `len()` function for the `list` container.
 -   #1875 : Add C and Fortran support for the `len()` function for the `set` container.
 -   #1908 : Add C and Fortran support for the `len()` function for the `dict` container.
+-   #1665 : Add C support for returning lists from functions.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C support for list method `pop()`.
+-   #1664 : Add C support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
 -   #1877 : Add C and Fortran Support for set method `pop()`.
 -   #1917 : Add C and Fortran support for set method `add()`.
@@ -51,6 +53,7 @@ All notable changes to this project will be documented in this file.
 -   Add a warning about containers in lists.
 -   #2016 : Add support for translating arithmetic magic methods (methods cannot yet be used from Python).
 -   #1980 : Extend The C support for min and max to more than two variables
+-   #2081 : Add support for multi operator expressions
 -   Add support for inhomogeneous tuple annotations.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
