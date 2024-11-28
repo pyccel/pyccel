@@ -244,9 +244,6 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
                             libs=libs, libdirs=libdirs, dependencies=dependencies,
                             accelerators=accelerators))
 
-    if lib_name in external_libs:
-        copy_internal_library(lib_name, pyccel_dirpath)
-
     return new_dependencies
 
 #==============================================================================
@@ -319,6 +316,12 @@ def manage_dependencies(printer, compiler, pyccel_dirpath, mod_obj, language, ve
     convert_only : bool, default=False
         Indicates if the compilation step is required or not.
     """
+    # Copy any necessary external libraries
+    for import_key in printer.get_additional_imports():
+        lib_name = str(import_key).split('/', 1)[0]
+        if lib_name in external_libs:
+            copy_internal_library(lib_name, pyccel_dirpath)
+
     # Iterate over the internal_libs list and determine if the printer
     # requires an internal lib to be included.
     for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
