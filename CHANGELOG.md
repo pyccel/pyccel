@@ -80,7 +80,7 @@ All notable changes to this project will be documented in this file.
 -   #2039 : Ensure any expressions in the iterable of a for loop are calculated before the loop.
 -   #2013 : Stop limiting the length of strings to 128 characters.
 -   #2078 : Fix translation of classes containing comments.
--   #2041 : Fix broken chaining of files using STC imports.
+-   #2041 : Include all type extension methods by default.
 
 ### Changed
 
