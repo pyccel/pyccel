@@ -7,7 +7,7 @@ This module contains all types which define a python class which is automaticall
 """
 
 from pyccel.ast.builtin_methods.set_methods  import (SetAdd, SetClear, SetCopy, SetPop,
-                                                     SetDiscard, SetUpdate, SetUnion)
+                                                     SetDiscard, SetUpdate, SetUnion, SetIntersection)
 from pyccel.ast.builtin_methods.list_methods import (ListAppend, ListInsert, ListPop,
                                                      ListClear, ListExtend, ListRemove,
                                                      ListCopy, ListSort)
@@ -166,8 +166,10 @@ SetClass = ClassDef('set',
             PyccelFunctionDef('pop', func_class = SetPop),
             PyccelFunctionDef('remove', func_class = SetDiscard),
             PyccelFunctionDef('union', func_class = SetUnion),
+            PyccelFunctionDef('intersection', func_class = SetIntersection),
             PyccelFunctionDef('update', func_class = SetUpdate),
             PyccelFunctionDef('__or__', func_class = SetUnion),
+            PyccelFunctionDef('__and__', func_class = SetIntersection),
             PyccelFunctionDef('__ior__', func_class = SetUpdate),
         ])
 
