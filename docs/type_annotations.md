@@ -41,12 +41,32 @@ In general string type hints must be used to provide Pyccel with information abo
 
 ## Tuples
 
-Currently Pyccel supports tuples used locally in functions and in certain cases as arguments, but not as returned objects or module variables. The implementation of the type annotations (including adding the missing support) is in progress. Currently homogeneous tuple type annotations are supported for local variables and function arguments (if the tuples contain scalar objects). Internally we handle homogeneous tuples as though they were NumPy arrays. When creating multiple dimensional tuples it is therefore important to ensure that all objects have compatible sizes otherwise they will be handled as inhomogeneous tuples.
+Currently Pyccel supports tuples used locally in functions and in certain cases as arguments, but not as returned objects or module variables. The implementation of the type annotations (including adding the missing support) is in progress. Currently homogeneous tuple type annotations are supported for local variables and function arguments and results (if the tuples contain scalar objects). Internally we handle homogeneous tuples as though they were NumPy arrays. When creating multiple dimensional tuples it is therefore important to ensure that all objects have compatible sizes otherwise they will be handled as inhomogeneous tuples.
 
 To declare a homogeneous tuple the syntax is as follows:
 ```python
 a : tuple[int,...] = (1,2,3,4)
 ```
+
+## Lists
+
+Lists are in the process of being added to Pyccel. Homogeneous lists can be declared in Pyccel using the following syntax:
+```python
+a : list[int] = [1, 2]
+b : list[bool] = [False, True]
+c : list[float] = []
+```
+So far lists can be declared as local variables or as results of functions.
+
+## Sets
+
+Sets are in the process of being added to Pyccel. Homogeneous sets can be declared in Pyccel using the following syntax:
+```python
+a : set[int] = {1, 2}
+b : set[bool] = {False, True}
+c : set[float] = {}
+```
+So far sets can be declared as local variables or as results of functions.
 
 ## Dictionaries
 
