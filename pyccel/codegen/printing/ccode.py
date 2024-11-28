@@ -1061,9 +1061,9 @@ class CCodePrinter(CodePrinter):
                         f'#define {header_guard}\n',
                         f'#define i_type {container_type}\n',
                         element_decl,
-                        '#define i_more\n',
+                        '#define i_more\n' if source in stc_extension_mapping else '',
                         f'#include <{source}.h>\n', 
-                        f'#include <{stc_extension_mapping[source]}.h>\n', 
+                        f'#include <{stc_extension_mapping[source]}.h>\n' if source in stc_extension_mapping else '', 
                         f'#endif // {header_guard}\n\n'))
             return code
 
