@@ -37,7 +37,7 @@ language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 #==============================================================================
 # map external libraries inside pyccel/extensions with their path
 external_libs = {"stc" : ("STC/include/stc", CompileObj("stc", folder="stc", has_target_file = False)),
-                 "gFTL" : ("gFTL/install/GFTL-1.13/include/v2", ("gFTL", CompileObj("gFTL", folder="gFTL", has_target_file = False))),
+                 "gFTL" : ("gFTL/install/GFTL-1.13/include/v2", CompileObj("gFTL", folder="gFTL", has_target_file = False)),
 }
 #==============================================================================
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
@@ -50,10 +50,22 @@ internal_libs = {
     "cwrapper"        : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
     "numpy_f90"       : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
     "numpy_c"         : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
-    "Set_extensions"  : ("STC_Extensions", CompileObj("Set_Extensions.h", folder="STC_Extensions", has_target_file = False)),
-    "List_extensions" : ("STC_Extensions", CompileObj("List_Extensions.h", folder="STC_Extensions", has_target_file = False)),
-    "Common_extensions" : ("STC_Extensions", CompileObj("Common_Extensions.h", folder="STC_Extensions", has_target_file = False)),
-    "gFTL_functions/Set_extensions"  : ("gFTL_functions", CompileObj("Set_Extensions.inc", folder="gFTL_functions", has_target_file = False)),
+    "Set_extensions"  : ("STC_Extensions", CompileObj("Set_Extensions.h",
+                                                      folder="STC_Extensions",
+                                                      has_target_file = False,
+                                                      dependencies = (external_libs['stc'][1],))),
+    "List_extensions" : ("STC_Extensions", CompileObj("List_Extensions.h",
+                                                      folder="STC_Extensions",
+                                                      has_target_file = False,
+                                                      dependencies = (external_libs['stc'][1],))),
+    "Common_extensions" : ("STC_Extensions", CompileObj("Common_Extensions.h",
+                                                      folder="STC_Extensions",
+                                                      has_target_file = False,
+                                                      dependencies = (external_libs['stc'][1],))),
+    "gFTL_functions/Set_extensions"  : ("gFTL_functions", CompileObj("Set_Extensions.inc",
+                                                                     folder="gFTL_functions",
+                                                                     has_target_file = False,
+                                                                     dependencies = (external_libs['gFTL'][1],))),
     "stc/cstr" : ("STC_Extensions", CompileObj("cstr.c", folder="STC_Extensions", dependencies = (external_libs['stc'][1],)))
 }
 internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_ndarrays.c",folder="cwrapper_ndarrays",
@@ -254,9 +266,10 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
 
         new_dependencies.append(CompileObj(os.path.basename(filename), folder=folder,
                             includes=includes,
-                            libs=libs, libdirs=libdirs, dependencies=dependencies,
+                            libs=libs, libdirs=libdirs,
+                            dependencies=(*dependencies, external_libs['gFTL'][1]),
                             accelerators=accelerators))
-        manage_dependencies({'gFTL': None}, compiler, pyccel_dirpath, new_dependencies[-1],
+        manage_dependencies({'gFTL':None}, compiler, pyccel_dirpath, new_dependencies[-1],
                 language, verbose, convert_only)
 
     return new_dependencies
