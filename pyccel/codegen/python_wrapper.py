@@ -162,7 +162,6 @@ def create_shared_library(codegen,
     # get the include folder path and library files
     recompile_object(cwrapper_lib,
                       compiler = wrapper_compiler,
-                      pyccel_dirpath = pyccel_dirpath,
                       verbose  = verbose)
     timings['Dependency compilation'] = time.time() - start_compile_libs
 

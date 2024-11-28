@@ -360,7 +360,6 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
             # get the include folder path and library files
             recompile_object(stdlib,
                              compiler = compiler,
-                             pyccel_dirpath = pyccel_dirpath,
                              verbose  = verbose)
 
             mod_obj.add_dependencies(stdlib)
@@ -381,7 +380,6 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
         for d in deps:
             recompile_object(d,
                              compiler = compiler,
-                             pyccel_dirpath = pyccel_dirpath,
                              verbose  = verbose)
             mod_obj.add_dependencies(d)
 
