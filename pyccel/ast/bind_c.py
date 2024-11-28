@@ -608,10 +608,8 @@ class BindCClassProperty(PyccelAstNode):
     __slots__ = ('_getter', '_setter', '_python_name', '_docstring', '_class_type')
     _attribute_nodes = ('_getter', '_setter')
     def __init__(self, python_name, getter, setter, class_type, docstring = None):
-        if not isinstance(getter, BindCFunctionDef):
-            raise TypeError("Getter should be a BindCFunctionDef")
-        if not isinstance(setter, BindCFunctionDef):
-            raise TypeError("Setter should be a BindCFunctionDef")
+        assert isinstance(getter, BindCFunctionDef)
+        assert isinstance(setter, BindCFunctionDef) or setter is None
         self._python_name = python_name
         self._getter = getter
         self._setter = setter

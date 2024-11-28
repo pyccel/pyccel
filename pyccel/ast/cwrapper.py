@@ -843,10 +843,8 @@ class PyGetSetDefElement(PyccelAstNode):
     _attribute_nodes = ('_getter', '_setter', '_docstring')
     __slots__ = ('_python_name', '_getter', '_setter', '_docstring')
     def __init__(self, python_name, getter, setter, docstring):
-        if not isinstance(getter, PyFunctionDef):
-            raise TypeError("Getter should be a PyFunctionDef")
-        if not isinstance(setter, PyFunctionDef):
-            raise TypeError("Setter should be a PyFunctionDef")
+        assert isinstance(getter, PyFunctionDef)
+        assert isinstance(setter, PyFunctionDef) or setter is None
         self._python_name = python_name
         self._getter = getter
         self._setter = setter
