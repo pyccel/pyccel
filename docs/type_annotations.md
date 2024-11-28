@@ -59,6 +59,11 @@ To declare an inhomogeneous tuple the syntax is as follows:
 a : tuple[int,bool] = (1,False)
 ```
 
+It is of course possible to create an inhomogeneous tuple in place of a homogeneous tuple to benefit from code optimisations that can arise from using multiple scalars in place of an array object. This will however imply the same restrictions as any other inhomogeneous tuple. E.g:
+```python
+a : tuple[int, int] = (1,2)
+```
+
 ## Dictionaries
 
 Dictionaries are in the process of being added to Pyccel. They cannot yet be used effectively however the type annotations are already supported.
