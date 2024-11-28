@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 -   #1918 : Add support for set method `clear()`.
 -   #1918 : Add support for set method `copy()`.
 -   #1753 : Add support for set method `union()`.
+-   #1744 : Add Python support for set method `intersection()`.
 -   #1884 : Add support for dict method `items()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
@@ -85,6 +86,7 @@ All notable changes to this project will be documented in this file.
 -   #2039 : Ensure any expressions in the iterable of a for loop are calculated before the loop.
 -   #2013 : Stop limiting the length of strings to 128 characters.
 -   #2078 : Fix translation of classes containing comments.
+-   #2041 : Include all type extension methods by default.
 
 ### Changed
 
