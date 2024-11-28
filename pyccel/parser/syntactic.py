@@ -442,6 +442,8 @@ class SyntaxParser(BasicParser):
             return AugAssign(lhs, '%', rhs)
         elif isinstance(stmt.op, ast.BitOr):
             return AugAssign(lhs, '|', rhs)
+        elif isinstance(stmt.op, ast.BitAnd):
+            return AugAssign(lhs, '&', rhs)
         else:
             return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
                     severity='error')
@@ -690,37 +692,38 @@ class SyntaxParser(BasicParser):
                       severity='error')
 
     def _visit_Compare(self, stmt):
-        if len(stmt.ops)>1:
-            return errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
-                      symbol = stmt,
-                      severity='error')
-
         first = self._visit(stmt.left)
-        second = self._visit(stmt.comparators[0])
-        op = stmt.ops[0]
+        comparison = None
+        for comparators, op in zip(stmt.comparators, stmt.ops):
+            second = self._visit(comparators)
 
-        if isinstance(op, ast.Eq):
-            return PyccelEq(first, second)
-        if isinstance(op, ast.NotEq):
-            return PyccelNe(first, second)
-        if isinstance(op, ast.Lt):
-            return PyccelLt(first, second)
-        if isinstance(op, ast.Gt):
-            return PyccelGt(first, second)
-        if isinstance(op, ast.LtE):
-            return PyccelLe(first, second)
-        if isinstance(op, ast.GtE):
-            return PyccelGe(first, second)
-        if isinstance(op, ast.Is):
-            return PyccelIs(first, second)
-        if isinstance(op, ast.IsNot):
-            return PyccelIsNot(first, second)
-        if isinstance(op, ast.In):
-            return PyccelIn(first, second)
+            if isinstance(op, ast.Eq):
+                expr = PyccelEq(first, second)
+            elif isinstance(op, ast.NotEq):
+                expr = PyccelNe(first, second)
+            elif isinstance(op, ast.Lt):
+                expr = PyccelLt(first, second)
+            elif isinstance(op, ast.Gt):
+                expr = PyccelGt(first, second)
+            elif isinstance(op, ast.LtE):
+                expr = PyccelLe(first, second)
+            elif isinstance(op, ast.GtE):
+                expr = PyccelGe(first, second)
+            elif isinstance(op, ast.Is):
+                expr = PyccelIs(first, second)
+            elif isinstance(op, ast.IsNot):
+                expr = PyccelIsNot(first, second)
+            elif isinstance(op, ast.In):
+                expr = PyccelIn(first, second)
+            else:
+                return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                              symbol = stmt,
+                              severity='error')
 
-        return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                      symbol = stmt,
-                      severity='error')
+            first = second
+            comparison = PyccelAnd(comparison, expr) if comparison else expr
+
+        return comparison
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
