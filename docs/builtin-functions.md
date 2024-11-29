@@ -78,7 +78,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 
 | Method | Supported |
 |----------|-----------|
-| `append` | Python-only |
+| **`append`** | **Yes** |
 | `clear` | Python-only |
 | `copy` | Python-only |
 | `count` | No |
@@ -92,6 +92,27 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `reverse` | No |
 | `sort` | Python-only |
 
+## Set methods
+
+| Method | Supported |
+|----------|-----------|
+| **`add`** | **Yes** |
+| **`clear`** | **Yes** |
+| **`copy`** | **Yes** |
+| `difference` | No |
+| `difference_update` | No |
+| `discard` | Python-only |
+| `intersection` | Python-only |
+| `intersection_update` | No |
+| `isdisjoint` | No |
+| `issubset` | No |
+| `issuperset` | No |
+| **`pop`** | **Yes** |
+| `remove` | Python-only |
+| `symmetric_difference` | No |
+| `symmetric_difference_update` | No |
+| **`union`** | Yes |
+| `update` | Python-only |
 
 ## Dictionary methods
 
@@ -99,15 +120,66 @@ Python contains a limited number of builtin functions defined [here](https://doc
 
 | Method | Supported |
 |----------|-----------|
-| `clear` | No |
-| `copy` | No |
+| `clear` | Python-only |
+| `copy` | Python-only |
 | `get` | Python-only |
-| `items` | No |
+| `items` | **Yes** |
 | `keys` | No |
 | `pop` | Python-only |
 | `popitem` | Python-only |
 | `reversed` | No |
-| `setdefault` | No |
+| `setdefault` | Python-only |
 | `update` | No |
 | `values` | No |
 
+## String methods
+
+| Method | Supported |
+|----------|-----------|
+| `capitalize` | No |
+| `casefold` | No |
+| `center` | No |
+| `count` | No |
+| `encode` | No |
+| `endswith` | No |
+| `expandtabs` | No |
+| `find` | No |
+| `format` | No |
+| `format_map` | No |
+| `index` | No |
+| `isalnum` | No |
+| `isalpha` | No |
+| `isascii` | No |
+| `isdecimal` | No |
+| `isdigit` | No |
+| `isidentifier` | No |
+| `islower` | No |
+| `isnumeric` | No |
+| `isprintable` | No |
+| `isspace` | No |
+| `istitle` | No |
+| `isupper` | No |
+| `join` | No |
+| `ljust` | No |
+| `lower` | No |
+| `lstrip` | No |
+| `make_trans` | No |
+| `partition` | No |
+| `removeprefix` | No |
+| `removesufix` | No |
+| `replace` | No |
+| `rfind` | No |
+| `rindex` | No |
+| `rjust` | No |
+| `rpartition` | No |
+| `rsplit` | No |
+| `rstrip` | No |
+| `split` | No |
+| `splitlines` | No |
+| `startswith` | No |
+| `strip` | No |
+| `swapcase` | No |
+| `title` | No |
+| `translate` | No |
+| `upper` | No |
+| `zfill` | No |

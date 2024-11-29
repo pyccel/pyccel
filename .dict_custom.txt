@@ -121,3 +121,4 @@ STC
 gFTL
 enum
 zip
+CMake

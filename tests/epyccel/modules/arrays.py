@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring, reimported
 import numpy as np
 
 from pyccel.decorators import template, stack_array, allow_negative_index
@@ -70,6 +70,11 @@ def array_int_1d_initialization_3():
     a = (1, 2, 4, 8, 16)
     b = np.array(a)
     return np.sum(b), b[0], b[-1]
+
+def array_int_1d_initialization_4():
+    import numpy as np
+    b = np.array([i*2 for i in range(10)])
+    return b
 
 #==============================================================================
 # 2D ARRAYS OF INT-32 WITH C ORDERING
@@ -1592,8 +1597,8 @@ def array_2d_C_slice_stride_23(a : 'int[:,:]'):
 
 def copy_to_slice_issue_1218(n : int):
     from numpy import zeros, array
-    x = 1
-    arr = zeros((2, n))
+    x = 2
+    arr = zeros((3, n))
     arr[0:x, 0:6:2] = array([2, 5, 6])
     return arr
 

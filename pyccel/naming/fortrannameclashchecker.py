@@ -91,9 +91,10 @@ class FortranNameClashChecker(LanguageNameClashChecker):
         str
             A new name which is collision free.
         """
-        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
-            # Ignore magic methods
+        if name in ('__init__', '__del__'):
             return name
+        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
+            name = 'operator' + name[1:-2]
         if name[0] == '_':
             name = 'private'+name
         name = self._get_collisionless_name(name, symbols)

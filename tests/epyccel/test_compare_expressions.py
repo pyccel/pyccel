@@ -11,6 +11,9 @@ def mod_neq_pow(a : int, m : int, n : int):
 def idiv_gt_add(a : int, m : int, n : int):
     return a//m > n+1
 
+def in_range(a : float, b : float, c : float):
+    return a <= b < c
+
 #==============================================================================
 def test_mod_eq_pow(language):
     test = epyccel_test(mod_eq_pow, lang=language)
@@ -44,3 +47,14 @@ def test_idiv_gt_add(language):
     test.compare_epyccel(10, 3, 2)
     test.compare_epyccel(8, 2, 3)
     test.compare_epyccel(16, 3, 5)
+
+def test_in_range(language):
+    test = epyccel_test(in_range, lang=language)
+    # True
+    test.compare_epyccel(0.0, 1.0, 2.0)
+    test.compare_epyccel(-2.0, -1.0, 2.0)
+    test.compare_epyccel(-2.0, -1.3, -1.0)
+    # False
+    test.compare_epyccel(0.0, 10.0, 2.0)
+    test.compare_epyccel(-2.0, -10.0, 2.0)
+    test.compare_epyccel(-2.0, -0.3, -1.0)

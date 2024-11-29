@@ -10,13 +10,19 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import InhomogeneousTupleType
-from pyccel.ast.internals import PyccelFunction
+from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType, SymbolicType
+from pyccel.ast.internals import PyccelFunction, Iterable
+from pyccel.ast.variable  import IndexedElement
 
-__all__ = ('DictGet',
+
+__all__ = ('DictClear',
+           'DictCopy',
+           'DictGet',
+           'DictItems',
            'DictMethod',
            'DictPop',
            'DictPopitem',
+           'DictSetDefault',
            )
 
 #==============================================================================
@@ -176,4 +182,148 @@ class DictGet(DictMethod):
         """
         return self._args[1]
 
+#==============================================================================
+class DictSetDefault(DictMethod):
+    """
+    Represents a call to the .setdefault() method.
 
+    The setdefault() method set an element in the dict. The element is set
+    via a key and a value. If the value is not passed then default value is set
+    as the value.
+
+    If returns the value and if it is not present in the dictionary then the default
+    value is returned.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+
+    k : TypedAstNode
+        The key which is used to set the value from the dictionary.
+
+    d : TypedAstNode, optional
+        The value that should be returned. if the value is not present in the
+        dictionary then default value is returned.
+    """
+    __slots__ = ('_class_type', '_shape')
+    name = 'setdefault'
+
+    def __init__(self, dict_obj, k, d = None):
+        dict_type = dict_obj.class_type
+        self._class_type = dict_type.value_type
+
+        self._shape = (None) * self._class_type.rank if self._class_type.rank else None
+
+        if k.class_type != dict_type.key_type:
+            raise TypeError(f"Key passed to setdefault method has type {k.class_type}. Expected {dict_type.key_type}")
+        if d is None:
+            raise TypeError("None cannot be used as the default argument for the setdefault method.")
+        if d and d.class_type != dict_type.value_type:
+            raise TypeError(f"Default value passed to setdefault method has type {d.class_type}. Expected {dict_type.value_type}")
+        super().__init__(dict_obj, k, d)
+
+    @property
+    def key(self):
+        """
+        The key that is used to select the element from the dict.
+
+        The key that is used to select the element from the dict.
+        """
+        return self._args[0]
+
+    @property
+    def default_value(self):
+        """
+        The value that should be returned if the key is not present in the dictionary.
+
+        The value that should be returned if the key is not present in the dictionary.
+        """
+        return self._args[1]
+
+#==============================================================================
+class DictClear(DictMethod) :
+    """
+    Represents a call to the .clear() method.
+
+    The clear() method removes all items from the dictionary.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+    """
+    __slots__ = ()
+    _shape = None
+    _class_type = VoidType()
+    name = 'clear'
+
+    def __init__(self, dict_obj):
+        super().__init__(dict_obj)
+
+#==============================================================================
+class DictCopy(DictMethod):
+    """
+    Represents a call to the .copy() method.
+
+    The copy() method returns a shallow copy of the dictionary.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+    """
+    __slots__ = ('_class_type',)
+    _shape = None
+    name = 'copy'
+
+    def __init__(self, dict_obj):
+        dict_type = dict_obj.class_type
+        self._class_type = dict_type
+        super().__init__(dict_obj)
+
+#==============================================================================
+class DictItems(Iterable):
+    """
+    Represents a call to the .items() method.
+
+    Represents a call to the .items() method which iterates over a dictionary.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+    """
+    __slots__ = ('_dict_obj',)
+    _attribute_nodes = Iterable._attribute_nodes + ("_dict_obj",)
+    _shape = None
+    _class_type = SymbolicType()
+    name = 'items'
+
+    def __init__(self, dict_obj):
+        self._dict_obj = dict_obj
+        super().__init__(1)
+
+    @property
+    def variable(self):
+        """
+        Get the object representing the dict.
+
+        Get the object representing the dict.
+        """
+        return self._dict_obj
+
+    def get_python_iterable_item(self):
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns two objects that could be a key and a value of the dictionary.
+        These elements are used to determine the types of the loop targets.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        item = DictPopitem(self._dict_obj)
+        return [IndexedElement(item, 0), IndexedElement(item, 1)]

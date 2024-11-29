@@ -18,9 +18,10 @@ __all__ = (
     'SetClear',
     'SetCopy',
     'SetDiscard',
+    'SetIntersection',
     'SetMethod',
     'SetPop',
-    'SetRemove',
+    'SetUnion',
     'SetUpdate'
 )
 
@@ -148,34 +149,6 @@ class SetPop(SetMethod):
         super().__init__(set_variable)
 
 #==============================================================================
-class SetRemove(SetMethod):
-    """
-    Represents a call to the .remove() method.
-
-    The remove() method removes the specified item from 
-    the set and updates the set. It doesn't return any value.
-
-    Parameters
-    ----------
-    set_variable : TypedAstNode
-        The set on which the method will operate.
-
-    item : TypedAstNode
-        The item to search for, and remove.
-    """
-    __slots__ = ()
-    _shape = None
-    _class_type = VoidType()
-    name = 'remove'
-
-    def __init__(self, set_variable, item) -> None:
-        if not isinstance(item, TypedAstNode):
-            raise TypeError(f"It is not possible to look for a {type(item).__name__} object in a set of {set_variable.dtype}")
-        if item.class_type != set_variable.class_type.element_type:
-            raise TypeError(f"Can't remove an element of type {item.dtype} from a set of {set_variable.dtype}")
-        super().__init__(set_variable, item)
-
-#==============================================================================
 class SetDiscard(SetMethod):
     """
     Represents a call to the .discard() method.
@@ -227,6 +200,65 @@ class SetUpdate(SetMethod):
     """
     __slots__ = ()
     name = 'update'
+    _shape = None
+    _class_type = VoidType()
 
     def __init__(self, set_obj, iterable) -> None:
         super().__init__(set_obj, iterable)
+
+#==============================================================================
+class SetUnion(SetMethod):
+    """
+    Represents a call to the set method .union.
+
+    Represents a call to the set method .union. This method builds a new set
+    by including all elements which appear in at least one of the iterables
+    (the set object and the arguments).
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    *others : TypedAstNode
+        The iterables which will be combined with this set.
+    """
+    __slots__ = ('_other','_class_type', '_shape')
+    name = 'union'
+
+    def __init__(self, set_obj, *others):
+        self._class_type = set_obj.class_type
+        element_type = self._class_type.element_type
+        for o in others:
+            if element_type != o.class_type.element_type:
+                raise TypeError(f"Argument of type {o.class_type} cannot be used to build set of type {self._class_type}")
+        self._shape = (None,)*self._class_type.rank
+        super().__init__(set_obj, *others)
+
+#==============================================================================
+
+class SetIntersection(SetMethod):
+    """
+    Represents a call to the set method .intersection.
+
+    Represents a call to the set method .intersection. This method builds a new set
+    by including all elements which appear in "both" of the iterables
+    (the set object and the arguments).
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    *others : TypedAstNode
+        The iterables which will be combined (common elements) with this set.
+    """
+    __slots__ = ('_other','_class_type', '_shape')
+    name = 'intersection'
+
+    def __init__(self, set_obj, *others):
+        self._class_type = set_obj.class_type
+        element_type = self._class_type.element_type
+        for o in others:
+            if element_type != o.class_type.element_type:
+                raise TypeError(f"Argument fo type {o.type_class} cannot be used to build set of type {self._class_type}")
+        self._shape = (None,)*self.rank
+        super().__init__(set_obj, *others)

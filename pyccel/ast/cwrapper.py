@@ -971,21 +971,6 @@ PyUnicode_FromString = FunctionDef(name = 'PyUnicode_FromString',
                         arguments = [FunctionDefArgument(Variable(StringType(), name='_'))],
                         results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
-# https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
-PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
-                        body = [],
-                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
-                                     FunctionDefArgument(Variable(CNativeInt(), name='i'))],
-                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
-
-# https://docs.python.org/3/c-api/list.html#c.PyList_SetItem
-PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
-                        body = [],
-                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
-                                     FunctionDefArgument(Variable(CNativeInt(), name='i')),
-                                     FunctionDefArgument(Variable(PyccelPyObject(), name='new_item', memory_handling='alias'))],
-                        results = [])
-
 #-------------------------------------------------------------------
 
 #using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
@@ -1084,25 +1069,95 @@ PyObject_TypeCheck = FunctionDef(name = 'PyObject_TypeCheck',
             results = [FunctionDefResult(Variable(PythonNativeBool(), 'r'))],
             body = [])
 
+#-------------------------------------------------------------------
+#                          List functions
+#-------------------------------------------------------------------
+
+# https://docs.python.org/3/c-api/list.html#c.PyList_New
 PyList_New = FunctionDef(name = 'PyList_New',
                     arguments = [FunctionDefArgument(Variable(PythonNativeInt(), 'size'), value = LiteralInteger(0))],
                     results = [FunctionDefResult(Variable(PyccelPyObject(), 'r', memory_handling='alias'))],
                     body = [])
 
+# https://docs.python.org/3/c-api/list.html#c.PyList_Append
 PyList_Append = FunctionDef(name = 'PyList_Append',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias')),
                                  FunctionDefArgument(Variable(PyccelPyObject(), 'item', memory_handling='alias'))],
                     results = [FunctionDefResult(Variable(CNativeInt(), 'i'))],
                     body = [])
 
+# https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
 PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias')),
                                  FunctionDefArgument(Variable(PythonNativeInt(), 'i'))],
                     results = [FunctionDefResult(Variable(PyccelPyObject(), 'item', memory_handling='alias'))],
                     body = [])
 
+# https://docs.python.org/3/c-api/list.html#c.PyList_Size
 PyList_Size = FunctionDef(name = 'PyList_Size',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/list.html#c.PyList_SetItem
+PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
+                                     FunctionDefArgument(Variable(PythonNativeInt(), name='i')),
+                                     FunctionDefArgument(Variable(PyccelPyObject(), name='new_item', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(CNativeInt(), 'i'))])
+
+#-------------------------------------------------------------------
+#                         Tuple functions
+#-------------------------------------------------------------------
+
+# https://docs.python.org/3/c-api/tuple.html#c.PyTuple_New
+PyTuple_New = FunctionDef(name = 'PyTuple_New',
+                    arguments = [FunctionDefArgument(Variable(PythonNativeInt(), 'size'), value = LiteralInteger(0))],
+                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'tuple', memory_handling='alias'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Check
+PyTuple_Check = FunctionDef(name = 'PyTuple_Check',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'tuple', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(CNativeInt(), 'i'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Size
+PyTuple_Size = FunctionDef(name = 'PyTuple_Size',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'tuple', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/tuple.html#c.PyTuple_GetItem
+PyTuple_GetItem = FunctionDef(name = 'PyTuple_GetItem',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='tuple', memory_handling='alias')),
+                                     FunctionDefArgument(Variable(PythonNativeInt(), name='i'))],
+                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
+
+# https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SetItem
+PyTuple_SetItem = FunctionDef(name = 'PyTuple_SetItem',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
+                                     FunctionDefArgument(Variable(PythonNativeInt(), name='i')),
+                                     FunctionDefArgument(Variable(PyccelPyObject(), name='new_item', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(CNativeInt(), 'i'))])
+
+#-------------------------------------------------------------------
+#                          Set functions
+#-------------------------------------------------------------------
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_New
+PySet_New = FunctionDef(name = 'PySet_New',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'iterable', memory_handling='alias'), value = Nil())],
+                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Add
+PySet_Add = FunctionDef(name = 'PySet_Add',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'key', memory_handling='alias'))],
                     results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
                     body = [])
 

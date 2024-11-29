@@ -7,6 +7,7 @@
 #define         PYC_MATH_C_H
 #include <math.h>
 #include <stdint.h>
+#include <complex.h>
 
 /*
 ** (N % M) + M and fmod(N, M) + M are used to handle the negative
@@ -39,4 +40,10 @@ inline double        pyc_fmodulo(double a, double b){
         else
             return modulo + b;
 }
+
+long long int isign(long long int x);
+double fsign(double x);
+double complex csgn(double complex x);
+double complex csign(double complex x);
+
 #endif

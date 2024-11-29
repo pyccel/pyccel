@@ -320,9 +320,12 @@ def test_array_int_1d_initialization_1(language):
 
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="Array initialisation from non-literal list not yet supported."),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Lists not yet supported"),
+            pytest.mark.skip(reason="Array initialisation from non-literal list not yet supported."),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -342,6 +345,13 @@ def test_array_int_1d_initialization_3(language):
     f2 = epyccel( f1 , language = language)
 
     assert f1() == f2()
+
+def test_array_int_1d_initialization_4(language):
+
+    f1 = arrays.array_int_1d_initialization_4
+    f2 = epyccel( f1 , language = language)
+
+    check_array_equal(f1(), f2())
 
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-32 WITH C ORDERING
@@ -4028,7 +4038,10 @@ def test_array_float_nested_C_array_initialization_3(language):
 # NUMPY SUM
 #==============================================================================
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="List comprehension not yet implemented"),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="List indexing is not yet supported in C, related issue #1876"),
             pytest.mark.c]

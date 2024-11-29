@@ -21,6 +21,15 @@ if github_debugging:
 def language(request):
     return request.param
 
+@pytest.fixture( params=[
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python),
+    ],
+    scope = "session"
+)
+def stc_language(request):
+    return request.param
+
 def move_coverage(path_dir):
     for root, _, files in os.walk(path_dir):
         for name in files:

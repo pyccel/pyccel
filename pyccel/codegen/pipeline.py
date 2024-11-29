@@ -18,10 +18,7 @@ from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError
 from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
-from pyccel.codegen.utilities      import recompile_object
-from pyccel.codegen.utilities      import copy_internal_library
-from pyccel.codegen.utilities      import internal_libs
-from pyccel.codegen.utilities      import external_libs
+from pyccel.codegen.utilities      import manage_dependencies
 from pyccel.codegen.python_wrapper import create_shared_library
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
@@ -190,7 +187,7 @@ def execute_pyccel(fname, *,
     # Get compiler object
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
     src_compiler = Compiler(compiler, language, debug)
-    wrapper_compiler = Compiler('GNU', 'c', debug)
+    wrapper_compiler = Compiler(compiler, 'c', debug)
 
     # Export the compiler information if requested
     if compiler_export_file:
@@ -313,35 +310,18 @@ def execute_pyccel(fname, *,
     #         # Call same function on 'dep'
     #         pass
     #------------------------------------------------------
-
-    # Iterate over the internal_libs list and determine if the printer
-    # requires an internal lib to be included.
-    for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
-        if lib_name in codegen.get_printer_imports():
-
-            lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
-
-            # stop after copying lib to __pyccel__ directory for
-            # convert only
-            if convert_only:
-                continue
-
-            # Pylint determines wrong type
-            stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
-            # get the include folder path and library files
-            recompile_object(stdlib,
-                              compiler = src_compiler,
-                              verbose  = verbose)
-
-            mod_obj.add_dependencies(stdlib)
-
-
-    # Iterate over the external_libs list and determine if the printer
-    # requires an external lib to be included.
-    for key in codegen.get_printer_imports():
-        lib_name = key.split("/", 1)[0]
-        if lib_name in external_libs:
-            lib_dest_path = copy_internal_library(lib_name, pyccel_dirpath)
+    try:
+        manage_dependencies(codegen.printer, src_compiler, pyccel_dirpath, mod_obj,
+                language, verbose, convert_only)
+    except NotImplementedError as error:
+        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error',
+            traceback=error.__traceback__)
+        handle_error('code generation (wrapping)')
+        raise PyccelCodegenError(msg) from None
+    except PyccelError:
+        handle_error('code generation (wrapping)')
+        raise
 
     if convert_only:
         # Change working directory back to starting point

@@ -15,9 +15,14 @@ base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
 
 files = sorted(os.listdir(path_dir))
+failing_files = {'ListComprehension.py': 'Lists of tuples not yet implemented with gFTL',
+                 'lists.py': 'List slicing not yet implemented with gFTL',
+                 'Functional_Stmts.py': 'List slicing not yet implemented with gFTL',
+                 'complex_numbers.py': 'List slicing not yet implemented with gFTL',
+                 }
 files = [os.path.join(path_dir,f) \
-         #if f not in failing_files \
-         #else pytest.param(os.path.join(path_dir,f), marks = pytest.mark.xfail(reason=failing_files[f])) \
+         if f not in failing_files \
+         else pytest.param(os.path.join(path_dir,f), marks = pytest.mark.xfail(reason=failing_files[f])) \
          for f in files \
          if f.endswith(".py") and f != 'ListComprehension.py' \
         ]

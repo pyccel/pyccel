@@ -37,7 +37,8 @@ class CNameClashChecker(LanguageNameClashChecker):
         'GET_INDEX_FUNC_H2', 'GET_INDEX_FUNC', 'GET_INDEX',
         'INDEX', 'GET_ELEMENT', 'free_array', 'free_pointer',
         'get_index', 'numpy_to_ndarray_strides',
-        'numpy_to_ndarray_shape', 'get_size', 'order_f', 'order_c', 'array_copy_data'])
+        'numpy_to_ndarray_shape', 'get_size', 'order_f', 'order_c', 'array_copy_data',
+        'I'])
 
     def has_clash(self, name, symbols):
         """
@@ -80,9 +81,10 @@ class CNameClashChecker(LanguageNameClashChecker):
         str
             A new name which is collision free.
         """
-        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
-            # Ignore magic methods
+        if name in ('__init__', '__del__'):
             return name
+        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
+            name = 'operator' + name[1:-2]
         if name[0] == '_':
             name = 'private'+name
         return self._get_collisionless_name(name, symbols)

@@ -14,7 +14,7 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 from pyccel.utilities.strings import create_incremented_string
 
 from .builtins  import PythonRange, PythonTuple, PythonMin, PythonMax
-from .core      import Iterable
+
 from .datatypes import PrimitiveIntegerType
 from .internals import PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
@@ -215,9 +215,6 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         sym = sp.Symbol(sym_name)
         symbol_map[sym] = expr
         return sym
-
-    elif isinstance(expr, Iterable):
-        return pyccel_to_sympy(expr.iterable, symbol_map, used_names)
 
     elif isinstance(expr, PythonRange):
         start = pyccel_to_sympy(expr.start, symbol_map, used_names)

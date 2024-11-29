@@ -20,17 +20,18 @@ from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple, PythonSet)
 from .cmathext      import cmath_mod
 from .datatypes     import HomogeneousTupleType, InhomogeneousTupleType, PythonNativeInt
+from .datatypes     import StringType
 from .internals     import PyccelFunction, Slice
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
 from .mathext       import math_mod
-from .sysext        import sys_mod
-
 from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
+from .numpytypes    import NumpyNDArrayType
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .operators     import PyccelUnarySub
 from .scipyext      import scipy_mod
+from .sysext        import sys_mod
 from .typingext     import typing_mod
 from .variable      import Variable, IndexedElement
 
@@ -188,27 +189,33 @@ def split_positional_keyword_arguments(*args):
 #==============================================================================
 def compatible_operation(*args, language_has_vectors = True):
     """
-    Indicates whether an operation requires an index to be
-    correctly understood
+    Indicate whether an operation only uses compatible arguments.
+
+    Indicate whether an operation requires an index to be
+    correctly interpreted in the target language or if the arguments
+    are already compatible.
 
     Parameters
-    ==========
-    args      : list of TypedAstNode
-                The operator arguments
+    ----------
+    *args : list of TypedAstNode
+        The operator arguments.
     language_has_vectors : bool
-                Indicates if the language has support for vector
-                operations of the same shape
-    Results
-    =======
-    compatible : bool
-                 A boolean indicating if the operation is compatible
+        Indicates if the language has support for vector
+        operations of the same shape.
+
+    Returns
+    -------
+    bool
+        A boolean indicating if the operation is compatible.
     """
-    if language_has_vectors:
+    if language_has_vectors and any(isinstance(a.class_type, NumpyNDArrayType) for a in args):
         # If the shapes don't match then an index must be required
         shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.rank != 0]
         shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
         order  = set(a.order for a in args if a.order is not None)
         return len(shapes) <= 1 and len(order) <= 1
+    elif any(isinstance(a.class_type, StringType) for a in args):
+        return True
     else:
         return all(a.rank == 0 for a in args)
 
@@ -571,13 +578,19 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             lhs = line.lhs
             rhs = line.rhs
             if lhs.rank > rhs.rank:
-                for index_depth in range(lhs.rank-rhs.rank):
+                loop_len = []
+                n_new_loops = lhs.rank-rhs.rank
+                for index_depth in range(n_new_loops):
+                    loop_len.append(lhs.shape[0])
                     # If an index exists at the same depth, reuse it if not create one
                     if index_depth >= len(indices):
                         indices.append(new_index(PythonNativeInt(), 'i'))
                     index = indices[index_depth]
                     lhs = insert_index(lhs, index_depth, index)
-                collect_loops([Assign(lhs, rhs)], indices, new_index, language_has_vectors, result = result)
+                block = collect_loops([Assign(lhs, rhs)], indices, new_index, language_has_vectors)
+                for s in loop_len:
+                    block = LoopCollection(block, s, set([lhs]))
+                result.append(block)
 
             elif not language_has_vectors:
                 if isinstance(rhs, NumpyArray):
@@ -681,7 +694,7 @@ def insert_fors(blocks, indices, scope, level = 0):
     else:
         body = CodeBlock(body, unravelled = True)
         loop_scope = scope.create_new_loop_scope()
-        return [For(indices[level],
+        return [For([indices[level]],
                     PythonRange(0,blocks.length),
                     body,
                     scope = loop_scope)]

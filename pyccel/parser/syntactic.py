@@ -49,7 +49,7 @@ from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, Pyc
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
-from pyccel.ast.operators import PyccelIs, PyccelIsNot
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, PyccelIn
 from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
@@ -440,6 +440,10 @@ class SyntaxParser(BasicParser):
             return AugAssign(lhs, '/', rhs)
         elif isinstance(stmt.op, ast.Mod):
             return AugAssign(lhs, '%', rhs)
+        elif isinstance(stmt.op, ast.BitOr):
+            return AugAssign(lhs, '|', rhs)
+        elif isinstance(stmt.op, ast.BitAnd):
+            return AugAssign(lhs, '&', rhs)
         else:
             return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
                     severity='error')
@@ -688,35 +692,38 @@ class SyntaxParser(BasicParser):
                       severity='error')
 
     def _visit_Compare(self, stmt):
-        if len(stmt.ops)>1:
-            return errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
-                      symbol = stmt,
-                      severity='error')
-
         first = self._visit(stmt.left)
-        second = self._visit(stmt.comparators[0])
-        op = stmt.ops[0]
+        comparison = None
+        for comparators, op in zip(stmt.comparators, stmt.ops):
+            second = self._visit(comparators)
 
-        if isinstance(op, ast.Eq):
-            return PyccelEq(first, second)
-        if isinstance(op, ast.NotEq):
-            return PyccelNe(first, second)
-        if isinstance(op, ast.Lt):
-            return PyccelLt(first, second)
-        if isinstance(op, ast.Gt):
-            return PyccelGt(first, second)
-        if isinstance(op, ast.LtE):
-            return PyccelLe(first, second)
-        if isinstance(op, ast.GtE):
-            return PyccelGe(first, second)
-        if isinstance(op, ast.Is):
-            return PyccelIs(first, second)
-        if isinstance(op, ast.IsNot):
-            return PyccelIsNot(first, second)
+            if isinstance(op, ast.Eq):
+                expr = PyccelEq(first, second)
+            elif isinstance(op, ast.NotEq):
+                expr = PyccelNe(first, second)
+            elif isinstance(op, ast.Lt):
+                expr = PyccelLt(first, second)
+            elif isinstance(op, ast.Gt):
+                expr = PyccelGt(first, second)
+            elif isinstance(op, ast.LtE):
+                expr = PyccelLe(first, second)
+            elif isinstance(op, ast.GtE):
+                expr = PyccelGe(first, second)
+            elif isinstance(op, ast.Is):
+                expr = PyccelIs(first, second)
+            elif isinstance(op, ast.IsNot):
+                expr = PyccelIsNot(first, second)
+            elif isinstance(op, ast.In):
+                expr = PyccelIn(first, second)
+            else:
+                return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                              symbol = stmt,
+                              severity='error')
 
-        return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                      symbol = stmt,
-                      severity='error')
+            first = second
+            comparison = PyccelAnd(comparison, expr) if comparison else expr
+
+        return comparison
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
@@ -1026,7 +1033,9 @@ class SyntaxParser(BasicParser):
             if isinstance(visited_i, FunctionDef):
                 methods.append(visited_i)
                 visited_i.arguments[0].bound_argument = True
-            elif isinstance(visited_i, Pass):
+            elif isinstance(visited_i, (Pass, Comment)):
+                continue
+            elif isinstance(visited_i, CodeBlock) and all(isinstance(x, Comment) for x in visited_i.body):
                 continue
             elif isinstance(visited_i, AnnotatedPyccelSymbol):
                 attributes.append(visited_i)
@@ -1090,7 +1099,7 @@ class SyntaxParser(BasicParser):
         if len(args) == 0:
             args = ()
 
-        if len(args) == 1 and isinstance(args[0].value, GeneratorComprehension):
+        if len(args) == 1 and isinstance(args[0].value, (GeneratorComprehension, FunctionalFor)):
             return args[0].value
 
         func = self._visit(stmt.func)
@@ -1102,6 +1111,9 @@ class SyntaxParser(BasicParser):
                 func = FunctionCall(func, args)
         elif isinstance(func, DottedName):
             func_attr = FunctionCall(func.name[-1], args)
+            for n in func.name:
+                if isinstance(n, PyccelAstNode):
+                    n.clear_syntactic_user_nodes()
             func = DottedName(*func.name[:-1], func_attr)
         else:
             raise NotImplementedError(f' Unknown function type {type(func)}')
@@ -1168,26 +1180,51 @@ class SyntaxParser(BasicParser):
 
         generators = list(self._visit(stmt.generators))
 
-        if not isinstance(self._context[-2],ast.Assign):
+        success = isinstance(self._context[-2],ast.Assign)
+        if not success and len(self._context) > 2:
+            success = isinstance(self._context[-3],ast.Assign) and isinstance(self._context[-2],ast.Call)
+
+        assignment = next((c for c in reversed(self._context) if isinstance(c, ast.Assign)), None)
+
+        if not success:
             errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
                           symbol = stmt,
                           severity='error')
             lhs = PyccelSymbol('_', is_temp=True)
         else:
-            lhs = self._visit(self._context[-2].targets)
+            lhs = self._visit(assignment.targets)
             if len(lhs)==1:
                 lhs = lhs[0]
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
         indices = [generator.target for generator in generators]
         generators[-1].insert2body(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
+        parent = self._context[-2]
+        if isinstance(parent, ast.Call):
+            output_type = self._visit(parent.func)
+        else:
+            output_type = 'list'
 
+        index = PyccelSymbol('_', is_temp=True)
+
+        args = [index]
+        target = IndexedElement(lhs, *args)
+        target = Assign(target, result)
+        assign1 = Assign(index, LiteralInteger(0))
+        assign1.set_current_ast(stmt)
+        target.set_current_ast(stmt)
+        generators[-1].insert2body(target)
+        assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
+        assign2.set_current_ast(stmt)
+        generators[-1].insert2body(assign2)
+
+        indices = [generators[-1].target]
         while len(generators) > 1:
             F = generators.pop()
             generators[-1].insert2body(F)
 
-        return FunctionalFor(generators, result, lhs,
-                             indices)
+        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
+                             indices, index, target_type = output_type)
 
     def _visit_GeneratorExp(self, stmt):
 

@@ -12,12 +12,12 @@ from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType
+from pyccel.ast.datatypes  import HomogeneousTupleType, VoidType
 from pyccel.ast.functionalexpr import FunctionalFor
-from pyccel.ast.literals   import LiteralTrue, LiteralString
+from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
-from pyccel.ast.numpytypes import NumpyNumericType
+from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.variable   import DottedName, Variable
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
@@ -446,8 +446,8 @@ class PythonCodePrinter(CodePrinter):
         else:
             return '{}({}+{}*1j)'.format(name, self._print(expr.real), self._print(expr.imag))
 
-    def _print_Iterable(self, expr):
-        return self._print(expr.iterable)
+    def _print_VariableIterator(self, expr):
+        return self._print(expr.variable)
 
     def _print_PythonRange(self, expr):
         return 'range({start}, {stop}, {step})'.format(
@@ -468,6 +468,10 @@ class PythonCodePrinter(CodePrinter):
         return 'map({func}, {args})'.format(
                 func = self._print(expr.func.name),
                 args = self._print(expr.func_args))
+
+    def _print_PythonZip(self, expr):
+        args = ', '.join(self._print(a) for a in expr.args)
+        return f'zip({args})'
 
     def _print_PythonReal(self, expr):
         if isinstance(expr.internal_var, Variable):
@@ -491,10 +495,18 @@ class PythonCodePrinter(CodePrinter):
         return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))
 
     def _print_PyccelArrayShapeElement(self, expr):
-        arg = self._print(expr.arg)
-        index = self._print(expr.index)
-        name = self._get_numpy_name(expr)
-        return f'{name}({arg})[{index}]'
+        arg = expr.arg
+        index = expr.index
+        arg_code = self._print(arg)
+        if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)) or \
+                not isinstance(index, LiteralInteger):
+            index_code = self._print(index)
+            name = self._get_numpy_name(expr)
+            return f'{name}({arg_code})[{index_code}]'
+        elif index == 0:
+            return f'len({arg_code})'
+        else:
+            raise NotImplementedError("The shape access function seems to be poorly defined.")
 
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
@@ -517,7 +529,8 @@ class PythonCodePrinter(CodePrinter):
         return ''
 
     def _print_DottedName(self, expr):
-        return '.'.join(self._print(n) for n in expr.name)
+        # A DottedName can only contain LiteralStrings or PyccelSymbols at the printing stage
+        return '.'.join(str(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
@@ -849,9 +862,9 @@ class PythonCodePrinter(CodePrinter):
         key = self._print(expr.key)
         if expr.default_value:
             val = self._print(expr.default_value)
-            return f"{dict_obj}.pop({key}, {val})\n"
+            return f"{dict_obj}.pop({key}, {val})"
         else:
-            return f"{dict_obj}.pop({key})\n"
+            return f"{dict_obj}.pop({key})"
 
     def _print_DictGet(self, expr):
         dict_obj = self._print(expr.dict_obj)
@@ -861,6 +874,11 @@ class PythonCodePrinter(CodePrinter):
             return f"{dict_obj}.get({key}, {val})\n"
         else:
             return f"{dict_obj}.get({key})\n"
+
+    def _print_DictItems(self, expr):
+        dict_obj = self._print(expr.variable)
+
+        return f"{dict_obj}.items()"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
@@ -879,7 +897,11 @@ class PythonCodePrinter(CodePrinter):
         name = expr.name
         args = "" if len(expr.args) == 0 or expr.args[-1] is None \
             else ', '.join(self._print(a) for a in expr.args)
-        return f"{set_var}.{name}({args})\n"
+        code = f"{set_var}.{name}({args})"
+        if expr.class_type is VoidType():
+            return f'{code}\n'
+        else:
+            return code
 
     def _print_Nil(self, expr):
         return 'None'
@@ -1093,6 +1115,11 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Concatenate(self, expr):
         return ' + '.join([self._print(a) for a in expr.args])
+
+    def _print_PyccelIn(self, expr):
+        element = self._print(expr.element)
+        container = self._print(expr.container)
+        return f'{element} in {container}'
 
     def _print_PyccelSymbol(self, expr):
         return expr

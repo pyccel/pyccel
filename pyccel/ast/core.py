@@ -12,18 +12,19 @@ from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 from pyccel.utilities.stage   import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
-from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
-                        PythonRange, PythonZip, PythonBool, Lambda)
+
+from .bitwise_operators import PyccelBitOr, PyccelBitAnd
+
+from .builtins  import PythonBool, PythonTuple
 
 from .c_concepts import PointerCast
 
-from .datatypes import (PyccelType, SymbolicType, HomogeneousTupleType,
-                        PythonNativeBool, InhomogeneousTupleType,
-                        VoidType)
+from .datatypes import (PyccelType, HomogeneousTupleType, VoidType,
+                        PythonNativeBool, InhomogeneousTupleType)
 
-from .internals import PyccelSymbol, PyccelFunction, apply_pickle
+from .internals import PyccelSymbol, PyccelFunction, apply_pickle, Iterable
 
-from .literals  import Nil, LiteralFalse, LiteralInteger
+from .literals  import Nil, LiteralFalse, LiteralInteger, LiteralString
 from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
@@ -31,6 +32,7 @@ from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
 
 from .variable import DottedName, IndexedElement
 from .variable import Variable, AnnotatedPyccelSymbol
+from .datatypes import HomogeneousSetType, HomogeneousListType, DictType
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -76,7 +78,6 @@ __all__ = (
     'InProgram',
     'InlineFunctionDef',
     'Interface',
-    'Iterable',
     'Module',
     'ModuleHeader',
     'Pass',
@@ -86,8 +87,6 @@ __all__ = (
     'Return',
     'SeparatorComment',
     'StarredArguments',
-    'SymbolicAssign',
-    'SymbolicPrint',
     'SympyFunction',
     'While',
     'With',
@@ -103,7 +102,6 @@ __all__ = (
 #      - add a new Idx that uses Variable instead of Symbol
 
 #==============================================================================
-
 
 class AsName(PyccelAstNode):
     """
@@ -345,31 +343,6 @@ class Assign(PyccelAstNode):
         cond = cond or isinstance(rhs, Variable) and rhs.is_alias
         return cond
 
-    @property
-    def is_symbolic_alias(self):
-        """
-        Returns True if the assignment is a symbolic alias.
-
-        Returns True if the assignment is a symbolic alias.
-        """
-
-        # TODO to be improved when handling classes
-        # TODO: Is this useful?
-
-        lhs = self.lhs
-        rhs = self.rhs
-        if isinstance(lhs, Variable):
-            return isinstance(lhs.class_type, SymbolicType)
-        elif isinstance(lhs, PyccelSymbol):
-            if isinstance(rhs, PythonRange):
-                return True
-            elif isinstance(rhs, Variable):
-                return isinstance(rhs.class_type, SymbolicType)
-            elif isinstance(rhs, PyccelSymbol):
-                return True
-
-        return False
-
 #------------------------------------------------------------------------------
 class Allocate(PyccelAstNode):
     """
@@ -395,16 +368,25 @@ class Allocate(PyccelAstNode):
         In C this provides the size which will be passed to malloc. In Fortran
         this provides the source argument of the allocate function.
 
+    alloc_type : str {'init'|'reserve'|'resize'}, optional
+        Specifies the memory allocation strategy for containers with dynamic memory management.
+        This parameter is relevant for any container type where memory allocation patterns 
+        need to be specified based on usage.
+
+        - 'init' refers to direct allocation with predefined data (e.g., `x = [1, 2, 4]`).
+        - 'reserve' refers to cases where the container will be appended to.
+        - 'resize' referes to cases where the container is populated via indexed elements.
+
     Notes
     -----
     An object of this class is immutable, although it contains a reference to a
     mutable Variable object.
     """
-    __slots__ = ('_variable', '_shape', '_order', '_status', '_like')
+    __slots__ = ('_variable', '_shape', '_order', '_status', '_like', '_alloc_type')
     _attribute_nodes = ('_variable', '_like')
 
     # ...
-    def __init__(self, variable, *, shape, status, like = None):
+    def __init__(self, variable, *, shape, status, like = None, alloc_type = None):
 
         if not isinstance(variable, (Variable, PointerCast)):
             raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
@@ -426,11 +408,15 @@ class Allocate(PyccelAstNode):
         if status not in ('allocated', 'unallocated', 'unknown'):
             raise ValueError(f"Value of 'status' not allowed: '{status}'")
 
+        assert alloc_type is None or isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType))
+        assert alloc_type is None or alloc_type in ('init', 'reserve', 'resize')
+
         self._variable = variable
         self._shape    = shape
         self._order    = variable.order
         self._status   = status
         self._like = like
+        self._alloc_type = alloc_type
         super().__init__()
     # ...
 
@@ -481,6 +467,18 @@ class Allocate(PyccelAstNode):
         this provides the source argument of the allocate function.
         """
         return self._like
+
+    @property
+    def alloc_type(self):
+        """
+        Determines the allocation type for homogeneous containers.
+
+        Returns a string that indicates the allocation type used for memory allocation.
+        The value is either 'init' for containers initialized with predefined data, 
+        'reserve' for containers populated through appending, and 'resize' for containers
+        populated through indexed element assignment.
+        """
+        return self._alloc_type
 
     def __str__(self):
         return f'Allocate({self.variable}, shape={self.shape}, order={self.order}, status={self.status})'
@@ -707,47 +705,6 @@ class AliasAssign(PyccelAstNode):
         return self._rhs
 
 
-class SymbolicAssign(PyccelAstNode):
-
-    """Represents symbolic aliasing for code generation. An alias is any statement of the
-    form `lhs := rhs` where
-
-    Parameters
-    ----------
-    lhs : PyccelSymbol
-
-    rhs : Range
-
-    Examples
-    --------
-    >>> from pyccel.ast.internals import PyccelSymbol
-    >>> from pyccel.ast.core import SymbolicAssign
-    >>> from pyccel.ast.core import Range
-    >>> r = Range(0, 3)
-    >>> y = PyccelSymbol('y')
-    >>> SymbolicAssign(y, r)
-
-    """
-    __slots__ = ('_lhs', '_rhs')
-    _attribute_nodes = ('_lhs', '_rhs')
-
-    def __init__(self, lhs, rhs):
-        self._lhs = lhs
-        self._rhs = rhs
-        super().__init__()
-
-    def __str__(self):
-        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
-
-    @property
-    def lhs(self):
-        return self._lhs
-
-    @property
-    def rhs(self):
-        return self._rhs
-
-
 class AugAssign(Assign):
     r"""
     Represents augmented variable assignment for code generation.
@@ -789,7 +746,10 @@ class AugAssign(Assign):
             '-' : PyccelMinus,
             '*' : PyccelMul,
             '/' : PyccelDiv,
-            '%' : PyccelMod}
+            '%' : PyccelMod,
+            '|' : PyccelBitOr,
+            '&' : PyccelBitAnd,
+        }
 
     def __init__(
         self,
@@ -812,7 +772,21 @@ class AugAssign(Assign):
 
     @property
     def op(self):
+        """
+        Get the string describing the operator which modifies the lhs variable.
+
+        Get the string describing the operator which modifies the lhs variable.
+        """
         return self._op
+
+    @property
+    def pyccel_operator(self):
+        """
+        Get the PyccelOperator which modifies the lhs variable.
+
+        Get the PyccelOperator which modifies the lhs variable.
+        """
+        return self._accepted_operators[self._op]
 
     def to_basic_assign(self):
         """
@@ -981,6 +955,10 @@ class Module(ScopedAstNode):
     scope : Scope
         The scope of the module.
 
+    is_external : bool
+        Indicates if the Module's definition is found elsewhere.
+        This is notably the case for gFTL extensions.
+
     Examples
     --------
     >>> from pyccel.ast.variable import Variable
@@ -1008,7 +986,8 @@ class Module(ScopedAstNode):
     """
     __slots__ = ('_name','_variables','_funcs','_interfaces',
                  '_classes','_imports','_init_func','_free_func',
-                 '_program','_variable_inits','_internal_dictionary')
+                 '_program','_variable_inits','_internal_dictionary',
+                 '_is_external')
     _attribute_nodes = ('_variables','_funcs','_interfaces',
                         '_classes','_imports','_init_func',
                         '_free_func','_program','_variable_inits')
@@ -1024,7 +1003,8 @@ class Module(ScopedAstNode):
         interfaces=(),
         classes=(),
         imports=(),
-        scope = None
+        scope = None,
+        is_external = False
         ):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
@@ -1070,8 +1050,10 @@ class Module(ScopedAstNode):
         imports = list(imports)
         for i in classes:
             imports += i.imports
-        imports = set(imports)  # for unicity
-        imports = tuple(imports)
+        imports = {i: None for i in imports} # for unicity and ordering
+        imports = tuple(imports.keys())
+
+        assert isinstance(is_external, bool)
 
         self._name = name
         self._variables = variables
@@ -1083,13 +1065,15 @@ class Module(ScopedAstNode):
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
+        self._is_external = is_external
 
         if pyccel_stage != "syntactic":
             self._internal_dictionary = {v.name:v for v in variables}
             self._internal_dictionary.update({f.name:f for f in funcs})
             self._internal_dictionary.update({i.name:i for i in interfaces})
             self._internal_dictionary.update({c.name:c for c in classes})
-            import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
+            import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] \
+                                for i in imports if isinstance(i, Import)}
             self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
             if init_func:
@@ -1208,6 +1192,15 @@ class Module(ScopedAstNode):
         """ Returns the names of all objects accessible directly in this module
         """
         return self._internal_dictionary.keys()
+
+    @property
+    def is_external(self):
+        """
+        Indicate if the Module's definition is found elsewhere.
+
+        This is notably the case for gFTL extensions.
+        """
+        return self._is_external
 
 class ModuleHeader(PyccelAstNode):
     """
@@ -1359,147 +1352,6 @@ class Program(ScopedAstNode):
 
 
 #==============================================================================
-class Iterable(PyccelAstNode):
-    """
-    Wrapper around iterable types helping to convert between those types and a range.
-
-    Wrapper around iterable types helping to convert between those
-    types and a range (necessary in low level languages, e.g. C and Fortran).
-
-    Parameters
-    ----------
-    iterable : acceptable_iterator_type
-               The iterator being wrapped
-               The type must be in acceptable_iterator_types or the class must
-               implement the following functions:
-               - n_indices
-               - to_range
-    """
-    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, PythonRange, IndexedElement)
-    __slots__ = ('_iterable','_indices','_num_indices_required')
-    _attribute_nodes = ('_iterable','_indices')
-
-    def __init__(self, iterable):
-        self._iterable = iterable
-        self._indices  = None
-
-        if isinstance(iterable, PythonRange):
-            self._num_indices_required = 0
-        elif isinstance(iterable, PythonEnumerate):
-            self._num_indices_required = int(iterable.start != 0)
-        elif isinstance(iterable, self.acceptable_iterator_types):
-            self._num_indices_required = 1
-        elif hasattr(iterable, 'n_indices') and hasattr(iterable, 'to_range'):
-            self._num_indices_required = iterable.n_indices
-        else:
-            raise TypeError(f"Unknown iterator type {type(iterable)}")
-
-        super().__init__()
-
-    @property
-    def num_loop_counters_required(self):
-        """ Number of iterators which must be generated in order to
-        convert this iterable to a range
-        """
-        return self._num_indices_required
-
-    def set_loop_counter(self, *indices):
-        """ Set the iterator(s) for the generated range
-        These are iterators generated by pyccel so are not
-        needed for python code
-        """
-        assert self._indices is None
-        for i in indices:
-            i.set_current_user_node(self)
-        self._indices = indices
-
-    def unset_loop_counter(self, invalidate = True):
-        """ Remove the iterator(s) set for the generated range
-        """
-        for i in self._indices:
-            i.remove_user_node(self, invalidate)
-        self._indices = None
-
-    def get_assigns(self, target):
-        """ Returns a list containing any assigns necessary to initialise
-        the loop iterators/targets when using a range iterable
-
-        Parameters
-        ----------
-        target : Variable or list of Variables
-                 The index(es) over which the loop iterates
-
-        Results
-        -------
-        assigns : list of Assign
-                  The assignments necessary to define target
-        """
-        iterable = self._iterable
-        if isinstance(iterable, PythonRange):
-            return []
-        range_element = self.get_target_from_range()
-        if self.num_loop_counters_required == 0:
-            target = target[1:]
-            range_element = range_element[1:]
-        if isinstance(target, (tuple, list)):
-            return [AliasAssign(t, r) if t.is_alias else Assign(t, r) for t, r in zip(target, range_element)]
-        else:
-            return [AliasAssign(target, range_element) if target.is_alias else Assign(target, range_element)]
-
-    def get_target_from_range(self):
-        """ Returns an element of the range indexed with the iterators
-        previously provided via the set_loop_counters method
-        (useful for get_assigns and to determine the dtype etc of the
-        loop iterator)
-        """
-        idx = self._indices[0] if len(self._indices)==1 else self._indices
-        range_base = self._iterable[idx]
-        if isinstance(self._iterable, PythonMap):
-            return FunctionCall(range_base[0], [range_base[1]])
-        else:
-            return range_base
-
-    def get_range(self):
-        """
-        Get the range required for this iterable.
-
-        Returns the range which is necessary in a low-level language to iterate over
-        the wrapped iterable.
-
-        Returns
-        -------
-        PythonRange
-            The range which should be used in the code.
-        """
-        if isinstance(self._iterable, PythonRange):
-            return self._iterable
-        elif hasattr(self._iterable, 'to_range'):
-            return self._iterable.to_range()
-        else:
-            length = getattr(self._iterable, '__len__',
-                    getattr(self._iterable, 'length', None))
-
-            # Only create PythonLen if length is None to avoid unnecessary TypeErrors
-            if length is None:
-                length = PythonLen(self._iterable)
-
-            if callable(length):
-                length = length()
-            return PythonRange(length)
-
-    @property
-    def iterable(self):
-        """ Returns the iterable being wrapped
-        """
-        return self._iterable
-
-    @property
-    def loop_counters(self):
-        """ Returns the iterator(s) of the generated range
-        """
-        return self._indices
-
-#==============================================================================
 
 class For(ScopedAstNode):
     """
@@ -1541,11 +1393,8 @@ class For(ScopedAstNode):
         body,
         scope = None
         ):
-        if pyccel_stage != "syntactic":
-            if not isinstance(iter_obj, Iterable):
-                iter_obj = Iterable(iter_obj)
-                if iter_obj.num_loop_counters_required!=0:
-                    raise TypeError('iter_obj must be an iterable')
+        assert pyccel_stage == "syntactic" or isinstance(iter_obj, Iterable)
+        assert pyccel_stage == "syntactic" or iterable(target)
 
         if iterable(body):
             body = CodeBlock(body)
@@ -1951,7 +1800,7 @@ class FunctionCall(TypedAstNode):
             self._interface = None
             self._funcdef   = func
             self._arguments = tuple(args)
-            self._func_name = func
+            self._func_name = getattr(func, 'name', func)
             super().__init__()
             return
 
@@ -2746,6 +2595,11 @@ class FunctionDef(ScopedAstNode):
         """
         return self._result_pointer_map
 
+    def __call__(self, *args, **kwargs):
+        arguments = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
+        arguments += [FunctionCallArgument(a, keyword=key) for key, a in kwargs.items()]
+        return FunctionCall(self, arguments)
+
 class InlineFunctionDef(FunctionDef):
     """
     Represents a function definition for an inline function.
@@ -2902,7 +2756,7 @@ class PyccelFunctionDef(FunctionDef):
     __slots__ = ('_argument_description',)
     def __init__(self, name, func_class, *, decorators = {}, argument_description = {}):
         assert isinstance(func_class, type) and \
-                issubclass(func_class, (PyccelFunction, TypedAstNode))
+                issubclass(func_class, (PyccelFunction, TypedAstNode, Iterable))
         assert isinstance(argument_description, dict)
         arguments = ()
         results = ()
@@ -2935,6 +2789,9 @@ class PyccelFunctionDef(FunctionDef):
             'decorators':self._decorators,
             'argument_description':self._argument_description}
         return args, kwargs
+
+    def __call__(self, *args, **kwargs):
+        return self._cls_name(*args, **kwargs)
 
 class Interface(PyccelAstNode):
     """
@@ -3153,6 +3010,11 @@ class Interface(PyccelAstNode):
             errors.report(f'Arguments types provided to {self.name} are incompatible',
                         severity='fatal')
         return  self._functions[j]
+
+    def __call__(self, *args, **kwargs):
+        arguments = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
+        arguments += [FunctionCallArgument(a, keyword=key) for key, a in kwargs.items()]
+        return FunctionCall(self, arguments)
 
 class FunctionAddress(FunctionDef):
     """
@@ -3587,7 +3449,7 @@ class ClassDef(ScopedAstNode):
         interface.set_current_user_node(self)
         self._interfaces += (interface,)
 
-    def get_method(self, name):
+    def get_method(self, name, raise_error = True):
         """
         Get the method `name` of the current class.
 
@@ -3600,6 +3462,11 @@ class ClassDef(ScopedAstNode):
         ----------
         name : str
             The name of the attribute we are looking for.
+
+        raise_error : bool, default=True
+            True if an error should be raised, False if None should be returned if
+            the method is not found.
+            False if None can be returned instead.
 
         Returns
         -------
@@ -3616,8 +3483,11 @@ class ClassDef(ScopedAstNode):
             try:
                 name = self.scope.get_expected_name(name)
             except RuntimeError:
-                errors.report(f"Can't find method {name} in class {self.name}",
-                        severity='fatal', symbol=self)
+                if raise_error:
+                    errors.report(f"Can't find method {name} in class {self.name}",
+                            severity='fatal', symbol=self)
+                else:
+                    return None
 
         try:
             method = next(i for i in chain(self.methods, self.interfaces) if i.name == name)
@@ -3627,11 +3497,12 @@ class ClassDef(ScopedAstNode):
             n_classes = len(self.superclasses)
             while method is None and i<n_classes:
                 try:
-                    method = self.superclasses[i].get_method(name)
+                    method = self.superclasses[i].get_method(name, raise_error)
                 except StopIteration:
                     method = None
+                i += 1
 
-        if method is None:
+        if method is None and raise_error:
             errors.report(f"Can't find method {name} in class {self.name}",
                     severity='fatal', symbol=self)
 
@@ -3781,7 +3652,7 @@ class Import(PyccelAstNode):
                 return DottedName(*i.split('.'))
             else:
                 return PyccelSymbol(i)
-        if isinstance(i, (DottedName, AsName, PyccelSymbol)):
+        if isinstance(i, (DottedName, AsName, PyccelSymbol, LiteralString)):
             return i
         else:
             raise TypeError(f'Expecting a string, PyccelSymbol DottedName, given {type(i)}')
@@ -3839,6 +3710,30 @@ class Import(PyccelAstNode):
             self._target.update({t: None for t in new_target})
         else:
             self._target[new_target] = None
+
+    def remove_target(self, target_to_remove):
+        """
+        Remove a target from the imports.
+
+        Remove a target from the imports.
+        I.e., if `imp` is an Import defined as:
+        >>> from numpy import ones, cos
+
+        and we call `imp.remove_target('cos')`
+        then it becomes:
+        >>> from numpy import ones
+
+        Parameters
+        ----------
+        target_to_remove : str | AsName | iterable[str | AsName]
+            The import target(s) to remove.
+        """
+        assert pyccel_stage != "syntactic"
+        if iterable(target_to_remove):
+            for t in target_to_remove:
+                self._target.pop(t, None)
+        else:
+            self._target.pop(target_to_remove, None)
 
     def find_module_target(self, new_target):
         """
@@ -4070,44 +3965,6 @@ class Raise(PyccelAstNode):
     __slots__ = ()
     _attribute_nodes = ()
 
-
-
-class SymbolicPrint(PyccelAstNode):
-
-    """Represents a print function of symbolic expressions in the code.
-
-    Parameters
-    ----------
-    expr : TypedAstNode
-        The expression to print
-
-    Examples
-    --------
-    >>> from pyccel.ast.internals import symbols
-    >>> from pyccel.ast.core import Print
-    >>> n,m = symbols('n,m')
-    >>> Print(('results', n,m))
-    Print((results, n, m))
-    """
-    __slots__ = ('_expr',)
-    _attribute_nodes = ('_expr',)
-
-    def __init__(self, expr):
-        if not iterable(expr):
-            raise TypeError('Expecting an iterable')
-
-        for i in expr:
-            if not isinstance(i, (Lambda, SymbolicAssign,
-                              SympyFunction)):
-                raise TypeError('Expecting Lambda, SymbolicAssign, SympyFunction for {}'.format(i))
-
-        self._expr = expr
-
-        super().__init__()
-
-    @property
-    def expr(self):
-        return self._expr
 
 
 class Del(PyccelAstNode):

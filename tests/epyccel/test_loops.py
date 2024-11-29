@@ -77,17 +77,6 @@ def test_double_loop_on_2d_array_F(language):
     f2( y )
     assert np.array_equal( x, y )
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="Fortran does not support list comprehension"),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_product_loop_on_2d_array_C(language):
 
     f1 = loops.product_loop_on_2d_array_C
@@ -100,17 +89,6 @@ def test_product_loop_on_2d_array_C(language):
     f2( y )
     assert np.array_equal( x, y )
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="Fortran does not support list comprehension"),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_product_loop_on_2d_array_F(language):
 
     f1 = loops.product_loop_on_2d_array_F
@@ -123,17 +101,7 @@ def test_product_loop_on_2d_array_F(language):
     f2( y )
     assert np.array_equal( x, y )
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="Fortran does not support list comprehension"),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+
 def test_product_loop(language):
 
     f1 = loops.product_loop
@@ -183,17 +151,16 @@ def test_enumerate_on_1d_array_with_start(language):
     assert np.array_equal( f1(z, 5), f2(z, 5) )
     assert np.array_equal( f1(z,-2), f2(z,-2) )
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="Fortran does not support list comprehension"),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="C does not support list indexing yet, related issue #1948"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+
+def test_enumerate_on_1d_array_with_tuple(language):
+
+    f1 = loops.enumerate_on_1d_array_with_tuple
+    f2 = epyccel(f1, language=language)
+
+    z = np.arange( 7 )
+
+    assert np.array_equal( f1(z), f2(z) )
+
 def test_zip_prod(language):
 
     f1 = loops.zip_prod
@@ -281,14 +248,8 @@ def test_less_than_100(language):
     assert f1(10) == f2(10)
     assert f1(101) == f2(101)
 
-##==============================================================================
-## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
-##==============================================================================
-#
-#def teardown_module():
-#    import os, glob
-#    dirname  = os.path.dirname( loops.__file__ )
-#    pattern  = os.path.join( dirname, '__epyccel__*' )
-#    filelist = glob.glob( pattern )
-#    for f in filelist:
-#        os.remove( f )
+def test_for_expression(language):
+    f1 = loops.for_expression
+    f2 = epyccel( f1, language = language )
+
+    assert f1() == f2()
