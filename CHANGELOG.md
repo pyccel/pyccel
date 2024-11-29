@@ -33,15 +33,18 @@ All notable changes to this project will be documented in this file.
 -   #1874 : Add C and Fortran support for the `len()` function for the `list` container.
 -   #1875 : Add C and Fortran support for the `len()` function for the `set` container.
 -   #1908 : Add C and Fortran support for the `len()` function for the `dict` container.
+-   #1665 : Add C support for returning lists from functions.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C support for list method `pop()`.
+-   #1664 : Add C support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
 -   #1877 : Add C and Fortran Support for set method `pop()`.
 -   #1917 : Add C and Fortran support for set method `add()`.
 -   #1918 : Add support for set method `clear()`.
 -   #1918 : Add support for set method `copy()`.
 -   #1753 : Add support for set method `union()`.
+-   #1744 : Add Python support for set method `intersection()`.
 -   #1884 : Add support for dict method `items()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
@@ -51,6 +54,8 @@ All notable changes to this project will be documented in this file.
 -   Add a warning about containers in lists.
 -   #2016 : Add support for translating arithmetic magic methods (methods cannot yet be used from Python).
 -   #1980 : Extend The C support for min and max to more than two variables
+-   #2081 : Add support for multi operator expressions
+-   Add support for inhomogeneous tuple annotations.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
@@ -80,6 +85,8 @@ All notable changes to this project will be documented in this file.
 -   #2039 : Ensure any expressions in the iterable of a for loop are calculated before the loop.
 -   #2013 : Stop limiting the length of strings to 128 characters.
 -   #2078 : Fix translation of classes containing comments.
+-   #2041 : Include all type extension methods by default.
+-   #2082 : Allow the use of a list comprehension to initialise an array.
 
 ### Changed
 

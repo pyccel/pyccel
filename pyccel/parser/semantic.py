@@ -72,7 +72,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol
+from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
 from pyccel.ast.internals import Iterable
 from pyccel.ast.itertoolsext import Product
 
@@ -150,6 +150,7 @@ type_container = {
                    PythonTupleFunction : HomogeneousTupleType,
                    PythonListFunction : HomogeneousListType,
                    PythonSetFunction : HomogeneousSetType,
+                   NumpyArray : NumpyNDArrayType,
                   }
 
 #==============================================================================
@@ -1565,7 +1566,7 @@ class SemanticParser(BasicParser):
                             for a in args:
                                 if isinstance(a.class_type, InhomogeneousTupleType):
                                     new_args.extend(self.scope.collect_tuple_element(v) for v in a if v.rank>0)
-                                else:
+                                elif a.rank > 0:
                                     new_expressions.append(Allocate(a,
                                         shape=a.alloc_shape, status=status))
                             args = new_args
@@ -1709,6 +1710,26 @@ class SemanticParser(BasicParser):
                 tmp_result = PyccelAdd(var, rhs)
                 result_type = tmp_result.class_type
                 raise_error = var.class_type != result_type
+            elif isinstance(var.class_type, InhomogeneousTupleType) and \
+                    isinstance(class_type, HomogeneousTupleType):
+                if d_var['shape'][0] == var.shape[0]:
+                    rhs_elem = self.scope.collect_tuple_element(var[0])
+                    self._ensure_inferred_type_matches_existing(class_type.element_type,
+                            self._infer_type(rhs_elem), rhs_elem, is_augassign, new_expressions, rhs)
+                    raise_error = False
+                else:
+                    raise_error = True
+            elif isinstance(var.class_type, InhomogeneousTupleType) and \
+                    isinstance(class_type, InhomogeneousTupleType):
+                for i, element_type in enumerate(class_type):
+                    rhs_elem = self.scope.collect_tuple_element(var[i])
+                    self._ensure_inferred_type_matches_existing(element_type,
+                            self._infer_type(rhs_elem), rhs_elem, is_augassign, new_expressions, rhs)
+                raise_error = False
+            elif isinstance(var.class_type, HomogeneousTupleType) and \
+                    isinstance(class_type, InhomogeneousTupleType):
+                # TODO: Remove isinstance(rhs, Variable) condition when tuples are saved like lists
+                raise_error = any(a != var.class_type.element_type for a in class_type) or not isinstance(rhs, Variable)
             else:
                 raise_error = True
 
@@ -2027,7 +2048,8 @@ class SemanticParser(BasicParser):
             else:
                 raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
-            if (len(args) == 2 and args[1] is LiteralEllipsis()) or len(args) == 1:
+            if (len(args) == 2 and args[1] is LiteralEllipsis()) or \
+                    (len(args) == 1 and dtype_cls is not PythonTupleFunction):
                 syntactic_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
                 internal_datatypes = self._visit(syntactic_annotation)
                 if dtype_cls in type_container:
@@ -2045,6 +2067,13 @@ class SemanticParser(BasicParser):
                 val_types = self._visit(syntactic_val_annotation)
                 type_annotations = [VariableTypeAnnotation(DictType(k.class_type, v.class_type)) \
                                     for k,v in zip(key_types.type_list, val_types.type_list)]
+                return UnionTypeAnnotation(*type_annotations)
+            elif dtype_cls is PythonTupleFunction:
+                syntactic_annotations = [self._convert_syntactic_object_to_type_annotation(a) for a in args]
+                types = [self._visit(a).type_list for a in syntactic_annotations]
+                internal_datatypes = list(product(*types))
+                type_annotations = [VariableTypeAnnotation(InhomogeneousTupleType(*[ui.class_type for ui in u]), True)
+                                    for u in internal_datatypes]
                 return UnionTypeAnnotation(*type_annotations)
             else:
                 raise errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,
@@ -2808,12 +2837,21 @@ class SemanticParser(BasicParser):
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
                 cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+                shape = len(class_type) if isinstance(class_type, InhomogeneousTupleType) else None
                 v = var_class(class_type, name, cls_base = cls_base,
-                        shape = None,
+                        shape = shape,
                         is_const = t.is_const, is_optional = False,
                         memory_handling = array_memory_handling if class_type.rank > 0 else 'stack',
                         **kwargs)
                 possible_args.append(v)
+                if isinstance(class_type, InhomogeneousTupleType):
+                    for i, t in enumerate(class_type):
+                        pyccel_stage.set_stage('syntactic')
+                        syntactic_elem = AnnotatedPyccelSymbol(self.scope.get_new_name( f'{name}_{i}'),
+                                                annotation = UnionTypeAnnotation(VariableTypeAnnotation(t)))
+                        pyccel_stage.set_stage('semantic')
+                        elem = self._visit(syntactic_elem)
+                        self.scope.insert_symbolic_alias(IndexedElement(v, i), elem[0])
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO + '\nUnrecoginsed type annotation',
                         severity='fatal', symbol=expr)
@@ -3471,7 +3509,8 @@ class SemanticParser(BasicParser):
                 if isinstance(l.class_type, InhomogeneousTupleType) \
                         and not isinstance(r, (FunctionCall, PyccelFunction)):
                     new_lhs.extend(self.scope.collect_tuple_element(v) for v in l)
-                    new_rhs.extend(self.scope.collect_tuple_element(v) for v in r)
+                    new_rhs.extend(self.scope.collect_tuple_element(r[i]) \
+                            for i in range(len(l.class_type)))
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
                 elif isinstance(l, Variable) and isinstance(l.class_type, InhomogeneousTupleType):
@@ -3509,7 +3548,8 @@ class SemanticParser(BasicParser):
                             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                             symbol=li, severity='error')
             else:
-                if getattr(l, 'is_const', False) and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or len(l.get_all_user_nodes()) > 0):
+                if getattr(l, 'is_const', False) and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or \
+                        any(not isinstance(u, (Allocate, PyccelArrayShapeElement)) for u in l.get_all_user_nodes())):
                     # If constant and not the initialising declaration of a constant variable
                     errors.report("Cannot modify 'const' variable",
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
@@ -3757,7 +3797,7 @@ class SemanticParser(BasicParser):
             dim = sympy_to_pyccel(dim, idx_subs)
         except TypeError:
             errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE + f'\n Deduced size : {dim}',
-                          bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                          symbol=expr,
                           severity='fatal')
 
         # TODO find a faster way to calculate dim
@@ -3777,7 +3817,35 @@ class SemanticParser(BasicParser):
                           severity='fatal')
 
         d_var['memory_handling'] = 'heap'
-        class_type = HomogeneousListType(class_type)
+        target_type_name = expr.target_type
+        if isinstance(target_type_name, DottedName):
+            lhs = target_type_name.name[0] if len(target_type_name.name) == 2 \
+                    else DottedName(*target_type_name.name[:-1])
+            first = self._visit(lhs)
+            if isinstance(first, Module):
+                conversion_func = first[target_type_name.name[-1]]
+            else:
+                conversion_func = None
+        else:
+            conversion_func = self.scope.find(target_type_name, 'functions')
+            if conversion_func is None:
+                if target_type_name in builtin_functions_dict:
+                    conversion_func = PyccelFunctionDef(target_type_name,
+                                            builtin_functions_dict[target_type_name])
+        if conversion_func is None:
+            errors.report("Unrecognised output type from functional for.\n"+PYCCEL_RESTRICTION_TODO,
+                          symbol=expr,
+                          severity='fatal')
+
+        try:
+            class_type = type_container[conversion_func.cls_name](class_type)
+        except TypeError:
+            if class_type.rank > 0:
+                errors.report("ND comprehension expressions cannot be saved directly to an array yet.\n"+PYCCEL_RESTRICTION_TODO,
+                              symbol=expr,
+                              severity='fatal')
+
+            class_type = type_container[conversion_func.cls_name](numpy_process_dtype(class_type), rank=1, order=None)
         d_var['class_type'] = class_type
         shape = [dim]
         if d_var['shape']:

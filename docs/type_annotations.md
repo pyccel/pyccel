@@ -41,12 +41,48 @@ In general string type hints must be used to provide Pyccel with information abo
 
 ## Tuples
 
-Currently Pyccel supports tuples used locally in functions and in certain cases as arguments, but not as returned objects or module variables. The implementation of the type annotations (including adding the missing support) is in progress. Currently homogeneous tuple type annotations are supported for local variables and function arguments (if the tuples contain scalar objects). Internally we handle homogeneous tuples as though they were NumPy arrays. When creating multiple dimensional tuples it is therefore important to ensure that all objects have compatible sizes otherwise they will be handled as inhomogeneous tuples.
+Currently Pyccel supports tuples used locally in functions and in certain cases as arguments, but not as returned objects or module variables. The implementation of the type annotations (including adding the missing support) is in progress.
+
+Tuples can be homogeneous or inhomogeneous. A homogeneous tuple is a tuple whose elements all have the same type and shape. Pyccel translates homogeneous tuples in a similar way to NumPy arrays. When creating multiple dimensional tuples it is therefore important to ensure that all objects have compatible sizes otherwise they will be handled as inhomogeneous tuples. An inhomogeneous tuple describes all other types, but comes with extra restrictions. An inhomogeneous tuple is translated to multiple objects in the target language so it can only be used if the element can be identified during the translation. This means that expressions such as `a[i]` are not possible for inhomogeneous tuples while `a[0]` is valid.
+
+Homogeneous tuple type annotations are supported for local variables and function arguments (if the tuples contain scalar objects).
 
 To declare a homogeneous tuple the syntax is as follows:
 ```python
 a : tuple[int,...] = (1,2,3,4)
 ```
+
+Inhomogeneous tuple type annotations are supported for local variables.
+
+To declare an inhomogeneous tuple the syntax is as follows:
+```python
+a : tuple[int,bool] = (1,False)
+```
+
+It is of course possible to create an inhomogeneous tuple in place of a homogeneous tuple to benefit from code optimisations that can arise from using multiple scalars in place of an array object. This will however imply the same restrictions as any other inhomogeneous tuple. E.g:
+```python
+a : tuple[int, int] = (1,2)
+```
+
+## Lists
+
+Lists are in the process of being added to Pyccel. Homogeneous lists can be declared in Pyccel using the following syntax:
+```python
+a : list[int] = [1, 2]
+b : list[bool] = [False, True]
+c : list[float] = []
+```
+So far lists can be declared as local variables or as results of functions.
+
+## Sets
+
+Sets are in the process of being added to Pyccel. Homogeneous sets can be declared in Pyccel using the following syntax:
+```python
+a : set[int] = {1, 2}
+b : set[bool] = {False, True}
+c : set[float] = {}
+```
+So far sets can be declared as local variables or as results of functions.
 
 ## Dictionaries
 
