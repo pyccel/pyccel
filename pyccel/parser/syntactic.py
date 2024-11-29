@@ -1197,34 +1197,21 @@ class SyntaxParser(BasicParser):
                 lhs = lhs[0]
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
-        indices = [generator.target for generator in generators]
+        #indices = [generator.target for generator in generators]
         generators[-1].insert2body(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
         parent = self._context[-2]
         if isinstance(parent, ast.Call):
             output_type = self._visit(parent.func)
         else:
             output_type = 'list'
-
-        index = PyccelSymbol('_', is_temp=True)
-
-        args = [index]
-        target = IndexedElement(lhs, *args)
-        target = Assign(target, result)
-        assign1 = Assign(index, LiteralInteger(0))
-        assign1.set_current_ast(stmt)
-        target.set_current_ast(stmt)
-        generators[-1].insert2body(target)
-        assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
-        assign2.set_current_ast(stmt)
-        generators[-1].insert2body(assign2)
-
         indices = [generators[-1].target]
         while len(generators) > 1:
             F = generators.pop()
             generators[-1].insert2body(F)
+            indices.append(generators[-1].target)
 
-        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
-                             indices, index, target_type = output_type)
+        return FunctionalFor([generators[-1]], result, lhs,
+                             indices, target_type = output_type)
 
     def _visit_GeneratorExp(self, stmt):
 

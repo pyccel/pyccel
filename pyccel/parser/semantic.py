@@ -3676,7 +3676,12 @@ class SemanticParser(BasicParser):
         pyccel.ast.basic.CodeBlock
             A code block containing the equivalent loops and necessary variable allocations for the given `FunctionalFor` expression.
         """
-         
+        '''
+        old_index   = expr.index
+        new_index   = self.scope.get_new_name()
+        expr.substitute(old_index, new_index) 
+        index = new_index
+        '''
         target  = expr.expr
         indices = []
         dims = []
@@ -3689,22 +3694,22 @@ class SemanticParser(BasicParser):
             start = LiteralInteger(0)
             step = LiteralInteger(1)
             vars = []
-            a = Iterable(self._visit(body.iterable))
-            if isinstance(a.iterable, PythonRange):
+            a = self._get_iterable(self._visit(body.iterable))
+            if isinstance(a, PythonRange):
                 var = self.scope.get_expected_name(expr.indices[i])
                 indices.append(var)
                 var   = self._create_variable(var, PythonNativeInt(), start, {})
                 dvar  = self._infer_type(var)
                 vars.append((var, dvar))
-                stop  = a.iterable.stop
-                start = a.iterable.start
-                step  = a.iterable.step
-            elif isinstance(a.iterable, PythonEnumerate):
+                stop  = a.stop
+                start = a.start
+                step  = a.step
+            elif isinstance(a, PythonEnumerate):
                 var1 = self.scope.get_expected_name(expr.indices[i][0])
                 var2 = self.scope.get_expected_name(expr.indices[i][1])
                 indices.append(var1)
                 indices.append(var2)
-                dvar2 = self._infer_type(a.iterable.element)
+                dvar2 = self._infer_type(a.element)
                 class_type = dvar2.pop('class_type')
                 if class_type.rank > 0:
                     class_type = class_type.switch_rank(class_type.rank - 1)
@@ -3716,9 +3721,9 @@ class SemanticParser(BasicParser):
                 var1 = Variable(PythonNativeInt(), var1)
                 vars.append((var1, self._infer_type(var1)))
                 vars.append((var2, dvar2))
-                stop = a.iterable.element.shape[0]
-            elif isinstance(a.iterable, PythonZip):
-                for idx, arg in enumerate(a.iterable.args):
+                stop = a.element.shape[0]
+            elif isinstance(a, PythonZip):
+                for idx, arg in enumerate(a.args):
                     var = self.scope.get_expected_name(expr.indices[i][idx])
                     indices.append(var)
                     dvar = self._infer_type(arg)
@@ -3731,9 +3736,9 @@ class SemanticParser(BasicParser):
                         dvar['memory_handling'] = 'stack'
                     var  = Variable(class_type, var, **dvar)
                     vars.append((var, dvar))
-                stop = a.iterable.length
-            
-            elif isinstance(a.iterable, Variable):
+                stop = a._length
+
+            elif isinstance(a, Variable):
                 var = self.scope.get_expected_name(expr.indices[i])
                 indices.append(var)
                 dvar  = self._infer_type(a.iterable)
@@ -3766,7 +3771,8 @@ class SemanticParser(BasicParser):
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
             start.invalidate_node()
             start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
-            stop.invalidate_node()
+            if stop not in a.get_attribute_nodes(type(stop)): 
+                stop.invalidate_node()
             stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
             size = (stop - start) / step
             if (step != 1):
@@ -3896,16 +3902,20 @@ class SemanticParser(BasicParser):
         target.invalidate_node()
 
         loops = [self._visit(i) for i in expr.loops]
-        index = self._visit(index)
+        #index = self._visit(index)
 
         l = loops[-1]
+        cnt = 0
         for idx in indices:
             assert isinstance(l, For)
             # Sub in indices as defined here for coherent naming
             if idx.is_temp:
                 self.scope.remove_variable(l.target[0])
                 l.substitute(l.target[0], idx_subs[idx])
-            l = l.body.body[-1]
+            cnt += 1
+            if cnt == len(l.target):
+                l = l.body.body[-1]
+                cnt = 0
 
         #self.exit_loop_scope()
 
