@@ -188,6 +188,233 @@ MyClass Object created!
 ==158858== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 ```
 
+## Class properties
+
+Pyccel now supports class properties (as getters only).
+
+### - Python Example
+
+```python
+import numpy as np
+
+class MyClass:
+    def __init__(self, param1 : 'int', param2 : 'int'):
+        self._param1 = param1
+        self._param2 = np.ones(param2)
+        print("MyClass Object created!")
+
+    @property
+    def param1(self):
+        return self._param1
+
+    @property
+    def param2(self):
+        return self._param2
+
+if __name__ == '__main__':
+    obj = MyClass1(2, 4)
+    print(obj.param1)
+    print(obj.param2)
+```
+
+### PYTHON _OUTPUT_
+```Shell
+MyClass Object created!
+2
+[1. 1. 1. 1.]
+```
+
+### - Header File Equivalent
+
+```C
+struct MyClass {
+    int64_t private_param1;
+    t_ndarray private_param2;
+    bool is_freed;
+};
+
+void MyClass__init__(struct MyClass* self, int64_t param1, int64_t param2);
+int64_t MyClass__param1(struct MyClass* self);
+t_ndarray MyClass__param2(struct MyClass* self);
+void MyClass__del__(struct MyClass* self);
+```
+
+### - C File Equivalent
+
+```C
+/*........................................*/
+void MyClass__init__(struct MyClass* self, int64_t param1, int64_t param2)
+{
+    self->is_freed = 0;
+    self->private_param1 = param1;
+    self->private_param2 = array_create(1, (int64_t[]){param2}, nd_double, false, order_c);
+    array_fill((double)1.0, self->private_param2);
+    printf("MyClass Object created!\n");
+}
+/*........................................*/
+/*........................................*/
+int64_t MyClass__param1(struct MyClass* self)
+{
+    return self->private_param1;
+}
+/*........................................*/
+/*........................................*/
+t_ndarray MyClass__param2(struct MyClass* self)
+{
+    t_ndarray Out_0001 = {.shape = NULL};
+    alias_assign(&Out_0001, self->private_param2);
+    return Out_0001;
+}
+/*........................................*/
+/*........................................*/
+void MyClass__del__(struct MyClass* self)
+{
+    if (!self->is_freed)
+    {
+        // pass
+        free_array(&self->private_param2);
+        self->is_freed = 1;
+    }
+}
+/*........................................*/
+```
+
+### - C Program File Equivalent
+```C
+int main()
+{
+    struct MyClass obj;
+    t_ndarray Dummy_0000 = {.shape = NULL};
+    int64_t i;
+    MyClass__init__(&obj, INT64_C(2), INT64_C(4));
+    printf("%"PRId64"\n", MyClass__param1(&obj));
+    Dummy_0000 = MyClass__param2(&obj);
+    printf("[");
+    for (i = INT64_C(0); i < Dummy_0000.shape[INT64_C(0)] - INT64_C(1); i += INT64_C(1))
+    {
+        printf("%.15lf ", GET_ELEMENT(Dummy_0000, nd_double, i));
+    }
+    printf("%.15lf]\n", GET_ELEMENT(Dummy_0000, nd_double, Dummy_0000.shape[INT64_C(0)] - INT64_C(1)));
+    MyClass__del__(&obj);
+    free_pointer(&Dummy_0000);
+    return 0;
+}
+```
+
+### - Fortran File Equivalent
+
+```fortran
+  type, public :: MyClass
+    integer(i64) :: private_param1
+    real(f64), allocatable :: private_param2(:)
+    logical(b1), private :: is_freed
+
+    contains
+    procedure :: create => myclass_create
+    procedure :: param1 => myclass_param1
+    procedure :: param2 => myclass_param2
+    procedure :: free => myclass_free
+  end type MyClass
+
+  contains
+
+
+  !........................................
+
+  subroutine myclass_create(self, param1, param2)
+
+    implicit none
+
+    class(MyClass), intent(inout) :: self
+    integer(i64), value :: param1
+    integer(i64), value :: param2
+
+    self%is_freed = .False._b1
+    self%private_param1 = param1
+    allocate(self%private_param2(0:param2 - 1_i64))
+    self%private_param2 = 1.0_f64
+    write(stdout, '(A)', advance="yes") 'MyClass Object created!'
+
+  end subroutine myclass_create
+
+  !........................................
+
+
+  !........................................
+
+  function myclass_param1(self) result(Out_0001)
+
+    implicit none
+
+    integer(i64) :: Out_0001
+    class(MyClass), intent(inout) :: self
+
+    Out_0001 = self%private_param1
+    return
+
+  end function myclass_param1
+
+  !........................................
+
+
+  !........................................
+
+  subroutine myclass_param2(self, Out_0001)
+
+    implicit none
+
+    real(f64), pointer, intent(out) :: Out_0001(:)
+    class(MyClass), target, intent(inout) :: self
+
+    Out_0001(0:) => self%private_param2
+    return
+
+  end subroutine myclass_param2
+
+  !........................................
+
+
+  !........................................
+
+  subroutine myclass_free(self)
+
+    implicit none
+
+    class(MyClass), intent(inout) :: self
+
+    if (.not. self%is_freed) then
+      ! pass
+      if (allocated(self%private_param2)) then
+        deallocate(self%private_param2)
+      end if
+      self%is_freed = .True._b1
+    end if
+
+  end subroutine myclass_free
+
+  !........................................
+```
+
+### - Fortran Program File Equivalent
+
+```fortran
+  type(MyClass), target :: obj
+  real(f64), pointer :: Dummy_0000(:)
+  integer(i64) :: i
+
+  call obj % create(2_i64, 4_i64)
+  write(stdout, '(I0)', advance="yes") obj % param1()
+  call obj % param2(Out_0001 = Dummy_0000)
+  write(stdout, '(A)', advance="no") '['
+  do i = 0_i64, size(Dummy_0000, kind=i64) - 1_i64 - 1_i64
+    write(stdout, '(F0.15, A)', advance="no") Dummy_0000(i) , ' '
+  end do
+  write(stdout, '(F0.15, A)', advance="no") Dummy_0000(size(Dummy_0000, &
+        kind=i64) - 1_i64) , ']'
+  write(stdout, '()', advance="yes")
+  call obj % free()
+```
+
 ## Limitations
 
-It's important to note that Pyccel does not support class inheritance, properties, magic methods or static class variables. For our first implementation, the focus of Pyccel is primarily on core class functionality and memory management.
+It's important to note that Pyccel does not support class inheritance, magic methods or static class variables. For our first implementation, the focus of Pyccel is primarily on core class functionality and memory management.
