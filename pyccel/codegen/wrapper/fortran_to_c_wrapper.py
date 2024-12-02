@@ -638,7 +638,7 @@ class FortranToCWrapper(Wrapper):
                     symbol=expr)
 
         properties_getters = [BindCClassProperty(expr.scope.get_python_name(m.original_function.name),
-                                                 m, None, expr.class_type)
+                                                 m, None, expr.class_type, m.original_function.docstring)
                                 for m in methods if 'property' in m.original_function.decorators]
         methods = [m for m in methods if m not in properties_getters
                         if 'property' not in m.original_function.decorators]

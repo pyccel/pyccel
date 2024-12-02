@@ -1894,8 +1894,10 @@ class CToPythonWrapper(Wrapper):
 
         self._error_exit_code = Nil()
 
-        return PyGetSetDefElement(expr.python_name, getter, setter,
-                                LiteralString(f"The attribute {expr.python_name}"))
+        docstring = LiteralString(
+                        '\n'.join(expr.docstring.comments)
+                        if expr.docstring else f"The attribute {expr.python_name}")
+        return PyGetSetDefElement(expr.python_name, getter, setter, docstring)
 
     def _wrap_ClassDef(self, expr):
         """
