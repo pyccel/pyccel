@@ -420,7 +420,7 @@ class CWrapperCodePrinter(CCodePrinter):
         property_definitions = ''.join(''.join(('{\n',
                                         f'"{p.python_name}",\n',
                                         f'(getter) {p.getter.name},\n',
-                                        f'(setter) {p.setter.name},\n' if p.setter else '',
+                                        f'(setter) {p.setter.name},\n' if p.setter else '(setter) NULL,\n',
                                         f'{self._print(p.docstring)},\n',
                                         'NULL\n',
                                         '},\n')) for p in expr.properties)
