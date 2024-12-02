@@ -1477,8 +1477,8 @@ class CToPythonWrapper(Wrapper):
         if 'property' in original_func.decorators:
             python_name = original_func.scope.get_python_name(original_func.name)
             docstring = LiteralString(
-                            '\n'.join(original_func.docstring.comments) or
-                            f"The attribute {python_name}")
+                            '\n'.join(original_func.docstring.comments)
+                            if original_func.docstring else f"The attribute {python_name}")
             return PyGetSetDefElement(python_name, function, None, docstring)
         else:
             return function
