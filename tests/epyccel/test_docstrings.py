@@ -63,6 +63,9 @@ def test_class_docstring(language):
 
 def test_property_docstring(language):
     class A:
+        """
+        Class containing x
+        """
         def __init__(self : 'A', x : int):
             self._x = x
 
@@ -75,5 +78,7 @@ def test_property_docstring(language):
 
     B = epyccel(A, language=language)
 
+    python_doc, pyccel_doc = pad_docstrings(A.__doc__, B.__doc__)
+    assert python_doc == pyccel_doc
     python_doc, pyccel_doc = pad_docstrings(A.x.__doc__, B.x.__doc__)
     assert python_doc == pyccel_doc
