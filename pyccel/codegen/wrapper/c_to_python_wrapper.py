@@ -1213,7 +1213,6 @@ class CToPythonWrapper(Wrapper):
         -------
         PyModule
             The module which can be called from Python.
-
         """
         pymod = self._wrap_Module(expr)
 
