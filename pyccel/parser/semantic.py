@@ -3682,6 +3682,7 @@ class SemanticParser(BasicParser):
         expr.substitute(old_index, new_index) 
         index = new_index
         '''
+
         target  = expr.expr
         indices = []
         dims = []
@@ -3689,6 +3690,28 @@ class SemanticParser(BasicParser):
         tmp_used_names = self.scope.all_used_symbols.copy()
         body = expr.loops[0]
         i = 0
+        
+        # Inner function to handle PythonNativeInt variables
+        def handle_int_loop_variable(var_name):
+            indices.append(var_name)
+            var = self._create_variable(var_name, PythonNativeInt(), None, {})
+            dvar = self._infer_type(var)
+            vars.append((var, dvar))
+
+        # Inner function to handle iterable variables
+        def handle_iterable_variable(var_name, element):
+            indices.append(var_name)
+            dvar = self._infer_type(element)
+            class_type = dvar.pop('class_type') 
+            if class_type.rank > 0:
+                class_type = class_type.switch_rank(class_type.rank - 1)
+                dvar['shape'] = dvar['shape'][1:]
+            if class_type.rank == 0:
+                dvar['shape'] = None
+                dvar['memory_handling'] = 'stack'
+            var = self._create_variable(var_name, class_type, None, dvar)
+            vars.append((var, dvar))
+    
         while isinstance(body, For):
             stop = None
             start = LiteralInteger(0)
@@ -3696,62 +3719,29 @@ class SemanticParser(BasicParser):
             vars = []
             a = self._get_iterable(self._visit(body.iterable))
             if isinstance(a, PythonRange):
-                var = self.scope.get_expected_name(expr.indices[i])
-                indices.append(var)
-                var   = self._create_variable(var, PythonNativeInt(), start, {})
-                dvar  = self._infer_type(var)
-                vars.append((var, dvar))
-                stop  = a.stop
+                var_name = self.scope.get_expected_name(expr.indices[i])
+                handle_int_loop_variable(var_name)
                 start = a.start
+                stop  = a.stop
                 step  = a.step
+
             elif isinstance(a, PythonEnumerate):
-                var1 = self.scope.get_expected_name(expr.indices[i][0])
-                var2 = self.scope.get_expected_name(expr.indices[i][1])
-                indices.append(var1)
-                indices.append(var2)
-                dvar2 = self._infer_type(a.element)
-                class_type = dvar2.pop('class_type')
-                if class_type.rank > 0:
-                    class_type = class_type.switch_rank(class_type.rank - 1)
-                    dvar2['shape'] = (dvar2['shape'])[1:]
-                if class_type.rank == 0:
-                    dvar2['shape'] = None
-                    dvar2['memory_handling'] = 'stack'
-                var2 = Variable(class_type, var2, **dvar2)
-                var1 = Variable(PythonNativeInt(), var1)
-                vars.append((var1, self._infer_type(var1)))
-                vars.append((var2, dvar2))
+                var_name1 = self.scope.get_expected_name(expr.indices[i][0])
+                var_name2 = self.scope.get_expected_name(expr.indices[i][1])
+                handle_int_loop_variable(var_name1)
+                handle_iterable_variable(var_name2, a.element)
                 stop = a.element.shape[0]
+
             elif isinstance(a, PythonZip):
                 for idx, arg in enumerate(a.args):
                     var = self.scope.get_expected_name(expr.indices[i][idx])
-                    indices.append(var)
-                    dvar = self._infer_type(arg)
-                    class_type = dvar.pop('class_type')
-                    if class_type.rank > 0:
-                        class_type = class_type.switch_rank(class_type.rank-1)
-                        dvar['shape'] = (dvar['shape'])[1:]
-                    if class_type.rank == 0:
-                        dvar['shape'] = None
-                        dvar['memory_handling'] = 'stack'
-                    var  = Variable(class_type, var, **dvar)
-                    vars.append((var, dvar))
+                    handle_iterable_variable(var, arg)
                 stop = a._length
 
-            elif isinstance(a, Variable):
+            elif isinstance(a, VariableIterator):
                 var = self.scope.get_expected_name(expr.indices[i])
-                indices.append(var)
-                dvar  = self._infer_type(a.iterable)
-                class_type = dvar.pop('class_type')
-                if class_type.rank > 0:
-                    class_type = class_type.switch_rank(class_type.rank-1)
-                    dvar['shape'] = (dvar['shape'])[1:]
-                if class_type.rank == 0:
-                    dvar['shape'] = None
-                    dvar['memory_handling'] = 'stack'
-                var  = Variable(class_type, var, **dvar)
-                vars.append((var, dvar))
-                stop = a.iterable.shape[0]
+                handle_iterable_variable(var, a.variable)
+                stop = a.variable.shape[0]
             
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO,
@@ -3760,18 +3750,23 @@ class SemanticParser(BasicParser):
             
             for var, dvar in vars:
                 existing_var = self.scope.find(var.name, 'variables')
-                if existing_var:
+                if var.name == expr.lhs:
+                    return errors.report(f"Variable {var} has the same name as the left hand side",
+                            symbol = expr, severity='error')     
+                if existing_var or var.name ==  expr.lhs:
                     if self._infer_type(existing_var) != dvar:
-                        errors.report(f"Variable {var} already exists with different type",
+                        return errors.report(f"Variable {var} already exists with different type",
                                 symbol = expr, severity='error')
                 else:
                     self.scope.insert_variable(var)
             
-            step.invalidate_node()
+            if isinstance(step, LiteralInteger): 
+                step.invalidate_node()
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
-            start.invalidate_node()
+            if isinstance(start, LiteralInteger): 
+                start.invalidate_node()
             start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
-            if stop not in a.get_attribute_nodes(type(stop)): 
+            if isinstance(stop, LiteralInteger): 
                 stop.invalidate_node()
             stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
             size = (stop - start) / step

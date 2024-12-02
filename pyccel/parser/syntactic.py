@@ -1144,6 +1144,7 @@ class SyntaxParser(BasicParser):
     def _visit_comprehension(self, stmt):
 
         scope = self.create_new_loop_scope()
+        body = []
 
         self._in_lhs_assign = True
         iterator = self._visit(stmt.target)
@@ -1153,10 +1154,10 @@ class SyntaxParser(BasicParser):
         self.exit_loop_scope()
 
         if stmt.ifs:
-            errors.report("Cannot handle if statements in list comprehensions. List length cannot be calculated.\n" + PYCCEL_RESTRICTION_TODO,
-                    symbol=stmt, severity='error')
+            cond = self._visit(stmt.ifs)
+            body.append(If(IfSection(cond[0], CodeBlock([]))))
 
-        expr = For(iterator, iterable, [], scope=scope)
+        expr = For(iterator, iterable, body, scope=scope)
         return expr
 
     def _visit_ListComp(self, stmt):
@@ -1197,8 +1198,18 @@ class SyntaxParser(BasicParser):
                 lhs = lhs[0]
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
-        #indices = [generator.target for generator in generators]
-        generators[-1].insert2body(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
+        condition = []
+        for generator in generators:
+            if generator.body.body:
+                assert isinstance(generator.body.body[0], If)
+                for ifSection in generator.body.body[0].blocks:
+                    condition.append(ifSection.condition)
+                generator._body = CodeBlock([])
+        if condition: 
+            generators[-1].insert2body(If(IfSection(condition,
+                                                    [DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)]))])))
+        else:
+            generators[-1].insert2body(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
         parent = self._context[-2]
         if isinstance(parent, ast.Call):
             output_type = self._visit(parent.func)
@@ -1209,6 +1220,7 @@ class SyntaxParser(BasicParser):
             F = generators.pop()
             generators[-1].insert2body(F)
             indices.append(generators[-1].target)
+        indices = indices[::-1]
 
         return FunctionalFor([generators[-1]], result, lhs,
                              indices, target_type = output_type)
