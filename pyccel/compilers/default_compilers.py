@@ -290,6 +290,7 @@ nvc_info.update(python_info)
 nvfort_info.update(python_info)
 
 gcc_info['python']['flags'].append('-Wno-incompatible-pointer-types')
+gcc_info['python']['flags'].append('-Wno-discarded-qualifiers')
 
 available_compilers = {('GNU', 'c') : gcc_info,
                        ('GNU', 'fortran') : gfort_info,
