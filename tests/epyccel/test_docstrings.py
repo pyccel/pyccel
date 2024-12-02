@@ -60,3 +60,20 @@ def test_class_docstring(language):
 
     python_doc, pyccel_doc = pad_docstrings(A.__doc__, B.__doc__)
     assert python_doc == pyccel_doc
+
+def test_property_docstring(language):
+    class A:
+        def __init__(self : 'A', x : int):
+            self._x = x
+
+        @property
+        def x(self):
+            """
+            This is a property it cannot be set.
+            """
+            return self._x
+
+    B = epyccel(A, language=language)
+
+    python_doc, pyccel_doc = pad_docstrings(A.x.__doc__, B.x.__doc__)
+    assert python_doc == pyccel_doc
