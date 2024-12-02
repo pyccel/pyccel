@@ -1398,12 +1398,19 @@ class CToPythonWrapper(Wrapper):
         original_c_args = expr.arguments
 
         # Get the arguments of the PyFunctionDef
-        if in_interface:
-            func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
+        if 'property' in original_func.decorators:
+            func_args = [self.get_new_PyObject('self_obj', dtype = class_dtype),
+                         func_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+            self._python_object_map[python_args[0]] = func_args[0]
+            func_args = [FunctionDefArgument(a) for a in func_args]
             body = []
         else:
-            func_args, body = self._unpack_python_args(python_args, class_dtype)
-            func_args = [FunctionDefArgument(a) for a in func_args]
+            if in_interface:
+                func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
+                body = []
+            else:
+                func_args, body = self._unpack_python_args(python_args, class_dtype)
+                func_args = [FunctionDefArgument(a) for a in func_args]
 
         # Get the code required to extract the C-compatible arguments from the Python arguments
         wrapped_args = [self._wrap(a) for a in python_args]
@@ -1467,7 +1474,14 @@ class CToPythonWrapper(Wrapper):
         self.scope.functions[func_name] = function
         self._python_object_map[expr] = function
 
-        return function
+        if 'property' in original_func.decorators:
+            python_name = original_func.scope.get_python_name(original_func.name)
+            docstring = LiteralString(
+                            '\n'.join(original_func.docstring.comments) or
+                            f"The attribute {python_name}")
+            return PyGetSetDefElement(python_name, function, None, docstring)
+        else:
+            return function
 
     def _wrap_FunctionDefArgument(self, expr):
         """
@@ -1925,6 +1939,8 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype, wrapped_class.scope))
             elif python_name == '__init__':
                 wrapped_class.add_new_method(self._get_class_initialiser(f, orig_cls_dtype))
+            elif 'property' in f.decorators:
+                wrapped_class.add_property(self._wrap(f))
             else:
                 wrapped_class.add_new_method(self._wrap(f))
 
