@@ -190,7 +190,7 @@ MyClass Object created!
 
 ## Class properties
 
-Pyccel now supports class properties (as getters only).
+Pyccel now supports class properties (to retrieve a constant value only).
 
 ### - Python Example
 
