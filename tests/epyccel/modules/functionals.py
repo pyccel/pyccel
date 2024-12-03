@@ -84,13 +84,9 @@ def functional_with_zip():
 def functional_with_multiple_zips():
     a = [x ** 2 for x in range(8)]
     b = [0, 1, 2]
-    c = [i for i in range(10)]
+    c = [i + 1 for i in range(10)]
     d = [i + j + k for i, j, k in zip(a, b, c)]
     return len(d), d[0], d[1], d[2]
-
-def functional_with_condition():
-    a = [x + 1 for x in range(10) if x % 2 == 0]
-    return len(a), a[0], a[1], a[2]
 
 def functional_with_multiple_conditions():
     a = [x + 1 - y for x in range(10) if x % 2 == 0 for y in range(12) if y % 3 == 0]

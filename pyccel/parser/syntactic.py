@@ -1152,7 +1152,7 @@ class SyntaxParser(BasicParser):
         iterable = self._visit(stmt.iter)
 
         self.exit_loop_scope()
-        
+ 
         if stmt.ifs:
             cond = self._visit(stmt.ifs[0])
             body.append(If(IfSection(cond, CodeBlock([]))))
@@ -1225,7 +1225,7 @@ class SyntaxParser(BasicParser):
                 assert isinstance(generator.body.body[0], If)
                 for ifSection in generator.body.body[0].blocks:
                     conditions.append(ifSection.condition)
-                generator._body = CodeBlock([]) # noqa
+                generator._body = CodeBlock([]) # pylint: disable=protected-access
 
         if conditions:
             if output_type != 'list':
@@ -1234,7 +1234,7 @@ class SyntaxParser(BasicParser):
                                symbol=stmt, severity='error')
             else:
                 from functools import reduce
-                condition = reduce(PyccelAnd, conditions) 
+                condition = reduce(PyccelAnd, conditions)
                 generators[-1].insert2body(If(IfSection(condition,
                                                     [operations[0]])))
         else:

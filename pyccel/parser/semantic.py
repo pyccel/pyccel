@@ -3753,7 +3753,6 @@ class SemanticParser(BasicParser):
                     return errors.report(f"Variable {var} has the same name as the left hand side",
                             symbol = expr, severity='error')     
                 if existing_var or var.name ==  expr.lhs:
-                    print(var, dvar, existing_var, self._infer_type(existing_var))
                     if self._infer_type(existing_var) != dvar:
                         return errors.report(f"Variable {var} already exists with different type",
                                 symbol = expr, severity='error')
