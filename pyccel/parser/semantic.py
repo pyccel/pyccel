@@ -3676,19 +3676,18 @@ class SemanticParser(BasicParser):
         pyccel.ast.basic.CodeBlock
             A code block containing the equivalent loops and necessary variable allocations for the given `FunctionalFor` expression.
         """
-        '''
-        old_index   = expr.index
-        new_index   = self.scope.get_new_name()
-        expr.substitute(old_index, new_index) 
-        index = new_index
-        '''
+        if expr.target_type != 'list':
+            old_index   = expr.index
+            new_index   = self.scope.get_new_name()
+            expr.substitute(old_index, new_index) 
+            index = new_index
 
         target  = expr.expr
         indices = []
         dims = []
         idx_subs = {}
         tmp_used_names = self.scope.all_used_symbols.copy()
-        body = expr.loops[0]
+        body = expr.loops[0 if expr.target_type == 'list' else 1]
         i = 0
         
         # Inner function to handle PythonNativeInt variables
@@ -3754,6 +3753,7 @@ class SemanticParser(BasicParser):
                     return errors.report(f"Variable {var} has the same name as the left hand side",
                             symbol = expr, severity='error')     
                 if existing_var or var.name ==  expr.lhs:
+                    print(var, dvar, existing_var, self._infer_type(existing_var))
                     if self._infer_type(existing_var) != dvar:
                         return errors.report(f"Variable {var} already exists with different type",
                                 symbol = expr, severity='error')
@@ -3897,7 +3897,8 @@ class SemanticParser(BasicParser):
         target.invalidate_node()
 
         loops = [self._visit(i) for i in expr.loops]
-        #index = self._visit(index)
+        if expr.index:
+            index = self._visit(index)
 
         l = loops[-1]
         cnt = 0
@@ -3913,8 +3914,9 @@ class SemanticParser(BasicParser):
                 cnt = 0
 
         #self.exit_loop_scope()
-
-        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=expr.indices, index=indices[0])])
+        if expr.index:
+            return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=expr.indices, index=index, target_type=expr.target_type)])
+        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=expr.indices, index=indices[0], target_type=expr.target_type)])
 
     def _visit_GeneratorComprehension(self, expr):
         lhs = self.check_for_variable(expr.lhs)

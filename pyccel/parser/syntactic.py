@@ -1152,10 +1152,10 @@ class SyntaxParser(BasicParser):
         iterable = self._visit(stmt.iter)
 
         self.exit_loop_scope()
-
+        
         if stmt.ifs:
-            cond = self._visit(stmt.ifs)
-            body.append(If(IfSection(cond[0], CodeBlock([]))))
+            cond = self._visit(stmt.ifs[0])
+            body.append(If(IfSection(cond, CodeBlock([]))))
 
         expr = For(iterator, iterable, body, scope=scope)
         return expr
@@ -1198,23 +1198,49 @@ class SyntaxParser(BasicParser):
                 lhs = lhs[0]
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
-        condition = []
-        for generator in generators:
-            if generator.body.body:
-                assert isinstance(generator.body.body[0], If)
-                for ifSection in generator.body.body[0].blocks:
-                    condition.append(ifSection.condition)
-                generator._body = CodeBlock([])
-        if condition: 
-            generators[-1].insert2body(If(IfSection(condition,
-                                                    [DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)]))])))
-        else:
-            generators[-1].insert2body(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
         parent = self._context[-2]
         if isinstance(parent, ast.Call):
             output_type = self._visit(parent.func)
         else:
             output_type = 'list'
+        operations = []
+        if output_type != 'list':
+            index = PyccelSymbol('_', is_temp=True)
+            args = [index]
+            target = IndexedElement(lhs, *args)
+            target = Assign(target, result)
+            assign1 = Assign(index, LiteralInteger(0))
+            assign1.set_current_ast(stmt)
+            target.set_current_ast(stmt)
+            operations.append(target)
+            assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
+            assign2.set_current_ast(stmt)
+            operations.append(assign2)
+        else:
+            operations.append(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
+
+        conditions = []
+        for generator in generators:
+            if generator.body.body:
+                assert isinstance(generator.body.body[0], If)
+                for ifSection in generator.body.body[0].blocks:
+                    conditions.append(ifSection.condition)
+                generator._body = CodeBlock([]) # noqa
+
+        if conditions:
+            if output_type != 'list':
+                errors.report("Cannot handle if statements in list comprehensions if lhs is a numpy array.\
+                              List length cannot be calculated.\n" + PYCCEL_RESTRICTION_TODO,
+                               symbol=stmt, severity='error')
+            else:
+                from functools import reduce
+                condition = reduce(PyccelAnd, conditions) 
+                generators[-1].insert2body(If(IfSection(condition,
+                                                    [operations[0]])))
+        else:
+            for operation in operations:
+                generators[-1].insert2body(operation)
+
         indices = [generators[-1].target]
         while len(generators) > 1:
             F = generators.pop()
@@ -1222,8 +1248,11 @@ class SyntaxParser(BasicParser):
             indices.append(generators[-1].target)
         indices = indices[::-1]
 
-        return FunctionalFor([generators[-1]], result, lhs,
-                             indices, target_type = output_type)
+        if output_type == 'list':
+            return FunctionalFor([generators[-1]], result, lhs,
+                                indices, target_type = output_type)
+        return FunctionalFor([assign1, generators[-1]], result, lhs,
+                            indices, index, target_type = output_type)
 
     def _visit_GeneratorExp(self, stmt):
 
