@@ -94,19 +94,22 @@ class PythonCodePrinter(CodePrinter):
 
     def _find_functional_expr_and_iterables(self, expr):
         """
+        Extract the central expression and iterables from a FunctionalFor or GeneratorComprehension.
+
         Traverse through the loop representing a FunctionalFor or GeneratorComprehension
-        to extract the central expression and the different iterable objects
+        to extract the central expression and the different iterable objects.
 
         Parameters
         ----------
         expr : FunctionalFor
+               The loop or generator comprehension to be analyzed.
 
         Returns
         -------
         body      : TypedAstNode
-                    The expression inside the for loops
+                    The expression inside the for loops.
         iterables : list of Iterables
-                    The iterables over which the for loops iterate
+                    The iterables over which the for loops iterate.
         """
         dummy_var = expr.index
         iterables = []
@@ -637,8 +640,9 @@ class PythonCodePrinter(CodePrinter):
         name = expr.target_type
         if 'array' in str(name):
             self.add_import(Import('numpy', [AsName(NumpyArray, 'array')]))
+            name = 'array'
 
-        return '{} = {}([{} {} {}])\n'.format(lhs, name, body, for_loops, condition)
+        return f'{lhs} = {name}([{body} {for_loops} {condition}])\n'
 
     def _print_GeneratorComprehension(self, expr):
         body, iterators = self._find_functional_expr_and_iterables(expr)

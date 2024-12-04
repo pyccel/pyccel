@@ -3679,7 +3679,7 @@ class SemanticParser(BasicParser):
         if expr.target_type != 'list':
             old_index   = expr.index
             new_index   = self.scope.get_new_name()
-            expr.substitute(old_index, new_index) 
+            expr.substitute(old_index, new_index)
             index = new_index
 
         target  = expr.expr
@@ -3689,19 +3689,19 @@ class SemanticParser(BasicParser):
         tmp_used_names = self.scope.all_used_symbols.copy()
         body = expr.loops[0 if expr.target_type == 'list' else 1]
         i = 0
-        
+
         # Inner function to handle PythonNativeInt variables
         def handle_int_loop_variable(var_name):
             indices.append(var_name)
             var = self._create_variable(var_name, PythonNativeInt(), None, {})
             dvar = self._infer_type(var)
-            vars.append((var, dvar))
+            variables.append((var, dvar))
 
         # Inner function to handle iterable variables
         def handle_iterable_variable(var_name, element):
             indices.append(var_name)
             dvar = self._infer_type(element)
-            class_type = dvar.pop('class_type') 
+            class_type = dvar.pop('class_type')
             if class_type.rank > 0:
                 class_type = class_type.switch_rank(class_type.rank - 1)
                 dvar['shape'] = dvar['shape'][1:]
@@ -3709,13 +3709,14 @@ class SemanticParser(BasicParser):
                 dvar['shape'] = None
                 dvar['memory_handling'] = 'stack'
             var = self._create_variable(var_name, class_type, None, dvar)
-            vars.append((var, dvar))
-    
+            dvar['class_type'] = class_type
+            variables.append((var, dvar))
+
         while isinstance(body, For):
             stop = None
             start = LiteralInteger(0)
             step = LiteralInteger(1)
-            vars = []
+            variables = []
             a = self._get_iterable(self._visit(body.iterable))
             if isinstance(a, PythonRange):
                 var_name = self.scope.get_expected_name(expr.indices[i])
@@ -3735,47 +3736,47 @@ class SemanticParser(BasicParser):
                 for idx, arg in enumerate(a.args):
                     var = self.scope.get_expected_name(expr.indices[i][idx])
                     handle_iterable_variable(var, arg)
-                stop = a._length
+                stop = a.get_range().stop
 
             elif isinstance(a, VariableIterator):
                 var = self.scope.get_expected_name(expr.indices[i])
                 handle_iterable_variable(var, a.variable)
                 stop = a.variable.shape[0]
-            
+
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO,
                               bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                               severity='fatal')
-            
-            for var, dvar in vars:
+
+            for var, dvar in variables:
                 existing_var = self.scope.find(var.name, 'variables')
                 if var.name == expr.lhs:
                     return errors.report(f"Variable {var} has the same name as the left hand side",
-                            symbol = expr, severity='error')     
+                            symbol = expr, severity='error')
                 if existing_var or var.name ==  expr.lhs:
-                    if self._infer_type(existing_var) != dvar:
+                    if self._infer_type(existing_var)['class_type'] != dvar['class_type']:
                         return errors.report(f"Variable {var} already exists with different type",
                                 symbol = expr, severity='error')
                 else:
                     self.scope.insert_variable(var)
-            
+
             if isinstance(step, LiteralInteger): 
                 step.invalidate_node()
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
-            if isinstance(start, LiteralInteger): 
+            if isinstance(start, LiteralInteger):
                 start.invalidate_node()
             start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
-            if isinstance(stop, LiteralInteger): 
+            if isinstance(stop, LiteralInteger):
                 stop.invalidate_node()
             stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
             size = (stop - start) / step
             if (step != 1):
                 size = ceiling(size)
 
-            dims.append((size, step, start, stop))         
+            dims.append((size, step, start, stop))
             body = body.body.body[0]
             i += 1
-        
+
         for idx in indices:
             var = self.get_variable(idx)
             idx_subs[idx] = var
