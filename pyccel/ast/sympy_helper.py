@@ -111,13 +111,6 @@ def sympy_to_pyccel(expr, symbol_map):
             result = PythonMin(result, a)
         return result
 
-    elif isinstance(expr, sp.Max):
-        args = [sympy_to_pyccel(a, symbol_map) for a in expr.args]
-        result = args[0]
-        for a in args[1:]:
-            result = PythonMax(result, a)
-        return result
-
     elif isinstance(expr, sp.Tuple):
         args = [sympy_to_pyccel(a, symbol_map) for a in expr]
         return PythonTuple(*args)
@@ -196,10 +189,6 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     elif isinstance(expr, PythonMin):
         args = [pyccel_to_sympy(ee, symbol_map, used_names) for e in expr.args for ee in e]
         return sp.Min(*args)
-
-    elif isinstance(expr, PythonMax):
-        args = [pyccel_to_sympy(ee, symbol_map, used_names) for e in expr.args for ee in e]
-        return sp.Max(*args)
 
     elif expr in symbol_map.values():
         return list(symbol_map.keys())[list(symbol_map.values()).index(expr)]
