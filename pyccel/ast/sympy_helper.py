@@ -13,7 +13,7 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 
 from pyccel.utilities.strings import create_incremented_string
 
-from .builtins  import PythonRange, PythonTuple, PythonMin, PythonMax
+from .builtins  import PythonRange, PythonTuple, PythonMin
 
 from .datatypes import PrimitiveIntegerType
 from .internals import PyccelArrayShapeElement
