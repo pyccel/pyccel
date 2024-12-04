@@ -1152,7 +1152,7 @@ class SyntaxParser(BasicParser):
         iterable = self._visit(stmt.iter)
 
         self.exit_loop_scope()
- 
+
         if stmt.ifs:
             cond = self._visit(stmt.ifs[0])
             body.append(If(IfSection(cond, CodeBlock([]))))
