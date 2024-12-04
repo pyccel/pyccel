@@ -2445,13 +2445,6 @@ class CCodePrinter(CodePrinter):
     def _print_PythonConjugate(self, expr):
         return 'conj({})'.format(self._print(expr.internal_var))
 
-    def _print_ListAppend(self, expr):
-        target = expr.list_obj
-        class_type = target.class_type
-        dtype = self.get_c_type(class_type)
-        args = self._print(expr.args[0])
-        return f'{dtype}_push(&{target.name}, {args});\n'
-
     def _handle_is_operator(self, Op, expr):
         """
         Get the code to print an `is` or `is not` expression.
