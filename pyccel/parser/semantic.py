@@ -3760,7 +3760,7 @@ class SemanticParser(BasicParser):
                 else:
                     self.scope.insert_variable(var)
 
-            if isinstance(step, LiteralInteger): 
+            if isinstance(step, LiteralInteger):
                 step.invalidate_node()
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
             if isinstance(start, LiteralInteger):
