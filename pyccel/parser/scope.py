@@ -358,7 +358,7 @@ class Scope(object):
                 Default : var.name
         """
         if name is None:
-            name = var.name
+            name = self._original_symbol[var.name]
 
         self._used_symbols.pop(name)
 
