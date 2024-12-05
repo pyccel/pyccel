@@ -2156,7 +2156,7 @@ class FCodePrinter(CodePrinter):
             elif expr.alloc_type == 'reserve':
                 var_code = self._print(expr.variable)
                 size_code = self._print(expr.shape[0])
-                return '{var_code} % reserve({size_code})\n'
+                return f'call {var_code} % reserve({size_code})\n'
             else:
                 return ''
         elif isinstance(class_type, (HomogeneousContainerType, DictType)):
@@ -3735,7 +3735,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_BindCClassDef(self, expr):
         funcs = [expr.new_func, *expr.methods, *[f for i in expr.interfaces for f in i.functions],
-                 *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes]]
+                 *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes if a.setter]]
         sep = f'\n{self._print(SeparatorComment(40))}\n'
         return '', sep.join(self._print(f) for f in funcs)
 

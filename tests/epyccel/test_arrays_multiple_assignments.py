@@ -169,6 +169,26 @@ def test_creation_in_if_heap(language):
     assert f(c) == g(c)
 
 #==============================================================================
+def test_creation_in_if_heap_shape(language):
+
+    def f(c : 'float'):
+        import numpy as np
+        if c > 0.5:
+            x = np.ones(2, dtype=int)
+        else:
+            x = np.ones(7, dtype=int)
+
+        y = x[1:-1]
+        return y.sum()
+
+    g = epyccel(f, language=language)
+
+    # Check result of pyccelized function
+    import numpy as np
+    c = np.random.random()
+    assert f(c) == g(c)
+
+#==============================================================================
 def test_Reassign_to_Target():
 
     def f():

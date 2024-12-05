@@ -245,7 +245,7 @@ class Variable(TypedAstNode):
         Indicate that the exact shape is unknown, e.g. if the allocate is done in
         an If block.
         """
-        self._shape = [PyccelArrayShapeElement(self, LiteralInteger(i)) for i in range(self.rank)]
+        self._shape = tuple(PyccelArrayShapeElement(self, LiteralInteger(i)) for i in range(self.rank))
 
     def set_init_shape(self, shape):
         """
