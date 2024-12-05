@@ -14,10 +14,10 @@ class A:
     def _calculate_y(self, n : int):
         return self.x + n
 
+    def get_A_contents(self):
+        return self.x, self.y
+
     @inline
     @property
     def y(self):
         return self._y
-
-    def get_A_contents(self):
-        return self.x, self.y
