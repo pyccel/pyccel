@@ -217,7 +217,8 @@ def test_classes_8(language):
     a_py = mod.A(3.0)
     a_l = modnew.A(3.0)
 
-    assert a_py.get_y() == a_l.get_y()
+    assert a_py.x == a_l.x
+    assert a_py.y == a_l.y
 
 def test_generic_methods(language):
     import classes.generic_methods as mod

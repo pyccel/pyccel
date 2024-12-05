@@ -3,7 +3,7 @@ class A:
         self._x = x
         self._y : float
         self._construct_y()
-        self._construct_y_from_z(self._y)
+        self._construct_y_from_z(self.y)
         self._construct_y_from_z(3)
 
     def _construct_y(self):
