@@ -172,6 +172,28 @@ def test_classes_4(language):
 
     p1_py = mod.Point()
 
+def test_classes_5(language):
+    import classes.classes_5 as mod
+    modnew = epyccel(mod, language = language)
+
+    x1 = np.array([0.,0.,0.])
+    x2 = np.array([0.,0.,0.])
+    a = np.array([1.,1.,1.])
+
+    p1_py = mod.Point(x1)
+    p1_l  = modnew.Point(x2)
+
+    assert np.allclose(p1_py.x, p1_l.x, rtol=RTOL, atol=ATOL)
+
+    p1_py.translate(a)
+    p1_l.translate(a)
+
+    assert np.allclose(p1_py.x, p1_l.x, rtol=RTOL, atol=ATOL)
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
+
+    with pytest.raises(AttributeError):
+        p1_l.x = 4.0
+
 def test_classes_6(language):
     import classes.classes_6 as mod
     modnew = epyccel(mod, language = language)
