@@ -4497,9 +4497,10 @@ class SemanticParser(BasicParser):
         deallocater_assign = Assign(deallocater, LiteralFalse())
         init_func.body.insert2body(deallocater_assign, back=False)
 
-        for m in cls.methods:
-            if not m.is_semantic:
-                self._visit(m)
+        syntactic_method = next((m for m in cls.methods if not m.is_semantic), None)
+        while syntactic_method:
+            self._visit(syntactic_method)
+            syntactic_method = next((m for m in cls.methods if not m.is_semantic), None)
 
         syntactic_del_func = next((method for method in methods if method.name == '__del__'), None)
         if syntactic_del_func is None:
