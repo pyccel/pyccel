@@ -392,13 +392,16 @@ class CCodePrinter(CodePrinter):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
-        if isinstance(getattr(a, 'dtype', None), CustomDataType) and a.is_argument:
+        if isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
+            return a.is_optional or any(a is bi for b in self._additional_args for bi in b)
+
+        if isinstance(getattr(a, 'class_type', None), (CustomDataType, HomogeneousContainerType, DictType)) \
+                and a.is_argument and not a.is_const:
             return True
 
         if not isinstance(a, Variable):
             return False
-        return (a.is_alias and not isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType))) \
-                or a.is_optional or \
+        return a.is_alias or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
     #========================== Numpy Elements ===============================#
@@ -772,7 +775,7 @@ class CCodePrinter(CodePrinter):
             op = '<' if isinstance(expr, PythonMin) else '>'
             return f"({arg1} {op} {arg2} ? {arg1} : {arg2})"
         elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
-            key = self.get_declare_type(arg[0])
+            key = self.get_c_type(arg[0].class_type)
             self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
             self.add_import(Import('Common_extensions',
                                    AsName(VariableTypeAnnotation(arg.dtype), key),
@@ -2738,18 +2741,18 @@ class CCodePrinter(CodePrinter):
         return f'{var_type}_pop({set_var})'
 
     def _print_SetClear(self, expr):
-        var_type = self.get_declare_type(expr.set_variable)
+        var_type = self.get_c_type(expr.set_variable.class_type)
         set_var = self._print(ObjectAddress(expr.set_variable))
         return f'{var_type}_clear({set_var});\n'
 
     def _print_SetAdd(self, expr):
-        var_type = self.get_declare_type(expr.set_variable)
+        var_type = self.get_c_type(expr.set_variable.class_type)
         set_var = self._print(ObjectAddress(expr.set_variable))
         arg = self._print(expr.args[0])
         return f'{var_type}_push({set_var}, {arg});\n'
 
     def _print_SetCopy(self, expr):
-        var_type = self.get_declare_type(expr.set_variable)
+        var_type = self.get_c_type(expr.set_variable.class_type)
         set_var = self._print(expr.set_variable)
         return f'{var_type}_clone({set_var})'
 
