@@ -220,6 +220,17 @@ def test_classes_8(language):
     assert a_py.x == a_l.x
     assert a_py.y == a_l.y
 
+def test_classes_9(language):
+    import classes.classes_9 as mod
+    modnew = epyccel(mod, language = language)
+
+    a_py = mod.A(3.0)
+    a_l = modnew.A(3.0)
+
+    assert a_py.get_A_contents() == a_l.get_A_contents()
+    assert a_py.x == a_l.x
+    assert a_py.y == a_l.y
+
 def test_generic_methods(language):
     import classes.generic_methods as mod
     modnew = epyccel(mod, language = language)
