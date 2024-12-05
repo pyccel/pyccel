@@ -310,7 +310,6 @@ class CCodePrinter(CodePrinter):
                       (PrimitiveIntegerType(),8)       : LiteralString("%") + CMacro('PRId64'),
                       (PrimitiveIntegerType(),2)       : LiteralString("%") + CMacro('PRId16'),
                       (PrimitiveIntegerType(),1)       : LiteralString("%") + CMacro('PRId8'),
-                      StringType()                  : '%s',
                       }
 
     def __init__(self, filename, prefix_module = None):
@@ -1131,6 +1130,10 @@ class CCodePrinter(CodePrinter):
                 except KeyError:
                     errors.report(f"Printing {var.dtype} type is not supported currently", severity='fatal')
                 arg = self._print(var)
+        elif isinstance(var.dtype, StringType):
+            var_obj = self._print(ObjectAddress(var))
+            arg = f'cstr_str({var_obj})'
+            arg_format = '%s'
         else:
             try:
                 arg_format = self.type_to_format[var.dtype]
