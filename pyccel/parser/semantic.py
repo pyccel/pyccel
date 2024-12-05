@@ -57,6 +57,7 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
+from pyccel.ast.core import AllDeclaration
 
 from pyccel.ast.class_defs import get_cls_base
 
@@ -3579,6 +3580,10 @@ class SemanticParser(BasicParser):
 
             new_expressions.append(new_expr)
 
+        if expr.lhs == '__all__':
+            self.scope.remove_variable(lhs[0])
+            self._allocs[-1].remove(lhs[0])
+            return AllDeclaration(new_expressions[-1].rhs)
 
         if (len(new_expressions)==1):
             new_expressions = new_expressions[0]
