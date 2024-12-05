@@ -4468,7 +4468,7 @@ class SemanticParser(BasicParser):
         self.scope.parent_scope.insert_class(cls)
 
         methods = expr.methods
-        for (i, method) in enumerate(methods):
+        for method in methods:
             cls.add_new_method(method)
 
         syntactic_init_func = next((method for method in methods if method.name == '__init__'), None)
@@ -4485,7 +4485,7 @@ class SemanticParser(BasicParser):
             init_func = self.scope.functions.pop('__init__')
 
         if isinstance(init_func, Interface):
-            errors.report("Pyccel does not support interface constructor", symbol=method,
+            errors.report("Pyccel does not support interface constructor", symbol=init_func,
                 severity='fatal')
 
         # create a new attribute to check allocation
