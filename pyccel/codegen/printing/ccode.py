@@ -396,7 +396,7 @@ class CCodePrinter(CodePrinter):
             return a.is_optional or any(a is bi for b in self._additional_args for bi in b)
 
         if isinstance(getattr(a, 'class_type', None), (CustomDataType, HomogeneousContainerType, DictType)) \
-                and a.is_argument and not a.is_const:
+                and getattr(a, 'is_argument', False) and not getattr(a, 'is_const', False):
             return True
 
         if not isinstance(a, Variable):
