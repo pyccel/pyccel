@@ -1,6 +1,6 @@
+#ifndef SET_EXTENSIONS_H
+#define SET_EXTENSIONS_H
 #include <stdarg.h>
-
-#define _c_MEMB(name) c_JOIN(i_type, name)
 
 // This function represents a call to the .pop() method.
 // i_type: Class type (e.g., hset_int64_t).
@@ -42,3 +42,5 @@ static inline i_type _c_MEMB(_union)(i_type* self, int n, ...) {
 
 #undef i_type
 #undef i_key
+#include <stc/priv/template2.h>
+#endif

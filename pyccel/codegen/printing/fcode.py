@@ -22,7 +22,9 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefAr
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
-from pyccel.ast.builtins import PythonBool, PythonList, PythonSet
+from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableIterator
+
+from pyccel.ast.builtin_methods.dict_methods import DictItems
 
 from pyccel.ast.builtin_methods.set_methods import SetUnion
 
@@ -1012,7 +1014,7 @@ class FCodePrinter(CodePrinter):
                     print_body.append(space_end)
 
                 for_body = [PythonPrint(print_body, file=expr.file)]
-                for_loop = For(for_index, for_range, for_body, scope=loop_scope)
+                for_loop = For((for_index,), for_range, for_body, scope=loop_scope)
                 for_end_char = LiteralString(']')
                 for_end = FunctionCallArgument(for_end_char,
                                                keyword='end')
@@ -1148,11 +1150,6 @@ class FCodePrinter(CodePrinter):
             errors.report(f"Printing {var_type} type is not supported currently", severity='fatal')
 
         return arg_format, arg
-
-    def _print_SymbolicPrint(self, expr):
-        # for every expression we will generate a print
-        code = '\n'.join(f"print *, 'sympy> {a}'" for a in expr.expr)
-        return code + '\n'
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
@@ -2009,14 +2006,6 @@ class FCodePrinter(CodePrinter):
             body_stmts.append(line)
         return ''.join(body_stmts)
 
-    # TODO the ifs as they are are, is not optimal => use elif
-    def _print_SymbolicAssign(self, expr):
-        errors.report(FOUND_SYMBOLIC_ASSIGN,
-                      symbol=expr.lhs, severity='warning')
-
-        stmt = Comment(str(expr))
-        return self._print_Comment(stmt)
-
     def _print_NumpyReal(self, expr):
         value = self._print(expr.internal_var)
         code = 'Real({0}, {1})'.format(value, self.print_kind(expr))
@@ -2167,7 +2156,7 @@ class FCodePrinter(CodePrinter):
             elif expr.alloc_type == 'reserve':
                 var_code = self._print(expr.variable)
                 size_code = self._print(expr.shape[0])
-                return '{var_code} % reserve({size_code})\n'
+                return f'call {var_code} % reserve({size_code})\n'
             else:
                 return ''
         elif isinstance(class_type, (HomogeneousContainerType, DictType)):
@@ -2585,29 +2574,39 @@ class FCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
         iterable = expr.iterable
-        iterable_type = iterable.iterable.class_type
-        indices = expr.iterable.loop_counters
+        indices = iterable.loop_counters
 
-        if isinstance(iterable_type, (DictType, HomogeneousSetType)):
-            if isinstance(iterable.iterable, Variable):
-                suggested_name = iterable.iterable.name + '_'
+        if isinstance(iterable, (VariableIterator, DictItems)) and \
+                isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType)):
+            var = iterable.variable
+            iterable_type = var.class_type
+            if isinstance(var, Variable):
+                suggested_name = var.name + '_'
             else:
                 suggested_name = ''
                 errors.report("Iterating over a temporary object. This may cause compilation issues or cause calculations to be carried out twice",
                         severity='warning', symbol=expr)
-            iterable = self._print(iterable.iterable)
+            var_code = self._print(var)
             iterator = self.scope.get_temporary_variable(IteratorType(iterable_type),
                     name = suggested_name + 'iter')
             last = self.scope.get_temporary_variable(IteratorType(iterable_type),
                     name = suggested_name + 'last')
-            target = self._print(expr.target)
-            prolog = (f'{iterator} = {iterable} % begin()\n'
-                      f'{last} = {iterable} % end()\n'
-                      f'do while ({iterator} /= {last})\n'
-                      f'{target} = {iterator} % of()\n')
+            if isinstance(iterable, DictItems):
+                key = self._print(expr.target[0])
+                val = self._print(expr.target[1])
+                target_assign = (f'{key} = {iterator} % first()\n'
+                                 f'{val} = {iterator} % second()\n')
+            else:
+                target = self._print(expr.target[0])
+                target_assign = f'{target} = {iterator} % of()\n'
+
+            prolog = ''.join((f'{iterator} = {var_code} % begin()\n',
+                              f'{last} = {var_code} % end()\n',
+                              f'do while ({iterator} /= {last})\n',
+                              target_assign))
             epilog = f'call {iterator} % next()\nend do\n'
         else:
-            index = indices[0] if indices else expr.target
+            index = indices[0] if indices else expr.target[0]
             if iterable.num_loop_counters_required:
                 self.scope.insert_variable(index)
 
@@ -2619,7 +2618,10 @@ class FCodePrinter(CodePrinter):
             prolog = f'do {target} = {range_code}\n'
             epilog = 'end do\n'
 
-            prolog += self._print(CodeBlock(iterable.get_assigns(expr.target)))
+            targets = iterable.get_assign_targets()
+            additional_assign = CodeBlock([AliasAssign(i, t) if i.is_alias else Assign(i, t) \
+                                    for i,t in zip(expr.target[-len(targets):], targets)])
+            prolog += self._print(additional_assign)
 
         body = self._print(expr.body)
 
@@ -3733,7 +3735,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_BindCClassDef(self, expr):
         funcs = [expr.new_func, *expr.methods, *[f for i in expr.interfaces for f in i.functions],
-                 *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes]]
+                 *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes if a.setter]]
         sep = f'\n{self._print(SeparatorComment(40))}\n'
         return '', sep.join(self._print(f) for f in funcs)
 

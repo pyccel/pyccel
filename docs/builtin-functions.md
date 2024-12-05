@@ -102,7 +102,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `difference` | No |
 | `difference_update` | No |
 | `discard` | Python-only |
-| `intersection` | No |
+| `intersection` | Python-only |
 | `intersection_update` | No |
 | `isdisjoint` | No |
 | `issubset` | No |
@@ -123,7 +123,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `clear` | Python-only |
 | `copy` | Python-only |
 | `get` | Python-only |
-| `items` | No |
+| `items` | **Yes** |
 | `keys` | No |
 | `pop` | Python-only |
 | `popitem` | Python-only |
