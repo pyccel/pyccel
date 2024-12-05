@@ -668,7 +668,7 @@ def test_set_iter_prod(language):
     assert python_result == pyccel_result
     assert isinstance(python_result, type(pyccel_result))
 
-def test_set_arg(stc_language):
+def test_set_const_arg(stc_language):
     @template('T', ['int', 'float', 'complex'])
     def set_arg(arg : 'const set[T]', my_sum : 'T'):
         for ai in arg:
@@ -685,6 +685,18 @@ def test_set_arg(stc_language):
         python_result = set_arg(arg, start)
         assert python_result == pyccel_result
         assert isinstance(pyccel_result, type(python_result))
+
+def test_set_arg(stc_language):
+    def set_arg(arg : 'set[int]', n : int):
+        arg.update(range(n))
+
+    epyccel_func = epyccel(set_arg, language = stc_language)
+    arg_pyc = {7,8,9,10}
+    arg_pyt = arg_pyc.copy()
+    n = 6
+    epyccel_func(arg_pyc, n)
+    set_arg(arg_pyt, n)
+    assert arg_pyc == arg_pyt
 
 def test_set_return(stc_language):
     def set_return():
