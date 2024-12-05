@@ -970,36 +970,33 @@ class SyntaxParser(BasicParser):
 
         returns = [i.expr for i in body.get_attribute_nodes(Return,
                     excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))]
-        assert all(len(i) == len(returns[0]) for i in returns)
-        if is_inline and len(returns)>1:
-            errors.report("Inline functions cannot have multiple return statements",
-                    symbol = stmt,
-                    severity = 'error')
-        results = []
-        result_counter = 1
-
-        local_symbols = self.scope.local_used_symbols
-
-        if result_annotation and not isinstance(result_annotation, (tuple, list)):
-            result_annotation = [result_annotation]
-
-        for i,r in enumerate(zip(*returns)):
-            r0 = r[0]
-
-            pyccel_symbol  = isinstance(r0, PyccelSymbol)
-            same_results   = all(r0 == ri for ri in r)
-            name_available = all(r0 != a.name for a in arguments) and r0 in local_symbols
-
-            if pyccel_symbol and same_results and name_available:
-                result_name = r0
+        n_returns = [len(r) for r in returns]
+        if len(returns) == 0:
+            results = FunctionDefResult(Nil())
+        else:
+            result_counter = 1
+            if len(set(n_returns)) == 1 and not result_annotation:
+                suggested_names = [set(ni for ni in n if isinstance(ni, PyccelSymbol)) \
+                                    for n in zip(*returns)]
+                if all(len(n)==1 for n in suggested_names):
+                    results = [n.pop() for n in suggested_names]
+                else:
+                    results = [self.scope.get_new_incremented_symbol('Out', result_counter)[0] \
+                            for _ in range(len(suggested_names))]
             else:
-                result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
+                results = [self.scope.get_new_incremented_symbol('Out', result_counter)[0]]
+
+            if len(results) == 1:
+                results = results[0]
+            else:
+                results = PythonTuple(*results)
 
             if result_annotation:
-                result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation[i])
+                results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
 
-            results.append(FunctionDefResult(result_name, annotation = result_annotation))
-            results[-1].set_current_ast(stmt)
+            results = FunctionDefResult(results)
+
+        results.set_current_ast(stmt)
 
         self.exit_function_scope()
 
