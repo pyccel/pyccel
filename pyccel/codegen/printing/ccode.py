@@ -21,7 +21,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict,
 
 from pyccel.ast.builtin_methods.dict_methods  import DictItems
 
-from pyccel.ast.core      import Declare, For, CodeBlock
+from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
 from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress
@@ -636,7 +636,8 @@ class CCodePrinter(CodePrinter):
         if parent_assign:
             body.substitute(new_res_vars, orig_res_vars)
 
-        if func.global_vars or func.global_funcs:
+        if func.global_vars or func.global_funcs and \
+                not func.get_direct_user_nodes(lambda u: isinstance(u, ClassDef)):
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
             self.add_import(Import(mod.name, [AsName(v, v.name) \
                 for v in (*func.global_vars, *func.global_funcs)]))
