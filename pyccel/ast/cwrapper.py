@@ -1165,7 +1165,7 @@ PySet_Check = FunctionDef(name = 'PySet_Check',
                     results = [FunctionDefResult(Variable(CNativeInt(), 'i'))],
                     body = [])
 
-# https://docs.python.org/3/c-api/tuple.html#c.PySet_Size
+# https://docs.python.org/3/c-api/set.html#c.PySet_Size
 PySet_Size = FunctionDef(name = 'PySet_Size',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
                     results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
@@ -1176,6 +1176,12 @@ PySet_GetIter = FunctionDef(name = 'PyObject_GetIter',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
                         results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Clear
+PySet_Clear = FunctionDef(name = 'PySet_Clear',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='set', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))])
 
 # https://docs.python.org/3/c-api/iter.html#c.PyIter_Check
 PyIter_Next = FunctionDef(name = 'PyIter_Next',

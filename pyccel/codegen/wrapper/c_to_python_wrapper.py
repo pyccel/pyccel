@@ -33,7 +33,7 @@ from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString, PyGe
 from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_New
 from pyccel.ast.cwrapper      import PyTuple_GetItem, PyTuple_SetItem
 from pyccel.ast.cwrapper      import PySet_New, PySet_Add
-from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PySet_GetIter
+from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PySet_GetIter, PySet_Clear
 from pyccel.ast.cwrapper      import PyIter_Next
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
@@ -365,7 +365,7 @@ class CToPythonWrapper(Wrapper):
             for_body = [indexed_init]
             internal_type_check_condition, _ = self._get_type_check_condition(indexed_py_obj, arg[0], False, for_body)
             for_body.append(Assign(type_check_condition, PyccelAnd(type_check_condition, internal_type_check_condition)))
-            internal_type_check = For(idx, Iterable(PythonRange(size_var)), for_body, scope = for_scope)
+            internal_type_check = For((idx,), PythonRange(size_var), for_body, scope = for_scope)
 
             set_checks = IfSection(set_check, [size_assign, iter_assign, Assign(type_check_condition, LiteralTrue()), internal_type_check])
             default_value = IfSection(LiteralTrue(), [Assign(type_check_condition, LiteralFalse())])
@@ -1523,6 +1523,7 @@ class CToPythonWrapper(Wrapper):
                 else:
                     body.append(Deallocate(v))
         body.extend(wrapped_results['body'])
+        body.extend(ai for arg in wrapped_args for ai in arg['clean_up'])
 
         # Pack the Python compatible results of the function into one argument.
         if python_result_variable is Py_None:
@@ -1625,7 +1626,7 @@ class CToPythonWrapper(Wrapper):
         else:
             body.extend(cast)
 
-        return {'body': body, 'args': arg_vars}
+        return {'body': body, 'args': arg_vars, 'clean_up': arg_extraction.get('clean_up', ())}
 
     def _wrap_Variable(self, expr):
         """
@@ -2468,10 +2469,6 @@ class CToPythonWrapper(Wrapper):
             errors.report("Optionals are not yet supported",
                     severity='fatal', symbol=orig_var)
 
-        if not orig_var.is_const:
-            errors.report("Non-constant arguments are not yet supported",
-                    severity='fatal', symbol=orig_var)
-
         assert not bound_argument
 
         size_var = self.scope.get_temporary_variable(PythonNativeInt(), self.scope.get_new_name(f'{orig_var.name}_size'))
@@ -2504,10 +2501,24 @@ class CToPythonWrapper(Wrapper):
         for_body.append(insert_func(arg_var, indexed_orig_var))
         self.exit_scope()
 
-        body.append(For(idx, Iterable(PythonRange(size_var)), for_body, scope = for_scope))
+        body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
 
+        clean_up = []
+        if not orig_var.is_const:
+            element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx),
+                                            is_bind_c_argument, None)
+            element = SetPop(arg_var)
+            elem_set = PySet_Add(collect_arg, element_extraction['py_result'])
+            for_body = [Assign(element_extraction['c_results'][0], element),
+                    *element_extraction['body'],
+                    If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
+                                             [Return([self._error_exit_code])]))]
 
-        return {'body': body, 'args': arg_vars}
+            clean_up = [If(IfSection(PyccelEq(PySet_Clear(collect_arg), PyccelUnarySub(LiteralInteger(1))),
+                                             [Return([self._error_exit_code])])),
+                    For((idx,), PythonRange(PythonLen(arg_var)), for_body, for_scope)]
+
+        return {'body': body, 'args': arg_vars, 'clean_up': clean_up}
 
     def _extract_FunctionDefResult(self, orig_var, is_bind_c, funcdef = None):
         """
