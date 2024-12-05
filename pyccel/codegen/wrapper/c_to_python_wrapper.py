@@ -12,6 +12,7 @@ from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFuncti
 from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
+from pyccel.ast.builtins      import VariableIterator
 from pyccel.ast.builtin_methods.set_methods import SetAdd, SetPop
 from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
@@ -2507,16 +2508,16 @@ class CToPythonWrapper(Wrapper):
         if not orig_var.is_const:
             element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx),
                                             is_bind_c_argument, None)
-            element = SetPop(arg_var)
             elem_set = PySet_Add(collect_arg, element_extraction['py_result'])
-            for_body = [Assign(element_extraction['c_results'][0], element),
-                    *element_extraction['body'],
+            for_body = [*element_extraction['body'],
                     If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
                                              [Return([self._error_exit_code])]))]
 
+            loop_iterator = VariableIterator(arg_var)
+            loop_iterator.set_loop_counter(idx)
             clean_up = [If(IfSection(PyccelEq(PySet_Clear(collect_arg), PyccelUnarySub(LiteralInteger(1))),
                                              [Return([self._error_exit_code])])),
-                    For((idx,), PythonRange(PythonLen(arg_var)), for_body, for_scope)]
+                    For((element_extraction['c_results'][0],), loop_iterator, for_body, for_scope)]
 
         return {'body': body, 'args': arg_vars, 'clean_up': clean_up}
 
