@@ -89,6 +89,7 @@ All notable changes to this project will be documented in this file.
 -   #2041 : Include all type extension methods by default.
 -   #2082 : Allow the use of a list comprehension to initialise an array.
 -   #2094 : Fix slicing of array allocated in an if block.
+-   #2085 : Fix calling class methods before they are defined.
 
 ### Changed
 
