@@ -392,15 +392,15 @@ class CCodePrinter(CodePrinter):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
+        if not isinstance(a, Variable):
+            return False
         if isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
             return a.is_optional or any(a is bi for b in self._additional_args for bi in b)
 
-        if isinstance(getattr(a, 'class_type', None), (CustomDataType, HomogeneousContainerType, DictType)) \
-                and getattr(a, 'is_argument', False) and not getattr(a, 'is_const', False):
+        if isinstance(a.class_type, (CustomDataType, HomogeneousContainerType, DictType)) \
+                and a,is_argument and not a.is_const:
             return True
 
-        if not isinstance(a, Variable):
-            return False
         return a.is_alias or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
