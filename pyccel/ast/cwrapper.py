@@ -1137,7 +1137,7 @@ PyTuple_SetItem = FunctionDef(name = 'PyTuple_SetItem',
                         arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
                                      FunctionDefArgument(Variable(PythonNativeInt(), name='i')),
                                      FunctionDefArgument(Variable(PyccelPyObject(), name='new_item', memory_handling='alias'))],
-                        results = [FunctionDefResult(Variable(CNativeInt(), 'i'))])
+                        results = FunctionDefResult(Variable(CNativeInt(), 'i')))
 
 #-------------------------------------------------------------------
 #                          Set functions
@@ -1146,14 +1146,14 @@ PyTuple_SetItem = FunctionDef(name = 'PyTuple_SetItem',
 # https://docs.python.org/3/c-api/set.html#c.PySet_New
 PySet_New = FunctionDef(name = 'PySet_New',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'iterable', memory_handling='alias'), value = Nil())],
-                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(PyccelPyObject(), 'set', memory_handling='alias')),
                     body = [])
 
 # https://docs.python.org/3/c-api/set.html#c.PySet_Add
 PySet_Add = FunctionDef(name = 'PySet_Add',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias')),
                                  FunctionDefArgument(Variable(PyccelPyObject(), 'key', memory_handling='alias'))],
-                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    results = FunctionDefResult(Variable(PythonNativeInt(), 'i')),
                     body = [])
 
 
