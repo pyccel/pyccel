@@ -3465,6 +3465,8 @@ class ClassDef(ScopedAstNode):
         assert isinstance(semantic_method, FunctionDef)
         assert syntactic_method in self._methods
         assert semantic_method.is_semantic
+        syntactic_method.remove_user_node(self)
+        semantic_method.set_current_user_node(self)
         self._methods = tuple(m for m in self._methods if m is not syntactic_method) + (semantic_method,)
 
     def update_interface(self, syntactic_interface, semantic_interface):
