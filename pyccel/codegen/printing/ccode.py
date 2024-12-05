@@ -2771,6 +2771,8 @@ class CCodePrinter(CodePrinter):
     def _print_PrecomputedCode(self, expr):
         return expr.code
 
+    def _print_AllDeclaration(self, expr):
+        return ''
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
