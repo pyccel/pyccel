@@ -1131,8 +1131,11 @@ class CCodePrinter(CodePrinter):
                     errors.report(f"Printing {var.dtype} type is not supported currently", severity='fatal')
                 arg = self._print(var)
         elif isinstance(var.dtype, StringType):
-            var_obj = self._print(ObjectAddress(var))
-            arg = f'cstr_str({var_obj})'
+            if isinstance(var, Variable):
+                var_obj = self._print(ObjectAddress(var))
+                arg = f'cstr_str({var_obj})'
+            else:
+                arg = self._print(var)
             arg_format = '%s'
         else:
             try:
