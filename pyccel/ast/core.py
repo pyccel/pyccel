@@ -4362,5 +4362,16 @@ class Decorator(PyccelAstNode):
         """
         return self._name
 
+class AllDeclaration(PyccelAstNode):
+    __slots__ = ('_values',)
+    _attribute_nodes = ('_values',)
+    def __init__(self, values):
+        self._values = values
+        super().__init__()
+
+    @property
+    def values(self):
+        return self._values
+
 #==============================================================================
 
