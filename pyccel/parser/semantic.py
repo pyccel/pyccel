@@ -3003,7 +3003,8 @@ class SemanticParser(BasicParser):
                     if not method.is_inline:
                         method = self._annotate_the_called_function_def(method)
                     else:
-                        method = self._annotate_the_called_function_def(method, function_call_args=args)
+                        method = self._annotate_the_called_function_def(method,
+                                    function_call_args=(FunctionCallArgument(visited_lhs),))
                 assert 'property' in method.decorators
                 if cls_base.name == 'numpy.ndarray':
                     numpy_class = method.cls_name
