@@ -1519,7 +1519,7 @@ class SemanticParser(BasicParser):
 
                 # We cannot allow the definition of a stack array from a shape which
                 # is unknown at the declaration
-                if not isinstance(class_type, StringType) and class_type.rank > 0 and d_lhs.get('memory_handling', None) == 'stack':
+                if class_type.rank > 0 and d_lhs.get('memory_handling', None) == 'stack':
                     for a in d_lhs['shape']:
                         if (isinstance(a, FunctionCall) and not a.funcdef.is_pure) or \
                                 any(not f.funcdef.is_pure for f in a.get_attribute_nodes(FunctionCall)):
@@ -1546,7 +1546,7 @@ class SemanticParser(BasicParser):
                 # Add memory allocation if needed
                 array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
                                             and not getattr(rhs.funcdef, 'is_elemental', False) and not isinstance(lhs.class_type, HomogeneousTupleType)) or arr_in_multirets
-                if not isinstance(lhs.class_type, StringType) and lhs.on_heap and not array_declared_in_function:
+                if lhs.on_heap and not array_declared_in_function:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
                         errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
@@ -1585,7 +1585,7 @@ class SemanticParser(BasicParser):
 
                 # ...
                 # Add memory deallocation
-                if isinstance(lhs.class_type, CustomDataType) or (not lhs.on_stack and not isinstance(lhs.class_type, StringType)):
+                if isinstance(lhs.class_type, CustomDataType) or not lhs.on_stack:
                     if isinstance(lhs.class_type, InhomogeneousTupleType):
                         args = [self.scope.collect_tuple_element(v) for v in lhs if v.rank>0]
                         new_args = []
@@ -1741,7 +1741,7 @@ class SemanticParser(BasicParser):
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
 
-        elif not is_augassign and not isinstance(var.class_type, StringType):
+        elif not is_augassign:
 
             shape = var.shape
 
@@ -1804,7 +1804,7 @@ class SemanticParser(BasicParser):
                     if status == 'unallocated':
                         self._allocs[-1].add(var)
                     else:
-                        errors.report(ARRAY_REALLOCATION, symbol=var.name,
+                        errors.report(ARRAY_REALLOCATION.format(class_type = var.class_type), symbol=var.name,
                             severity='warning',
                             bounding_box=(self.current_ast_node.lineno,
                                 self.current_ast_node.col_offset))

@@ -425,7 +425,12 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                                     and not isinstance(f, (NumpyTranspose))))
     for line in block:
 
-        if (isinstance(line, Assign) and
+        if isinstance(line, Assign) and isinstance(line.lhs.class_type, StringType):
+            # Save line in top level (no for loop)
+            result.append(line)
+            current_level = 0
+
+        elif (isinstance(line, Assign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
                 not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
