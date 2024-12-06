@@ -4425,7 +4425,7 @@ class AllDeclaration(PyccelAstNode):
     _attribute_nodes = ('_values',)
 
     def __init__(self, values):
-        if not hasattr(values, '__getitem__') or any(not isinstance(v, LiteralString) for v in values):
+        if not hasattr(values, '__iter__') or any(not isinstance(v, LiteralString) for v in values):
             errors.report("__all__ must be an iterable of strings.",
                         symbol=values, severity='fatal')
         self._values = values
