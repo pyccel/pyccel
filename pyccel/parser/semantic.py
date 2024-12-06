@@ -3582,7 +3582,7 @@ class SemanticParser(BasicParser):
 
         if expr.lhs == '__all__':
             self.scope.remove_variable(lhs[0])
-            self._allocs[-1].remove(lhs[0])
+            self._allocs[-1].discard(lhs[0])
             return AllDeclaration(new_expressions[-1].rhs)
 
         if (len(new_expressions)==1):
