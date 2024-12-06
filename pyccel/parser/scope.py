@@ -354,7 +354,7 @@ class Scope(object):
 
         Parameters
         ----------
-        var  : Variable
+        var : Variable
                 The variable to be removed.
         name : str, optional
                 The name of the variable in the python code
