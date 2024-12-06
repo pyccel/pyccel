@@ -41,6 +41,7 @@ pyccel_stage = PyccelStage()
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
 __all__ = (
     'AliasAssign',
+    'AllDeclaration',
     'Allocate',
     'AnnotatedComment',
     'AsName',
