@@ -4363,14 +4363,34 @@ class Decorator(PyccelAstNode):
         return self._name
 
 class AllDeclaration(PyccelAstNode):
+    """
+    Class representing the __all__ declaration of public methods in a module.
+
+    Class representing the __all__ declaration of public methods/variables/classes
+    in a module.
+
+    Parameters
+    ----------
+    values : iterable[LiteralString]
+        A PythonList/PythonTuple of strings.
+    """
     __slots__ = ('_values',)
     _attribute_nodes = ('_values',)
+
     def __init__(self, values):
+        if not hasattr(values, '__getitem__') or any(not isinstance(v, LiteralString) for v in values):
+            errors.report("__all__ must be an iterable of strings.",
+                        symbol=values, severity='fatal')
         self._values = values
         super().__init__()
 
     @property
     def values(self):
+        """
+        An iterable of LiteralStrings describing the public methods/variables/classes/etc.
+
+        An iterable of LiteralStrings describing the public methods/variables/classes/etc.
+        """
         return self._values
 
 #==============================================================================
