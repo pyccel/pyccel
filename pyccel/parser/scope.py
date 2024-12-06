@@ -347,15 +347,18 @@ class Scope(object):
                 self.insert_symbol(name)
 
     def remove_variable(self, var, name = None):
-        """ Remove a variable from anywhere in scope
+        """
+        Remove a variable from anywhere in scope.
+
+        Remove a variable from anywhere in scope.
 
         Parameters
         ----------
         var  : Variable
-                The variable to be removed
-        name : str
+                The variable to be removed.
+        name : str, optional
                 The name of the variable in the python code
-                Default : var.name
+                Default : var.name.
         """
         if name is None:
             name = self._original_symbol[var.name]
