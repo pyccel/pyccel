@@ -3449,6 +3449,47 @@ class ClassDef(ScopedAstNode):
         interface.set_current_user_node(self)
         self._interfaces += (interface,)
 
+    def update_method(self, syntactic_method, semantic_method):
+        """
+        Replace a syntactic_method with its semantic equivalent.
+
+        Replace a syntactic_method with its semantic equivalent.
+
+        Parameters
+        ----------
+        syntactic_method : FunctionDef
+            The method that has already been added to the class.
+        semantic_method : FunctionDef
+            The method that will replace the syntactic_method.
+        """
+        assert isinstance(semantic_method, FunctionDef)
+        assert syntactic_method in self._methods
+        assert semantic_method.is_semantic
+        syntactic_method.remove_user_node(self)
+        semantic_method.set_current_user_node(self)
+        self._methods = tuple(m for m in self._methods if m is not syntactic_method) + (semantic_method,)
+
+    def update_interface(self, syntactic_interface, semantic_interface):
+        """
+        Replace a syntactic_interface with its semantic equivalent.
+
+        Replace a syntactic_interface with its semantic equivalent.
+
+        Parameters
+        ----------
+        syntactic_interface : FunctionDef
+            The interface that has already been added to the class.
+        semantic_interface : FunctionDef
+            The interface that will replace the syntactic_interface.
+        """
+        assert isinstance(semantic_interface, Interface)
+        assert syntactic_interface in self._methods
+        assert semantic_interface.is_semantic
+        syntactic_interface.remove_user_node(self)
+        semantic_interface.set_current_user_node(self)
+        self._methods = tuple(m for m in self._methods if m is not syntactic_interface)
+        self._interfaces = tuple(m for m in self._interfaces if m is not syntactic_interface) + (semantic_interface,)
+
     def get_method(self, name, raise_error = True):
         """
         Get the method `name` of the current class.
@@ -3478,6 +3519,11 @@ class ClassDef(ScopedAstNode):
         ValueError
             Raised if the method cannot be found.
         """
+        method = next((i for i in chain(self.methods, self.interfaces) \
+                if i.name == name and i.pyccel_staging == 'syntactic'), None)
+        if method:
+            return method
+
         if self.scope is not None:
             # Collect translated name from scope
             try:
