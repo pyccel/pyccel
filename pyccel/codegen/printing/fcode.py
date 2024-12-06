@@ -30,7 +30,7 @@ from pyccel.ast.builtin_methods.set_methods import SetUnion
 
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import SeparatorComment, Comment
-from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import ConstructorCall, ClassDef
 from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Return, Module, For
@@ -464,7 +464,9 @@ class FCodePrinter(CodePrinter):
 
         for i in func.imports:
             self.add_import(i)
-        if func.global_vars or func.global_funcs:
+
+        if (func.global_vars or func.global_funcs) and \
+                not func.get_direct_user_nodes(lambda u: isinstance(u, ClassDef)):
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
             current_mod = expr.get_user_nodes(Module, excluded_nodes=(FunctionCall,))[0]
             if current_mod is not mod:
@@ -2495,7 +2497,8 @@ class FCodePrinter(CodePrinter):
 
         aliases = []
         names   = []
-        methods = ''.join(f'procedure :: {method.name} => {method.cls_name}\n' for method in expr.methods)
+        methods = ''.join(f'procedure :: {method.name} => {method.cls_name}\n' for method in expr.methods \
+                if not method.is_inline)
         for i in expr.interfaces:
             names = ','.join(f.cls_name for f in i.functions if not f.is_inline)
             if names:

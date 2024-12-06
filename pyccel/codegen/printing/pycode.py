@@ -542,6 +542,8 @@ class PythonCodePrinter(CodePrinter):
         args = expr.args
         if func.arguments and func.arguments[0].bound_argument:
             func_name = f'{self._print(args[0])}.{func_name}'
+            if 'property' in func.decorators:
+                return func_name
             args = args[1:]
         args_str = ', '.join(self._print(i) for i in args)
         code = f'{func_name}({args_str})'

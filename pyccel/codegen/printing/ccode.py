@@ -21,7 +21,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict,
 
 from pyccel.ast.builtin_methods.dict_methods  import DictItems
 
-from pyccel.ast.core      import Declare, For, CodeBlock
+from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
 from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress
@@ -247,7 +247,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdio',
                  "inttypes",
                  'stdbool',
-                 'assert']}
+                 'assert',
+                 'stc/cstr']}
 
 import_header_guard_prefix = {'stc/hset'    : '_TOOLS_SET',
                               'stc/vec'   : '_TOOLS_LIST',
@@ -309,7 +310,6 @@ class CCodePrinter(CodePrinter):
                       (PrimitiveIntegerType(),8)       : LiteralString("%") + CMacro('PRId64'),
                       (PrimitiveIntegerType(),2)       : LiteralString("%") + CMacro('PRId16'),
                       (PrimitiveIntegerType(),1)       : LiteralString("%") + CMacro('PRId8'),
-                      StringType()                  : '%s',
                       }
 
     def __init__(self, filename, prefix_module = None):
@@ -636,7 +636,8 @@ class CCodePrinter(CodePrinter):
         if parent_assign:
             body.substitute(new_res_vars, orig_res_vars)
 
-        if func.global_vars or func.global_funcs:
+        if func.global_vars or func.global_funcs and \
+                not func.get_direct_user_nodes(lambda u: isinstance(u, ClassDef)):
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
             self.add_import(Import(mod.name, [AsName(v, v.name) \
                 for v in (*func.global_vars, *func.global_funcs)]))
@@ -1039,7 +1040,7 @@ class CCodePrinter(CodePrinter):
                      f'#include <{stc_extension_mapping[source]}.h>\n', 
                      f'#endif // {header_guard}\n\n'))
             return code
-        elif source.startswith('stc/'):
+        elif source != 'stc/cstr' and (source.startswith('stc/') or source in import_header_guard_prefix):
             code = ''
             for t in expr.target:
                 class_type = t.object.class_type
@@ -1130,6 +1131,13 @@ class CCodePrinter(CodePrinter):
                 except KeyError:
                     errors.report(f"Printing {var.dtype} type is not supported currently", severity='fatal')
                 arg = self._print(var)
+        elif isinstance(var.dtype, StringType):
+            if isinstance(var, Variable):
+                var_obj = self._print(ObjectAddress(var))
+                arg = f'cstr_str({var_obj})'
+            else:
+                arg = self._print(var)
+            arg_format = '%s'
         else:
             try:
                 arg_format = self.type_to_format[var.dtype]
@@ -1302,6 +1310,9 @@ class CCodePrinter(CodePrinter):
             i_type = f'{container_type}_{key_type}_{val_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
+        elif isinstance(dtype, StringType):
+            self.add_import(c_imports['stc/cstr'])
+            return 'cstr'
         else:
             key = dtype
 
@@ -1377,11 +1388,11 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
 
         if rank > 0:
-            if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType, DictType)):
-                dtype = self.get_c_type(expr.class_type)
-            elif isinstance(expr.class_type, CStackArray):
-                return self.get_c_type(expr.class_type.element_type)
-            elif isinstance(expr.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
+            if isinstance(class_type, (HomogeneousSetType, HomogeneousListType, DictType, StringType)):
+                dtype = self.get_c_type(class_type)
+            elif isinstance(class_type, CStackArray):
+                return self.get_c_type(class_type.element_type)
+            elif isinstance(class_type, (HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
@@ -1699,15 +1710,18 @@ class CCodePrinter(CodePrinter):
             c_type = self.get_c_type(arg.class_type)
             arg_code = self._print(ObjectAddress(arg))
             return f'{c_type}_size({arg_code})'
+        elif isinstance(arg.class_type, StringType):
+            arg_code = self._print(ObjectAddress(arg))
+            return f'cstr_size({arg_code})'
         else:
             raise NotImplementedError(f"Don't know how to represent shape of object of type {arg.class_type}")
 
     def _print_Allocate(self, expr):
         free_code = ''
         variable = expr.variable
-        if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+        if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType, StringType)):
             if expr.status in ('allocated', 'unknown'):
-                free_code = f'{self._print(Deallocate(variable))}\n'
+                free_code = f'{self._print(Deallocate(variable))}'
             if expr.shape[0] is None:
                 return free_code
             size = self._print(expr.shape[0])
@@ -1718,7 +1732,7 @@ class CCodePrinter(CodePrinter):
             elif expr.alloc_type == 'resize':
                 return f'{container_type}_resize({variable_address}, {size}, {0});\n'
             return free_code
-        if isinstance(variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+        elif isinstance(variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
                 shape_var = DottedVariable(VoidType(), 'shape', lhs = variable)
@@ -1755,7 +1769,7 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
 
     def _print_Deallocate(self, expr):
-        if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+        if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType, StringType)):
             if expr.variable.is_alias:
                 return ''
             variable_address = self._print(ObjectAddress(expr.variable))
@@ -2306,11 +2320,13 @@ class CCodePrinter(CodePrinter):
             return self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)
-        lhs = self._print(expr.lhs)
+        lhs_code = self._print(lhs)
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
             return self.init_stc_container(rhs, expr)
-        rhs = self._print(expr.rhs)
-        return f'{lhs} = {rhs};\n'
+        rhs_code = self._print(rhs)
+        if isinstance(rhs, LiteralString):
+            rhs_code = f'cstr_lit({rhs_code})'
+        return f'{lhs_code} = {rhs_code};\n'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
