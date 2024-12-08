@@ -125,6 +125,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Stop using ndarrays as an intermediate step to return arrays from Fortran code.
 -   \[INTERNALS\] Unify the strategy for handling additional imports in the printing stage for different languages.
 -   \[INTERNALS\] Make `Iterable` into a super-class instead of a storage class.
+-   \[INTERNALS\] Change the order of the constructor arguments of `FunctionDef`.
 
 ### Deprecated
 
