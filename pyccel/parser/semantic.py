@@ -19,7 +19,7 @@ from sympy import ceiling
 
 #==============================================================================
 from pyccel.utilities.strings import random_string
-from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
+from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode, iterable
 
 from pyccel.ast.bitwise_operators import PyccelBitOr, PyccelLShift, PyccelRShift, PyccelBitAnd
 
@@ -630,6 +630,7 @@ class SemanticParser(BasicParser):
             A list of objects in `_allocs` which are to be ignored (variables appearing
             in a return statement).
         """
+        assert not isinstance(exceptions, Variable)
         for i in self._allocs[-1]:
             if isinstance(i, DottedVariable):
                 if isinstance(i.lhs.class_type, CustomDataType) and self._current_function != '__del__':
@@ -4010,32 +4011,28 @@ class SemanticParser(BasicParser):
                         severity='fatal', symbol=expr)
 
         return_objs = func.results
+        return_var = getattr(return_objs.var, 'name', return_objs.var)
         assigns     = []
-        for o,r in zip(return_objs, results):
-            v = o.var
-            if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
-                # Create a syntactic object to visit
-                pyccel_stage.set_stage('syntactic')
-                if isinstance(v, Variable):
-                    v = PyccelSymbol(v.name)
-                syntactic_assign = Assign(v, r, python_ast=expr.python_ast)
-                pyccel_stage.set_stage('semantic')
+        if return_var != results:
+            # Create a syntactic object to visit
+            pyccel_stage.set_stage('syntactic')
+            syntactic_assign = Assign(return_var, results, python_ast=expr.python_ast)
+            pyccel_stage.set_stage('semantic')
 
-                a = self._visit(syntactic_assign)
-                assigns.append(a)
-                if isinstance(a, ConstructorCall):
-                    a.cls_variable.is_temp = False
+            a = self._visit(syntactic_assign)
+            assigns.append(a)
+            if isinstance(a, ConstructorCall):
+                a.cls_variable.is_temp = False
 
-        results = [self._visit(i.var) for i in return_objs]
-        if any(isinstance(i.class_type, InhomogeneousTupleType) for i in results):
-            # Extraction of underlying variables is not yet implemented here
-            errors.report("Returning tuples is not yet implemented",
-                    severity='error', symbol=expr)
+        results = self._visit(return_var)
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
-        self._check_pointer_targets(results)
-        code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results]
+        results_vars = self.create_tuple_of_inhomogeneous_elements(results)
+        if isinstance(results_vars, Variable):
+            results_vars = [results_vars]
+        self._check_pointer_targets(results_vars)
+        code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results_vars]
         if code:
             expr  = Return(results, CodeBlock(code))
         else:
@@ -4205,13 +4202,13 @@ class SemanticParser(BasicParser):
                         cls_base.scope.insert_symbol(DottedName(*s.name[1:]))
 
             results = expr.results
-            if results and results[0].annotation:
-                results = [self._visit(r) for r in expr.results]
+            if results.annotation:
+                results = self._visit(expr.results)
 
             # insert the FunctionDef into the scope
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
-            recursive_func_obj = FunctionDef(name, arguments, results, [])
+            recursive_func_obj = FunctionDef(name, arguments, [], results)
             self.insert_function(recursive_func_obj)
 
             # Create a new list that store local variables for each FunctionDef to handle nested functions
@@ -4238,10 +4235,17 @@ class SemanticParser(BasicParser):
             # it will add the necessary Deallocate nodes
             # to the body of the function
             body.insert2body(*self._garbage_collector(body))
-            self._check_pointer_targets(results)
 
-            results = [self._visit(a) for a in results]
-            results = [r for r in results if not isinstance(r, EmptyNode)]
+            results = self._visit(results)
+            results_vars = results.var
+            if results_vars is Nil():
+                results_vars = []
+            else:
+                results_vars = self.create_tuple_of_inhomogeneous_elements(results_vars)
+                if isinstance(results_vars, Variable):
+                    results_vars = [results_vars]
+
+            self._check_pointer_targets(results_vars)
 
             # Determine local and global variables
             global_vars = list(self.get_variables(self.scope.parent_scope))
@@ -4271,7 +4275,7 @@ class SemanticParser(BasicParser):
             namespace_imports = self.scope.imports
             self.exit_function_scope()
 
-            results_names = [i.var.name for i in results]
+            results_names = [v.name for v in results_vars]
 
             # Find all nodes which can modify variables
             assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
@@ -4293,9 +4297,9 @@ class SemanticParser(BasicParser):
             # Raise an error if one of the return arguments is an alias.
             pointer_targets = self._pointer_targets.pop()
             result_pointer_map = {}
-            for r in results:
-                t = pointer_targets.get(r.var, ())
-                if r.var.is_alias:
+            for r in results_vars:
+                t = pointer_targets.get(r, ())
+                if r.is_alias:
                     persistent_targets = []
                     for target, _ in t:
                         target_argument_index = next((i for i,a in enumerate(arguments) if a.var == target), -1)
@@ -4306,7 +4310,7 @@ class SemanticParser(BasicParser):
                             symbol=r, severity='error',
                             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
                     else:
-                        result_pointer_map[r.var] = persistent_targets
+                        result_pointer_map[r] = persistent_targets
 
             optional_inits = []
             for a in arguments:
@@ -4339,8 +4343,8 @@ class SemanticParser(BasicParser):
                 cls = FunctionDef
             func = cls(name,
                     arguments,
-                    results,
                     body,
+                    results,
                     **func_kwargs)
             if not is_recursive:
                 recursive_func_obj.invalidate_node()
