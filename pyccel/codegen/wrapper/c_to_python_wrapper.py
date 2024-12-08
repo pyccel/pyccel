@@ -455,8 +455,8 @@ class CToPythonWrapper(Wrapper):
                         "which indicates which function should be called.")
 
         # Build the function
-        func = FunctionDef(name, [FunctionDefArgument(a) for a in args], [FunctionDefResult(type_indicator)],
-                            body, docstring=docstring, scope=func_scope)
+        func = FunctionDef(name, [FunctionDefArgument(a) for a in args], body,
+                            [FunctionDefResult(type_indicator)], docstring=docstring, scope=func_scope)
 
         return func, argument_type_flags
 
