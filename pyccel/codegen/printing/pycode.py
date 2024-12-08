@@ -299,11 +299,10 @@ class PythonCodePrinter(CodePrinter):
 
         body = ''.join([docstring, functions, interfaces, imports, body])
 
-        code = ('def {name}({args}):\n'
-                '{body}\n').format(
-                        name=name,
-                        args=args,
-                        body=body)
+        result_annotation = ('-> ' + self._print(expr.results.annotation)) \
+                                if expr.results.annotation else ''
+
+        code = ''.join((f'def {name}({args}){result_annotation}:\n', body, '\n'))
         decorators = expr.decorators.copy()
         if decorators:
             if decorators['template']:
