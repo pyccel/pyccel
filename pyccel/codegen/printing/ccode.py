@@ -1480,7 +1480,8 @@ class CCodePrinter(CodePrinter):
             Signature of the function.
         """
         arg_vars = [a.var for a in expr.arguments]
-        result_vars = [r.var for r in expr.results if not r.is_argument]
+        result_vars = [r for r in self.scope.collect_all_tuple_elements(expr.results.var) \
+                if isinstance(r, Variable) and not r.is_argument]
 
         n_results = len(result_vars)
 
@@ -2097,15 +2098,17 @@ class CCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
         arguments = [a.var for a in expr.arguments]
-        results = [r.var for r in expr.results]
-        if len(expr.results) > 1:
+        # Collect results filtering out Nil()
+        results = [r for r in self.scope.collect_all_tuple_elements(expr.results.var) \
+                if isinstance(r, Variable)]
+        if len(results) > 1:
             self._additional_args.append(results)
 
         body  = self._print(expr.body)
         decs = [Declare(i, value=(Nil() if i.is_alias and isinstance(i.class_type, (VoidType, BindCPointer)) else None))
                 if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
 
-        if len(results) == 1 :
+        if len(results) == 1:
             res = results[0]
             if isinstance(res, Variable) and not res.is_temp:
                 decs += [Declare(res)]
@@ -2168,12 +2171,19 @@ class CCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
         code = ''
-        args = [ObjectAddress(a) if isinstance(a, Variable) and self.is_c_pointer(a) else a for a in expr.expr]
+        return_obj = expr.expr
+        if isinstance(return_obj, Nil):
+            args = []
+        elif isinstance(return_obj, Variable):
+            args = [ObjectAddress(return_obj) if self.is_c_pointer(return_obj) else return_obj]
+        else:
+            args = [ObjectAddress(a) if isinstance(a, Variable) and self.is_c_pointer(a) else a \
+                    for a in expr.expr]
 
         if len(args) == 0:
             return 'return;\n'
 
-        if len(args) > 1:
+        if len(args) > 1 or expr.expr.rank > 0:
             if expr.stmt:
                 return self._print(expr.stmt)+'return 0;\n'
             return 'return 0;\n'
