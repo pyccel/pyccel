@@ -2212,7 +2212,6 @@ class FunctionDef(ScopedAstNode):
         if iterable(body):
             body = CodeBlock(body)
         assert isinstance(body,CodeBlock)
-        assert not any(isinstance(b, FunctionDefResult) for b in body.body)
 
         # results
         assert iterable(results) and all(isinstance(r, FunctionDefResult) for r in results)
