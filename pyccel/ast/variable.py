@@ -125,15 +125,14 @@ class Variable(TypedAstNode):
         if isinstance(name, str):
             name = name.split(""".""")
             if len(name) == 1:
-                name = name[0]
+                name = PyccelSymbol(name[0])
             else:
                 name = DottedName(*name)
 
         if name == '':
             raise ValueError("Variable name can't be empty")
 
-        if not isinstance(name, (str, DottedName)):
-            raise TypeError(f'Expecting a string or DottedName, given {type(name)}')
+        assert isinstance(name, (PyccelSymbol, DottedName))
         self._name = name
 
         if memory_handling not in ('heap', 'stack', 'alias'):
