@@ -361,7 +361,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             assigns = {}
             prelude = ''
-        expr_return_vars = [assigns.get(a,a) for a in expr.expr]
+        expr_return_vars = [assigns.get(v, v) for v in self.scope.collect_all_tuple_elements(expr.expr)]
 
         return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars))
 
