@@ -15,7 +15,7 @@ from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 
 from .bitwise_operators import PyccelBitOr, PyccelBitAnd
 
-from .builtins  import PythonBool, PythonTuple
+from .builtins  import PythonBool, PythonTuple, PythonList
 
 from .c_concepts import PointerCast
 
@@ -1995,16 +1995,20 @@ class Return(PyccelAstNode):
     stmt : PyccelAstNode
         Any assign statements in the case of expression return.
     """
-    __slots__ = ('_expr', '_stmt')
+    __slots__ = ('_expr', '_stmt', '_n_returns')
     _attribute_nodes = ('_expr', '_stmt')
 
     def __init__(self, expr, stmt=None):
 
-        if stmt and not isinstance(stmt, CodeBlock):
-            raise TypeError('stmt should only be of type CodeBlock')
+        assert stmt is None or isinstance(stmt, CodeBlock)
+        assert isinstance(expr, (TypedAstNode, PyccelSymbol))
 
         self._expr = expr
         self._stmt = stmt
+
+        self._n_returns = 0 if isinstance(expr, Nil) else \
+                1 if not isinstance(expr, (PythonTuple, PythonList)) else \
+                len(expr)
 
         super().__init__()
 
@@ -2015,6 +2019,15 @@ class Return(PyccelAstNode):
     @property
     def stmt(self):
         return self._stmt
+
+    @property
+    def n_explicit_results(self):
+        """
+        The number of variables explicitly returned.
+
+        The number of variables explicitly returned.
+        """
+        return self._n_returns
 
     def __getnewargs__(self):
         """used for Pickling self."""
@@ -2027,8 +2040,7 @@ class Return(PyccelAstNode):
             code = repr(self.stmt)+';'
         else:
             code = ''
-        exprs = ','.join(repr(e) for e in self.expr)
-        return code+f"Return({exprs})"
+        return code+f"Return({repr(self.expr)})"
 
 class FunctionDef(ScopedAstNode):
 

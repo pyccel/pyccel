@@ -727,10 +727,6 @@ class SyntaxParser(BasicParser):
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
-        if results is Nil():
-            results = []
-        elif not isinstance(results, (list, PythonTuple, PythonList)):
-            results = [results]
         return Return(results)
 
     def _visit_Pass(self, stmt):
@@ -968,28 +964,18 @@ class SyntaxParser(BasicParser):
 
         body = CodeBlock(body)
 
-        returns = [i.expr for i in body.get_attribute_nodes(Return,
+        returns = [i for i in body.get_attribute_nodes(Return,
                     excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))]
-        n_returns = [len(r) for r in returns]
+        n_returns = [r.n_explicit_results for r in returns]
         if len(returns) == 0:
             results = FunctionDefResult(Nil())
         else:
             result_counter = 1
-            if len(set(n_returns)) == 1 and not result_annotation:
-                suggested_names = [set(ni for ni in n if isinstance(ni, PyccelSymbol)) \
-                                    for n in zip(*returns)]
-                if all(len(n)==1 for n in suggested_names):
-                    results = [n.pop() for n in suggested_names]
-                else:
-                    results = [self.scope.get_new_incremented_symbol('Out', result_counter)[0] \
-                            for _ in range(len(suggested_names))]
+            suggested_names = set(r.expr for r in returns if isinstance(r.expr, PyccelSymbol))
+            if len(suggested_names) == 1:
+                results = suggested_names.pop()
             else:
-                results = [self.scope.get_new_incremented_symbol('Out', result_counter)[0]]
-
-            if len(results) == 1:
-                results = results[0]
-            else:
-                results = PythonTuple(*results)
+                results, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
 
             if result_annotation:
                 results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
