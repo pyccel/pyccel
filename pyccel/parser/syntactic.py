@@ -980,7 +980,7 @@ class SyntaxParser(BasicParser):
             if result_annotation:
                 results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
 
-            results = FunctionDefResult(results)
+            results = FunctionDefResult(results, annotation = result_annotation)
 
         results.set_current_ast(stmt)
 
