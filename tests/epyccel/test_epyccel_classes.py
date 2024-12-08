@@ -172,6 +172,28 @@ def test_classes_4(language):
 
     p1_py = mod.Point()
 
+def test_classes_5(language):
+    import classes.classes_5 as mod
+    modnew = epyccel(mod, language = language)
+
+    x1 = np.array([0.,0.,0.])
+    x2 = np.array([0.,0.,0.])
+    a = np.array([1.,1.,1.])
+
+    p1_py = mod.Point(x1)
+    p1_l  = modnew.Point(x2)
+
+    assert np.allclose(p1_py.x, p1_l.x, rtol=RTOL, atol=ATOL)
+
+    p1_py.translate(a)
+    p1_l.translate(a)
+
+    assert np.allclose(p1_py.x, p1_l.x, rtol=RTOL, atol=ATOL)
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
+
+    with pytest.raises(AttributeError):
+        p1_l.x = 4.0
+
 def test_classes_6(language):
     import classes.classes_6 as mod
     modnew = epyccel(mod, language = language)
@@ -187,6 +209,27 @@ def test_classes_6(language):
 
     assert p_py.get_attributes(3) == p_l.get_attributes(3)
     assert p_py.get_attributes(4.5) == p_l.get_attributes(4.5)
+
+def test_classes_8(language):
+    import classes.classes_8 as mod
+    modnew = epyccel(mod, language = language)
+
+    a_py = mod.A(3.0)
+    a_l = modnew.A(3.0)
+
+    assert a_py.x == a_l.x
+    assert a_py.y == a_l.y
+
+def test_classes_9(language):
+    import classes.classes_9 as mod
+    modnew = epyccel(mod, language = language)
+
+    a_py = mod.A(3.0)
+    a_l = modnew.A(3.0)
+
+    assert a_py.get_A_contents() == a_l.get_A_contents()
+    assert a_py.x == a_l.x
+    assert a_py.y == a_l.y
 
 def test_generic_methods(language):
     import classes.generic_methods as mod

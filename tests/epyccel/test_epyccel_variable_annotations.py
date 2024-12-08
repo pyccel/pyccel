@@ -324,9 +324,81 @@ def test_dict_empty_init(language):
 def test_dict_complex_float(language):
     def dict_int_float():
         # Not valid in Python 3.8
-        a : dict[complex, float] #pylint: disable=unsubscriptable-object,unused-variable
+        a : dict[complex, float] #pylint: disable=unsubscriptable-object
         a = {1j:1.0, -1j:2.0}
         return len(a)
 
     epyc_dict_int_float = epyccel(dict_int_float, language = language)
     assert epyc_dict_int_float() == dict_int_float()
+
+def test_inhomogeneous_tuple_annotation_1(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[int, bool] = (1, True) #pylint: disable=unsubscriptable-object
+        return a[0], a[1]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
+def test_inhomogeneous_tuple_annotation_2(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[int] = (1,) #pylint: disable=unsubscriptable-object
+        return a[0]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
+def test_inhomogeneous_tuple_annotation_3(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[int,int,int] = (1,2,3) #pylint: disable=unsubscriptable-object
+        return a[0], a[1], a[2]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
+def test_inhomogeneous_tuple_annotation_4(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[tuple[float,bool],tuple[int,complex]] = ((1.0, False), (1,2+3j)) #pylint: disable=unsubscriptable-object
+        return a[0][0], a[0][1], a[1][0], a[1][1]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
+def test_inhomogeneous_tuple_annotation_5(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[tuple[int, float]] = ((1,0.2),) #pylint: disable=unsubscriptable-object
+        return a[0][0], a[0][1]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
+def test_inhomogeneous_tuple_annotation_6(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[tuple[tuple[int, float]]] = (((1,0.2),),) #pylint: disable=unsubscriptable-object
+        return a[0][0][0], a[0][0][1]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
+def test_inhomogeneous_tuple_annotation_7(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[tuple[tuple[int, float]], int] = (((1,0.2),),1) #pylint: disable=unsubscriptable-object
+        return a[0][0][0], a[0][0][1], a[1]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
+def test_inhomogeneous_tuple_annotation_8(language):
+    def inhomogeneous_tuple_annotation():
+        a : tuple[tuple[tuple[tuple[int, float]], int]] = ((((1,0.2),),1),) #pylint: disable=unsubscriptable-object
+        return a[0][0][0][0], a[0][0][0][1], a[0][1]
+
+    epyc_inhomogeneous_tuple_annotation = epyccel(inhomogeneous_tuple_annotation, language = language)
+    assert epyc_inhomogeneous_tuple_annotation() == inhomogeneous_tuple_annotation()
+
+def test_str_declaration(language):
+    def str_declaration():
+        a : str = 'hello here is a very long string with more than 128 characters. This used to be a Fortran limit but now I can hold lots more characters. There is no limit!'
+        return len(a)
+
+    epyc_str_declaration = epyccel(str_declaration, language = language)
+    assert str_declaration() == epyc_str_declaration()

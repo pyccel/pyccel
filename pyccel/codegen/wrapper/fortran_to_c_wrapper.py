@@ -637,10 +637,16 @@ class FortranToCWrapper(Wrapper):
                     severity='warning',
                     symbol=expr)
 
+        properties_getters = [BindCClassProperty(expr.scope.get_python_name(m.original_function.name),
+                                                 m, None, expr.class_type, m.original_function.docstring)
+                                for m in methods if 'property' in m.original_function.decorators]
+        methods = [m for m in methods if m not in properties_getters
+                        if 'property' not in m.original_function.decorators]
+
         # Pseudo-self variable is useful for pre-defined attributes which are not DottedVariables
         pseudo_self = Variable(expr.class_type, 'self', cls_base = expr)
         properties = [self._wrap(v if isinstance(v, DottedVariable) else v.clone(v.name, new_class = DottedVariable, lhs=pseudo_self)) \
                         for v in expr.attributes if not v.is_private and not isinstance(v.class_type, TupleType)]
         return BindCClassDef(expr, new_func = new_method, methods = methods,
-                             interfaces = interfaces, attributes = properties,
+                             interfaces = interfaces, attributes = properties_getters + properties,
                              docstring = expr.docstring, class_type = expr.class_type)

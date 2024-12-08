@@ -16,6 +16,7 @@ from pyccel.codegen.wrapper.c_to_python_wrapper  import CToPythonWrapper
 from pyccel.codegen.utilities                    import recompile_object
 from pyccel.codegen.utilities                    import copy_internal_library
 from pyccel.codegen.utilities                    import internal_libs
+from pyccel.codegen.utilities                    import manage_dependencies
 from pyccel.naming                               import name_clash_checkers
 from pyccel.parser.scope                         import Scope
 from pyccel.utilities.stage                      import PyccelStage
@@ -197,20 +198,8 @@ def create_shared_library(codegen,
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
     #--------------------------------------------------------
     start_compile_libs = time.time()
-    for lib_name in ("ndarrays", "cwrapper_ndarrays"):
-        if lib_name in wrapper_codegen.get_additional_imports():
-            stdlib_folder, stdlib = internal_libs[lib_name]
-
-            lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
-
-            # Pylint determines wrong type
-            stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
-            # get the include folder path and library files
-            recompile_object(stdlib,
-                              compiler = wrapper_compiler,
-                              verbose  = verbose)
-
-            wrapper_compile_obj.add_dependencies(stdlib)
+    manage_dependencies(wrapper_codegen.get_additional_imports(), wrapper_compiler, pyccel_dirpath, wrapper_compile_obj,
+            language, verbose)
     timings['Dependency compilation'] += (time.time() - start_compile_libs)
 
     #---------------------------------------

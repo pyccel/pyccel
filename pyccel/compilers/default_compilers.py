@@ -289,6 +289,8 @@ pgfortran_info.update(python_info)
 nvc_info.update(python_info)
 nvfort_info.update(python_info)
 
+gcc_info['python']['flags'].append('-Wno-incompatible-pointer-types')
+
 available_compilers = {('GNU', 'c') : gcc_info,
                        ('GNU', 'fortran') : gfort_info,
                        ('intel', 'c') : icc_info,

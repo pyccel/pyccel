@@ -22,13 +22,15 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefAr
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
-from pyccel.ast.builtins import PythonBool, PythonList, PythonSet
+from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableIterator
+
+from pyccel.ast.builtin_methods.dict_methods import DictItems
 
 from pyccel.ast.builtin_methods.set_methods import SetUnion
 
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import SeparatorComment, Comment
-from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import ConstructorCall, ClassDef
 from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Return, Module, For
@@ -462,7 +464,9 @@ class FCodePrinter(CodePrinter):
 
         for i in func.imports:
             self.add_import(i)
-        if func.global_vars or func.global_funcs:
+
+        if (func.global_vars or func.global_funcs) and \
+                not func.get_direct_user_nodes(lambda u: isinstance(u, ClassDef)):
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
             current_mod = expr.get_user_nodes(Module, excluded_nodes=(FunctionCall,))[0]
             if current_mod is not mod:
@@ -1012,7 +1016,7 @@ class FCodePrinter(CodePrinter):
                     print_body.append(space_end)
 
                 for_body = [PythonPrint(print_body, file=expr.file)]
-                for_loop = For(for_index, for_range, for_body, scope=loop_scope)
+                for_loop = For((for_index,), for_range, for_body, scope=loop_scope)
                 for_end_char = LiteralString(']')
                 for_end = FunctionCallArgument(for_end_char,
                                                keyword='end')
@@ -1148,11 +1152,6 @@ class FCodePrinter(CodePrinter):
             errors.report(f"Printing {var_type} type is not supported currently", severity='fatal')
 
         return arg_format, arg
-
-    def _print_SymbolicPrint(self, expr):
-        # for every expression we will generate a print
-        code = '\n'.join(f"print *, 'sympy> {a}'" for a in expr.expr)
-        return code + '\n'
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
@@ -1641,6 +1640,8 @@ class FCodePrinter(CodePrinter):
             return f'size({arg_code}, {index}, {prec})'
         elif isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             return f'{arg_code} % size()'
+        elif isinstance(arg.class_type, StringType):
+            return f'len({arg_code})'
         else:
             raise NotImplementedError(f"Don't know how to represent shape of object of type {arg.class_type}")
 
@@ -1865,8 +1866,10 @@ class FCodePrinter(CodePrinter):
         rankstr   = ''
 
         # ... print datatype
-        if isinstance(expr_type, CustomDataType):
-            name   = expr_type.name
+        if isinstance(expr_type, (CustomDataType, IteratorType, HomogeneousListType, HomogeneousSetType, DictType)):
+            name   = self._print(expr_type)
+            if isinstance(expr_type, (HomogeneousContainerType, DictType)):
+                self.add_import(self._build_gFTL_module(expr_type))
 
             if var.is_argument:
                 sig = 'class'
@@ -1894,16 +1897,13 @@ class FCodePrinter(CodePrinter):
                     raise NotImplementedError("Fortran rank string undetermined")
                 rankstr = f'({rankstr})'
 
-        elif isinstance(expr_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-            self.add_import(self._build_gFTL_module(expr_type))
-            typename = self._print(expr_type)
-            dtype_str = f'type({typename})'
         elif isinstance(dtype, StringType):
             dtype_str = self._print(dtype)
 
             if intent_in:
-                dtype_str = dtype_str[:9] +'(len =*)'
-                #TODO improve ,this is the case of character as argument
+                dtype_str += '(len = *)'
+            else:
+                dtype_str += '(len = :)'
         elif isinstance(dtype, BindCPointer):
             dtype_str = 'type(c_ptr)'
             self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
@@ -1936,11 +1936,11 @@ class FCodePrinter(CodePrinter):
                 intentstr = f', intent({intent})'
 
         # Compute allocatable string
-        if not is_static and not is_string:
+        if not is_static:
             if is_alias:
                 allocatablestr = ', pointer'
 
-            elif on_heap and not intent_in and isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            elif on_heap and not intent_in and isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType, StringType)):
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -2006,15 +2006,7 @@ class FCodePrinter(CodePrinter):
                 body_stmts.append(self._additional_code)
                 self._additional_code = ''
             body_stmts.append(line)
-        return ''.join(self._print(b) for b in body_stmts)
-
-    # TODO the ifs as they are are, is not optimal => use elif
-    def _print_SymbolicAssign(self, expr):
-        errors.report(FOUND_SYMBOLIC_ASSIGN,
-                      symbol=expr.lhs, severity='warning')
-
-        stmt = Comment(str(expr))
-        return self._print_Comment(stmt)
+        return ''.join(body_stmts)
 
     def _print_NumpyReal(self, expr):
         value = self._print(expr.internal_var)
@@ -2156,6 +2148,19 @@ class FCodePrinter(CodePrinter):
 
             return code
 
+        elif isinstance(class_type, HomogeneousListType):
+            if expr.alloc_type == 'resize':
+                var_code = self._print(expr.variable)
+                container_type = expr.variable.class_type
+                container = self._print(container_type)
+                size_code = self._print(expr.shape[0])
+                return f'{var_code} = {container}({size_code})\n'
+            elif expr.alloc_type == 'reserve':
+                var_code = self._print(expr.variable)
+                size_code = self._print(expr.shape[0])
+                return f'call {var_code} % reserve({size_code})\n'
+            else:
+                return ''
         elif isinstance(class_type, (HomogeneousContainerType, DictType)):
             return ''
 
@@ -2206,8 +2211,7 @@ class FCodePrinter(CodePrinter):
         return 'complex'
 
     def _print_StringType(self, expr):
-        return 'character(len=280)'
-        #TODO fix improve later
+        return 'character'
 
     def _print_FixedSizeNumericType(self, expr):
         return f'{self._print(expr.primitive_type)}{expr.precision}'
@@ -2230,6 +2234,9 @@ class FCodePrinter(CodePrinter):
     def _print_IteratorType(self, expr):
         iterable_type = self._print(expr.iterable_type)
         return f"{iterable_type}_Iterator"
+
+    def _print_CustomDataType(self, expr):
+        return expr.name
 
     def _print_DataType(self, expr):
         return self._print(expr.name)
@@ -2490,7 +2497,8 @@ class FCodePrinter(CodePrinter):
 
         aliases = []
         names   = []
-        methods = ''.join(f'procedure :: {method.name} => {method.cls_name}\n' for method in expr.methods)
+        methods = ''.join(f'procedure :: {method.name} => {method.cls_name}\n' for method in expr.methods \
+                if not method.is_inline)
         for i in expr.interfaces:
             names = ','.join(f.cls_name for f in i.functions if not f.is_inline)
             if names:
@@ -2568,27 +2576,55 @@ class FCodePrinter(CodePrinter):
     def _print_For(self, expr):
         self.set_scope(expr.scope)
 
-        indices = expr.iterable.loop_counters
-        index = indices[0] if indices else expr.target
-        if expr.iterable.num_loop_counters_required:
-            self.scope.insert_variable(index)
+        iterable = expr.iterable
+        indices = iterable.loop_counters
 
-        target   = index
-        my_range = expr.iterable.get_range()
+        if isinstance(iterable, (VariableIterator, DictItems)) and \
+                isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType)):
+            var = iterable.variable
+            iterable_type = var.class_type
+            if isinstance(var, Variable):
+                suggested_name = var.name + '_'
+            else:
+                suggested_name = ''
+                errors.report("Iterating over a temporary object. This may cause compilation issues or cause calculations to be carried out twice",
+                        severity='warning', symbol=expr)
+            var_code = self._print(var)
+            iterator = self.scope.get_temporary_variable(IteratorType(iterable_type),
+                    name = suggested_name + 'iter')
+            last = self.scope.get_temporary_variable(IteratorType(iterable_type),
+                    name = suggested_name + 'last')
+            if isinstance(iterable, DictItems):
+                key = self._print(expr.target[0])
+                val = self._print(expr.target[1])
+                target_assign = (f'{key} = {iterator} % first()\n'
+                                 f'{val} = {iterator} % second()\n')
+            else:
+                target = self._print(expr.target[0])
+                target_assign = f'{target} = {iterator} % of()\n'
 
-        if not isinstance(my_range, PythonRange):
-            # Only iterable currently supported is PythonRange
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal')
+            prolog = ''.join((f'{iterator} = {var_code} % begin()\n',
+                              f'{last} = {var_code} % end()\n',
+                              f'do while ({iterator} /= {last})\n',
+                              target_assign))
+            epilog = f'call {iterator} % next()\nend do\n'
+        else:
+            index = indices[0] if indices else expr.target[0]
+            if iterable.num_loop_counters_required:
+                self.scope.insert_variable(index)
 
-        tar        = self._print(target)
-        range_code = self._print(my_range)
+            my_range = iterable.get_range()
 
-        prolog = 'do {0} = {1}\n'.format(tar, range_code)
-        epilog = 'end do\n'
+            target     = self._print(index)
+            range_code = self._print(my_range)
 
-        additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
-        prolog += self._print(additional_assign)
+            prolog = f'do {target} = {range_code}\n'
+            epilog = 'end do\n'
+
+            targets = iterable.get_assign_targets()
+            additional_assign = CodeBlock([AliasAssign(i, t) if i.is_alias else Assign(i, t) \
+                                    for i,t in zip(expr.target[-len(targets):], targets)])
+            prolog += self._print(additional_assign)
 
         body = self._print(expr.body)
 
@@ -2598,9 +2634,7 @@ class FCodePrinter(CodePrinter):
 
         self.exit_scope()
 
-        return ('{prolog}'
-                '{body}'
-                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
+        return prolog + body + epilog
 
     # .....................................................
     #               Print OpenMP AnnotatedComment
@@ -3325,11 +3359,11 @@ class FCodePrinter(CodePrinter):
                             PyccelAdd(_shape, ind, simplify = True), ind)
 
         if isinstance(base.class_type, HomogeneousListType):
-            if any(isinstance(i, Slice) for i in inds):
-                raise NotImplementedError("Slice indexing not implemented for lists")
-            inds = [PyccelAdd(i, LiteralInteger(1), simplify=True) for i in inds]
-            inds_code = ", ".join(self._print(i) for i in inds)
-            return f"{base_code}%of({inds_code})"
+            assert len(inds) == 1
+            ind = inds[0]
+            assert not isinstance(ind, Slice)
+            ind_code = self._print(PyccelAdd(inds[0], LiteralInteger(1), simplify=True))
+            return f"{base_code}%of({ind_code})"
         elif isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             inds_code = ", ".join(self._print(i) for i in inds)
             return f"{base_code}({inds_code})"
@@ -3704,7 +3738,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_BindCClassDef(self, expr):
         funcs = [expr.new_func, *expr.methods, *[f for i in expr.interfaces for f in i.functions],
-                 *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes]]
+                 *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes if a.setter]]
         sep = f'\n{self._print(SeparatorComment(40))}\n'
         return '', sep.join(self._print(f) for f in funcs)
 

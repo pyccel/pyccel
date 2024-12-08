@@ -20,8 +20,8 @@ from .datatypes import GenericType, PythonNativeComplex, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
-from .datatypes import DictType
-from .internals import PyccelFunction, Slice, PyccelArrayShapeElement
+from .datatypes import DictType, VoidType
+from .internals import PyccelFunction, Slice, PyccelArrayShapeElement, Iterable
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
@@ -60,6 +60,7 @@ __all__ = (
     'PythonTupleFunction',
     'PythonType',
     'PythonZip',
+    'VariableIterator',
     'builtin_functions_dict',
 )
 
@@ -347,7 +348,7 @@ class PythonComplex(PyccelFunction):
         return f"complex({self.real}, {self.imag})"
 
 #==============================================================================
-class PythonEnumerate(PyccelFunction):
+class PythonEnumerate(Iterable):
     """
     Represents a call to Python's native `enumerate()` function.
 
@@ -362,7 +363,7 @@ class PythonEnumerate(PyccelFunction):
         The start value of the enumeration index.
     """
     __slots__ = ('_element','_start')
-    _attribute_nodes = ('_element','_start')
+    _attribute_nodes = Iterable._attribute_nodes + ('_element','_start')
     name = 'enumerate'
     _class_type = SymbolicType()
     _shape = ()
@@ -373,7 +374,7 @@ class PythonEnumerate(PyccelFunction):
             raise TypeError('Expecting an arg of valid type')
         self._element = arg
         self._start   = start or LiteralInteger(0)
-        super().__init__()
+        super().__init__(int(self.start != 0))
 
     @property
     def element(self):
@@ -390,15 +391,53 @@ class PythonEnumerate(PyccelFunction):
         """
         return self._start
 
-    def __getitem__(self, index):
-        return [PyccelAdd(index, self.start, simplify=True),
-                self.element[index]]
-
-    @property
-    def length(self):
-        """ Return the length of the enumerated object
+    def get_python_iterable_item(self):
         """
-        return PythonLen(self.element)
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns two objects that could be elements of the enumerate.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        index = self._indices[0]
+        return [index, self.element[index]]
+
+    def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the enumerate targets.
+
+        Get objects that should be assigned to variables to use the enumerate targets.
+        If the start of the enumerate is 0 then the only object that needs to be assigned
+        is the element of the variable, however if the indexing is offset compared to
+        the variable then both the index and the variable need to be created.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        index = self._indices[0]
+        if index.is_temp:
+            return [PyccelAdd(index, self.start, simplify=True),
+                    self.element[index]]
+        else:
+            return [self.element[index]]
+
+    def get_range(self):
+        """
+        Get a range that can be used to iterate over the enumerate iterable.
+
+        Get a range that can be used to iterate over the enumerate iterable.
+
+        Returns
+        -------
+        PythonRange
+            A range that can be used to iterate over the enumerate iterable.
+        """
+        return PythonRange(PythonLen(self.element))
 
 #==============================================================================
 class PythonFloat(PyccelFunction):
@@ -491,12 +530,15 @@ class PythonTuple(TypedAstNode):
     ----------
     *args : tuple of TypedAstNode
         The arguments passed to the tuple function.
+    prefer_inhomogeneous : bool, default=False
+        A boolean that can be used to ensure that the tuple is stocked as an
+        inhomogeneous object even if it could be homogeneous.
     """
     __slots__ = ('_args','_is_homogeneous', '_shape', '_class_type')
     _iterable = True
     _attribute_nodes = ('_args',)
 
-    def __init__(self, *args):
+    def __init__(self, *args, prefer_inhomogeneous = False):
         self._args = args
         super().__init__()
         if pyccel_stage == 'syntactic':
@@ -521,7 +563,7 @@ class PythonTuple(TypedAstNode):
                                for i in range(rank))
         else:
             shapes = ()
-        is_homogeneous = len(dtypes) == 1 and len(ranks) == 1 and \
+        is_homogeneous = (not prefer_inhomogeneous) and len(dtypes) == 1 and len(ranks) == 1 and \
                          len(orders) == 1 and all(len(s) <= 1 for s in shapes)
         contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
                             not isinstance(a.class_type, HomogeneousTupleType) for a in args)
@@ -633,7 +675,10 @@ class PythonLen(PyccelFunction):
     __slots__ = ()
 
     def __new__(cls, arg):
-        return arg.shape[0]
+        if isinstance(arg, LiteralString):
+            return LiteralInteger(len(arg.python_value))
+        else:
+            return arg.shape[0]
 
 #==============================================================================
 class PythonList(TypedAstNode):
@@ -975,7 +1020,7 @@ class PythonDictFunction(PyccelFunction):
         return self._args[0]
 
 #==============================================================================
-class PythonMap(PyccelFunction):
+class PythonMap(Iterable):
     """
     Class representing a call to Python's builtin map function.
 
@@ -990,7 +1035,7 @@ class PythonMap(PyccelFunction):
         The arguments to which the function will be applied.
     """
     __slots__ = ('_func','_func_args')
-    _attribute_nodes = ('_func','_func_args')
+    _attribute_nodes = Iterable._attribute_nodes + ('_func','_func_args')
     name = 'map'
     _class_type = SymbolicType()
     _shape = ()
@@ -998,7 +1043,7 @@ class PythonMap(PyccelFunction):
     def __init__(self, func, func_args):
         self._func = func
         self._func_args = func_args
-        super().__init__()
+        super().__init__(1)
 
     @property
     def func(self):
@@ -1012,14 +1057,48 @@ class PythonMap(PyccelFunction):
         """
         return self._func_args
 
-    def __getitem__(self, index):
-        return self.func, IndexedElement(self.func_args, index)
-
-    @property
-    def length(self):
-        """ Return the length of the resulting object
+    def get_python_iterable_item(self):
         """
-        return PythonLen(self.func_args)
+        Get the item of the iterable that will be saved to the loop targets.
+
+        This is the function calling the element of the variable that is found
+        at the index.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        idx = self._indices[0] if len(self._indices)==1 else self._indices
+        return [self.func(IndexedElement(self.func_args, idx))]
+
+    def get_range(self):
+        """
+        Get a range that can be used to iterate over the map iterable.
+
+        Get a range that can be used to iterate over the map iterable.
+
+        Returns
+        -------
+        PythonRange
+            A range that can be used to iterate over the map iterable.
+        """
+        return PythonRange(PythonLen(self.func_args))
+
+    def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the map target.
+
+        Get objects that should be assigned to variables to use the map targets.
+        This is the function calling the element of the variable that is found
+        at the index.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        return self.get_python_iterable_item()
 
 #==============================================================================
 class PythonPrint(PyccelAstNode):
@@ -1062,7 +1141,7 @@ class PythonPrint(PyccelAstNode):
         return self._file
 
 #==============================================================================
-class PythonRange(PyccelFunction):
+class PythonRange(Iterable):
     """
     Class representing a range.
 
@@ -1080,10 +1159,8 @@ class PythonRange(PyccelFunction):
         If three arguments are passed then they represent the start, end and step of the interval.
     """
     __slots__ = ('_start','_stop','_step')
-    _attribute_nodes = ('_start', '_stop', '_step')
+    _attribute_nodes = Iterable._attribute_nodes + ('_start', '_stop', '_step')
     name = 'range'
-    _class_type = SymbolicType()
-    _shape = ()
 
     def __init__(self, *args):
         # Define default values
@@ -1104,7 +1181,7 @@ class PythonRange(PyccelFunction):
         else:
             raise ValueError('Range has at most 3 arguments')
 
-        super().__init__()
+        super().__init__(0)
 
     @property
     def start(self):
@@ -1134,12 +1211,51 @@ class PythonRange(PyccelFunction):
         """
         return self._step
 
-    def __getitem__(self, index):
-        return index
+    def get_range(self):
+        """
+        Get this range.
 
+        Get this range. This method is used to allow this class to be handled
+        like other iterables which can be converted to PythonRange objects.
+
+        Returns
+        -------
+        PythonRange
+            This object.
+        """
+        return self
+
+    def get_python_iterable_item(self):
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns an element of the range indexed with the iterators
+        previously provided via the set_loop_counters method
+        (useful to determine the dtype etc of the loop iterator).
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        return self._indices
+
+    def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the range.
+
+        This method is used to allow this class to be handled like other iterables
+        which can be converted to PythonRange objects.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            An empty list.
+        """
+        return []
 
 #==============================================================================
-class PythonZip(PyccelFunction):
+class PythonZip(Iterable):
     """
     Represents a call to Python `zip` for code generation.
 
@@ -1150,7 +1266,8 @@ class PythonZip(PyccelFunction):
     *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
-    __slots__ = ('_length',)
+    __slots__ = ('_length', '_class_type','_args')
+    _attribute_nodes = Iterable._attribute_nodes + ('_args', '_length')
     name = 'zip'
 
     def __init__(self, *args):
@@ -1158,7 +1275,7 @@ class PythonZip(PyccelFunction):
             raise TypeError('args must be a list or tuple')
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
-        super().__init__(*args)
+        self._args = args
         if pyccel_stage == 'syntactic':
             self._length = None
             return
@@ -1167,16 +1284,60 @@ class PythonZip(PyccelFunction):
             if lengths:
                 self._length = min(lengths)
             else:
-                self._length = self.args[0].shape[0]
+                self._length = PythonMin(*[PythonLen(a) for a in self.args])
+            self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
+        super().__init__(1)
 
     @property
-    def length(self):
-        """ Length of the shortest zip argument
+    def args(self):
         """
-        return self._length
+        The arguments passed to the function.
 
-    def __getitem__(self, index):
+        Tuple containing all the arguments passed to the function call.
+        """
+        return self._args
+
+    def get_python_iterable_item(self):
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns an element of the zip indexed with the iterators
+        previously provided via the set_loop_counters method
+        (useful to determine the dtype etc of the loop iterator).
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        index = self._indices[0]
         return [a[index] for a in self.args]
+
+    def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the zip targets.
+
+        Get objects that should be assigned to variables to use the zip targets.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        return self.get_python_iterable_item()
+
+    def get_range(self):
+        """
+        Get a range that can be used to iterate over the zip iterable.
+
+        Get a range that can be used to iterate over the zip iterable.
+
+        Returns
+        -------
+        PythonRange
+            A range that can be used to iterate over the zip iterable.
+        """
+        return PythonRange(self._length)
 
 #==============================================================================
 class PythonAbs(PyccelFunction):
@@ -1402,6 +1563,80 @@ class PythonType(PyccelFunction):
         then be easily printed in each language.
         """
         return LiteralString(f"<class '{self._type}'>")
+
+#==============================================================================
+class VariableIterator(Iterable):
+    """
+    Represents a call to Python's `iter` function on a variable.
+
+    Represents a call to Python's `iter` function on a variable. This is
+    useful for for loops as this function is called implicitly.
+
+    Parameters
+    ----------
+    var : Variable
+        The Variable that is iterated over.
+    """
+    __slots__ = ('_var',)
+    _attribute_nodes = Iterable._attribute_nodes + ('_var',)
+
+    def __init__(self, var):
+        assert isinstance(var, TypedAstNode)
+        assert var.class_type is not VoidType()
+        assert var.rank > 0
+        self._var = var
+        super().__init__(1)
+
+    @property
+    def variable(self):
+        """
+        The variable being iterated over.
+
+        The variable being iterated over.
+        """
+        return self._var
+
+    def get_range(self):
+        """
+        Get a range that can be used to iterate over the variable.
+
+        Get a range that can be used to iterate over the variable.
+
+        Returns
+        -------
+        PythonRange
+            A range that can be used to iterate over the enumerate iterable.
+        """
+        return PythonRange(self.variable.shape[0])
+
+    def get_python_iterable_item(self):
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns an element of the variable indexed with the iterators
+        previously provided via the set_loop_counters method
+        (useful to determine the dtype etc of the loop iterator).
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        return [self._var[self._indices[0]]]
+
+    def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the variable iterator targets.
+
+        Returns an element of the variable indexed with the iterators
+        previously provided via the set_loop_counters method.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        return self.get_python_iterable_item()
 
 #==============================================================================
 
