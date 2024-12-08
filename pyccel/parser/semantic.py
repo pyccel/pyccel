@@ -565,7 +565,7 @@ class SemanticParser(BasicParser):
             An object containing only variables that can be printed in a low-level language.
         """
         if isinstance(tuple_var.class_type, InhomogeneousTupleType):
-            return PythonTuple(*[self.create_tuple_of_inhomogeneous_elements(self.scope.collect_tuple_element(v)) for v in tuple_var])
+            return PythonTuple(*self.scope.collect_all_tuple_elements(tuple_var))
         else:
             return tuple_var
 
@@ -4028,9 +4028,7 @@ class SemanticParser(BasicParser):
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
-        results_vars = self.create_tuple_of_inhomogeneous_elements(results)
-        if isinstance(results_vars, Variable):
-            results_vars = [results_vars]
+        results_vars = self.scope.collect_all_tuple_elements(results)
         self._check_pointer_targets(results_vars)
         code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results_vars]
         if code:
@@ -4241,9 +4239,7 @@ class SemanticParser(BasicParser):
             if results_vars is Nil():
                 results_vars = []
             else:
-                results_vars = self.create_tuple_of_inhomogeneous_elements(results_vars)
-                if isinstance(results_vars, Variable):
-                    results_vars = [results_vars]
+                results_vars = self.scope.collect_all_tuple_elements(results_vars)
 
             self._check_pointer_targets(results_vars)
 

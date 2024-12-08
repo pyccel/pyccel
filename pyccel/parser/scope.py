@@ -871,3 +871,29 @@ class Scope(object):
                 return result
         else:
             return tuple_elem
+
+    def collect_all_tuple_elements(self, tuple_var):
+        """
+        Create a tuple of variables from a variable representing an inhomogeneous object.
+
+        Create a tuple of variables that can be printed in a low-level language. An
+        inhomogeneous object cannot be represented as is in a low-level language so
+        it must be unpacked into a PythonTuple. This function is recursive so that
+        variables with a type such as `tuple[tuple[int,bool],float]` generate
+        `PythonTuple(PythonTuple(var_0_0, var_0_1), var_1)`.
+
+        Parameters
+        ----------
+        tuple_var : Variable
+            A variable which may or may not be an inhomogeneous tuple.
+
+        Returns
+        -------
+        Variable | PythonTuple
+            An object containing only variables that can be printed in a low-level language.
+        """
+        if isinstance(tuple_var.class_type, InhomogeneousTupleType):
+            return [vi for v in tuple_var for vi in self.collect_all_tuple_elements(self.collect_tuple_element(v))]
+        else:
+            return [tuple_var]
+
