@@ -1858,21 +1858,8 @@ class FunctionCall(TypedAstNode):
         self._funcdef    = func
         self._arguments  = args
         self._func_name  = func.name
-        n_results = len(func.results)
-        if n_results == 1:
-            self._shape      = func.results[0].var.shape
-            self._class_type = func.results[0].var.class_type
-        elif n_results == 0:
-            self._shape      = None
-            self._class_type = VoidType()
-        else:
-            dtypes = [r.var.dtype for r in func.results]
-            if all(d is dtypes[0] for d in dtypes):
-                dtype = HomogeneousTupleType(dtypes[0])
-            else:
-                dtype = InhomogeneousTupleType(*dtypes)
-            self._shape      = (LiteralInteger(n_results),)
-            self._class_type = dtype
+        self._shape      = func.results.var.shape
+        self._class_type = func.results.var.class_type
 
         super().__init__()
 
@@ -2335,8 +2322,8 @@ class FunctionDef(ScopedAstNode):
         """
         local_vars = self.scope.variables.values()
         argument_vars = [a.var for a in self.arguments]
-        result_vars = [r.var for r in self.results]
-        return tuple(l for l in local_vars if l not in result_vars and l not in argument_vars)
+        result_var = self.results.var
+        return tuple(l for l in local_vars if l != result_var and l not in argument_vars)
 
     @property
     def global_vars(self):
@@ -2585,10 +2572,8 @@ class FunctionDef(ScopedAstNode):
 
 
     def __str__(self):
-        result = 'None' if len(self.results) == 0 else \
-                    ', '.join(str(r) for r in self.results)
         args = ', '.join(str(a) for a in self.arguments)
-        return f'{self.name}({args}) -> {result}'
+        return f'{self.name}({args}) -> {self.results}'
 
     @property
     def is_unused(self):
