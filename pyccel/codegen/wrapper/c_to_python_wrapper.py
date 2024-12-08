@@ -1046,7 +1046,7 @@ class CToPythonWrapper(Wrapper):
 
         self.exit_scope()
 
-        function = PyFunctionDef(func_name, [FunctionDefArgument(func_arg)], body, [], scope=func_scope,
+        function = PyFunctionDef(func_name, [FunctionDefArgument(func_arg)], body, scope=func_scope,
                 original_function = original_func)
 
         self.scope.functions[func_name] = function

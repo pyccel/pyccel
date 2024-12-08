@@ -2162,7 +2162,7 @@ class FunctionDef(ScopedAstNode):
         name,
         arguments,
         body,
-        results = None,
+        results = (),
         *,
         global_vars=(),
         cls_name=None,
@@ -2215,8 +2215,6 @@ class FunctionDef(ScopedAstNode):
         assert not any(isinstance(b, FunctionDefResult) for b in body.body)
 
         # results
-        if results is None:
-            results = ()
         assert iterable(results) and all(isinstance(r, FunctionDefResult) for r in results)
 
         if cls_name:
