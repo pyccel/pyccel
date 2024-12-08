@@ -576,18 +576,6 @@ def test_set_intersection_operator(python_only_language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Update not fully implemented yet. See #2022"),
-            pytest.mark.fortran]
-        ),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Update not fully implemented yet. See #2022"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_set_union_augoperator(language):
     def union_int():
         a = {1,2,3,4}
