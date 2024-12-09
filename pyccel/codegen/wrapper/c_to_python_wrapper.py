@@ -2663,10 +2663,7 @@ class CToPythonWrapper(Wrapper):
             elem_set = PySet_Add(py_res, element_extraction['py_result'])
             init = PySet_New()
         elif isinstance(class_type, HomogeneousListType):
-            if is_bind_c:
-                raise NotImplementedError("Support for returning lists from Fortran code is not yet available")
-            else:
-                element = IndexedElement(c_res, idx)
+            element = IndexedElement(c_res, idx)
             elem_set = PyList_SetItem(py_res, idx, element_extraction['py_result'])
             init = PyList_New(loop_size)
         elif isinstance(class_type, HomogeneousTupleType):

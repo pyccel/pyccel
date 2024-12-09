@@ -22,6 +22,7 @@ from pyccel.ast.core import For
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import HomogeneousSetType, PythonNativeInt
+from pyccel.ast.datatypes import HomogeneousListType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.numpytypes import NumpyNDArrayType
@@ -431,12 +432,15 @@ class FortranToCWrapper(Wrapper):
                 if isinstance(local_var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
                     copy = Assign(ptr_var, local_var)
                     self._additional_exprs.extend([alloc, copy])
-                elif isinstance(local_var.class_type, HomogeneousSetType):
+                elif isinstance(local_var.class_type, (HomogeneousSetType, HomogeneousListType)):
                     iterator = VariableIterator(local_var)
                     elem = Variable(var.class_type.element_type, self.scope.get_new_name())
                     idx = Variable(PythonNativeInt(), self.scope.get_new_name())
                     self.scope.insert_variable(elem)
-                    self.scope.insert_variable(idx)
+                    if isinstance(local_var.class_type, HomogeneousSetType):
+                        self.scope.insert_variable(idx)
+                    else:
+                        iterator.set_loop_counter(idx)
                     assign = Assign(idx, LiteralInteger(0))
                     for_scope = self.scope.create_new_loop_scope()
                     for_body = [Assign(IndexedElement(ptr_var, idx), elem)]
