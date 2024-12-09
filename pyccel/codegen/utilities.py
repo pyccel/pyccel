@@ -11,6 +11,7 @@ This file contains some useful functions to compile the generated fortran code
 import os
 import shutil
 from filelock import FileLock
+
 import pyccel.stdlib as stdlib_folder
 import pyccel.extensions as ext_folder
 from pyccel.errors.errors import Errors
@@ -34,8 +35,9 @@ language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 
 #==============================================================================
 # map external libraries inside pyccel/extensions with their path
-external_libs = {"stc" : "STC/include/stc", "gFTL" : "gFTL/install/GFTL-1.13/include/v2"}
-
+external_libs = {"stc" : ("STC/include/stc", CompileObj("stc", folder="stc", has_target_file = False)),
+                 "gFTL" : ("gFTL/install/GFTL-1.13/include/v2", CompileObj("gFTL", folder="gFTL", has_target_file = False)),
+}
 #==============================================================================
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
 # The compile object folder will be in the pyccel dirpath
@@ -47,10 +49,23 @@ internal_libs = {
     "cwrapper"        : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
     "numpy_f90"       : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
     "numpy_c"         : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
-    "Set_extensions"  : ("STC_Extensions", CompileObj("Set_Extensions.h", folder="STC_Extensions", has_target_file = False)),
-    "List_extensions" : ("STC_Extensions", CompileObj("List_Extensions.h", folder="STC_Extensions", has_target_file = False)),
-    "Common_extensions" : ("STC_Extensions", CompileObj("Common_Extensions.h", folder="STC_Extensions", has_target_file = False)),
-    "gFTL_functions/Set_extensions"  : ("gFTL_functions", CompileObj("Set_Extensions.inc", folder="gFTL_functions", has_target_file = False)),
+    "Set_extensions"  : ("STC_Extensions", CompileObj("Set_Extensions.h",
+                                                      folder="STC_Extensions",
+                                                      has_target_file = False,
+                                                      dependencies = (external_libs['stc'][1],))),
+    "List_extensions" : ("STC_Extensions", CompileObj("List_Extensions.h",
+                                                      folder="STC_Extensions",
+                                                      has_target_file = False,
+                                                      dependencies = (external_libs['stc'][1],))),
+    "Common_extensions" : ("STC_Extensions", CompileObj("Common_Extensions.h",
+                                                      folder="STC_Extensions",
+                                                      has_target_file = False,
+                                                      dependencies = (external_libs['stc'][1],))),
+    "gFTL_functions/Set_extensions"  : ("gFTL_functions", CompileObj("Set_Extensions.inc",
+                                                                     folder="gFTL_functions",
+                                                                     has_target_file = False,
+                                                                     dependencies = (external_libs['gFTL'][1],))),
+    "stc/cstr" : ("STC_Extensions", CompileObj("cstr.c", folder="STC_Extensions", dependencies = (external_libs['stc'][1],)))
 }
 internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_ndarrays.c",folder="cwrapper_ndarrays",
                                                              accelerators = ('python',),
@@ -121,7 +136,7 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     """
     # get lib path (stdlib_path/lib_name or ext_path/lib_name)
     if lib_folder in external_libs:
-        lib_path = os.path.join(ext_path, external_libs[lib_folder])
+        lib_path = os.path.join(ext_path, external_libs[lib_folder][0])
     else:
         lib_path = os.path.join(stdlib_path, lib_folder)
 
@@ -183,12 +198,16 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
                         extra_file = os.path.join(lib_dest_path, filename)
                         with open(extra_file, 'w', encoding="utf-8") as f:
                             f.writelines(contents)
-    return lib_dest_path
+
+    if lib_folder in external_libs and lib_folder != 'gFTL':
+        return pyccel_dirpath
+    else:
+        return lib_dest_path
 
 #==============================================================================
 def generate_extension_modules(import_key, import_node, pyccel_dirpath,
-                               includes, libs, libdirs, dependencies,
-                               accelerators, language):
+                               compiler, includes, libs, libdirs, dependencies,
+                               accelerators, language, verbose, convert_only):
     """
     Generate any new modules that describe extensions.
 
@@ -204,6 +223,8 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         be printed).
     pyccel_dirpath : str
         The folder where files are being saved.
+    compiler : Compiler
+        A compiler that can be used to compile dependencies.
     includes : iterable of strs
         Include directories paths.
     libs : iterable of strs
@@ -216,6 +237,10 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         Tool used to accelerate the code (e.g. openmp openacc).
     language : str
         The language in which code is being printed.
+    verbose : bool
+        Indicates whether additional information should be printed.
+    convert_only : bool, default=False
+        Indicates if the compilation step is required or not.
 
     Returns
     -------
@@ -228,10 +253,10 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
     if lib_name == 'gFTL_extensions':
         lib_name = 'gFTL'
         mod = import_node.source_module
-        printer = printer_registry[language]
         filename = os.path.join(pyccel_dirpath, import_key)+'.F90'
         folder = os.path.dirname(filename)
-        code = printer(filename).doprint(mod)
+        printer = printer_registry[language](filename)
+        code = printer.doprint(mod)
         if not os.path.exists(folder):
             os.mkdir(folder)
         with FileLock(f'{folder}.lock'):
@@ -239,12 +264,12 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
                 f.write(code)
 
         new_dependencies.append(CompileObj(os.path.basename(filename), folder=folder,
-                            includes=(os.path.join(pyccel_dirpath, 'gFTL'), *includes),
-                            libs=libs, libdirs=libdirs, dependencies=dependencies,
+                            includes=includes,
+                            libs=libs, libdirs=libdirs,
+                            dependencies=(*dependencies, external_libs['gFTL'][1]),
                             accelerators=accelerators))
-
-    if lib_name in external_libs:
-        copy_internal_library(lib_name, pyccel_dirpath)
+        manage_dependencies({'gFTL':None}, compiler, pyccel_dirpath, new_dependencies[-1],
+                language, verbose, convert_only)
 
     return new_dependencies
 
@@ -284,7 +309,7 @@ def recompile_object(compile_obj,
                 output_folder=compile_obj.source_folder,
                 verbose=verbose)
 
-def manage_dependencies(printer, compiler, pyccel_dirpath, mod_obj, language, verbose, convert_only = False):
+def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, language, verbose, convert_only = False):
     """
     Manage dependencies of the code to be compiled.
 
@@ -292,8 +317,8 @@ def manage_dependencies(printer, compiler, pyccel_dirpath, mod_obj, language, ve
 
     Parameters
     ----------
-    printer : CodePrinter
-        The printer that printed the code. This object describes dependencies from imports.
+    pyccel_imports : dict[str,Import]
+        A dictionary describing imports created by Pyccel that may imply dependencies.
     compiler : Compiler
         A compiler that can be used to compile dependencies.
     pyccel_dirpath : str
@@ -307,39 +332,54 @@ def manage_dependencies(printer, compiler, pyccel_dirpath, mod_obj, language, ve
     convert_only : bool, default=False
         Indicates if the compilation step is required or not.
     """
+    # Copy any necessary external libraries
+    for import_key in pyccel_imports:
+        lib_name = str(import_key).split('/', 1)[0]
+        if lib_name in external_libs:
+            lib_dest_path = copy_internal_library(lib_name, pyccel_dirpath)
+            external_libs[lib_name][1].reset_folder(lib_dest_path)
+
     # Iterate over the internal_libs list and determine if the printer
     # requires an internal lib to be included.
     for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
-        if lib_name in printer.get_additional_imports():
+        if lib_name in pyccel_imports:
 
             lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
+
+            # Pylint thinks stdlib is a str
+            if stdlib.dependencies: # pylint: disable=E1101
+                manage_dependencies({os.path.splitext(os.path.basename(d.source))[0]: None for d in stdlib.dependencies}, # pylint: disable=E1101
+                        compiler, pyccel_dirpath, stdlib, language, verbose, convert_only)
 
             # stop after copying lib to __pyccel__ directory for
             # convert only
             if convert_only:
                 continue
-
-            # Pylint determines wrong type
             stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
+
             # get the include folder path and library files
             recompile_object(stdlib,
-                              compiler = compiler,
-                              verbose  = verbose)
+                             compiler = compiler,
+                             verbose  = verbose)
 
             mod_obj.add_dependencies(stdlib)
 
     # Iterate over the external_libs list and determine if the printer
     # requires an external lib to be included.
-    for key, import_node in printer.get_additional_imports().items():
+    for key, import_node in pyccel_imports.items():
         deps = generate_extension_modules(key, import_node, pyccel_dirpath,
+                                          compiler     = compiler,
                                           includes     = mod_obj.includes,
                                           libs         = mod_obj.libs,
                                           libdirs      = mod_obj.libdirs,
                                           dependencies = mod_obj.dependencies,
                                           accelerators = mod_obj.accelerators,
-                                          language = language)
+                                          language = language,
+                                          verbose = verbose,
+                                          convert_only = convert_only)
         for d in deps:
             recompile_object(d,
-                              compiler = compiler,
-                              verbose  = verbose)
+                             compiler = compiler,
+                             verbose  = verbose)
             mod_obj.add_dependencies(d)
+

@@ -56,6 +56,7 @@ All notable changes to this project will be documented in this file.
 -   #2016 : Add support for translating arithmetic magic methods (methods cannot yet be used from Python).
 -   #1980 : Extend The C support for min and max to more than two variables
 -   #2081 : Add support for multi operator expressions
+-   #2061 : Add C support for string declarations.
 -   Add support for inhomogeneous tuple annotations.
 -   #1834 : Add support for `@property` decorator.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
@@ -90,6 +91,7 @@ All notable changes to this project will be documented in this file.
 -   #2041 : Include all type extension methods by default.
 -   #2082 : Allow the use of a list comprehension to initialise an array.
 -   #2094 : Fix slicing of array allocated in an if block.
+-   #2085 : Fix calling class methods before they are defined.
 
 ### Changed
 
@@ -124,6 +126,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Stop using ndarrays as an intermediate step to return arrays from Fortran code.
 -   \[INTERNALS\] Unify the strategy for handling additional imports in the printing stage for different languages.
 -   \[INTERNALS\] Make `Iterable` into a super-class instead of a storage class.
+-   \[INTERNALS\] Change the order of the constructor arguments of `FunctionDef`.
 
 ### Deprecated
 
