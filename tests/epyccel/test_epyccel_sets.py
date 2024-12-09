@@ -205,6 +205,18 @@ def test_update_multiple(language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
+def test_update_multiple_args(language):
+    def update_multiple():
+        a = {1, 2, 3}
+        a.update({4, 5}, {6, 7, 8, 9}, {10})
+        return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
+
+    epyccel_update = epyccel(update_multiple, language=language)
+    pyccel_result = epyccel_update()
+    python_result =  update_multiple()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
 
 def test_update_boolean_tuple(language):
     def update_boolean_tuple():
