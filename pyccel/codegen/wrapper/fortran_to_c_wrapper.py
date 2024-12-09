@@ -13,12 +13,15 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
 from pyccel.ast.bind_c import BindCClassProperty
+from pyccel.ast.builtins import VariableIterator
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
+from pyccel.ast.core import For
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
+from pyccel.ast.datatypes import HomogeneousSetType, PythonNativeInt
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.numpytypes import NumpyNDArrayType
@@ -419,14 +422,29 @@ class FortranToCWrapper(Wrapper):
 
             if not (var.is_alias or wrap_dotted):
                 # Create an array variable which can be passed to CLocFunc
-                ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
+                ptr_var = Variable(NumpyNDArrayType(var.dtype, var.rank, var.order), scope.get_new_name(name+'_ptr'),
                                     memory_handling='alias')
                 scope.insert_variable(ptr_var)
 
                 # Define the additional steps necessary to define and fill ptr_var
                 alloc = Allocate(ptr_var, shape=result.shape, status='unallocated')
-                copy = Assign(ptr_var, local_var)
-                self._additional_exprs.extend([alloc, copy])
+                if isinstance(local_var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+                    copy = Assign(ptr_var, local_var)
+                    self._additional_exprs.extend([alloc, copy])
+                elif isinstance(local_var.class_type, HomogeneousSetType):
+                    iterator = VariableIterator(local_var)
+                    elem = Variable(var.class_type.element_type, self.scope.get_new_name())
+                    idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+                    self.scope.insert_variable(elem)
+                    self.scope.insert_variable(idx)
+                    assign = Assign(idx, LiteralInteger(0))
+                    for_scope = self.scope.create_new_loop_scope()
+                    for_body = [Assign(IndexedElement(ptr_var, idx), elem)]
+                    fill_for = For((elem,), iterator, for_body, scope = for_scope)
+                    self._additional_exprs.extend([alloc, assign, fill_for])
+                else:
+                    raise errors.report(f"Don't know how to return an object of type {local_var.class_type} to C code.",
+                            severity='fatal', symbol = var)
             else:
                 ptr_var = var
 
