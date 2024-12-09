@@ -12,7 +12,7 @@ from collections import namedtuple
 import pyccel.decorators as pyccel_decorators
 from pyccel.errors.errors import Errors, PyccelError
 
-from .core          import (AsName, Import, FunctionDef, FunctionCall,
+from .core          import (AsName, Import, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
                             Concatenate, Module, PyccelFunctionDef)
 

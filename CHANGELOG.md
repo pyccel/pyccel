@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C support for list method `pop()`.
+-   #1663 : Add C support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
 -   #1877 : Add C and Fortran Support for set method `pop()`.
@@ -125,6 +126,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Stop using ndarrays as an intermediate step to return arrays from Fortran code.
 -   \[INTERNALS\] Unify the strategy for handling additional imports in the printing stage for different languages.
 -   \[INTERNALS\] Make `Iterable` into a super-class instead of a storage class.
+-   \[INTERNALS\] Change the order of the constructor arguments of `FunctionDef`.
 
 ### Deprecated
 

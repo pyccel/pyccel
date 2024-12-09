@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
 from pyccel import epyccel
+from pyccel.decorators import template
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = [
@@ -666,6 +667,36 @@ def test_set_iter_prod(language):
     python_result = set_iter_prod()
     assert python_result == pyccel_result
     assert isinstance(python_result, type(pyccel_result))
+
+def test_set_const_arg(stc_language):
+    @template('T', ['int', 'float', 'complex'])
+    def set_arg(arg : 'const set[T]', my_sum : 'T'):
+        for ai in arg:
+            my_sum += ai
+        return my_sum
+
+    epyccel_func = epyccel(set_arg, language = stc_language)
+    int_arg = {1,2,3,4,5,6,7}
+    float_arg = {1.5, 2.5, 3.5, 4.5, 6.7}
+    complex_arg = {1+0j,4j,2.5+2j}
+    for arg in (int_arg, float_arg, complex_arg):
+        start = type(next(iter(arg)))(0)
+        pyccel_result = epyccel_func(arg, start)
+        python_result = set_arg(arg, start)
+        assert python_result == pyccel_result
+        assert isinstance(pyccel_result, type(python_result))
+
+def test_set_arg(stc_language):
+    def set_arg(arg : 'set[int]', n : int):
+        arg.update(range(n))
+
+    epyccel_func = epyccel(set_arg, language = stc_language)
+    arg_pyc = {7,8,9,10}
+    arg_pyt = arg_pyc.copy()
+    n = 6
+    epyccel_func(arg_pyc, n)
+    set_arg(arg_pyt, n)
+    assert arg_pyc == arg_pyt
 
 def test_set_return(language):
     def set_return():

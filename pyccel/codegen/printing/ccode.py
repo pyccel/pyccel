@@ -325,6 +325,34 @@ class CCodePrinter(CodePrinter):
         self._current_module = None
         self._in_header = False
 
+    def sort_imports(self, imports):
+        """
+        Sort imports to avoid any errors due to bad ordering.
+
+        Sort imports. This is important so that types exist before they are used to create
+        container types. E.g. it is important that complex or inttypes be imported before
+        vec_int or vec_double_complex is declared.
+
+        Parameters
+        ----------
+        imports : list[Import]
+            A list of the imports.
+
+        Returns
+        -------
+        list[Import]
+            A sorted list of the imports.
+        """
+        import_src = [str(i.source) for i in imports]
+        stc_imports = [i for i in import_src if i.startswith('stc/')]
+        dependent_imports = [i for i in import_src if i in import_header_guard_prefix]
+        non_stc_imports = [i for i in import_src if i not in chain(stc_imports, dependent_imports)]
+        stc_imports.sort()
+        dependent_imports.sort()
+        non_stc_imports.sort()
+        sorted_imports = [imports[import_src.index(name)] for name in chain(non_stc_imports, stc_imports, dependent_imports)]
+        return sorted_imports
+
     def _format_code(self, lines):
         return self.indent_code(lines)
 
@@ -364,13 +392,16 @@ class CCodePrinter(CodePrinter):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
-        if isinstance(getattr(a, 'dtype', None), CustomDataType) and a.is_argument:
-            return True
-
         if not isinstance(a, Variable):
             return False
-        return (a.is_alias and not isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType))) \
-                or a.is_optional or \
+        if isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
+            return a.is_optional or any(a is bi for b in self._additional_args for bi in b)
+
+        if isinstance(a.class_type, (CustomDataType, HomogeneousContainerType, DictType)) \
+                and a.is_argument and not a.is_const:
+            return True
+
+        return a.is_alias or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
     #========================== Numpy Elements ===============================#
@@ -745,7 +776,7 @@ class CCodePrinter(CodePrinter):
             op = '<' if isinstance(expr, PythonMin) else '>'
             return f"({arg1} {op} {arg2} ? {arg1} : {arg2})"
         elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
-            key = self.get_declare_type(arg[0])
+            key = self.get_c_type(arg[0].class_type)
             self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
             self.add_import(Import('Common_extensions',
                                    AsName(VariableTypeAnnotation(arg.dtype), key),
@@ -851,6 +882,7 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
+        imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self._in_header = False
@@ -2658,6 +2690,7 @@ class CCodePrinter(CodePrinter):
         decs = ''.join(self._print(Declare(v)) for v in variables)
 
         imports = [*expr.imports, *self._additional_imports.values()]
+        imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
@@ -2724,18 +2757,18 @@ class CCodePrinter(CodePrinter):
         return f'{var_type}_pop({set_var})'
 
     def _print_SetClear(self, expr):
-        var_type = self.get_declare_type(expr.set_variable)
+        var_type = self.get_c_type(expr.set_variable.class_type)
         set_var = self._print(ObjectAddress(expr.set_variable))
         return f'{var_type}_clear({set_var});\n'
 
     def _print_SetAdd(self, expr):
-        var_type = self.get_declare_type(expr.set_variable)
+        var_type = self.get_c_type(expr.set_variable.class_type)
         set_var = self._print(ObjectAddress(expr.set_variable))
         arg = self._print(expr.args[0])
         return f'{var_type}_push({set_var}, {arg});\n'
 
     def _print_SetCopy(self, expr):
-        var_type = self.get_declare_type(expr.set_variable)
+        var_type = self.get_c_type(expr.set_variable.class_type)
         set_var = self._print(expr.set_variable)
         return f'{var_type}_clone({set_var})'
 

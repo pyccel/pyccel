@@ -510,8 +510,8 @@ class PyModule(Module):
         self._external_funcs = external_funcs
         self._declarations = declarations
         if import_func is None:
-            self._import_func = FunctionDef(f'{name}_import', (),
-                            (FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)),), ())
+            self._import_func = FunctionDef(f'{name}_import', (), (),
+                            (FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)),))
         else:
             self._import_func = import_func
         super().__init__(name, *args, init_func = init_func, **kwargs)
@@ -915,7 +915,7 @@ class PyModInitFunc(FunctionDef):
 
     def __init__(self, name, body, static_vars, scope):
         self._static_vars = static_vars
-        super().__init__(name, (), (), body, scope=scope)
+        super().__init__(name, (), body, scope=scope)
 
     @property
     def declarations(self):
@@ -1143,7 +1143,7 @@ PyTuple_SetItem = FunctionDef(name = 'PyTuple_SetItem',
                         results = [FunctionDefResult(Variable(CNativeInt(), 'i'))])
 
 #-------------------------------------------------------------------
-#                          Set functions
+#                         Set functions
 #-------------------------------------------------------------------
 
 # https://docs.python.org/3/c-api/set.html#c.PySet_New
@@ -1158,6 +1158,36 @@ PySet_Add = FunctionDef(name = 'PySet_Add',
                                  FunctionDefArgument(Variable(PyccelPyObject(), 'key', memory_handling='alias'))],
                     results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
                     body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Check
+PySet_Check = FunctionDef(name = 'PySet_Check',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(CNativeInt(), 'i'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Size
+PySet_Size = FunctionDef(name = 'PySet_Size',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/object.html#c.PyObject_GetIter
+PySet_GetIter = FunctionDef(name = 'PyObject_GetIter',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Clear
+PySet_Clear = FunctionDef(name = 'PySet_Clear',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='set', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))])
+
+# https://docs.python.org/3/c-api/iter.html#c.PyIter_Check
+PyIter_Next = FunctionDef(name = 'PyIter_Next',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c

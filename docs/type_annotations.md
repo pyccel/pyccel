@@ -82,7 +82,15 @@ a : set[int] = {1, 2}
 b : set[bool] = {False, True}
 c : set[float] = {}
 ```
-So far sets can be declared as local variables or as results of functions.
+Sets can be declared as local variables, arguments or results of functions translated to C. An argument can be marked as constant using a string annotation or (in a module) using the `Final` qualifier:
+```python
+def f(a : 'const set[int]'):
+    pass
+
+from typing import Final
+def g(b : Final[set[bool]]):
+    pass
+```
 
 ## Dictionaries
 

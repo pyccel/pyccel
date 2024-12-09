@@ -1007,8 +1007,8 @@ class SyntaxParser(BasicParser):
         func = cls(
                name,
                arguments,
-               results,
                body,
+               results,
                is_pure=is_pure,
                is_elemental=is_elemental,
                is_private=is_private,
