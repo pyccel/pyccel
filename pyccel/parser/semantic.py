@@ -5326,7 +5326,7 @@ class SemanticParser(BasicParser):
             iterable_args = [a.value for a in expr.name[1].args]
             set_obj = expr.name[0]
         elif isinstance(expr, AugAssign):
-            iterable = [expr.rhs]
+            iterable_args = [expr.rhs]
             set_obj = expr.lhs
         else:
             raise NotImplementedError(f"Function doesn't handle {type(expr)}")
