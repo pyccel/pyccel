@@ -2048,11 +2048,11 @@ class FunctionDef(ScopedAstNode):
     arguments : iterable of FunctionDefArgument
         The arguments to the function.
 
-    results : iterable
-        The direct outputs of the function.
-
     body : iterable
         The body of the function.
+
+    results : iterable
+        The direct outputs of the function.
 
     global_vars : list of Symbols
         Variables which will not be passed into the function.
@@ -2162,8 +2162,9 @@ class FunctionDef(ScopedAstNode):
         self,
         name,
         arguments,
-        results,
         body,
+        results = (),
+        *,
         global_vars=(),
         cls_name=None,
         is_static=False,
@@ -2211,15 +2212,10 @@ class FunctionDef(ScopedAstNode):
 
         if iterable(body):
             body = CodeBlock(body)
-        elif not isinstance(body,CodeBlock):
-            raise TypeError('body must be an iterable or a CodeBlock')
+        assert isinstance(body,CodeBlock)
 
         # results
-
-        if not iterable(results):
-            raise TypeError('results must be an iterable')
-        if not all(isinstance(r, FunctionDefResult) for r in results):
-            raise TypeError('results must be all be FunctionDefResults')
+        assert iterable(results) and all(isinstance(r, FunctionDefResult) for r in results)
 
         if cls_name:
 
@@ -2528,28 +2524,28 @@ class FunctionDef(ScopedAstNode):
         args = (
         self._name,
         self._arguments,
-        self._results,
         self._body)
 
         kwargs = {
-        'global_vars':self._global_vars,
-        'cls_name':self._cls_name,
-        'is_static':self._is_static,
-        'imports':self._imports,
-        'decorators':self._decorators,
-        'headers':self._headers,
-        'is_recursive':self._is_recursive,
-        'is_pure':self._is_pure,
-        'is_elemental':self._is_elemental,
-        'is_private':self._is_private,
-        'is_header':self._is_header,
-        'functions':self._functions,
-        'is_external':self._is_external,
-        'is_imported':self._is_imported,
-        'is_semantic':self._is_semantic,
-        'interfaces':self._interfaces,
-        'docstring':self._docstring,
-        'scope':self._scope}
+            'results':self._results,
+            'global_vars':self._global_vars,
+            'cls_name':self._cls_name,
+            'is_static':self._is_static,
+            'imports':self._imports,
+            'decorators':self._decorators,
+            'headers':self._headers,
+            'is_recursive':self._is_recursive,
+            'is_pure':self._is_pure,
+            'is_elemental':self._is_elemental,
+            'is_private':self._is_private,
+            'is_header':self._is_header,
+            'functions':self._functions,
+            'is_external':self._is_external,
+            'is_imported':self._is_imported,
+            'is_semantic':self._is_semantic,
+            'interfaces':self._interfaces,
+            'docstring':self._docstring,
+            'scope':self._scope}
         return args, kwargs
 
     def __reduce_ex__(self, i):
@@ -3077,7 +3073,7 @@ class FunctionAddress(FunctionDef):
         memory_handling='stack',
         **kwargs
         ):
-        super().__init__(name, arguments, results, body=[], scope=None, **kwargs)
+        super().__init__(name, arguments, body=[], results=results, scope=None, **kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
