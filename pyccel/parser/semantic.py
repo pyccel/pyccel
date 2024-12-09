@@ -5321,36 +5321,42 @@ class SemanticParser(BasicParser):
             CodeBlock or For containing SetAdd objects.
         """
         if isinstance(expr, DottedName):
-            iterable = expr.name[1].args[0].value
+            iterable_args = [a.value for a in expr.name[1].args]
             set_obj = expr.name[0]
         elif isinstance(expr, AugAssign):
-            iterable = expr.rhs
+            iterable = [expr.rhs]
             set_obj = expr.lhs
         else:
             raise NotImplementedError(f"Function doesn't handle {type(expr)}")
 
-        if isinstance(iterable, (PythonList, PythonSet, PythonTuple)):
-            list_variable = self._visit(set_obj)
-            added_list = self._visit(iterable)
-            try:
-                store = [SetAdd(list_variable, a) for a in added_list]
-            except TypeError as e:
-                msg = str(e)
-                errors.report(msg, symbol=expr, severity='fatal')
-            return CodeBlock(store)
+        code = []
+        for iterable in iterable_args:
+            if isinstance(iterable, (PythonList, PythonSet, PythonTuple)):
+                list_variable = self._visit(set_obj)
+                added_list = self._visit(iterable)
+                try:
+                    code.extend(SetAdd(list_variable, a) for a in added_list)
+                except TypeError as e:
+                    msg = str(e)
+                    errors.report(msg, symbol=expr, severity='fatal')
+            else:
+                pyccel_stage.set_stage('syntactic')
+                for_target = self.scope.get_new_name()
+                arg = FunctionCallArgument(for_target)
+                func_call = FunctionCall('add', [arg])
+                dotted = DottedName(set_obj, func_call)
+                lhs = PyccelSymbol('_', is_temp=True)
+                assign = Assign(lhs, dotted)
+                assign.set_current_ast(expr.python_ast)
+                body = CodeBlock([assign])
+                for_obj = For(for_target, iterable, body)
+                pyccel_stage.set_stage('semantic')
+                code.append(self._visit(for_obj))
+
+        if len(code) == 1:
+            return code[0]
         else:
-            pyccel_stage.set_stage('syntactic')
-            for_target = self.scope.get_new_name()
-            arg = FunctionCallArgument(for_target)
-            func_call = FunctionCall('add', [arg])
-            dotted = DottedName(set_obj, func_call)
-            lhs = PyccelSymbol('_', is_temp=True)
-            assign = Assign(lhs, dotted)
-            assign.set_current_ast(expr.python_ast)
-            body = CodeBlock([assign])
-            for_obj = For(for_target, iterable, body)
-            pyccel_stage.set_stage('semantic')
-            return self._visit(for_obj)
+            return CodeBlock(code)
 
     def _build_SetUnion(self, expr, function_call_args):
         """
