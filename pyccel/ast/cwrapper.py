@@ -510,8 +510,8 @@ class PyModule(Module):
         self._external_funcs = external_funcs
         self._declarations = declarations
         if import_func is None:
-            self._import_func = FunctionDef(f'{name}_import', (),
-                            (FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)),), ())
+            self._import_func = FunctionDef(f'{name}_import', (), (),
+                            (FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)),))
         else:
             self._import_func = import_func
         super().__init__(name, *args, init_func = init_func, **kwargs)
@@ -915,7 +915,7 @@ class PyModInitFunc(FunctionDef):
 
     def __init__(self, name, body, static_vars, scope):
         self._static_vars = static_vars
-        super().__init__(name, (), (), body, scope=scope)
+        super().__init__(name, (), body, scope=scope)
 
     @property
     def declarations(self):

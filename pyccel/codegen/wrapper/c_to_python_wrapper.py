@@ -455,8 +455,8 @@ class CToPythonWrapper(Wrapper):
                         "which indicates which function should be called.")
 
         # Build the function
-        func = FunctionDef(name, [FunctionDefArgument(a) for a in args], [FunctionDefResult(type_indicator)],
-                            body, docstring=docstring, scope=func_scope)
+        func = FunctionDef(name, [FunctionDefArgument(a) for a in args], body,
+                            [FunctionDefResult(type_indicator)], docstring=docstring, scope=func_scope)
 
         return func, argument_type_flags
 
@@ -787,7 +787,7 @@ class CToPythonWrapper(Wrapper):
         result = func_scope.get_temporary_variable(CNativeInt())
         self.exit_scope()
         self._error_exit_code = Nil()
-        import_func = FunctionDef(func_name, (), (FunctionDefResult(result),), body, is_static=True, scope = func_scope)
+        import_func = FunctionDef(func_name, (), body, (FunctionDefResult(result),), is_static=True, scope = func_scope)
 
         return API_var, import_func
 
@@ -883,8 +883,8 @@ class CToPythonWrapper(Wrapper):
 
         self.exit_scope()
 
-        return PyFunctionDef(func_name, func_args, func_results,
-                             body, scope=func_scope, original_function = None)
+        return PyFunctionDef(func_name, func_args, body, func_results,
+                             scope=func_scope, original_function = None)
 
     def _get_class_initialiser(self, init_function, cls_dtype):
         """
@@ -980,7 +980,7 @@ class CToPythonWrapper(Wrapper):
             if not a.bound_argument:
                 self._python_object_map.pop(a)
 
-        function = PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope,
+        function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = init_function.docstring, original_function = original_func)
 
         self.scope.functions[func_name] = function
@@ -1046,7 +1046,7 @@ class CToPythonWrapper(Wrapper):
 
         self.exit_scope()
 
-        function = PyFunctionDef(func_name, [FunctionDefArgument(func_arg)], [], body, scope=func_scope,
+        function = PyFunctionDef(func_name, [FunctionDefArgument(func_arg)], body, scope=func_scope,
                 original_function = original_func)
 
         self.scope.functions[func_name] = function
@@ -1225,24 +1225,24 @@ class CToPythonWrapper(Wrapper):
         # Add external functions for functions wrapping array variables
         for v in expr.variable_wrappers:
             f = v.wrapper_function
-            external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_header = True, scope = Scope()))
+            external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = Scope()))
 
         # Add external functions for normal functions
         for f in expr.funcs:
-            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, f.results, [], is_header = True, scope = Scope()))
+            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = Scope()))
 
         for c in expr.classes:
             m = c.new_func
-            external_funcs.append(FunctionDef(m.name, m.arguments, m.results, [], is_header = True, scope = Scope()))
+            external_funcs.append(FunctionDef(m.name, m.arguments, [], m.results, is_header = True, scope = Scope()))
             for m in c.methods:
-                external_funcs.append(FunctionDef(m.name, m.arguments, m.results, [], is_header = True, scope = Scope()))
+                external_funcs.append(FunctionDef(m.name, m.arguments, [], m.results, is_header = True, scope = Scope()))
             for i in c.interfaces:
                 for f in i.functions:
-                    external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_header = True, scope = Scope()))
+                    external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = Scope()))
             for a in c.attributes:
                 for f in (a.getter, a.setter):
                     if f:
-                        external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_header = True, scope = Scope()))
+                        external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = Scope()))
         pymod.external_funcs = external_funcs
 
         return pymod
@@ -1326,8 +1326,8 @@ class CToPythonWrapper(Wrapper):
 
         interface_func = FunctionDef(func_name,
                                      [FunctionDefArgument(a) for a in func_args],
-                                     [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))],
                                      body,
+                                     [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))],
                                      scope=func_scope)
         for a in python_args:
             self._python_object_map.pop(a)
@@ -1467,7 +1467,7 @@ class CToPythonWrapper(Wrapper):
             if not a.bound_argument:
                 self._python_object_map.pop(a)
 
-        function = PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope,
+        function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = expr.docstring, original_function = original_func)
 
         self.scope.functions[func_name] = function
@@ -1712,7 +1712,7 @@ class CToPythonWrapper(Wrapper):
         self.exit_scope()
 
         args = [FunctionDefArgument(a) for a in getter_args]
-        getter = PyFunctionDef(getter_name, args, (FunctionDefResult(getter_result),), getter_body,
+        getter = PyFunctionDef(getter_name, args, getter_body, (FunctionDefResult(getter_result),),
                                 original_function = expr, scope = getter_scope)
 
         # ----------------------------------------------------------------------------------
@@ -1760,7 +1760,7 @@ class CToPythonWrapper(Wrapper):
         self.exit_scope()
 
         args = [FunctionDefArgument(a) for a in setter_args]
-        setter = PyFunctionDef(setter_name, args, setter_result, setter_body,
+        setter = PyFunctionDef(setter_name, args, setter_body, setter_result,
                                 original_function = expr, scope = setter_scope)
         self._error_exit_code = Nil()
         self._python_object_map.pop(new_set_val_arg)
@@ -1840,7 +1840,7 @@ class CToPythonWrapper(Wrapper):
         self.exit_scope()
 
         args = [FunctionDefArgument(a) for a in getter_args]
-        getter = PyFunctionDef(getter_name, args, (FunctionDefResult(getter_result),), getter_body,
+        getter = PyFunctionDef(getter_name, args, getter_body, (FunctionDefResult(getter_result),),
                                 original_function = expr.getter, scope = getter_scope)
 
         # ----------------------------------------------------------------------------------
@@ -1886,7 +1886,7 @@ class CToPythonWrapper(Wrapper):
             self.exit_scope()
 
             args = [FunctionDefArgument(a) for a in setter_args]
-            setter = PyFunctionDef(setter_name, args, setter_result, setter_body,
+            setter = PyFunctionDef(setter_name, args, setter_body, setter_result,
                                     original_function = expr, scope = setter_scope)
         else:
             setter = None
