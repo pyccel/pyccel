@@ -3597,7 +3597,7 @@ class SemanticParser(BasicParser):
         if expr.lhs == '__all__':
             self.scope.remove_variable(lhs[0])
             self._allocs[-1].discard(lhs[0])
-            if isinstance(lhs.class_type, HomogeneousListType):
+            if isinstance(lhs[0].class_type, HomogeneousListType):
                 # Remove the last element of the errors (if it is a warning)
                 # This will be the list of list warning
                 error_info_map = errors.error_info_map[os.path.basename(errors.target)]
