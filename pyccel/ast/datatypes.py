@@ -789,6 +789,8 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
         if element_type.rank > 0:
+            # When this error is removed the pop() of the warning must also be removed
+            # in parser/semantic.py before the creation of the AllDeclaration node
             errors.report("Lists of non-scalar objects are not yet fully supported. " +
                     "Using containers in lists may lead to bugs such as memory leaks",
                     symbol=self, severity="warning")
