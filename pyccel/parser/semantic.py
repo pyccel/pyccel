@@ -2392,7 +2392,7 @@ class SemanticParser(BasicParser):
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
 
-            init_func = FunctionDef(init_func_name, [], [], [init_func_body],
+            init_func = FunctionDef(init_func_name, [], [init_func_body],
                     global_vars = variables, scope=init_scope)
             self.insert_function(init_func)
 
@@ -2416,7 +2416,7 @@ class SemanticParser(BasicParser):
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 # Ensure that the function is correctly defined within the namespaces
                 scope = self.create_new_function_scope(free_func_name)
-                free_func = FunctionDef(free_func_name, [], [], [free_func_body],
+                free_func = FunctionDef(free_func_name, [], [free_func_body],
                                     global_vars = variables, scope = scope)
                 self.exit_function_scope()
                 self.insert_function(free_func)
@@ -2456,7 +2456,7 @@ class SemanticParser(BasicParser):
 
                             args = [FunctionDefArgument(a) for a in args]
                             results = [FunctionDefResult(r) for r in results]
-                            func_defs.append(FunctionDef(v.name, args, results, [], is_external = is_external, is_header = True))
+                            func_defs.append(FunctionDef(v.name, args, [], results, is_external = is_external, is_header = True))
 
                         if len(func_defs) == 1:
                             F = func_defs[0]
@@ -4126,8 +4126,10 @@ class SemanticParser(BasicParser):
                 return [ann]
 
         # Filter out unused templates
-        templatable_args = [unpack(a.annotation) for a in expr.arguments if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation))]
-        arg_annotations = [annot for a in templatable_args for annot in a if isinstance(annot, SyntacticTypeAnnotation)]
+        templatable_args = [unpack(a.annotation) for a in expr.arguments \
+                if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation, TypingFinal))]
+        arg_annotations = [annot for a in templatable_args for annot in a \
+                if isinstance(annot, (SyntacticTypeAnnotation, TypingFinal))]
         used_type_names = set(t for a in arg_annotations for t in a.get_attribute_nodes(PyccelSymbol))
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
@@ -4224,7 +4226,7 @@ class SemanticParser(BasicParser):
             # insert the FunctionDef into the scope
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
-            recursive_func_obj = FunctionDef(name, arguments, results, [])
+            recursive_func_obj = FunctionDef(name, arguments, [], results)
             self.insert_function(recursive_func_obj)
 
             # Create a new list that store local variables for each FunctionDef to handle nested functions
@@ -4352,8 +4354,8 @@ class SemanticParser(BasicParser):
                 cls = FunctionDef
             func = cls(name,
                     arguments,
-                    results,
                     body,
+                    results,
                     **func_kwargs)
             if not is_recursive:
                 recursive_func_obj.invalidate_node()
@@ -4477,7 +4479,7 @@ class SemanticParser(BasicParser):
             argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
             self.scope.insert_symbol('__init__')
             scope = self.create_new_function_scope('__init__')
-            init_func = FunctionDef('__init__', [argument], (), [], cls_name=cls.name, scope=scope)
+            init_func = FunctionDef('__init__', [argument], (), cls_name=cls.name, scope=scope)
             self.exit_function_scope()
             self.insert_function(init_func)
             cls.add_new_method(init_func)
@@ -4507,7 +4509,7 @@ class SemanticParser(BasicParser):
             argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
             self.scope.insert_symbol('__del__')
             scope = self.create_new_function_scope('__del__')
-            del_method = FunctionDef('__del__', [argument], (), [Pass()], scope=scope)
+            del_method = FunctionDef('__del__', [argument], [Pass()], scope=scope)
             self.exit_function_scope()
             self.insert_function(del_method)
             cls.add_new_method(del_method)
@@ -4791,7 +4793,7 @@ class SemanticParser(BasicParser):
 
                 arguments = [FunctionDefArgument(self._visit(a)[0]) for a in syntactic_args]
                 results = [FunctionDefResult(self._visit(r)[0]) for r in syntactic_results]
-                interfaces.append(FunctionDef(f_name, arguments, results, []))
+                interfaces.append(FunctionDef(f_name, arguments, [], results))
 
             # TODO -> Said: must handle interface
 
