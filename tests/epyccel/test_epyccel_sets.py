@@ -179,14 +179,14 @@ def test_Discard_wrong_arg(python_only_language):
     python_result = Discard_wrong_arg()
     assert python_result == pyccel_result
 
-def test_update_basic(python_only_language):
+def test_update_basic(language):
     def update_basic():
         a = {1, 2, 3}
         b = {4, 5, 6}
         a.update(b)
         return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
 
-    epyccel_update = epyccel(update_basic, language=python_only_language)
+    epyccel_update = epyccel(update_basic, language=language)
     pyccel_result = epyccel_update()
     python_result =  update_basic()
     assert python_result[0] == pyccel_result[0]
@@ -198,6 +198,18 @@ def test_update_multiple(language):
         a.update({4, 5})
         a.update({6, 7, 8, 9})
         a.update({10})
+        return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
+
+    epyccel_update = epyccel(update_multiple, language=language)
+    pyccel_result = epyccel_update()
+    python_result =  update_multiple()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_update_multiple_args(language):
+    def update_multiple():
+        a = {1, 2, 3}
+        a.update({4, 5}, {6, 7, 8, 9}, {10})
         return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
 
     epyccel_update = epyccel(update_multiple, language=language)
@@ -577,18 +589,6 @@ def test_set_intersection_operator(python_only_language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Update not fully implemented yet. See #2022"),
-            pytest.mark.fortran]
-        ),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Update not fully implemented yet. See #2022"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_set_union_augoperator(language):
     def union_int():
         a = {1,2,3,4}
