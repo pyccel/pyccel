@@ -26,7 +26,7 @@ from pyccel.ast.datatypes import HomogeneousListType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.numpytypes import NumpyNDArrayType
-from pyccel.ast.operators import PyccelIsNot, PyccelMul
+from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
 from pyccel.ast.numpyext import NumpyNDArrayType
 from pyccel.errors.errors import Errors
@@ -443,7 +443,8 @@ class FortranToCWrapper(Wrapper):
                         iterator.set_loop_counter(idx)
                     assign = Assign(idx, LiteralInteger(0))
                     for_scope = self.scope.create_new_loop_scope()
-                    for_body = [Assign(IndexedElement(ptr_var, idx), elem)]
+                    for_body = [Assign(IndexedElement(ptr_var, idx), elem),
+                                Assign(idx, PyccelAdd(idx, LiteralInteger(1)))]
                     fill_for = For((elem,), iterator, for_body, scope = for_scope)
                     self._additional_exprs.extend([alloc, assign, fill_for])
                 else:
