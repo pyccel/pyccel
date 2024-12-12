@@ -437,14 +437,14 @@ class FortranToCWrapper(Wrapper):
                     elem = Variable(var.class_type.element_type, self.scope.get_new_name())
                     idx = Variable(PythonNativeInt(), self.scope.get_new_name())
                     self.scope.insert_variable(elem)
-                    if isinstance(local_var.class_type, HomogeneousSetType):
-                        self.scope.insert_variable(idx)
-                    else:
-                        iterator.set_loop_counter(idx)
                     assign = Assign(idx, LiteralInteger(0))
                     for_scope = self.scope.create_new_loop_scope()
-                    for_body = [Assign(IndexedElement(ptr_var, idx), elem),
-                                Assign(idx, PyccelAdd(idx, LiteralInteger(1)))]
+                    for_body = [Assign(IndexedElement(ptr_var, idx), elem)]
+                    if isinstance(local_var.class_type, HomogeneousSetType):
+                        self.scope.insert_variable(idx)
+                        for_body.append(Assign(idx, PyccelAdd(idx, LiteralInteger(1))))
+                    else:
+                        iterator.set_loop_counter(idx)
                     fill_for = For((elem,), iterator, for_body, scope = for_scope)
                     self._additional_exprs.extend([alloc, assign, fill_for])
                 else:
