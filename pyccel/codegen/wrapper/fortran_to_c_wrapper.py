@@ -429,7 +429,7 @@ class FortranToCWrapper(Wrapper):
 
                 # Define the additional steps necessary to define and fill ptr_var
                 alloc = Allocate(ptr_var, shape=result.shape, status='unallocated')
-                if isinstance(local_var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+                if isinstance(local_var.class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
                     copy = Assign(ptr_var, local_var)
                     self._additional_exprs.extend([alloc, copy])
                 elif isinstance(local_var.class_type, (HomogeneousSetType, HomogeneousListType)):
