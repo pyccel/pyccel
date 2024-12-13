@@ -56,9 +56,11 @@ class FunctionalFor(TypedAstNode):
     target_type : PyccelSymbol, optional
         The type of the result of the functional for. This is useful at
         the syntactic stage to pass along the final type of the lhs (list/set/array/etc).
+    condition : If
+        The condition ....
     """
     __slots__ = ('_loops','_expr', '_lhs', '_indices','_index',
-            '_shape','_class_type', '_target_type')
+            '_shape','_class_type', '_target_type', '_conditions')
     _attribute_nodes = ('_loops','_expr', '_lhs', '_indices','_index')
 
     def __init__(
@@ -68,7 +70,8 @@ class FunctionalFor(TypedAstNode):
         lhs=None,
         indices=None,
         index=None,
-        target_type=None
+        target_type=None,
+        conditions=None
         ):
         self._loops   = loops
         self._expr    = expr
@@ -76,6 +79,7 @@ class FunctionalFor(TypedAstNode):
         self._indices = indices
         self._index   = index
         self._target_type = target_type
+        self._conditions = conditions
         super().__init__()
 
         if pyccel_stage != 'syntactic':
@@ -111,6 +115,10 @@ class FunctionalFor(TypedAstNode):
         the syntactic stage to pass along the final type of the lhs (list/set/array/etc).
         """
         return self._target_type
+
+    @property
+    def conditions(self):
+        return self._conditions
 
 #==============================================================================
 class GeneratorComprehension(FunctionalFor):

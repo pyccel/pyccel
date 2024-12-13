@@ -1144,20 +1144,22 @@ class SyntaxParser(BasicParser):
     def _visit_comprehension(self, stmt):
 
         scope = self.create_new_loop_scope()
-        body = []
+        condition = None
 
         self._in_lhs_assign = True
         iterator = self._visit(stmt.target)
         self._in_lhs_assign = False
         iterable = self._visit(stmt.iter)
 
+        if stmt.ifs:
+            from functools import reduce
+            cond = reduce(PyccelAnd, [self._visit(if_cond)
+                                      for if_cond in stmt.ifs])
+            condition = If(IfSection(cond, CodeBlock([])))
+
         self.exit_loop_scope()
 
-        if stmt.ifs:
-            cond = self._visit(stmt.ifs[0])
-            body.append(If(IfSection(cond, CodeBlock([]))))
-
-        expr = For(iterator, iterable, body, scope=scope)
+        expr = (For(iterator, iterable, [], scope=scope), condition) 
         return expr
 
     def _visit_ListComp(self, stmt):
@@ -1178,8 +1180,15 @@ class SyntaxParser(BasicParser):
         """
 
         result = self._visit(stmt.elt)
+        output_type = None
 
-        generators = list(self._visit(stmt.generators))
+        comprehensions = list(self._visit(stmt.generators))
+        generators, conditions = zip(*comprehensions)
+        generators, conditions = map(list, [generators, conditions])
+
+        parent = self._context[-2]    
+        if isinstance(parent, ast.Call):
+            output_type = self._visit(parent.func)
 
         success = isinstance(self._context[-2],ast.Assign)
         if not success and len(self._context) > 2:
@@ -1198,67 +1207,23 @@ class SyntaxParser(BasicParser):
                 lhs = lhs[0]
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
-        parent = self._context[-2]
-        if isinstance(parent, ast.Call):
-            output_type = self._visit(parent.func)
-        else:
-            output_type = 'list'
-        operations = []
-        if output_type != 'list':
-            index = PyccelSymbol('_', is_temp=True)
-            args = [index]
-            target = IndexedElement(lhs, *args)
-            target = Assign(target, result)
-            assign1 = Assign(index, LiteralInteger(0))
-            assign1.set_current_ast(stmt)
-            target.set_current_ast(stmt)
-            operations.append(target)
-            assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
-            assign2.set_current_ast(stmt)
-            operations.append(assign2)
-        else:
-            operations.append(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
 
-        conditions = []
-        for generator in generators:
-            if generator.body.body:
-                assert isinstance(generator.body.body[0], If)
-                for ifSection in generator.body.body[0].blocks:
-                    conditions.append(ifSection.condition)
-                generator._body = CodeBlock([]) # pylint: disable=protected-access
+        indices = [generator.target for generator in generators]
 
-        if conditions:
-            if output_type != 'list':
-                errors.report("Cannot handle if statements in list comprehensions if lhs is a numpy array.\
-                              List length cannot be calculated.\n" + PYCCEL_RESTRICTION_TODO,
-                               symbol=stmt, severity='error')
-            else:
-                from functools import reduce
-                condition = reduce(PyccelAnd, conditions)
-                generators[-1].insert2body(If(IfSection(condition,
-                                                    [operations[0]])))
-        else:
-            for operation in operations:
-                generators[-1].insert2body(operation)
-
-        indices = [generators[-1].target]
-        while len(generators) > 1:
-            F = generators.pop()
-            generators[-1].insert2body(F)
-            indices.append(generators[-1].target)
-        indices = indices[::-1]
-
-        if output_type == 'list':
-            return FunctionalFor([generators[-1]], result, lhs,
-                                indices, target_type = output_type)
-        return FunctionalFor([assign1, generators[-1]], result, lhs,
-                            indices, index, target_type = output_type)
+        return FunctionalFor(generators, result, lhs, indices,
+                             conditions=conditions,
+                             target_type=output_type)
 
     def _visit_GeneratorExp(self, stmt):
-
+        
+        conditions = []
+        generators = []
+        indices = []
+        condition = None
+        
         result = self._visit(stmt.elt)
 
-        generators = self._visit(stmt.generators)
+        comprehensions = self._visit(stmt.generators)
         parent = self._context[-2]
         if not isinstance(parent, ast.Call):
             raise NotImplementedError("GeneratorExp is not the argument of a function call")
@@ -1281,20 +1246,29 @@ class SyntaxParser(BasicParser):
             body = Assign(lhs, body)
 
         body.set_current_ast(parent)
-        indices = []
-        generators = list(generators)
+
+        for generator, condition in comprehensions:
+            if condition:
+                conditions.append(condition)
+            generators.append(generator)
+
         while len(generators) > 0:
             indices.append(generators[-1].target)
             generators[-1].insert2body(body)
             body = generators.pop()
 
         indices = indices[::-1]
+
+        if conditions:
+            from functools import reduce
+            condition = reduce(PyccelAnd, conditions)
+
         if name == 'sum':
-            expr = FunctionalSum(body, result, lhs, indices)
+            expr = FunctionalSum(body, result, lhs, indices, condition=condition)
         elif name == 'min':
-            expr = FunctionalMin(body, result, lhs, indices)
+            expr = FunctionalMin(body, result, lhs, indices, condition=condition)
         elif name == 'max':
-            expr = FunctionalMax(body, result, lhs, indices)
+            expr = FunctionalMax(body, result, lhs, indices, condition=condition)
         else:
             expr = EmptyNode()
             errors.report(PYCCEL_RESTRICTION_TODO,

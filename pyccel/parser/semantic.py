@@ -1907,7 +1907,7 @@ class SemanticParser(BasicParser):
         # Iterate over the loops
         # This provides the definitions of iterators as well
         # as the central expression
-        loops = [self._visit(expr.loops)]
+        loops = [self._visit(loops)]
 
         # If necessary add additional expressions corresponding
         # to nested GeneratorComprehensions
@@ -3676,29 +3676,30 @@ class SemanticParser(BasicParser):
         pyccel.ast.basic.CodeBlock
             A code block containing the equivalent loops and necessary variable allocations for the given `FunctionalFor` expression.
         """
+        '''
         if expr.target_type != 'list':
             old_index   = expr.index
             new_index   = self.scope.get_new_name()
             expr.substitute(old_index, new_index)
             index = new_index
-
+        '''
         target  = expr.expr
         indices = []
         dims = []
         idx_subs = {}
         tmp_used_names = self.scope.all_used_symbols.copy()
-        body = expr.loops[0 if expr.target_type == 'list' else 1]
         i = 0
+        loops = list(expr.loops)
 
         # Inner function to handle PythonNativeInt variables
-        def handle_int_loop_variable(var_name):
+        def handle_int_loop_variable(var_name, var_scope):
             indices.append(var_name)
-            var = self._create_variable(var_name, PythonNativeInt(), None, {})
+            var = self._create_variable(var_name, PythonNativeInt(), None, {},insertion_scope=var_scope)
             dvar = self._infer_type(var)
             variables.append((var, dvar))
 
         # Inner function to handle iterable variables
-        def handle_iterable_variable(var_name, element):
+        def handle_iterable_variable(var_name, element, var_scope):
             indices.append(var_name)
             dvar = self._infer_type(element)
             class_type = dvar.pop('class_type')
@@ -3708,11 +3709,51 @@ class SemanticParser(BasicParser):
             if class_type.rank == 0:
                 dvar['shape'] = None
                 dvar['memory_handling'] = 'stack'
-            var = self._create_variable(var_name, class_type, None, dvar)
+            var = self._create_variable(var_name, class_type, None, dvar, insertion_scope=var_scope)
             dvar['class_type'] = class_type
             variables.append((var, dvar))
 
-        while isinstance(body, For):
+        def create_target_operations():
+            pyccel_stage.set_stage('syntactic')
+            operations = []
+            if target_type_name != 'list':
+                index = PyccelSymbol('_', is_temp=True)
+                args = [index]
+                target = IndexedElement(lhs, *args)
+                target = Assign(target, expr.expr)
+                assign1 = Assign(index, LiteralInteger(0))
+                assign1.set_current_ast(expr)
+                target.set_current_ast(expr)
+                operations.append(target)
+                assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
+                assign2.set_current_ast(expr)
+                operations.append(assign2)
+            else:
+                operations.append(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(expr.expr)])))
+            pyccel_stage.set_stage('semantic')
+
+            return [self._visit(op) for op in operations]
+
+        for loop, condition in zip(loops, expr.conditions):
+            if condition:
+                loop.insert2body(condition)
+
+        while len(loops) > 1:
+            outter_loop = loops.pop()
+            inserted_into = loops[-1]
+            if inserted_into.body.body:
+                inserted_into.body.body[0].blocks[0].body.insert2body(outter_loop)
+            else:
+                inserted_into.insert2body(outter_loop)
+
+        body = loops[0]
+
+        while isinstance(body, (For, If)):
+
+            if isinstance(body, If):
+                body = None if not body.blocks[0].body.body else body.blocks[0].body.body[0]
+                continue
+
             stop = None
             start = LiteralInteger(0)
             step = LiteralInteger(1)
@@ -3720,7 +3761,7 @@ class SemanticParser(BasicParser):
             a = self._get_iterable(self._visit(body.iterable))
             if isinstance(a, PythonRange):
                 var_name = self.scope.get_expected_name(expr.indices[i])
-                handle_int_loop_variable(var_name)
+                handle_int_loop_variable(var_name, body.scope)
                 start = a.start
                 stop  = a.stop
                 step  = a.step
@@ -3728,19 +3769,19 @@ class SemanticParser(BasicParser):
             elif isinstance(a, PythonEnumerate):
                 var_name1 = self.scope.get_expected_name(expr.indices[i][0])
                 var_name2 = self.scope.get_expected_name(expr.indices[i][1])
-                handle_int_loop_variable(var_name1)
-                handle_iterable_variable(var_name2, a.element)
+                handle_int_loop_variable(var_name1, body.scope)
+                handle_iterable_variable(var_name2, a.element, body.scope)
                 stop = a.element.shape[0]
 
             elif isinstance(a, PythonZip):
                 for idx, arg in enumerate(a.args):
                     var = self.scope.get_expected_name(expr.indices[i][idx])
-                    handle_iterable_variable(var, arg)
+                    handle_iterable_variable(var, arg, body.scope)
                 stop = a.get_range().stop
 
             elif isinstance(a, VariableIterator):
                 var = self.scope.get_expected_name(expr.indices[i])
-                handle_iterable_variable(var, a.variable)
+                handle_iterable_variable(var, a.variable, body.scope)
                 stop = a.variable.shape[0]
 
             else:
@@ -3772,9 +3813,9 @@ class SemanticParser(BasicParser):
             size = (stop - start) / step
             if (step != 1):
                 size = ceiling(size)
-
+                
+            body = None if not body.body.body else body.body.body[0]
             dims.append((size, step, start, stop))
-            body = body.body.body[0]
             i += 1
 
         for idx in indices:
@@ -3846,7 +3887,7 @@ class SemanticParser(BasicParser):
                           severity='fatal')
 
         d_var['memory_handling'] = 'heap'
-        target_type_name = expr.target_type
+        target_type_name = 'list' if not expr.target_type else expr.target_type
         if isinstance(target_type_name, DottedName):
             lhs = target_type_name.name[0] if len(target_type_name.name) == 2 \
                     else DottedName(*target_type_name.name[:-1])
@@ -3865,7 +3906,11 @@ class SemanticParser(BasicParser):
             errors.report("Unrecognised output type from functional for.\n"+PYCCEL_RESTRICTION_TODO,
                           symbol=expr,
                           severity='fatal')
-
+        if expr.conditions:
+            if target_type_name != 'list':
+                errors.report("Cannot handle if statements in list comprehensions if lhs is a numpy array.\
+                              List length cannot be calculated.\n" + PYCCEL_RESTRICTION_TODO,
+                               symbol=expr, severity='error')
         try:
             class_type = type_container[conversion_func.cls_name](class_type)
         except TypeError:
@@ -3896,27 +3941,54 @@ class SemanticParser(BasicParser):
 
         target.invalidate_node()
 
+        if expr.loops[-1].body.body:
+            for operation in create_target_operations():
+                expr.loops[-1].body.body[0].blocks[0].body.insert2body(operation)
+        else:
+            for operation in create_target_operations():
+                expr.loops[-1].insert2body(operation)
+
+
         loops = [self._visit(i) for i in expr.loops]
         if expr.index:
             index = self._visit(index)
 
-        l = loops[-1]
+        l = loops[0]
         cnt = 0
+        tt = 0
         for idx in indices:
             assert isinstance(l, For)
             # Sub in indices as defined here for coherent naming
             if idx.is_temp:
-                self.scope.remove_variable(l.target[0])
-                l.substitute(l.target[0], idx_subs[idx])
+                self.scope.remove_variable(l.target[cnt])
+                l.substitute(l.target[cnt], idx_subs[idx])
             cnt += 1
             if cnt == len(l.target):
-                l = l.body.body[-1]
+                tt += 1
+                l = None if tt >= len(loops) else loops[tt]
                 cnt = 0
+        
+        '''
+        for loop, condition in zip(loops, conditions):
+            if condition:
+                loop.insert2body(self._visit(condition))
 
-        #self.exit_loop_scope()
-        if expr.index:
-            return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=expr.indices, index=index, target_type=expr.target_type)])
-        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=expr.indices, index=indices[0], target_type=expr.target_type)])
+        if loops[-1].body.body:
+            for operation in create_target_operations():
+                loops[-1].body.body[0].blocks[0].body.insert2body(operation)
+        else:
+            for operation in create_target_operations():
+                loops[-1].insert2body(operation)
+        while len(loops) > 1:
+            outter_loop = loops.pop()
+            inserted_into = loops[-1]
+            if inserted_into.body.body:
+                inserted_into.body.body[0].blocks[0].body.insert2body(outter_loop)
+            else:
+                inserted_into.insert2body(outter_loop)
+        '''
+
+        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=expr.indices, target_type=expr.target_type)])
 
     def _visit_GeneratorComprehension(self, expr):
         lhs = self.check_for_variable(expr.lhs)

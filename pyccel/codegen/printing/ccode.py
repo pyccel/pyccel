@@ -2641,6 +2641,7 @@ class CCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
         body  = self._print(expr.body)
         variables = self.scope.variables.values()
+        print(variables)
         decs = ''.join(self._print(Declare(v)) for v in variables)
 
         imports = [*expr.imports, *self._additional_imports.values()]
