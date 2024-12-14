@@ -1310,9 +1310,18 @@ class FCodePrinter(CodePrinter):
     #========================== List Methods ===============================#
 
     def _print_ListAppend(self, expr):
-        target = expr.list_obj
+        target = self._print(expr.list_obj)
         arg = self._print(expr.args[0])
         return f'call {target} % push_back({arg})\n'
+
+    def _print_ListPop(self, expr):
+        target = self._print(expr.list_obj)
+        index_element = expr.index_element
+        # TODO only include \n if not retrieving result
+        if expr.index_element:
+            return f'call {target} % erase({self._print(index_element)})\n'
+        else:
+            return f'call {target} % pop_back()\n'
 
     #========================== Set Methods ================================#
 
