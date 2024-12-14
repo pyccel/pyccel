@@ -2209,7 +2209,11 @@ class CCodePrinter(CodePrinter):
         self._temporary_args = []
         args = ', '.join(['{}'.format(self._print(a)) for a in args])
 
-        call_code = f'{func.name}({args})'
+        func_name = func.name
+        if func.cls_name and not func_name.startswith(func.cls_name):
+            func_name = f'{func.cls_name}__{func_name}'
+
+        call_code = f'{func_name}({args})'
         if not func.results:
             return f'{call_code};\n'
         else:

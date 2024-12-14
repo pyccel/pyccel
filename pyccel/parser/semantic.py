@@ -4226,7 +4226,7 @@ class SemanticParser(BasicParser):
             # insert the FunctionDef into the scope
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
-            recursive_func_obj = FunctionDef(name, arguments, [], results)
+            recursive_func_obj = FunctionDef(name, arguments, [], results, cls_name = cls_name)
             if cls_name:
                 bound_class.update_method(expr, recursive_func_obj)
             # TODO: this is the wrong place to insert a class method. But it needs to be detected in
