@@ -4227,6 +4227,10 @@ class SemanticParser(BasicParser):
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
             recursive_func_obj = FunctionDef(name, arguments, [], results)
+            if cls_name:
+                bound_class.update_method(expr, recursive_func_obj)
+            # TODO: this is the wrong place to insert a class method. But it needs to be detected in
+            # _check_pointer_targets
             self.insert_function(recursive_func_obj)
 
             # Create a new list that store local variables for each FunctionDef to handle nested functions
@@ -4363,7 +4367,7 @@ class SemanticParser(BasicParser):
             if cls_name:
                 # update the class methods
                 if not is_interface:
-                    bound_class.update_method(expr, func)
+                    bound_class.update_method(recursive_func_obj, func)
 
             new_semantic_funcs += [func]
             if expr.python_ast:
