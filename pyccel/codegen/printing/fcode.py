@@ -1317,17 +1317,27 @@ class FCodePrinter(CodePrinter):
         return f'call {target} % push_back({arg})\n'
 
     def _print_ListPop(self, expr):
-        target = self._print(expr.list_obj)
+        list_obj = expr.list_obj
+        target = self._print(list_obj)
         index_element = expr.index_element
-        code = ''
-        if isinstance(expr.current_user_node, Assign):
-            lhs = self._print(expr.current_user_node.lhs)
-            index = expr.index_element or PyccelUnarySub(LiteralInteger(1))
-            rhs = self._print(IndexedElement(expr.list_obj, index))
-            code = f'{lhs} = {rhs}\n'
-        if expr.index_element:
-            return code + f'call {target} % erase({self._print(index_element)})\n'
+        if index_element:
+            _shape = PyccelArrayShapeElement(list_obj, index_element)
+            if isinstance(index_element, PyccelUnarySub) and isinstance(index_element.args[0], LiteralInteger):
+                index_element = PyccelMinus(_shape, index_element.args[0], simplify = True)
+            tmp_iter = self.scope.get_temporary_variable(IteratorType(list_obj.class_type),
+                    name = f'{list_obj}_iter')
+            code = f'{tmp_iter} = {target} % begin() + {self._print(index_element)}\n'
+            if isinstance(expr.current_user_node, Assign):
+                lhs = self._print(expr.current_user_node.lhs)
+                code += f'{lhs} = {tmp_iter} % of()\n'
+            return code + f'{tmp_iter} = {target} % erase({tmp_iter})\n'
         else:
+            code = ''
+            if isinstance(expr.current_user_node, Assign):
+                lhs = self._print(expr.current_user_node.lhs)
+                index = expr.index_element or PyccelUnarySub(LiteralInteger(1))
+                rhs = self._print(IndexedElement(list_obj, index))
+                code = f'{lhs} = {rhs}\n'
             return code + f'call {target} % pop_back()\n'
 
     #========================== Set Methods ================================#
