@@ -26,6 +26,8 @@ from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableItera
 
 from pyccel.ast.builtin_methods.dict_methods import DictItems
 
+from pyccel.ast.builtin_methods.list_methods import ListPop
+
 from pyccel.ast.builtin_methods.set_methods import SetUnion
 
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -1317,11 +1319,16 @@ class FCodePrinter(CodePrinter):
     def _print_ListPop(self, expr):
         target = self._print(expr.list_obj)
         index_element = expr.index_element
-        # TODO only include \n if not retrieving result
+        code = ''
+        if isinstance(expr.current_user_node, Assign):
+            lhs = self._print(expr.current_user_node.lhs)
+            index = expr.index_element or PyccelUnarySub(LiteralInteger(1))
+            rhs = self._print(IndexedElement(expr.list_obj, index))
+            code = f'{lhs} = {rhs}\n'
         if expr.index_element:
-            return f'call {target} % erase({self._print(index_element)})\n'
+            return code + f'call {target} % erase({self._print(index_element)})\n'
         else:
-            return f'call {target} % pop_back()\n'
+            return code + f'call {target} % pop_back()\n'
 
     #========================== Set Methods ================================#
 
@@ -2026,7 +2033,7 @@ class FCodePrinter(CodePrinter):
     def _print_Assign(self, expr):
         rhs = expr.rhs
 
-        if isinstance(rhs, (FunctionCall, SetUnion)):
+        if isinstance(rhs, (FunctionCall, SetUnion, ListPop)):
             return self._print(rhs)
 
         lhs_code = self._print(expr.lhs)
