@@ -20,6 +20,7 @@ from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionD
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock, For
 from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, AsName
+from pyccel.ast.core          import EmptyNode
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
@@ -1739,6 +1740,8 @@ class CToPythonWrapper(Wrapper):
         """
         lhs = expr.lhs
         class_type = lhs.cls_base
+        if isinstance(expr.class_type, HomogeneousListType):
+            return EmptyNode()
         python_class_type = self.scope.find(class_type.name, 'classes', raise_if_missing = True)
         class_scope = python_class_type.scope
 
@@ -2040,7 +2043,9 @@ class CToPythonWrapper(Wrapper):
 
             if bound_class or not a.is_private:
                 if isinstance(a, (DottedVariable, BindCClassProperty)):
-                    wrapped_class.add_property(self._wrap(a))
+                    wrapped = self._wrap(a)
+                    if not isinstance(wrapped, EmptyNode):
+                        wrapped_class.add_property(wrapped)
                 else:
                     wrapped_class.add_property(self._wrap(a.clone(a.name, new_class = DottedVariable,
                                                             lhs=pseudo_self)))

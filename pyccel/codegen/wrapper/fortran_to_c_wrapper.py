@@ -19,6 +19,7 @@ from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgumen
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
+from pyccel.ast.datatypes import HomogeneousListType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.numpytypes import NumpyNDArrayType
@@ -516,6 +517,8 @@ class FortranToCWrapper(Wrapper):
         """
         lhs = expr.lhs
         class_dtype = lhs.dtype
+        if isinstance(expr.class_type, HomogeneousListType):
+            return EmptyNode()
         # ----------------------------------------------------------------------------------
         #                        Create getter
         # ----------------------------------------------------------------------------------
@@ -647,6 +650,7 @@ class FortranToCWrapper(Wrapper):
         pseudo_self = Variable(expr.class_type, 'self', cls_base = expr)
         properties = [self._wrap(v if isinstance(v, DottedVariable) else v.clone(v.name, new_class = DottedVariable, lhs=pseudo_self)) \
                         for v in expr.attributes if not v.is_private and not isinstance(v.class_type, TupleType)]
+        properties = [m for m in properties if not isinstance(m, EmptyNode)]
         return BindCClassDef(expr, new_func = new_method, methods = methods,
                              interfaces = interfaces, attributes = properties_getters + properties,
                              docstring = expr.docstring, class_type = expr.class_type)
