@@ -1486,7 +1486,10 @@ class CCodePrinter(CodePrinter):
             init    = ' = {.shape = NULL}'
         elif isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             preface = ''
-            init = ' = {0}'
+            if isinstance(expr.variable, DottedVariable) and expr.variable.lhs.name == 'self':
+                init = ''
+            else:
+                init = ' = {0}'
         else:
             preface = ''
 
