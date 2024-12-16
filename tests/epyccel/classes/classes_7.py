@@ -2,7 +2,7 @@
 
 class A:
     def __init__(self : 'A', x : int):
-        self.data = x
+        self.data : int = x
 
     def update(self : 'A', x : int):
         self.data = x
