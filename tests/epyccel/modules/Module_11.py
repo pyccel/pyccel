@@ -1,3 +1,5 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
+
 def update_multiple():
     a = {1, 2, 3}
     a.update({4, 5})
