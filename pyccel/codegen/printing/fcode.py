@@ -675,34 +675,39 @@ class FCodePrinter(CodePrinter):
         Import
             The import which allows the new type to be accessed.
         """
-        # Get the type used in the dict for compatible types (e.g. float vs float64)
-        matching_expr_type = next((t for t in self._generated_gFTL_types if expr_type == t), None)
+        # Get the module describing the type
+        matching_expr_type = next((m for t,m in self._generated_gFTL_types.items() if expr_type == t), None)
+        # Get the module describing the extension
         matching_expr_extensions = next((t for t in self._generated_gFTL_extensions if expr_type == t), None)
         typename = self._print(expr_type)
         mod_name = f'{typename}_extensions_mod'
         if matching_expr_extensions:
-            module = self._generated_gFTL_extensions[matching_expr_extensions]
-        else:
-            if matching_expr_type is None:
-                matching_expr_type = self._build_gFTL_module(expr_type)
-                self.add_import(matching_expr_type)
+            return EmptyNode()
 
+        imports_and_macros = []
+
+        if matching_expr_type is None:
+            matching_expr_type = self._build_gFTL_module(expr_type)
+            self.add_import(matching_expr_type)
+            imports_and_macros.append(matching_expr_type)
             type_module = matching_expr_type.source_module
+        else:
+            type_module = matching_expr_type
+            imports_and_macros.append(Import(f'gFTL_extensions/{mod_name}', type_module))
 
-            if isinstance(expr_type, HomogeneousSetType):
-                set_filename = LiteralString('set/template.inc')
-                imports_and_macros = [Import(LiteralString('Set_extensions.inc'), Module('_', (), ())) \
-                                        if getattr(i, 'source', None) == set_filename else i \
-                                        for i in type_module.imports]
-                imports_and_macros.insert(0, matching_expr_type)
-                self.add_import(Import('gFTL_functions/Set_extensions', Module('_', (), ()), ignore_at_print = True))
-            else:
-                raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
+        if isinstance(expr_type, HomogeneousSetType):
+            set_filename = LiteralString('set/template.inc')
+            imports_and_macros += [Import(LiteralString('Set_extensions.inc'), Module('_', (), ())) \
+                                    if getattr(i, 'source', None) == set_filename else i \
+                                    for i in type_module.imports]
+            self.add_import(Import('gFTL_functions/Set_extensions', Module('_', (), ()), ignore_at_print = True))
+        else:
+            raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
 
-            module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
-                                       is_external = True)
+        module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
+                                   is_external = True)
 
-            self._generated_gFTL_extensions[expr_type] = module
+        self._generated_gFTL_extensions[expr_type] = module
 
         return Import(f'gFTL_extensions/{mod_name}', module)
 
