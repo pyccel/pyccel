@@ -3600,9 +3600,14 @@ class SemanticParser(BasicParser):
             if isinstance(lhs[0].class_type, HomogeneousListType):
                 # Remove the last element of the errors (if it is a warning)
                 # This will be the list of list warning
-                error_info_map = errors.error_info_map[os.path.basename(errors.target)]
-                if error_info_map[-1].severity == 'warning':
-                    error_info_map.pop()
+                try:
+                    error_info_map = errors.error_info_map[os.path.basename(errors.target)]
+                    if error_info_map[-1].severity == 'warning':
+                        error_info_map.pop()
+                except KeyError:
+                    # There may be a KeyError if this is not the first time that this DataType
+                    # of list of rank>0 is created.
+                    pass
             return AllDeclaration(new_expressions[-1].rhs)
 
         if (len(new_expressions)==1):
