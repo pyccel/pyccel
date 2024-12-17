@@ -15,8 +15,8 @@ max_int8 = iinfo('int8').max
 min_int16 = iinfo('int16').min
 max_int16 = iinfo('int16').max
 
-min_int = iinfo(int).min
-max_int = iinfo(int).max
+min_int = iinfo(np.long).min
+max_int = iinfo(np.long).max
 
 min_int32 = iinfo('int32').min
 max_int32 = iinfo('int32').max
@@ -5249,7 +5249,7 @@ def test_numpy_where_array_like_1d_with_condition(language):
 
     integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
     integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
-    integer   = randint(min_int//2,   max_int//2, size=size, dtype=int)
+    integer   = randint(min_int//2,   max_int//2, size=size, dtype=np.intp)
     integer32 = randint(min_int32//2, max_int32//2, size=size, dtype=np.int32)
     integer64 = randint(min_int64//2, max_int64//2, size=size, dtype=np.int64)
 
@@ -5327,7 +5327,7 @@ def test_numpy_where_array_like_2d_with_condition(language):
 
     integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int-1, size=size, dtype=int)
+    integer = randint(min_int, max_int-1, size=size, dtype=np.intp)
     integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
 
