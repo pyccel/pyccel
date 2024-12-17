@@ -230,18 +230,11 @@ numpy_num_to_type = {0 : numpy_bool_type,
                     15 : numpy_cdouble_type,
                     16 : numpy_clongdouble_type}
 
-# This dictionary is required as the precision does not line up with the expected type on windows
-numpy_int_type_precision_map = {
-        1 : np.dtype(np.int8).num,
-        2 : np.dtype(np.int16).num,
-        4 : np.dtype(np.int32).num,
-        8 : np.dtype(np.int64).num}
-
 numpy_dtype_registry = {PythonNativeBool()    : numpy_bool_type,
-                        NumpyInt8Type()       : numpy_num_to_type[numpy_int_type_precision_map[1]],
-                        NumpyInt16Type()      : numpy_num_to_type[numpy_int_type_precision_map[2]],
-                        NumpyInt32Type()      : numpy_num_to_type[numpy_int_type_precision_map[4]],
-                        NumpyInt64Type()      : numpy_num_to_type[numpy_int_type_precision_map[8]],
+                        NumpyInt8Type()       : numpy_byte_type,
+                        NumpyInt16Type()      : numpy_ubyte_type,
+                        NumpyInt32Type()      : numpy_ushort_type,
+                        NumpyInt64Type()      : numpy_ulong_type,
                         NumpyFloat32Type()    : numpy_float_type,
                         NumpyFloat64Type()    : numpy_double_type,
                         NumpyFloat128Type()   : numpy_longdouble_type,
