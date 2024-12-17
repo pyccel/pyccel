@@ -174,7 +174,7 @@ void capsule_cleanup(PyObject *capsule) {
 #endif
 }
 
-#ifdef _WIN32
+#ifdef _WIN32 && (PyArray_RUNTIME_VERSION >= NPY_2_0_API_VERSION)
 PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order, bool release_memory)
 #else
 PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order, bool release_memory)
