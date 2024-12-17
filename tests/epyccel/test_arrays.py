@@ -2267,7 +2267,7 @@ def test_argument_negative_index_2(language):
 
 
 def test_c_order_argument_negative_index(language):
-    a = np.random.randint(20, size=(3,4))
+    a = np.random.randint(20, size=(3,4), dtype=int)
 
     f1 = arrays.test_c_order_argument_negative_index
     f2 = epyccel(f1, language = language)
@@ -2275,7 +2275,7 @@ def test_c_order_argument_negative_index(language):
 
 
 def test_f_order_argument_negative_index(language):
-    a = np.array(np.random.randint(20, size=(3,4)), order='F')
+    a = np.array(np.random.randint(20, size=(3,4)), order='F', dtype=int)
 
     f1 = arrays.test_f_order_argument_negative_index
     f2 = epyccel(f1, language = language)

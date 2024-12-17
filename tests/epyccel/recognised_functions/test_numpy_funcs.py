@@ -2393,7 +2393,7 @@ def test_sum_int(language):
         return np_sum(x)
 
     f1 = epyccel(sum_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == sum_call(x)
 
 def test_sum_override_builtin(language):
@@ -2402,7 +2402,7 @@ def test_sum_override_builtin(language):
         return sum(x)
 
     f1 = epyccel(sum_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == sum_call(x)
 
 def test_sum_real(language):
@@ -2440,7 +2440,7 @@ def test_sum_property(language):
         return x.sum()
 
     f1 = epyccel(sum_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == sum_call(x)
 
 def test_min_int(language):
@@ -2449,7 +2449,7 @@ def test_min_int(language):
         return amin(x)
 
     f1 = epyccel(min_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == min_call(x)
 
 def test_min_real(language):
@@ -2517,7 +2517,7 @@ def test_min_property(language):
         return x.min()
 
     f1 = epyccel(min_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == min_call(x)
 
 def test_max_int(language):
@@ -2526,7 +2526,7 @@ def test_max_int(language):
         return amax(x)
 
     f1 = epyccel(max_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == max_call(x)
 
 def test_max_real(language):
@@ -2576,7 +2576,7 @@ def test_max_property(language):
         return x.max()
 
     f1 = epyccel(max_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == max_call(x)
 
 
@@ -6238,7 +6238,7 @@ def test_copy(language):
         b = a.copy(order='C')
         return b
 
-    arr_1d = randint(min_int, max_int, size=5)
+    arr_1d = randint(min_int, max_int, size=5, dtype=int)
     arr_2d = uniform(min_float64 / 2, max_float64 / 2, size=(3,4))
     arr_3d = (uniform(min_float64 / 2, max_float64 / 2, size=(3,4,5)) \
             + uniform(min_float64 / 2, max_float64 / 2, size=(3,4,5))*1j).T
