@@ -346,6 +346,13 @@ def test_array_int_1d_initialization_3(language):
 
     assert f1() == f2()
 
+def test_array_int_1d_initialization_4(language):
+
+    f1 = arrays.array_int_1d_initialization_4
+    f2 = epyccel( f1 , language = language)
+
+    check_array_equal(f1(), f2())
+
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================

@@ -285,7 +285,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     "};\n")
             sig_methods = c.methods + (c.new_func,) + tuple(f for i in c.interfaces for f in i.functions) + \
                           tuple(i.interface_func for i in c.interfaces) + \
-                          tuple(getset for p in c.properties for getset in (p.getter, p.setter))
+                          tuple(getset for p in c.properties for getset in (p.getter, p.setter) if getset)
             function_signatures += '\n'+''.join(self.function_signature(f)+';\n' for f in sig_methods)
             macro_defs += f'#define {type_name} (*(PyTypeObject*){API_var.name}[{i}])\n'
 
@@ -393,7 +393,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         original_scope = expr.original_class.scope
         getters = tuple(p.getter for p in expr.properties)
-        setters = tuple(p.setter for p in expr.properties)
+        setters = tuple(p.setter for p in expr.properties if p.setter)
         print_methods = expr.methods + (expr.new_func,) + expr.interfaces + \
                          getters + setters
         functions = '\n'.join(self._print(f) for f in print_methods)
@@ -417,13 +417,13 @@ class CWrapperCodePrinter(CCodePrinter):
                                                     if f.docstring else '""'
             funcs[py_name] = (f.name, docstring)
 
-        property_definitions = ''.join(('{\n'
-                                        f'"{p.python_name}",\n'
-                                        f'(getter) {p.getter.name},\n'
-                                        f'(setter) {p.setter.name},\n'
-                                        f'{self._print(p.docstring)},\n'
-                                        'NULL\n'
-                                        '},\n') for p in expr.properties)
+        property_definitions = ''.join(''.join(('{\n',
+                                        f'"{p.python_name}",\n',
+                                        f'(getter) {p.getter.name},\n',
+                                        f'(setter) {p.setter.name},\n' if p.setter else '(setter) NULL,\n',
+                                        f'{self._print(p.docstring)},\n',
+                                        'NULL\n',
+                                        '},\n')) for p in expr.properties)
         property_definitions += '{ NULL }\n'
 
         method_def_funcs = ''.join(('{\n'

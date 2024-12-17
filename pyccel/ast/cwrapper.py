@@ -510,8 +510,8 @@ class PyModule(Module):
         self._external_funcs = external_funcs
         self._declarations = declarations
         if import_func is None:
-            self._import_func = FunctionDef(f'{name}_import', (),
-                            (FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)),), ())
+            self._import_func = FunctionDef(f'{name}_import', (), (),
+                            (FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)),))
         else:
             self._import_func = import_func
         super().__init__(name, *args, init_func = init_func, **kwargs)
@@ -843,10 +843,8 @@ class PyGetSetDefElement(PyccelAstNode):
     _attribute_nodes = ('_getter', '_setter', '_docstring')
     __slots__ = ('_python_name', '_getter', '_setter', '_docstring')
     def __init__(self, python_name, getter, setter, docstring):
-        if not isinstance(getter, PyFunctionDef):
-            raise TypeError("Getter should be a PyFunctionDef")
-        if not isinstance(setter, PyFunctionDef):
-            raise TypeError("Setter should be a PyFunctionDef")
+        assert isinstance(getter, PyFunctionDef)
+        assert isinstance(setter, PyFunctionDef) or setter is None
         self._python_name = python_name
         self._getter = getter
         self._setter = setter
@@ -917,7 +915,7 @@ class PyModInitFunc(FunctionDef):
 
     def __init__(self, name, body, static_vars, scope):
         self._static_vars = static_vars
-        super().__init__(name, (), (), body, scope=scope)
+        super().__init__(name, (), body, scope=scope)
 
     @property
     def declarations(self):
@@ -1102,7 +1100,7 @@ PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
                         arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
                                      FunctionDefArgument(Variable(PythonNativeInt(), name='i')),
                                      FunctionDefArgument(Variable(PyccelPyObject(), name='new_item', memory_handling='alias'))],
-                        results = [])
+                        results = [FunctionDefResult(Variable(CNativeInt(), 'i'))])
 
 #-------------------------------------------------------------------
 #                         Tuple functions
@@ -1131,6 +1129,61 @@ PyTuple_GetItem = FunctionDef(name = 'PyTuple_GetItem',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='tuple', memory_handling='alias')),
                                      FunctionDefArgument(Variable(PythonNativeInt(), name='i'))],
+                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
+
+# https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SetItem
+PyTuple_SetItem = FunctionDef(name = 'PyTuple_SetItem',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
+                                     FunctionDefArgument(Variable(PythonNativeInt(), name='i')),
+                                     FunctionDefArgument(Variable(PyccelPyObject(), name='new_item', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(CNativeInt(), 'i'))])
+
+#-------------------------------------------------------------------
+#                         Set functions
+#-------------------------------------------------------------------
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_New
+PySet_New = FunctionDef(name = 'PySet_New',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'iterable', memory_handling='alias'), value = Nil())],
+                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Add
+PySet_Add = FunctionDef(name = 'PySet_Add',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'key', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Check
+PySet_Check = FunctionDef(name = 'PySet_Check',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(CNativeInt(), 'i'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Size
+PySet_Size = FunctionDef(name = 'PySet_Size',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/object.html#c.PyObject_GetIter
+PySet_GetIter = FunctionDef(name = 'PyObject_GetIter',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Clear
+PySet_Clear = FunctionDef(name = 'PySet_Clear',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='set', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))])
+
+# https://docs.python.org/3/c-api/iter.html#c.PyIter_Check
+PyIter_Next = FunctionDef(name = 'PyIter_Next',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
                         results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
 
