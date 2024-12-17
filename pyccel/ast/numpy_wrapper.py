@@ -212,35 +212,17 @@ numpy_cfloat_type       = Variable(CNativeInt(),  name = 'NPY_CFLOAT')
 numpy_cdouble_type      = Variable(CNativeInt(),  name = 'NPY_CDOUBLE')
 numpy_clongdouble_type  = Variable(CNativeInt(),  name = 'NPY_CLONGDOUBLE')
 
-numpy_num_to_type = {0 : numpy_bool_type,
-                     1 : numpy_byte_type,
-                     2 : numpy_ubyte_type,
-                     3 : numpy_short_type,
-                     4 : numpy_ushort_type,
-                     5 : numpy_int_type,
-                     6 : numpy_uint_type,
-                     7 : numpy_long_type,
-                     8 : numpy_ulong_type,
-                     9 : numpy_longlong_type,
-                    10 : numpy_ulonglong_type,
-                    11 : numpy_float_type,
-                    12 : numpy_double_type,
-                    13 : numpy_longdouble_type,
-                    14 : numpy_cfloat_type,
-                    15 : numpy_cdouble_type,
-                    16 : numpy_clongdouble_type}
-
-numpy_dtype_registry = {PythonNativeBool()    : numpy_num_to_type[np.dtype(bool).num],
-                        NumpyInt8Type()       : numpy_num_to_type[np.dtype(np.int8).num],
-                        NumpyInt16Type()      : numpy_num_to_type[np.dtype(np.int16).num],
-                        NumpyInt32Type()      : numpy_num_to_type[np.dtype(np.int32).num],
-                        NumpyInt64Type()      : numpy_num_to_type[np.dtype(np.int64).num],
-                        NumpyFloat32Type()    : numpy_num_to_type[np.dtype(np.float32).num],
-                        NumpyFloat64Type()    : numpy_num_to_type[np.dtype(np.float64).num],
-                        NumpyFloat128Type()   : numpy_num_to_type[np.dtype(np.float128).num],
-                        NumpyComplex64Type()  : numpy_num_to_type[np.dtype(np.complex64).num],
-                        NumpyComplex128Type() : numpy_num_to_type[np.dtype(np.complex128).num],
-                        NumpyComplex256Type() : numpy_num_to_type[np.dtype(np.complex256).num]}
+numpy_dtype_registry = {PythonNativeBool()    : numpy_bool_type,
+                        NumpyInt8Type()       : numpy_byte_type,
+                        NumpyInt16Type()      : numpy_short_type,
+                        NumpyInt32Type()      : numpy_int32_type,
+                        NumpyInt64Type()      : numpy_int64_type,
+                        NumpyFloat32Type()    : numpy_float_type,
+                        NumpyFloat64Type()    : numpy_double_type,
+                        NumpyFloat128Type()   : numpy_longdouble_type,
+                        NumpyComplex64Type()  : numpy_cfloat_type,
+                        NumpyComplex128Type() : numpy_cdouble_type,
+                        NumpyComplex256Type() : numpy_clongdouble_type}
 
 # Needed to check for NumPy arguments type
 check_type_registry.update({
