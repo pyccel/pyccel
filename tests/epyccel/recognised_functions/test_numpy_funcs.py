@@ -15,8 +15,8 @@ max_int8 = iinfo('int8').max
 min_int16 = iinfo('int16').min
 max_int16 = iinfo('int16').max
 
-min_int = iinfo(np.long).min
-max_int = iinfo(np.long).max
+min_int = iinfo(np.int_).min
+max_int = iinfo(np.int_).max
 
 min_int32 = iinfo('int32').min
 max_int32 = iinfo('int32').max

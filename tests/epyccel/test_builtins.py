@@ -11,8 +11,8 @@ ATOL = 1e-15
 RTOL = 2e-14
 
 
-min_int = iinfo(np.long).min
-max_int = iinfo(np.long).max
+min_int = iinfo(np.int_).min
+max_int = iinfo(np.int_).max
 
 min_float = finfo(float).min
 max_float = finfo(float).max
