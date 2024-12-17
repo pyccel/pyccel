@@ -4897,7 +4897,7 @@ def test_numpy_norm_array_like_2d_fortran_order(language):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
+    integer = randint(min_int, max_int, size=size, dtype=np.intp)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -5049,7 +5049,7 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
+    integer = randint(min_int, max_int, size=size, dtype=np.intp)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
