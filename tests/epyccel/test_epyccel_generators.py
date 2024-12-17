@@ -5,12 +5,14 @@ from numpy.random import randint, rand
 
 from pyccel import epyccel
 
+np_default_int = np.array([1]).dtype
+
 def test_sum_range(language):
     def f(a0 : 'int[:]'):
         return sum(a0[i] for i in range(len(a0)))
 
     n = randint(1,50)
-    x = randint(100, size=n, dtype=np.intp)
+    x = randint(100, size=n, dtype=np_default_int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -21,7 +23,7 @@ def test_sum_var(language):
         return sum(ai for ai in a)
 
     n = randint(1,50)
-    x = randint(100, size=n, dtype=np.intp)
+    x = randint(100, size=n, dtype=np_default_int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -33,7 +35,7 @@ def test_sum_var2(language):
 
     n1 = randint(1,10)
     n2 = randint(1,10)
-    x = randint(10, size=(n1,n2), dtype=np.intp)
+    x = randint(10, size=(n1,n2), dtype=np_default_int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -47,7 +49,7 @@ def test_sum_var3(language):
     n1 = randint(1,10)
     n2 = randint(1,10)
     n3 = randint(1,10)
-    x = randint(10, size=(n1,n2,n3), dtype=np.intp)
+    x = randint(10, size=(n1,n2,n3), dtype=np_default_int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -59,7 +61,7 @@ def test_sum_var4(language):
         return sum(ai for ai in a),s
 
     n = randint(1,50)
-    x = randint(100, size=n, dtype=np.intp)
+    x = randint(100, size=n, dtype=np_default_int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -193,7 +195,7 @@ def test_sum_range_overwrite(language):
         return v
 
     n = randint(1,50)
-    x = randint(100, size=n, dtype=np.intp)
+    x = randint(100, size=n, dtype=np_default_int)
 
     f_epyc = epyccel(f, language = language)
 

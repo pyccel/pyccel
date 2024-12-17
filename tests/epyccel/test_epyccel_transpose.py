@@ -1,9 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import empty, array_equal, intp
-from numpy.random import randint
+from numpy import empty, array_equal, np_default_int
+from numpy.random import randint, array
 
 from pyccel import epyccel
 
+np_default_int = array([1]).dtype
 
 def test_transpose_shape(language):
 
@@ -19,8 +20,8 @@ def test_transpose_shape(language):
         n, m, p = y.shape
         return n, m, p, y[0,-1,0], y[0,0,-1], y[-1,-1,0]
 
-    x1 = randint(50, size=(2,5), dtype=intp)
-    x2 = randint(50, size=(2,3,7), dtype=intp)
+    x1 = randint(50, size=(2,5), dtype=np_default_int)
+    x2 = randint(50, size=(2,3,7), dtype=np_default_int)
 
     f1_epyc = epyccel(f1, language=language)
     assert f1( x1 ) == f1_epyc( x1 )
@@ -41,8 +42,8 @@ def test_transpose_property(language):
         n, m, p = y.shape
         return n, m, p, y[0,-1,0], y[0,0,-1], y[-1,-1,0]
 
-    x1 = randint(50, size=(2,5), dtype=intp)
-    x2 = randint(50, size=(2,3,7), dtype=intp)
+    x1 = randint(50, size=(2,5), dtype=np_default_int)
+    x2 = randint(50, size=(2,3,7), dtype=np_default_int)
 
     f1_epyc = epyccel(f1, language=language)
     assert f1( x1 ) == f1_epyc( x1 )
@@ -64,8 +65,8 @@ def test_transpose_in_expression(language):
         n, m, p = y.shape
         return n, m, p, y[0,-1,0], y[0,0,-1], y[-1,-1,0]
 
-    x1 = randint(50, size=(2,5), dtype=intp)
-    x2 = randint(50, size=(2,3,7), dtype=intp)
+    x1 = randint(50, size=(2,5), dtype=np_default_int)
+    x2 = randint(50, size=(2,3,7), dtype=np_default_int)
 
     f1_epyc = epyccel(f1, language=language)
     assert f1( x1 ) == f1_epyc( x1 )
@@ -100,8 +101,8 @@ def test_mixed_order(language):
         n, m, p = z.shape
         return n, m, p, z[0,-1,0], z[0,0,-1], z[-1,-1,0]
 
-    x1 = randint(50, size=(2,5), dtype=intp)
-    x2 = randint(50, size=(2,3,7), dtype=intp)
+    x1 = randint(50, size=(2,5), dtype=np_default_int)
+    x2 = randint(50, size=(2,3,7), dtype=np_default_int)
 
     f1_epyc = epyccel(f1, language=language)
     assert f1( x1 ) == f1_epyc( x1 )
@@ -128,9 +129,9 @@ def test_transpose_pointer(language):
         n, m, p = y.shape
         return n, m, p, y[0,-1,0], y[0,0,-1], y[-1,-1,0]
 
-    x1 = randint(50, size=(2,5), dtype=intp)
+    x1 = randint(50, size=(2,5), dtype=np_default_int)
     x1_copy = x1.copy()
-    x2 = randint(50, size=(2,3,7), dtype=intp)
+    x2 = randint(50, size=(2,3,7), dtype=np_default_int)
     x2_copy = x2.copy()
 
     f1_epyc = epyccel(f1, language=language)
@@ -153,8 +154,8 @@ def test_transpose_of_expression(language):
         n, m, p = y.shape
         return n, m, p, y[0,-1,0], y[0,0,-1], y[-1,-1,0]
 
-    x1 = randint(50, size=(2,5), dtype=intp)
-    x2 = randint(50, size=(2,3,7), dtype=intp)
+    x1 = randint(50, size=(2,5), dtype=np_default_int)
+    x2 = randint(50, size=(2,3,7), dtype=np_default_int)
 
     f1_epyc = epyccel(f1, language=language)
     assert f1( x1 ) == f1_epyc( x1 )
@@ -181,8 +182,8 @@ def test_force_transpose(language):
         n, m, p = y.shape
         return n, m, p, y[0,-1,0], y[0,0,-1], y[-1,-1,0]
 
-    x1 = randint(50, size=(2,5), dtype=intp)
-    x2 = randint(50, size=(2,3,7), dtype=intp)
+    x1 = randint(50, size=(2,5), dtype=np_default_int)
+    x2 = randint(50, size=(2,3,7), dtype=np_default_int)
 
     f1_epyc = epyccel(f1, language=language)
     assert f1( x1 ) == f1_epyc( x1 )
@@ -202,8 +203,8 @@ def test_transpose_to_inner_indexes(language):
     def f3(x : 'int[:,:,:]', y : 'int[:,:,:,:,:]'):
         y[0,:,:,:,0] = x.T
 
-    x1 = randint(50, size=(2,5), dtype=intp)
-    x2 = randint(50, size=(2,5,3), dtype=intp)
+    x1 = randint(50, size=(2,5), dtype=np_default_int)
+    x2 = randint(50, size=(2,5,3), dtype=np_default_int)
 
     y1_pyt = empty((1,5,2,1), dtype=int)
     y2_pyt = empty((1,5,1,2,1), dtype=int)

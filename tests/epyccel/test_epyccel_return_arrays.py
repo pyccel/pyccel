@@ -9,6 +9,7 @@ from recognised_functions.test_numpy_funcs import max_float, min_float, max_floa
 from pyccel import epyccel
 from pyccel.decorators import template
 
+np_default_int = np.array([1]).dtype
 
 def test_single_return(language):
     @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
@@ -19,7 +20,7 @@ def test_single_return(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.intp)
+    integer = randint(min_int, max_int, dtype=np_default_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -119,7 +120,7 @@ def test_multi_returns(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.intp)
+    integer = randint(min_int, max_int, dtype=np_default_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -219,7 +220,7 @@ def test_return_array_array_op(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.intp)
+    integer = randint(min_int, max_int, dtype=np_default_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -307,7 +308,7 @@ def test_return_multi_array_array_op(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.intp)
+    integer = randint(min_int, max_int, dtype=np_default_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -394,7 +395,7 @@ def test_return_array_scalar_op(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.intp)
+    integer = randint(min_int, max_int, dtype=np_default_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -482,7 +483,7 @@ def test_multi_return_array_scalar_op(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.intp)
+    integer = randint(min_int, max_int, dtype=np_default_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -709,7 +710,7 @@ def test_c_array_return(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.intp)
+    integer = randint(min_int, max_int, dtype=np_default_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -745,7 +746,7 @@ def test_f_array_return(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.intp)
+    integer = randint(min_int, max_int, dtype=np_default_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 

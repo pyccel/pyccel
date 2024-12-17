@@ -1,4 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from packaging.version import Version
+
 import pytest
 from numpy.random import randint, uniform
 from numpy import iinfo, finfo
@@ -10,9 +12,9 @@ from pyccel.decorators import template
 ATOL = 1e-15
 RTOL = 2e-14
 
-
-min_int = iinfo(np.int_).min
-max_int = iinfo(np.int_).max
+# Use int32 for Windows compatibility
+min_int = iinfo(np.int32).min
+max_int = iinfo(np.int32).max
 
 min_float = finfo(float).min
 max_float = finfo(float).max
