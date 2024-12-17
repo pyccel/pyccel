@@ -25,8 +25,6 @@
 # define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API
 # include "numpy/arrayobject.h"
 
-extern const char* dataTypes[17];
-
 /*
  * A function which can be passed to a PyCapsule in order to free data that was created by Pyccel.
  */

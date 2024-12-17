@@ -7,15 +7,6 @@
 
 
 
-// strings order needs to be the same as its equivalent numpy macro
-// https://numpy.org/doc/stable/reference/c-api/dtype.html
-const char* dataTypes[17] = {"Bool", "Int8", "UInt8", "Int16", "UIn16", "Int32", "UInt32",
-                             "Int64", "UInt64", "Int128", "UInt128", "Float32", "Float64",
-                             "Float128", "Complex64", "Complex128", "Complex256"};
-
-
-
-
 /* Casting python object to c type
  *
  * Reference of the used c python api function
