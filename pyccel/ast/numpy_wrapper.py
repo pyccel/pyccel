@@ -230,24 +230,17 @@ numpy_num_to_type = {0 : numpy_bool_type,
                     15 : numpy_cdouble_type,
                     16 : numpy_clongdouble_type}
 
-# This dictionary is required as the precision does not line up with the expected type on windows
-numpy_int_type_precision_map = {
-        1 : np.dtype(np.int8).num,
-        2 : np.dtype(np.int16).num,
-        4 : np.dtype(np.int32).num,
-        8 : np.dtype(np.int64).num}
-
-numpy_dtype_registry = {PythonNativeBool()    : numpy_bool_type,
-                        NumpyInt8Type()       : numpy_num_to_type[numpy_int_type_precision_map[1]],
-                        NumpyInt16Type()      : numpy_num_to_type[numpy_int_type_precision_map[2]],
-                        NumpyInt32Type()      : numpy_num_to_type[numpy_int_type_precision_map[4]],
-                        NumpyInt64Type()      : numpy_num_to_type[numpy_int_type_precision_map[8]],
-                        NumpyFloat32Type()    : numpy_float_type,
-                        NumpyFloat64Type()    : numpy_double_type,
-                        NumpyFloat128Type()   : numpy_longdouble_type,
-                        NumpyComplex64Type()  : numpy_cfloat_type,
-                        NumpyComplex128Type() : numpy_cdouble_type,
-                        NumpyComplex256Type() : numpy_clongdouble_type}
+numpy_dtype_registry = {PythonNativeBool()    : numpy_num_to_type[np.dtype(bool).num],
+                        NumpyInt8Type()       : numpy_num_to_type[np.dtype(np.int8).num],
+                        NumpyInt16Type()      : numpy_num_to_type[np.dtype(np.int16).num],
+                        NumpyInt32Type()      : numpy_num_to_type[np.dtype(np.int32).num],
+                        NumpyInt64Type()      : numpy_num_to_type[np.dtype(np.int64).num],
+                        NumpyFloat32Type()    : numpy_num_to_type[np.dtype(np.float32).num],
+                        NumpyFloat64Type()    : numpy_num_to_type[np.dtype(np.float64).num],
+                        NumpyFloat128Type()   : numpy_num_to_type[np.dtype(np.float128).num],
+                        NumpyComplex64Type()  : numpy_num_to_type[np.dtype(np.complex64).num],
+                        NumpyComplex128Type() : numpy_num_to_type[np.dtype(np.complex128).num],
+                        NumpyComplex256Type() : numpy_num_to_type[np.dtype(np.complex256).num]}
 
 # Needed to check for NumPy arguments type
 check_type_registry.update({
