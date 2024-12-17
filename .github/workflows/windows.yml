@@ -78,13 +78,6 @@ jobs:
             python -m pip install --upgrade pip
             python -m pip install .[test]
         shell: bash
-      - name: Test
-        run: |
-          import numpy as np
-          print(np.dtype(int).alignment)
-          print(np.dtype(np.int64).alignment)
-          print(np.array(1).dtype.alignment)
-        shell: python
       - name: Fortran/C tests with pytest
         id: f_c_pytest
         timeout-minutes: 60
