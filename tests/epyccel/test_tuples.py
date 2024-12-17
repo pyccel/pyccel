@@ -9,7 +9,6 @@ from pyccel import epyccel
 from pyccel.decorators import template
 from pyccel.errors.errors import PyccelError
 
-np_default_int = np.array([1]).dtype
 
 def is_func_with_0_args(f):
     """ Test if name 'f' corresponds to an argument in the
@@ -101,7 +100,7 @@ def test_tuples_with_2d_args(test_func, language):
     f1 = test_func
     f2 = epyccel( f1, language=language )
 
-    python_x = np.random.randint(100, size=(3,4), dtype=np_default_int)
+    python_x = np.random.randint(100, size=(3,4), dtype=int)
     pyccel_x = python_x.copy()
 
     f1(python_x)

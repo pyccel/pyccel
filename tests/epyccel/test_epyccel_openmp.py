@@ -11,7 +11,6 @@ from numpy import matmul
 from pyccel import epyccel
 #==============================================================================
 
-np_default_int = np.array([1]).dtype
 
 #==============================================================================
 
@@ -354,7 +353,7 @@ def test_omp_nowait(language):
     f1 = epyccel(openmp.omp_nowait, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(4)
-    x = random.randint(20, size=(1000), dtype=np_default_int)
+    x = random.randint(20, size=(1000), dtype=int)
     y = np.zeros((1000,), dtype=int)
     z = np.zeros((1000,))
     f1(x, y, z)
@@ -367,7 +366,7 @@ def test_omp_arraysum(language):
     f1 = epyccel(openmp.omp_arraysum, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(4)
-    x = random.randint(20, size=(5), dtype=np_default_int)
+    x = random.randint(20, size=(5), dtype=int)
 
     assert f1(x) == np.sum(x)
 
@@ -376,7 +375,7 @@ def test_omp_arraysum_combined(language):
     f1 = epyccel(openmp.omp_arraysum_combined, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(4)
-    x = random.randint(20, size=(5), dtype=np_default_int)
+    x = random.randint(20, size=(5), dtype=int)
 
     assert f1(x) == np.sum(x)
 
@@ -394,7 +393,7 @@ def test_omp_arraysum_single(language):
     f1 = epyccel(openmp.omp_arraysum_single, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(2)
-    x = random.randint(20, size=(10), dtype=np_default_int)
+    x = random.randint(20, size=(10), dtype=int)
 
     assert f1(x) == np.sum(x)
 
@@ -447,11 +446,11 @@ def test_omp_long_line(language):
     f1 = epyccel(openmp.omp_long_line, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(4)
-    x1 = random.randint(20, size=(5), dtype=np_default_int)
-    x2 = random.randint(20, size=(5), dtype=np_default_int)
-    x3 = random.randint(20, size=(5), dtype=np_default_int)
-    x4 = random.randint(20, size=(5), dtype=np_default_int)
-    x5 = random.randint(20, size=(5), dtype=np_default_int)
+    x1 = random.randint(20, size=(5), dtype=int)
+    x2 = random.randint(20, size=(5), dtype=int)
+    x3 = random.randint(20, size=(5), dtype=int)
+    x4 = random.randint(20, size=(5), dtype=int)
+    x5 = random.randint(20, size=(5), dtype=int)
 
     assert f1(x1,x2,x3,x4,x5) == np.sum(x1+x2+x3+x4+x5)
 
