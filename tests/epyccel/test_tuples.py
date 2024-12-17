@@ -99,7 +99,7 @@ def test_tuples_with_2d_args(test_func, language):
     f1 = test_func
     f2 = epyccel( f1, language=language )
 
-    python_x = np.random.randint(100, size=(3,4), dtype=int)
+    python_x = np.random.randint(100, size=(3,4), dtype=np.intp)
     pyccel_x = python_x.copy()
 
     f1(python_x)
