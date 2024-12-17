@@ -277,7 +277,7 @@ class FortranToCWrapper(Wrapper):
 
         self.exit_scope()
 
-        func = BindCFunctionDef(name, func_arguments, func_results, body, scope=func_scope, original_function = expr,
+        func = BindCFunctionDef(name, func_arguments, body, func_results, scope=func_scope, original_function = expr,
                 docstring = expr.docstring, result_pointer_map = expr.result_pointer_map)
 
         self.scope.functions[name] = func
@@ -541,7 +541,7 @@ class FortranToCWrapper(Wrapper):
         self._additional_exprs.clear()
         self.exit_scope()
 
-        getter = BindCFunctionDef(getter_name, (getter_arg,), (getter_result,), getter_body,
+        getter = BindCFunctionDef(getter_name, (getter_arg,), getter_body, (getter_result,),
                                 original_function = expr, scope = getter_scope)
 
         # ----------------------------------------------------------------------------------
@@ -579,7 +579,7 @@ class FortranToCWrapper(Wrapper):
             setter_body.append(Assign(attrib, set_val))
         self.exit_scope()
 
-        setter = BindCFunctionDef(setter_name, setter_args, (), setter_body,
+        setter = BindCFunctionDef(setter_name, setter_args, setter_body,
                                 original_function = expr, scope = setter_scope)
         return BindCClassProperty(lhs.cls_base.scope.get_python_name(expr.name),
                                   getter, setter, lhs.dtype)
@@ -623,7 +623,7 @@ class FortranToCWrapper(Wrapper):
         c_loc = CLocFunc(local_var, bind_var)
         body = [alloc, c_loc]
 
-        new_method = BindCFunctionDef(func_name, [], [result], body, original_function = None, scope = func_scope)
+        new_method = BindCFunctionDef(func_name, [], body, [result], original_function = None, scope = func_scope)
 
         methods = [self._wrap(m) for m in expr.methods]
         methods = [m for m in methods if not isinstance(m, EmptyNode)]
@@ -637,10 +637,16 @@ class FortranToCWrapper(Wrapper):
                     severity='warning',
                     symbol=expr)
 
+        properties_getters = [BindCClassProperty(expr.scope.get_python_name(m.original_function.name),
+                                                 m, None, expr.class_type, m.original_function.docstring)
+                                for m in methods if 'property' in m.original_function.decorators]
+        methods = [m for m in methods if m not in properties_getters
+                        if 'property' not in m.original_function.decorators]
+
         # Pseudo-self variable is useful for pre-defined attributes which are not DottedVariables
         pseudo_self = Variable(expr.class_type, 'self', cls_base = expr)
         properties = [self._wrap(v if isinstance(v, DottedVariable) else v.clone(v.name, new_class = DottedVariable, lhs=pseudo_self)) \
                         for v in expr.attributes if not v.is_private and not isinstance(v.class_type, TupleType)]
         return BindCClassDef(expr, new_func = new_method, methods = methods,
-                             interfaces = interfaces, attributes = properties,
+                             interfaces = interfaces, attributes = properties_getters + properties,
                              docstring = expr.docstring, class_type = expr.class_type)

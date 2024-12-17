@@ -27,6 +27,11 @@ def dict_reassign():
     a = {1:1,2:2}
     a = {1:1,2:2,3:3,4:4,5:5}
 
+def str_reassign():
+    a = 'hello'
+    a = 'hello world'
+    a = 'hello cruel world'
+
 def conditional_list(b1: bool):
     if (b1):
         a = [1,2,3]

@@ -150,6 +150,15 @@ def test_enumerate_on_1d_array_with_start(language):
     assert np.array_equal( f1(z, 5), f2(z, 5) )
     assert np.array_equal( f1(z,-2), f2(z,-2) )
 
+def test_enumerate_on_1d_array_with_tuple(language):
+
+    f1 = loops.enumerate_on_1d_array_with_tuple
+    f2 = epyccel(f1, language=language)
+
+    z = np.arange( 7 )
+
+    assert np.array_equal( f1(z), f2(z) )
+
 def test_zip_prod(language):
 
     f1 = loops.zip_prod
@@ -237,14 +246,8 @@ def test_less_than_100(language):
     assert f1(10) == f2(10)
     assert f1(101) == f2(101)
 
-##==============================================================================
-## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
-##==============================================================================
-#
-#def teardown_module():
-#    import os, glob
-#    dirname  = os.path.dirname( loops.__file__ )
-#    pattern  = os.path.join( dirname, '__epyccel__*' )
-#    filelist = glob.glob( pattern )
-#    for f in filelist:
-#        os.remove( f )
+def test_for_expression(language):
+    f1 = loops.for_expression
+    f2 = epyccel( f1, language = language )
+
+    assert f1() == f2()

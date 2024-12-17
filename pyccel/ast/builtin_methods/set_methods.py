@@ -18,6 +18,7 @@ __all__ = (
     'SetClear',
     'SetCopy',
     'SetDiscard',
+    'SetIntersection',
     'SetMethod',
     'SetPop',
     'SetUnion',
@@ -231,4 +232,33 @@ class SetUnion(SetMethod):
             if element_type != o.class_type.element_type:
                 raise TypeError(f"Argument of type {o.class_type} cannot be used to build set of type {self._class_type}")
         self._shape = (None,)*self._class_type.rank
+        super().__init__(set_obj, *others)
+
+#==============================================================================
+
+class SetIntersection(SetMethod):
+    """
+    Represents a call to the set method .intersection.
+
+    Represents a call to the set method .intersection. This method builds a new set
+    by including all elements which appear in "both" of the iterables
+    (the set object and the arguments).
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    *others : TypedAstNode
+        The iterables which will be combined (common elements) with this set.
+    """
+    __slots__ = ('_other','_class_type', '_shape')
+    name = 'intersection'
+
+    def __init__(self, set_obj, *others):
+        self._class_type = set_obj.class_type
+        element_type = self._class_type.element_type
+        for o in others:
+            if element_type != o.class_type.element_type:
+                raise TypeError(f"Argument fo type {o.type_class} cannot be used to build set of type {self._class_type}")
+        self._shape = (None,)*self.rank
         super().__init__(set_obj, *others)

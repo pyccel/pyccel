@@ -60,7 +60,8 @@ def test_reallocation_heap(language):
     # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
-    assert warning_info.message == ARRAY_REALLOCATION
+    expected_msg = ARRAY_REALLOCATION.split()[1:]
+    assert warning_info.message.split()[-len(expected_msg):] == expected_msg
 
 #==============================================================================
 def test_reallocation_stack(language):
@@ -168,6 +169,26 @@ def test_creation_in_if_heap(language):
     assert f(c) == g(c)
 
 #==============================================================================
+def test_creation_in_if_heap_shape(language):
+
+    def f(c : 'float'):
+        import numpy as np
+        if c > 0.5:
+            x = np.ones(2, dtype=int)
+        else:
+            x = np.ones(7, dtype=int)
+
+        y = x[1:-1]
+        return y.sum()
+
+    g = epyccel(f, language=language)
+
+    # Check result of pyccelized function
+    import numpy as np
+    c = np.random.random()
+    assert f(c) == g(c)
+
+#==============================================================================
 def test_Reassign_to_Target():
 
     def f():
@@ -249,7 +270,8 @@ def test_Assign_after_If():
     # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
-    assert warning_info.message == ARRAY_REALLOCATION
+    expected_msg = ARRAY_REALLOCATION.split()[1:]
+    assert warning_info.message.split()[-len(expected_msg):] == expected_msg
 
     assert f(True) == f2(True)
     assert f(False) == f2(False)

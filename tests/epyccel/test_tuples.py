@@ -185,3 +185,13 @@ def test_multi_level_tuple_arg(language):
         epyc_func = epyccel(my_tuple, language=language)
 
         assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
+
+@pytest.mark.xfail(reason="Returning tuples from functions requires a reorganisation of the return system. See #337")
+def test_homogeneous_tuples_result(stc_language):
+    def my_tuple() -> 'tuple[int, ...]':
+        a = (1,2,3,4,5)
+        return a
+
+    epyc_func = epyccel(my_tuple, language=stc_language)
+
+    assert my_tuple() == epyc_func()

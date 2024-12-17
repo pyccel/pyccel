@@ -12,7 +12,7 @@ from collections import namedtuple
 import pyccel.decorators as pyccel_decorators
 from pyccel.errors.errors import Errors, PyccelError
 
-from .core          import (AsName, Import, FunctionDef, FunctionCall,
+from .core          import (AsName, Import, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
                             Concatenate, Module, PyccelFunctionDef)
 
@@ -425,7 +425,12 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                                     and not isinstance(f, (NumpyTranspose))))
     for line in block:
 
-        if (isinstance(line, Assign) and
+        if isinstance(line, Assign) and isinstance(line.lhs.class_type, StringType):
+            # Save line in top level (no for loop)
+            result.append(line)
+            current_level = 0
+
+        elif (isinstance(line, Assign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
                 not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
@@ -694,7 +699,7 @@ def insert_fors(blocks, indices, scope, level = 0):
     else:
         body = CodeBlock(body, unravelled = True)
         loop_scope = scope.create_new_loop_scope()
-        return [For(indices[level],
+        return [For([indices[level]],
                     PythonRange(0,blocks.length),
                     body,
                     scope = loop_scope)]
