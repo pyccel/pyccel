@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import empty, array_equal, np_default_int
+from numpy import empty, array_equal
 from numpy.random import randint, array
 
 from pyccel import epyccel
