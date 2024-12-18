@@ -563,6 +563,33 @@ def test_set_intersection_operator(language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
+def test_set_intersection_update(language):
+    def intersection_int():
+        a = {1,2,3,4,8}
+        b = {5,2,3,7,8}
+        a.intersection_update(b)
+        return len(a), a.pop(), a.pop(), a.pop()
+
+    epyccel_func = epyccel(intersection_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = intersection_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_intersection_multiple_update(language):
+    def intersection_int():
+        a = {1,2,3,4,8}
+        b = {5,2,3,7,8}
+        c = {10,2,20}
+        a.intersection_update(b, c)
+        return len(a), a.pop()
+
+    epyccel_func = epyccel(intersection_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = intersection_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
 def test_set_union_augoperator(language):
     def union_int():
         a = {1,2,3,4}
