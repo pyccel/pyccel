@@ -1,6 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from packaging.version import Version
-
 import pytest
 from numpy.random import randint, uniform
 from numpy import iinfo, finfo
