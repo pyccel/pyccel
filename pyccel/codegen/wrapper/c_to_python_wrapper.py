@@ -2696,12 +2696,18 @@ class CToPythonWrapper(Wrapper):
             shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
             c_result_vars = [ObjectAddress(data_var)]+shape_vars
         else:
-            # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
-            c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False, memory_handling='alias')
+            c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
+            typenum = numpy_dtype_registry[orig_var.dtype]
+            data_var = DottedVariable(VoidType(), 'data', memory_handling='alias',
+                        lhs=c_res)
+            shape_var = DottedVariable(CStackArray(PythonNativeInt()), 'shape',
+                        lhs=c_res)
+            release_memory = False
+            body = [AliasAssign(py_res, to_pyarray(
+                             LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
+                             convert_to_literal(orig_var.order != 'F'),
+                             convert_to_literal(release_memory)))]
             self.scope.insert_variable(c_res)
-            self._wrapping_arrays = True
-            body = [AliasAssign(py_res, FunctionCall(C_to_Python(c_res), [c_res])),
-                    Deallocate(c_res)]
             c_result_vars = [c_res]
 
         if funcdef:
