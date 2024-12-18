@@ -31,7 +31,7 @@ from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
-from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion
+from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -5414,3 +5414,45 @@ class SemanticParser(BasicParser):
                      for c in update_calls]
             pyccel_stage.set_stage('semantic')
             return CodeBlock([self._visit(b) for b in body])
+
+    def _build_SetIntersection(self, expr, function_call_args):
+        """
+        Method to visit a SetIntersection node.
+
+        The purpose of this `_build` method is to construct multiple nodes to represent
+        the single DottedName node representing the call to SetIntersection. It
+        replaces the call with a call to copy followed by multiple calls to
+        SetIntersectionUpdate.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represent the call to `.intersection()`.
+
+        function_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        Returns
+        -------
+        CodeBlock
+            CodeBlock containing SetCopy and SetIntersectionUpdate objects.
+        """
+        start_set = function_call_args[0].value
+        set_args = [self._visit(a.value) for a in function_call_args[1:]]
+        assign = expr.get_direct_user_nodes(lambda a: isinstance(a, Assign))
+        if assign:
+            syntactic_lhs = assign[-1].lhs
+        else:
+            syntactic_lhs = self.scope.get_new_name()
+        d_var = self._infer_type(start_set)
+        rhs = SetCopy(start_set)
+        body = []
+        lhs = self._assign_lhs_variable(syntactic_lhs, d_var, rhs, body)
+        body.append(Assign(lhs, rhs, python_ast = expr.python_ast))
+        body += [SetIntersectionUpdate(lhs, s) for s in set_args]
+        if assign:
+            return CodeBlock(body)
+        else:
+            self._additional_exprs[-1].extend(body)
+            return lhs
+
