@@ -2793,8 +2793,8 @@ class CCodePrinter(CodePrinter):
         var_type = self.get_c_type(class_type)
         self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(class_type), var_type)))
         set_var = self._print(ObjectAddress(expr.set_variable))
-        args = ', '.join(self._print(ObjectAddress(a)) for a in expr.args)
-        return f'{var_type}_intersection_update({set_var}, {args});\n'
+        return ''.join(f'{var_type}_intersection_update({set_var}, {self._print(ObjectAddress(a))});\n' \
+                for a in expr.args)
 
     #=================== MACROS ==================
 
