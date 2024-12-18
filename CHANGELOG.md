@@ -47,6 +47,7 @@ All notable changes to this project will be documented in this file.
 -   #1753 : Add support for set method `union()`.
 -   #1754 : Add support for set method `update()`.
 -   #1744 : Add support for set method `intersection()`.
+-   #1745 : Add support for set method `intersection_update()`.
 -   #1884 : Add support for dict method `items()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
