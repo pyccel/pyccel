@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy.random import randint
-from numpy import equal
+from numpy import equal, array
 import pytest
 
 
@@ -21,11 +21,11 @@ def test_functional_for_overwrite_1d_range(language):
     compare_epyccel(functionals.functional_for_overwrite_1d_range, language)
 
 def test_functional_for_1d_var(language):
-    y = randint(99, size = 4, dtype = int)
+    y = array(randint(99, size = 4), dtype = int)
     compare_epyccel(functionals.functional_for_1d_var, language, y)
 
 def test_functional_for_1d_const(language):
-    y = randint(99, size = 4, dtype = int)
+    y = array(randint(99, size = 4), dtype = int)
     z = randint(99)
     compare_epyccel(functionals.functional_for_1d_const, language, y, z)
 
@@ -36,12 +36,12 @@ def test_functional_for_2d_range(language):
     compare_epyccel(functionals.functional_for_2d_range, language)
 
 def test_functional_for_2d_var_range(language):
-    y = randint(99, size = 3, dtype = int)
+    y = array(randint(99, size = 3), dtype = int)
     compare_epyccel(functionals.functional_for_2d_var_range, language, y)
 
 def test_functional_for_2d_var_var(language):
-    y = randint(99, size = 3, dtype = int)
-    z = randint(99, size = 2, dtype = int)
+    y = array(randint(99, size = 3), dtype = int)
+    z = array(randint(99, size = 2), dtype = int)
     compare_epyccel(functionals.functional_for_2d_var_var, language, y, z)
 
 def test_functional_for_2d_dependant_range(language):
@@ -72,5 +72,5 @@ def test_functional_for_3d_range(language):
     compare_epyccel(functionals.functional_for_3d_range, language)
 
 def test_unknown_length_functional(language):
-    y = randint(100, size = 20, dtype = int)
+    y = array(randint(100, size = 20), dtype = int)
     compare_epyccel(functionals.unknown_length_functional, language, y)
