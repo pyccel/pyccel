@@ -119,62 +119,62 @@ def test_copy_complex(language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_remove_complex(python_only_language):
+def test_remove_complex(language):
     def remove_complex():
         se = {1j, 3j, 8j}
         se.remove(3j)
         return se
-    epyccel_remove = epyccel(remove_complex, language = python_only_language)
+    epyccel_remove = epyccel(remove_complex, language = language)
     pyccel_result = epyccel_remove()
     python_result = remove_complex()
     assert python_result == pyccel_result
 
-def test_remove_int(python_only_language):
+def test_remove_int(language):
     def remove_int():
         se = {2, 4, 9}
         se.remove(4)
         return se
-    epyccel_remove = epyccel(remove_int, language = python_only_language)
+    epyccel_remove = epyccel(remove_int, language = language)
     pyccel_result = epyccel_remove()
     python_result = remove_int()
     assert python_result == pyccel_result
 
-def test_remove_float(python_only_language):
+def test_remove_float(language):
     def remove_float():
         se = {5.7, 2.4, 8.1}
         se.remove(8.1)
         return se
-    epyccel_remove = epyccel(remove_float, language = python_only_language)
+    epyccel_remove = epyccel(remove_float, language = language)
     pyccel_result = epyccel_remove()
     python_result = remove_float()
     assert python_result == pyccel_result
 
-def test_Discard_int(python_only_language):
+def test_Discard_int(language):
     def Discard_int():
         se = {2.7, 4.3, 9.2}
         se.discard(4.3)
         return se
-    epyccel_remove = epyccel(Discard_int, language = python_only_language)
+    epyccel_remove = epyccel(Discard_int, language = language)
     pyccel_result = epyccel_remove()
     python_result = Discard_int()
     assert python_result == pyccel_result
 
-def test_Discard_complex(python_only_language):
+def test_Discard_complex(language):
     def Discard_complex():
         se = {2j, 5j, 3j, 7j}
         se.discard(5j)
         return se
-    epyccel_remove = epyccel(Discard_complex, language = python_only_language)
+    epyccel_remove = epyccel(Discard_complex, language = language)
     pyccel_result = epyccel_remove()
     python_result = Discard_complex()
     assert python_result == pyccel_result
 
-def test_Discard_wrong_arg(python_only_language):
+def test_Discard_wrong_arg(language):
     def Discard_wrong_arg():
         se = {4.7, 1.3, 8.2}
         se.discard(8.6)
         return se
-    epyccel_remove = epyccel(Discard_wrong_arg, language = python_only_language)
+    epyccel_remove = epyccel(Discard_wrong_arg, language = language)
     pyccel_result = epyccel_remove()
     python_result = Discard_wrong_arg()
     assert python_result == pyccel_result
