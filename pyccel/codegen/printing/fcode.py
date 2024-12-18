@@ -1363,6 +1363,12 @@ class FCodePrinter(CodePrinter):
             self._additional_code += code
             return result
 
+    def _print_SetDiscard(self, expr):
+        var = self._print(expr.set_variable)
+        val = self._print(expr.args[0])
+        success = self.scope.get_temporary_variable(PythonNativeInt())
+        return f'{success} = {var} % erase_value({val})\n'
+
     #========================== Numpy Elements ===============================#
 
     def _print_NumpySum(self, expr):
