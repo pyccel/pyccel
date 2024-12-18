@@ -33,9 +33,10 @@ contains
     last = this%end()
     do while (iter /= last)
       if (other_set % count(iter%of()) == 0) then
-        call this%erase(iter)
+        iter = this%erase(iter)
+      else
+        call iter%next()
       end if
-      call iter%next()
     end do
 
   end subroutine __IDENTITY(Set)_intersection_update
