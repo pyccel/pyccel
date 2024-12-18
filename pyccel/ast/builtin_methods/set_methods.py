@@ -254,15 +254,6 @@ class SetIntersection(SetMethod):
     __slots__ = ('_other','_class_type', '_shape')
     name = 'intersection'
 
-    def __init__(self, set_obj, *others):
-        self._class_type = set_obj.class_type
-        element_type = self._class_type.element_type
-        for o in others:
-            if element_type != o.class_type.element_type:
-                raise TypeError(f"Argument fo type {o.type_class} cannot be used to build set of type {self._class_type}")
-        self._shape = (None,)*self.rank
-        super().__init__(set_obj, *others)
-
 #==============================================================================
 
 class SetIntersectionUpdate(SetMethod):
@@ -285,4 +276,8 @@ class SetIntersectionUpdate(SetMethod):
     _shape = None
 
     def __init__(self, set_obj, *others):
+        class_type = set_obj.class_type
+        for o in others:
+            if class_type != o.class_type:
+                raise TypeError(f"Only arguments of type {class_type} are supported for the functions intersection and .intersection_update")
         super().__init__(set_obj, *others)
