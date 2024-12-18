@@ -2787,6 +2787,15 @@ class CCodePrinter(CodePrinter):
         args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
         return f'{var_type}_union({set_var}, {args})'
 
+    def _print_SetIntersectionUpdate(self, expr):
+        assign_base = expr.get_direct_user_nodes(lambda n: isinstance(n, Assign))
+        class_type = expr.set_variable.class_type
+        var_type = self.get_c_type(class_type)
+        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(class_type), var_type)))
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        args = ', '.join(self._print(ObjectAddress(a)) for a in expr.args)
+        return f'{var_type}_intersection_update({set_var}, {args});\n'
+
     #=================== MACROS ==================
 
     def _print_MacroShape(self, expr):
