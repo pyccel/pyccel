@@ -5449,7 +5449,10 @@ class SemanticParser(BasicParser):
         body = []
         lhs = self._assign_lhs_variable(syntactic_lhs, d_var, rhs, body)
         body.append(Assign(lhs, rhs, python_ast = expr.python_ast))
-        body += [SetIntersectionUpdate(lhs, s) for s in set_args]
+        try:
+            body += [SetIntersectionUpdate(lhs, s) for s in set_args]
+        except TypeError as e:
+            errors.report(e, symbol=expr, severity='error')
         if assign:
             return CodeBlock(body)
         else:
