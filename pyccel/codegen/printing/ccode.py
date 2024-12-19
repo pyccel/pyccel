@@ -242,7 +242,6 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                 ['stdlib',
                  'math',
                  'string',
-                 #'ndarrays',
                  'complex',
                  'stdint',
                  'pyc_math_c',
@@ -1085,6 +1084,19 @@ class CCodePrinter(CodePrinter):
                          '#include <stc/cspan.h>\n',
                         f'using_cspan({container_type}, {element_type}, {rank});\n',
                         f'#endif // {header_guard}\n\n'))
+            return code
+        elif source == 'stc/common':
+            code = ''
+            for t in expr.target:
+                element_decl = f'#define i_key {t.local_alias}\n'
+                header_guard_prefix = import_header_guard_prefix.get(source, '')
+                header_guard = f'{header_guard_prefix}_{t.local_alias.upper()}'
+                code += ''.join((f'#ifndef {header_guard}\n',
+                     f'#define {header_guard}\n',
+                     element_decl,
+                     f'#include <{source}.h>\n',
+                     f'#include <{stc_extension_mapping[source]}.h>\n',
+                     f'#endif // {header_guard}\n\n'))
             return code
         elif source != 'stc/cstr' and (source.startswith('stc/') or source in import_header_guard_prefix):
             code = ''
