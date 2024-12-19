@@ -71,10 +71,12 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 
     ```python
     from numpy import imag, real, array
-    arr1 = array([1+1j,2+1j,3+1j,4+1j])
-    real_part = real(arr1)
-    imag_part = imag(arr1)
-    print("real part for arr1: " , real_part, "\nimag part for arr1: ", imag_part)
+
+    if __name__ == '__main__':
+        arr1 = array([1+1j,2+1j,3+1j,4+1j])
+        real_part = real(arr1)
+        imag_part = imag(arr1)
+        print("real part for arr1: " , real_part, "\nimag part for arr1: ", imag_part)
     ```
 
 -   Fortran equivalent:
@@ -105,134 +107,55 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 -   C equivalent:
 
     ```C
-    #include <complex.h>
-    #include <stdlib.h>
-    #include "ndarrays.h"
-    #include <stdio.h>
-    #include <stdint.h>
     int main()
     {
-        t_ndarray arr1;
-        t_ndarray real_part;
-        t_ndarray imag_part;
-        int64_t i_0001;
+        array_double_complex_1d arr1 = {0};
+        array_double_1d real_part = {0};
+        array_double_1d imag_part = {0};
         int64_t i;
-        int64_t i_0002;
-        arr1 = array_create(1, (int64_t[]){4}, nd_cdouble);
-        double complex array_dummy_0001[] = {(1.0 + 1.0 * _Complex_I), (2.0 + 1.0 * _Complex_I), (3.0 + 1.0 * _Complex_I), (4.0 + 1.0 * _Complex_I)};
-        memcpy(arr1.nd_cdouble, array_dummy_0001, arr1.buffer_size);
-        real_part = array_create(1, (int64_t[]){4}, nd_double);
-        for (i_0001 = 0; i_0001 < 4; i_0001 += 1)
-        {
-            real_part.nd_double[get_index(real_part, i_0001)] = creal(arr1.nd_cdouble[get_index(arr1, i_0001)]);
-        }
-        imag_part = array_create(1, (int64_t[]){4}, nd_double);
-        for (i_0001 = 0; i_0001 < 4; i_0001 += 1)
-        {
-            imag_part.nd_double[get_index(imag_part, i_0001)] = cimag(arr1.nd_cdouble[get_index(arr1, i_0001)]);
-        }
-        printf("%s ", "real part for arr1: ");
-        printf("%s", "[");
-        for (i = 0; i < 3; i += 1)
-        {
-            printf("%.12lf ", real_part.nd_double[get_index(real_part, i)]);
-        }
-        printf("%.12lf]", real_part.nd_double[get_index(real_part, 3)]);
-        printf("%s ", "\nimag part for arr1: ");
-        printf("%s", "[");
-        for (i_0002 = 0; i_0002 < 3; i_0002 += 1)
-        {
-            printf("%.12lf ", imag_part.nd_double[get_index(imag_part, i_0002)]);
-        }
-        printf("%.12lf]\n", imag_part.nd_double[get_index(imag_part, 3)]);
-        free_array(arr1);
-        free_array(real_part);
-        free_array(imag_part);
-        return 0;
-    }
-    ```
-
--   Python code with arrays:
-
-    ```python
-    from numpy import imag, real, array
-    arr1 = array([1+1j,2+1j,3+1j,4+1j])
-    real_part = real(arr1)
-    imag_part = imag(arr1)
-    print("real part for arr1: " , real_part, "\nimag part for arr1: ", imag_part)
-    ```
-
--   Fortran equivalent:
-
-    ```fortran
-    program prog_test_imag_real
-
-    use, intrinsic :: ISO_C_BINDING
-
-    implicit none
-
-    complex(C_DOUBLE_COMPLEX), allocatable :: arr1(:)
-    real(C_DOUBLE), allocatable :: real_part(:)
-    real(C_DOUBLE), allocatable :: imag_part(:)
-
-    allocate(arr1(0:3_C_INT64_T))
-    arr1 = [(1.0_C_DOUBLE, 1.0_C_DOUBLE), (2.0_C_DOUBLE, 1.0_C_DOUBLE), ( &
-          3.0_C_DOUBLE, 1.0_C_DOUBLE), (4.0_C_DOUBLE, 1.0_C_DOUBLE)]
-    allocate(real_part(0:3_C_INT64_T))
-    real_part = Real(arr1, C_DOUBLE)
-    allocate(imag_part(0:3_C_INT64_T))
-    imag_part = aimag(arr1)
-    print *, 'real part for arr1: ' // ' ' , real_part, ACHAR(10) // 'imag part for arr1: ' // ' ' , imag_part
-
-    end program prog_test_imag_real
-    ```
-
--   C equivalent:
-
-    ```C
-    #include <stdlib.h>
-    #include <stdio.h>
-    #include "ndarrays.h"
-    #include <complex.h>
-    #include <stdint.h>
-    int main()
-    {
-        t_ndarray arr1;
-        t_ndarray real_part;
-        t_ndarray imag_part;
+        double complex* arr1_ptr;
+        double* real_part_ptr;
+        double* imag_part_ptr;
         int64_t i_0001;
-        int64_t i;
         int64_t i_0002;
-        arr1 = array_create(1, (int64_t[]){4}, nd_cdouble);
-        double complex array_dummy_0001[] = {(1.0 + 1.0 * _Complex_I), (2.0 + 1.0 * _Complex_I), (3.0 + 1.0 * _Complex_I), (4.0 + 1.0 * _Complex_I)};
-        memcpy(arr1.nd_cdouble, array_dummy_0001, arr1.buffer_size);
-        real_part = array_create(1, (int64_t[]){4}, nd_double);
-        for (i_0001 = 0; i_0001 < 4; i_0001 += 1)
+        arr1_ptr = malloc(sizeof(double complex) * (INT64_C(4)));
+        arr1 = (array_double_complex_1d)cspan_md_layout(c_ROWMAJOR, arr1_ptr, INT64_C(4));
+        (*cspan_at(&arr1, INT64_C(0))) = (1.0 + 1.0 * _Complex_I);
+        (*cspan_at(&arr1, INT64_C(1))) = (2.0 + 1.0 * _Complex_I);
+        (*cspan_at(&arr1, INT64_C(2))) = (3.0 + 1.0 * _Complex_I);
+        (*cspan_at(&arr1, INT64_C(3))) = (4.0 + 1.0 * _Complex_I);
+        real_part_ptr = malloc(sizeof(double) * (INT64_C(4)));
+        real_part = (array_double_1d)cspan_md_layout(c_ROWMAJOR, real_part_ptr, INT64_C(4));
+        for (i = INT64_C(0); i < INT64_C(4); i += INT64_C(1))
         {
-            real_part.nd_double[get_index(real_part, i_0001)] = creal(arr1.nd_cdouble[get_index(arr1, i_0001)]);
+            (*cspan_at(&real_part, i)) = creal((*cspan_at(&arr1, i)));
         }
-        imag_part = array_create(1, (int64_t[]){4}, nd_double);
-        for (i_0001 = 0; i_0001 < 4; i_0001 += 1)
+        imag_part_ptr = malloc(sizeof(double) * (INT64_C(4)));
+        imag_part = (array_double_1d)cspan_md_layout(c_ROWMAJOR, imag_part_ptr, INT64_C(4));
+        for (i = INT64_C(0); i < INT64_C(4); i += INT64_C(1))
         {
-            imag_part.nd_double[get_index(imag_part, i_0001)] = cimag(arr1.nd_cdouble[get_index(arr1, i_0001)]);
+            (*cspan_at(&imag_part, i)) = cimag((*cspan_at(&arr1, i)));
         }
-        printf("%s ", "real part for arr1: ");
-        printf("%s", "[");
-        for (i = 0; i < 4 - 1; i += 1)
+        printf("real part for arr1:  ");
+        printf("[");
+        for (i_0001 = INT64_C(0); i_0001 < INT64_C(3); i_0001 += INT64_C(1))
         {
-            printf("%.12lf ", real_part.nd_double[get_index(real_part, i)]);
+            printf("%.15lf ", (*cspan_at(&real_part, i_0001)));
         }
-        printf("%.12lf]", real_part.nd_double[get_index(real_part, 4 - 1)]);
-        printf("%s ", "\nimag part for arr1: ");
-        printf("%s", "[");
-        for (i_0002 = 0; i_0002 < 4 - 1; i_0002 += 1)
+        printf("%.15lf]", (*cspan_at(&real_part, INT64_C(3))));
+        printf("\nimag part for arr1:  ");
+        printf("[");
+        for (i_0002 = INT64_C(0); i_0002 < INT64_C(3); i_0002 += INT64_C(1))
         {
-            printf("%.12lf ", imag_part.nd_double[get_index(imag_part, i_0002)]);
+            printf("%.15lf ", (*cspan_at(&imag_part, i_0002)));
         }
-        printf("%.12lf]\n", imag_part.nd_double[get_index(imag_part, 4 - 1)]);
-        free_array(arr1);
-        free_array(real_part);
-        free_array(imag_part);
+        printf("%.15lf]\n", (*cspan_at(&imag_part, INT64_C(3))));
+        free(arr1.data);
+        arr1.data = NULL;
+        free(real_part.data);
+        real_part.data = NULL;
+        free(imag_part.data);
+        imag_part.data = NULL;
         return 0;
     }
     ```
@@ -422,29 +345,27 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 -   C equivalent:
 
     ```C
-    #include "test.h"
-    #include "ndarrays.h"
-    #include <stdlib.h>
-    #include <stdint.h>
-    #include <stdio.h>
     int main()
     {
-        t_ndarray x;
-        int64_t i_0001;
+        array_double_1d x = {0};
         int64_t i;
-        x = array_create(1, (int64_t[]){20}, nd_double);
-        for (i_0001 = 0; i_0001 < 20; i_0001 += 1)
+        double* x_ptr;
+        int64_t i_0001;
+        x_ptr = malloc(sizeof(double) * (INT64_C(20)));
+        x = (array_double_1d)cspan_md_layout(c_ROWMAJOR, x_ptr, INT64_C(20));
+        for (i = INT64_C(0); i < INT64_C(20); i += INT64_C(1))
         {
-            GET_ELEMENT(x, nd_double, i_0001) = (0 + i_0001*(double)((10 - 0)) / (double)((20 - 1)));
-            GET_ELEMENT(x, nd_double, 19) = (double)10;
+            (*cspan_at(&x, i)) = (INT64_C(0) + i*(double)((INT64_C(10) - INT64_C(0))) / 19.0);
+            (*cspan_at(&x, INT64_C(19))) = (double)INT64_C(10);
         }
-        printf("%s", "[");
-        for (i = 0; i < 19; i += 1)
+        printf("[");
+        for (i_0001 = INT64_C(0); i_0001 < INT64_C(19); i_0001 += INT64_C(1))
         {
-            printf("%.12lf ", GET_ELEMENT(x, nd_double, i));
+            printf("%.15lf ", (*cspan_at(&x, i_0001)));
         }
-        printf("%.12lf]\n", GET_ELEMENT(x, nd_double, 19));
-        free_array(x);
+        printf("%.15lf]\n", (*cspan_at(&x, INT64_C(19))));
+        free(x.data);
+        x.data = NULL;
         return 0;
     }
     ```
