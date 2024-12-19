@@ -1794,7 +1794,6 @@ class CCodePrinter(CodePrinter):
             elif (expr.status == 'allocated'):
                 free_code += self._print(Deallocate(variable))
 
-            #data_ptr = ObjectAddress(DottedVariable(VoidType(), 'data', lhs = variable, memory_handling='alias'))
             tot_shape = self._print(functools.reduce(
                 lambda x,y: PyccelMul(x,y,simplify=True), expr.shape))
             c_type = self.get_c_type(variable.class_type)
@@ -1817,7 +1816,7 @@ class CCodePrinter(CodePrinter):
             order = 'c_COLMAJOR' if variable.order == 'F' else 'c_ROWMAJOR'
             shape = ", ".join(self._print(i) for i in expr.shape)
 
-            return buffer_array + f'{self._print(variable)} = ({c_type})cspan_md_layout({order}, {dummy_array_name}, {shape});\n'
+            return free_code + buffer_array + f'{self._print(variable)} = ({c_type})cspan_md_layout({order}, {dummy_array_name}, {shape});\n'
         elif variable.is_alias:
             var_code = self._print(ObjectAddress(variable))
             if expr.like:
