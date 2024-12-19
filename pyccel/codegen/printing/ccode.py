@@ -876,6 +876,7 @@ class CCodePrinter(CodePrinter):
             if classDef.docstring is not None:
                 classes += self._print(classDef.docstring)
             classes += f"struct {classDef.name} {{\n"
+            # Is external is required to avoid the default initialisation of containers
             attrib_decl = [self._print(Declare(var, external=True)) for var in classDef.attributes]
             classes += ''.join(d[len('extern '):] if d.startswith('extern ') else d for d in attrib_decl)
             for method in classDef.methods:
