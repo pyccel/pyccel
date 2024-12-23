@@ -98,6 +98,7 @@ All notable changes to this project will be documented in this file.
 -   #2094 : Fix slicing of array allocated in an if block.
 -   #2085 : Fix calling class methods before they are defined.
 -   #2111 : Fix declaration of class attributes with name conflicts using type annotations.
+-   #2115 : Fix integer handling with NumPy 2.0 on Windows.
 
 ### Changed
 

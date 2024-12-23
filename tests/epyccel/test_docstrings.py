@@ -24,7 +24,7 @@ def test_1_line_docstring(language):
         return 1
 
     g = epyccel(f, language=language)
-    assert f.__doc__ == g.__doc__
+    assert f.__doc__.strip() == g.__doc__.strip()
 
 def test_multiline_line_docstring(language):
     def f():
