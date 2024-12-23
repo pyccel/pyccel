@@ -683,7 +683,6 @@ class FCodePrinter(CodePrinter):
         mod_name = f'{typename}_extensions_mod'
         if matching_expr_extensions:
             module = matching_expr_extensions
-            print(matching_expr_extensions, type(matching_expr_extensions))
         else:
             imports_and_macros = []
 
