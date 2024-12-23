@@ -1813,7 +1813,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.variable.dtype, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
             return f"{Pyccel__del}({variable_address});\n"
-        elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousContainerType)):
+        elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             if expr.variable.is_alias:
                 return f'free_pointer({variable_address});\n'
             else:
@@ -2826,6 +2826,8 @@ class CCodePrinter(CodePrinter):
     def _print_PrecomputedCode(self, expr):
         return expr.code
 
+    def _print_AllDeclaration(self, expr):
+        return ''
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""

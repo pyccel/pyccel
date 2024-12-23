@@ -698,14 +698,12 @@ def test_set_arg(stc_language):
     set_arg(arg_pyt, n)
     assert arg_pyc == arg_pyt
 
-def test_set_return(stc_language):
+def test_set_return(language):
     def set_return():
         a = {1,2,3,4,5}
-        b = {4,5,6}
-        c = a.union(b) # Use union to avoid #2084
-        return c
+        return a
 
-    epyccel_func = epyccel(set_return, language = stc_language)
+    epyccel_func = epyccel(set_return, language = language)
     pyccel_result = epyccel_func()
     python_result = set_return()
     assert python_result == pyccel_result
