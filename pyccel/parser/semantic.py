@@ -1844,11 +1844,17 @@ class SemanticParser(BasicParser):
         index   = Variable(PythonNativeInt(),self.scope.get_new_name('to_delete'), is_temp=True)
         self.scope.insert_variable(index)
         new_expr = []
-        while isinstance(loop, For):
+        while isinstance(loop, (For, If)):
+
+            if isinstance(loop, If):
+                loop = loop.blocks[0].body.body[0]
+                continue         
             nlevels+=1
             self._get_for_iterators(loop.iterable, loop.target, new_expr)
 
             loop_elem = loop.body.body[0]
+            if isinstance(loop_elem, If):
+                loop_elem = loop_elem.blocks[0].body.body[0]
 
             if isinstance(loop_elem, Assign):
                 # If the result contains a GeneratorComprehension, treat it and replace
@@ -1907,7 +1913,7 @@ class SemanticParser(BasicParser):
         # Iterate over the loops
         # This provides the definitions of iterators as well
         # as the central expression
-        loops = [self._visit(loops)]
+        loops = [self._visit(expr.loops)]
 
         # If necessary add additional expressions corresponding
         # to nested GeneratorComprehensions
@@ -3676,13 +3682,6 @@ class SemanticParser(BasicParser):
         pyccel.ast.basic.CodeBlock
             A code block containing the equivalent loops and necessary variable allocations for the given `FunctionalFor` expression.
         """
-        '''
-        if expr.target_type != 'list':
-            old_index   = expr.index
-            new_index   = self.scope.get_new_name()
-            expr.substitute(old_index, new_index)
-            index = new_index
-        '''
         target  = expr.expr
         indices = []
         dims = []
@@ -3967,26 +3966,6 @@ class SemanticParser(BasicParser):
                 tt += 1
                 l = None if tt >= len(loops) else loops[tt]
                 cnt = 0
-        
-        '''
-        for loop, condition in zip(loops, conditions):
-            if condition:
-                loop.insert2body(self._visit(condition))
-
-        if loops[-1].body.body:
-            for operation in create_target_operations():
-                loops[-1].body.body[0].blocks[0].body.insert2body(operation)
-        else:
-            for operation in create_target_operations():
-                loops[-1].insert2body(operation)
-        while len(loops) > 1:
-            outter_loop = loops.pop()
-            inserted_into = loops[-1]
-            if inserted_into.body.body:
-                inserted_into.body.body[0].blocks[0].body.insert2body(outter_loop)
-            else:
-                inserted_into.insert2body(outter_loop)
-        '''
 
         return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=expr.indices, target_type=expr.target_type)])
 

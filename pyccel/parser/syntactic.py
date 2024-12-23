@@ -1223,7 +1223,10 @@ class SyntaxParser(BasicParser):
         
         result = self._visit(stmt.elt)
 
-        comprehensions = self._visit(stmt.generators)
+        comprehensions = list(self._visit(stmt.generators))
+        generators, conditions = zip(*comprehensions)
+        generators, conditions = map(list, [generators, conditions])
+
         parent = self._context[-2]
         if not isinstance(parent, ast.Call):
             raise NotImplementedError("GeneratorExp is not the argument of a function call")
@@ -1246,29 +1249,35 @@ class SyntaxParser(BasicParser):
             body = Assign(lhs, body)
 
         body.set_current_ast(parent)
-
-        for generator, condition in comprehensions:
+        
+        for loop, condition in zip(generators, conditions):
             if condition:
-                conditions.append(condition)
-            generators.append(generator)
-
-        while len(generators) > 0:
-            indices.append(generators[-1].target)
+                loop.insert2body(condition)
+        
+        if generators[-1].body.body:
+            generators[-1].body.body[0].blocks[0].body.insert2body(body)
+        else:
             generators[-1].insert2body(body)
-            body = generators.pop()
 
+        while(len(generators)) > 1:
+            indices.append(generators[-1].target)
+            outter_loop = generators.pop()
+            inserted_into = generators[-1]
+            if inserted_into.body.body:
+                inserted_into.body.body[0].blocks[0].body.insert2body(outter_loop)
+            else:
+                inserted_into.insert2body(outter_loop)
+ 
         indices = indices[::-1]
-
-        if conditions:
-            from functools import reduce
-            condition = reduce(PyccelAnd, conditions)
+        
+        
 
         if name == 'sum':
-            expr = FunctionalSum(body, result, lhs, indices, condition=condition)
+            expr = FunctionalSum(generators[0], result, lhs, indices, conditions=conditions)
         elif name == 'min':
-            expr = FunctionalMin(body, result, lhs, indices, condition=condition)
+            expr = FunctionalMin(generators[0], result, lhs, indices, conditions=conditions)
         elif name == 'max':
-            expr = FunctionalMax(body, result, lhs, indices, condition=condition)
+            expr = FunctionalMax(generators[0], result, lhs, indices, conditions=conditions)
         else:
             expr = EmptyNode()
             errors.report(PYCCEL_RESTRICTION_TODO,

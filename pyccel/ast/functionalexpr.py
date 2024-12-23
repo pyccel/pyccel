@@ -56,8 +56,10 @@ class FunctionalFor(TypedAstNode):
     target_type : PyccelSymbol, optional
         The type of the result of the functional for. This is useful at
         the syntactic stage to pass along the final type of the lhs (list/set/array/etc).
-    condition : If
-        The condition ....
+    conditions : list of If or None, optional
+        A list of filter conditions corresponding to each for-loop in the comprehension.
+        Each element of this list is either an `If` instance that describes the filtering
+        condition for that loop, or `None` if no condition is applied in that loop.
     """
     __slots__ = ('_loops','_expr', '_lhs', '_indices','_index',
             '_shape','_class_type', '_target_type', '_conditions')
@@ -118,6 +120,21 @@ class FunctionalFor(TypedAstNode):
 
     @property
     def conditions(self):
+        """
+        A list of filter conditions corresponding to each for-loop 
+        in the comprehension, or None.
+
+        If not `None`, each element of this list is either an `If` instance 
+        that describes the filtering condition for that loop, or `None` if 
+        no condition is applied. These conditions collectively determine
+        whether each item produced by the loops is included in the final result.
+
+        Returns
+        -------
+        list of If or None, or None
+            The list of filter conditions for each for-loop in 
+            the comprehension, or `None` if not specified.
+        """
         return self._conditions
 
 #==============================================================================
