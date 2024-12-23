@@ -8,6 +8,7 @@ See the developer docs for more details
 """
 
 from itertools import chain, product
+import os
 import warnings
 
 from sympy.utilities.iterables import iterable as sympy_iterable
@@ -57,6 +58,7 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
+from pyccel.ast.core import AllDeclaration
 
 from pyccel.ast.class_defs import get_cls_base
 
@@ -1610,8 +1612,10 @@ class SemanticParser(BasicParser):
 
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
-                know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape) \
-                        or isinstance(lhs.class_type, StringType)
+                if isinstance(lhs.dtype, StringType):
+                    know_lhs_shape = (lhs.rank == 1) or all(sh is not None for sh in lhs.alloc_shape[:-1])
+                else:
+                    know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape)
 
                 if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType)) and not know_lhs_shape:
                     msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
@@ -3279,10 +3283,11 @@ class SemanticParser(BasicParser):
                 cls_def = semantic_lhs_var.lhs.cls_base
                 insert_scope = cls_def.scope
                 cls_def.add_new_attribute(semantic_lhs_var)
+                lhs = lhs.name.name[-1]
             else:
                 insert_scope = self.scope
+                lhs = lhs.name
 
-            lhs = lhs.name
             if semantic_lhs_var.class_type is TypeAlias():
                 if not isinstance(rhs, SyntacticTypeAnnotation):
                     pyccel_stage.set_stage('syntactic')
@@ -3293,7 +3298,7 @@ class SemanticParser(BasicParser):
                 return EmptyNode()
 
             try:
-                insert_scope.insert_variable(semantic_lhs_var)
+                insert_scope.insert_variable(semantic_lhs_var, lhs)
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
 
@@ -3590,6 +3595,21 @@ class SemanticParser(BasicParser):
 
             new_expressions.append(new_expr)
 
+        if expr.lhs == '__all__':
+            self.scope.remove_variable(lhs[0])
+            self._allocs[-1].discard(lhs[0])
+            if isinstance(lhs[0].class_type, HomogeneousListType):
+                # Remove the last element of the errors (if it is a warning)
+                # This will be the list of list warning
+                try:
+                    error_info_map = errors.error_info_map[os.path.basename(errors.target)]
+                    if error_info_map[-1].severity == 'warning':
+                        error_info_map.pop()
+                except KeyError:
+                    # There may be a KeyError if this is not the first time that this DataType
+                    # of list of rank>0 is created.
+                    pass
+            return AllDeclaration(new_expressions[-1].rhs)
 
         if (len(new_expressions)==1):
             new_expressions = new_expressions[0]
