@@ -1425,10 +1425,6 @@ class CCodePrinter(CodePrinter):
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
 
-        elif isinstance(dtype, IteratorType):
-            iter_type = self.get_c_type(dtype.iterable_type)
-            return f'{iter_type}_iter'
-
         elif isinstance(dtype, StringType):
             self.add_import(c_imports['stc/cstr'])
             return 'cstr'
@@ -1851,8 +1847,6 @@ class CCodePrinter(CodePrinter):
                 buffer_array = ''
                 if isinstance(expr.like.class_type, VoidType):
                     dummy_array_name = self._print(ObjectAddress(expr.like))
-                elif isinstance(expr.like.class_type, BindCPointer):
-                    dummy_array_name = self._print(expr.like)
                 else:
                     raise NotImplementedError("Unexpected type passed to like argument")
             else:
