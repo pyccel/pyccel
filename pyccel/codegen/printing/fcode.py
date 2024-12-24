@@ -69,7 +69,7 @@ from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 
-from pyccel.ast.numpytypes import NumpyNDArrayType
+from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt64Type
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd, PyccelEq
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
@@ -1201,7 +1201,9 @@ class FCodePrinter(CodePrinter):
         args : variable
         """
         arg = expr.arg
-        ndigits = expr.ndigits
+        if not isinstance(arg.dtype.primitive_type, PrimitiveFloatingPointType):
+            arg = self._apply_cast(NumpyInt64Type(), arg)
+        ndigits = self._apply_cast(NumpyInt64Type(), expr.ndigits)
         self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
 
         arg_code = self._print(arg)
