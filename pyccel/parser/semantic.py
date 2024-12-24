@@ -3607,7 +3607,8 @@ class SemanticParser(BasicParser):
             test_node = None
         if test_node:
             lhs.remove_user_node(test_node, invalidate = False)
-            rhs.remove_user_node(test_node, invalidate = False)
+            for elem in rhs.get_all_user_nodes():
+                elem.remove_user_node(test_node, invalidate = False)
             lhs = self._assign_lhs_variable(expr.lhs, self._infer_type(test_node), test_node,
                     new_expressions, is_augassign = True)
             lhs = self._optional_params.get(lhs, lhs)
