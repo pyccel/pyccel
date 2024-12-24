@@ -1159,7 +1159,7 @@ class SyntaxParser(BasicParser):
 
         self.exit_loop_scope()
 
-        expr = (For(iterator, iterable, [], scope=scope), condition) 
+        expr = (For(iterator, iterable, [], scope=scope), condition)
         return expr
 
     def _visit_ListComp(self, stmt):
@@ -1186,7 +1186,7 @@ class SyntaxParser(BasicParser):
         generators, conditions = zip(*comprehensions)
         generators, conditions = map(list, [generators, conditions])
 
-        parent = self._context[-2]    
+        parent = self._context[-2]
         if isinstance(parent, ast.Call):
             output_type = self._visit(parent.func)
 
@@ -1215,7 +1215,6 @@ class SyntaxParser(BasicParser):
                              target_type=output_type)
 
     def _visit_GeneratorExp(self, stmt):
-        
         conditions = []
         generators = []
         indices = []
