@@ -1203,11 +1203,11 @@ class FCodePrinter(CodePrinter):
         arg = expr.arg
         if not isinstance(arg.dtype.primitive_type, PrimitiveFloatingPointType):
             arg = self._apply_cast(NumpyInt64Type(), arg)
-        ndigits = self._apply_cast(NumpyInt64Type(), expr.ndigits)
         self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
 
         arg_code = self._print(arg)
-        if ndigits:
+        if expr.ndigits:
+            ndigits = self._apply_cast(NumpyInt64Type(), expr.ndigits)
             ndigits_code = self._print(ndigits)
             return f"pyc_bankers_round({arg_code}, {ndigits_code})"
         else:
