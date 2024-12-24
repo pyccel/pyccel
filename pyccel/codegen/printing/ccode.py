@@ -400,6 +400,21 @@ class CCodePrinter(CodePrinter):
                 any(a is bi for b in self._additional_args for bi in b)
 
     def _flatten_list(self, irregular_list):
+        """
+        Get a list of all the arguments in a multi-level list/tuple.
+
+        Get a list of all the arguments in a multi-level list/tuple.
+
+        Parameters
+        ----------
+        irregular_list : PythonList | PythonTuple
+            A multi-level list/tuple.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A flattened list of all the elements of the list/tuple.
+        """
         def to_list(arg):
             if isinstance(arg, (PythonList, PythonTuple)):
                 return [ai for a in arg.args for ai in to_list(a)]
@@ -694,6 +709,26 @@ class CCodePrinter(CodePrinter):
                         class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
 
     def _handle_numpy_functional(self, expr, ElementExpression, start_val = None):
+        """
+        Print code describing a NumPy functional for object.
+
+        Print code describing a NumPy functional for object. E.g. sum/min/max.
+
+        Parameters
+        ----------
+        expr : TypedAstNode
+            The expression to be printed.
+        ElementExpression : class type
+            A class describing the operation carried out on each element of the
+            array argument.
+        start_val : TypedAstNode
+            The value that the result should be initialised to before the loop.
+
+        Returns
+        -------
+        str
+            Code which describes the NumPy functional calculation.
+        """
         assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
         if assign_node:
             lhs_var = assign_node[0].lhs
