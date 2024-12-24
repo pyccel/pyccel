@@ -486,7 +486,8 @@ class PythonRound(PyccelFunction):
     """
     Class representing a call to Python's native round() function.
 
-    Class representing a call to Python's native round() function.
+    Class representing a call to Python's native round() function
+    which rounds a float or integer to a given number of decimals.
 
     Parameters
     ----------
