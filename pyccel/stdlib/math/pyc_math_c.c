@@ -66,3 +66,39 @@ double complex csign(double complex x)
 
 /*---------------------------------------------------------------------------*/
 
+double fpyc_bankers_round(double arg, int64_t ndigits)
+{
+    double factor = pow(10.0, ndigits);
+    arg *= factor;
+
+    double nearest_int_fix = copysign(0.5, arg);
+
+    double rnd = (int64_t)(arg + nearest_int_fix);
+
+    double diff = arg - rnd;
+
+    if (ndigits <= 0 && (diff == 0.5 || diff == -0.5)) {
+        rnd = ((int64_t)(arg*0.5 + nearest_int_fix))*2.0;
+    }
+
+    return rnd / factor;
+}
+
+int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits)
+{
+    if (ndigits >= 0) {
+        return arg;
+    } else {
+        int64_t mul_fact = 1;
+        for (int i = 0; i< -ndigits; ++i) mul_fact *= 10;
+
+        int64_t pivot_point = copysign(5*mul_fact/10, arg);
+        int64_t remainder = arg % mul_fact;
+        if ( remainder == pivot_point ) {
+            int64_t val = (mul_fact - remainder) / mul_fact;
+            return (val + (val & 1)) * mul_fact;
+        } else {
+            return ((arg + pivot_point) / mul_fact) * mul_fact;
+        }
+    }
+}
