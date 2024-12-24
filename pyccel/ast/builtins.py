@@ -495,7 +495,7 @@ class PythonRound(PyccelAstNode):
     def __init__(self, number, ndigits = None):
         self._arg = number
         if ndigits is None:
-            self._dtype = NativeInteger()
+            self._dtype = PythonNativeInt()
         else:
             self._dtype = number.dtype
         self._ndigits = ndigits
