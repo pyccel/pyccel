@@ -482,37 +482,33 @@ class PythonFloat(PyccelFunction):
         return f'float({self.arg})'
 
 # ===========================================================================
-class PythonRound(PyccelAstNode):
+class PythonRound(PyccelFunction):
     """ Represents a call to Python's native round() function.
     """
-    __slots__ = ('_arg', '_ndigits', '_dtype', '_precision')
+    __slots__ = ('_dtype',)
     name = 'round'
     _rank = 0
-    _shape = ()
+    _shape = None
     _order = None
-    _attribute_nodes  = ('_arg','_ndigits')
 
     def __init__(self, number, ndigits = None):
-        self._arg = number
         if ndigits is None:
             self._dtype = PythonNativeInt()
         else:
             self._dtype = number.dtype
-        self._ndigits = ndigits
-        self._precision = -1
-        super().__init__()
+        super().__init__(number, ndigits)
 
     @property
     def arg(self):
         """ Number to be rounded
         """
-        return self._arg
+        return self._args[0]
 
     @property
     def ndigits(self):
         """ Number of digits to which the argument is rounded
         """
-        return self._ndigits
+        return self._args[1]
 
     def get_round_with_0_digits(self):
         """ Get expression returning the same value but containing
