@@ -426,13 +426,24 @@ pure function pyc_bankers_round_int_4(arg, ndigits) result(rnd)
     integer(C_INT32_T), value :: ndigits
     integer(C_INT32_T)        :: rnd
 
-    real(C_DOUBLE) :: val
+    integer(C_INT32_T) :: val
+    integer(C_INT32_T) :: mul_fact
+    integer(C_INT32_T) :: pivot_point
+    integer(C_INT32_T) :: remainder
 
-    val = arg * 10._C_DOUBLE**ndigits
-
-    rnd = nint(val, kind=C_INT64_T)
-
-    rnd = rnd * 10._C_DOUBLE**(-ndigits)
+    if (ndigits >= 0) then
+        rnd = arg
+    else
+        mul_fact = 10**(-ndigits)
+        pivot_point = 5*10**(-ndigits-1)
+        remainder = modulo(arg, mul_fact)
+        if ( remainder == pivot_point ) then
+            val = (mul_fact - remainder) / mul_fact
+            rnd = (val + IAND(val, 1)) * mul_fact
+        else
+            rnd = ((arg + pivot_point) / mul_fact) * mul_fact
+        endif
+    endif
 
 end function pyc_bankers_round_int_4
 
@@ -444,13 +455,24 @@ pure function pyc_bankers_round_int_8(arg, ndigits) result(rnd)
     integer(C_INT64_T), value :: ndigits
     integer(C_INT64_T)        :: rnd
 
-    real(C_DOUBLE) :: val
+    integer(C_INT64_T) :: val
+    integer(C_INT64_T) :: mul_fact
+    integer(C_INT64_T) :: pivot_point
+    integer(C_INT64_T) :: remainder
 
-    val = arg * 10._C_DOUBLE**ndigits
-
-    rnd = nint(val, kind=C_INT64_T)
-
-    rnd = rnd * 10._C_DOUBLE**(-ndigits)
+    if (ndigits >= 0) then
+        rnd = arg
+    else
+        mul_fact = 10**(-ndigits)
+        pivot_point = sign(5*10**(-ndigits-1), arg)
+        remainder = modulo(arg, mul_fact)
+        if ( remainder == pivot_point ) then
+            val = (mul_fact - remainder) / mul_fact
+            rnd = (val + IAND(val, 1_C_INT64_T)) * mul_fact
+        else
+            rnd = ((arg + pivot_point) / mul_fact) * mul_fact
+        endif
+    endif
 
 end function pyc_bankers_round_int_8
 
