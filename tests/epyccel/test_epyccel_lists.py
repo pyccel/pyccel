@@ -113,6 +113,16 @@ def test_pop_2(language) :
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
+def test_pop_expression(language) :
+    def pop_last_element():
+        a = [1, 3, 45]
+        return a.pop() + 3
+    epyc_last_element = epyccel(pop_last_element, language = language)
+    pyccel_result = epyc_last_element()
+    python_result = pop_last_element()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
 def test_append_basic(language):
     def f():
         a = [1, 2, 3]
