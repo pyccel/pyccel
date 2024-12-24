@@ -441,8 +441,13 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : TypedAstNode
-            The Assign Node used to get the lhs and rhs.
+        lhs : TypedAstNode
+            The left-hand side of the assignment containing the array into which the
+            NumPy array should be copied.
+
+        rhs : TypedAstNode
+            The right-hand side of the assignment containing the array(s) which should
+            be copied into the left-hand side.
 
         Returns
         -------
