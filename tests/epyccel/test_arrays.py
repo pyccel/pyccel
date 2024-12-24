@@ -27,7 +27,7 @@ def check_array_equal(a, b):
 #==============================================================================
 
 def test_array_assigned_dtype(language):
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max,   dtype=int)
+    integer   = randint(low = iinfo('int32').min,   high = iinfo('int32').max)
     integer8  = randint(low = iinfo('int8').min,  high = iinfo('int8').max,  dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max, dtype=np.int32)
@@ -2294,7 +2294,7 @@ def test_argument_negative_index_2(language):
     )
 )
 def test_c_order_argument_negative_index(language):
-    a = np.random.randint(20, size=(3,4))
+    a = np.array(np.random.randint(20, size=(3,4)), dtype=int)
 
     f1 = arrays.test_c_order_argument_negative_index
     f2 = epyccel(f1, language = language)
@@ -2311,7 +2311,7 @@ def test_c_order_argument_negative_index(language):
     )
 )
 def test_f_order_argument_negative_index(language):
-    a = np.array(np.random.randint(20, size=(3,4)), order='F')
+    a = np.array(np.random.randint(20, size=(3,4)), order='F', dtype=int)
 
     f1 = arrays.test_f_order_argument_negative_index
     f2 = epyccel(f1, language = language)
@@ -4347,7 +4347,7 @@ def test_array_ndmin_1(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
+    d = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max, size=(2,3,4)), dtype=int)
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -4376,7 +4376,7 @@ def test_array_ndmin_2(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
+    d = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max, size=(2,3,4)), dtype=int)
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -4405,7 +4405,7 @@ def test_array_ndmin_4(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
+    d = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max, size=(2,3,4)), dtype=int)
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -4434,7 +4434,7 @@ def test_array_ndmin_2_order(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
+    d = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max, size=(2,3,4)), dtype=int)
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -4452,8 +4452,8 @@ def test_dtype_conversion_to_bool_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4490,7 +4490,7 @@ def test_dtype_conversion_to_int8_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
     integer8   = randint(low = iinfo('int8').min,   high = iinfo('int8').max, size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
@@ -4528,8 +4528,8 @@ def test_dtype_conversion_to_int16_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4566,8 +4566,8 @@ def test_dtype_conversion_to_int32_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4604,8 +4604,8 @@ def test_dtype_conversion_to_int64_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4641,8 +4641,8 @@ def test_dtype_conversion_to_float32_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4677,8 +4677,8 @@ def test_dtype_conversion_to_float64_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4712,8 +4712,8 @@ def test_dtype_conversion_to_complex64_from_other_types(language):
     size = (2, 2)
 
     bl = randint(0, 2, size = size, dtype= bool)
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4747,8 +4747,8 @@ def test_dtype_conversion_to_complex128_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4785,7 +4785,7 @@ def test_dtype_conversion_to_pyint_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
     integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
@@ -4822,8 +4822,8 @@ def test_dtype_conversion_to_pyfloat_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4858,9 +4858,9 @@ def test_dtype_conversion_to_pyfloat_from_other_types(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -4931,9 +4931,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5004,9 +5004,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5076,9 +5076,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5149,9 +5149,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5221,9 +5221,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5292,9 +5292,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5363,9 +5363,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5433,9 +5433,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5506,9 +5506,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5579,9 +5579,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5652,9 +5652,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5725,9 +5725,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5798,9 +5798,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5871,9 +5871,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5944,9 +5944,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -6016,9 +6016,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -6087,9 +6087,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -6158,9 +6158,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -6228,9 +6228,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -6301,9 +6301,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -6374,9 +6374,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)

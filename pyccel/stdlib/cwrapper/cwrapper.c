@@ -7,11 +7,6 @@
 
 
 
-// strings order needs to be the same as its equivalent numpy macro
-// https://numpy.org/doc/stable/reference/c-api/dtype.html
-const char* dataTypes[17] = {"Bool", "Int8", "UInt8", "Int16", "UIn16", "Int32", "UInt32",
-                             "Int64", "UInt64", "Int128", "UInt128", "Float32", "Float64",
-                             "Float128", "Complex64", "Complex128", "Complex256"};
 
 const int NO_TYPE_CHECK = -1;
 const int NO_ORDER_CHECK = -1;
@@ -185,7 +180,7 @@ void capsule_cleanup(PyObject *capsule) {
 #endif
 }
 
-#ifdef _WIN32
+#if defined(WIN32) && (PyArray_RUNTIME_VERSION >= NPY_2_0_API_VERSION)
 PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order, bool release_memory)
 #else
 PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order, bool release_memory)

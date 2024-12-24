@@ -25,7 +25,6 @@
 # define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API
 # include "numpy/arrayobject.h"
 
-extern const char* dataTypes[17];
 
 extern const int NO_TYPE_CHECK;
 extern const int NO_ORDER_CHECK;
@@ -53,7 +52,7 @@ void capsule_cleanup(PyObject *capsule);
  * c_order : True if the data is in C order, False otherwise.
  * release_memory : If true a Capsule is created to automatically free the data when the created PyArrayObject goes out of scope.
  */
-#ifdef _WIN32
+#if defined(_WIN32) && (PyArray_RUNTIME_VERSION >= NPY_2_0_API_VERSION)
 PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order, bool release_memory);
 #else
 PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order, bool release_memory);

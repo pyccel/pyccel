@@ -4,6 +4,7 @@ runs:
   using: "composite"
   steps:
     - name: Fix 'Unknown MS Compiler version 1900' problem
+      continue-on-error: True
       run: |
         $PYTHON_EXE_PATH=(Get-Command python).Source
         $PYTHON_PATH=(Split-Path -Path ${PYTHON_EXE_PATH})

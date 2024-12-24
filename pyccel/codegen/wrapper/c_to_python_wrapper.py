@@ -2776,13 +2776,17 @@ class CToPythonWrapper(Wrapper):
         if isinstance(orig_var, PythonTuple):
             return self._extract_InhomogeneousTupleType_FunctionDefResult(orig_var, is_bind_c, funcdef)
 
-        if is_bind_c:
-            raise NotImplementedError("Support for returning sets from Fortran code is not yet available")
-
         name = getattr(orig_var, 'name', 'tmp')
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
-        c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)
-        loop_size = Variable(PythonNativeInt(), self.scope.get_new_name(f'{name}_size'))
+        if is_bind_c:
+            c_res = Variable(CStackArray(orig_var.class_type.element_type),
+                             self.scope.get_new_name(funcdef.results[0].var.name))
+            loop_size = funcdef.results[1].var.clone(self.scope.get_new_name(funcdef.results[1].var.name), is_argument = False)
+            c_results = [ObjectAddress(c_res), loop_size]
+        else:
+            c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)
+            c_results = [c_res]
+            loop_size = Variable(PythonNativeInt(), self.scope.get_new_name(f'{name}_size'))
         idx = Variable(PythonNativeInt(), self.scope.get_new_name())
         self.scope.insert_variable(c_res)
         self.scope.insert_variable(loop_size)
@@ -2795,7 +2799,10 @@ class CToPythonWrapper(Wrapper):
 
         class_type = orig_var.class_type
         if isinstance(class_type, HomogeneousSetType):
-            element = SetPop(c_res)
+            if is_bind_c:
+                element = IndexedElement(c_res, idx)
+            else:
+                element = SetPop(c_res)
             elem_set = PySet_Add(py_res, element_extraction['py_result'])
             init = PySet_New()
         elif isinstance(class_type, HomogeneousListType):
@@ -2813,8 +2820,10 @@ class CToPythonWrapper(Wrapper):
                 *element_extraction['body'],
                 If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
                                          [Return([self._error_exit_code])]))]
-        body = [Assign(loop_size, PythonLen(c_res)),
-                AliasAssign(py_res, init),
-                For((idx,), PythonRange(loop_size), for_body, for_scope)]
+        body = [Assign(loop_size, PythonLen(c_res))] if not is_bind_c else []
+        body += [AliasAssign(py_res, init),
+                 For((idx,), PythonRange(loop_size), for_body, for_scope)]
+        if is_bind_c:
+            body.append(Deallocate(c_res))
 
-        return {'c_results': [c_res], 'py_result': py_res, 'body': body}
+        return {'c_results': c_results, 'py_result': py_res, 'body': body}
