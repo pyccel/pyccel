@@ -1,5 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
-import pytest
 import numpy as np
 from numpy.random import randint
 
@@ -110,14 +109,6 @@ def test_round_ndigits(language):
     assert np.isclose(round_ndigits_output, f_output)
     assert isinstance(f_output, type(round_ndigits_output))
 
-@pytest.mark.parametrize( 'language', (
-    pytest.param('fortran', marks = pytest.mark.fortran),
-    pytest.param('c',       marks = [
-        pytest.mark.xfail(reason="Python implements bankers' round. But only for ndigits=0"),
-        pytest.mark.c]),
-    pytest.param('python', marks = pytest.mark.python),
-    )
-)
 def test_round_ndigits_half(language):
     def round_ndigits(x : float, i : int):
         return round(x,i)
