@@ -545,7 +545,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
             # TODO [NH]: get all indices when adding axis argument to linspace function
             if isinstance(line.rhs, NumpyLinspace):
-                line.rhs.ind = indices[0]
+                line.rhs.ind = indices[len(line.lhs.shape) - len(line.rhs.shape)]
 
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars,

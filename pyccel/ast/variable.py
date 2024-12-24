@@ -684,6 +684,9 @@ class IndexedElement(TypedAstNode):
         if not indices:
             raise IndexError('Indexed needs at least one index.')
 
+        if isinstance(base, IndexedElement) and base._is_slice:
+            raise NotImplementedError("Can't extract a slice from a slice")
+
         self._label = base
         self._shape = None
         if pyccel_stage == 'syntactic':

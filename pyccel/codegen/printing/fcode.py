@@ -1417,6 +1417,9 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_NumpyLinspace(self, expr):
+        start = self._print(expr.start)
+        step  = self._print(expr.step)
+        end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
 
         if expr.stop.dtype != expr.dtype:
             st = self._apply_cast(expr.dtype, expr.stop)
@@ -1424,48 +1427,47 @@ class FCodePrinter(CodePrinter):
         else:
             v = self._print(expr.stop)
 
+        if expr.rank > 1:
+            index = self._print(expr.ind)
+            init_value = f'({start} + {index}*{step})'
+        else:
+            zero = self._print(LiteralInteger(0))
+            var = self.scope.get_temporary_variable(PythonNativeInt(), 'linspace_index')
+            index = self._print(var)
+            init_value = f'[(({start} + {index}*{step}), {index} = {zero},{end})]'
+
         if not isinstance(expr.endpoint, LiteralFalse):
             lhs = expr.get_user_nodes(Assign)[0].lhs
-
 
             if expr.rank > 1:
                 #expr.rank > 1, we need to replace the last index of the loop with the last index of the array.
                 lhs_source = expr.get_user_nodes(Assign)[0].lhs
                 lhs_source.substitute(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
-                lhs = self._print(lhs_source)
+                lhs_code = self._print(lhs_source)
             else:
                 #Since the expr.rank == 1, we modify the last element in the array.
-                lhs = self._print(IndexedElement(lhs,
-                                                 PyccelMinus(expr.num, LiteralInteger(1),
-                                                 simplify = True)))
+                if isinstance(lhs, IndexedElement):
+                    arr = lhs.base
+                    indices = lhs.indices
+                    if indices[0].step:
+                        indx = IndexedElement(arr, PyccelMinus(indices[0].stop, PyccelMod(indices[0].stop, indices[0].step),
+                                                    simplify = True))
+                    else:
+                        indx = IndexedElement(arr, PyccelMinus(indices[0].stop, LiteralInteger(1),
+                                                    simplify = True))
+                else:
+                    indx = self._print(IndexedElement(lhs,
+                                                PyccelMinus(expr.num, LiteralInteger(1),
+                                                simplify = True)))
+                lhs_code = self._print(indx)
 
             if isinstance(expr.endpoint, LiteralTrue):
-                cond_template = lhs + ' = {stop}'
+                init_value += f'\n{lhs_code} = {v}'
             else:
-                cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
-        if expr.rank > 1:
-            template = '({start} + {index}*{step})'
-            var = expr.ind
-        else:
-            template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
-            var = self.scope.get_temporary_variable(PythonNativeInt(), 'linspace_index')
+                cond=self._print(expr.endpoint)
+                init_value += f'\n{lhs_code} = merge({v}, {lhs_code}, ({cond}))'
 
-        init_value = template.format(
-            start = self._print(expr.start),
-            step  = self._print(expr.step),
-            index = self._print(var),
-            zero  = self._print(LiteralInteger(0)),
-            end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)),
-        )
-
-        if isinstance(expr.endpoint, LiteralFalse):
-            code = init_value
-        elif isinstance(expr.endpoint, LiteralTrue):
-            code = init_value + '\n' + cond_template.format(stop=v)
-        else:
-            code = init_value + '\n' + cond_template.format(stop=v, lhs=lhs, cond=self._print(expr.endpoint))
-
-        return code
+        return init_value
 
     def _print_NumpyNonZeroElement(self, expr):
 
