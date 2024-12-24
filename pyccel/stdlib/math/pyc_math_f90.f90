@@ -52,10 +52,8 @@ interface csign
 end interface csign
 
 interface pyc_bankers_round
-    module procedure pyc_bankers_round_4
-    module procedure pyc_bankers_round_8
-    module procedure pyc_bankers_round_int_4
-    module procedure pyc_bankers_round_int_8
+    module procedure pyc_bankers_round_float
+    module procedure pyc_bankers_round_int
 end interface pyc_bankers_round
 
 public :: pyc_gcd, &
@@ -370,31 +368,7 @@ function amin_4(arr) result(min_value)
 
   end function numpy_v2_sign_c64
 
-pure function pyc_bankers_round_4(arg, ndigits) result(rnd)
-
-    implicit none
-
-    real(f32), value     :: arg
-    integer(i32), value :: ndigits
-    real(f32)            :: rnd
-
-    real(f32) :: diff
-
-    arg = arg * 10._f32**ndigits
-
-    rnd = nint(arg, kind=i64)
-
-    diff = arg - rnd
-
-    if (ndigits <= 0 .and. (diff == 0.5_f32 .or. diff == -0.5_f32)) then
-        rnd = nint(arg*0.5_f32, kind=i64)*2_i64
-    end if
-
-    rnd = rnd * 10._f32**(-ndigits)
-
-end function pyc_bankers_round_4
-
-pure function pyc_bankers_round_8(arg, ndigits) result(rnd)
+pure function pyc_bankers_round_float(arg, ndigits) result(rnd)
 
     implicit none
 
@@ -416,36 +390,7 @@ pure function pyc_bankers_round_8(arg, ndigits) result(rnd)
 
     rnd = rnd * 10._f64**(-ndigits)
 
-end function pyc_bankers_round_8
-
-pure function pyc_bankers_round_int_4(arg, ndigits) result(rnd)
-
-    implicit none
-
-    integer(i32), value :: arg
-    integer(i32), value :: ndigits
-    integer(i32)        :: rnd
-
-    integer(i32) :: val
-    integer(i32) :: mul_fact
-    integer(i32) :: pivot_point
-    integer(i32) :: remainder
-
-    if (ndigits >= 0) then
-        rnd = arg
-    else
-        mul_fact = 10_i32**(-ndigits)
-        pivot_point = 5_i32*10_i32**(-ndigits-1_i32)
-        remainder = modulo(arg, mul_fact)
-        if ( remainder == pivot_point ) then
-            val = (mul_fact - remainder) / mul_fact
-            rnd = (val + IAND(val, 1_i32)) * mul_fact
-        else
-            rnd = ((arg + pivot_point) / mul_fact) * mul_fact
-        endif
-    endif
-
-end function pyc_bankers_round_int_4
+end function pyc_bankers_round_float
 
 pure function pyc_bankers_round_int_8(arg, ndigits) result(rnd)
 
