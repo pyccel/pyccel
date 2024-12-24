@@ -1203,14 +1203,9 @@ class FCodePrinter(CodePrinter):
         arg = expr.arg
         ndigits = expr.ndigits
         self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
-        if arg.precision != -1:
-            arg = DtypePrecisionToCastFunction[arg.dtype.name][arg.precision]
 
         arg_code = self._print(arg)
         if ndigits:
-            if ndigits.precision != -1:
-                ndigits = DtypePrecisionToCastFunction[ndigits.dtype.name][ndigits.precision]
-
             ndigits_code = self._print(ndigits)
             return f"pyc_bankers_round({arg_code}, {ndigits_code})"
         else:
