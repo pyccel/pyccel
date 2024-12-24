@@ -113,9 +113,11 @@ class PythonCodePrinter(CodePrinter):
         """
         dummy_var = expr.index
         iterables = []
-        body = expr.loops[0 if expr.target_type == 'list' else 1]
-        while not isinstance(body, (Assign, ListAppend, If)):
-            if isinstance(body, CodeBlock):
+        body = expr.loops[-1]
+        while not isinstance(body, (Assign, ListAppend)):
+            if isinstance(body, If):
+                body = body.blocks[0].body.body[0]
+            elif isinstance(body, CodeBlock):
                 body = list(body.body)
                 while isinstance(body[0], FunctionalFor):
                     func_for = body.pop(0)
@@ -634,8 +636,10 @@ class PythonCodePrinter(CodePrinter):
         else:
             condition = 'if ' + self._print(body.blocks[0].condition)
             body = self._print(body.blocks[0].body.body[0].args[0])
-        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
-                        for idx, iters in zip(expr.indices, iterators)])
+        #for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
+        #                for idx, iters in zip(expr.indices, iterators)])
+        for_loops = ' '.join([f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
+                             for idx, iters, condition in zip(expr.indices, iterators, expr.conditions)])
 
         name = expr.target_type
         if 'array' in str(name):

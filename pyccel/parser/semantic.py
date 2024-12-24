@@ -3949,13 +3949,12 @@ class SemanticParser(BasicParser):
                 expr.loops[-1].insert2body(operation)
 
 
-        loops = [self._visit(i) for i in expr.loops]
+        loops = [self._visit(i) for i in loops]
         if expr.index:
             index = self._visit(index)
 
         l = loops[0]
         cnt = 0
-        tt = 0
         for idx in indices:
             assert isinstance(l, For)
             # Sub in indices as defined here for coherent naming
@@ -3964,11 +3963,14 @@ class SemanticParser(BasicParser):
                 l.substitute(l.target[cnt], idx_subs[idx])
             cnt += 1
             if cnt == len(l.target):
-                tt += 1
-                l = None if tt >= len(loops) else loops[tt]
+                if l.body.body:
+                    if isinstance(l.body.body[0], If):
+                        l = l.body.body[0].blocks[0].body.body[0]
+                    else:
+                        l = l.body.body[0]
                 cnt = 0
 
-        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=expr.indices, target_type=expr.target_type)])
+        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=expr.indices, target_type=target_type_name, conditions=expr.conditions)])
 
     def _visit_GeneratorComprehension(self, expr):
         lhs = self.check_for_variable(expr.lhs)
