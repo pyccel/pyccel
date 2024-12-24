@@ -483,7 +483,17 @@ class PythonFloat(PyccelFunction):
 
 # ===========================================================================
 class PythonRound(PyccelFunction):
-    """ Represents a call to Python's native round() function.
+    """
+    Class representing a call to Python's native round() function.
+
+    Class representing a call to Python's native round() function.
+
+    Parameters
+    ----------
+    number : TypedAstNode
+        The number to be rounded.
+    ndigits : TypedAstNode, optional
+        The number of digits to round to.
     """
     __slots__ = ('_class_type',)
     name = 'round'
@@ -500,23 +510,21 @@ class PythonRound(PyccelFunction):
 
     @property
     def arg(self):
-        """ Number to be rounded
+        """
+        The number to be rounded.
+
+        The number to be rounded.
         """
         return self._args[0]
 
     @property
     def ndigits(self):
-        """ Number of digits to which the argument is rounded
+        """
+        The number of digits to which the argument is rounded.
+
+        The number of digits to which the argument is rounded.
         """
         return self._args[1]
-
-    def get_round_with_0_digits(self):
-        """ Get expression returning the same value but containing
-        a call to PyccelRound with ndigits=None
-        """
-        assert self.ndigits is not None
-        factor = PyccelPow(LiteralFloat(10), self.ndigits)
-        return PyccelDiv(PythonRound(PyccelMul(self.arg, factor)), factor)
 
 #==============================================================================
 class PythonInt(PyccelFunction):
