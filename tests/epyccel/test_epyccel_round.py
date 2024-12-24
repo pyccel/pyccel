@@ -42,7 +42,7 @@ def test_round_int(language):
     assert isinstance(f_output, type(round_int_output))
 
 def test_negative_round_int(language):
-    def round_int(x : int):
+    def round_int(x : float):
         return round(x)
 
     f = epyccel(round_int, language=language)
