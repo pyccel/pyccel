@@ -419,6 +419,6 @@ pure function pyc_bankers_round_int(arg, ndigits) result(rnd)
         endif
     endif
 
-end function pyc_bankers_round_int_8
+end function pyc_bankers_round_int
 
 end module pyc_math_f90
