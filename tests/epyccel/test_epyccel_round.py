@@ -3,12 +3,10 @@ import pytest
 import numpy as np
 from numpy.random import randint
 
-from pyccel.decorators import types
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 def test_round_int(language):
-    @types('float')
-    def round_int(x):
+    def round_int(x : float):
         return round(x)
 
     f = epyccel(round_int, language=language)
@@ -44,8 +42,7 @@ def test_round_int(language):
     assert isinstance(f_output, type(round_int_output))
 
 def test_negative_round_int(language):
-    @types('float')
-    def round_int(x):
+    def round_int(x : int):
         return round(x)
 
     f = epyccel(round_int, language=language)
@@ -81,8 +78,7 @@ def test_negative_round_int(language):
     assert isinstance(f_output, type(round_int_output))
 
 def test_round_ndigits(language):
-    @types('float','int')
-    def round_ndigits(x, i):
+    def round_ndigits(x : float, i : int):
         return round(x,i)
 
     f = epyccel(round_ndigits, language=language)
@@ -123,8 +119,7 @@ def test_round_ndigits(language):
     )
 )
 def test_round_ndigits_half(language):
-    @types('float','int')
-    def round_ndigits(x, i):
+    def round_ndigits(x : float, i : int):
         return round(x,i)
 
     f = epyccel(round_ndigits, language=language)
@@ -157,8 +152,7 @@ def test_round_ndigits_half(language):
     assert isinstance(f_output, type(round_ndigits_output))
 
 def test_round_ndigits_int(language):
-    @types('int','int')
-    def round_ndigits(x, i):
+    def round_ndigits(x : int, i : int):
         return round(x,i)
 
     f = epyccel(round_ndigits, language=language)
