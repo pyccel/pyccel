@@ -374,23 +374,23 @@ pure function pyc_bankers_round_4(arg, ndigits) result(rnd)
 
     implicit none
 
-    real(C_DOUBLE), value     :: arg
-    integer(C_INT32_T), value :: ndigits
-    real(C_DOUBLE)            :: rnd
+    real(f32), value     :: arg
+    integer(i32), value :: ndigits
+    real(f32)            :: rnd
 
-    real(C_DOUBLE) :: diff
+    real(f32) :: diff
 
-    arg = arg * 10._C_DOUBLE**ndigits
+    arg = arg * 10._f32**ndigits
 
-    rnd = nint(arg, kind=C_INT64_T)
+    rnd = nint(arg, kind=i64)
 
     diff = arg - rnd
 
-    if (ndigits <= 0 .and. (diff == 0.5_C_DOUBLE .or. diff == -0.5_C_DOUBLE)) then
-        rnd = nint(arg*0.5_C_DOUBLE, kind=C_INT64_T)*2_C_INT64_T
+    if (ndigits <= 0 .and. (diff == 0.5_f32 .or. diff == -0.5_f32)) then
+        rnd = nint(arg*0.5_f32, kind=i64)*2_i64
     end if
 
-    rnd = rnd * 10._C_DOUBLE**(-ndigits)
+    rnd = rnd * 10._f32**(-ndigits)
 
 end function pyc_bankers_round_4
 
@@ -398,23 +398,23 @@ pure function pyc_bankers_round_8(arg, ndigits) result(rnd)
 
     implicit none
 
-    real(C_DOUBLE), value     :: arg
-    integer(C_INT64_T), value :: ndigits
-    real(C_DOUBLE)            :: rnd
+    real(f64), value     :: arg
+    integer(i64), value :: ndigits
+    real(f64)            :: rnd
 
-    real(C_DOUBLE) :: diff
+    real(f64) :: diff
 
-    arg = arg * 10._C_DOUBLE**ndigits
+    arg = arg * 10._f64**ndigits
 
-    rnd = nint(arg, kind=C_INT64_T)
+    rnd = nint(arg, kind=i64)
 
     diff = arg - rnd
 
-    if (ndigits <= 0 .and. (diff == 0.5_C_DOUBLE .or. diff == -0.5_C_DOUBLE)) then
-        rnd = nint(arg*0.5_C_DOUBLE, kind=C_INT64_T)*2_C_INT64_T
+    if (ndigits <= 0 .and. (diff == 0.5_f64 .or. diff == -0.5_f64)) then
+        rnd = nint(arg*0.5_f64, kind=i64)*2_i64
     end if
 
-    rnd = rnd * 10._C_DOUBLE**(-ndigits)
+    rnd = rnd * 10._f64**(-ndigits)
 
 end function pyc_bankers_round_8
 
@@ -422,24 +422,24 @@ pure function pyc_bankers_round_int_4(arg, ndigits) result(rnd)
 
     implicit none
 
-    integer(C_INT32_T), value :: arg
-    integer(C_INT32_T), value :: ndigits
-    integer(C_INT32_T)        :: rnd
+    integer(i32), value :: arg
+    integer(i32), value :: ndigits
+    integer(i32)        :: rnd
 
-    integer(C_INT32_T) :: val
-    integer(C_INT32_T) :: mul_fact
-    integer(C_INT32_T) :: pivot_point
-    integer(C_INT32_T) :: remainder
+    integer(i32) :: val
+    integer(i32) :: mul_fact
+    integer(i32) :: pivot_point
+    integer(i32) :: remainder
 
     if (ndigits >= 0) then
         rnd = arg
     else
-        mul_fact = 10**(-ndigits)
-        pivot_point = 5*10**(-ndigits-1)
+        mul_fact = 10_i32**(-ndigits)
+        pivot_point = 5_i32*10_i32**(-ndigits-1_i32)
         remainder = modulo(arg, mul_fact)
         if ( remainder == pivot_point ) then
             val = (mul_fact - remainder) / mul_fact
-            rnd = (val + IAND(val, 1)) * mul_fact
+            rnd = (val + IAND(val, 1_i32)) * mul_fact
         else
             rnd = ((arg + pivot_point) / mul_fact) * mul_fact
         endif
@@ -451,24 +451,24 @@ pure function pyc_bankers_round_int_8(arg, ndigits) result(rnd)
 
     implicit none
 
-    integer(C_INT64_T), value :: arg
-    integer(C_INT64_T), value :: ndigits
-    integer(C_INT64_T)        :: rnd
+    integer(i64), value :: arg
+    integer(i64), value :: ndigits
+    integer(i64)        :: rnd
 
-    integer(C_INT64_T) :: val
-    integer(C_INT64_T) :: mul_fact
-    integer(C_INT64_T) :: pivot_point
-    integer(C_INT64_T) :: remainder
+    integer(i64) :: val
+    integer(i64) :: mul_fact
+    integer(i64) :: pivot_point
+    integer(i64) :: remainder
 
     if (ndigits >= 0) then
         rnd = arg
     else
-        mul_fact = 10**(-ndigits)
-        pivot_point = sign(5*10**(-ndigits-1), arg)
+        mul_fact = 10_i64**(-ndigits)
+        pivot_point = sign(5_i64*10_i64**(-ndigits-1_i64), arg)
         remainder = modulo(arg, mul_fact)
         if ( remainder == pivot_point ) then
             val = (mul_fact - remainder) / mul_fact
-            rnd = (val + IAND(val, 1_C_INT64_T)) * mul_fact
+            rnd = (val + IAND(val, 1_i64)) * mul_fact
         else
             rnd = ((arg + pivot_point) / mul_fact) * mul_fact
         endif
