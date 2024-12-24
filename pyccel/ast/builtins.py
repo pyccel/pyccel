@@ -485,7 +485,7 @@ class PythonFloat(PyccelFunction):
 class PythonRound(PyccelFunction):
     """ Represents a call to Python's native round() function.
     """
-    __slots__ = ('_dtype',)
+    __slots__ = ('_class_type',)
     name = 'round'
     _rank = 0
     _shape = None
@@ -493,9 +493,9 @@ class PythonRound(PyccelFunction):
 
     def __init__(self, number, ndigits = None):
         if ndigits is None:
-            self._dtype = PythonNativeInt()
+            self._class_type = PythonNativeInt()
         else:
-            self._dtype = number.dtype
+            self._class_type = number.class_type
         super().__init__(number, ndigits)
 
     @property
