@@ -1202,7 +1202,7 @@ class FCodePrinter(CodePrinter):
         """
         arg = expr.arg
         ndigits = expr.ndigits
-        self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+        self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
         if arg.precision != -1:
             arg = DtypePrecisionToCastFunction[arg.dtype.name][arg.precision]
 
