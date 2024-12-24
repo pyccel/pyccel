@@ -174,7 +174,7 @@ def test_creation_in_if_heap_shape(language):
     def f(c : 'float'):
         import numpy as np
         if c > 0.5:
-            x = np.ones(2, dtype=int)
+            x = np.ones(3, dtype=int)
         else:
             x = np.ones(7, dtype=int)
 
