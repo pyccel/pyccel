@@ -39,13 +39,6 @@ int64_t                     pyc_lcm (int64_t a, int64_t b)
     return a / pyc_gcd(a, b) * b;
 }
 /*---------------------------------------------------------------------------*/
-extern inline double        pyc_radians(double degrees);
-/*---------------------------------------------------------------------------*/
-extern inline double        pyc_degrees(double radians);
-/*---------------------------------------------------------------------------*/
-extern inline int64_t       pyc_modulo(int64_t a, int64_t b);
-/*---------------------------------------------------------------------------*/
-extern inline double        pyc_fmodulo(double a, double b);
 
 /* numpy.sign for float, double and integers */
 long long int isign(long long int x)
@@ -70,3 +63,6 @@ double complex csign(double complex x)
     double absolute = cabs(x);
     return ((absolute == 0) ? 0.0 : (x / absolute));
 }
+
+/*---------------------------------------------------------------------------*/
+
