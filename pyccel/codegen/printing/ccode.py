@@ -416,6 +416,13 @@ class CCodePrinter(CodePrinter):
             A flattened list of all the elements of the list/tuple.
         """
         def to_list(arg):
+            """
+            Get a list containing the scalar elements of a list/tuple.
+            This method is called recursively. If the argument is not
+            a list/tuple then it is returned in a list otherwise the
+            elements of the list/tuple are converted to a list and
+            flattened.
+            """
             if isinstance(arg, (PythonList, PythonTuple)):
                 return [ai for a in arg.args for ai in to_list(a)]
             else:
