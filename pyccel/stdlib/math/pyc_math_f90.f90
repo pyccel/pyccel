@@ -392,7 +392,7 @@ pure function pyc_bankers_round_float(arg, ndigits) result(rnd)
 
 end function pyc_bankers_round_float
 
-pure function pyc_bankers_round_int_8(arg, ndigits) result(rnd)
+pure function pyc_bankers_round_int(arg, ndigits) result(rnd)
 
     implicit none
 
