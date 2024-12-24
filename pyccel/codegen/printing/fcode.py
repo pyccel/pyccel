@@ -3778,5 +3778,8 @@ class FCodePrinter(CodePrinter):
         name = expr.macro_name
         return f'#undef {name}\n'
 
+    def _print_AllDeclaration(self, expr):
+        return ''
+
     def _print_KindSpecification(self, expr):
         return f'(kind = {self.print_kind(expr.type_specifier)})'
