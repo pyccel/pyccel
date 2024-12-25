@@ -1209,7 +1209,7 @@ class FCodePrinter(CodePrinter):
 
         code = f'pyc_bankers_round({arg_code}, {ndigits_code})'
 
-        if isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType):
+        if not isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType):
             prec = self.print_kind(expr)
             return f"Int({code}, kind={prec})"
         else:
