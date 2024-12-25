@@ -1206,8 +1206,14 @@ class FCodePrinter(CodePrinter):
         ndigits = self._apply_cast(NumpyInt64Type(), expr.ndigits) if expr.ndigits \
                 else LiteralInteger(0, NumpyInt64Type())
         ndigits_code = self._print(ndigits)
-        prec = self.print_kind(expr)
-        return f"Int(pyc_bankers_round({arg_code}, {ndigits_code}), kind={prec})"
+
+        code = pyc_bankers_round({arg_code}, {ndigits_code})
+
+        if isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType):
+            prec = self.print_kind(expr)
+            return f"Int({code}, kind={prec})"
+        else:
+            return code
 
     def _print_PythonTuple(self, expr):
         shape = tuple(reversed(expr.shape))
