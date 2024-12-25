@@ -1207,7 +1207,7 @@ class FCodePrinter(CodePrinter):
                 else LiteralInteger(0, NumpyInt64Type())
         ndigits_code = self._print(ndigits)
 
-        code = pyc_bankers_round({arg_code}, {ndigits_code})
+        code = f'pyc_bankers_round({arg_code}, {ndigits_code})'
 
         if isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType):
             prec = self.print_kind(expr)
