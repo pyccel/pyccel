@@ -1197,23 +1197,17 @@ class FCodePrinter(CodePrinter):
         return f"abs({arg_code})"
 
     def _print_PythonRound(self, expr):
-        """ print the python builtin function round
-        args : variable
-        """
         arg = expr.arg
         if not isinstance(arg.dtype.primitive_type, PrimitiveFloatingPointType):
             arg = self._apply_cast(NumpyInt64Type(), arg)
         self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
 
         arg_code = self._print(arg)
-        if expr.ndigits:
-            ndigits = self._apply_cast(NumpyInt64Type(), expr.ndigits)
-            ndigits_code = self._print(ndigits)
-            return f"pyc_bankers_round({arg_code}, {ndigits_code})"
-        else:
-            prec = self.print_kind(expr)
-            zero = self._print(LiteralInteger(0))
-            return f"Int(pyc_bankers_round({arg_code}, {zero}), kind={prec})"
+        ndigits = self._apply_cast(NumpyInt64Type(), expr.ndigits) if expr.ndigits \
+                else LiteralInteger(0, NumpyInt64Type())
+        ndigits_code = self._print(ndigits)
+        prec = self.print_kind(expr)
+        return f"Int(pyc_bankers_round({arg_code}, {ndigits_code}), kind={prec})"
 
     def _print_PythonTuple(self, expr):
         shape = tuple(reversed(expr.shape))
