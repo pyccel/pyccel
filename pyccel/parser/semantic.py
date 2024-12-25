@@ -1933,11 +1933,11 @@ class SemanticParser(BasicParser):
         indices = [self._visit(i) for i in expr.indices]
 
         if isinstance(expr, FunctionalSum):
-            expr_new = FunctionalSum(loops, lhs=lhs, indices = indices)
+            expr_new = FunctionalSum(loops, lhs=lhs, indices = indices, conditions=expr.conditions)
         elif isinstance(expr, FunctionalMin):
-            expr_new = FunctionalMin(loops, lhs=lhs, indices = indices)
+            expr_new = FunctionalMin(loops, lhs=lhs, indices = indices, conditions=expr.conditions)
         elif isinstance(expr, FunctionalMax):
-            expr_new = FunctionalMax(loops, lhs=lhs, indices = indices)
+            expr_new = FunctionalMax(loops, lhs=lhs, indices = indices, conditions=expr.conditions)
         expr_new.set_current_ast(expr.python_ast)
         return expr_new
 
@@ -3608,7 +3608,8 @@ class SemanticParser(BasicParser):
         if test_node:
             lhs.remove_user_node(test_node, invalidate = False)
             for elem in rhs.get_all_user_nodes():
-                elem.remove_user_node(test_node, invalidate = False)
+                if test_node in elem.get_all_user_nodes():
+                    elem.remove_user_node(test_node, invalidate = False)
             lhs = self._assign_lhs_variable(expr.lhs, self._infer_type(test_node), test_node,
                     new_expressions, is_augassign = True)
             lhs = self._optional_params.get(lhs, lhs)

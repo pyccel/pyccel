@@ -636,8 +636,6 @@ class PythonCodePrinter(CodePrinter):
         else:
             condition = 'if ' + self._print(body.blocks[0].condition)
             body = self._print(body.blocks[0].body.body[0].args[0])
-        #for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
-        #                for idx, iters in zip(expr.indices, iterators)])
         for_loops = ' '.join([f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
                              for idx, iters, condition in zip(expr.indices, iterators, expr.conditions)])
 
@@ -662,8 +660,8 @@ class PythonCodePrinter(CodePrinter):
                     rhs = type(body.rhs)(*args)
 
         body = self._print(rhs)
-        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
-                        for idx, iters in zip(expr.indices, iterators)])
+        for_loops = ' '.join([f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
+                             for idx, iters, condition in zip(expr.indices, iterators, expr.conditions)])
 
         if expr.get_user_nodes(FunctionalFor):
             return '{}({} {})'.format(expr.name, body, for_loops)

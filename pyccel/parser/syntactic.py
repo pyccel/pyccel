@@ -1266,6 +1266,7 @@ class SyntaxParser(BasicParser):
                 inserted_into.body.body[0].blocks[0].body.insert2body(outter_loop)
             else:
                 inserted_into.insert2body(outter_loop)
+        indices.append(generators[-1].target)
  
         indices = indices[::-1]
         
