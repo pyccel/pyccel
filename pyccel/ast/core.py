@@ -19,7 +19,7 @@ from .builtins  import PythonBool, PythonTuple, PythonList
 
 from .c_concepts import PointerCast
 
-from .datatypes import (PyccelType, HomogeneousTupleType, VoidType,
+from .datatypes import (PyccelType, HomogeneousTupleType, VoidType, TupleType,
                         PythonNativeBool, InhomogeneousTupleType)
 
 from .internals import PyccelSymbol, PyccelFunction, apply_pickle, Iterable
@@ -1762,6 +1762,10 @@ class FunctionDefResult(TypedAstNode):
         """
         return self._is_argument
 
+    def __len__(self):
+        return 0 if self.var is None else \
+                (self.var.shape[0] if isinstance(self.var.class_type, TupleType) else 1)
+
     def __repr__(self):
         return f'FunctionDefResult({repr(self.var)})'
 
@@ -1903,7 +1907,7 @@ class FunctionCall(TypedAstNode):
         Check if the result of the function call is an alias type.
         """
         assert len(self._funcdef.results) == 1
-        return self._funcdef.results[0].var.is_alias
+        return self._funcdef.results.var.is_alias
 
     def __repr__(self):
         args = ', '.join(str(a) for a in self.args)

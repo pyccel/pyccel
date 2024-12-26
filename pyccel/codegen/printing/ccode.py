@@ -391,7 +391,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(a, (Nil, ObjectAddress, PointerCast)):
             return True
         if isinstance(a, FunctionCall):
-            a = a.funcdef.results[0].var
+            a = a.funcdef.results.var
         if not isinstance(a, Variable):
             return False
         if isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
@@ -2210,7 +2210,7 @@ class CCodePrinter(CodePrinter):
         args = ', '.join(['{}'.format(self._print(a)) for a in args])
 
         call_code = f'{func.name}({args})'
-        if not func.results:
+        if not func.results.var:
             return f'{call_code};\n'
         else:
             return call_code
@@ -2220,11 +2220,11 @@ class CCodePrinter(CodePrinter):
         return_obj = expr.expr
         if isinstance(return_obj, Nil):
             args = []
-        elif isinstance(return_obj, Variable):
-            args = [ObjectAddress(return_obj) if self.is_c_pointer(return_obj) else return_obj]
-        else:
+        elif isinstance(return_obj, PythonTuple):
             args = [ObjectAddress(a) if isinstance(a, Variable) and self.is_c_pointer(a) else a \
                     for a in expr.expr]
+        else:
+            args = [ObjectAddress(return_obj) if self.is_c_pointer(return_obj) else return_obj]
 
         if len(args) == 0:
             return 'return;\n'

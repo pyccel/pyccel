@@ -816,7 +816,7 @@ class CToPythonWrapper(Wrapper):
         result = func_scope.get_temporary_variable(CNativeInt())
         self.exit_scope()
         self._error_exit_code = Nil()
-        import_func = FunctionDef(func_name, (), body, (FunctionDefResult(result),), is_static=True, scope = func_scope)
+        import_func = FunctionDef(func_name, (), body, FunctionDefResult(result), is_static=True, scope = func_scope)
 
         return API_var, import_func
 
@@ -1524,11 +1524,11 @@ class CToPythonWrapper(Wrapper):
         # Pack the Python compatible results of the function into one argument.
         if python_result_variable is Py_None:
             res = Py_None
-            func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+            func_results = FunctionDefResult(self.get_new_PyObject("result", is_temp=True))
             body.append(Py_INCREF(res))
         else:
             res = python_result_variable
-            func_results = [FunctionDefResult(res)]
+            func_results = FunctionDefResult(res)
         body.append(Return(res))
 
         self.exit_scope()
