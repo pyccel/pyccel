@@ -48,7 +48,7 @@ class VariableTypeAnnotation(PyccelAstNode):
         True if the variable cannot be modified, false otherwise.
     """
     __slots__ = ('_class_type', '_is_const', '_shape')
-    _attribute_nodes = ()
+    _attribute_nodes = ('_shape',)
     def __init__(self, class_type : 'DataType', is_const : bool = False, shape = None):
         self._class_type = class_type
         self._is_const = is_const
