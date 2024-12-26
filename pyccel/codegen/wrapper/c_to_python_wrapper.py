@@ -1498,7 +1498,6 @@ class CToPythonWrapper(Wrapper):
         # Get the names of the results collected from the C-compatible function
         body.extend(l for l in wrapped_results.get('setup',()))
         c_results =  wrapped_results['c_results']
-        print(c_results, type(c_results))
         python_result_variable = wrapped_results['py_result']
 
         if class_dtype:

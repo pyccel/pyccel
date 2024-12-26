@@ -2218,9 +2218,9 @@ class CCodePrinter(CodePrinter):
     def _print_Return(self, expr):
         code = ''
         return_obj = expr.expr
-        if isinstance(return_obj, Nil):
+        if return_obj is None:
             args = []
-        elif isinstance(return_obj, PythonTuple):
+        elif isinstance(return_obj.class_type, InhomogeneousTupleType):
             args = [ObjectAddress(a) if isinstance(a, Variable) and self.is_c_pointer(a) else a \
                     for a in expr.expr]
         else:
