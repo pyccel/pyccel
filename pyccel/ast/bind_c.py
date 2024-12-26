@@ -9,10 +9,12 @@ file.
 """
 
 from pyccel.ast.basic import PyccelAstNode
+from pyccel.ast.builtins import PythonTuple
 from pyccel.ast.core import Module, Deallocate
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt
+from pyccel.ast.literals import Nil
 from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.variable import Variable
 from pyccel.errors.errors     import Errors
@@ -89,7 +91,9 @@ class BindCFunctionDef(FunctionDef):
         super().__init__(*args, **kwargs)
         assert self.name == self.name.lower()
         assert all(isinstance(a, BindCFunctionDefArgument) for a in self._arguments)
-        assert all(isinstance(a, BindCFunctionDefResult) for a in self._results)
+        if 'results' in kwargs or len(args) > 3:
+            result = kwargs.get('results', args[3])
+            assert isinstance(result, BindCFunctionDefResult) or result is None
 
     @property
     def original_function(self):
@@ -131,7 +135,8 @@ class BindCFunctionDef(FunctionDef):
         A list of all objects returned by the function including variables
         which contain array metadata.
         """
-        return [ai for a in self._results for ai in a.get_all_function_def_results()]
+        result_list = self._results.get_all_function_def_results() if isinstance(self._results, BindCFunctionDefResult) else [Nil()]
+        return FunctionDefResult(PythonTuple(*result_list))
 
     @property
     def arguments(self):

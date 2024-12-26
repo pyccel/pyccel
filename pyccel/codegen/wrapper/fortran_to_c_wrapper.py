@@ -262,9 +262,10 @@ class FortranToCWrapper(Wrapper):
         call_arguments = [self._get_call_argument(fa) for fa in func_arguments]
         func_to_call = {fa : ca for ca, fa in zip(call_arguments, func_arguments)}
 
-        func_results = [self._wrap_FunctionDefResult(r) for r in expr.results]
+        func_results = None if expr.results.var is Nil() else self._wrap_FunctionDefResult(expr.results)
 
-        func_call_results = [r.var.clone(self.scope.get_expected_name(r.var.name)) for r in expr.results]
+        func_call_results = [r for r in self.scope.collect_all_tuple_elements(expr.results.var) \
+                if isinstance(r, Variable)]
 
         interface = expr.get_direct_user_nodes(lambda u: isinstance(u, Interface))
 
