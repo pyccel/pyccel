@@ -10,12 +10,12 @@ from pyccel.decorators import template
 ATOL = 1e-15
 RTOL = 2e-14
 
+# Use int32 for Windows compatibility
+min_int = iinfo(np.int32).min
+max_int = iinfo(np.int32).max
 
-min_int = iinfo('int').min
-max_int = iinfo('int').max
-
-min_float = finfo('float').min
-max_float = finfo('float').max
+min_float = finfo(float).min
+max_float = finfo(float).max
 
 def test_abs_i(language):
     def f1(x : 'int'):
@@ -460,14 +460,6 @@ def test_len_dict_int_float(stc_language):
 
     assert epyc_f() == f()
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="C has no support for strings. See #2061"),
-            pytest.mark.c]),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_len_string(language):
     def f():
         a = 'abcdefghij'
@@ -478,14 +470,6 @@ def test_len_string(language):
 
     assert epyc_f() == f()
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="C has no support for strings. See #2061"),
-            pytest.mark.c]),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_len_literal_string(language):
     def f():
         b = len('abcd')

@@ -541,6 +541,8 @@ class PythonCodePrinter(CodePrinter):
         args = expr.args
         if func.arguments and func.arguments[0].bound_argument:
             func_name = f'{self._print(args[0])}.{func_name}'
+            if 'property' in func.decorators:
+                return func_name
             args = args[1:]
         args_str = ', '.join(self._print(i) for i in args)
         code = f'{func_name}({args_str})'
@@ -1002,6 +1004,10 @@ class PythonCodePrinter(CodePrinter):
                         imports = imports,
                         body    = body,
                         prog    = prog)
+
+    def _print_AllDeclaration(self, expr):
+        values = ',\n           '.join(self._print(v) for v in expr.values)
+        return f'__all__ = ({values},)\n'
 
     def _print_PyccelPow(self, expr):
         base = self._print(expr.args[0])
