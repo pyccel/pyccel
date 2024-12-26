@@ -2032,7 +2032,7 @@ class SemanticParser(BasicParser):
         elif isinstance(base, UnionTypeAnnotation):
             return UnionTypeAnnotation(*[self._get_indexed_type(t, args, expr) for t in base.type_list])
 
-        if all(isinstance(a, Slice) for a in args):
+        if all(isinstance(a, (Slice, LiteralInteger)) for a in args):
             rank = len(args)
             order = None if rank < 2 else 'C'
             if isinstance(base, VariableTypeAnnotation):
@@ -2044,9 +2044,10 @@ class SemanticParser(BasicParser):
                 dtype_cls = base.cls_name
                 dtype = numpy_process_dtype(dtype_cls.static_type())
                 class_type = NumpyNDArrayType(dtype, rank, order)
-            return VariableTypeAnnotation(class_type)
+            shape = [None if isinstance(a, Slice) else a for a in args]
+            return VariableTypeAnnotation(class_type, shape = shape)
 
-        if not any(isinstance(a, Slice) for a in args):
+        if not any(isinstance(a, (LiteralInteger, Slice)) for a in args):
             if isinstance(base, PyccelFunctionDef):
                 dtype_cls = base.cls_name
             else:
@@ -2841,7 +2842,7 @@ class SemanticParser(BasicParser):
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
                 cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
-                shape = len(class_type) if isinstance(class_type, InhomogeneousTupleType) else None
+                shape = t.shape
                 v = var_class(class_type, name, cls_base = cls_base,
                         shape = shape,
                         is_const = t.is_const, is_optional = False,

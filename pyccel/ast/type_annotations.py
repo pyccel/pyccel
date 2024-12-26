@@ -14,7 +14,9 @@ from .basic import PyccelAstNode
 from .core import FunctionDefArgument
 
 from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
-from .datatypes import VoidType, GenericType, StringType
+from .datatypes import VoidType, GenericType, StringType, InhomogeneousTupleType
+
+from .literals import LiteralInteger
 
 from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
 
@@ -45,11 +47,14 @@ class VariableTypeAnnotation(PyccelAstNode):
     is_const : bool, default=False
         True if the variable cannot be modified, false otherwise.
     """
-    __slots__ = ('_class_type', '_is_const')
+    __slots__ = ('_class_type', '_is_const', '_shape')
     _attribute_nodes = ()
-    def __init__(self, class_type : 'DataType', is_const : bool = False):
+    def __init__(self, class_type : 'DataType', is_const : bool = False, shape = None):
         self._class_type = class_type
         self._is_const = is_const
+        self._shape = shape
+        if not shape and isinstance(self._class_type, InhomogeneousTupleType):
+            shape = (LiteralInteger(len(self._class_type)),)
 
         super().__init__()
 
@@ -89,6 +94,10 @@ class VariableTypeAnnotation(PyccelAstNode):
         if not isinstance(val, bool):
             raise TypeError("Is const value should be a boolean")
         self._is_const = val
+
+    @property
+    def shape(self):
+        return self._shape
 
     def __hash__(self):
         return hash(self.class_type)
