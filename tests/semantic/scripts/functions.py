@@ -5,41 +5,34 @@
 def helloworld():
     print('hello world')
 
-#$ header function incr(int)
-def incr(x):
+def incr(x : int):
     x = x + 1
 
-#$ header function decr(int) results(int)
-def decr(x):
+def decr(x : int) -> int:
     y = x - 1
     return y
 
 # TODO [YG, 30.01.2020] function behavior in Python not correct:
 #      must change to x += 1
 #
-#$ header function incr_array(int [:])
-def incr_array(x):
+def incr_array(x : 'int [:]'):
     x = x + 1
 
-##$ header function decr_array(int [:]) results(int [:])
-#def decr_array(x):
-#    y = x - 1
-#    return y
+def decr_array(x : 'int [:]') -> 'int [:]':
+    y = x - 1
+    return y
 
 # TODO [YG, 30.01.2020] function behavior in Python not correct:
 #      must change to x -= 1
 #
-#$ header function decr_array(int [:])
-def decr_array(x):
+def decr_array(x : 'int [:]'):
     x = x - 1
 
-#$ header function f1(int, int, int) results(int)
-def f1(x, n=2, m=None):
+def f1(x : int, n : int = 2, m : int = None) -> int:
     y = x - n
     return y
 
-#$ header function f2(int, int) results(int)
-def f2(x, m=None):
+def f2(x : int, m : int = None) -> int:
     if m is None:
         y = x + 1
     else:
