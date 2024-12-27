@@ -593,49 +593,16 @@ def test_in_specified(language):
     pyccel_test("scripts/runtest_degree_in.py", language=language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/hope_fib.py",
+@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/fib.py",
                                         "scripts/hope_benchmarks/quicksort.py",
                                         "scripts/hope_benchmarks/hope_pisum.py",
                                         "scripts/hope_benchmarks/hope_ln_python.py",
                                         "scripts/hope_benchmarks/hope_pairwise_python.py",
                                         "scripts/hope_benchmarks/point_spread_func.py",
                                         "scripts/hope_benchmarks/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/fib.py",
-                                        "scripts/hope_benchmarks_decorators/hope_ln_python.py",
-                                        "scripts/hope_benchmarks_decorators/hope_pairwise_python.py",
-                                        "scripts/hope_benchmarks_decorators/point_spread_func.py",
-                                        "scripts/hope_benchmarks_decorators/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/quicksort.py",
-
                                         ] )
-@pytest.mark.parametrize( "language", (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-    )
-)
 def test_hope_benchmarks( test_file, language ):
     pyccel_test(test_file, language=language)
-
-#------------------------------------------------------------------------------
-@pytest.mark.c
-@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/hope_fib.py",
-                                        "scripts/hope_benchmarks/quicksort.py",
-                                        "scripts/hope_benchmarks/hope_pisum.py",
-                                        "scripts/hope_benchmarks/hope_ln_python.py",
-                                        "scripts/hope_benchmarks/hope_pairwise_python.py",
-                                        pytest.param("scripts/hope_benchmarks/point_spread_func.py",
-                                            marks = pytest.mark.skip(reason="Numpy sum not implemented in c")),
-                                        "scripts/hope_benchmarks/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/fib.py",
-                                        "scripts/hope_benchmarks_decorators/hope_ln_python.py",
-                                        "scripts/hope_benchmarks_decorators/hope_pairwise_python.py",
-                                        pytest.param("scripts/hope_benchmarks_decorators/point_spread_func.py",
-                                            marks = pytest.mark.skip(reason="Numpy sum not implemented in c")),
-                                        "scripts/hope_benchmarks_decorators/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/quicksort.py",
-                                        ] )
-def test_hope_benchmarks_c( test_file ):
-    pyccel_test(test_file, language='c')
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import.py",
