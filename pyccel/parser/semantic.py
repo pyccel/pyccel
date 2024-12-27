@@ -922,6 +922,12 @@ class SemanticParser(BasicParser):
             The new operator.
         """
         arg1 = visited_args[0]
+        if isinstance(arg1, FunctionDef):
+            msg = ("Function found in a mathematical operation. "
+                   "Are you trying to declare a type? "
+                   "If so then the TypeAlias type hint from the typing library must be used.")
+            errors.report(msg,
+                    severity='fatal', symbol=expr)
         class_type = arg1.class_type
         class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
         magic_method_name = magic_method_map.get(type(expr), None)
