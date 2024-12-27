@@ -3289,10 +3289,9 @@ class SemanticParser(BasicParser):
                 lhs = lhs.name
 
             if semantic_lhs_var.class_type is TypeAlias():
-                if not isinstance(rhs, SyntacticTypeAnnotation):
-                    pyccel_stage.set_stage('syntactic')
-                    rhs = SyntacticTypeAnnotation(rhs)
-                    pyccel_stage.set_stage('semantic')
+                pyccel_stage.set_stage('syntactic')
+                rhs = SyntacticTypeAnnotation(rhs)
+                pyccel_stage.set_stage('semantic')
                 type_annot = self._visit(rhs)
                 self.scope.insert_symbolic_alias(lhs, type_annot)
                 return EmptyNode()
@@ -4161,7 +4160,10 @@ class SemanticParser(BasicParser):
             if isinstance(a.annotation, UnionTypeAnnotation):
                 annotation = [aa for a in a.annotation for aa in unpack(a)]
             else:
-                annotation = [a.annotation]
+                if a.annotation.dtype not in templates:
+                    annotation = unpack(self._visit(a.annotation))
+                else:
+                    annotation = [a.annotation]
             if len(annotation)>1:
                 tmp_template_name = a.name + '_' + random_string(12)
                 tmp_template_name = self.scope.get_new_name(tmp_template_name)
