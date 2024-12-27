@@ -18,6 +18,8 @@ from .core import FunctionDefArgument
 from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import VoidType, GenericType, StringType
 
+from .literals import LiteralString
+
 from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
 
 __all__ = (
@@ -273,6 +275,8 @@ class SyntacticTypeAnnotation(PyccelAstNode):
             return super().__new__(cls)
 
     def __init__(self, dtype, order = None):
+        if isinstance(dtype, LiteralString):
+            dtype = dtype.python_value
         if not isinstance(dtype, (str, DottedName, IndexedElement)):
             raise ValueError("Syntactic datatypes should be strings")
         if not (order is None or isinstance(order, str)):
