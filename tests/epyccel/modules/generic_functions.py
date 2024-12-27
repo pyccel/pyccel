@@ -1,33 +1,31 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeAlias
 from pyccel.decorators import template
 
-#$ header function gen_2(real, int)
-#$ header function gen_2(int, real)
-#$ header function gen_4(T, T)
-#$ header template T(int|real)
-#$ header template R(int|real)
-#$ header template O(real|complex)
-#$ header template S(int|real|complex)
+T : TypeAlias = int | float
+R : TypeAlias = int | float
+O : TypeAlias = float | complex
+S : TypeAlias = int | float | complex
 
 def gen_1(a : 'float'):
     return a / 10
 
-def gen_2(y, x):
+def gen_2(y : float | int, x : int | float):
     return y / x
 
-def gen_3(x : 'T', y : 'T'):
+def gen_3(x : T, y : T):
     return x / y
 
-def gen_4(x, y):
+def gen_4(x : T, y : T):
     return x / y
 
-def gen_5(x : 'T', y : 'R'):
+def gen_5(x : T, y : R):
     return x / y
 
-def gen_6(x : 'S', y : 'S'):
+def gen_6(x : S, y : S):
     return x + y
 
-def gen_7(x : 'T', y : 'T', z : 'R'):
+def gen_7(x : T, y : T, z : R):
     return x + y + z
 
 
@@ -41,7 +39,7 @@ def local_overide_1(x : 'O', y : 'O'):
     return x + y
 
 @template('Z', types=['int', 'real'])
-def tmplt_tmplt_1(x : 'Z', y : 'Z', z : 'R'):
+def tmplt_tmplt_1(x : 'Z', y : 'Z', z : R):
     return x + y + z
 
 def tst_gen_1():
