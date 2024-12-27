@@ -5360,9 +5360,8 @@ def test_numpy_where_array_like_2d_with_condition(language):
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
 
 def test_numpy_where_complex(language):
-    @types('complex64[:]', 'complex64[:]', 'bool[:]')
-    @types('complex128[:]', 'complex128[:]', 'bool[:]')
-    def where_wrapper(arr1, arr2, cond):
+    @template('T', ['complex64[:]','complex128[:]'])
+    def where_wrapper(arr1 : 'T', arr2 : 'T', cond : 'bool[:]'):
         from numpy import where, shape
         a = where(cond, arr1, arr2)
         s = shape(a)
