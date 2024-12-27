@@ -4205,7 +4205,8 @@ class SemanticParser(BasicParser):
 
             # Here _visit_AnnotatedPyccelSymbol always give us an list of size 1
             # so we flatten the arguments
-            scalar_arguments = [a for a in new_expr_args if isinstance(a.annotation.dtype, PyccelSymbol)]
+            scalar_arguments = [a for a in new_expr_args if isinstance(a.annotation, SyntacticTypeAnnotation) \
+                    and isinstance(a.annotation.dtype, PyccelSymbol)]
             visited_scalar_arguments = {a: self._visit(a) for a in scalar_arguments}
             for a in visited_scalar_arguments.values():
                 self.scope.insert_variable(a[0].var, expr.scope.get_python_name(a[0].name))
