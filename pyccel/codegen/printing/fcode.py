@@ -1886,11 +1886,9 @@ class FCodePrinter(CodePrinter):
                 # arrays are 0-based in pyccel, to avoid ambiguity with range
                 start_val = self._print(LiteralInteger(0))
 
-                if intent_in:
-                    rankstr = ', '.join([f'{start_val}:'] * rank)
-                elif is_static or on_stack:
+                if intent or is_static or on_stack:
                     ordered_shape = shape[::-1] if var.order == 'C' else shape
-                    ubounds = [PyccelMinus(s, LiteralInteger(1), simplify = True) for s in ordered_shape]
+                    ubounds = [self._print(PyccelMinus(s, LiteralInteger(1), simplify = True)) if s else '' for s in ordered_shape]
                     rankstr = ', '.join(f'{start_val}:{self._print(u)}' for u in ubounds)
                 elif is_alias or on_heap:
                     rankstr = ', '.join(':'*rank)
