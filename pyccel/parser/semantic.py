@@ -139,6 +139,7 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
 
 from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
+from pyccel.parser.syntax.headers import types_meta
 
 from pyccel.utilities.stage import PyccelStage
 
@@ -3296,7 +3297,17 @@ class SemanticParser(BasicParser):
 
             if semantic_lhs_var.class_type is TypeAlias():
                 pyccel_stage.set_stage('syntactic')
-                rhs = SyntacticTypeAnnotation(rhs)
+                if isinstance(rhs, LiteralString):
+                    try:
+                        annotation = types_meta.model_from_str(rhs.python_value)
+                    except TextXSyntaxError as e:
+                        errors.report(f"Invalid header. {e.message}",
+                                symbol = stmt, column = e.col,
+                                severity='fatal')
+                    rhs = annotation.expr
+                    rhs.set_current_ast(expr.python_ast)
+                else:
+                    rhs = SyntacticTypeAnnotation(rhs)
                 pyccel_stage.set_stage('semantic')
                 type_annot = self._visit(rhs)
                 self.scope.insert_symbolic_alias(lhs, type_annot)
