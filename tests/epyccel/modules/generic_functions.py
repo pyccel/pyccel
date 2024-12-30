@@ -1,16 +1,15 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from typing import TypeAlias
 from pyccel.decorators import template
 
-T : TypeAlias = int | float
-R : TypeAlias = int | float
-O : TypeAlias = float | complex
-S : TypeAlias = int | float | complex
+T : type = 'int | float'
+R : type = 'int | float'
+O : type = 'float | complex'
+S : type = 'int | float | complex'
 
 def gen_1(a : 'float'):
     return a / 10
 
-def gen_2(y : float | int, x : int | float):
+def gen_2(y : 'float | int', x : 'int | float'):
     return y / x
 
 def gen_3(x : T, y : T):

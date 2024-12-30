@@ -11,7 +11,7 @@ def tmplt_1(x : 'Z', y : 'Z'):
 def multi_tmplt_1(x : 'Z', y : 'Z', z : 'Y'):
     return x + y + z
 
-def multi_heads_1(x : int, y : int | float):
+def multi_heads_1(x : int, y : 'int | float'):
     return x + y
 
 @template(types=['int', 'float'], name = 'Z')
@@ -44,7 +44,7 @@ def default_var_3(x : 'G', y  : 'K' =  False):
         return x
     return x - 1
 
-def default_var_4(x : int | float, y : int = 5):
+def default_var_4(x : 'int | float', y : int = 5):
     return x + y
 
 
@@ -63,13 +63,13 @@ def optional_var_2(x : 'G', y  : 'K' =  None):
         return x + 1j
     return x + y
 
-def optional_var_3(x : int | float, y : float = None):
+def optional_var_3(x : 'int | float', y : float = None):
     if y is None:
         return x / 2.0
     return x / y
 
 
-def optional_var_4(x : complex | float, y : int = None):
+def optional_var_4(x : 'complex | float', y : int = None):
     if y is None:
         return x
     return x + y
