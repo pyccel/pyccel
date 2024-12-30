@@ -6,7 +6,7 @@ from numpy.random import rand, randn, uniform
 from numpy import isclose, iinfo, finfo, complex64, complex128
 import numpy as np
 
-from pyccel.decorators import template, types
+from pyccel.decorators import template
 from pyccel import epyccel
 
 min_int8 = iinfo('int8').min
@@ -5386,11 +5386,7 @@ def test_numpy_where_complex(language):
     assert epyccel_func(cmplx128_1, cmplx128_2, cond) == where_wrapper(cmplx128_1, cmplx128_2, cond)
 
 def test_where_combined_types(language):
-    @types('bool[:]','int32[:]','int64[:]')
-    @types('bool[:]','int32[:]','float32[:]')
-    @types('bool[:]','float64[:]','int64[:]')
-    @types('bool[:]','complex128[:]','int64[:]')
-    def where_wrapper(cond, arr1, arr2):
+    def where_wrapper(cond : 'bool[:]', arr1 : 'int32[:] | float64[:] | complex128[:]', arr2 : 'int64[:] | float32[:]'):
         from numpy import where, shape
         a = where(cond, arr1, arr2)
         s = shape(a)
@@ -5528,14 +5524,8 @@ def test_numpy_linspace_scalar(language):
 def test_numpy_linspace_array_like_1d(language):
     from numpy import linspace
 
-    @types('int[:]', 'int', 'float[:,:]', 'bool')
-    @types('int8[:]', 'int', 'float[:,:]', 'bool')
-    @types('int16[:]', 'int', 'float[:,:]', 'bool')
-    @types('int32[:]', 'int', 'float[:,:]', 'bool')
-    @types('float[:]', 'int', 'float[:,:]', 'bool')
-    @types('float32[:]', 'int', 'float32[:,:]', 'bool')
-    @types('float64[:]', 'int', 'float64[:,:]', 'bool')
-    def test_linspace(start, stop, out, endpoint):
+    @template('T', ['int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'float[:]', 'float32[:]', 'float64[:]'])
+    def test_linspace(start : 'T', stop : int, out : 'float64[:,:]', endpoint : bool):
         from numpy import linspace
         numberOfSamplesToGenerate = 7
         a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
@@ -5551,9 +5541,7 @@ def test_numpy_linspace_array_like_1d(language):
             for j in range(len(out[i])):
                 out[i][j] = a[i][j]
 
-    @types('int[:]', 'int', 'int32[:,:]', 'bool')
-    @types('float64[:]', 'int', 'int32[:,:]', 'bool')
-    def test_linspace_dtype(start, stop, out, endpoint):
+    def test_linspace_dtype(start : 'int[:] | float64[:]', stop : int, out : 'int32[:,:]', endpoint : bool):
         from numpy import linspace
         import numpy as np
         numberOfSamplesToGenerate = 7
@@ -5656,14 +5644,8 @@ def test_numpy_linspace_array_like_1d(language):
 def test_numpy_linspace_array_like_2d(language):
     from numpy import linspace
 
-    @types('int[:,:]', 'int', 'float[:,:,:]', 'bool')
-    @types('int8[:,:]', 'int', 'float[:,:,:]', 'bool')
-    @types('int16[:,:]', 'int', 'float[:,:,:]', 'bool')
-    @types('int32[:,:]', 'int', 'float[:,:,:]', 'bool')
-    @types('float[:,:]', 'int', 'float[:,:,:]', 'bool')
-    @types('float32[:,:]', 'int', 'float32[:,:,:]', 'bool')
-    @types('float64[:,:]', 'int', 'float64[:,:,:]', 'bool')
-    def test_linspace(start, stop, out, endpoint):
+    @template('T', ['int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
+    def test_linspace(start : 'T', stop : int, out : 'float64[:,:,:]', endpoint : bool):
         from numpy import linspace
         numberOfSamplesToGenerate = 7
         a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
