@@ -926,7 +926,7 @@ class SemanticParser(BasicParser):
         if isinstance(arg1, FunctionDef):
             msg = ("Function found in a mathematical operation. "
                    "Are you trying to declare a type? "
-                   "If so then the TypeAlias type hint from the typing library must be used.")
+                   "If so then the type object must be used as a type hint.")
             errors.report(msg,
                     severity='fatal', symbol=expr)
         class_type = arg1.class_type
