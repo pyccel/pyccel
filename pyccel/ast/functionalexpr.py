@@ -53,6 +53,9 @@ class FunctionalFor(TypedAstNode):
                   Dummy_0 += 1
               ```
               Index is `Dummy_0`.
+    operations : dict
+        A dictionary mapping each type of comprehension (e.g. list, array, etc.)
+        to the operation used for populating it.
     target_type : PyccelSymbol, optional
         The type of the result of the functional for. This is useful at
         the syntactic stage to pass along the final type of the lhs (list/set/array/etc).
@@ -61,7 +64,7 @@ class FunctionalFor(TypedAstNode):
         Each element of this list is either an `If` instance that describes the filtering
         condition for that loop, or `None` if no condition is applied in that loop.
     """
-    __slots__ = ('_loops','_expr', '_lhs', '_indices','_index',
+    __slots__ = ('_loops','_expr', '_lhs', '_indices','_index', '_operations',
             '_shape','_class_type', '_target_type', '_conditions')
     _attribute_nodes = ('_loops','_expr', '_lhs', '_indices','_index')
 
@@ -73,13 +76,15 @@ class FunctionalFor(TypedAstNode):
         indices=None,
         index=None,
         target_type=None,
-        conditions=None
+        conditions=None,
+        operations=None
         ):
         self._loops   = loops
         self._expr    = expr
         self._lhs     = lhs
         self._indices = indices
         self._index   = index
+        self._operations = operations
         self._target_type = target_type
         self._conditions = conditions
         super().__init__()
@@ -107,6 +112,26 @@ class FunctionalFor(TypedAstNode):
     @property
     def index(self):
         return self._index
+
+    @property
+    def operations(self):
+        """
+        A dictionary mapping each type of comprehension to the operation used for populating it.
+
+        For example, for list comprehensions we might use 
+        ``{'list': 'append'}``, and for cspans (the equivalent of NumPy arrays, 
+        which require a fixed size at compile time), we might use 
+        ``{'cspans': 'indexed_element_assignment'}``. 
+        This mapping allows the code generator to select the appropriate operation 
+        when building the final data structure from the comprehension.
+
+        Returns
+        -------
+        dict
+            A dictionary that maps comprehension types (e.g. 'list', 'cspans') to 
+            the corresponding operation ('append', 'indexed_element_assignment', etc.).
+        """
+        return self._operations
 
     @property
     def target_type(self):

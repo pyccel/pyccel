@@ -1848,7 +1848,7 @@ class SemanticParser(BasicParser):
 
             if isinstance(loop, If):
                 loop = loop.blocks[0].body.body[0]
-                continue         
+                continue
             nlevels+=1
             self._get_for_iterators(loop.iterable, loop.target, new_expr)
 
@@ -3714,26 +3714,10 @@ class SemanticParser(BasicParser):
             dvar['class_type'] = class_type
             variables.append((var, dvar))
 
-        def create_target_operations():
-            pyccel_stage.set_stage('syntactic')
-            operations = []
-            if target_type_name != 'list':
-                index = PyccelSymbol('_', is_temp=True)
-                args = [index]
-                target = IndexedElement(lhs, *args)
-                target = Assign(target, expr.expr)
-                assign1 = Assign(index, LiteralInteger(0))
-                assign1.set_current_ast(expr)
-                target.set_current_ast(expr)
-                operations.append(target)
-                assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
-                assign2.set_current_ast(expr)
-                operations.append(assign2)
-            else:
-                operations.append(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(expr.expr)])))
-            pyccel_stage.set_stage('semantic')
-
-            return [self._visit(op) for op in operations]
+        def create_target_operations(target):
+            # this can be used to add opertations for set/dict comprehension
+            assert target in expr.operations
+            return expr.operations[target]
 
         for loop, condition in zip(loops, expr.conditions):
             if condition:
@@ -3813,8 +3797,7 @@ class SemanticParser(BasicParser):
             stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
             size = (stop - start) / step
             if (step != 1):
-                size = ceiling(size)
-                
+                size = ceiling(size) 
             body = None if not body.body.body else body.body.body[0]
             dims.append((size, step, start, stop))
             i += 1
@@ -3907,11 +3890,10 @@ class SemanticParser(BasicParser):
             errors.report("Unrecognised output type from functional for.\n"+PYCCEL_RESTRICTION_TODO,
                           symbol=expr,
                           severity='fatal')
-        if expr.conditions:
-            if target_type_name != 'list':
-                errors.report("Cannot handle if statements in list comprehensions if lhs is a numpy array.\
-                              List length cannot be calculated.\n" + PYCCEL_RESTRICTION_TODO,
-                               symbol=expr, severity='error')
+        if target_type_name != 'list' and any(cond is not None for cond in  expr.conditions):
+            errors.report("Cannot handle if statements in list comprehensions if lhs is a numpy array.\
+                          List length cannot be calculated.\n" + PYCCEL_RESTRICTION_TODO,
+                           symbol=expr, severity='error')
         try:
             class_type = type_container[conversion_func.cls_name](class_type)
         except TypeError:
@@ -3941,18 +3923,28 @@ class SemanticParser(BasicParser):
             errors.report(LIST_OF_TUPLES, symbol=expr, severity='fatal')
 
         target.invalidate_node()
+        operations = []
+        if target_type_name != 'list':
+            old_index   = expr.index
+            new_index   = self.scope.get_new_name() 
+            for operation in create_target_operations('numpy_array'):
+                operation.substitute(old_index, new_index)
+                operations.append(operation)
+            index = new_index
+            index = self._visit(index)
+        else:
+            index = None
+            operations.extend(operations['list'])
 
         if expr.loops[-1].body.body:
             for operation in create_target_operations():
-                expr.loops[-1].body.body[0].blocks[0].body.insert2body(operation)
+                expr.loops[-1].body.body[0].blocks[0].body.insert2body(self._visit(operation))
         else:
             for operation in create_target_operations():
-                expr.loops[-1].insert2body(operation)
+                expr.loops[-1].insert2body(self._visit(operation))
 
 
         loops = [self._visit(i) for i in loops]
-        if expr.index:
-            index = self._visit(index)
 
         l = loops[0]
         cnt = 0
@@ -3971,7 +3963,7 @@ class SemanticParser(BasicParser):
                         l = l.body.body[0]
                 cnt = 0
 
-        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=expr.indices, target_type=target_type_name, conditions=expr.conditions)])
+        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, index=index, indices=expr.indices, target_type=target_type_name, conditions=expr.conditions)])
 
     def _visit_GeneratorComprehension(self, expr):
         lhs = self.check_for_variable(expr.lhs)

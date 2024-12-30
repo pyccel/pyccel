@@ -1178,6 +1178,24 @@ class SyntaxParser(BasicParser):
         pyccel.ast.functionalexpr.FunctionalFor
             AST object which is the syntactic equivalent of the list comprehension.
         """
+        
+        def create_target_operations():
+            operations = {'list' : [], 'numpy_array' : []}
+            index = PyccelSymbol('_', is_temp=True)
+            args = [index]
+            target = IndexedElement(lhs, *args)
+            target = Assign(target, result)
+            assign1 = Assign(index, LiteralInteger(0))
+            assign1.set_current_ast(stmt)
+            target.set_current_ast(stmt)
+            operations['numpy_array'].append(target)
+            assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
+            assign2.set_current_ast(stmt)
+            operations['numpy_array'].append(assign2)
+            operations['list'].append(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
+
+            return index, operations
+
 
         result = self._visit(stmt.elt)
         output_type = None
@@ -1209,17 +1227,18 @@ class SyntaxParser(BasicParser):
                 raise NotImplementedError("A list comprehension cannot be unpacked")
 
         indices = [generator.target for generator in generators]
+        index, operations = create_target_operations()
 
-        return FunctionalFor(generators, result, lhs, indices,
+        return FunctionalFor(generators, result, lhs,indices,index=index,
                              conditions=conditions,
-                             target_type=output_type)
+                             target_type=output_type, operations=operations)
 
     def _visit_GeneratorExp(self, stmt):
         conditions = []
         generators = []
         indices = []
         condition = None
-        
+
         result = self._visit(stmt.elt)
 
         comprehensions = list(self._visit(stmt.generators))
@@ -1248,11 +1267,11 @@ class SyntaxParser(BasicParser):
             body = Assign(lhs, body)
 
         body.set_current_ast(parent)
-        
+
         for loop, condition in zip(generators, conditions):
             if condition:
                 loop.insert2body(condition)
-        
+
         if generators[-1].body.body:
             generators[-1].body.body[0].blocks[0].body.insert2body(body)
         else:
@@ -1267,10 +1286,8 @@ class SyntaxParser(BasicParser):
             else:
                 inserted_into.insert2body(outter_loop)
         indices.append(generators[-1].target)
- 
-        indices = indices[::-1]
-        
-        
+
+        indices = indices[::-1] 
 
         if name == 'sum':
             expr = FunctionalSum(generators[0], result, lhs, indices, conditions=conditions)
