@@ -368,7 +368,7 @@ class BasicParser(object):
         """
         if self.scope.is_class:
             child = self.scope.parent_scope.new_child_scope(name,
-                        parent_scope = self.scope, **kwargs)
+                        previous_scope = self.scope, **kwargs)
         else:
             child = self.scope.new_child_scope(name, **kwargs)
 
@@ -383,7 +383,7 @@ class BasicParser(object):
         """ Exit the function scope and return to the encasing scope
         """
 
-        self._scope = self._scope.parent_scope
+        self._scope = self._scope.previous_scope
         if isinstance(self._current_function, DottedName):
 
             name = self._current_function.name[:-1]
@@ -404,7 +404,7 @@ class BasicParser(object):
     def exit_loop_scope(self):
         """ Exit the loop scope and return to the encasing scope
         """
-        self._scope = self._scope.parent_scope
+        self._scope = self._scope.previous_scope
 
     def create_new_class_scope(self, name, **kwargs):
         """
@@ -440,7 +440,7 @@ class BasicParser(object):
     def exit_class_scope(self):
         """ Exit the class scope and return to the encasing scope
         """
-        self._scope = self._scope.parent_scope
+        self._scope = self._scope.previous_scope
 
     def dump(self, filename=None):
         """
