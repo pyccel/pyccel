@@ -2979,7 +2979,7 @@ class SemanticParser(BasicParser):
                 args = macro.apply(args)
                 return FunctionCall(master, args, self._current_function)
 
-            method = cls_base.get_method(rhs_name)
+            method = cls_base.scope.find(rhs_name, 'functions')
 
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
             if not method.is_semantic:
