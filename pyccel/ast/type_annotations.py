@@ -268,7 +268,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
     __slots__ = ('_dtype', '_order')
     _attribute_nodes = ('_dtype',)
 
-    def __new__(cls, dtype, order = None):
+    def __new__(cls, dtype = None, order = None):
         if isinstance(dtype, PyccelBitOr):
             return UnionTypeAnnotation(*[SyntacticTypeAnnotation(d) for d in dtype.args])
         else:
@@ -314,6 +314,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
                     self.order == o.order
         else:
             return False
+
 
 #==============================================================================
 
