@@ -18,6 +18,8 @@ from sympy import Symbol as sp_Symbol
 from sympy import Integer as sp_Integer
 from sympy import ceiling
 
+from textx.exceptions import TextXSyntaxError
+
 #==============================================================================
 from pyccel.utilities.strings import random_string
 from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
@@ -3302,8 +3304,7 @@ class SemanticParser(BasicParser):
                         annotation = types_meta.model_from_str(rhs.python_value)
                     except TextXSyntaxError as e:
                         errors.report(f"Invalid header. {e.message}",
-                                symbol = stmt, column = e.col,
-                                severity='fatal')
+                                symbol = expr, severity = 'fatal')
                     rhs = annotation.expr
                     rhs.set_current_ast(expr.python_ast)
                 else:
