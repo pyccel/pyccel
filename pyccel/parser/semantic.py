@@ -3307,7 +3307,8 @@ class SemanticParser(BasicParser):
                                 symbol = expr, severity = 'fatal')
                     rhs = annotation.expr
                     rhs.set_current_ast(expr.python_ast)
-                else:
+                elif not isinstance(rhs, (SyntacticTypeAnnotation, FunctionTypeAnnotation,
+                                          VariableTypeAnnotation, UnionTypeAnnotation)):
                     rhs = SyntacticTypeAnnotation(rhs)
                 pyccel_stage.set_stage('semantic')
                 type_annot = self._visit(rhs)
