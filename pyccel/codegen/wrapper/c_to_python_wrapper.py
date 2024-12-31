@@ -1548,7 +1548,7 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[expr] = function
 
         if 'property' in original_func.decorators:
-            python_name = original_func.scope.get_python_name(original_func.name)
+            python_name = original_func.scope.previous_scope.get_python_name(original_func.name)
             docstring = LiteralString(
                             '\n'.join(original_func.docstring.comments)
                             if original_func.docstring else f"The attribute {python_name}")
