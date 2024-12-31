@@ -4175,13 +4175,14 @@ class SemanticParser(BasicParser):
         tmp_templates = {}
         new_expr_args = []
         for a in expr.arguments:
-            if isinstance(a.annotation, UnionTypeAnnotation):
-                annotation = [aa for a in a.annotation for aa in unpack(a)]
+            annot = a.annotation
+            if isinstance(annot, UnionTypeAnnotation):
+                annotation = [aa for a in annot for aa in unpack(a)]
             else:
-                if a.annotation.dtype not in templates:
-                    annotation = unpack(self._visit(a.annotation))
+                if isinstance(annot, VariableTypeAnnotation) and annot.dtype not in templates:
+                    annotation = unpack(self._visit(annot))
                 else:
-                    annotation = [a.annotation]
+                    annotation = [annot]
             if len(annotation)>1:
                 tmp_template_name = a.name + '_' + random_string(12)
                 tmp_template_name = self.scope.get_new_name(tmp_template_name)
