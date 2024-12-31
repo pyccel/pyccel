@@ -3283,10 +3283,10 @@ class SemanticParser(BasicParser):
                 cls_def = semantic_lhs_var.lhs.cls_base
                 insert_scope = cls_def.scope
                 cls_def.add_new_attribute(semantic_lhs_var)
-                lhs = lhs.name.name[-1]
+                lhs_tag = lhs.name.name[-1]
             else:
                 insert_scope = self.scope
-                lhs = lhs.name
+                lhs_tag = lhs.name
 
             if semantic_lhs_var.class_type is TypeAlias():
                 if not isinstance(rhs, SyntacticTypeAnnotation):
@@ -3298,7 +3298,7 @@ class SemanticParser(BasicParser):
                 return EmptyNode()
 
             try:
-                insert_scope.insert_variable(semantic_lhs_var, lhs)
+                insert_scope.insert_variable(semantic_lhs_var, lhs_tag)
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
 
