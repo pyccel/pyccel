@@ -346,3 +346,17 @@ def test_ptr_in_class(language):
     y[0] = -3
 
     assert np.array_equal(a_py.x, a_l.x)
+
+def test_class_property_name_conflict(language):
+    import classes.class_property_name_conflict as mod
+    modnew = epyccel(mod, language = language)
+
+    a_py = mod.A(3.0)
+    a_l = modnew.A(3.0)
+
+    assert a_py.x == a_l.x
+
+    a_py.translate(4.5)
+    a_l.translate(4.5)
+
+    assert a_py.x == a_l.x
