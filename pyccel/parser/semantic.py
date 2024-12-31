@@ -4181,8 +4181,7 @@ class SemanticParser(BasicParser):
             elif isinstance(annot, SyntacticTypeAnnotation):
                 elem = annot.dtype
                 if isinstance(elem, IndexedElement):
-                    elem = [elem.base, *elem.indices]
-                    elem = [a.dtype for a in elem if isinstance(a, SyntacticTypeAnnotation)]
+                    elem = [elem.base] + [a.dtype for a in elem.indices if isinstance(a, SyntacticTypeAnnotation)]
                 else:
                     elem = [elem]
                 if all(e not in templates for e in elem):
