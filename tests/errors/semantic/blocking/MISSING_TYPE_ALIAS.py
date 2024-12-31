@@ -1,3 +1,3 @@
 
 
-S = int | float
+S = 'int | float'

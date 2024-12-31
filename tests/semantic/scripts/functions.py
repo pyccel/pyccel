@@ -25,7 +25,7 @@ def decr_array(x : 'int [:]') -> 'int [:]':
 # TODO [YG, 30.01.2020] function behavior in Python not correct:
 #      must change to x -= 1
 #
-def decr_array(x : 'int [:]'):
+def decr_array_inplace(x : 'int [:]'):
     x = x - 1
 
 def f1(x : int, n : int = 2, m : int = None) -> int:

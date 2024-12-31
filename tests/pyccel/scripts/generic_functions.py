@@ -3,15 +3,15 @@ import numpy as np
 from pyccel.decorators import template
 from pyccel.decorators import types
 
-T : TypeAlias = int | float
-R : TypeAlias = int | float
-O : TypeAlias = bool | complex
-S : TypeAlias = int | float
+T : type = 'int | float'
+R : type = 'int | float'
+O : type = 'bool | complex'
+S : type = 'int | float'
 
 def gen_1(a : float) -> float:
     return a * 10
 
-def gen_2(y : float | int, x : int | float):
+def gen_2(y : 'float | int', x : 'int | float'):
     return y * x
 
 def gen_3(x : T, y : T):
@@ -29,7 +29,7 @@ def gen_6(x : S, y : S):
 def gen_7(x : T, y : T, z : R):
     return x + y + z
 
-def multi_heads_1(x : int, y : int | float):
+def multi_heads_1(x : int, y : 'int | float'):
     return x + y
 
 @template('z', types=['int', 'float'])
@@ -53,7 +53,7 @@ def local_overide_1(x : 'O', y : 'O'):
 def tmplt_tmplt_1(x : 'z', y : 'z', z : R):
     return x + y + z
 
-def array_elem1(x : 'int64 [:]|float64[:]'):
+def array_elem1(x : 'int64 [:] | float64[:]'):
     return x[0]
 
 @template('k', types='int')
@@ -65,7 +65,7 @@ def multi_tmplt_2(y : 'k', z : 'g'):
 def dup_types_1(a : 'g'):
     return a
 
-def dup_types_2(a : 'int|int'):
+def dup_types_2(a : 'int | int'):
     return a
 
 def tst_gen_1():
