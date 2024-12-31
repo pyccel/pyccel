@@ -48,6 +48,9 @@ class Scope(object):
     parent_scope : Scope, default: None
         The enclosing scope.
 
+    previous_scope : Scope, default: None
+        The scope which should be returned to upon exiting this scope.
+
     used_symbols : dict, default: None
         A dictionary mapping all the names which we know will appear in the scope and which
         we therefore want to avoid when creating new names to their collisionless name.
@@ -63,7 +66,8 @@ class Scope(object):
     name_clash_checker = PythonNameClashChecker()
     __slots__ = ('_name', '_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
-            '_dummy_counter','_original_symbol', '_dotted_symbols', '_is_class')
+            '_dummy_counter','_original_symbol', '_dotted_symbols', '_is_class',
+            '_previous_scope')
 
     categories = ('functions','variables','classes',
             'imports','symbolic_functions', 'symbolic_alias',
@@ -71,7 +75,7 @@ class Scope(object):
             'cls_constructs')
 
     def __init__(self, *, name=None, decorators = (), is_loop = False,
-                    parent_scope = None, used_symbols = None,
+                    parent_scope = None, previous_scope = None, used_symbols = None,
                     original_symbols = None, is_class = False):
 
         self._name    = name
@@ -93,8 +97,9 @@ class Scope(object):
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
-        self._parent_scope       = parent_scope
-        self._sons_scopes        = {}
+        self._parent_scope   = parent_scope
+        self._previous_scope = previous_scope or parent_scope
+        self._sons_scopes    = {}
 
         self._is_loop = is_loop
         self._is_class = is_class
@@ -132,7 +137,7 @@ class Scope(object):
             New child scope, which has the current object as parent.
         """
         ps = kwargs.pop('parent_scope', self)
-        assert ps is self or ps.is_class
+        assert ps is self
 
         child = Scope(name=name, **kwargs, parent_scope = ps)
 
@@ -764,6 +769,17 @@ class Scope(object):
         """
         return self._parent_scope
 
+    @property
+    def previous_scope(self):
+        """
+        The scope which should be returned to upon exiting this scope.
+
+        The scope which should be returned to upon exiting this scope.
+        This is usually equal to the parent scope but will be different
+        for classes.
+        """
+        return self._previous_scope
+
     def remove_loop(self, loop):
         """ Remove a loop from the scope
         """
@@ -785,7 +801,7 @@ class Scope(object):
     def add_son(self, name, son):
         """ Make parent aware of new child
         """
-        assert son.parent_scope is self or son.parent_scope.is_class
+        assert son.parent_scope is self
         self._sons_scopes[name] = son
 
     def get_python_name(self, name):
