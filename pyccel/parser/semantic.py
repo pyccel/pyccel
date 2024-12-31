@@ -1262,8 +1262,8 @@ class SemanticParser(BasicParser):
         old_current_function = self._current_function
         names = []
         sc = old_func.scope if isinstance(old_func, FunctionDef) else old_func.syntactic_node.scope
-        while sc.parent_scope is not None:
-            sc = sc.parent_scope
+        while sc.previous_scope is not None:
+            sc = sc.previous_scope
             if not sc.name is None:
                 names.append(sc.name)
         names.reverse()
@@ -1294,7 +1294,7 @@ class SemanticParser(BasicParser):
         if old_func.is_imported:
             scope = self.scope
             while new_name not in scope.imports['functions']:
-                scope = scope.parent_scope
+                scope = scope.previous_scope
             assert old_func is scope.imports['functions'].get(new_name)
             func = func.clone(new_name, is_imported=True)
             func.set_current_user_node(mod)
@@ -4488,7 +4488,7 @@ class SemanticParser(BasicParser):
 
         cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope,
                 docstring = docstring, class_type = dtype)
-        self.scope.parent_scope.insert_class(cls)
+        self.scope.previous_scope.insert_class(cls)
 
         methods = expr.methods
         for method in methods:
