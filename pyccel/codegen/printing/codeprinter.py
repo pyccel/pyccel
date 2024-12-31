@@ -102,7 +102,7 @@ class CodePrinter:
     def exit_scope(self):
         """ Exit the current scope and return to the enclosing scope
         """
-        self._scope = self._scope.parent_scope
+        self._scope = self._scope.previous_scope
 
     def _print(self, expr):
         """Print the AST node in the printer language

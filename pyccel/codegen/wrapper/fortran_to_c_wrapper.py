@@ -276,7 +276,7 @@ class FortranToCWrapper(Wrapper):
         body.extend(self._additional_exprs)
         self._additional_exprs.clear()
 
-        if expr.scope.get_python_name(expr.name) == '__del__':
+        if expr.scope.previous_scope.get_python_name(expr.name) == '__del__':
             body.append(DeallocatePointer(call_arguments[0]))
 
         self.exit_scope()

@@ -652,7 +652,7 @@ class SemanticParser(BasicParser):
 
         if self._current_function:
             func_name = self._current_function.name[-1] if isinstance(self._current_function, DottedName) else self._current_function
-            current_func = self.scope.find(func_name, 'functions')
+            current_func = self.scope.previous_scope.find(func_name, 'functions')
             arg_vars = {a.var:a for a in current_func.arguments}
 
             for p, t_list in self._pointer_targets[-1].items():
@@ -4027,9 +4027,9 @@ class SemanticParser(BasicParser):
         if isinstance(f_name, DottedName):
             f_name = f_name.name[-1]
 
-        func = self.scope.find(f_name, 'functions')
+        func = self.scope.previous_scope.find(f_name, 'functions')
 
-        original_name = self.scope.get_python_name(f_name)
+        original_name = self.scope.previous_scope.get_python_name(f_name)
         if original_name.startswith('__i') and ('__'+original_name[3:]) in magic_method_map.values():
             valid_return = len(expr.expr) == 1 and expr.stmt is None and len(func.arguments) > 0
             if valid_return:
@@ -4247,7 +4247,7 @@ class SemanticParser(BasicParser):
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
             recursive_func_obj = FunctionDef(name, arguments, [], results)
-            self.insert_function(recursive_func_obj, scope = self.scope.parent_scope)
+            self.insert_function(recursive_func_obj, scope = self.scope.previous_scope)
 
             # Create a new list that store local variables for each FunctionDef to handle nested functions
             self._allocs.append(set())
@@ -4288,7 +4288,7 @@ class SemanticParser(BasicParser):
             imports   = list({imp:None for imp in imports}.keys())
 
             # remove the FunctionDef from the function scope
-            func_ = self.scope.parent_scope.functions.pop(name)
+            func_ = self.scope.previous_scope.functions.pop(name)
             is_recursive = False
             # check if the function is recursive if it was called on the same scope
             if func_.is_recursive and not is_inline:
@@ -4881,7 +4881,7 @@ class SemanticParser(BasicParser):
         f_name      = self._current_function
         if isinstance(f_name, DottedName):
             f_name = f_name.name[-1]
-        original_name = self.scope.get_python_name(f_name)
+        original_name = self.scope.previous_scope.get_python_name(f_name)
         if original_name.startswith('__i') and ('__'+original_name[3:]) in magic_method_map.values():
             return EmptyNode()
 
