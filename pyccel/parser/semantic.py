@@ -4247,7 +4247,7 @@ class SemanticParser(BasicParser):
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
             recursive_func_obj = FunctionDef(name, arguments, [], results)
-            self.insert_function(recursive_func_obj)
+            self.insert_function(recursive_func_obj, scope = self.scope.parent_scope)
 
             # Create a new list that store local variables for each FunctionDef to handle nested functions
             self._allocs.append(set())
@@ -4288,7 +4288,7 @@ class SemanticParser(BasicParser):
             imports   = list({imp:None for imp in imports}.keys())
 
             # remove the FunctionDef from the function scope
-            func_     = self.scope.functions.pop(name)
+            func_ = self.scope.parent_scope.functions.pop(name)
             is_recursive = False
             # check if the function is recursive if it was called on the same scope
             if func_.is_recursive and not is_inline:
