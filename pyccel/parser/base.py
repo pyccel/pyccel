@@ -373,7 +373,11 @@ class BasicParser(object):
             Decorators attached to FunctionDef object at syntactic stage.
 
         """
-        child = self.scope.new_child_scope(name, **kwargs)
+        if self.scope.is_class:
+            child = self.scope.parent_scope.new_child_scope(name,
+                        parent_scope = self.scope, **kwargs)
+        else:
+            child = self.scope.new_child_scope(name, **kwargs)
 
         self._scope = child
         if self._current_function:
@@ -435,7 +439,7 @@ class BasicParser(object):
         Scope
             The scope for the class.
         """
-        child = self.scope.new_child_scope(name, **kwargs)
+        child = self.scope.new_child_scope(name, is_class = True, **kwargs)
         self._scope = child
 
         return child

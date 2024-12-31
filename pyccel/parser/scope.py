@@ -55,12 +55,15 @@ class Scope(object):
     original_symbols : dict, default: None
         A dictionary which maps names used in the code to the original name used
         in the Python code.
+
+    is_class : bool, default: False
+        Indicates if the scope describes a class.
     """
     allow_loop_scoping = False
     name_clash_checker = PythonNameClashChecker()
     __slots__ = ('_name', '_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
-            '_dummy_counter','_original_symbol', '_dotted_symbols')
+            '_dummy_counter','_original_symbol', '_dotted_symbols', '_is_class')
 
     categories = ('functions','variables','classes',
             'imports','symbolic_functions', 'symbolic_alias',
@@ -69,7 +72,7 @@ class Scope(object):
 
     def __init__(self, *, name=None, decorators = (), is_loop = False,
                     parent_scope = None, used_symbols = None,
-                    original_symbols = None):
+                    original_symbols = None, is_class = False):
 
         self._name    = name
         self._imports = {k:{} for k in self.categories}
@@ -94,6 +97,7 @@ class Scope(object):
         self._sons_scopes        = {}
 
         self._is_loop = is_loop
+        self._is_class = is_class
         # scoping for loops
         self._loops = []
 
@@ -128,10 +132,9 @@ class Scope(object):
             New child scope, which has the current object as parent.
         """
         ps = kwargs.pop('parent_scope', self)
-        if ps is not self:
-            raise ValueError(f"A child of {self} cannot have a parent {ps}")
+        assert ps is self or ps.is_class
 
-        child = Scope(name=name, **kwargs, parent_scope = self)
+        child = Scope(name=name, **kwargs, parent_scope = ps)
 
         self.add_son(name, child)
 
@@ -223,6 +226,15 @@ class Scope(object):
         """ A dictionary of symbolic functions defined in this scope
         """
         return self._locals['symbolic_functions']
+
+    @property
+    def is_class(self):
+        """
+        Indicates if the scope describes a class.
+
+        Indicates if the scope describes a class.
+        """
+        return self._is_class
 
     def find(self, name, category = None, local_only = False, raise_if_missing = False):
         """
@@ -773,7 +785,7 @@ class Scope(object):
     def add_son(self, name, son):
         """ Make parent aware of new child
         """
-        assert son.parent_scope is self
+        assert son.parent_scope is self or son.parent_scope.is_class
         self._sons_scopes[name] = son
 
     def get_python_name(self, name):
