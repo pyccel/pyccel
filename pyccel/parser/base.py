@@ -293,38 +293,31 @@ class BasicParser(object):
     def blocking(self):
         return self._blocking
 
-    def insert_function(self, func):
+    def insert_function(self, func, scope = None):
         """
-        Insert a function into the current scope.
+        Insert a function into a scope.
 
-        Insert a function into the current scope under the final name by which it
-        will be known in the generated code.
+        Insert a function into a scope under the final name by which it
+        will be known in the generated code. By default the current scope
+        is used.
 
         Parameters
         ----------
         func : FunctionDef | SympyFunction | Interface | FunctionAddress
             The function to be inserted into the scope.
+
+        scope : Scope, optional
+            The scope to which the function should be inserted.
         """
+        assert isinstance(func, (FunctionDef, Interface, FunctionAddress))
+        if scope is None:
+            scope = self.scope
 
-        if isinstance(func, SympyFunction):
-            self.insert_symbolic_function(func)
-        elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
-            container = self.scope.functions
-            if func.pyccel_staging == 'syntactic':
-                container[self.scope.get_expected_name(func.name)] = func
-            else:
-                container[func.name] = func
+        container = scope.functions
+        if func.pyccel_staging == 'syntactic':
+            container[scope.get_expected_name(func.name)] = func
         else:
-            raise TypeError('Expected a Function definition')
-
-    def insert_symbolic_function(self, func):
-        """."""
-
-        container = self.scope.symbolic_functions
-        if isinstance(func, SympyFunction):
             container[func.name] = func
-        else:
-            raise TypeError('Expected a symbolic_function')
 
     def insert_import(self, expr):
         """."""
