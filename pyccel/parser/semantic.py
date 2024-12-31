@@ -4179,7 +4179,7 @@ class SemanticParser(BasicParser):
             if isinstance(annot, UnionTypeAnnotation):
                 annotation = [aa for a in annot for aa in unpack(a)]
             else:
-                if isinstance(annot, VariableTypeAnnotation) and annot.dtype not in templates:
+                if isinstance(annot, SyntacticTypeAnnotation) and annot.dtype not in templates:
                     annotation = unpack(self._visit(annot))
                 else:
                     annotation = [annot]
