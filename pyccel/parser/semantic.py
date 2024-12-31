@@ -4172,7 +4172,6 @@ class SemanticParser(BasicParser):
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
         # Create new temparary templates for the arguments with a Union data type.
-        pyccel_stage.set_stage('syntactic')
         tmp_templates = {}
         new_expr_args = []
         for a in expr.arguments:
@@ -4194,15 +4193,16 @@ class SemanticParser(BasicParser):
             if len(annotation)>1:
                 tmp_template_name = a.name + '_' + random_string(12)
                 tmp_template_name = self.scope.get_new_name(tmp_template_name)
+                pyccel_stage.set_stage('syntactic')
                 tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in annotation])
                 dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
                 dtype_symb = SyntacticTypeAnnotation(dtype_symb)
                 var_clone = AnnotatedPyccelSymbol(a.var.name, annotation=dtype_symb, is_temp=a.var.name.is_temp)
                 new_expr_args.append(FunctionDefArgument(var_clone, bound_argument=a.bound_argument,
                                         value=a.value, kwonly=a.is_kwonly, annotation=dtype_symb))
+                pyccel_stage.set_stage('semantic')
             else:
                 new_expr_args.append(a)
-        pyccel_stage.set_stage('semantic')
 
         templates.update(tmp_templates)
         template_combinations = list(product(*[v.type_list for v in templates.values()]))
