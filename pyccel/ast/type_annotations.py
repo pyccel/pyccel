@@ -275,8 +275,6 @@ class SyntacticTypeAnnotation(PyccelAstNode):
             return super().__new__(cls)
 
     def __init__(self, dtype, order = None):
-        if isinstance(dtype, LiteralString):
-            dtype = dtype.python_value
         if not isinstance(dtype, (str, DottedName, IndexedElement)):
             raise ValueError("Syntactic datatypes should be strings not {type(dtype)}")
         if not (order is None or isinstance(order, str)):
