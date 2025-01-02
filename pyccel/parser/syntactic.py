@@ -1178,7 +1178,7 @@ class SyntaxParser(BasicParser):
         pyccel.ast.functionalexpr.FunctionalFor
             AST object which is the syntactic equivalent of the list comprehension.
         """
- 
+
         def create_target_operations():
             operations = {'list' : [], 'numpy_array' : []}
             index = PyccelSymbol('_', is_temp=True)
