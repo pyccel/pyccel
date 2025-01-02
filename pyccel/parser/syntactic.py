@@ -1178,7 +1178,7 @@ class SyntaxParser(BasicParser):
         pyccel.ast.functionalexpr.FunctionalFor
             AST object which is the syntactic equivalent of the list comprehension.
         """
-        
+ 
         def create_target_operations():
             operations = {'list' : [], 'numpy_array' : []}
             index = PyccelSymbol('_', is_temp=True)
@@ -1288,7 +1288,7 @@ class SyntaxParser(BasicParser):
                 inserted_into.insert2body(outter_loop)
         indices.append(generators[-1].target)
 
-        indices = indices[::-1] 
+        indices = indices[::-1]
 
         if name == 'sum':
             expr = FunctionalSum(generators[0], result, lhs, indices, conditions=conditions)
