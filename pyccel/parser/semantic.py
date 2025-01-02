@@ -3924,33 +3924,41 @@ class SemanticParser(BasicParser):
 
         target.invalidate_node()
         operations = []
+        assign = None
         if target_type_name != 'list':
             old_index   = expr.index
             new_index   = self.scope.get_new_name() 
-            for operation in create_target_operations('numpy_array'):
+            expr.substitute(old_index, new_index)
+            array_ops = create_target_operations('numpy_array')
+            assign = array_ops[0]
+            assign.substitute(old_index, new_index)
+            assign = self._visit(array_ops[0])
+            array_ops = array_ops[1:]
+            for operation in array_ops:
                 operation.substitute(old_index, new_index)
                 operations.append(operation)
             index = new_index
             index = self._visit(index)
         else:
             index = None
-            operations.extend(operations['list'])
+            operations.extend(create_target_operations('list'))
 
         if expr.loops[-1].body.body:
-            for operation in create_target_operations():
+            for operation in operations:
                 expr.loops[-1].body.body[0].blocks[0].body.insert2body(self._visit(operation))
         else:
-            for operation in create_target_operations():
+            for operation in operations:
                 expr.loops[-1].insert2body(self._visit(operation))
 
 
         loops = [self._visit(i) for i in loops]
+        if assign:
+            loops = [assign, *loops]
 
-        l = loops[0]
+        l = loops[-1]
         cnt = 0
         for idx in indices:
             assert isinstance(l, For)
-            # Sub in indices as defined here for coherent naming
             if idx.is_temp:
                 self.scope.remove_variable(l.target[cnt])
                 l.substitute(l.target[cnt], idx_subs[idx])

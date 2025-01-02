@@ -1187,6 +1187,7 @@ class SyntaxParser(BasicParser):
             target = Assign(target, result)
             assign1 = Assign(index, LiteralInteger(0))
             assign1.set_current_ast(stmt)
+            operations['numpy_array'].append(assign1)
             target.set_current_ast(stmt)
             operations['numpy_array'].append(target)
             assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
