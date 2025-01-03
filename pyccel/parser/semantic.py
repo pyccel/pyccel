@@ -3607,6 +3607,8 @@ class SemanticParser(BasicParser):
             test_node = None
         if test_node:
             lhs.remove_user_node(test_node, invalidate = False)
+            if test_node in rhs.get_all_user_nodes():
+                rhs.remove_user_node(test_node, invalidate=False)
             for elem in rhs.get_all_user_nodes():
                 if test_node in elem.get_all_user_nodes():
                     elem.remove_user_node(test_node, invalidate = False)
@@ -3777,8 +3779,8 @@ class SemanticParser(BasicParser):
             for var, dvar in variables:
                 existing_var = self.scope.find(var.name, 'variables')
                 if var.name == expr.lhs:
-                    return errors.report(f"Variable {var} has the same name as the left hand side",
-                            symbol = expr, severity='error')
+                    errors.report(f"Variable {var} has the same name as the left hand side",
+                            symbol = expr, severity='fatal')
                 if existing_var or var.name ==  expr.lhs:
                     if self._infer_type(existing_var)['class_type'] != dvar['class_type']:
                         return errors.report(f"Variable {var} already exists with different type",

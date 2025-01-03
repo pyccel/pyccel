@@ -92,7 +92,6 @@ def test_max(language):
     f_epyc = epyccel(f, language = language)
 
     assert f() == f_epyc()
-
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
@@ -198,3 +197,51 @@ def test_sum_range_overwrite(language):
     f_epyc = epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
+
+def test_sum_with_condition(language):
+    def f():
+        v = sum(i for i in range(20) if i % 2 == 1)
+        return v
+    
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_sum_with_multiple_conditions(language):
+    def f():
+        v = sum(i - j for i in range(20) if i % 2 == 1 for j in range(30) if j % 3 == 1)
+        return v
+    
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_max_with_condition(language):
+    def f():
+        v = max(i for i in range(20) if i % 2 == 1)
+        return v
+    
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_max_with_multiple_conditions(language):
+    def f():
+        v = max(i - j for i in range(20) if i % 2 == 1 for j in range(30) if j % 3 == 1)
+        return v
+    
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_min_with_condition(language):
+    def f():
+        v = min(i for i in range(20) if i % 2 == 1)
+        return v
+    
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_min_with_multiple_conditions(language):
+    def f():
+        v = min(i - j for i in range(20) if i % 2 == 1 for j in range(30) if j % 3 == 1)
+        return v
+    
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
