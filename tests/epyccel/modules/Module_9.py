@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import TypeAlias
 
-MyType : TypeAlias = float | int
+MyType : TypeAlias = float | int #pylint: disable=unsupported-binary-operation
 
 def set_i(x : 'MyType[:]', i : 'int', val : MyType):
     x[i] = val
