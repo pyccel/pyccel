@@ -311,7 +311,6 @@ class SyntacticTypeAnnotation(PyccelAstNode):
         else:
             return False
 
-
 #==============================================================================
 
 typenames_to_dtypes = { 'float'   : PythonNativeFloat(),
