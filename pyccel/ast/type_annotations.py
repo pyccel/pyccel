@@ -18,8 +18,6 @@ from .core import FunctionDefArgument
 from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import VoidType, GenericType, StringType
 
-from .literals import LiteralString
-
 from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
 
 __all__ = (
