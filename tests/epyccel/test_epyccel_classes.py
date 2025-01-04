@@ -362,14 +362,85 @@ def test_class_magic(language):
     assert isinstance(left_add_l, modnew.A)
     assert left_add_py.x == left_add_l.x
 
+    left_sub_py = a_py - 2
+    left_sub_l = a_l - 2
+
+    assert isinstance(left_sub_l, modnew.A)
+    assert left_sub_py.x == left_sub_l.x
+
     left_mul_py = a_py * 2
     left_mul_l = a_l * 2
 
     assert isinstance(left_mul_l, modnew.A)
     assert left_mul_py.x == left_mul_l.x
 
+    left_truediv_py = a_py / 2
+    left_truediv_l = a_l / 2
+
+    assert isinstance(left_truediv_l, modnew.A)
+    assert left_truediv_py.x == left_truediv_l.x
+
+    left_lshift_py = a_py << 2
+    left_lshift_l = a_l << 2
+
+    assert isinstance(left_lshift_l, modnew.A)
+    assert left_lshift_py.x == left_lshift_l.x
+
+    left_rshift_py = a_py >> 2
+    left_rshift_l = a_l >> 2
+
+    assert isinstance(left_rshift_l, modnew.A)
+    assert left_rshift_py.x == left_rshift_l.x
+
+    left_and_py = a_py & 2
+    left_and_l = a_l & 2
+
+    assert isinstance(left_and_l, modnew.A)
+    assert left_and_py.x == left_and_l.x
+
+    left_or_py = a_py | 2
+    left_or_l = a_l | 2
+
+    assert isinstance(left_or_l, modnew.A)
+    assert left_or_py.x == left_or_l.x
+
     a_py += 6
     a_l += 6
+
+    assert a_py.x == a_l.x
+
+    a_py -= 6
+    a_l -= 6
+
+    assert a_py.x == a_l.x
+
+    a_py *= 6
+    a_l *= 6
+
+    assert a_py.x == a_l.x
+
+    a_py /= 2
+    a_l /= 2
+
+    assert a_py.x == a_l.x
+
+    a_py <<= 1
+    a_l <<= 1
+
+    assert a_py.x == a_l.x
+
+    a_py >>= 2
+    a_l >>= 2
+
+    assert a_py.x == a_l.x
+
+    a_py &= 7
+    a_l &= 7
+
+    assert a_py.x == a_l.x
+
+    a_py |= 6
+    a_l |= 6
 
     assert a_py.x == a_l.x
 
