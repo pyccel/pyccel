@@ -54,7 +54,7 @@ class VariableTypeAnnotation(PyccelAstNode):
         self._is_const = is_const
         self._shape = shape
         if not shape and isinstance(self._class_type, InhomogeneousTupleType):
-            shape = (LiteralInteger(len(self._class_type)),)
+            self._shape = (LiteralInteger(len(self._class_type)),)
 
         super().__init__()
 
