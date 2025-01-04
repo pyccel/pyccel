@@ -1511,7 +1511,12 @@ class CToPythonWrapper(Wrapper):
 
         # Get the code required to wrap the C-compatible results into Python objects
         # This function creates variables so it must be called before extracting them from the scope.
-        if len(python_results) == 0:
+        if original_func_name in magic_binary_funcs and original_func_name.startswith('__i'):
+            res = func_args[0].var.clone(self.scope.get_new_name(func_args[0].var.name), is_argument=False)
+            wrapped_results = {'c_results': [], 'py_result': res, 'body': []}
+            body.append(AliasAssign(res, func_args[0].var))
+            body.append(Py_INCREF(res))
+        elif len(python_results) == 0:
             wrapped_results = {'c_results': [], 'py_result': Py_None, 'body': []}
         elif len(python_results) == 1:
             wrapped_results = self._extract_FunctionDefResult(original_func.results[0].var, is_bind_c_function_def, expr)
