@@ -151,8 +151,9 @@ class CToPythonWrapper(Wrapper):
         is_bound = [getattr(a, 'wrapping_bound_argument', a.bound_argument) for a in args]
         collect_args = [self.get_new_PyObject(o_a.name+'_obj',
                                               dtype = o_a.dtype if b else None)
-                        for a, b, o_a in zip(args, is_bound, orig_args)]
-        self._python_object_map.update(dict(zip(args, collect_args)))
+                        for a, b, o_a in zip(args, is_bound, orig_args) if not o_a.is_temp]
+        non_temp_args = [a for a, o_a in zip(args, orig_args) if not o_a.is_temp]
+        self._python_object_map.update(dict(zip(non_temp_args, collect_args)))
         return collect_args
 
     def _unpack_python_args(self, args, class_base = None):
@@ -1538,7 +1539,7 @@ class CToPythonWrapper(Wrapper):
 
         self.exit_scope()
         for a in python_args:
-            if not a.bound_argument:
+            if not (a.bound_argument or a.var.is_temp):
                 self._python_object_map.pop(a)
 
         function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
@@ -1585,13 +1586,12 @@ class CToPythonWrapper(Wrapper):
                         to a C-compatible variable.
              - args : a list of Variables which should be passed to call the function being wrapped.
         """
-
-        collect_arg = self._python_object_map[expr]
-        in_interface = len(expr.get_user_nodes(Interface)) > 0
-        is_bind_c_argument = isinstance(expr, BindCFunctionDefArgument)
-
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
         bound_argument = getattr(expr, 'wrapping_bound_argument', expr.bound_argument)
+
+        collect_arg = self._python_object_map.get(expr, None)
+        in_interface = len(expr.get_user_nodes(Interface)) > 0
+        is_bind_c_argument = isinstance(expr, BindCFunctionDefArgument)
 
         # Collect the function which casts from a Python object to a C object
         arg_extraction = self._extract_FunctionDefArgument(orig_var, collect_arg, bound_argument, is_bind_c_argument)
@@ -1619,7 +1619,7 @@ class CToPythonWrapper(Wrapper):
             check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body)
             body.append(If( IfSection(PyccelIsNot(collect_arg, Py_None), [
                                 If(IfSection(check_func, cast), IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])]))])))
-        elif not (in_interface or bound_argument):
+        elif not (in_interface or bound_argument or orig_var.is_temp):
             check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body)
             body.append(If( IfSection(check_func, cast),
                         IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])])
@@ -2181,12 +2181,16 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to access the argument.
         """
+
         assert not bound_argument
         if arg_var is None:
             kwargs = {'is_argument': False}
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
                                     **kwargs)
             self.scope.insert_variable(arg_var, orig_var.name)
+
+        if orig_var.is_temp:
+            return {'body': [], 'args': [arg_var]}
 
         dtype = orig_var.dtype
         try :
@@ -2323,6 +2327,12 @@ class CToPythonWrapper(Wrapper):
             default_body = [AliasAssign(parts['data'], Nil())] + \
                     [Assign(IndexedElement(shape, i), 0) for i in range(orig_var.rank)] + \
                     [Assign(IndexedElement(strides, i), 1) for i in range(orig_var.rank)]
+
+            for i,s in enumerate(orig_var.alloc_shape):
+                if isinstance(s, Variable):
+                    local_s = self.scope.find(s.name, 'variables')
+                    body.append(Assign(local_s, shape[i]))
+
             return {'body': body, 'args': args, 'default_init': default_body}
         else:
             assert not bound_argument
@@ -2337,6 +2347,11 @@ class CToPythonWrapper(Wrapper):
             if orig_var.is_optional:
                 memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
                 body.insert(0, AliasAssign(arg_var, memory_var))
+
+            for i,s in enumerate(orig_var.alloc_shape):
+                if isinstance(s, Variable):
+                    local_s = self.scope.find(s.name, 'variables')
+                    body.append(Assign(local_s, arg_var.shape[i]))
 
             return {'body': body,
                     'args': [arg_var]}

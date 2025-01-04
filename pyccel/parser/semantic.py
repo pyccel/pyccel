@@ -2083,6 +2083,9 @@ class SemanticParser(BasicParser):
             raise errors.report("NumPy element must be a scalar type", severity='fatal', symbol=expr)
         class_type = NumpyNDArrayType(numpy_process_dtype(dtype_cls), rank, order)
         args = [self._visit(a.dtype) if isinstance(a, SyntacticTypeAnnotation) else a for a in args]
+        for a in args:
+            if isinstance(a, Variable):
+                a.is_temp = True
         shape = [None if isinstance(a, Slice) else a for a in args]
         return VariableTypeAnnotation(class_type, shape = shape)
 
