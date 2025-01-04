@@ -21,7 +21,7 @@ from .builtins  import PythonInt
 
 from .datatypes import FixedSizeType, CustomDataType
 from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
-from .datatypes import PythonNativeBool, StringType, VoidType
+from .datatypes import PythonNativeBool, StringType, VoidType, CharType
 from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 
 from .core      import FunctionDefArgument, FunctionDefResult
@@ -1036,6 +1036,7 @@ pytype_parse_registry = {
     PythonNativeComplex() : 'O',
     PythonNativeBool()    : 'p',
     StringType()          : 's',
+    CharType()            : 's',
     PyccelPyObject()      : 'O',
     }
 
@@ -1263,6 +1264,15 @@ PyDict_SetItem = FunctionDef(name = 'PyDict_SetItem',
                                  FunctionDefArgument(Variable(PyccelPyObject(), 'val', memory_handling='alias'))],
                     results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
                     body = [])
+
+#-------------------------------------------------------------------
+#                         String functions
+#-------------------------------------------------------------------
+cstr_data = FunctionDef(name = 'cstr_data',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(StringType(), name='s', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(CharType(), name='o', memory_handling='alias'))])
+
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {

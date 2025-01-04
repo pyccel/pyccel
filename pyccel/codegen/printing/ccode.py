@@ -35,7 +35,7 @@ from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, Poin
 from pyccel.ast.c_concepts import CStackArray
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
-from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
+from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
@@ -292,6 +292,7 @@ class CCodePrinter(CodePrinter):
 
     dtype_registry = {CNativeInt()    : 'int',
                       VoidType() : 'void',
+                      CharType() : 'char',
                       (PrimitiveComplexType(),8) : 'double complex',
                       (PrimitiveComplexType(),4) : 'float complex',
                       (PrimitiveFloatingPointType(),8)   : 'double',

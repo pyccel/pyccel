@@ -36,13 +36,13 @@ from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_New
 from pyccel.ast.cwrapper      import PyTuple_GetItem, PyTuple_SetItem
 from pyccel.ast.cwrapper      import PySet_New, PySet_Add
 from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PySet_GetIter, PySet_Clear
-from pyccel.ast.cwrapper      import PyIter_Next
+from pyccel.ast.cwrapper      import PyIter_Next, cstr_data
 from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
 from pyccel.ast.datatypes     import HomogeneousSetType, HomogeneousListType
-from pyccel.ast.datatypes     import TupleType
+from pyccel.ast.datatypes     import TupleType, CharType, StringType
 from pyccel.ast.internals     import Slice
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
@@ -2956,3 +2956,17 @@ class CToPythonWrapper(Wrapper):
                 for_loop]
 
         return {'c_results': c_results, 'py_result': py_res, 'body': body}
+
+    def _extract_StringType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+        if is_bind_c:
+            return errors.report(f"Wrapping function results is not implemented for type string. " + PYCCEL_RESTRICTION_TODO, symbol=orig_var,
+                severity='fatal')
+        else:
+            name = getattr(orig_var, 'name', 'tmp')
+            py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+            c_res = Variable(StringType(), self.scope.get_new_name(name), memory_handling='heap')
+            self.scope.insert_variable(c_res)
+
+            body = [AliasAssign(py_res, PyBuildValueNode([cstr_data(ObjectAddress(c_res))]))]
+            return {'c_results': [c_res], 'py_result': py_res, 'body': body}
+
