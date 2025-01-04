@@ -64,6 +64,17 @@ errors = Errors()
 cwrapper_ndarray_imports = [Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ())),
                             Import('ndarrays', Module('ndarrays', (), ()))]
 
+magic_binary_funcs = ('__add__',
+                      '__sub__',
+                      '__mul__',
+                      '__truediv__',
+                      '__pow__',
+                      '__lshift__',
+                      '__rshift__',
+                      '__and__',
+                      '__or__',
+                      )
+
 class CToPythonWrapper(Wrapper):
     """
     Class for creating a wrapper exposing C code to Python.
@@ -1409,7 +1420,7 @@ class CToPythonWrapper(Wrapper):
 
     def _wrap_FunctionDef(self, expr):
         """
-        Build a `PyFunctionDef` form a `FunctionDef`.
+        Build a `PyFunctionDef` from a `FunctionDef`.
 
         Create a `PyFunctionDef` which wraps a C-compatible `FunctionDef`.
         The `PyFunctionDef` should take three arguments (`self`, `args`,
@@ -1431,6 +1442,7 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(expr.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
+        original_func_name = original_func.scope.get_python_name(original_func.name)
 
         possible_class_base = expr.get_user_nodes((ClassDef,))
         if possible_class_base:
@@ -1477,7 +1489,7 @@ class CToPythonWrapper(Wrapper):
             func_args = [FunctionDefArgument(a) for a in func_args]
             body = []
         else:
-            if in_interface:
+            if in_interface or original_func_name in magic_binary_funcs:
                 func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
                 body = []
             else:
