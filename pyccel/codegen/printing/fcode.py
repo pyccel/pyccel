@@ -1849,7 +1849,6 @@ class FCodePrinter(CodePrinter):
         # Group the variables by intent
         dtype           = var.dtype
         rank            = var.rank
-        shape           = var.alloc_shape
         is_const        = var.is_const
         is_optional     = var.is_optional
         is_private      = var.is_private
@@ -1860,7 +1859,8 @@ class FCodePrinter(CodePrinter):
         is_external     = expr.external
         is_target       = var.is_target and not var.is_alias
         intent          = expr.intent
-        intent_in = intent and intent != 'out'
+        intent_in       = intent and intent != 'out'
+        shape           = var.alloc_shape if intent_in else var.shape
         # ...
 
         dtype_str = ''
@@ -1886,9 +1886,13 @@ class FCodePrinter(CodePrinter):
                 # arrays are 0-based in pyccel, to avoid ambiguity with range
                 start_val = self._print(LiteralInteger(0))
 
-                if intent or is_static or on_stack:
-                    ordered_shape = shape[::-1] if var.order == 'C' else shape
-                    ubounds = [self._print(PyccelMinus(s, LiteralInteger(1), simplify = True)) if s else '' for s in ordered_shape]
+                if intent_in or is_static or on_stack:
+                    if not any(isinstance(s, PyccelArrayShapeElement) for s in shape):
+                        ordered_shape = shape[::-1] if var.order == 'C' else shape
+                        ubounds = [self._print(PyccelMinus(s, LiteralInteger(1), simplify = True)) \
+                                    if s  else '' for s in ordered_shape]
+                    else:
+                        ubounds = ['']*rank
                     rankstr = ', '.join(f'{start_val}:{self._print(u)}' for u in ubounds)
                 elif is_alias or on_heap:
                     rankstr = ', '.join(':'*rank)
