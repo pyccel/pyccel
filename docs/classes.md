@@ -2,6 +2,15 @@
 
 Pyccel strives to provide robust support for object-oriented programming concepts commonly used by developers. In Pyccel, classes are a fundamental building block for creating structured and reusable code. This documentation outlines key features and considerations when working with classes in Pyccel.
 
+## Contents
+
+1. [Constructor Method](#constructor-method)
+2. [Destructor Method](#destructor-method)
+3. [Class Methods](#class-methods)
+4. [Class Properties](#class-properties)
+5. [Magic Methods](#magic-methods)
+6. [Limitations](#limitations)
+
 ## Constructor Method
 
 -   The Constructor Method, `__init__`, is used to initialise the object's attributes.
@@ -188,7 +197,7 @@ MyClass Object created!
 ==158858== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 ```
 
-## Class properties
+## Class Properties
 
 Pyccel now supports class properties (to retrieve a constant value only).
 
@@ -415,7 +424,7 @@ int main()
   call obj % free()
 ```
 
-## Magic methods
+## Magic Methods
 
 Pyccel supports a subset of magic methods that are listed here:
 
