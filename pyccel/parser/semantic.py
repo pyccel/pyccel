@@ -30,8 +30,8 @@ from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunct
 from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet, VariableIterator
-from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
-                                 PythonTuple, Lambda, PythonMap)
+from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonTuple
+from pyccel.ast.builtins import PythonLen, Lambda, PythonMap
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
@@ -5508,3 +5508,21 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].extend(body)
             return lhs
 
+    def _build_PythonLen(self, expr, function_call_args):
+        arg = function_call_args[0].value
+        class_type = arg.class_type
+        if isinstance(arg, LiteralString):
+            return LiteralInteger(len(arg.python_value))
+        elif isinstance(arg.class_type, CustomDataType):
+            class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+            magic_method = class_base.get_method('__len__', False)
+            if magic_method:
+                return self._handle_function(expr, magic_method, function_call_args)
+            else:
+                raise errors.report(f"__len__ not implemented for type {class_type}",
+                        severity='fatal', symbol=expr)
+        elif arg.rank > 0:
+            return arg.shape[0]
+        else:
+            raise errors.report(f"__len__ not implemented for type {class_type}",
+                    severity='fatal', symbol=expr)

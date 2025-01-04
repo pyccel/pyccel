@@ -722,11 +722,8 @@ class PythonLen(PyccelFunction):
     """
     __slots__ = ()
 
-    def __new__(cls, arg):
-        if isinstance(arg, LiteralString):
-            return LiteralInteger(len(arg.python_value))
-        else:
-            return arg.shape[0]
+    def __init__(self, arg):
+        super().__init__(arg)
 
 #==============================================================================
 class PythonList(TypedAstNode):
