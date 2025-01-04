@@ -3675,7 +3675,9 @@ class FCodePrinter(CodePrinter):
         self._constantImports.setdefault('ISO_C_Binding', set()).add('c_loc')
         return f'{lhs} = c_loc({rhs})\n'
 
-#=======================================================================================
+    def _print_C_NULL_CHAR(self, expr):
+        self._constantImports.setdefault('ISO_C_Binding', set()).add('C_NULL_CHAR')
+        return 'C_NULL_CHAR'
 
     def _print_C_F_Pointer(self, expr):
         self._constantImports.setdefault('ISO_C_Binding', set()).add('C_F_Pointer')

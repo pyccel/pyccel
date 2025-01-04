@@ -14,16 +14,17 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCModuleVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
 from pyccel.ast.bind_c import BindCClassProperty, c_malloc, BindCSizeOf
-from pyccel.ast.bind_c import BindCVariable, BindCArrayType
+from pyccel.ast.bind_c import BindCVariable, BindCArrayType, C_NULL_CHAR
 from pyccel.ast.builtins import VariableIterator
 from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
-from pyccel.ast.core import For
+from pyccel.ast.core import For, Concatenate
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
-from pyccel.ast.datatypes import PythonNativeInt
+from pyccel.ast.datatypes import HomogeneousSetType, PythonNativeInt
+from pyccel.ast.datatypes import HomogeneousListType, StringType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type
