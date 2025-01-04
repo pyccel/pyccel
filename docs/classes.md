@@ -415,6 +415,42 @@ int main()
   call obj % free()
 ```
 
+## Magic methods
+
+Pyccel supports a subset of magic methods that are listed here:
+
+-   `__add__`
+-   `__sub__`
+-   `__mul__`
+-   `__truediv__`
+-   `__pow__`
+-   `__lshift__`
+-   `__rshift__`
+-   `__and__`
+-   `__or__`
+-   `__iadd__`
+-   `__isub__`
+-   `__imul__`
+-   `__itruediv__`
+-   `__ipow__`
+-   `__ilshift__`
+-   `__irshift__`
+-   `__iand__`
+-   `__ior__`
+
+Additionally the following methods are supported in the translation but are lacking the wrapper support that would allow them to be called from Python code:
+
+-   `__radd__`
+-   `__rsub__`
+-   `__rmul__`
+-   `__rtruediv__`
+-   `__rpow__`
+-   `__rlshift__`
+-   `__rrshift__`
+-   `__rand__`
+-   `__ror__`
+-   `__contains__`
+
 ## Limitations
 
-It's important to note that Pyccel does not support class inheritance, magic methods or static class variables. For our first implementation, the focus of Pyccel is primarily on core class functionality and memory management.
+It's important to note that Pyccel does not support class inheritance, or static class variables. For our first implementation, the focus of Pyccel is primarily on core class functionality and memory management.
