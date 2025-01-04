@@ -73,6 +73,15 @@ magic_binary_funcs = ('__add__',
                       '__rshift__',
                       '__and__',
                       '__or__',
+                      '__iadd__',
+                      '__isub__',
+                      '__imul__',
+                      '__itruediv__',
+                      '__ipow__',
+                      '__ilshift__',
+                      '__irshift__',
+                      '__iand__',
+                      '__ior__',
                       )
 
 class CToPythonWrapper(Wrapper):
@@ -2026,6 +2035,8 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype, wrapped_class.scope))
             elif python_name == '__init__':
                 wrapped_class.add_new_method(self._get_class_initialiser(f, orig_cls_dtype))
+            elif python_name in magic_binary_funcs:
+                wrapped_class.add_new_magic_number_method(self._wrap(f))
             elif 'property' in f.decorators:
                 wrapped_class.add_property(self._wrap(f))
             else:
