@@ -123,6 +123,16 @@ def test_pop_expression(language) :
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
+def test_pop_as_arg(language) :
+    def pop_as_arg():
+        a = [1, 3, 45]
+        return a.pop(a.pop(0))
+    epyc_as_arg = epyccel(pop_as_arg, language = language)
+    pyccel_result = epyc_as_arg()
+    python_result = pop_as_arg()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
 def test_append_basic(language):
     def f():
         a = [1, 2, 3]
