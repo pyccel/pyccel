@@ -753,7 +753,7 @@ class CCodePrinter(CodePrinter):
         self.add_import(c_imports['pyc_math_c'])
         arg = self._print(expr.arg)
         ndigits = self._print(expr.ndigits or LiteralInteger(0))
-        if isinstance(expr.arg.class_type.primitive_type, PrimitiveIntegerType):
+        if isinstance(expr.arg.class_type.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)):
             return f'ipyc_bankers_round({arg}, {ndigits})'
         else:
             return f'fpyc_bankers_round({arg}, {ndigits})'

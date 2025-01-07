@@ -16,7 +16,8 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
-from .datatypes import GenericType, PythonNativeComplex, PrimitiveComplexType
+from .datatypes import GenericType, PythonNativeComplex
+from .datatypes import PrimitiveBooleanType, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
@@ -503,7 +504,7 @@ class PythonRound(PyccelFunction):
     _order = None
 
     def __init__(self, number, ndigits = None):
-        if ndigits is None:
+        if ndigits is None or number.class_type.primitive_type is PrimitiveBooleanType():
             self._class_type = PythonNativeInt()
         else:
             self._class_type = number.class_type
