@@ -649,3 +649,14 @@ def test_round_ndigits_int(language):
     round_ndigits_output = round_ndigits(x, -2)
     assert np.isclose(round_ndigits_output, f_output)
     assert isinstance(f_output, type(round_ndigits_output))
+
+def test_round_ndigits_bool(language):
+    def round_ndigits():
+        return round(True), round(False), round(True, 1), round(True, -1)
+
+    f = epyccel(round_ndigits, language=language)
+
+    f_output = f()
+    round_ndigits_output = round_ndigits()
+    assert all(o == r for o, r in zip(f_output, round_ndigits_output))
+    assert all(isinstance(o, type(r)) for o, r in zip(f_output, round_ndigits_output))
