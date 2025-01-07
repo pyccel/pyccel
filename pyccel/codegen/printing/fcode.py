@@ -1320,7 +1320,8 @@ class FCodePrinter(CodePrinter):
         list_obj = expr.list_obj
         target = self._print(list_obj)
         index_element = expr.index_element
-        if isinstance(expr.current_user_node, Assign):
+        parent_assign_nodes = expr.get_direct_user_nodes(lambda u: isinstance(u, Assign))
+        if parent_assign_nodes:
             lhs = expr.current_user_node.lhs
         else:
             lhs = self.scope.get_temporary_variable(expr.class_type)
@@ -1342,7 +1343,7 @@ class FCodePrinter(CodePrinter):
             code = (f'{lhs_code} = {rhs}\n'
                     f'call {target} % pop_back()\n')
 
-        if isinstance(expr.current_user_node, Assign):
+        if parent_assign_nodes:
             return code
         else:
             self._additional_code += code
