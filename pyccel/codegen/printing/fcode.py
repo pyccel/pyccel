@@ -71,7 +71,7 @@ from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 
-from pyccel.ast.numpytypes import NumpyNDArrayType
+from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt64Type
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd, PyccelEq
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
@@ -1197,6 +1197,25 @@ class FCodePrinter(CodePrinter):
     def _print_PythonAbs(self, expr):
         arg_code = self._get_node_without_gFTL(expr.arg)
         return f"abs({arg_code})"
+
+    def _print_PythonRound(self, expr):
+        arg = expr.arg
+        if not isinstance(arg.dtype.primitive_type, PrimitiveFloatingPointType):
+            arg = self._apply_cast(NumpyInt64Type(), arg)
+        self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+
+        arg_code = self._print(arg)
+        ndigits = self._apply_cast(NumpyInt64Type(), expr.ndigits) if expr.ndigits \
+                else LiteralInteger(0, NumpyInt64Type())
+        ndigits_code = self._print(ndigits)
+
+        code = f'pyc_bankers_round({arg_code}, {ndigits_code})'
+
+        if not isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType):
+            prec = self.print_kind(expr)
+            return f"Int({code}, kind={prec})"
+        else:
+            return code
 
     def _print_PythonTuple(self, expr):
         shape = tuple(reversed(expr.shape))
