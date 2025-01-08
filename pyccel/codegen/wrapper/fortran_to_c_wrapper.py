@@ -7,6 +7,7 @@
 Module describing the code-wrapping class : FortranToCWrapper
 which creates an interface exposing Fortran code to C.
 """
+from functools import reduce
 import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
@@ -423,12 +424,14 @@ class FortranToCWrapper(Wrapper):
 
             if not (var.is_alias or wrap_dotted):
                 # Create an array variable which can be passed to CLocFunc
-                ptr_var = Variable(NumpyNDArrayType(var.dtype, var.rank, var.order), scope.get_new_name(name+'_ptr'),
+                ptr_var = Variable(NumpyNDArrayType(var.dtype, 1, None), scope.get_new_name(name+'_ptr'),
                                     memory_handling='alias')
                 scope.insert_variable(ptr_var)
 
+                new_shape = (reduce(PyccelMul, result.shape),)
+
                 # Define the additional steps necessary to define and fill ptr_var
-                alloc = Allocate(ptr_var, shape=result.shape, status='unallocated')
+                alloc = Allocate(ptr_var, shape=new_shape, status='unallocated')
                 if isinstance(local_var.class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
                     copy = Assign(ptr_var, local_var)
                     self._additional_exprs.extend([alloc, copy])
