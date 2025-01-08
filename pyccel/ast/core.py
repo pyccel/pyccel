@@ -13,7 +13,7 @@ from pyccel.utilities.stage   import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 
-from .bitwise_operators import PyccelBitOr, PyccelBitAnd
+from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRShift
 
 from .builtins  import PythonBool, PythonTuple
 
@@ -750,6 +750,8 @@ class AugAssign(Assign):
             '%' : PyccelMod,
             '|' : PyccelBitOr,
             '&' : PyccelBitAnd,
+            '<<': PyccelLShift,
+            '>>': PyccelRShift,
         }
 
     def __init__(
