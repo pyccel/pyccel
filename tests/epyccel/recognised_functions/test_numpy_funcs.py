@@ -6259,3 +6259,50 @@ def test_copy(language):
         assert res_3d_pyt.dtype is res_3d_pyc.dtype
         assert res_3d_pyt.flags.c_contiguous == res_3d_pyc.flags.c_contiguous
         assert res_3d_pyt.flags.f_contiguous == res_3d_pyc.flags.f_contiguous
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip("Reshape not implemented for C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python),
+    )
+)
+def test_reshape(language):
+    def reshape_var(a : 'int[:,:,:]'):
+        m, n, p = a.shape
+        b = a.reshape((m*n, p))
+        b[0,0] = 123
+        return b
+
+    def reshape_var_order(a : 'int[:,:,:]'):
+        from numpy import reshape
+        m, n, p = a.shape
+        b = reshape(a, (m*n, p), order='F')
+        b[0,0] = 123
+        return b
+
+    def reshape_expr(a : 'int[:,:,:]'):
+        from numpy import reshape, array
+        m, n, p = a.shape
+        b = reshape(a*3, (m*n, p))
+        b[0,0] = 123
+        c = array(b)
+        return c
+
+    def flatten(a : 'int[:,:,:]'):
+        m, n, p = a.shape
+        b = a.reshape((m*n*p))
+        b[0] = 123
+        return b
+
+    for func in (reshape_var, reshape_var_order, reshape_expr, flatten):
+        print(func.__name__)
+        epyc_f = epyccel(func, language=language)
+        x = np.reshape(np.arange(60), (3,4,5))
+        x_epyc = x.copy()
+        y = func(x)
+        y_epyc = epyc_f(x_epyc)
+        np.array_equal(x, x_epyc)
+        np.array_equal(y, y_epyc)
