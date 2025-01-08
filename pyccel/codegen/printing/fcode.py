@@ -26,6 +26,8 @@ from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableItera
 
 from pyccel.ast.builtin_methods.dict_methods import DictItems
 
+from pyccel.ast.builtin_methods.list_methods import ListPop
+
 from pyccel.ast.builtin_methods.set_methods import SetUnion
 
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -1329,9 +1331,42 @@ class FCodePrinter(CodePrinter):
     #========================== List Methods ===============================#
 
     def _print_ListAppend(self, expr):
-        target = expr.list_obj
+        target = self._print(expr.list_obj)
         arg = self._print(expr.args[0])
         return f'call {target} % push_back({arg})\n'
+
+    def _print_ListPop(self, expr):
+        list_obj = expr.list_obj
+        target = self._print(list_obj)
+        index_element = expr.index_element
+        parent_assign_nodes = expr.get_direct_user_nodes(lambda u: isinstance(u, Assign))
+        if parent_assign_nodes:
+            lhs = expr.current_user_node.lhs
+        else:
+            lhs = self.scope.get_temporary_variable(expr.class_type)
+
+        lhs_code = self._print(lhs)
+
+        if index_element:
+            _shape = PyccelArrayShapeElement(list_obj, index_element)
+            if isinstance(index_element, PyccelUnarySub) and isinstance(index_element.args[0], LiteralInteger):
+                index_element = PyccelMinus(_shape, index_element.args[0], simplify = True)
+            tmp_iter = self.scope.get_temporary_variable(IteratorType(list_obj.class_type),
+                    name = f'{list_obj}_iter')
+            code = (f'{tmp_iter} = {target} % begin() + {self._print(index_element)}\n'
+                    f'{lhs} = {tmp_iter} % of()\n'
+                    f'{tmp_iter} = {target} % erase({tmp_iter})\n')
+        else:
+            index = expr.index_element or PyccelUnarySub(LiteralInteger(1))
+            rhs = self._print(IndexedElement(list_obj, index))
+            code = (f'{lhs_code} = {rhs}\n'
+                    f'call {target} % pop_back()\n')
+
+        if parent_assign_nodes:
+            return code
+        else:
+            self._additional_code += code
+            return lhs_code
 
     #========================== Set Methods ================================#
 
@@ -2036,7 +2071,7 @@ class FCodePrinter(CodePrinter):
     def _print_Assign(self, expr):
         rhs = expr.rhs
 
-        if isinstance(rhs, (FunctionCall, SetUnion)):
+        if isinstance(rhs, (FunctionCall, SetUnion, ListPop)):
             return self._print(rhs)
 
         lhs_code = self._print(expr.lhs)

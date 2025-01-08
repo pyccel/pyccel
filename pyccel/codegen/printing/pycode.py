@@ -842,7 +842,11 @@ class PythonCodePrinter(CodePrinter):
         else:
             method_args = ', '.join(self._print(a) for a in expr.args)
 
-        return f"{list_obj}.{method_name}({method_args})\n"
+        code = f"{list_obj}.{method_name}({method_args})"
+        if isinstance(expr.class_type, VoidType):
+            return code + '\n'
+        else:
+            return code
 
     def _print_DictMethod(self, expr):
         method_name = expr.name
