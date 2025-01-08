@@ -13,8 +13,6 @@ All notable changes to this project will be documented in this file.
 -   #1700 : Add Python support for list method `sort()`.
 -   #1696 : Add Python support for list method `copy()`.
 -   #1693 : Add Python support for list method `remove()`.
--   #1750 : Add Python support for set method `remove()`.
--   #1743 : Add Python support for set method `discard()`.
 -   #1893 : Add Python support for set initialisation with `set()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
@@ -44,6 +42,8 @@ All notable changes to this project will be documented in this file.
 -   #1917 : Add C and Fortran support for set method `add()`.
 -   #1918 : Add support for set method `clear()`.
 -   #1918 : Add support for set method `copy()`.
+-   #1743 : Add support for set method `discard()`.
+-   #1750 : Add support for set method `remove()`.
 -   #1753 : Add support for set method `union()`.
 -   #1754 : Add support for set method `update()`.
 -   #1744 : Add support for set method `intersection()`.

@@ -1431,6 +1431,12 @@ class FCodePrinter(CodePrinter):
         return ''.join(f'call {type_name}_intersection_update({var_code}, {self._print(arg)})\n' \
                 for arg in expr.args)
 
+    def _print_SetDiscard(self, expr):
+        var = self._print(expr.set_variable)
+        val = self._print(expr.args[0])
+        success = self.scope.get_temporary_variable(PythonNativeInt())
+        return f'{success} = {var} % erase_value({val})\n'
+
     #========================== Numpy Elements ===============================#
 
     def _print_NumpySum(self, expr):
