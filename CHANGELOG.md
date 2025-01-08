@@ -64,6 +64,7 @@ All notable changes to this project will be documented in this file.
 -   #2099 : Fix translation of modules containing `__all__`.
 -   #983 : Add support for built-in function `round`.
 -   Add support for `type` as a type annotation.
+-   Add Fortran and Python support for NumPy's `reshape` function.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
