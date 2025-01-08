@@ -842,7 +842,7 @@ class PythonCodePrinter(CodePrinter):
         args = self._print(PythonTuple(*expr.shape))
         if isinstance(expr.copy.dtype.primitive_type, PrimitiveBooleanType):
             copy = self._print(expr.copy)
-            args += ', copy = {copy}'
+            args += f', copy = {copy}'
         order = expr.order
         if order:
             args += f", order = '{order}'"
