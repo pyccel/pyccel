@@ -444,3 +444,4 @@ def test_class_magic(language):
 
     assert a_py.x == a_l.x
 
+    assert len(a_py) == len(a_l)

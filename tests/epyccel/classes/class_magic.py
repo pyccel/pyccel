@@ -59,3 +59,6 @@ class A:
     def __ior__(self, other : int):
         self.x |= other
         return self
+
+    def __len__(self):
+        return 1
