@@ -2688,6 +2688,8 @@ class NumpyReshape(PyccelFunction):
         shape = shape or newshape
         if isinstance(shape, (PythonTuple, PythonList)):
             self._shape = tuple(shape)
+        elif shape.rank == 0:
+            self._shape = (shape,)
         else:
             raise TypeError("Shape must be a tuple so the number of dimensions can be deduced.")
         if not isinstance(copy, (LiteralTrue, LiteralFalse, Nil)):
