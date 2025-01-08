@@ -692,6 +692,8 @@ class SemanticParser(BasicParser):
             self._indicate_pointer_target(pointer, target.lhs, expr)
         elif isinstance(target, IndexedElement):
             self._indicate_pointer_target(pointer, target.base, expr)
+        elif isinstance(target, NumpyReshape):
+            self._indicate_pointer_target(pointer, target.args[0], expr)
         elif isinstance(target, Variable):
             if target.is_alias:
                 try:
@@ -771,7 +773,7 @@ class SemanticParser(BasicParser):
 
             var = expr.args[0]
 
-            d_var['memory_handling'] = 'alias' if var.is_alias and expr.copy is not LiteralFalse() else 'heap'
+            d_var['memory_handling'] = 'alias' if expr.is_alias else 'heap'
             return d_var
 
         elif isinstance(expr, TypedAstNode):
@@ -2960,6 +2962,7 @@ class SemanticParser(BasicParser):
                             func  = func.clone(new_name)
                     pyccel_stage.set_stage('syntactic')
                     syntactic_call = FunctionCall(func, args)
+                    syntactic_call.set_current_ast(expr.python_ast)
                     pyccel_stage.set_stage('semantic')
                     return self._handle_function(syntactic_call, func, args)
                 elif isinstance(rhs, Constant):
@@ -5539,12 +5542,15 @@ class SemanticParser(BasicParser):
         args = function_call_args[1:]
         args, kwargs = split_positional_keyword_arguments(*args)
         if not isinstance(var_arg, Variable):
-            syntactic_var_arg = expr.args[0].value
+            if isinstance(expr, DottedName):
+                syntactic_var_arg = expr.name[0]
+            else:
+                syntactic_var_arg = expr.args[0].value
             tmp_var = PyccelSymbol(self.scope.get_new_name())
             pyccel_stage.set_stage('syntactic')
             assign = Assign(tmp_var, syntactic_var_arg)
             assign.set_current_ast(expr.python_ast)
             pyccel_stage.set_stage('semantic')
             self._additional_exprs[-1].append(self._visit(assign))
-            var_arg = tmp_var
+            var_arg = self._visit(tmp_var)
         return NumpyReshape(var_arg, *args, **kwargs)

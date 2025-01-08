@@ -2693,13 +2693,19 @@ class NumpyReshape(PyccelFunction):
         if not isinstance(copy, (LiteralTrue, LiteralFalse, Nil)):
             raise TypeError("Copy must be a literal [True|False|None].")
         self._class_type = NumpyNDArrayType(a.dtype, len(self._shape), order)
-        self._is_alias = a.is_alias or copy is False
+        self._is_alias = not a.is_alias or copy is LiteralFalse()
+        if order and order != a.order:
+            self._is_alias = False
         self._copy = copy
         super().__init__(a)
 
     @property
     def copy(self):
         return self._copy
+
+    @property
+    def is_alias(self):
+        return self._is_alias
 
 #==============================================================================
 
