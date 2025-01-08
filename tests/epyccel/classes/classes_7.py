@@ -2,10 +2,10 @@
 
 class A:
     def __init__(self : 'A', x : int):
-        self.x = x
+        self.data : int = x
 
     def update(self : 'A', x : int):
-        self.x = x
+        self.data = x
 
 def get_A():
     return A(4)
@@ -15,15 +15,6 @@ def get_A_int():
 
 def get_x_from_A(a : 'A' = None):
     if a is not None:
-        return a.x
+        return a.data
     else:
         return 5
-
-if __name__ == '__main__':
-    print(get_A().x)
-    print(get_x_from_A())
-    print(get_x_from_A(get_A()))
-    x = get_A()
-    x.update(10)
-    print(get_x_from_A(x))
-    x, p = get_A_int()

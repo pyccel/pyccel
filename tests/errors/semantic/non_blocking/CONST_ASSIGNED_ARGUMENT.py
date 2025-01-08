@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-#$ header function funct_c(const int, int)
-def funct_c( x, a ):
+
+def funct_c(x : 'const int', a  : int):
     x += a
     return x

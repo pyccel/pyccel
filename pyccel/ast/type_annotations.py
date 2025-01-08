@@ -11,6 +11,8 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic import PyccelAstNode
 
+from .bitwise_operators import PyccelBitOr
+
 from .core import FunctionDefArgument
 
 from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
@@ -255,7 +257,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
 
     Parameters
     ----------
-    dtype : PyccelSymbol | IndexedElement | DottedName
+    dtype : str | IndexedElement | DottedName
         The dtype named in the type annotation.
 
     order : str | None
@@ -263,9 +265,16 @@ class SyntacticTypeAnnotation(PyccelAstNode):
     """
     __slots__ = ('_dtype', '_order')
     _attribute_nodes = ('_dtype',)
+
+    def __new__(cls, dtype = None, order = None):
+        if isinstance(dtype, PyccelBitOr):
+            return UnionTypeAnnotation(*[SyntacticTypeAnnotation(d) for d in dtype.args])
+        else:
+            return super().__new__(cls)
+
     def __init__(self, dtype, order = None):
         if not isinstance(dtype, (str, DottedName, IndexedElement)):
-            raise ValueError("Syntactic datatypes should be strings")
+            raise ValueError("Syntactic datatypes should be strings not {type(dtype)}")
         if not (order is None or isinstance(order, str)):
             raise ValueError("Order should be a string")
         self._dtype = dtype

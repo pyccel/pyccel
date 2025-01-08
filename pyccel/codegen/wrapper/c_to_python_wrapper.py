@@ -64,6 +64,26 @@ errors = Errors()
 cwrapper_ndarray_imports = [Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ())),
                             Import('ndarrays', Module('ndarrays', (), ()))]
 
+magic_binary_funcs = ('__add__',
+                      '__sub__',
+                      '__mul__',
+                      '__truediv__',
+                      '__pow__',
+                      '__lshift__',
+                      '__rshift__',
+                      '__and__',
+                      '__or__',
+                      '__iadd__',
+                      '__isub__',
+                      '__imul__',
+                      '__itruediv__',
+                      '__ipow__',
+                      '__ilshift__',
+                      '__irshift__',
+                      '__iand__',
+                      '__ior__',
+                      )
+
 class CToPythonWrapper(Wrapper):
     """
     Class for creating a wrapper exposing C code to Python.
@@ -1409,7 +1429,7 @@ class CToPythonWrapper(Wrapper):
 
     def _wrap_FunctionDef(self, expr):
         """
-        Build a `PyFunctionDef` form a `FunctionDef`.
+        Build a `PyFunctionDef` from a `FunctionDef`.
 
         Create a `PyFunctionDef` which wraps a C-compatible `FunctionDef`.
         The `PyFunctionDef` should take three arguments (`self`, `args`,
@@ -1431,6 +1451,7 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(expr.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
+        original_func_name = original_func.scope.get_python_name(original_func.name)
 
         possible_class_base = expr.get_user_nodes((ClassDef,))
         if possible_class_base:
@@ -1477,7 +1498,7 @@ class CToPythonWrapper(Wrapper):
             func_args = [FunctionDefArgument(a) for a in func_args]
             body = []
         else:
-            if in_interface:
+            if in_interface or original_func_name in magic_binary_funcs:
                 func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
                 body = []
             else:
@@ -1490,7 +1511,12 @@ class CToPythonWrapper(Wrapper):
 
         # Get the code required to wrap the C-compatible results into Python objects
         # This function creates variables so it must be called before extracting them from the scope.
-        if len(python_results) == 0:
+        if original_func_name in magic_binary_funcs and original_func_name.startswith('__i'):
+            res = func_args[0].var.clone(self.scope.get_new_name(func_args[0].var.name), is_argument=False)
+            wrapped_results = {'c_results': [], 'py_result': res, 'body': []}
+            body.append(AliasAssign(res, func_args[0].var))
+            body.append(Py_INCREF(res))
+        elif len(python_results) == 0:
             wrapped_results = {'c_results': [], 'py_result': Py_None, 'body': []}
         elif len(python_results) == 1:
             wrapped_results = self._extract_FunctionDefResult(original_func.results[0].var, is_bind_c_function_def, expr)
@@ -2014,6 +2040,8 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype, wrapped_class.scope))
             elif python_name == '__init__':
                 wrapped_class.add_new_method(self._get_class_initialiser(f, orig_cls_dtype))
+            elif python_name in magic_binary_funcs:
+                wrapped_class.add_new_magic_number_method(self._wrap(f))
             elif 'property' in f.decorators:
                 wrapped_class.add_property(self._wrap(f))
             else:
@@ -2758,13 +2786,17 @@ class CToPythonWrapper(Wrapper):
         if isinstance(orig_var, PythonTuple):
             return self._extract_InhomogeneousTupleType_FunctionDefResult(orig_var, is_bind_c, funcdef)
 
-        if is_bind_c:
-            raise NotImplementedError("Support for returning sets from Fortran code is not yet available")
-
         name = getattr(orig_var, 'name', 'tmp')
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
-        c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)
-        loop_size = Variable(PythonNativeInt(), self.scope.get_new_name(f'{name}_size'))
+        if is_bind_c:
+            c_res = Variable(CStackArray(orig_var.class_type.element_type),
+                             self.scope.get_new_name(funcdef.results[0].var.name))
+            loop_size = funcdef.results[1].var.clone(self.scope.get_new_name(funcdef.results[1].var.name), is_argument = False)
+            c_results = [ObjectAddress(c_res), loop_size]
+        else:
+            c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)
+            c_results = [c_res]
+            loop_size = Variable(PythonNativeInt(), self.scope.get_new_name(f'{name}_size'))
         idx = Variable(PythonNativeInt(), self.scope.get_new_name())
         self.scope.insert_variable(c_res)
         self.scope.insert_variable(loop_size)
@@ -2777,7 +2809,10 @@ class CToPythonWrapper(Wrapper):
 
         class_type = orig_var.class_type
         if isinstance(class_type, HomogeneousSetType):
-            element = SetPop(c_res)
+            if is_bind_c:
+                element = IndexedElement(c_res, idx)
+            else:
+                element = SetPop(c_res)
             elem_set = PySet_Add(py_res, element_extraction['py_result'])
             init = PySet_New()
         elif isinstance(class_type, HomogeneousListType):
@@ -2795,8 +2830,10 @@ class CToPythonWrapper(Wrapper):
                 *element_extraction['body'],
                 If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
                                          [Return([self._error_exit_code])]))]
-        body = [Assign(loop_size, PythonLen(c_res)),
-                AliasAssign(py_res, init),
-                For((idx,), PythonRange(loop_size), for_body, for_scope)]
+        body = [Assign(loop_size, PythonLen(c_res))] if not is_bind_c else []
+        body += [AliasAssign(py_res, init),
+                 For((idx,), PythonRange(loop_size), for_body, for_scope)]
+        if is_bind_c:
+            body.append(Deallocate(c_res))
 
-        return {'c_results': [c_res], 'py_result': py_res, 'body': body}
+        return {'c_results': c_results, 'py_result': py_res, 'body': body}

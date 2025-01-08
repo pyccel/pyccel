@@ -59,7 +59,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **`range`** | **Yes** |
 | `repr` | No |
 | `reversed` | No |
-| `round` | No |
+| **`round`** | **Yes** |
 | *`set`* | Python-only |
 | `setattr` | No  |
 | `slice` | No |
@@ -87,7 +87,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `insert` | Python-only |
 | `max` | No |
 | `min` | No |
-| `pop` | Python and C only |
+| **`pop`** | **Yes** |
 | `remove` | Python-only |
 | `reverse` | No |
 | `sort` | Python-only |

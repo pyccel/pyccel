@@ -749,6 +749,15 @@ class CCodePrinter(CodePrinter):
             func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
 
+    def _print_PythonRound(self, expr):
+        self.add_import(c_imports['pyc_math_c'])
+        arg = self._print(expr.arg)
+        ndigits = self._print(expr.ndigits or LiteralInteger(0))
+        if isinstance(expr.arg.class_type.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)):
+            return f'ipyc_bankers_round({arg}, {ndigits})'
+        else:
+            return f'fpyc_bankers_round({arg}, {ndigits})'
+
     def _print_PythonMinMax(self, expr):
         arg = expr.args[0]
         if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
@@ -1813,7 +1822,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.variable.dtype, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
             return f"{Pyccel__del}({variable_address});\n"
-        elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousContainerType)):
+        elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             if expr.variable.is_alias:
                 return f'free_pointer({variable_address});\n'
             else:
@@ -2828,6 +2837,8 @@ class CCodePrinter(CodePrinter):
     def _print_PrecomputedCode(self, expr):
         return expr.code
 
+    def _print_AllDeclaration(self, expr):
+        return ''
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
