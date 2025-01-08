@@ -36,7 +36,7 @@ All notable changes to this project will be documented in this file.
 -   #1665 : Add C and Fortran support for returning lists from functions.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
--   #1690 : Add C support for list method `pop()`.
+-   #1690 : Add C and Fortran support for list method `pop()`.
 -   #1663 : Add C support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
@@ -54,13 +54,14 @@ All notable changes to this project will be documented in this file.
 -   #1583 : Allow inhomogeneous tuples in classes.
 -   #738 : Add support for homogeneous tuples with scalar elements as arguments.
 -   Add a warning about containers in lists.
--   #2016 : Add support for translating arithmetic magic methods (methods cannot yet be used from Python).
+-   #2016 : Add support for translating arithmetic magic methods.
 -   #1980 : Extend The C support for min and max to more than two variables
 -   #2081 : Add support for multi operator expressions
 -   #2061 : Add C support for string declarations.
 -   Add support for inhomogeneous tuple annotations.
 -   #1834 : Add support for `@property` decorator.
 -   #2099 : Fix translation of modules containing `__all__`.
+-   #983 : Add support for built-in function `round`.
 -   Add support for `type` as a type annotation.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
