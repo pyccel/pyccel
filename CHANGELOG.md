@@ -36,7 +36,7 @@ All notable changes to this project will be documented in this file.
 -   #1665 : Add C and Fortran support for returning lists from functions.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
--   #1690 : Add C support for list method `pop()`.
+-   #1690 : Add C and Fortran support for list method `pop()`.
 -   #1663 : Add C support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
@@ -61,6 +61,7 @@ All notable changes to this project will be documented in this file.
 -   Add support for inhomogeneous tuple annotations.
 -   #1834 : Add support for `@property` decorator.
 -   #2099 : Fix translation of modules containing `__all__`.
+-   #983 : Add support for built-in function `round`.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
