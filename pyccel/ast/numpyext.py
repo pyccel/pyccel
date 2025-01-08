@@ -2678,6 +2678,29 @@ class NumpyIsFinite(NumpyUfuncUnary):
         """
         return PythonNativeBool()
 
+class NumpyReshape(PyccelFunction):
+    name = 'reshape'
+    __slots__ = ('_class_type', '_shape', '_is_alias', '_copy')
+    _attribute_nodes = PyccelFunction._attribute_nodes + ('_shape',)
+
+    def __init__(self, a, newshape = None, shape = None, order='C', copy=Nil()):
+        assert (newshape is None) != (shape is None)
+        shape = shape or newshape
+        if isinstance(shape, (PythonTuple, PythonList)):
+            self._shape = tuple(shape)
+        else:
+            raise TypeError("Shape must be a tuple so the number of dimensions can be deduced.")
+        if not isinstance(copy, (LiteralTrue, LiteralFalse, Nil)):
+            raise TypeError("Copy must be a literal [True|False|None].")
+        self._class_type = NumpyNDArrayType(a.dtype, len(self._shape), order)
+        self._is_alias = a.is_alias or copy is False
+        self._copy = copy
+        super().__init__(a)
+
+    @property
+    def copy(self):
+        return self._copy
+
 #==============================================================================
 
 DtypePrecisionToCastFunction.update({
@@ -2720,6 +2743,7 @@ numpy_funcs = {
     'array'     : PyccelFunctionDef('array'     , NumpyArray),
     'arange'    : PyccelFunctionDef('arange'    , NumpyArange),
     'copy'      : PyccelFunctionDef('copy'      , NumpyArray),
+    'reshape'   : PyccelFunctionDef('reshape'   , NumpyReshape),
     # ...
     'shape'     : PyccelFunctionDef('shape'     , NumpyShape),
     'size'      : PyccelFunctionDef('size'      , NumpySize),

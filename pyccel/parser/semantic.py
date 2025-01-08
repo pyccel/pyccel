@@ -87,7 +87,7 @@ from pyccel.ast.literals import Literal, convert_to_literal, LiteralEllipsis
 
 from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
 
-from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
+from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs, NumpyReshape
 from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyResultType
@@ -765,6 +765,13 @@ class SemanticParser(BasicParser):
             var = expr.internal_var
 
             d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
+            return d_var
+
+        elif isinstance(expr, NumpyReshape):
+
+            var = expr.args[0]
+
+            d_var['memory_handling'] = 'alias' if var.is_alias and expr.copy is not LiteralFalse() else 'heap'
             return d_var
 
         elif isinstance(expr, TypedAstNode):
@@ -5508,3 +5515,36 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].extend(body)
             return lhs
 
+    def _build_NumpyReshape(self, expr, function_call_args):
+        """
+        Method to visit a NumpyReshape node.
+
+        The purpose of this `_build` method is to ensure that the first argument
+        passed to the reshape method is a Variable.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represents the call to `.reshape()`.
+
+        function_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        Returns
+        -------
+        NumpyReshape
+            The semantic reshape node.
+        """
+        var_arg = function_call_args[0].value
+        args = function_call_args[1:]
+        args, kwargs = split_positional_keyword_arguments(*args)
+        if not isinstance(var_arg, Variable):
+            syntactic_var_arg = expr.args[0].value
+            tmp_var = PyccelSymbol(self.scope.get_new_name())
+            pyccel_stage.set_stage('syntactic')
+            assign = Assign(tmp_var, syntactic_var_arg)
+            assign.set_current_ast(expr.python_ast)
+            pyccel_stage.set_stage('semantic')
+            self._additional_exprs[-1].append(self._visit(assign))
+            var_arg = tmp_var
+        return NumpyReshape(var_arg, *args, **kwargs)
