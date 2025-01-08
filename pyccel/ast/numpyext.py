@@ -2694,7 +2694,10 @@ class NumpyReshape(PyccelFunction):
             raise TypeError("Shape must be a tuple so the number of dimensions can be deduced.")
         if not isinstance(copy, (LiteralTrue, LiteralFalse, Nil)):
             raise TypeError("Copy must be a literal [True|False|None].")
-        self._class_type = NumpyNDArrayType(a.dtype, len(self._shape), order)
+        rank = len(self._shape)
+        if rank < 2:
+            order = None
+        self._class_type = NumpyNDArrayType(a.dtype, rank, order)
         self._is_alias = not a.is_alias or copy is LiteralFalse()
         if order and order != a.order:
             self._is_alias = False

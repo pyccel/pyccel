@@ -844,7 +844,8 @@ class PythonCodePrinter(CodePrinter):
             copy = self._print(expr.copy)
             args += ', copy = {copy}'
         order = expr.order
-        args += f", order = '{order}'"
+        if order:
+            args += f", order = '{order}'"
         return f'{var}.reshape({args})'
 
     def _print_ListMethod(self, expr):

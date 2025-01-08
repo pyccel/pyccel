@@ -2056,7 +2056,7 @@ class FCodePrinter(CodePrinter):
         shape_code = ''
         if isinstance(lhs.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             if isinstance(rhs, NumpyReshape):
-                ubounds = [PyccelMinus(s, LiteralInteger(1), simplify=True) for s in lhs.alloc_shape]
+                ubounds = [self._print(PyccelMinus(s, LiteralInteger(1), simplify=True)) for s in lhs.alloc_shape]
                 shape_code = ', '.join(f'0:{u}' for u in ubounds)
             else:
                 shape_code = ', '.join('0:' for i in range(lhs.rank))
