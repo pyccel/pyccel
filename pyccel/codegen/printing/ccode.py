@@ -2804,6 +2804,12 @@ class CCodePrinter(CodePrinter):
         return ''.join(f'{var_type}_intersection_update({set_var}, {self._print(ObjectAddress(a))});\n' \
                 for a in expr.args)
 
+    def _print_SetDiscard(self, expr):
+        var_type = self.get_c_type(expr.set_variable.class_type)
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        arg_val = self._print(expr.args[0])
+        return f'{var_type}_erase({set_var}, {arg_val});\n'
+
     #=================== MACROS ==================
 
     def _print_MacroShape(self, expr):
