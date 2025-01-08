@@ -6270,32 +6270,47 @@ def test_copy(language):
     )
 )
 def test_reshape(language):
+    # Copies are needed in these functions to ensure reshaped objects are
+    # contiguous and no pointers to temporaries are returned
     def reshape_var(a : 'int[:,:,:]'):
+        from numpy import array
         m, n, p = a.shape
-        b = a.reshape((m*n, p))
+        tmp_a = array(a)
+        b = tmp_a.reshape((m*n, p))
         b[0,0] = 123
-        return b
+        a[:] = tmp_a
+        c = array(b)
+        return c
 
     def reshape_var_order(a : 'int[:,:,:]'):
-        from numpy import reshape
+        from numpy import reshape, array
         m, n, p = a.shape
-        b = reshape(a, (m*n, p), order='F')
+        tmp_a = array(a)
+        b = reshape(tmp_a, (m*n, p), order='F')
         b[0,0] = 123
-        return b
+        a[:] = tmp_a
+        c = array(b, order='F')
+        return c
 
     def reshape_expr(a : 'int[:,:,:]'):
         from numpy import reshape, array
         m, n, p = a.shape
-        b = reshape(a*3, (m*n, p))
+        tmp_a = array(a)
+        b = reshape(tmp_a*3, (m*n, p))
         b[0,0] = 123
+        a[:] = tmp_a
         c = array(b)
         return c
 
     def flatten(a : 'int[:,:,:]'):
+        from numpy import array
         m, n, p = a.shape
-        b = a.reshape((m*n*p))
+        tmp_a = array(a)
+        b = tmp_a.reshape((m*n*p))
         b[0] = 123
-        return b
+        a[:] = tmp_a
+        c = array(b)
+        return c
 
     for func in (reshape_var, reshape_var_order, reshape_expr, flatten):
         print(func.__name__)
