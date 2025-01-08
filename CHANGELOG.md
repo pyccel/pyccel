@@ -56,6 +56,7 @@ All notable changes to this project will be documented in this file.
 -   #738 : Add support for homogeneous tuples with scalar elements as arguments.
 -   Add a warning about containers in lists.
 -   #2016 : Add support for translating arithmetic magic methods.
+-   #2106 : Add support for `__len__` magic method.
 -   #1980 : Extend The C support for min and max to more than two variables
 -   #2081 : Add support for multi operator expressions
 -   #2061 : Add C support for string declarations.
