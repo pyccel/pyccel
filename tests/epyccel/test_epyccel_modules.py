@@ -243,3 +243,18 @@ def test_module_type_alias_expression(language):
     assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
     assert np.allclose( x, x_pyc, rtol=1e-14, atol=1e-14 )
     assert np.allclose( y, y_pyc, rtol=1e-14, atol=1e-14 )
+
+def test_module_11(language):
+    import modules.Module_11 as mod
+
+    modnew = epyccel(mod, language=language)
+
+    len_pyt = mod.update_multiple()
+    len_pyc = modnew.update_multiple()
+
+    assert len_pyt == len_pyc
+
+    len_pyt = mod.set_union()
+    len_pyc = modnew.set_union()
+
+    assert len_pyt == len_pyc
