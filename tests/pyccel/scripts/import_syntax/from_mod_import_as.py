@@ -2,8 +2,7 @@
 from numpy import zeros as zilch
 from numpy import shape as form
 
-#$ header function matmat(double [:,:], double [:,:], double [:,:])
-def matmat(a,b,c):
+def matmat(a : 'float[:,:]', b : 'float[:,:]', c : 'float[:,:]'):
     nm = form(a)
     mp = form(b)
 

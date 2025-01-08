@@ -18,6 +18,8 @@ from sympy import Symbol as sp_Symbol
 from sympy import Integer as sp_Integer
 from sympy import ceiling
 
+from textx.exceptions import TextXSyntaxError
+
 #==============================================================================
 from pyccel.utilities.strings import random_string
 from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
@@ -32,7 +34,7 @@ from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
-from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion
+from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -139,6 +141,7 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
 
 from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
+from pyccel.parser.syntax.headers import types_meta
 
 from pyccel.utilities.stage import PyccelStage
 
@@ -922,6 +925,12 @@ class SemanticParser(BasicParser):
             The new operator.
         """
         arg1 = visited_args[0]
+        if isinstance(arg1, FunctionDef):
+            msg = ("Function found in a mathematical operation. "
+                   "Are you trying to declare a type? "
+                   "If so then the type object must be used as a type hint.")
+            errors.report(msg,
+                    severity='fatal', symbol=expr)
         class_type = arg1.class_type
         class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
         magic_method_name = magic_method_map.get(type(expr), None)
@@ -3283,21 +3292,31 @@ class SemanticParser(BasicParser):
                 cls_def = semantic_lhs_var.lhs.cls_base
                 insert_scope = cls_def.scope
                 cls_def.add_new_attribute(semantic_lhs_var)
+                lhs = lhs.name.name[-1]
             else:
                 insert_scope = self.scope
+                lhs = lhs.name
 
-            lhs = lhs.name
             if semantic_lhs_var.class_type is TypeAlias():
-                if not isinstance(rhs, SyntacticTypeAnnotation):
-                    pyccel_stage.set_stage('syntactic')
+                pyccel_stage.set_stage('syntactic')
+                if isinstance(rhs, LiteralString):
+                    try:
+                        annotation = types_meta.model_from_str(rhs.python_value)
+                    except TextXSyntaxError as e:
+                        errors.report(f"Invalid header. {e.message}",
+                                symbol = expr, severity = 'fatal')
+                    rhs = annotation.expr
+                    rhs.set_current_ast(expr.python_ast)
+                elif not isinstance(rhs, (SyntacticTypeAnnotation, FunctionTypeAnnotation,
+                                          VariableTypeAnnotation, UnionTypeAnnotation)):
                     rhs = SyntacticTypeAnnotation(rhs)
-                    pyccel_stage.set_stage('semantic')
+                pyccel_stage.set_stage('semantic')
                 type_annot = self._visit(rhs)
                 self.scope.insert_symbolic_alias(lhs, type_annot)
                 return EmptyNode()
 
             try:
-                insert_scope.insert_variable(semantic_lhs_var)
+                insert_scope.insert_variable(semantic_lhs_var, lhs)
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
 
@@ -4153,26 +4172,37 @@ class SemanticParser(BasicParser):
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
         # Create new temparary templates for the arguments with a Union data type.
-        pyccel_stage.set_stage('syntactic')
         tmp_templates = {}
         new_expr_args = []
         for a in expr.arguments:
-            if isinstance(a.annotation, UnionTypeAnnotation):
-                annotation = [aa for a in a.annotation for aa in unpack(a)]
+            annot = a.annotation
+            if isinstance(annot, UnionTypeAnnotation):
+                annotation = [aa for a in annot for aa in unpack(a)]
+            elif isinstance(annot, SyntacticTypeAnnotation):
+                elem = annot.dtype
+                if isinstance(elem, IndexedElement):
+                    elem = [elem.base] + [a.dtype for a in elem.indices if isinstance(a, SyntacticTypeAnnotation)]
+                else:
+                    elem = [elem]
+                if all(e not in templates for e in elem):
+                    annotation = unpack(self._visit(annot))
+                else:
+                    annotation = [annot]
             else:
-                annotation = [a.annotation]
+                annotation = [annot]
             if len(annotation)>1:
                 tmp_template_name = a.name + '_' + random_string(12)
                 tmp_template_name = self.scope.get_new_name(tmp_template_name)
+                pyccel_stage.set_stage('syntactic')
                 tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in annotation])
                 dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
                 dtype_symb = SyntacticTypeAnnotation(dtype_symb)
                 var_clone = AnnotatedPyccelSymbol(a.var.name, annotation=dtype_symb, is_temp=a.var.name.is_temp)
                 new_expr_args.append(FunctionDefArgument(var_clone, bound_argument=a.bound_argument,
                                         value=a.value, kwonly=a.is_kwonly, annotation=dtype_symb))
+                pyccel_stage.set_stage('semantic')
             else:
                 new_expr_args.append(a)
-        pyccel_stage.set_stage('semantic')
 
         templates.update(tmp_templates)
         template_combinations = list(product(*[v.type_list for v in templates.values()]))
@@ -5433,3 +5463,48 @@ class SemanticParser(BasicParser):
                      for c in update_calls]
             pyccel_stage.set_stage('semantic')
             return CodeBlock([self._visit(b) for b in body])
+
+    def _build_SetIntersection(self, expr, function_call_args):
+        """
+        Method to visit a SetIntersection node.
+
+        The purpose of this `_build` method is to construct multiple nodes to represent
+        the single DottedName node representing the call to SetIntersection. It
+        replaces the call with a call to copy followed by multiple calls to
+        SetIntersectionUpdate.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represent the call to `.intersection()`.
+
+        function_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        Returns
+        -------
+        CodeBlock
+            CodeBlock containing SetCopy and SetIntersectionUpdate objects.
+        """
+        start_set = function_call_args[0].value
+        set_args = [self._visit(a.value) for a in function_call_args[1:]]
+        assign = expr.get_direct_user_nodes(lambda a: isinstance(a, Assign))
+        if assign:
+            syntactic_lhs = assign[-1].lhs
+        else:
+            syntactic_lhs = self.scope.get_new_name()
+        d_var = self._infer_type(start_set)
+        rhs = SetCopy(start_set)
+        body = []
+        lhs = self._assign_lhs_variable(syntactic_lhs, d_var, rhs, body)
+        body.append(Assign(lhs, rhs, python_ast = expr.python_ast))
+        try:
+            body += [SetIntersectionUpdate(lhs, s) for s in set_args]
+        except TypeError as e:
+            errors.report(e, symbol=expr, severity='error')
+        if assign:
+            return CodeBlock(body)
+        else:
+            self._additional_exprs[-1].extend(body)
+            return lhs
+

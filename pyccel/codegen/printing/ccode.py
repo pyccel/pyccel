@@ -749,6 +749,15 @@ class CCodePrinter(CodePrinter):
             func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
 
+    def _print_PythonRound(self, expr):
+        self.add_import(c_imports['pyc_math_c'])
+        arg = self._print(expr.arg)
+        ndigits = self._print(expr.ndigits or LiteralInteger(0))
+        if isinstance(expr.arg.class_type.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)):
+            return f'ipyc_bankers_round({arg}, {ndigits})'
+        else:
+            return f'fpyc_bankers_round({arg}, {ndigits})'
+
     def _print_PythonMinMax(self, expr):
         arg = expr.args[0]
         if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
@@ -2786,6 +2795,14 @@ class CCodePrinter(CodePrinter):
         set_var = self._print(ObjectAddress(expr.set_variable))
         args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
         return f'{var_type}_union({set_var}, {args})'
+
+    def _print_SetIntersectionUpdate(self, expr):
+        class_type = expr.set_variable.class_type
+        var_type = self.get_c_type(class_type)
+        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(class_type), var_type)))
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        return ''.join(f'{var_type}_intersection_update({set_var}, {self._print(ObjectAddress(a))});\n' \
+                for a in expr.args)
 
     def _print_SetDiscard(self, expr):
         var_type = self.get_c_type(expr.set_variable.class_type)
