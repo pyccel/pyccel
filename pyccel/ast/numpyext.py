@@ -114,6 +114,7 @@ __all__ = (
     'NumpyRand',
     'NumpyRandint',
     'NumpyReal',
+    'NumpyReshape',
     'NumpyResultType',
     'NumpyTranspose',
     'NumpyWhere',
