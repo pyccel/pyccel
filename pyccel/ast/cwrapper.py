@@ -718,8 +718,8 @@ class PyClassDef(ClassDef):
         wrapped.
     """
     __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object',
-                 '_new_func', '_properties', '_number_magic_methods')
-    _attribute_nodes = ClassDef._attribute_nodes + ('_number_magic_methods',)
+                 '_new_func', '_properties', '_magic_methods')
+    _attribute_nodes = ClassDef._attribute_nodes + ('_magic_methods',)
 
     def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
         self._original_class = original_class
@@ -728,7 +728,7 @@ class PyClassDef(ClassDef):
         self._type_object = Variable(PyccelPyClassType(), type_name)
         self._new_func = None
         self._properties = ()
-        self._number_magic_methods = ()
+        self._magic_methods = ()
         variables = [Variable(VoidType(), 'instance', memory_handling='alias'),
                      Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias'),
                      Variable(PythonNativeBool(), 'is_alias')]
@@ -821,12 +821,11 @@ class PyClassDef(ClassDef):
         """
         return self._properties
 
-    def add_new_magic_number_method(self, method):
+    def add_new_magic_method(self, method):
         """
-        Add a new magic number method to the current class.
+        Add a new magic method to the current class.
 
-        Add a new magic method to the current ClassDef describing
-        a number method.
+        Add a new magic method to the current ClassDef.
 
         Parameters
         ----------
@@ -837,16 +836,16 @@ class PyClassDef(ClassDef):
         if not isinstance(method, PyFunctionDef):
             raise TypeError("Method must be FunctionDef")
         method.set_current_user_node(self)
-        self._number_magic_methods += (method,)
+        self._magic_methods += (method,)
 
     @property
-    def number_magic_methods(self):
+    def magic_methods(self):
         """
-        Get the magic methods describing number methods.
+        Get the magic methods describing methods.
 
-        Get the magic methods describing number methods such as __add__.
+        Get the magic methods describing methods such as __add__.
         """
-        return self._number_magic_methods
+        return self._magic_methods
 
 #-------------------------------------------------------------------
 
