@@ -5509,6 +5509,28 @@ class SemanticParser(BasicParser):
             return lhs
 
     def _build_PythonLen(self, expr, function_call_args):
+        """
+        Method to visit a PythonLen node.
+
+        The purpose of this `_build` method is to construct a node representing
+        a call to the PythonLen function. This function returns the first element
+        of the shape of a variable, or a call to a method which calculates the
+        length (e.g. the `__len__` function).
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic node that represent the call to `len()`.
+
+        function_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        Returns
+        -------
+        TypedAstNode
+            The node representing an object which allows the result of the
+            PythonLen function to be obtained.
+        """
         arg = function_call_args[0].value
         class_type = arg.class_type
         if isinstance(arg, LiteralString):
