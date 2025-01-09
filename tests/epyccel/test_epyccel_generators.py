@@ -198,3 +198,12 @@ def test_sum_range_overwrite(language):
     f_epyc = epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
+
+def test_sum_with_two_variables(language):
+    def f():
+        x = sum(i-j for i in range(10) for j in range(7))
+        return x
+
+    f_epyc = epyccel(f, language=language)
+
+    assert f() == f_epyc()

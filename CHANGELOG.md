@@ -104,6 +104,7 @@ All notable changes to this project will be documented in this file.
 -   #2111 : Fix declaration of class attributes with name conflicts using type annotations.
 -   #2115 : Fix integer handling with NumPy 2.0 on Windows.
 -   Fix handling of union `typing.TypeAlias` objects as type hints.
+-   #2141 : Fix error when removing `test_node`
 
 ### Changed
 
