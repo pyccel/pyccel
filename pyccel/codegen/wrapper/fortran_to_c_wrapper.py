@@ -14,7 +14,7 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
 from pyccel.ast.bind_c import BindCClassProperty
-from pyccel.ast.builtins import VariableIterator
+from pyccel.ast.builtins import VariableIterator, PythonTuple
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
@@ -29,7 +29,7 @@ from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
-from pyccel.ast.numpyext import NumpyNDArrayType
+from pyccel.ast.numpyext import NumpyNDArrayType, NumpyReshape
 from pyccel.errors.errors import Errors
 from pyccel.parser.scope import Scope
 from .wrapper import Wrapper
@@ -433,7 +433,7 @@ class FortranToCWrapper(Wrapper):
                 # Define the additional steps necessary to define and fill ptr_var
                 alloc = Allocate(ptr_var, shape=new_shape, status='unallocated')
                 if isinstance(local_var.class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
-                    copy = Assign(ptr_var, local_var)
+                    copy = Assign(ptr_var, NumpyReshape(local_var, shape=PythonTuple(new_shape[0]), copy=LiteralTrue()))
                     self._additional_exprs.extend([alloc, copy])
                 elif isinstance(local_var.class_type, (HomogeneousSetType, HomogeneousListType)):
                     iterator = VariableIterator(local_var)
