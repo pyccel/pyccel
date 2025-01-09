@@ -30,8 +30,8 @@ from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunct
 from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet, VariableIterator
-from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
-                                 PythonTuple, Lambda, PythonMap)
+from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonTuple
+from pyccel.ast.builtins import Lambda, PythonMap
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
@@ -5508,3 +5508,43 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].extend(body)
             return lhs
 
+    def _build_PythonLen(self, expr, function_call_args):
+        """
+        Method to visit a PythonLen node.
+
+        The purpose of this `_build` method is to construct a node representing
+        a call to the PythonLen function. This function returns the first element
+        of the shape of a variable, or a call to a method which calculates the
+        length (e.g. the `__len__` function).
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic node that represent the call to `len()`.
+
+        function_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        Returns
+        -------
+        TypedAstNode
+            The node representing an object which allows the result of the
+            PythonLen function to be obtained.
+        """
+        arg = function_call_args[0].value
+        class_type = arg.class_type
+        if isinstance(arg, LiteralString):
+            return LiteralInteger(len(arg.python_value))
+        elif isinstance(arg.class_type, CustomDataType):
+            class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+            magic_method = class_base.get_method('__len__', False)
+            if magic_method:
+                return self._handle_function(expr, magic_method, function_call_args)
+            else:
+                raise errors.report(f"__len__ not implemented for type {class_type}",
+                        severity='fatal', symbol=expr)
+        elif arg.rank > 0:
+            return arg.shape[0]
+        else:
+            raise errors.report(f"__len__ not implemented for type {class_type}",
+                    severity='fatal', symbol=expr)

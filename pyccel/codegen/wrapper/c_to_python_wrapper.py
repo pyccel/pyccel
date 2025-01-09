@@ -1498,7 +1498,7 @@ class CToPythonWrapper(Wrapper):
             func_args = [FunctionDefArgument(a) for a in func_args]
             body = []
         else:
-            if in_interface or original_func_name in magic_binary_funcs:
+            if in_interface or original_func_name in magic_binary_funcs or original_func_name == '__len__':
                 func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
                 body = []
             else:
@@ -1549,7 +1549,12 @@ class CToPythonWrapper(Wrapper):
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
                 else:
                     body.append(Deallocate(v))
-        body.extend(wrapped_results['body'])
+
+        if original_func_name == '__len__':
+            self.scope.remove_variable(python_result_variable)
+            python_result_variable = c_results[0]
+        else:
+            body.extend(wrapped_results['body'])
         body.extend(ai for arg in wrapped_args for ai in arg['clean_up'])
 
         # Pack the Python compatible results of the function into one argument.
@@ -2040,8 +2045,8 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype, wrapped_class.scope))
             elif python_name == '__init__':
                 wrapped_class.add_new_method(self._get_class_initialiser(f, orig_cls_dtype))
-            elif python_name in magic_binary_funcs:
-                wrapped_class.add_new_magic_number_method(self._wrap(f))
+            elif python_name in (*magic_binary_funcs, '__len__'):
+                wrapped_class.add_new_magic_method(self._wrap(f))
             elif 'property' in f.decorators:
                 wrapped_class.add_property(self._wrap(f))
             else:
