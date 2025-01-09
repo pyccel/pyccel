@@ -723,12 +723,12 @@ class PythonLen(PyccelFunction):
     __slots__ = ()
 
     def __new__(cls, arg):
-         if isinstance(arg, LiteralString):
-             return LiteralInteger(len(arg.python_value))
-         elif isinstance(arg.class_type, StringType):
-             return super().__new__(cls)
-         else:
-             return arg.shape[0]
+        if isinstance(arg, LiteralString):
+            return LiteralInteger(len(arg.python_value))
+        elif isinstance(arg.class_type, StringType):
+            return super().__new__(cls)
+        else:
+            return arg.shape[0]
 
     def __init__(self, arg):
         super().__init__(arg)
