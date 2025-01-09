@@ -793,7 +793,7 @@ def test_classes( test_file , language):
 
 def test_class_magic(language):
     pyccel_test("scripts/classes/class_magic.py", language=language,
-            output_dtype = [int]*6 + [bool]*2)
+            output_dtype = [int]*6 + [bool]*2 + [int])
 
 def test_tuples_in_classes(language):
     test_file = "scripts/classes/tuples_in_classes.py"
