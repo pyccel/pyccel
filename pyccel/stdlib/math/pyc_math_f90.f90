@@ -421,4 +421,29 @@ pure function pyc_bankers_round_int(arg, ndigits) result(rnd)
 
 end function pyc_bankers_round_int
 
+pure integer(kind=1) function py_floor_div_i8(x, y) result(res)
+  implicit none
+  integer(kind=1), intent(in) :: x, y
+  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. (x < 0) .neqv. (y < 0))
+end function py_floor_div_i8
+
+pure integer(kind=2) function py_floor_div_i16(x, y) result(res)
+  implicit none
+  integer(kind=2), intent(in) :: x, y
+  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. (x < 0) .neqv. (y < 0))
+end function py_floor_div_i16
+
+pure integer(kind=4) function py_floor_div_i32(x, y) result(res)
+  implicit none
+  integer(kind=4), intent(in) :: x, y
+  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. (x < 0) .neqv. (y < 0))
+end function py_floor_div_i32
+
+pure integer(kind=8) function py_floor_div_i64(x, y) result(res)
+  implicit none
+  integer(kind=8), intent(in) :: x, y
+  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. (x < 0) .neqv. (y < 0))
+end function py_floor_div_i64
+
+
 end module pyc_math_f90

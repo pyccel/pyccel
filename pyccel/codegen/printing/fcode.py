@@ -3083,19 +3083,12 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PyccelFloorDiv(self, expr):
-
-        code     = self._print(expr.args[0])
-        adtype   = expr.args[0].dtype.primitive_type
-        is_float = isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType)
-        for b in expr.args[1:]:
-            bdtype    = b.dtype.primitive_type
-            if all(isinstance(dtype, PrimitiveIntegerType) for dtype in (adtype, bdtype)):
-                b = NumpyFloat(b)
-            c = self._print(b)
-            adtype = bdtype
-            code = 'FLOOR({}/{},{})'.format(code, c, self.print_kind(expr))
-            if is_float:
-                code = 'real({}, {})'.format(code, self.print_kind(expr))
+        if all(isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) for arg in expr.args): 
+            self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            return f'py_floor_div_{self.print_kind(expr)}({self._print(expr.args[0])},{self._print(expr.args[1])})'
+        a = self._print(expr.args[0])
+        b = self._print(expr.args[1])
+        code = f'real(FLOOR({a} / {b}, {self.print_kind(expr)}))'
         return code
 
     def _print_PyccelRShift(self, expr):
