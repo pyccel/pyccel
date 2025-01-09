@@ -21,7 +21,7 @@ from .datatypes import PrimitiveBooleanType, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
-from .datatypes import DictType, VoidType, TypeAlias
+from .datatypes import DictType, VoidType, TypeAlias, StringType
 from .internals import PyccelFunction, Slice, PyccelArrayShapeElement, Iterable
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
@@ -725,8 +725,13 @@ class PythonLen(PyccelFunction):
     def __new__(cls, arg):
         if isinstance(arg, LiteralString):
             return LiteralInteger(len(arg.python_value))
+        elif isinstance(arg.class_type, StringType):
+            return super().__new__(cls)
         else:
             return arg.shape[0]
+
+    def __init__(self, arg):
+        super().__init__(arg)
 
 #==============================================================================
 class PythonList(TypedAstNode):
