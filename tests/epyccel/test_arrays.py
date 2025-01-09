@@ -3826,7 +3826,14 @@ def test_arrs_uncertain_shape_1(language):
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
-
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Bad unravelling. See #2042"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python)
+    ]
+)
 def test_arrs_2d_similar_shapes_0(language):
     f1 = arrays.arrs_2d_similar_shapes_0
     f2 = epyccel(f1, language = language)
