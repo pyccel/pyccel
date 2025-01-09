@@ -88,7 +88,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                        help='Compiler flags.')
     group.add_argument('--wrapper-flags', type=str, \
                        help='Compiler flags for the wrapper.')
-    group.add_argument('--debug', action='store_true', \
+    group.add_argument('--debug', action=argparse.BooleanOptionalAction, default=None, \
                        help='compiles the code in a debug mode.')
 
     group.add_argument('--include',

@@ -54,7 +54,7 @@ def execute_pyccel(fname, *,
                    libdirs       = (),
                    modules       = (),
                    libs          = (),
-                   debug         = False,
+                   debug         = None,
                    accelerators  = (),
                    output_name   = None,
                    compiler_export_file = None,
@@ -101,8 +101,9 @@ def execute_pyccel(fname, *,
     libs : list, optional
         List of required libraries.
     debug : bool, optional
-        Indicates whether the file should be compiled in debug mode. Default is False.
-        (Currently, this only implies that the flag -fcheck=bounds is added.).
+        Indicates whether the file should be compiled in debug mode.
+        The default value is taken from the environment variable DEBUG.
+        If no such environment variable exists then the default is False.
     accelerators : iterable, optional
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
     output_name : str, optional
@@ -161,6 +162,10 @@ def execute_pyccel(fname, *,
         folder = pymod_dirpath
     else:
         folder = os.path.abspath(folder)
+
+    # Define default debug mode
+    if debug is None:
+        debug = bool(os.environ.get('DEBUG', False))
 
     # Define directory name and path for pyccel & cpython build
     pyccel_dirname = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
