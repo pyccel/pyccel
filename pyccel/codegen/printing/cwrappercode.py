@@ -285,7 +285,8 @@ class CWrapperCodePrinter(CCodePrinter):
                     "};\n")
             sig_methods = c.methods + (c.new_func,) + tuple(f for i in c.interfaces for f in i.functions) + \
                           tuple(i.interface_func for i in c.interfaces) + \
-                          tuple(getset for p in c.properties for getset in (p.getter, p.setter) if getset)
+                          tuple(getset for p in c.properties for getset in (p.getter, p.setter) if getset) + \
+                          c.number_magic_methods
             function_signatures += '\n'+''.join(self.function_signature(f)+';\n' for f in sig_methods)
             macro_defs += f'#define {type_name} (*(PyTypeObject*){API_var.name}[{i}])\n'
 
@@ -395,7 +396,7 @@ class CWrapperCodePrinter(CCodePrinter):
         getters = tuple(p.getter for p in expr.properties)
         setters = tuple(p.setter for p in expr.properties if p.setter)
         print_methods = expr.methods + (expr.new_func,) + expr.interfaces + \
-                         getters + setters
+                         expr.number_magic_methods + getters + setters
         functions = '\n'.join(self._print(f) for f in print_methods)
         init_string = ''
         del_string = ''
@@ -434,6 +435,44 @@ class CWrapperCodePrinter(CCodePrinter):
                                      '},\n')
                                      for name, (wrapper_name, doc_string) in funcs.items())
 
+        number_magic_method_name = self.scope.get_new_name(f'{expr.name}_number_methods')
+        number_magic_methods = {self.get_python_name(original_scope, f.original_function): f for f in expr.number_magic_methods}
+
+        number_magic_methods_def = f"static PyNumberMethods {number_magic_method_name} = {{\n"
+        if '__add__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_add = (binaryfunc){number_magic_methods['__add__'].name},\n"
+        if '__sub__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_subtract = (binaryfunc){number_magic_methods['__sub__'].name},\n"
+        if '__mul__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_multiply = (binaryfunc){number_magic_methods['__mul__'].name},\n"
+        if '__truediv__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_true_divide = (binaryfunc){number_magic_methods['__truediv__'].name},\n"
+        if '__lshift__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_lshift = (binaryfunc){number_magic_methods['__lshift__'].name},\n"
+        if '__rshift__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_rshift = (binaryfunc){number_magic_methods['__rshift__'].name},\n"
+        if '__and__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_and = (binaryfunc){number_magic_methods['__and__'].name},\n"
+        if '__or__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_or = (binaryfunc){number_magic_methods['__or__'].name},\n"
+        if '__iadd__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_add = (binaryfunc){number_magic_methods['__iadd__'].name},\n"
+        if '__isub__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_subtract = (binaryfunc){number_magic_methods['__isub__'].name},\n"
+        if '__imul__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_multiply = (binaryfunc){number_magic_methods['__imul__'].name},\n"
+        if '__itruediv__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_true_divide = (binaryfunc){number_magic_methods['__itruediv__'].name},\n"
+        if '__ilshift__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_lshift = (binaryfunc){number_magic_methods['__ilshift__'].name},\n"
+        if '__irshift__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_rshift = (binaryfunc){number_magic_methods['__irshift__'].name},\n"
+        if '__iand__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_and = (binaryfunc){number_magic_methods['__iand__'].name},\n"
+        if '__ior__' in number_magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_or = (binaryfunc){number_magic_methods['__ior__'].name},\n"
+        number_magic_methods_def += '};\n'
+
         method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
                         f'{method_def_funcs}'
@@ -448,6 +487,7 @@ class CWrapperCodePrinter(CCodePrinter):
         type_code = (f"static PyTypeObject {type_name} = {{\n"
                 "    PyVarObject_HEAD_INIT(NULL, 0)\n"
                 f"    .tp_name = \"{self._module_name}.{name}\",\n"
+                f"    .tp_as_number = &{number_magic_method_name},\n"
                 f"    .tp_doc = PyDoc_STR({docstring}),\n"
                 f"    .tp_basicsize = sizeof(struct {struct_name}),\n"
                  "    .tp_itemsize = 0,\n"
@@ -458,7 +498,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 f"    .tp_getset = {property_def_name},\n"
                 "};\n")
 
-        return '\n'.join((method_def, property_def, type_code, functions))
+        return '\n'.join((method_def, number_magic_methods_def, property_def, type_code, functions))
 
     def _print_PyModInitFunc(self, expr):
         decs = ''.join(self._print(d) for d in expr.declarations)

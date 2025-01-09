@@ -199,11 +199,11 @@ numpy_byte_type         = Variable(CNativeInt(),  name = 'NPY_BYTE')
 numpy_ubyte_type        = Variable(CNativeInt(),  name = 'NPY_UBYTE')
 numpy_short_type        = Variable(CNativeInt(),  name = 'NPY_SHORT')
 numpy_ushort_type       = Variable(CNativeInt(),  name = 'NPY_USHORT')
-numpy_int_type          = Variable(CNativeInt(),  name = 'NPY_INT32')
+numpy_int32_type        = Variable(CNativeInt(),  name = 'NPY_INT32')
 numpy_uint_type         = Variable(CNativeInt(),  name = 'NPY_UINT')
 numpy_long_type         = Variable(CNativeInt(),  name = 'NPY_LONG')
 numpy_ulong_type        = Variable(CNativeInt(),  name = 'NPY_ULONG')
-numpy_longlong_type     = Variable(CNativeInt(),  name = 'NPY_INT64')
+numpy_int64_type        = Variable(CNativeInt(),  name = 'NPY_INT64')
 numpy_ulonglong_type    = Variable(CNativeInt(),  name = 'NPY_ULONGLONG')
 numpy_float_type        = Variable(CNativeInt(),  name = 'NPY_FLOAT')
 numpy_double_type       = Variable(CNativeInt(),  name = 'NPY_DOUBLE')
@@ -212,29 +212,11 @@ numpy_cfloat_type       = Variable(CNativeInt(),  name = 'NPY_CFLOAT')
 numpy_cdouble_type      = Variable(CNativeInt(),  name = 'NPY_CDOUBLE')
 numpy_clongdouble_type  = Variable(CNativeInt(),  name = 'NPY_CLONGDOUBLE')
 
-numpy_num_to_type = {0 : numpy_bool_type,
-                     1 : numpy_byte_type,
-                     2 : numpy_ubyte_type,
-                     3 : numpy_short_type,
-                     4 : numpy_ushort_type,
-                     5 : numpy_int_type,
-                     6 : numpy_uint_type,
-                     7 : numpy_long_type,
-                     8 : numpy_ulong_type,
-                     9 : numpy_longlong_type,
-                    10 : numpy_ulonglong_type,
-                    11 : numpy_float_type,
-                    12 : numpy_double_type,
-                    13 : numpy_longdouble_type,
-                    14 : numpy_cfloat_type,
-                    15 : numpy_cdouble_type,
-                    16 : numpy_clongdouble_type}
-
 numpy_dtype_registry = {PythonNativeBool()    : numpy_bool_type,
                         NumpyInt8Type()       : numpy_byte_type,
-                        NumpyInt16Type()      : numpy_ubyte_type,
-                        NumpyInt32Type()      : numpy_ushort_type,
-                        NumpyInt64Type()      : numpy_ulong_type,
+                        NumpyInt16Type()      : numpy_short_type,
+                        NumpyInt32Type()      : numpy_int32_type,
+                        NumpyInt64Type()      : numpy_int64_type,
                         NumpyFloat32Type()    : numpy_float_type,
                         NumpyFloat64Type()    : numpy_double_type,
                         NumpyFloat128Type()   : numpy_longdouble_type,

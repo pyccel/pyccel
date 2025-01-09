@@ -5,8 +5,7 @@ a2 = sum(i for i in a0)
 a3 = max(i if i>k else k for i in range(5) for k in range(10))
 a4 = min(k if i>k else 0 if i==k else i for i in range(5) for k in range(10))
 
-#$ header function incr(int)
-def incr(x):
+def incr(x : int):
     y = x + 1
     return y
 from numpy import ones

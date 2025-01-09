@@ -119,62 +119,62 @@ def test_copy_complex(language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_remove_complex(python_only_language):
+def test_remove_complex(language):
     def remove_complex():
         se = {1j, 3j, 8j}
         se.remove(3j)
         return se
-    epyccel_remove = epyccel(remove_complex, language = python_only_language)
+    epyccel_remove = epyccel(remove_complex, language = language)
     pyccel_result = epyccel_remove()
     python_result = remove_complex()
     assert python_result == pyccel_result
 
-def test_remove_int(python_only_language):
+def test_remove_int(language):
     def remove_int():
         se = {2, 4, 9}
         se.remove(4)
         return se
-    epyccel_remove = epyccel(remove_int, language = python_only_language)
+    epyccel_remove = epyccel(remove_int, language = language)
     pyccel_result = epyccel_remove()
     python_result = remove_int()
     assert python_result == pyccel_result
 
-def test_remove_float(python_only_language):
+def test_remove_float(language):
     def remove_float():
         se = {5.7, 2.4, 8.1}
         se.remove(8.1)
         return se
-    epyccel_remove = epyccel(remove_float, language = python_only_language)
+    epyccel_remove = epyccel(remove_float, language = language)
     pyccel_result = epyccel_remove()
     python_result = remove_float()
     assert python_result == pyccel_result
 
-def test_Discard_int(python_only_language):
+def test_Discard_int(language):
     def Discard_int():
         se = {2.7, 4.3, 9.2}
         se.discard(4.3)
         return se
-    epyccel_remove = epyccel(Discard_int, language = python_only_language)
+    epyccel_remove = epyccel(Discard_int, language = language)
     pyccel_result = epyccel_remove()
     python_result = Discard_int()
     assert python_result == pyccel_result
 
-def test_Discard_complex(python_only_language):
+def test_Discard_complex(language):
     def Discard_complex():
         se = {2j, 5j, 3j, 7j}
         se.discard(5j)
         return se
-    epyccel_remove = epyccel(Discard_complex, language = python_only_language)
+    epyccel_remove = epyccel(Discard_complex, language = language)
     pyccel_result = epyccel_remove()
     python_result = Discard_complex()
     assert python_result == pyccel_result
 
-def test_Discard_wrong_arg(python_only_language):
+def test_Discard_wrong_arg(language):
     def Discard_wrong_arg():
         se = {4.7, 1.3, 8.2}
         se.discard(8.6)
         return se
-    epyccel_remove = epyccel(Discard_wrong_arg, language = python_only_language)
+    epyccel_remove = epyccel(Discard_wrong_arg, language = language)
     pyccel_result = epyccel_remove()
     python_result = Discard_wrong_arg()
     assert python_result == pyccel_result
@@ -438,33 +438,33 @@ def test_set_union_2_args(language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_set_intersection_int(python_only_language):
+def test_set_intersection_int(language):
     def intersection_int():
         a = {1,2,3}
         b = {2,3,4}
         c = a.intersection(b)
         return len(c), c.pop(), c.pop()
 
-    epyccel_func = epyccel(intersection_int, language = python_only_language)
+    epyccel_func = epyccel(intersection_int, language = language)
     pyccel_result = epyccel_func()
     python_result = intersection_int()
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_set_intersection_no_args(python_only_language):
+def test_set_intersection_no_args(language):
     def intersection_int():
         a = {1,2,3,4}
         c = a.intersection()
         a.add(5)
         return len(c), c.pop(), c.pop(), c.pop(), c.pop()
 
-    epyccel_func = epyccel(intersection_int, language = python_only_language)
+    epyccel_func = epyccel(intersection_int, language = language)
     pyccel_result = epyccel_func()
     python_result = intersection_int()
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_set_intersection_2_args(python_only_language):
+def test_set_intersection_2_args(language):
     def intersection_int():
         a = {1,2,3,4}
         b = {5,6,7,2,1,3}
@@ -472,7 +472,7 @@ def test_set_intersection_2_args(python_only_language):
         d = a.intersection(b, c)
         return len(d), d.pop(), d.pop(), d.pop()
 
-    epyccel_func = epyccel(intersection_int, language = python_only_language)
+    epyccel_func = epyccel(intersection_int, language = language)
     pyccel_result = epyccel_func()
     python_result = intersection_int()
     assert python_result[0] == pyccel_result[0]
@@ -538,52 +538,53 @@ def test_set_union_operator(language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_temporary_set_intersection(python_only_language):
+def test_temporary_set_intersection(language):
     def intersection_int():
         a = {1,2}
         b = {2}
         d = a.intersection(b).pop()
         return d
 
-    epyccel_func = epyccel(intersection_int, language = python_only_language)
+    epyccel_func = epyccel(intersection_int, language = language)
     pyccel_result = epyccel_func()
     python_result = intersection_int()
     assert python_result == pyccel_result
 
-def test_set_intersection_list(python_only_language):
-    def intersection_list():
-        a = {1.2, 2.3, 5.0}
-        b = [1.2, 5.0, 4.0]
-        d = a.intersection(b)
-        return len(d), d.pop(), d.pop()
-
-    epyccel_func = epyccel(intersection_list, language = python_only_language)
-    pyccel_result = epyccel_func()
-    python_result = intersection_list()
-    assert python_result[0] == pyccel_result[0]
-    assert set(python_result[1:]) == set(pyccel_result[1:])
-
-def test_set_intersection_tuple(python_only_language):
-    def intersection_tuple():
-        a = {True}
-        b = (False, True)
-        d = a.intersection(b)
-        return len(d), d.pop()
-
-    epyccel_func = epyccel(intersection_tuple, language = python_only_language)
-    pyccel_result = epyccel_func()
-    python_result = intersection_tuple()
-    assert python_result[0] == pyccel_result[0]
-    assert set(python_result[1:]) == set(pyccel_result[1:])
-
-def test_set_intersection_operator(python_only_language):
+def test_set_intersection_operator(language):
     def intersection_int():
         a = {1,2,3,4,8}
         b = {5,2,3,7,8}
         c = a & b
         return len(c), c.pop(), c.pop(), c.pop()
 
-    epyccel_func = epyccel(intersection_int, language = python_only_language)
+    epyccel_func = epyccel(intersection_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = intersection_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_intersection_update(language):
+    def intersection_int():
+        a = {1,2,3,4,8}
+        b = {5,2,3,7,8}
+        a.intersection_update(b)
+        return len(a), a.pop(), a.pop(), a.pop()
+
+    epyccel_func = epyccel(intersection_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = intersection_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_intersection_multiple_update(language):
+    def intersection_int():
+        a = {1,2,3,4,8}
+        b = {5,2,3,7,8}
+        c = {10,2,20}
+        a.intersection_update(b, c)
+        return len(a), a.pop()
+
+    epyccel_func = epyccel(intersection_int, language = language)
     pyccel_result = epyccel_func()
     python_result = intersection_int()
     assert python_result[0] == pyccel_result[0]
@@ -613,14 +614,14 @@ def test_set_contains(language):
     python_result = union_int()
     assert python_result == pyccel_result
 
-def test_set_intersection_augoperator(python_only_language):
+def test_set_intersection_augoperator(language):
     def intersection_int():
         a = {1,2,3,4}
         b = {2,3,4}
         a &= b
         return len(a), a.pop(), a.pop(), a.pop()
 
-    epyccel_func = epyccel(intersection_int, language = python_only_language)
+    epyccel_func = epyccel(intersection_int, language = language)
     pyccel_result = epyccel_func()
     python_result = intersection_int()
     assert python_result[0] == pyccel_result[0]
@@ -698,14 +699,12 @@ def test_set_arg(stc_language):
     set_arg(arg_pyt, n)
     assert arg_pyc == arg_pyt
 
-def test_set_return(stc_language):
+def test_set_return(language):
     def set_return():
         a = {1,2,3,4,5}
-        b = {4,5,6}
-        c = a.union(b) # Use union to avoid #2084
-        return c
+        return a
 
-    epyccel_func = epyccel(set_return, language = stc_language)
+    epyccel_func = epyccel(set_return, language = language)
     pyccel_result = epyccel_func()
     python_result = set_return()
     assert python_result == pyccel_result
