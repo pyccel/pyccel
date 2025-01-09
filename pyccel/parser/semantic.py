@@ -3652,7 +3652,7 @@ class SemanticParser(BasicParser):
             test_node = None
         if test_node:
             lhs.remove_user_node(test_node, invalidate = False)
-            if rhs.current_user_node is test_node:
+            if test_node in rhs.get_all_user_nodes():
                 rhs.remove_user_node(test_node, invalidate = False)
             else:
                 assert isinstance(rhs.current_user_node, PyccelAssociativeParenthesis)
