@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
+from packaging.version import Version
 import sys
 import pytest
 from numpy.random import rand, randn, uniform
@@ -6312,7 +6313,22 @@ def test_reshape(language):
         c = array(b)
         return c
 
-    for func in (reshape_var, reshape_var_order, reshape_expr, flatten):
+    funcs_to_test = (reshape_var, reshape_var_order, reshape_expr, flatten)
+
+    if Version(np.__version__) >= Version("2.1.0"):
+        def reshape_var_copy(a : 'int[:,:,:]'):
+            from numpy import array
+            m, n, p = a.shape
+            tmp_a = array(a)
+            b = tmp_a.reshape((m*n, p), copy=True)
+            b[0,0] = 123
+            a[:] = tmp_a
+            c = array(b)
+            return c
+
+        funcs_to_test += (reshape_var_copy,)
+
+    for func in funcs_to_test:
         print(func.__name__)
         epyc_f = epyccel(func, language=language)
         x = np.reshape(np.arange(60), (3,4,5))
