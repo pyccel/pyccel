@@ -30,7 +30,7 @@ runs:
     - name: Setup debug state
       if: github.event_name == 'workflow_dispatch'
       run: |
-        echo "DEBUG=1" >> $GITHUB_ENV
+        echo "PYCCEL_DEBUG_MODE=1" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
     - name: Test C translation

@@ -102,7 +102,7 @@ def execute_pyccel(fname, *,
         List of required libraries.
     debug : bool, optional
         Indicates whether the file should be compiled in debug mode.
-        The default value is taken from the environment variable DEBUG.
+        The default value is taken from the environment variable PYCCEL_DEBUG_MODE.
         If no such environment variable exists then the default is False.
     accelerators : iterable, optional
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
@@ -165,7 +165,7 @@ def execute_pyccel(fname, *,
 
     # Define default debug mode
     if debug is None:
-        debug = bool(os.environ.get('DEBUG', False))
+        debug = bool(os.environ.get('PYCCEL_DEBUG_MODE', False))
 
     # Define directory name and path for pyccel & cpython build
     pyccel_dirname = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
