@@ -2719,9 +2719,14 @@ class NumpyReshape(PyccelFunction):
         rank = len(self._shape)
         order = NumpyNewArray._process_order(rank, order)
         self._class_type = NumpyNDArrayType(a.dtype, rank, order)
-        self._is_alias = not a.is_alias or copy is LiteralFalse()
-        if order and order != a.order:
+        if copy == LiteralFalse():
+            self._is_alias = True
+        elif copy == LiteralTrue():
             self._is_alias = False
+        else:
+            self._is_alias = not a.is_alias
+            if order and order != a.order:
+                self._is_alias = False
         self._copy = copy
         super().__init__(a)
 
