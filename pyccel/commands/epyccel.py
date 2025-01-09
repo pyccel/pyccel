@@ -153,8 +153,9 @@ def epyccel_seq(function_or_module, *,
         Print additional information (default: False).
     time_execution : bool
         Time the execution of Pyccel's internal stages.
-    debug : bool, optional
-        Enable debug mode.
+    debug : None, optional
+        Enable debug mode. The default value is taken from the environment variable DEBUG.
+        If no such environment variable exists then the default is False.
     includes : tuple, optional
         Additional include directories for the compiler.
     libdirs : tuple, optional
@@ -196,6 +197,9 @@ def epyccel_seq(function_or_module, *,
         folder = dirpath
     else:
         folder = os.path.abspath(folder)
+
+    if debug is None:
+        debug = bool(os.environ.get('DEBUG', False))
 
     # Define directory name and path for epyccel files
     epyccel_dirname = '__epyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
