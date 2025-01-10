@@ -3815,6 +3815,16 @@ def test_arrs_similar_shapes_1(language):
     check_array_equal(f1(), f2())
 
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Bad unravelling. See #2042"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="Bad unravelling. See #2042"),
+            pytest.mark.fortran]),
+        pytest.param("python", marks = pytest.mark.python)
+    ]
+)
 def test_arrs_different_shapes_0(language):
     f1 = arrays.arrs_different_shapes_0
     f2 = epyccel(f1, language = language)
