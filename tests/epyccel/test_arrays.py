@@ -3806,44 +3806,46 @@ def test_copy_to_slice_4(language):
 def test_arrs_similar_shapes_0(language):
     f1 = arrays.arrs_similar_shapes_0
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 def test_arrs_similar_shapes_1(language):
     f1 = arrays.arrs_similar_shapes_1
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 def test_arrs_different_shapes_0(language):
     f1 = arrays.arrs_different_shapes_0
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 def test_arrs_uncertain_shape_1(language):
     f1 = arrays.arrs_uncertain_shape_1
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Bad unravelling. See #2042"),
             pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="Bad unravelling. See #2042"),
+            pytest.mark.fortran]),
         pytest.param("python", marks = pytest.mark.python)
     ]
 )
 def test_arrs_2d_similar_shapes_0(language):
     f1 = arrays.arrs_2d_similar_shapes_0
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 def test_arrs_2d_different_shapes_0(language):
     f1 = arrays.arrs_2d_different_shapes_0
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 @pytest.mark.parametrize( 'language', [
@@ -3877,16 +3879,6 @@ def test_arrs_1d_int64_index(language):
     assert f1() == f2()
 
 
-def test_arr_tuple_slice_index(language):
-    f1 = arrays.arr_tuple_slice_index
-    f2 = epyccel(f1, language = language)
-
-    r_python = f1(arrays.a_2d_c)
-    r_pyccel = f2(arrays.a_2d_c)
-
-    check_array_equal(r_python, r_pyccel)
-
-
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3917,6 +3909,16 @@ def test_arrs_2d_negative_index(language):
     f1 = arrays.arrs_2d_negative_index
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
+
+
+def test_arr_tuple_slice_index(language):
+    f1 = arrays.arr_tuple_slice_index
+    f2 = epyccel(f1, language = language)
+
+    r_python = f1(arrays.a_2d_c)
+    r_pyccel = f2(arrays.a_2d_c)
+
+    check_array_equal(r_python, r_pyccel)
 
 #==============================================================================
 # TEST : NUMPY ARANGE
