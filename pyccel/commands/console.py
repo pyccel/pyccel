@@ -93,7 +93,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                            help='Compiles the code with debug flags.')
     else:
         group.add_argument('--debug', action=argparse.BooleanOptionalAction, default=None, \
-                           help='Compiles the code with debug flags.')
+                           help='Compiles the code with debug flags.') # pylint: disable=no-member
 
     group.add_argument('--include',
                         type=str,
