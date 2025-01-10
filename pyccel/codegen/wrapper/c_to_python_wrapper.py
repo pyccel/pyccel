@@ -35,7 +35,8 @@ from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_New
 from pyccel.ast.cwrapper      import PyTuple_GetItem, PyTuple_SetItem
 from pyccel.ast.cwrapper      import PySet_New, PySet_Add
 from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PySet_GetIter, PySet_Clear
-from pyccel.ast.cwrapper      import PyIter_Next
+from pyccel.ast.cwrapper      import PyIter_Next, PyCapsule_NewArray
+from pyccel.ast.cwrapper      import capsule_cleanup_bind_c, capsule_cleanup_c
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
@@ -45,7 +46,7 @@ from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInt
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
 from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type
 from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array, PyccelPyArrayObject
-from pyccel.ast.numpy_wrapper import PyArray_DATA
+from pyccel.ast.numpy_wrapper import PyArray_DATA, PyArray_SetBaseObject
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, to_pyarray
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
@@ -55,6 +56,7 @@ from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, Pyc
 from pyccel.ast.operators     import PyccelLt, IfTernaryOperator, PyccelAnd
 from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
 from pyccel.parser.scope      import Scope
+from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
 from .wrapper                 import Wrapper
@@ -2694,6 +2696,7 @@ class CToPythonWrapper(Wrapper):
         """
         name = orig_var.name
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        release_memory = False
         if is_bind_c:
             # Result of calling the bind-c function
             data_var = Variable(VoidType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
@@ -2704,18 +2707,11 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(data_var)
             self.scope.insert_variable(shape_var)
 
-            release_memory = False
-            if funcdef:
-                arg_targets = funcdef.result_pointer_map.get(orig_var, ())
-                release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
-
             body = [AliasAssign(py_res, to_pyarray(
                              LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
-                             convert_to_literal(orig_var.order != 'F'),
-                             convert_to_literal(release_memory)))]
-            if release_memory:
-                capsule_variable = self.get_new_PyObject(f'{orig_var_name}_base')
-                body.append(Assign(capsule_variable, PyCapsule_NewArray(data_var, Nil(), array_free[orig_var.rank])))
+                             convert_to_literal(orig_var.order != 'F')))]
+
+            capsule_cleanup = capsule_cleanup_bind_c
 
             shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
             c_result_vars = [ObjectAddress(data_var)]+shape_vars
@@ -2728,8 +2724,21 @@ class CToPythonWrapper(Wrapper):
                     Deallocate(c_res)]
             c_result_vars = [c_res]
 
+            capsule_cleanup = capsule_cleanup_c
+            # With STC:
+            #data_var = DottedVariable(VoidType(), 'data', memory_handling='alias', lhs=c_res)
+            data_var = DottedVariable(VoidType(), CCodePrinter.ndarray_type_registry[orig_var.dtype], memory_handling='alias', lhs=c_res)
+
         if funcdef:
+            arg_targets = funcdef.result_pointer_map.get(orig_var, ())
+            release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
             body.extend(self.connect_pointer_targets(orig_var, py_res, funcdef, is_bind_c))
+
+        if release_memory:
+            capsule_variable = self.get_new_PyObject(f'{name}_base')
+            body.append(AliasAssign(capsule_variable, PyCapsule_NewArray(data_var, Nil(), capsule_cleanup)))
+            set_base = PyArray_SetBaseObject(ObjectAddress(PointerCast(py_res, PyArray_SetBaseObject.arguments[0].var)), capsule_variable)
+            body.append(If(IfSection(PyccelEq(set_base, PyccelUnarySub(LiteralInteger(1))), [Return([self._error_exit_code])])))
 
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 

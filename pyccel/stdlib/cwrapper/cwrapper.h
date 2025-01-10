@@ -28,7 +28,8 @@
 /*
  * A function which can be passed to a PyCapsule in order to free data that was created by Pyccel.
  */
-void capsule_cleanup(PyObject *capsule);
+void capsule_cleanup_c(PyObject *capsule);
+void capsule_cleanup_bind_c(PyObject *capsule);
 
 /*
  * Functions : Cast functions
@@ -49,9 +50,9 @@ void capsule_cleanup(PyObject *capsule);
  * release_memory : If true a Capsule is created to automatically free the data when the created PyArrayObject goes out of scope.
  */
 #if defined(_WIN32) && (PyArray_RUNTIME_VERSION >= NPY_2_0_API_VERSION)
-PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order, bool release_memory);
+PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order);
 #else
-PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order, bool release_memory);
+PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order);
 #endif
 
 /*

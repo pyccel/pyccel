@@ -157,18 +157,20 @@ void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int6
     }
 }
 
-void capsule_cleanup(PyObject *capsule) {
+void capsule_cleanup_c(PyObject *capsule) {
     void *memory = PyCapsule_GetPointer(capsule, NULL);
-    // TODO: Correct free method. See #2001
-#ifndef __INTEL_LLVM_COMPILER
     free(memory);
-#endif
+}
+
+void capsule_cleanup_bind_c(PyObject *capsule) {
+    void *memory = PyCapsule_GetPointer(capsule, NULL);
+    //array_free(memory);
 }
 
 #if defined(WIN32) && (PyArray_RUNTIME_VERSION >= NPY_2_0_API_VERSION)
-PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order, bool release_memory)
+PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order)
 #else
-PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order, bool release_memory)
+PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order)
 #endif
 {
     int FLAGS;
@@ -190,11 +192,6 @@ PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[]
 
     PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(typenum),
                                          nd, npy_shape, NULL, data, FLAGS, NULL);
-    if (release_memory) {
-        // Add a capsule base to ensure that memory is freed.
-        PyObject* base = PyCapsule_New(data, NULL, capsule_cleanup);
-        PyArray_SetBaseObject((PyArrayObject*)arr, base);
-    }
     return arr;
 }
 

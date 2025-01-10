@@ -1090,6 +1090,8 @@ c_to_py_registry = {
     PythonNativeComplex() : 'Complex128_to_PyComplex',
     }
 
+capsule_cleanup_c = FunctionAddress('capsule_cleanup_c', (), ())
+capsule_cleanup_bind_c = FunctionAddress('capsule_cleanup_bind_c', (), ())
 
 #-------------------------------------------------------------------
 #              errors and check functions

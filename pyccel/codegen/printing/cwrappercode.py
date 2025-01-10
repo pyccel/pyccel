@@ -6,6 +6,7 @@
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
+from pyccel.ast.basic      import TypedAstNode
 from pyccel.ast.bind_c     import BindCPointer
 from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
 from pyccel.ast.c_concepts import CStackArray
@@ -86,7 +87,7 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         CCodePrinter.is_c_pointer : The extended function.
         """
-        if isinstance(a.class_type, (WrapperCustomDataType, BindCPointer, CStackArray)):
+        if isinstance(a, TypedAstNode) and isinstance(a.class_type, (WrapperCustomDataType, BindCPointer, CStackArray)):
             return True
         elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create, LiteralString)):
             return True
