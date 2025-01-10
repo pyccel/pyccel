@@ -56,6 +56,7 @@ All notable changes to this project will be documented in this file.
 -   #738 : Add support for homogeneous tuples with scalar elements as arguments.
 -   Add a warning about containers in lists.
 -   #2016 : Add support for translating arithmetic magic methods.
+-   #2106 : Add support for `__len__` magic method.
 -   #1980 : Extend The C support for min and max to more than two variables
 -   #2081 : Add support for multi operator expressions
 -   #2061 : Add C support for string declarations.
@@ -101,6 +102,7 @@ All notable changes to this project will be documented in this file.
 -   #2111 : Fix declaration of class attributes with name conflicts using type annotations.
 -   #2115 : Fix integer handling with NumPy 2.0 on Windows.
 -   Fix handling of union `typing.TypeAlias` objects as type hints.
+-   #2141 : Fix error when removing `test_node`
 
 ### Changed
 
