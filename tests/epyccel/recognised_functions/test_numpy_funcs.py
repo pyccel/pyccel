@@ -5511,10 +5511,10 @@ def test_numpy_linspace_scalar(language):
 
     epyccel_func1 = epyccel(test_linspace, language=language)
     epyccel_func2 = epyccel(test_linspace2, language=language)
-    assert np.allclose(epyccel_func1(np.complex64(3+6j), np.complex64(5+1j)), test_linspace(np.complex64(3+6j), np.complex64(5+1j))), rtol=RTOL*10, atol=ATOL*10)
-    assert np.allclose(epyccel_func1(np.complex64(-3+6j), np.complex64(5-1j)), test_linspace(np.complex64(-3+6j), np.complex64(5-1j))), rtol=RTOL*10, atol=ATOL*10)
-    assert np.allclose(epyccel_func2(np.complex128(3+6j), np.complex128(5+1j)), test_linspace(np.complex128(3+6j), np.complex128(5+1j))), rtol=RTOL*10, atol=ATOL*10)
-    assert np.allclose(epyccel_func2(np.complex128(-3+6j), np.complex128(5-1j)), test_linspace(np.complex128(-3+6j), np.complex128(5-1j))), rtol=RTOL*10, atol=ATOL*10)
+    assert np.allclose(epyccel_func1(np.complex64(3+6j), np.complex64(5+1j)), test_linspace(np.complex64(3+6j), np.complex64(5+1j)), rtol=RTOL*10, atol=ATOL*10)
+    assert np.allclose(epyccel_func1(np.complex64(-3+6j), np.complex64(5-1j)), test_linspace(np.complex64(-3+6j), np.complex64(5-1j)), rtol=RTOL*10, atol=ATOL*10)
+    assert np.allclose(epyccel_func2(np.complex128(3+6j), np.complex128(5+1j)), test_linspace(np.complex128(3+6j), np.complex128(5+1j)), rtol=RTOL*10, atol=ATOL*10)
+    assert np.allclose(epyccel_func2(np.complex128(-3+6j), np.complex128(5-1j)), test_linspace(np.complex128(-3+6j), np.complex128(5-1j)), rtol=RTOL*10, atol=ATOL*10)
 
     res_pyc = epyccel_func2(np.complex128(3+6j), np.complex128(5+1j))
     res_pyt = test_linspace(np.complex128(3+6j), np.complex128(5+1j))
