@@ -104,6 +104,7 @@ All notable changes to this project will be documented in this file.
 -   #2141 : Fix error when removing `test_node`
 -   #2112 : Improve floor division
 
+
 ### Changed
 
 -   #1920 : Add a maximum version for NumPy.
