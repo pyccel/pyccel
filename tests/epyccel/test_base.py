@@ -179,7 +179,7 @@ def test_pass2_if(language):
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
             pytest.mark.skip(reason="Intel does not use lazy evaluation. See #1668"),
-            pytest.mark.fortran])
+            pytest.mark.fortran]),
         pytest.param("python", marks = pytest.mark.python),
     ])
 def test_use_optional(language):
