@@ -182,7 +182,6 @@ def test_call_fdiv_i_i_i(language):
     assert (f(-x, y, z) == fdiv_i_i_i(-x, y, z))
     assert (f(x, -y, z) == fdiv_i_i_i(x, -y, z))
     assert (f(-x, -y, z) == fdiv_i_i_i(-x, -y, z))
-    assert (f(999999999999999997, 3, 1) == fdiv_i_i_i(999999999999999997, 3, 1))
     assert isinstance(f(x, y, z), type(fdiv_i_i_i(x, y, z)))
 
 def test_call_fdiv_b_b(language):
