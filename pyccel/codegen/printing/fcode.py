@@ -3084,7 +3084,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelFloorDiv(self, expr):
         args = [self._print(arg) for arg in expr.args]
-        if all(isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) for arg in expr.args): 
+        if all(isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) for arg in expr.args):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             for idx, arg in enumerate(expr.args):
                 if isinstance(arg.dtype.primitive_type, PrimitiveBooleanType):
