@@ -3087,9 +3087,6 @@ class FCodePrinter(CodePrinter):
         args = [self._print(arg) for arg in new_args]
         if all(isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) for arg in expr.args):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
-            for idx, arg in enumerate(expr.args):
-                if isinstance(arg.dtype.primitive_type, PrimitiveBooleanType):
-                    args[idx] = f'logical_to_int({args[idx]})'
             return f'pyc_floor_div({args[0]},{args[1]})'
         code = f'real(FLOOR({args[0]} / {args[1]}, {self.print_kind(expr)}), {self.print_kind(expr)})'
         return code

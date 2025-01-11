@@ -429,17 +429,6 @@ pure function pyc_bankers_round_int(arg, ndigits) result(rnd)
 
 end function pyc_bankers_round_int
 
-pure integer(kind=8) function logical_to_int(logical_val) result(res)
-  implicit none
-  logical(kind=1), intent(in) :: logical_val
-  if (logical_val) then
-    res = 1_8
-  else
-    res = 0_8
-  end if
-end function logical_to_int
-
-
 elemental pure integer(kind=1) function pyc_floor_div_i8(x, y) result(res)
   implicit none
   integer(kind=1), intent(in) :: x, y
