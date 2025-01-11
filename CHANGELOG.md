@@ -16,7 +16,7 @@ All notable changes to this project will be documented in this file.
 -   #1893 : Add Python support for set initialisation with `set()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
--   #1886 : Add Python support for dict method `pop()`.
+-   #1886 : Add Python and C support for dict method `pop()`.
 -   #1887 : Add Python support for dict method `popitem()`.
 -   #1888 : Add Python support for dict method `setdefault()`.
 -   #1885 : Add Python support for dict method `get()`.

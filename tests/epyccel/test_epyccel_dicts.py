@@ -70,21 +70,31 @@ def test_dict_kwarg_init(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_pop_element(python_only_language):
+@pytest.mark.parametrize("language", (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_pop_element(language):
     def pop_element():
         a = {1:1.0, 2:2.0}
         return a.pop(1)
-    epyc_element = epyccel(pop_element, language = python_only_language)
+    epyc_element = epyccel(pop_element, language = language)
     pyccel_result = epyc_element()
     python_result = pop_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_pop_default_element(python_only_language):
+@pytest.mark.parametrize("language", (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_pop_default_element(language):
     def pop_default_element():
         a = {1:True, 2:False}
         return a.pop(3, True)
-    epyc_default_element = epyccel(pop_default_element, language = python_only_language)
+    epyc_default_element = epyccel(pop_default_element, language = language)
     pyccel_result = epyc_default_element()
     python_result = pop_default_element()
     assert isinstance(python_result, type(pyccel_result))
