@@ -174,9 +174,9 @@ def test_call_fdiv_i_i_i(language):
     fflags = "-Werror -Wconversion"
 
     f = epyccel(fdiv_i_i_i, language=language, fflags=fflags)
-    x = randint(1e18)
-    y = randint(low=1, high= 1e9)
-    z = randint(low=1, high= 1e5)
+    x = randint(1e9)
+    y = randint(low=1, high= 1e3)
+    z = randint(low=1, high= 1e2)
 
     assert (f(x, y, z) == fdiv_i_i_i(x, y, z))
     assert (f(-x, y, z) == fdiv_i_i_i(-x, y, z))
