@@ -445,16 +445,22 @@ class FortranToCWrapper(Wrapper):
 
             if not (var.is_alias or wrap_dotted):
                 # Create an array variable which can be passed to CLocFunc
-                ptr_var = Variable(NumpyNDArrayType(var.dtype, 1, None), scope.get_new_name(name+'_ptr'),
+                ptr_var = Variable(NumpyNDArrayType(var.dtype, min(1, var.rank), None), scope.get_new_name(name+'_ptr'),
                                     memory_handling='alias')
                 scope.insert_variable(ptr_var)
 
-                new_shape = (reduce(PyccelMul, result.shape),)
+                if result.shape:
+                    new_shape = (reduce(PyccelMul, result.shape),)
+                else:
+                    new_shape = ()
 
                 # Define the additional steps necessary to define and fill ptr_var
                 alloc = Allocate(ptr_var, shape=new_shape, status='unallocated')
-                if isinstance(local_var.class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
+                if isinstance(local_var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
                     copy = Assign(ptr_var, NumpyReshape(local_var, shape=PythonTuple(new_shape[0]), copy=LiteralTrue()))
+                    self._additional_exprs.extend([alloc, copy])
+                elif isinstance(local_var.class_type, CustomDataType):
+                    copy = Assign(ptr_var, local_var)
                     self._additional_exprs.extend([alloc, copy])
                 elif isinstance(local_var.class_type, (HomogeneousSetType, HomogeneousListType)):
                     iterator = VariableIterator(local_var)
