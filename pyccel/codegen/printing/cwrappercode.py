@@ -338,7 +338,8 @@ class CWrapperCodePrinter(CCodePrinter):
         decs = ''.join(self._print(d) for d in expr.declarations)
         self._in_header = False
 
-        function_defs = '\n'.join(self._print(f) for f in chain(expr.capsule_free_funcs, funcs))
+        capsule_free_function_defs = '\n'.join(self._print(f) for f in expr.capsule_free_funcs)
+        function_defs = '\n'.join(self._print(f) for f in funcs)
 
         class_defs = f"\n{sep}\n".join(self._print(c) for c in expr.classes)
 
@@ -383,7 +384,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return '\n'.join(['#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API',
                 f'#define {pymod_name.upper()}\n',
-                imports, decs, sep, class_defs, sep,
+                imports, decs, sep, capsule_free_function_defs, sep, class_defs, sep,
                 function_defs, sep, method_def, sep,
                 module_def, sep, init_func])
 
