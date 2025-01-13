@@ -8,21 +8,16 @@ import os
 import time
 
 from pyccel.ast.core                             import ModuleHeader
-from pyccel.ast.numpy_wrapper                    import get_numpy_max_acceptable_version_file
 from pyccel.codegen.printing.cwrappercode        import CWrapperCodePrinter
 from pyccel.codegen.printing.fcode               import FCodePrinter
 from pyccel.codegen.wrapper.fortran_to_c_wrapper import FortranToCWrapper
 from pyccel.codegen.wrapper.c_to_python_wrapper  import CToPythonWrapper
-from pyccel.codegen.utilities                    import recompile_object
-from pyccel.codegen.utilities                    import copy_internal_library
-from pyccel.codegen.utilities                    import internal_libs
 from pyccel.codegen.utilities                    import manage_dependencies
+from pyccel.compiling.basic                      import CompileObj
+from pyccel.errors.errors                        import Errors
 from pyccel.naming                               import name_clash_checkers
 from pyccel.parser.scope                         import Scope
 from pyccel.utilities.stage                      import PyccelStage
-from .compiling.basic                            import CompileObj
-
-from pyccel.errors.errors import Errors
 
 errors = Errors()
 
@@ -151,7 +146,6 @@ def create_shared_library(codegen,
     #---------------------------------------
     #      Print code specific cwrapper
     #---------------------------------------
-    module_old_name = codegen.ast.name
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
     Scope.name_clash_checker = name_clash_checkers['c']
     wrapper = CToPythonWrapper(base_dirpath)
