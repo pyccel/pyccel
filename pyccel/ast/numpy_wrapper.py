@@ -166,6 +166,11 @@ PyArray_SetBaseObject = FunctionDef(name   = 'PyArray_SetBaseObject',
                                     arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'arr', memory_handling='alias')),
                                                  FunctionDefArgument(Variable(PyccelPyObject(), name = 'obj', memory_handling='alias'))],
                                     results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
+# See https://numpy.org/devdocs/reference/c-api/array.html#c.PyArray_Size
+PyArray_Size = FunctionDef(name   = 'PyArray_Size',
+                                    body      = [],
+                                    arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'arr', memory_handling='alias'))],
+                                    results   = [FunctionDefResult(Variable(NumpyInt64Type(), name = 'size'))])
 
 to_pyarray = FunctionDef(name = 'to_pyarray',
                          body = [],
