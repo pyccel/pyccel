@@ -2828,16 +2828,14 @@ class CCodePrinter(CodePrinter):
 
         dict_var = self._print(ObjectAddress(target))
         key = self._print(expr.key)
-        tmp_var = self.scope.get_temporary_variable(class_type.value_type)
 
         if expr.default_value:
             default = self._print(expr.default_value)
-            pop_expr = f"{tmp_var.name} = {c_type}_pop_with_default({dict_var}, {key}, {default});"
+            pop_expr = f"{c_type}_pop_with_default({dict_var}, {key}, {default})"
         else:
-            pop_expr = f"{tmp_var.name} = {c_type}_pop({dict_var}, {key});"
-        self._additional_code += f"{pop_expr}\n"
+            pop_expr = f"{c_type}_pop({dict_var}, {key})"
 
-        return tmp_var.name
+        return pop_expr
 
     #=================== MACROS ==================
 
