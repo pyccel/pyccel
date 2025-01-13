@@ -21,7 +21,7 @@ from .builtins      import (builtin_functions_dict,
 from .cmathext      import cmath_mod
 from .datatypes     import HomogeneousTupleType, InhomogeneousTupleType, PythonNativeInt
 from .datatypes     import StringType
-from .internals     import PyccelFunction, Slice
+from .internals     import PyccelFunction, Slice, PyccelArrayShapeElement
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
 from .mathext       import math_mod
@@ -549,10 +549,10 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars,
-                    excluded_nodes = (FunctionCall, PyccelFunction))
+                    excluded_nodes = (FunctionCall, PyccelFunction, PyccelArrayShapeElement))
             line.substitute(transposed_vars + indexed_funcs, handled_funcs,
                     excluded_nodes = (FunctionCall))
-            _ = [f.substitute(variables, new_vars) for f in elemental_func_calls]
+            _ = [f.substitute(variables, new_vars, excluded_nodes = (PyccelArrayShapeElement,)) for f in elemental_func_calls]
             _ = [f.substitute(transposed_vars + indexed_funcs, handled_funcs) for f in elemental_func_calls]
 
             # Recurse through result tree to save line with lines which need
