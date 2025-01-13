@@ -15,21 +15,21 @@ from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
 from pyccel.ast.bind_c import BindCClassProperty
 from pyccel.ast.builtins import VariableIterator, PythonTuple
-from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
+from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
-from pyccel.ast.core import For, Deallocate
+from pyccel.ast.core import For
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import HomogeneousSetType, PythonNativeInt
 from pyccel.ast.datatypes import HomogeneousListType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
+from pyccel.ast.numpyext import NumpyReshape
 from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
-from pyccel.ast.numpyext import NumpyNDArrayType, NumpyReshape
 from pyccel.errors.errors import Errors
 from pyccel.parser.scope import Scope
 from .wrapper import Wrapper
