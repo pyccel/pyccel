@@ -157,16 +157,6 @@ void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int6
     }
 }
 
-void capsule_cleanup_c(PyObject *capsule) {
-    void *memory = PyCapsule_GetPointer(capsule, NULL);
-    free(memory);
-}
-
-void capsule_cleanup_bind_c(PyObject *capsule) {
-    void *memory = PyCapsule_GetPointer(capsule, NULL);
-    //array_free(memory);
-}
-
 #if defined(WIN32) && (PyArray_RUNTIME_VERSION >= NPY_2_0_API_VERSION)
 PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order)
 #else

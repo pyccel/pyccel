@@ -26,12 +26,6 @@
 # include "numpy/arrayobject.h"
 
 /*
- * A function which can be passed to a PyCapsule in order to free data that was created by Pyccel.
- */
-void capsule_cleanup_c(PyObject *capsule);
-void capsule_cleanup_bind_c(PyObject *capsule);
-
-/*
  * Functions : Cast functions
  * --------------------------
  * Handwritten cast functions to build Python objects from C objects.
