@@ -4343,7 +4343,7 @@ class SemanticParser(BasicParser):
             results_names = [i.var.name for i in results]
 
             # Find all nodes which can modify variables
-            assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
+            assigns = body.get_attribute_nodes((Assign, AliasAssign), excluded_nodes = (FunctionCall,))
             calls   = body.get_attribute_nodes(FunctionCall)
             builtin_calls = body.get_attribute_nodes((Allocate, Deallocate))
 
