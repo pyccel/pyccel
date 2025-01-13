@@ -124,14 +124,14 @@ def test_min_3_args(language):
 
 def test_min_if(language):
     def f(x : 'int', y : 'int'):
-        if min(x*y, x+y) < 2:
-            return x*y
+        if min(x+x+y, x+y+y) < (x+y):
+            return x+y
         else:
             return x-y
 
     epyc_f = epyccel(f, language=language)
 
-    int_args = [randint(min_int, max_int) for _ in range(2)]
+    int_args = [randint(min_int//3, max_int//3) for _ in range(2)]
 
     assert epyc_f(*int_args) == f(*int_args)
 
