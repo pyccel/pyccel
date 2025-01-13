@@ -122,6 +122,19 @@ def test_min_3_args(language):
     assert epyc_f(*int_args) == f(*int_args)
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
+def test_min_if(language):
+    def f(x : 'int', y : 'int'):
+        if min(x*y, x+y) < 2:
+            return x*y
+        else:
+            return x-y
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int, max_int) for _ in range(2)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
