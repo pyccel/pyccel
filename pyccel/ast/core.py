@@ -19,7 +19,7 @@ from .builtins  import PythonBool, PythonTuple
 
 from .c_concepts import PointerCast
 
-from .datatypes import (PyccelType, HomogeneousTupleType, VoidType,
+from .datatypes import (PyccelType, HomogeneousTupleType, VoidType, CustomDataType,
                         PythonNativeBool, InhomogeneousTupleType)
 
 from .internals import PyccelSymbol, PyccelFunction, apply_pickle, Iterable
@@ -1572,7 +1572,8 @@ class FunctionDefArgument(TypedAstNode):
             name.declare_as_argument()
 
         if pyccel_stage != "syntactic":
-            self._inout = self.var.rank>0 and not self.var.is_const if isinstance(self.var, Variable) else False
+            self._inout = (self.var.rank > 0 or isinstance(self.var.class_type, CustomDataType)) \
+                        and not self.var.is_const if isinstance(self.var, Variable) else False
 
         super().__init__()
 
