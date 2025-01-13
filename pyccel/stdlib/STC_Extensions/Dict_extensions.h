@@ -1,5 +1,3 @@
-#ifndef DICT_EXTENSIONS_H
-#define DICT_EXTENSIONS_H
 
 /**
  * Removes and returns the value associated with the key in the dictionary.
@@ -32,4 +30,4 @@ static inline i_val _c_MEMB(_pop_with_default)(i_type* self, i_keyraw rkey, i_va
 
 #undef i_type
 #undef i_key
-#endif // DICT_EXTENSIONS_H
+#include <stc/priv/template2.h>

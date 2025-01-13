@@ -2826,9 +2826,6 @@ class CCodePrinter(CodePrinter):
         class_type = target.class_type
         c_type = self.get_c_type(class_type)
 
-        self.add_import(Import('stc/hmap', AsName(VariableTypeAnnotation(class_type), c_type)))
-        self.add_import(Import('Dict_extensions', AsName(VariableTypeAnnotation(class_type), c_type), ignore_at_print=True))
-
         dict_var = self._print(ObjectAddress(target))
         key = self._print(expr.key)
         tmp_var = self.scope.get_temporary_variable(class_type.value_type)
