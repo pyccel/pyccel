@@ -149,25 +149,6 @@ def create_shared_library(codegen,
         c_ast = codegen.ast
 
     #---------------------------------------
-    #     Compile cwrapper from stdlib
-    #---------------------------------------
-    start_compile_libs = time.time()
-    cwrapper_lib_dest_path = copy_internal_library('cwrapper', pyccel_dirpath,
-                                extra_files = {'numpy_version.h' :
-                                                get_numpy_max_acceptable_version_file()})
-
-    cwrapper_lib = internal_libs["cwrapper"][1]
-    cwrapper_lib.reset_folder(cwrapper_lib_dest_path)
-
-    # get the include folder path and library files
-    recompile_object(cwrapper_lib,
-                      compiler = wrapper_compiler,
-                      verbose  = verbose)
-    timings['Dependency compilation'] = time.time() - start_compile_libs
-
-    wrapper_compile_obj.add_dependencies(cwrapper_lib)
-
-    #---------------------------------------
     #      Print code specific cwrapper
     #---------------------------------------
     module_old_name = codegen.ast.name
@@ -200,7 +181,7 @@ def create_shared_library(codegen,
     start_compile_libs = time.time()
     manage_dependencies(wrapper_codegen.get_additional_imports(), wrapper_compiler, pyccel_dirpath, wrapper_compile_obj,
             language, verbose)
-    timings['Dependency compilation'] += (time.time() - start_compile_libs)
+    timings['Dependency compilation'] = (time.time() - start_compile_libs)
 
     #---------------------------------------
     #         Compile code
