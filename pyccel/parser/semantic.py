@@ -4351,7 +4351,7 @@ class SemanticParser(BasicParser):
             lhs_assigns   = [a.lhs for a in assigns]
             modified_args = [call_arg.value for f in calls
                                 for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
-            modified_args += [a for f in builtin_calls for a in f.args]
+            modified_args += [f.variable for f in builtin_calls]
             # Collect modified variables
             all_assigned = [v for a in (lhs_assigns + modified_args) for v in
                             (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
@@ -4364,7 +4364,7 @@ class SemanticParser(BasicParser):
 
             # ... computing inout arguments
             for a in arguments:
-                if a.var not in all_assigned and expr.name != '__del__':
+                if a.var not in all_assigned and expr.name not in ('__del__', '__init__'):
                     a.make_const()
             # ...
             # Raise an error if one of the return arguments is an alias.
