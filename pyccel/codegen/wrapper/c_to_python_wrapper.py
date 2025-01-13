@@ -24,7 +24,7 @@ from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, Py
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
-from pyccel.ast.cwrapper      import PyAttributeError
+from pyccel.ast.cwrapper      import PyAttributeError, PyCapsule_GetPointer
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
@@ -100,12 +100,16 @@ class CToPythonWrapper(Wrapper):
         be located.
     """
     def __init__(self, file_location):
-        # A map used to find the Python-compatible Variable equivalent to an object in the AST
+        # A map used to find the Python-compatible Variable equivalent to an object in the AST.
         self._python_object_map = {}
         # Indicate if arrays were wrapped.
         self._wrapping_arrays = False
-        # The object that should be returned to indicate an error
+        # The object that should be returned to indicate an error.
         self._error_exit_code = Nil()
+        # An interface containing functions that can be used to deallocate arrays.
+        self._array_dealloc_interface = None
+
+        self._capsule_free_function = None
 
         self._file_location = file_location
         super().__init__()
@@ -1252,12 +1256,29 @@ class CToPythonWrapper(Wrapper):
             The module which can be called from Python.
         """
         # Define scope
-        scope = expr.scope
-        mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
-        self.scope = mod_scope
+        if not isinstance(expr, BindCModule):
+            scope = expr.scope
+            mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
+            self.scope = mod_scope
+        else:
+            mod_scope = self.scope
+        original_mod = getattr(expr, 'original_module', expr)
+        original_mod_name = mod_scope.get_python_name(original_mod.name)
 
         imports = [self._wrap(i) for i in getattr(expr, 'original_module', expr).imports]
         imports = [i for i in imports if i]
+
+        if not isinstance(expr, BindCModule):
+            capsule_free_name = mod_scope.get_new_name(f'{original_mod_name}__capsule_clean_up')
+            capsule_free_scope = mod_scope.new_child_scope(capsule_free_name)
+            arg = Variable(PyccelPyObject(), capsule_free_scope.get_new_name('capsule'),
+                        memory_handling='alias', is_argument = True)
+            var_to_free = Variable(VoidType(), capsule_free_scope.get_new_name('memory'),
+                        memory_handling='alias')
+            body = [AliasAssign(var_to_free, PyCapsule_GetPointer(arg, Nil())), Deallocate(var_to_free)]
+            self._capsule_free_function = FunctionDef(capsule_free_name,
+                    (FunctionDefArgument(arg),),
+                    body, (), scope = capsule_free_scope)
 
         # Wrap classes
         classes = [self._wrap(i) for i in expr.classes]
@@ -1285,8 +1306,6 @@ class CToPythonWrapper(Wrapper):
         imports += cwrapper_ndarray_imports if self._wrapping_arrays else []
         if not isinstance(expr, BindCModule):
             imports.append(Import(mod_scope.get_python_name(expr.name), expr))
-        original_mod = getattr(expr, 'original_module', expr)
-        original_mod_name = mod_scope.get_python_name(original_mod.name)
         return PyModule(original_mod_name, [API_var], funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
                         init_func = init_func, import_func = import_func)
@@ -1309,6 +1328,26 @@ class CToPythonWrapper(Wrapper):
         PyModule
             The module which can be called from Python.
         """
+        scope = expr.scope
+        mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
+        self.scope = mod_scope
+        original_mod = getattr(expr, 'original_module', expr)
+        original_mod_name = mod_scope.get_python_name(original_mod.name)
+        self._capsule_free_function = {}
+        for func in expr.array_deallocs:
+            dtype = func.arguments[0].original_function_argument_variable.dtype
+            dtype_name = str(dtype).replace('.', '_')
+            capsule_free_name = mod_scope.get_new_name(f'{original_mod_name}__capsule_clean_up__{dtype_name}')
+            capsule_free_scope = mod_scope.new_child_scope(capsule_free_name)
+            arg = Variable(PyccelPyObject(), capsule_free_scope.get_new_name('capsule'),
+                        memory_handling='alias', is_argument = True)
+            var_to_free = Variable(VoidType(), capsule_free_scope.get_new_name('memory'),
+                        memory_handling='alias')
+            body = [AliasAssign(var_to_free, PyCapsule_GetPointer(arg, Nil())), func(var_to_free)]
+            self._capsule_free_function[dtype] = FunctionDef(capsule_free_name,
+                    (FunctionDefArgument(arg),),
+                    body, (), scope = capsule_free_scope)
+
         pymod = self._wrap_Module(expr)
 
         # Add declarations for C-compatible variables
@@ -1325,6 +1364,12 @@ class CToPythonWrapper(Wrapper):
         # Add external functions for normal functions
         for f in expr.funcs:
             external_funcs.append(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = Scope()))
+
+        # Add external functions for array deallocation functions
+        for f in expr.array_deallocs:
+            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = Scope()))
+
+        self._array_dealloc_interface = Interface('free', expr.array_deallocs)
 
         for c in expr.classes:
             m = c.new_func
@@ -2711,7 +2756,7 @@ class CToPythonWrapper(Wrapper):
                              LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
                              convert_to_literal(orig_var.order != 'F')))]
 
-            capsule_cleanup = capsule_cleanup_bind_c
+            capsule_cleanup = self._capsule_free_function.get(orig_var.dtype)
 
             shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
             c_result_vars = [ObjectAddress(data_var)]+shape_vars
@@ -2724,7 +2769,7 @@ class CToPythonWrapper(Wrapper):
                     Deallocate(c_res)]
             c_result_vars = [c_res]
 
-            capsule_cleanup = capsule_cleanup_c
+            capsule_cleanup = self._capsule_free_function
             # With STC:
             #data_var = DottedVariable(VoidType(), 'data', memory_handling='alias', lhs=c_res)
             data_var = DottedVariable(VoidType(), CCodePrinter.ndarray_type_registry[orig_var.dtype], memory_handling='alias', lhs=c_res)
