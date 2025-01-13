@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+from itertools import chain
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
@@ -337,7 +338,7 @@ class CWrapperCodePrinter(CCodePrinter):
         decs = ''.join(self._print(d) for d in expr.declarations)
         self._in_header = False
 
-        function_defs = '\n'.join(self._print(f) for f in funcs)
+        function_defs = '\n'.join(self._print(f) for f in chain(expr.capsule_free_funcs, funcs))
 
         class_defs = f"\n{sep}\n".join(self._print(c) for c in expr.classes)
 

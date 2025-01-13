@@ -46,7 +46,7 @@ from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInt
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
 from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type
 from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array, PyccelPyArrayObject
-from pyccel.ast.numpy_wrapper import PyArray_DATA, PyArray_SetBaseObject
+from pyccel.ast.numpy_wrapper import PyArray_DATA, PyArray_SetBaseObject, PyArray_Size
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, to_pyarray
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
@@ -1275,6 +1275,7 @@ class CToPythonWrapper(Wrapper):
                         memory_handling='alias', is_argument = True)
             var_to_free = Variable(VoidType(), capsule_free_scope.get_new_name('memory'),
                         memory_handling='alias')
+            capsule_free_scope.insert_variable(var_to_free)
             body = [AliasAssign(var_to_free, PyCapsule_GetPointer(arg, Nil())), Deallocate(var_to_free)]
             self._capsule_free_function = FunctionDef(capsule_free_name,
                     (FunctionDefArgument(arg),),
@@ -1306,9 +1307,13 @@ class CToPythonWrapper(Wrapper):
         imports += cwrapper_ndarray_imports if self._wrapping_arrays else []
         if not isinstance(expr, BindCModule):
             imports.append(Import(mod_scope.get_python_name(expr.name), expr))
+            capsule_free_functions = (self._capsule_free_function,)
+        else:
+            capsule_free_functions = self._capsule_free_function.values()
         return PyModule(original_mod_name, [API_var], funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
-                        init_func = init_func, import_func = import_func)
+                        init_func = init_func, import_func = import_func,
+                        capsule_free_funcs = capsule_free_functions)
 
     def _wrap_BindCModule(self, expr):
         """
@@ -1341,9 +1346,16 @@ class CToPythonWrapper(Wrapper):
             capsule_free_scope = mod_scope.new_child_scope(capsule_free_name)
             arg = Variable(PyccelPyObject(), capsule_free_scope.get_new_name('capsule'),
                         memory_handling='alias', is_argument = True)
+            arr_arg = Variable(PyccelPyArrayObject(), capsule_free_scope.get_new_name('capsule'),
+                        memory_handling='alias', is_argument = True)
             var_to_free = Variable(VoidType(), capsule_free_scope.get_new_name('memory'),
                         memory_handling='alias')
-            body = [AliasAssign(var_to_free, PyCapsule_GetPointer(arg, Nil())), func(var_to_free)]
+            size_var = Variable(NumpyInt64Type(), mod_scope.get_new_name('size'))
+            capsule_free_scope.insert_variable(var_to_free)
+            capsule_free_scope.insert_variable(size_var)
+            body = [AliasAssign(var_to_free, PyCapsule_GetPointer(arg, Nil())),
+                    Assign(size_var, PyArray_Size(ObjectAddress(PointerCast(arg, arr_arg)))),
+                    func(var_to_free, size_var, LiteralInteger(1))]
             self._capsule_free_function[dtype] = FunctionDef(capsule_free_name,
                     (FunctionDefArgument(arg),),
                     body, (), scope = capsule_free_scope)
