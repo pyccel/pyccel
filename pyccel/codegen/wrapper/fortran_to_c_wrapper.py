@@ -19,7 +19,7 @@ from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
-from pyccel.ast.core import For
+from pyccel.ast.core import For, Deallocate
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import HomogeneousSetType, PythonNativeInt
@@ -206,13 +206,34 @@ class FortranToCWrapper(Wrapper):
         variable_getters = [v for v in variables if isinstance(v, BindCArrayVariable)]
         imports = [Import(self.scope.get_python_name(expr.name), target = expr, mod=expr)]
 
+        all_funcs = expr.funcs + tuple(f for c in expr.classes for f in c.methods)
+        returns = [v.var for f in all_funcs for v in f.results]
+        array_return_types = {v.dtype for v in returns if v.rank and not v.is_alias}
+
+        free_funcs = []
+        if array_return_types:
+            for dtype in array_return_types:
+                dtype_name = str(dtype).replace('.', '_')
+                free_name = mod_scope.get_new_name(f'{expr.name}_free_array_{dtype_name}')
+                free_scope = mod_scope.new_child_scope(free_name)
+                self.scope = free_scope
+                f_arg = Variable(NumpyNDArrayType(dtype, 1, None), free_scope.get_new_name('arr'))
+                bind_c_arg = self._wrap(FunctionDefArgument(f_arg))
+                func_to_call = {bind_c_arg: self._get_call_argument(bind_c_arg)}
+                example_body = self._get_function_def_body(lambda arg: DeallocatePointer(arg.value.base), (bind_c_arg,), func_to_call, ())
+                dealloc_node = example_body[-1].rhs
+                body = example_body[:1] + [dealloc_node]
+                self.exit_scope()
+                free_funcs.append(BindCFunctionDef(free_name, (bind_c_arg,), body, (),
+                                    original_function = None, scope = free_scope))
+
         name = mod_scope.get_new_name(f'bind_c_{expr.name}')
         self._wrapper_names_dict[expr.name] = name
 
         self.exit_scope()
 
         return BindCModule(name, variables, funcs, variable_wrappers = variable_getters,
-                init_func = init_func, free_func = free_func,
+                init_func = init_func, free_func = free_func, array_deallocs = free_funcs,
                 interfaces = interfaces, classes = classes,
                 imports = imports, original_module = expr,
                 scope = mod_scope, removed_functions = removed_functions)

@@ -831,7 +831,7 @@ class FCodePrinter(CodePrinter):
         if expr.funcs:
             func_strings += [''.join([sep, self._print(i), sep]) for i in expr.funcs]
         if isinstance(expr, BindCModule):
-            func_strings += [''.join([sep, self._print(i), sep]) for i in expr.variable_wrappers]
+            func_strings += [''.join([sep, self._print(i), sep]) for i in expr.variable_wrappers + expr.array_deallocs]
         body = '\n'.join(func_strings)
         # ...
 

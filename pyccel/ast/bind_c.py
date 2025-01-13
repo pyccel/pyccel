@@ -420,6 +420,10 @@ class BindCModule(Module):
         A list of any functions which weren't translated to BindCFunctionDef
         objects (e.g. private functions).
 
+    array_deallocs : Iterable[BindCFunctionDef]
+        A list of any functions necessary to free arrays created in this
+        module.
+
     **kwargs : dict
         See `pyccel.ast.core.Module`.
 
@@ -429,13 +433,15 @@ class BindCModule(Module):
         The class from which BindCModule inherits which contains all details
         about the args and kwargs.
     """
-    __slots__ = ('_orig_mod','_variable_wrappers', '_removed_functions')
-    _attribute_nodes = Module._attribute_nodes + ('_orig_mod','_variable_wrappers', '_removed_functions')
+    __slots__ = ('_orig_mod','_variable_wrappers', '_removed_functions', '_array_deallocs')
+    _attribute_nodes = Module._attribute_nodes + ('_orig_mod','_variable_wrappers', '_removed_functions', '_array_deallocs')
 
-    def __init__(self, *args, original_module, variable_wrappers = (), removed_functions = None, **kwargs):
+    def __init__(self, *args, original_module, variable_wrappers = (), removed_functions = None,
+                 array_deallocs = (), **kwargs):
         self._orig_mod = original_module
         self._variable_wrappers = variable_wrappers
         self._removed_functions = removed_functions
+        self._array_deallocs = array_deallocs
         super().__init__(*args, **kwargs)
 
     @property
@@ -476,6 +482,16 @@ class BindCModule(Module):
         wrapper functions.
         """
         return ()
+
+    @property
+    def array_deallocs(self):
+        """
+        Get functions which free arrays created in this module.
+
+        A list of any functions necessary to free arrays created in this
+        module. There is one per dtype.
+        """
+        return self._array_deallocs
 
 # =======================================================================================
 
