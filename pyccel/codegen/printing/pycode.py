@@ -22,6 +22,8 @@ from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_impo
 from pyccel.ast.utilities  import decorators_mod
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 
+from pyccel.parser.semantic import magic_method_map
+
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
@@ -305,11 +307,12 @@ class PythonCodePrinter(CodePrinter):
 
         body = ''.join([docstring, functions, interfaces, imports, body])
 
-        code = ('def {name}({args}):\n'
-                '{body}\n').format(
-                        name=name,
-                        args=args,
-                        body=body)
+        # Put back return removed in semantic stage
+        if name.startswith('__i') and ('__'+name[3:]) in magic_method_map.values():
+            body += f'    return {expr.arguments[0].name}\n'
+
+        code = (f'def {name}({args}):\n'
+                f'{body}\n')
         decorators = expr.decorators.copy()
         if decorators:
             if decorators['template']:
@@ -513,6 +516,14 @@ class PythonCodePrinter(CodePrinter):
         else:
             raise NotImplementedError("The shape access function seems to be poorly defined.")
 
+    def _print_PythonRound(self, expr):
+        arg = self._print(expr.arg)
+        if expr.ndigits:
+            ndigits = self._print(expr.ndigits)
+            return f'round({arg}, {ndigits})'
+        else:
+            return f'round({arg})'
+
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
         name = self._get_numpy_name(expr)
@@ -548,6 +559,8 @@ class PythonCodePrinter(CodePrinter):
         args = expr.args
         if func.arguments and func.arguments[0].bound_argument:
             func_name = f'{self._print(args[0])}.{func_name}'
+            if 'property' in func.decorators:
+                return func_name
             args = args[1:]
         args_str = ', '.join(self._print(i) for i in args)
         code = f'{func_name}({args_str})'
@@ -846,7 +859,11 @@ class PythonCodePrinter(CodePrinter):
         else:
             method_args = ', '.join(self._print(a) for a in expr.args)
 
-        return f"{list_obj}.{method_name}({method_args})\n"
+        code = f"{list_obj}.{method_name}({method_args})"
+        if isinstance(expr.class_type, VoidType):
+            return code + '\n'
+        else:
+            return code
 
     def _print_DictMethod(self, expr):
         method_name = expr.name
@@ -1017,6 +1034,10 @@ class PythonCodePrinter(CodePrinter):
                         imports = imports,
                         body    = body,
                         prog    = prog)
+
+    def _print_AllDeclaration(self, expr):
+        values = ',\n           '.join(self._print(v) for v in expr.values)
+        return f'__all__ = ({values},)\n'
 
     def _print_PyccelPow(self, expr):
         base = self._print(expr.args[0])

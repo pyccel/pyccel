@@ -21,7 +21,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict,
 
 from pyccel.ast.builtin_methods.dict_methods  import DictItems
 
-from pyccel.ast.core      import Declare, For, CodeBlock
+from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
 from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress
@@ -247,7 +247,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdio',
                  "inttypes",
                  'stdbool',
-                 'assert']}
+                 'assert',
+                 'stc/cstr']}
 
 import_header_guard_prefix = {'stc/hset'    : '_TOOLS_SET',
                               'stc/vec'   : '_TOOLS_LIST',
@@ -309,7 +310,6 @@ class CCodePrinter(CodePrinter):
                       (PrimitiveIntegerType(),8)       : LiteralString("%") + CMacro('PRId64'),
                       (PrimitiveIntegerType(),2)       : LiteralString("%") + CMacro('PRId16'),
                       (PrimitiveIntegerType(),1)       : LiteralString("%") + CMacro('PRId8'),
-                      StringType()                  : '%s',
                       }
 
     def __init__(self, filename, prefix_module = None):
@@ -324,6 +324,34 @@ class CCodePrinter(CodePrinter):
         self._temporary_args = []
         self._current_module = None
         self._in_header = False
+
+    def sort_imports(self, imports):
+        """
+        Sort imports to avoid any errors due to bad ordering.
+
+        Sort imports. This is important so that types exist before they are used to create
+        container types. E.g. it is important that complex or inttypes be imported before
+        vec_int or vec_double_complex is declared.
+
+        Parameters
+        ----------
+        imports : list[Import]
+            A list of the imports.
+
+        Returns
+        -------
+        list[Import]
+            A sorted list of the imports.
+        """
+        import_src = [str(i.source) for i in imports]
+        stc_imports = [i for i in import_src if i.startswith('stc/')]
+        dependent_imports = [i for i in import_src if i in import_header_guard_prefix]
+        non_stc_imports = [i for i in import_src if i not in chain(stc_imports, dependent_imports)]
+        stc_imports.sort()
+        dependent_imports.sort()
+        non_stc_imports.sort()
+        sorted_imports = [imports[import_src.index(name)] for name in chain(non_stc_imports, stc_imports, dependent_imports)]
+        return sorted_imports
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -364,13 +392,16 @@ class CCodePrinter(CodePrinter):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
-        if isinstance(getattr(a, 'dtype', None), CustomDataType) and a.is_argument:
-            return True
-
         if not isinstance(a, Variable):
             return False
-        return (a.is_alias and not isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType))) \
-                or a.is_optional or \
+        if isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
+            return a.is_optional or any(a is bi for b in self._additional_args for bi in b)
+
+        if isinstance(a.class_type, (CustomDataType, HomogeneousContainerType, DictType)) \
+                and a.is_argument and not a.is_const:
+            return True
+
+        return a.is_alias or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
     #========================== Numpy Elements ===============================#
@@ -636,7 +667,8 @@ class CCodePrinter(CodePrinter):
         if parent_assign:
             body.substitute(new_res_vars, orig_res_vars)
 
-        if func.global_vars or func.global_funcs:
+        if func.global_vars or func.global_funcs and \
+                not func.get_direct_user_nodes(lambda u: isinstance(u, ClassDef)):
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
             self.add_import(Import(mod.name, [AsName(v, v.name) \
                 for v in (*func.global_vars, *func.global_funcs)]))
@@ -717,6 +749,15 @@ class CCodePrinter(CodePrinter):
             func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
 
+    def _print_PythonRound(self, expr):
+        self.add_import(c_imports['pyc_math_c'])
+        arg = self._print(expr.arg)
+        ndigits = self._print(expr.ndigits or LiteralInteger(0))
+        if isinstance(expr.arg.class_type.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)):
+            return f'ipyc_bankers_round({arg}, {ndigits})'
+        else:
+            return f'fpyc_bankers_round({arg}, {ndigits})'
+
     def _print_PythonMinMax(self, expr):
         arg = expr.args[0]
         if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
@@ -744,7 +785,7 @@ class CCodePrinter(CodePrinter):
             op = '<' if isinstance(expr, PythonMin) else '>'
             return f"({arg1} {op} {arg2} ? {arg1} : {arg2})"
         elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
-            key = self.get_declare_type(arg[0])
+            key = self.get_c_type(arg[0].class_type)
             self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
             self.add_import(Import('Common_extensions',
                                    AsName(VariableTypeAnnotation(arg.dtype), key),
@@ -850,6 +891,7 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
+        imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self._in_header = False
@@ -1039,7 +1081,7 @@ class CCodePrinter(CodePrinter):
                      f'#include <{stc_extension_mapping[source]}.h>\n', 
                      f'#endif // {header_guard}\n\n'))
             return code
-        elif source.startswith('stc/'):
+        elif source != 'stc/cstr' and (source.startswith('stc/') or source in import_header_guard_prefix):
             code = ''
             for t in expr.target:
                 class_type = t.object.class_type
@@ -1130,6 +1172,13 @@ class CCodePrinter(CodePrinter):
                 except KeyError:
                     errors.report(f"Printing {var.dtype} type is not supported currently", severity='fatal')
                 arg = self._print(var)
+        elif isinstance(var.dtype, StringType):
+            if isinstance(var, Variable):
+                var_obj = self._print(ObjectAddress(var))
+                arg = f'cstr_str({var_obj})'
+            else:
+                arg = self._print(var)
+            arg_format = '%s'
         else:
             try:
                 arg_format = self.type_to_format[var.dtype]
@@ -1302,6 +1351,9 @@ class CCodePrinter(CodePrinter):
             i_type = f'{container_type}_{key_type}_{val_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
+        elif isinstance(dtype, StringType):
+            self.add_import(c_imports['stc/cstr'])
+            return 'cstr'
         else:
             key = dtype
 
@@ -1377,11 +1429,11 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
 
         if rank > 0:
-            if isinstance(expr.class_type, (HomogeneousSetType, HomogeneousListType, DictType)):
-                dtype = self.get_c_type(expr.class_type)
-            elif isinstance(expr.class_type, CStackArray):
-                return self.get_c_type(expr.class_type.element_type)
-            elif isinstance(expr.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
+            if isinstance(class_type, (HomogeneousSetType, HomogeneousListType, DictType, StringType)):
+                dtype = self.get_c_type(class_type)
+            elif isinstance(class_type, CStackArray):
+                return self.get_c_type(class_type.element_type)
+            elif isinstance(class_type, (HomogeneousTupleType, NumpyNDArrayType)):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
@@ -1699,13 +1751,18 @@ class CCodePrinter(CodePrinter):
             c_type = self.get_c_type(arg.class_type)
             arg_code = self._print(ObjectAddress(arg))
             return f'{c_type}_size({arg_code})'
+        elif isinstance(arg.class_type, StringType):
+            arg_code = self._print(ObjectAddress(arg))
+            return f'cstr_size({arg_code})'
         else:
             raise NotImplementedError(f"Don't know how to represent shape of object of type {arg.class_type}")
 
     def _print_Allocate(self, expr):
         free_code = ''
         variable = expr.variable
-        if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+        if isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType, StringType)):
+            if expr.status in ('allocated', 'unknown'):
+                free_code = f'{self._print(Deallocate(variable))}'
             if expr.shape[0] is None:
                 return free_code
             if expr.status in ('allocated', 'unknown'):
@@ -1720,7 +1777,7 @@ class CCodePrinter(CodePrinter):
             elif expr.alloc_type == 'resize':
                 return f'{container_type}_resize({variable_address}, {size}, {0});\n'
             return free_code
-        if isinstance(variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+        elif isinstance(variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
                 shape_var = DottedVariable(VoidType(), 'shape', lhs = variable)
@@ -1757,7 +1814,7 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
 
     def _print_Deallocate(self, expr):
-        if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+        if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType, StringType)):
             if expr.variable.is_alias:
                 return ''
             variable_address = self._print(ObjectAddress(expr.variable))
@@ -1769,7 +1826,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.variable.dtype, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
             return f"{Pyccel__del}({variable_address});\n"
-        elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousContainerType)):
+        elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             if expr.variable.is_alias:
                 return f'free_pointer({variable_address});\n'
             else:
@@ -2308,11 +2365,13 @@ class CCodePrinter(CodePrinter):
             return self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)
-        lhs = self._print(expr.lhs)
+        lhs_code = self._print(lhs)
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
             return self.init_stc_container(rhs, expr)
-        rhs = self._print(expr.rhs)
-        return f'{lhs} = {rhs};\n'
+        rhs_code = self._print(rhs)
+        if isinstance(rhs, LiteralString):
+            rhs_code = f'cstr_lit({rhs_code})'
+        return f'{lhs_code} = {rhs_code};\n'
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
@@ -2644,6 +2703,7 @@ class CCodePrinter(CodePrinter):
         decs = ''.join(self._print(Declare(v)) for v in variables)
 
         imports = [*expr.imports, *self._additional_imports.values()]
+        imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
@@ -2710,18 +2770,18 @@ class CCodePrinter(CodePrinter):
         return f'{var_type}_pop({set_var})'
 
     def _print_SetClear(self, expr):
-        var_type = self.get_declare_type(expr.set_variable)
+        var_type = self.get_c_type(expr.set_variable.class_type)
         set_var = self._print(ObjectAddress(expr.set_variable))
         return f'{var_type}_clear({set_var});\n'
 
     def _print_SetAdd(self, expr):
-        var_type = self.get_declare_type(expr.set_variable)
+        var_type = self.get_c_type(expr.set_variable.class_type)
         set_var = self._print(ObjectAddress(expr.set_variable))
         arg = self._print(expr.args[0])
         return f'{var_type}_push({set_var}, {arg});\n'
 
     def _print_SetCopy(self, expr):
-        var_type = self.get_declare_type(expr.set_variable)
+        var_type = self.get_c_type(expr.set_variable.class_type)
         set_var = self._print(expr.set_variable)
         return f'{var_type}_clone({set_var})'
 
@@ -2739,6 +2799,20 @@ class CCodePrinter(CodePrinter):
         set_var = self._print(ObjectAddress(expr.set_variable))
         args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
         return f'{var_type}_union({set_var}, {args})'
+
+    def _print_SetIntersectionUpdate(self, expr):
+        class_type = expr.set_variable.class_type
+        var_type = self.get_c_type(class_type)
+        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(class_type), var_type)))
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        return ''.join(f'{var_type}_intersection_update({set_var}, {self._print(ObjectAddress(a))});\n' \
+                for a in expr.args)
+
+    def _print_SetDiscard(self, expr):
+        var_type = self.get_c_type(expr.set_variable.class_type)
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        arg_val = self._print(expr.args[0])
+        return f'{var_type}_erase({set_var}, {arg_val});\n'
 
     #=================== MACROS ==================
 
@@ -2773,6 +2847,8 @@ class CCodePrinter(CodePrinter):
     def _print_PrecomputedCode(self, expr):
         return expr.code
 
+    def _print_AllDeclaration(self, expr):
+        return ''
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""

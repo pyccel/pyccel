@@ -19,6 +19,7 @@ __all__ = (
     'SetCopy',
     'SetDiscard',
     'SetIntersection',
+    'SetIntersectionUpdate',
     'SetMethod',
     'SetPop',
     'SetUnion',
@@ -254,11 +255,30 @@ class SetIntersection(SetMethod):
     __slots__ = ('_other','_class_type', '_shape')
     name = 'intersection'
 
+#==============================================================================
+
+class SetIntersectionUpdate(SetMethod):
+    """
+    Represents a call to the .intersection_update() method.
+
+    Represents a call to the set method .intersection_update(). This method combines
+    two sets by including all elements which appear in all of the sets.
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    *others : TypedAstNode
+        The sets which will be combined with this set.
+    """
+    __slots__ = ()
+    name = 'intersection_update'
+    _class_type = VoidType()
+    _shape = None
+
     def __init__(self, set_obj, *others):
-        self._class_type = set_obj.class_type
-        element_type = self._class_type.element_type
+        class_type = set_obj.class_type
         for o in others:
-            if element_type != o.class_type.element_type:
-                raise TypeError(f"Argument fo type {o.type_class} cannot be used to build set of type {self._class_type}")
-        self._shape = (None,)*self.rank
+            if class_type != o.class_type:
+                raise TypeError(f"Only arguments of type {class_type} are supported for the functions intersection and .intersection_update")
         super().__init__(set_obj, *others)

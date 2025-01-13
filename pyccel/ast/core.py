@@ -13,7 +13,7 @@ from pyccel.utilities.stage   import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 
-from .bitwise_operators import PyccelBitOr, PyccelBitAnd
+from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRShift
 
 from .builtins  import PythonBool, PythonTuple
 
@@ -41,6 +41,7 @@ pyccel_stage = PyccelStage()
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
 __all__ = (
     'AliasAssign',
+    'AllDeclaration',
     'Allocate',
     'AnnotatedComment',
     'AsName',
@@ -749,6 +750,8 @@ class AugAssign(Assign):
             '%' : PyccelMod,
             '|' : PyccelBitOr,
             '&' : PyccelBitAnd,
+            '<<': PyccelLShift,
+            '>>': PyccelRShift,
         }
 
     def __init__(
@@ -2047,11 +2050,11 @@ class FunctionDef(ScopedAstNode):
     arguments : iterable of FunctionDefArgument
         The arguments to the function.
 
-    results : iterable
-        The direct outputs of the function.
-
     body : iterable
         The body of the function.
+
+    results : iterable
+        The direct outputs of the function.
 
     global_vars : list of Symbols
         Variables which will not be passed into the function.
@@ -2161,8 +2164,9 @@ class FunctionDef(ScopedAstNode):
         self,
         name,
         arguments,
-        results,
         body,
+        results = (),
+        *,
         global_vars=(),
         cls_name=None,
         is_static=False,
@@ -2210,15 +2214,10 @@ class FunctionDef(ScopedAstNode):
 
         if iterable(body):
             body = CodeBlock(body)
-        elif not isinstance(body,CodeBlock):
-            raise TypeError('body must be an iterable or a CodeBlock')
+        assert isinstance(body,CodeBlock)
 
         # results
-
-        if not iterable(results):
-            raise TypeError('results must be an iterable')
-        if not all(isinstance(r, FunctionDefResult) for r in results):
-            raise TypeError('results must be all be FunctionDefResults')
+        assert iterable(results) and all(isinstance(r, FunctionDefResult) for r in results)
 
         if cls_name:
 
@@ -2527,28 +2526,28 @@ class FunctionDef(ScopedAstNode):
         args = (
         self._name,
         self._arguments,
-        self._results,
         self._body)
 
         kwargs = {
-        'global_vars':self._global_vars,
-        'cls_name':self._cls_name,
-        'is_static':self._is_static,
-        'imports':self._imports,
-        'decorators':self._decorators,
-        'headers':self._headers,
-        'is_recursive':self._is_recursive,
-        'is_pure':self._is_pure,
-        'is_elemental':self._is_elemental,
-        'is_private':self._is_private,
-        'is_header':self._is_header,
-        'functions':self._functions,
-        'is_external':self._is_external,
-        'is_imported':self._is_imported,
-        'is_semantic':self._is_semantic,
-        'interfaces':self._interfaces,
-        'docstring':self._docstring,
-        'scope':self._scope}
+            'results':self._results,
+            'global_vars':self._global_vars,
+            'cls_name':self._cls_name,
+            'is_static':self._is_static,
+            'imports':self._imports,
+            'decorators':self._decorators,
+            'headers':self._headers,
+            'is_recursive':self._is_recursive,
+            'is_pure':self._is_pure,
+            'is_elemental':self._is_elemental,
+            'is_private':self._is_private,
+            'is_header':self._is_header,
+            'functions':self._functions,
+            'is_external':self._is_external,
+            'is_imported':self._is_imported,
+            'is_semantic':self._is_semantic,
+            'interfaces':self._interfaces,
+            'docstring':self._docstring,
+            'scope':self._scope}
         return args, kwargs
 
     def __reduce_ex__(self, i):
@@ -3076,7 +3075,7 @@ class FunctionAddress(FunctionDef):
         memory_handling='stack',
         **kwargs
         ):
-        super().__init__(name, arguments, results, body=[], scope=None, **kwargs)
+        super().__init__(name, arguments, body=[], results=results, scope=None, **kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
@@ -3449,6 +3448,47 @@ class ClassDef(ScopedAstNode):
         interface.set_current_user_node(self)
         self._interfaces += (interface,)
 
+    def update_method(self, syntactic_method, semantic_method):
+        """
+        Replace a syntactic_method with its semantic equivalent.
+
+        Replace a syntactic_method with its semantic equivalent.
+
+        Parameters
+        ----------
+        syntactic_method : FunctionDef
+            The method that has already been added to the class.
+        semantic_method : FunctionDef
+            The method that will replace the syntactic_method.
+        """
+        assert isinstance(semantic_method, FunctionDef)
+        assert syntactic_method in self._methods
+        assert semantic_method.is_semantic
+        syntactic_method.remove_user_node(self)
+        semantic_method.set_current_user_node(self)
+        self._methods = tuple(m for m in self._methods if m is not syntactic_method) + (semantic_method,)
+
+    def update_interface(self, syntactic_interface, semantic_interface):
+        """
+        Replace a syntactic_interface with its semantic equivalent.
+
+        Replace a syntactic_interface with its semantic equivalent.
+
+        Parameters
+        ----------
+        syntactic_interface : FunctionDef
+            The interface that has already been added to the class.
+        semantic_interface : FunctionDef
+            The interface that will replace the syntactic_interface.
+        """
+        assert isinstance(semantic_interface, Interface)
+        assert syntactic_interface in self._methods
+        assert semantic_interface.is_semantic
+        syntactic_interface.remove_user_node(self)
+        semantic_interface.set_current_user_node(self)
+        self._methods = tuple(m for m in self._methods if m is not syntactic_interface)
+        self._interfaces = tuple(m for m in self._interfaces if m is not syntactic_interface) + (semantic_interface,)
+
     def get_method(self, name, raise_error = True):
         """
         Get the method `name` of the current class.
@@ -3478,6 +3518,11 @@ class ClassDef(ScopedAstNode):
         ValueError
             Raised if the method cannot be found.
         """
+        method = next((i for i in chain(self.methods, self.interfaces) \
+                if i.name == name and i.pyccel_staging == 'syntactic'), None)
+        if method:
+            return method
+
         if self.scope is not None:
             # Collect translated name from scope
             try:
@@ -4361,6 +4406,37 @@ class Decorator(PyccelAstNode):
         """ Return the name of the decorator
         """
         return self._name
+
+class AllDeclaration(PyccelAstNode):
+    """
+    Class representing the __all__ declaration of public methods in a module.
+
+    Class representing the __all__ declaration of public methods/variables/classes
+    in a module.
+
+    Parameters
+    ----------
+    values : iterable[LiteralString]
+        A PythonList/PythonTuple of strings.
+    """
+    __slots__ = ('_values',)
+    _attribute_nodes = ('_values',)
+
+    def __init__(self, values):
+        if not hasattr(values, '__iter__') or any(not isinstance(v, LiteralString) for v in values):
+            errors.report("__all__ must be an iterable of strings.",
+                        symbol=values, severity='fatal')
+        self._values = values
+        super().__init__()
+
+    @property
+    def values(self):
+        """
+        An iterable of LiteralStrings describing the public methods/variables/classes/etc.
+
+        An iterable of LiteralStrings describing the public methods/variables/classes/etc.
+        """
+        return self._values
 
 #==============================================================================
 

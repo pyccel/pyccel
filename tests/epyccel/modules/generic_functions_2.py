@@ -11,9 +11,7 @@ def tmplt_1(x : 'Z', y : 'Z'):
 def multi_tmplt_1(x : 'Z', y : 'Z', z : 'Y'):
     return x + y + z
 
-@types('int', 'int')
-@types('int', 'float')
-def multi_heads_1(x, y):
+def multi_heads_1(x : int, y : 'int | float'):
     return x + y
 
 @template(types=['int', 'float'], name = 'Z')
@@ -46,9 +44,7 @@ def default_var_3(x : 'G', y  : 'K' =  False):
         return x
     return x - 1
 
-@types('int', 'int')
-@types('float', 'int')
-def default_var_4(x, y = 5):
+def default_var_4(x : 'int | float', y : int = 5):
     return x + y
 
 
@@ -67,17 +63,13 @@ def optional_var_2(x : 'G', y  : 'K' =  None):
         return x + 1j
     return x + y
 
-@types('int', 'float')
-@types('float', 'float')
-def optional_var_3(x, y = None):
+def optional_var_3(x : 'int | float', y : float = None):
     if y is None:
         return x / 2.0
     return x / y
 
 
-@types('complex', 'int')
-@types('float', 'int')
-def optional_var_4(x, y = None):
+def optional_var_4(x : 'complex | float', y : int = None):
     if y is None:
         return x
     return x + y
@@ -130,9 +122,7 @@ def mix_array_1(x : 'T', a : 'int'):
     x[:] += a
 
 
-@types('complex[:]', 'complex[:]', 'int')
-@types('float[:]', 'int64[:]', 'int')
-def mix_array_2(x, y, a):
+def mix_array_2(x : 'complex[:] | float[:]', y : 'complex[:] | int64[:]', a : int):
     x[:] += a
     y[:] -= a
 

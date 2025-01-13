@@ -16,11 +16,12 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
-from .datatypes import GenericType, PythonNativeComplex, PrimitiveComplexType
+from .datatypes import GenericType, PythonNativeComplex
+from .datatypes import PrimitiveBooleanType, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
-from .datatypes import DictType, VoidType
+from .datatypes import DictType, VoidType, TypeAlias, StringType
 from .internals import PyccelFunction, Slice, PyccelArrayShapeElement, Iterable
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
@@ -53,6 +54,7 @@ __all__ = (
     'PythonPrint',
     'PythonRange',
     'PythonReal',
+    'PythonRound',
     'PythonSet',
     'PythonSetFunction',
     'PythonSum',
@@ -480,6 +482,52 @@ class PythonFloat(PyccelFunction):
     def __str__(self):
         return f'float({self.arg})'
 
+# ===========================================================================
+class PythonRound(PyccelFunction):
+    """
+    Class representing a call to Python's native round() function.
+
+    Class representing a call to Python's native round() function
+    which rounds a float or integer to a given number of decimals.
+
+    Parameters
+    ----------
+    number : TypedAstNode
+        The number to be rounded.
+    ndigits : TypedAstNode, optional
+        The number of digits to round to.
+    """
+    __slots__ = ('_class_type',)
+    name = 'round'
+    _rank = 0
+    _shape = None
+    _order = None
+
+    def __init__(self, number, ndigits = None):
+        if ndigits is None or number.class_type.primitive_type is PrimitiveBooleanType():
+            self._class_type = PythonNativeInt()
+        else:
+            self._class_type = number.class_type
+        super().__init__(number, ndigits)
+
+    @property
+    def arg(self):
+        """
+        The number to be rounded.
+
+        The number to be rounded.
+        """
+        return self._args[0]
+
+    @property
+    def ndigits(self):
+        """
+        The number of digits to which the argument is rounded.
+
+        The number of digits to which the argument is rounded.
+        """
+        return self._args[1]
+
 #==============================================================================
 class PythonInt(PyccelFunction):
     """
@@ -677,8 +725,13 @@ class PythonLen(PyccelFunction):
     def __new__(cls, arg):
         if isinstance(arg, LiteralString):
             return LiteralInteger(len(arg.python_value))
+        elif isinstance(arg.class_type, StringType):
+            return super().__new__(cls)
         else:
             return arg.shape[0]
+
+    def __init__(self, arg):
+        super().__init__(arg)
 
 #==============================================================================
 class PythonList(TypedAstNode):
@@ -1538,6 +1591,7 @@ class PythonType(PyccelFunction):
     _attribute_nodes = ('_obj',)
     _class_type = SymbolicType()
     _shape = None
+    _static_type = TypeAlias()
 
     def __init__(self, obj):
         if not isinstance (obj, TypedAstNode):
@@ -1664,6 +1718,7 @@ builtin_functions_dict = {
     'min'      : PythonMin,
     'not'      : PyccelNot,
     'range'    : PythonRange,
+    'round'    : PythonRound,
     'set'      : PythonSetFunction,
     'str'      : LiteralString,
     'sum'      : PythonSum,

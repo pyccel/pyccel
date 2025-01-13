@@ -444,6 +444,10 @@ class SyntaxParser(BasicParser):
             return AugAssign(lhs, '|', rhs)
         elif isinstance(stmt.op, ast.BitAnd):
             return AugAssign(lhs, '&', rhs)
+        elif isinstance(stmt.op, ast.LShift):
+            return AugAssign(lhs, '<<', rhs)
+        elif isinstance(stmt.op, ast.RShift):
+            return AugAssign(lhs, '>>', rhs)
         else:
             return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
                     severity='error')
@@ -1007,8 +1011,8 @@ class SyntaxParser(BasicParser):
         func = cls(
                name,
                arguments,
-               results,
                body,
+               results,
                is_pure=is_pure,
                is_elemental=is_elemental,
                is_private=is_private,

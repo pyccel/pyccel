@@ -248,11 +248,13 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     # ...
 
     # ...
+    # this will initialize the singelton ErrorsMode
+    # making this settings available everywhere
+    err_mode = ErrorsMode()
     if args.developer_mode:
-        # this will initialize the singelton ErrorsMode
-        # making this settings available everywhere
-        err_mode = ErrorsMode()
         err_mode.set_mode('developer')
+    else:
+        err_mode.set_mode('user')
     # ...
 
     base_dirpath = os.getcwd()

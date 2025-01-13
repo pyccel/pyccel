@@ -5,7 +5,6 @@
 """
 This module represent a call to the itertools functions for code generation.
 """
-from .builtins  import PythonLen, PythonRange
 from .core      import PyccelFunctionDef, Module
 from .internals import Iterable
 

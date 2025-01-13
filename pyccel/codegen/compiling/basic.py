@@ -91,10 +91,7 @@ class CompileObj:
         self._lock_source  = FileLock(self.source+'.lock')
 
         self._flags        = list(flags)
-        if has_target_file:
-            self._includes     = set([folder, *includes])
-        else:
-            self._includes = set(includes)
+        self._includes     = set([folder, *includes])
         self._libs         = list(libs)
         self._libdirs      = set(libdirs)
         self._accelerators = set(accelerators)
@@ -117,9 +114,8 @@ class CompileObj:
         folder : str
             The new folder where the source file can be found.
         """
-        if self.has_target_file:
-            self._includes.remove(self._folder)
-            self._includes.add(folder)
+        self._includes.remove(self._folder)
+        self._includes.add(folder)
 
         self._file = os.path.join(folder, os.path.basename(self._file))
         self._lock_source  = FileLock(self.source+'.lock')

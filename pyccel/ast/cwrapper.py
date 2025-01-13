@@ -510,8 +510,8 @@ class PyModule(Module):
         self._external_funcs = external_funcs
         self._declarations = declarations
         if import_func is None:
-            self._import_func = FunctionDef(f'{name}_import', (),
-                            (FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)),), ())
+            self._import_func = FunctionDef(f'{name}_import', (), (),
+                            (FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)),))
         else:
             self._import_func = import_func
         super().__init__(name, *args, init_func = init_func, **kwargs)
@@ -718,7 +718,8 @@ class PyClassDef(ClassDef):
         wrapped.
     """
     __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object',
-                 '_new_func', '_properties')
+                 '_new_func', '_properties', '_magic_methods')
+    _attribute_nodes = ClassDef._attribute_nodes + ('_magic_methods',)
 
     def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
         self._original_class = original_class
@@ -727,6 +728,7 @@ class PyClassDef(ClassDef):
         self._type_object = Variable(PyccelPyClassType(), type_name)
         self._new_func = None
         self._properties = ()
+        self._magic_methods = ()
         variables = [Variable(VoidType(), 'instance', memory_handling='alias'),
                      Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias'),
                      Variable(PythonNativeBool(), 'is_alias')]
@@ -819,6 +821,32 @@ class PyClassDef(ClassDef):
         """
         return self._properties
 
+    def add_new_magic_method(self, method):
+        """
+        Add a new magic method to the current class.
+
+        Add a new magic method to the current ClassDef.
+
+        Parameters
+        ----------
+        method : FunctionDef
+            The Method that will be added.
+        """
+
+        if not isinstance(method, PyFunctionDef):
+            raise TypeError("Method must be FunctionDef")
+        method.set_current_user_node(self)
+        self._magic_methods += (method,)
+
+    @property
+    def magic_methods(self):
+        """
+        Get the magic methods describing methods.
+
+        Get the magic methods describing methods such as __add__.
+        """
+        return self._magic_methods
+
 #-------------------------------------------------------------------
 
 class PyGetSetDefElement(PyccelAstNode):
@@ -843,10 +871,8 @@ class PyGetSetDefElement(PyccelAstNode):
     _attribute_nodes = ('_getter', '_setter', '_docstring')
     __slots__ = ('_python_name', '_getter', '_setter', '_docstring')
     def __init__(self, python_name, getter, setter, docstring):
-        if not isinstance(getter, PyFunctionDef):
-            raise TypeError("Getter should be a PyFunctionDef")
-        if not isinstance(setter, PyFunctionDef):
-            raise TypeError("Setter should be a PyFunctionDef")
+        assert isinstance(getter, PyFunctionDef)
+        assert isinstance(setter, PyFunctionDef) or setter is None
         self._python_name = python_name
         self._getter = getter
         self._setter = setter
@@ -917,7 +943,7 @@ class PyModInitFunc(FunctionDef):
 
     def __init__(self, name, body, static_vars, scope):
         self._static_vars = static_vars
-        super().__init__(name, (), (), body, scope=scope)
+        super().__init__(name, (), body, scope=scope)
 
     @property
     def declarations(self):
@@ -1145,7 +1171,7 @@ PyTuple_SetItem = FunctionDef(name = 'PyTuple_SetItem',
                         results = [FunctionDefResult(Variable(CNativeInt(), 'i'))])
 
 #-------------------------------------------------------------------
-#                          Set functions
+#                         Set functions
 #-------------------------------------------------------------------
 
 # https://docs.python.org/3/c-api/set.html#c.PySet_New
@@ -1160,6 +1186,36 @@ PySet_Add = FunctionDef(name = 'PySet_Add',
                                  FunctionDefArgument(Variable(PyccelPyObject(), 'key', memory_handling='alias'))],
                     results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
                     body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Check
+PySet_Check = FunctionDef(name = 'PySet_Check',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(CNativeInt(), 'i'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Size
+PySet_Size = FunctionDef(name = 'PySet_Size',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/object.html#c.PyObject_GetIter
+PySet_GetIter = FunctionDef(name = 'PyObject_GetIter',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Clear
+PySet_Clear = FunctionDef(name = 'PySet_Clear',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='set', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))])
+
+# https://docs.python.org/3/c-api/iter.html#c.PyIter_Check
+PyIter_Next = FunctionDef(name = 'PyIter_Next',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c

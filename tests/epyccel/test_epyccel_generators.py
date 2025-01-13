@@ -10,7 +10,7 @@ def test_sum_range(language):
         return sum(a0[i] for i in range(len(a0)))
 
     n = randint(1,50)
-    x = randint(100,size=n)
+    x = np.array(randint(100, size=n), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -21,7 +21,7 @@ def test_sum_var(language):
         return sum(ai for ai in a)
 
     n = randint(1,50)
-    x = randint(100,size=n)
+    x = np.array(randint(100, size=n), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -33,7 +33,7 @@ def test_sum_var2(language):
 
     n1 = randint(1,10)
     n2 = randint(1,10)
-    x = randint(10,size=(n1,n2))
+    x = np.array(randint(10, size=(n1,n2)), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -47,7 +47,7 @@ def test_sum_var3(language):
     n1 = randint(1,10)
     n2 = randint(1,10)
     n3 = randint(1,10)
-    x = randint(10,size=(n1,n2,n3))
+    x = np.array(randint(10, size=(n1,n2,n3)), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -59,7 +59,7 @@ def test_sum_var4(language):
         return sum(ai for ai in a),s
 
     n = randint(1,50)
-    x = randint(100,size=n)
+    x = np.array(randint(100, size=n), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -115,7 +115,7 @@ def test_expression1(language):
         return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9
 
     n = randint(1,10)
-    x = np.array(randint(100,size=n), dtype=float)
+    x = np.array(randint(100, size=n), dtype=float)
 
     f_epyc = epyccel(f, language = language)
 
@@ -139,7 +139,7 @@ def test_expression2(language):
         return 5+incr(2+incr(6+sum(b[i] for i in range(n))))
 
     n = randint(1,10)
-    x = randint(100,size=n).astype(np.int64)
+    x = randint(100, size=n).astype(np.int64)
 
     f_epyc = epyccel(f, language = language)
 
@@ -192,7 +192,7 @@ def test_sum_range_overwrite(language):
         return v
 
     n = randint(1,50)
-    x = randint(100,size=n)
+    x = np.array(randint(100, size=n), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -244,4 +244,12 @@ def test_min_with_multiple_conditions(language):
         return v
     
     f_epyc = epyccel(f, language = language)
+
+def test_sum_with_two_variables(language):
+    def f():
+        x = sum(i-j for i in range(10) for j in range(7))
+        return x
+
+    f_epyc = epyccel(f, language=language)
+
     assert f() == f_epyc()

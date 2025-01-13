@@ -1,5 +1,3 @@
-#ifndef SET_EXTENSIONS_H
-#define SET_EXTENSIONS_H
 #include <stdarg.h>
 
 // This function represents a call to the .pop() method.
@@ -40,7 +38,24 @@ static inline i_type _c_MEMB(_union)(i_type* self, int n, ...) {
     return union_result;
 }
 
+/**
+ * This function represents a call to the .intersection_update() method.
+ * @param self : The set instance to modify.
+ * @param other : The other set in which elements must be found.
+ */
+static inline void _c_MEMB(_intersection_update)(i_type* self, i_type* other) {
+    _c_MEMB(_iter) itr = _c_MEMB(_begin)(self);
+    while (itr.ref)
+    {
+        i_key val = (*itr.ref);
+        if (_c_MEMB(_contains)(other, val)) {
+            _c_MEMB(_next)(&itr);
+        } else {
+            itr = _c_MEMB(_erase_at)(self, itr);
+        }
+    }
+}
+
 #undef i_type
 #undef i_key
 #include <stc/priv/template2.h>
-#endif

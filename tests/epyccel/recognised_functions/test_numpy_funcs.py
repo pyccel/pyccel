@@ -2,11 +2,11 @@
 import os
 import sys
 import pytest
-from numpy.random import rand, randn, randint, uniform
+from numpy.random import rand, randn, uniform
 from numpy import isclose, iinfo, finfo, complex64, complex128
 import numpy as np
 
-from pyccel.decorators import template, types
+from pyccel.decorators import template
 from pyccel import epyccel
 
 min_int8 = iinfo('int8').min
@@ -15,8 +15,9 @@ max_int8 = iinfo('int8').max
 min_int16 = iinfo('int16').min
 max_int16 = iinfo('int16').max
 
-min_int = iinfo('int').min
-max_int = iinfo('int').max
+# Use int32 for Windows compatibility
+min_int = iinfo(np.int32).min
+max_int = iinfo(np.int32).max
 
 min_int32 = iinfo('int32').min
 max_int32 = iinfo('int32').max
@@ -32,6 +33,16 @@ max_float32 = finfo('float32').max
 
 min_float64 = finfo('float64').min
 max_float64 = finfo('float64').max
+
+default_numpy_int = np.array([1]).dtype
+
+def randint(*args, **kwargs):
+    if 'dtype' in kwargs:
+        return np.random.randint(*args, **kwargs)
+    elif 'size' in kwargs or len(args) > 2:
+        return np.random.randint(*args, **kwargs, dtype=default_numpy_int)
+    else:
+        return np.random.randint(*args, **kwargs, dtype=int)
 
 # Functions still to be tested:
 #    diag
@@ -1581,8 +1592,8 @@ def test_full_dtype_auto(language):
         a = full(3,val)
         return a[0]
 
-    integer   = randint(low = min_int,   high = max_int,   dtype=int)
     integer32 = randint(low = min_int32, high = max_int32, dtype=np.int32)
+    integer = int(integer32)
 
     fl = float(integer)
     fl32 = np.float32(fl)
@@ -2393,7 +2404,7 @@ def test_sum_int(language):
         return np_sum(x)
 
     f1 = epyccel(sum_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10)
     assert f1(x) == sum_call(x)
 
 def test_sum_override_builtin(language):
@@ -2402,7 +2413,7 @@ def test_sum_override_builtin(language):
         return sum(x)
 
     f1 = epyccel(sum_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10)
     assert f1(x) == sum_call(x)
 
 def test_sum_real(language):
@@ -2440,7 +2451,7 @@ def test_sum_property(language):
         return x.sum()
 
     f1 = epyccel(sum_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10)
     assert f1(x) == sum_call(x)
 
 def test_min_int(language):
@@ -2449,7 +2460,7 @@ def test_min_int(language):
         return amin(x)
 
     f1 = epyccel(min_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10)
     assert f1(x) == min_call(x)
 
 def test_min_real(language):
@@ -2517,7 +2528,7 @@ def test_min_property(language):
         return x.min()
 
     f1 = epyccel(min_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10)
     assert f1(x) == min_call(x)
 
 def test_max_int(language):
@@ -2526,7 +2537,7 @@ def test_max_int(language):
         return amax(x)
 
     f1 = epyccel(max_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10)
     assert f1(x) == max_call(x)
 
 def test_max_real(language):
@@ -2576,7 +2587,7 @@ def test_max_property(language):
         return x.max()
 
     f1 = epyccel(max_call, language = language)
-    x = randint(99,size=10)
+    x = randint(99, size=10)
     assert f1(x) == max_call(x)
 
 
@@ -3748,7 +3759,7 @@ def test_numpy_real_scalar(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=int)
+    integer = randint(min_int, max_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -3869,7 +3880,7 @@ def test_numpy_real_array_like_1d(language):
 
     integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
-    integer = randint(min_int, max_int, size = size, dtype=int)
+    integer = randint(min_int, max_int, size = size)
     integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
 
@@ -3927,7 +3938,7 @@ def test_numpy_real_array_like_2d(language):
 
     integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
-    integer = randint(min_int, max_int, size = size, dtype=int)
+    integer = randint(min_int, max_int, size = size)
     integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
 
@@ -3977,7 +3988,7 @@ def test_numpy_imag_scalar(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=int)
+    integer = randint(min_int, max_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -4095,7 +4106,7 @@ def test_numpy_imag_array_like_1d(language):
 
     integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
-    integer = randint(min_int, max_int, size = size, dtype=int)
+    integer = randint(min_int, max_int, size = size)
     integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
 
@@ -4150,7 +4161,7 @@ def test_numpy_imag_array_like_2d(language):
 
     integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
-    integer = randint(min_int, max_int, size = size, dtype=int)
+    integer = randint(min_int, max_int, size = size)
     integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
 
@@ -4381,7 +4392,7 @@ def test_numpy_prod_scalar(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=int)
+    integer = randint(min_int, max_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -4501,7 +4512,7 @@ def test_numpy_prod_array_like_1d(language):
 
     integer8  = randint(max(min_int8, -max_ok_int), min(max_ok_int, max_int8), size = size, dtype=np.int8)
     integer16 = randint(max(min_int16, -max_ok_int), min(max_ok_int, max_int16), size = size, dtype=np.int16)
-    integer   = randint(max(min_int, -max_ok_int), min(max_ok_int, max_int), size = size, dtype=int)
+    integer   = randint(max(min_int, -max_ok_int), min(max_ok_int, max_int), size = size)
     integer32 = randint(max(min_int32, -max_ok_int), min(max_ok_int, max_int32), size = size, dtype=np.int32)
     integer64 = randint(-max_ok_int, max_ok_int, size = size, dtype=np.int64)
 
@@ -4584,7 +4595,7 @@ def test_numpy_prod_array_like_2d(language):
 
     integer8  = randint(max(min_int8, -max_ok_int), min(max_ok_int, max_int8), size = size, dtype=np.int8)
     integer16 = randint(max(min_int16, -max_ok_int), min(max_ok_int, max_int16), size = size, dtype=np.int16)
-    integer   = randint(max(min_int, -max_ok_int), min(max_ok_int, max_int), size = size, dtype=int)
+    integer   = randint(max(min_int, -max_ok_int), min(max_ok_int, max_int), size = size)
     integer32 = randint(max(min_int32, -max_ok_int), min(max_ok_int, max_int32), size = size, dtype=np.int32)
     integer64 = randint(-max_ok_int, max_ok_int, size = size, dtype=np.int64)
 
@@ -4646,7 +4657,7 @@ def test_numpy_norm_scalar(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=int)
+    integer = randint(min_int, max_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -4762,7 +4773,7 @@ def test_numpy_norm_array_like_1d(language):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
+    integer = randint(min_int, max_int, size=size)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -4823,7 +4834,7 @@ def test_numpy_norm_array_like_2d(language):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
+    integer = randint(min_int, max_int, size=size)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -4897,7 +4908,7 @@ def test_numpy_norm_array_like_2d_fortran_order(language):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
+    integer = randint(min_int, max_int, size=size)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -4980,7 +4991,7 @@ def test_numpy_norm_array_like_3d(language):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
+    integer = randint(min_int, max_int, size=size)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -5049,7 +5060,7 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
+    integer = randint(min_int, max_int, size=size)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -5123,7 +5134,7 @@ def test_numpy_matmul_array_like_1d(language):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
+    integer = randint(min_int, max_int, size=size)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -5192,7 +5203,7 @@ def test_numpy_matmul_array_like_2x2d(language):
 
     integer8 = randint(*calculate_max_values(min_int8, max_int8), size=size, dtype=np.int8)
     integer16 = randint(*calculate_max_values(min_int16, max_int16), size=size, dtype=np.int16)
-    integer = randint(*calculate_max_values(min_int, max_int), size=size, dtype=int)
+    integer = randint(*calculate_max_values(min_int, max_int), size=size)
     integer32 = randint(*calculate_max_values(min_int32, max_int32), size=size, dtype=np.int32)
     integer64 = randint(*calculate_max_values(min_int64, max_int64), size=size, dtype=np.int64)
 
@@ -5249,7 +5260,7 @@ def test_numpy_where_array_like_1d_with_condition(language):
 
     integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
     integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
-    integer   = randint(min_int//2,   max_int//2, size=size, dtype=int)
+    integer   = randint(min_int//2,   max_int//2, size=size)
     integer32 = randint(min_int32//2, max_int32//2, size=size, dtype=np.int32)
     integer64 = randint(min_int64//2, max_int64//2, size=size, dtype=np.int64)
 
@@ -5327,7 +5338,7 @@ def test_numpy_where_array_like_2d_with_condition(language):
 
     integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int-1, size=size, dtype=int)
+    integer = randint(min_int, max_int-1, size=size)
     integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
 
@@ -5349,9 +5360,8 @@ def test_numpy_where_array_like_2d_with_condition(language):
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
 
 def test_numpy_where_complex(language):
-    @types('complex64[:]', 'complex64[:]', 'bool[:]')
-    @types('complex128[:]', 'complex128[:]', 'bool[:]')
-    def where_wrapper(arr1, arr2, cond):
+    @template('T', ['complex64[:]','complex128[:]'])
+    def where_wrapper(arr1 : 'T', arr2 : 'T', cond : 'bool[:]'):
         from numpy import where, shape
         a = where(cond, arr1, arr2)
         s = shape(a)
@@ -5376,11 +5386,7 @@ def test_numpy_where_complex(language):
     assert epyccel_func(cmplx128_1, cmplx128_2, cond) == where_wrapper(cmplx128_1, cmplx128_2, cond)
 
 def test_where_combined_types(language):
-    @types('bool[:]','int32[:]','int64[:]')
-    @types('bool[:]','int32[:]','float32[:]')
-    @types('bool[:]','float64[:]','int64[:]')
-    @types('bool[:]','complex128[:]','int64[:]')
-    def where_wrapper(cond, arr1, arr2):
+    def where_wrapper(cond : 'bool[:]', arr1 : 'int32[:] | float64[:] | complex128[:]', arr2 : 'int64[:] | float32[:]'):
         from numpy import where, shape
         a = where(cond, arr1, arr2)
         s = shape(a)
@@ -5456,7 +5462,7 @@ def test_numpy_linspace_scalar(language):
 
     integer8 = randint(min_int8, max_int8 // 2, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=int)
+    integer = randint(min_int, max_int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -5518,20 +5524,12 @@ def test_numpy_linspace_scalar(language):
 def test_numpy_linspace_array_like_1d(language):
     from numpy import linspace
 
-    @types('int[:]', 'int', 'float[:,:]', 'bool')
-    @types('int8[:]', 'int', 'float[:,:]', 'bool')
-    @types('int16[:]', 'int', 'float[:,:]', 'bool')
-    @types('int32[:]', 'int', 'float[:,:]', 'bool')
-    @types('float[:]', 'int', 'float[:,:]', 'bool')
-    @types('float32[:]', 'int', 'float32[:,:]', 'bool')
-    @types('float64[:]', 'int', 'float64[:,:]', 'bool')
-    def test_linspace(start, stop, out, endpoint):
+    @template('T', ['int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'float[:]', 'float32[:]', 'float64[:]'])
+    def test_linspace(start : 'T', stop : int, endpoint : bool):
         from numpy import linspace
         numberOfSamplesToGenerate = 7
         a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
-        for i in range(len(out)):
-            for j in range(len(out[i])):
-                out[i][j] = a[i][j]
+        return a
 
     def test_linspace2(start : 'complex128[:]', stop : 'int', out : 'complex128[:,:]', endpoint : 'bool'):
         from numpy import linspace
@@ -5541,21 +5539,17 @@ def test_numpy_linspace_array_like_1d(language):
             for j in range(len(out[i])):
                 out[i][j] = a[i][j]
 
-    @types('int[:]', 'int', 'int32[:,:]', 'bool')
-    @types('float64[:]', 'int', 'int32[:,:]', 'bool')
-    def test_linspace_dtype(start, stop, out, endpoint):
+    def test_linspace_dtype(start : 'int[:] | float64[:]', stop : int, endpoint : bool):
         from numpy import linspace
         import numpy as np
         numberOfSamplesToGenerate = 7
         a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=(endpoint == True), dtype=np.int32)
-        for i in range(len(out)):
-            for j in range(len(out[i])):
-                out[i][j] = a[i][j]
+        return a
 
     size = 5
     integer8 = randint(min_int8 / 2, max_int8 / 2, size=size, dtype=np.int8)
     integer16 = randint(min_int16 / 2, max_int16 / 2, size=size, dtype=np.int16)
-    integer = randint(-10000, 10000, size=size, dtype=int)
+    integer = randint(-10000, 10000, size=size)
     integer32 = randint(min_int32 / 2, max_int32 / 2, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -5567,71 +5561,70 @@ def test_numpy_linspace_array_like_1d(language):
     epyccel_func_dtype = epyccel(test_linspace_dtype, language=language)
 
     arr = linspace(integer, 5, 7)
-    out = np.empty_like(arr)
-    epyccel_func(integer, 5, out, True)
+    out = epyccel_func(integer, 5, True)
     assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
     arr = linspace(integer, 5, 7, endpoint=False)
-    out = np.empty_like(arr)
-    epyccel_func(integer, 5, out, False)
+    out = epyccel_func(integer, 5, False)
     assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
 
     arr = linspace(integer8, 5, 7)
-    out = np.empty_like(arr)
-    epyccel_func(integer8, 5, out, True)
+    out = epyccel_func(integer8, 5, True)
     assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
     arr = linspace(integer8, 5, 7, endpoint=False)
-    out = np.empty_like(arr)
-    epyccel_func(integer8, 5, out, False)
+    out = epyccel_func(integer8, 5, False)
     assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
 
     arr = linspace(integer16, 5, 7)
-    out = np.empty_like(arr)
-    epyccel_func(integer16, 5, out, True)
+    out = epyccel_func(integer16, 5, True)
     assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
     arr = linspace(integer16, 5, 7, endpoint=False)
-    out = np.empty_like(arr)
-    epyccel_func(integer16, 5, out, False)
+    out = epyccel_func(integer16, 5, False)
     assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
 
     arr = linspace(integer32, 5, 7)
-    out = np.empty_like(arr)
-    epyccel_func(integer32, 5, out, True)
+    out = epyccel_func(integer32, 5, True)
     assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
     arr = linspace(integer32, 5, 7, endpoint=False)
-    out = np.empty_like(arr)
-    epyccel_func(integer32, 5, out, False)
+    out = epyccel_func(integer32, 5, False)
     assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
 
     if sys.platform != 'win32':
         arr = linspace(integer64, 5, 7)
-        out = np.empty_like(arr)
-        epyccel_func(integer64, 5, out, True)
+        out = epyccel_func(integer64, 5, True)
         assert np.allclose(arr, out)
+        assert isinstance(out[0,0], type(arr[0,0]))
         arr = linspace(integer64, 5, 7, endpoint=False)
-        out = np.empty_like(arr)
-        epyccel_func(integer64, 5, out, False)
+        out = epyccel_func(integer64, 5, False)
         assert np.allclose(arr, out)
-
+        assert isinstance(out[0,0], type(arr[0,0]))
 
     arr = linspace(fl32, 5, 7)
-    out = np.empty_like(arr)
-    epyccel_func(fl32, 5, out, True)
+    out = epyccel_func(fl32, 5, True)
     assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
     arr = linspace(fl32, 5, 7, endpoint=False)
-    out = np.empty_like(arr)
-    epyccel_func(fl32, 5, out, False)
+    out = epyccel_func(fl32, 5, False)
     assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
 
     rng = np.random.default_rng()
     fl64 = rng.random((5,), dtype=np.float64)
     arr = linspace(fl64, 2, 7)
-    out = np.empty_like(arr)
-    epyccel_func(fl64, 2, out, True)
+    out = epyccel_func(fl64, 2, True)
     assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
     arr = linspace(fl64, 5, 7, endpoint=False)
-    out = np.empty_like(arr)
-    epyccel_func(fl64, 5, out, False)
+    out = epyccel_func(fl64, 5, False)
     assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
 
     cmplx = (np.random.random(5)*75) + (np.random.random(5)*50) * 1j
     arr = linspace(cmplx, 0, 7)
@@ -5643,24 +5636,25 @@ def test_numpy_linspace_array_like_1d(language):
     epyccel_func2(cmplx, 0, out, False)
     assert np.allclose(arr, out)
 
+    arr = linspace(fl64, 5, 7, dtype=np.int32)
+    out = epyccel_func_dtype(fl64, 5, True)
+    assert np.allclose(arr, out)
+    assert isinstance(out[0,0], type(arr[0,0]))
+    # Integer test does not work. See #2126
+    #arr = linspace(integer, 5, 7, endpoint=False, dtype=np.int32)
+    #out = epyccel_func_dtype(integer, 5, False)
+    #assert isinstance(out[0,0], type(arr[0,0]))
+    #assert np.allclose(arr, out)
+
 def test_numpy_linspace_array_like_2d(language):
     from numpy import linspace
 
-    @types('int[:,:]', 'int', 'float[:,:,:]', 'bool')
-    @types('int8[:,:]', 'int', 'float[:,:,:]', 'bool')
-    @types('int16[:,:]', 'int', 'float[:,:,:]', 'bool')
-    @types('int32[:,:]', 'int', 'float[:,:,:]', 'bool')
-    @types('float[:,:]', 'int', 'float[:,:,:]', 'bool')
-    @types('float32[:,:]', 'int', 'float32[:,:,:]', 'bool')
-    @types('float64[:,:]', 'int', 'float64[:,:,:]', 'bool')
-    def test_linspace(start, stop, out, endpoint):
+    @template('T', ['int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
+    def test_linspace(start : 'T', stop : int, endpoint : bool):
         from numpy import linspace
         numberOfSamplesToGenerate = 7
         a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
-        for i in range(len(out)):
-            for j in range(len(out[i])):
-                for k in range(len(out[i][j])):
-                    out[i][j][k] = a[i][j][k]
+        return a
 
     def test_linspace3(start : 'complex128[:,:]', stop : 'int', out : 'complex128[:,:,:]', endpoint : 'bool'):
         from numpy import linspace
@@ -5693,7 +5687,7 @@ def test_numpy_linspace_array_like_2d(language):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
+    integer = randint(min_int, max_int, size=size)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
     fl32 = np.array([[1.5, 2.2, 3.3, 4.4, 5.5],[5.4,2.1,7.1,10.46,11.0]], dtype=np.float32)
@@ -5705,38 +5699,38 @@ def test_numpy_linspace_array_like_2d(language):
     epyccel_func4 = epyccel(test_linspace4, language=language)
 
     arr = linspace(integer, 5, 7)
-    out = np.empty_like(arr)
-    epyccel_func(integer, 5, out, True)
+    out = epyccel_func(integer, 5, True)
     assert np.allclose(arr, out)
+    assert arr.dtype is out.dtype
     arr = linspace(integer, 5, 7, endpoint=False)
-    out = np.empty_like(arr)
-    epyccel_func(integer, 5, out, False)
+    out = epyccel_func(integer, 5, False)
     assert np.allclose(arr, out)
+    assert arr.dtype is out.dtype
     arr = linspace(integer8, 5, 7)
-    out = np.empty_like(arr)
-    epyccel_func(integer8, 5, out, True)
+    out = epyccel_func(integer8, 5, True)
     assert np.allclose(arr, out)
+    assert arr.dtype is out.dtype
     arr = linspace(integer8, 5, 7, endpoint=False)
-    out = np.empty_like(arr)
-    epyccel_func(integer8, 5, out, False)
+    out = epyccel_func(integer8, 5, False)
     assert np.allclose(arr, out)
+    assert arr.dtype is out.dtype
     arr = linspace(integer16, 5, 7)
-    out = np.empty_like(arr)
-    epyccel_func(integer16, 5, out, True)
+    out = epyccel_func(integer16, 5, True)
     assert np.allclose(arr, out)
+    assert arr.dtype is out.dtype
     arr = linspace(integer16, 5, 7, endpoint=False)
-    out = np.empty_like(arr)
-    epyccel_func(integer16, 5, out, False)
+    out = epyccel_func(integer16, 5, False)
     assert np.allclose(arr, out)
+    assert arr.dtype is out.dtype
     arr = linspace(integer32, 5, 7)
-    out = np.empty_like(arr)
-    epyccel_func(integer32, 5, out, True)
+    out = epyccel_func(integer32, 5, True)
     assert np.allclose(arr, out)
+    assert arr.dtype is out.dtype
     arr = linspace(integer32, 5, 7, endpoint=False)
-    out = np.empty_like(arr)
-    epyccel_func(integer32, 5, out, False)
+    out = epyccel_func(integer32, 5, False)
     assert np.allclose(arr, out)
-    integer   = randint(min_int / 2, max_int / 2, size=size, dtype=int)
+    assert arr.dtype is out.dtype
+    integer   = randint(min_int / 2, max_int / 2, size=size)
     integer_2 = np.array([[1, 2, 3, 4, 5],[5,2,7,10,11]], dtype=int)
     arr = linspace(integer, integer_2, 7, endpoint=False)
     out = np.empty_like(arr)
@@ -5744,32 +5738,32 @@ def test_numpy_linspace_array_like_2d(language):
     assert np.allclose(arr, out)
     if sys.platform != 'win32':
         arr = linspace(integer64, 5, 7)
-        out = np.empty_like(arr)
-        epyccel_func(integer64, 5, out, True)
+        out = epyccel_func(integer64, 5, True)
         assert np.allclose(arr, out)
+        assert arr.dtype is out.dtype
         arr = linspace(integer64, 5, 7, endpoint=False)
-        out = np.empty_like(arr)
-        epyccel_func(integer64, 5, out, False)
+        out = epyccel_func(integer64, 5, False)
         assert np.allclose(arr, out)
+        assert arr.dtype is out.dtype
 
     arr = linspace(fl32, 5, 7)
-    out = np.empty_like(arr)
-    epyccel_func(fl32, 5, out, True)
+    out = epyccel_func(fl32, 5, True)
     assert np.allclose(arr, out)
+    assert arr.dtype is out.dtype
     arr = linspace(fl32, 5, 7, endpoint=False)
-    out = np.empty_like(arr)
-    epyccel_func(fl32, 5, out, False)
+    out = epyccel_func(fl32, 5, False)
     assert np.allclose(arr, out)
+    assert arr.dtype is out.dtype
     rng = np.random.default_rng()
     fl64 = rng.random((2,5), dtype=np.float64)
     arr = linspace(fl64, 5, 7)
-    out = np.empty_like(arr)
-    epyccel_func(fl64, 5, out, True)
+    out = epyccel_func(fl64, 5, True)
     assert np.allclose(arr, out)
+    assert arr.dtype is out.dtype
     arr = linspace(fl64, 5, 7, endpoint=False)
-    out = np.empty_like(arr)
-    epyccel_func(fl64, 5, out, False)
+    out = epyccel_func(fl64, 5, False)
     assert np.allclose(arr, out)
+    assert arr.dtype is out.dtype
 
     arr = linspace(cmplx, 5, 7)
     out = np.empty_like(arr)
@@ -5807,7 +5801,7 @@ def test_numpy_count_non_zero_1d(language):
 
     integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
     integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
-    integer   = randint(min_int//2,   max_int//2, size=size, dtype=int)
+    integer   = randint(min_int//2,   max_int//2, size=size)
     integer32 = randint(min_int32//2, max_int32//2, size=size, dtype=np.int32)
     integer64 = randint(min_int64//2, max_int64//2, size=size, dtype=np.int64)
 
@@ -5849,7 +5843,7 @@ def test_numpy_count_non_zero_2d(language):
 
     integer8  = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
-    integer   = randint(min_int, max_int-1, size=size, dtype=int)
+    integer   = randint(min_int, max_int-1, size=size)
     integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
 
@@ -5893,7 +5887,7 @@ def test_numpy_count_non_zero_1d_keep_dims(language):
 
     integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
     integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
-    integer   = randint(min_int//2,   max_int//2, size=size, dtype=int)
+    integer   = randint(min_int//2,   max_int//2, size=size)
     integer32 = randint(min_int32//2, max_int32//2, size=size, dtype=np.int32)
     integer64 = randint(min_int64//2, max_int64//2, size=size, dtype=np.int64)
 
@@ -5937,7 +5931,7 @@ def test_numpy_count_non_zero_2d_keep_dims(language):
 
     integer8  = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
-    integer   = randint(min_int, max_int-1, size=size, dtype=int)
+    integer   = randint(min_int, max_int-1, size=size)
     integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
 
@@ -5981,7 +5975,7 @@ def test_numpy_count_non_zero_axis(language):
 
     integer8  = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
-    integer   = randint(min_int, max_int-1, size=size, dtype=int)
+    integer   = randint(min_int, max_int-1, size=size)
     integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
 
@@ -6025,7 +6019,7 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
 
     integer8  = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
-    integer   = randint(min_int, max_int-1, size=size, dtype=int)
+    integer   = randint(min_int, max_int-1, size=size)
     integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
 
@@ -6077,7 +6071,7 @@ def test_numpy_count_non_zero_axis_keep_dims_F(language):
 
     integer8  = np.array(randint(min_int8,  max_int8-1,  size=size, dtype=np.int8), order='F')
     integer16 = np.array(randint(min_int16, max_int16-1, size=size, dtype=np.int16), order='F')
-    integer   = np.array(randint(min_int,   max_int-1,   size=size, dtype=int), order='F')
+    integer   = np.array(randint(min_int,   max_int-1,   size=size), order='F')
     integer32 = np.array(randint(min_int32, max_int32-1, size=size, dtype=np.int32), order='F')
     integer64 = np.array(randint(min_int64, max_int64-1, size=size, dtype=np.int64), order='F')
 
