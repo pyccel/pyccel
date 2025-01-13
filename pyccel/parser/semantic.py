@@ -4352,11 +4352,11 @@ class SemanticParser(BasicParser):
                                 for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
             # Collect modified variables
             all_assigned = [v for a in (lhs_assigns + modified_args) for v in
-                            (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
+                            (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) or isinstance(a, DottedVariable) else [a])]
 
             # ... computing inout arguments
             for a in arguments:
-                if a.name not in chain(results_names, ['self']) and a.var not in all_assigned:
+                if a.var not in all_assigned:
                     a.make_const()
             # ...
             # Raise an error if one of the return arguments is an alias.
