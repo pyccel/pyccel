@@ -495,6 +495,9 @@ class PyModule(Module):
         modules.
         See: <https://docs.python.org/3/extending/extending.html>.
 
+    capsule_free_funcs : Iterable[FunctionDef], optional
+        Any functions needed to free allocated arrays.
+
     **kwargs : dict
         See Module.
 
@@ -502,11 +505,12 @@ class PyModule(Module):
     --------
     Module : The super class from which the class inherits.
     """
-    __slots__ = ('_external_funcs', '_declarations', '_import_func')
-    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations', '_import_func')
+    __slots__ = ('_external_funcs', '_declarations', '_import_func', '_capsule_free_funcs')
+    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations',
+                        '_import_func', '_capsule_free_funcs')
 
     def __init__(self, name, *args, external_funcs = (), declarations = (), init_func = None,
-                        import_func = None, **kwargs):
+                        import_func = None, capsule_free_funcs = (), **kwargs):
         self._external_funcs = external_funcs
         self._declarations = declarations
         if import_func is None:
@@ -514,6 +518,7 @@ class PyModule(Module):
                             (FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)),))
         else:
             self._import_func = import_func
+        self._capsule_free_funcs = capsule_free_funcs
         super().__init__(name, *args, init_func = init_func, **kwargs)
 
     @property
@@ -564,6 +569,15 @@ class PyModule(Module):
         is done.
         """
         return self._import_func
+
+    @property
+    def capsule_free_funcs(self):
+        """
+        Any functions needed to free allocated arrays.
+
+        Any functions needed to free allocated arrays via PyCapsule objects.
+        """
+        return self._capsule_free_funcs
 
 #-------------------------------------------------------------------
 class PyFunctionDef(FunctionDef):
