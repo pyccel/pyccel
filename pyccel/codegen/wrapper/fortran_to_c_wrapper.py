@@ -634,9 +634,12 @@ class FortranToCWrapper(Wrapper):
 
         local_var = Variable(expr.class_type, func_scope.get_new_name(f'{name}_obj'),
                              cls_base = expr, memory_handling='alias')
+        local_var_elem = Variable(expr.class_type, func_scope.get_new_name(f'{name}_elem'),
+                             cls_base = expr)
 
         # Allocatable is not returned so it must appear in local scope
         func_scope.insert_variable(local_var)
+        func_scope.insert_variable(local_var_elem)
 
         # Create the C-compatible data pointer
         bind_var = Variable(BindCPointer(),
@@ -647,8 +650,8 @@ class FortranToCWrapper(Wrapper):
         result = BindCFunctionDefResult(bind_var, local_var, func_scope)
 
         # Define the additional steps necessary to define and fill ptr_var
-        alloc = Allocate(local_var, shape=(), status='unallocated')
-        c_loc = CLocFunc(local_var, bind_var)
+        alloc = Assign(bind_var, c_malloc(BindCSizeOf(local_var_elem)))
+        c_loc = C_F_Pointer(bind_var, local_var)
         body = [alloc, c_loc]
 
         new_method = BindCFunctionDef(func_name, [], body, [result], original_function = None, scope = func_scope)
