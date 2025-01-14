@@ -7,12 +7,13 @@
 Module describing the code-wrapping class : FortranToCWrapper
 which creates an interface exposing Fortran code to C.
 """
+from functools import reduce
 import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
-from pyccel.ast.bind_c import BindCClassProperty
+from pyccel.ast.bind_c import BindCClassProperty, c_malloc, BindCSizeOf
 from pyccel.ast.builtins import VariableIterator
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
@@ -425,13 +426,17 @@ class FortranToCWrapper(Wrapper):
                 # Create an array variable which can be passed to CLocFunc
                 ptr_var = Variable(NumpyNDArrayType(var.dtype, var.rank, var.order), scope.get_new_name(name+'_ptr'),
                                     memory_handling='alias')
+                elem_var = Variable(var.dtype, scope.get_new_name(name+'_elem'))
                 scope.insert_variable(ptr_var)
+                scope.insert_variable(elem_var)
 
                 # Define the additional steps necessary to define and fill ptr_var
-                alloc = Allocate(ptr_var, shape=result.shape, status='unallocated')
+                shape = [BindCSizeOf(elem_var), *result.shape]
+                self._additional_exprs.extend([Assign(bind_var, c_malloc(reduce(PyccelMul, shape))),
+                            C_F_Pointer(bind_var, ptr_var, result.shape if var.order == 'F' else result.shape[::-1])])
                 if isinstance(local_var.class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
                     copy = Assign(ptr_var, local_var)
-                    self._additional_exprs.extend([alloc, copy])
+                    self._additional_exprs.append(copy)
                 elif isinstance(local_var.class_type, (HomogeneousSetType, HomogeneousListType)):
                     iterator = VariableIterator(local_var)
                     elem = Variable(var.class_type.element_type, self.scope.get_new_name())
@@ -446,7 +451,7 @@ class FortranToCWrapper(Wrapper):
                     else:
                         iterator.set_loop_counter(idx)
                     fill_for = For((elem,), iterator, for_body, scope = for_scope)
-                    self._additional_exprs.extend([alloc, assign, fill_for])
+                    self._additional_exprs.extend([assign, fill_for])
                 else:
                     raise errors.report(f"Don't know how to return an object of type {local_var.class_type} to C code.",
                             severity='fatal', symbol = var)
