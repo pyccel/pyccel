@@ -102,3 +102,8 @@ int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits)
         }
     }
 }
+
+extern inline double       pyc_radians(double degrees);
+extern inline double       pyc_degrees(double radians);
+extern inline int64_t      pyc_modulo(int64_t a, int64_t b);
+extern inline double        pyc_fmodulo(double a, double b);
