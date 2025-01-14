@@ -3971,7 +3971,7 @@ class SemanticParser(BasicParser):
         lhs_alloc = ne[0]
 
         if isinstance(target, PythonTuple) and not target.is_homogeneous:
-            errors.report(LIST_OF_TUPLES, symbol=expr, severity='error')
+            errors.report(LIST_OF_TUPLES, symbol=expr, severity='fatal')
 
         target.invalidate_node()
         operations = []
