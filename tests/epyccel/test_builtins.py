@@ -137,7 +137,7 @@ def test_min_if(language):
 
 def test_min_in_min(language):
     def f(x : 'int', y : 'int'):
-        if min(min(x+x,+y), min(x+y,y)) < (x+y):
+        if min(min(x+x,+y), min(x+y,y)) < (x+y): #pylint: disable=nested-min-max
             return x+y
         else:
             return x-y
