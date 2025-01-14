@@ -1572,8 +1572,8 @@ class FunctionDefArgument(TypedAstNode):
             name.declare_as_argument()
 
         if pyccel_stage != "syntactic":
-            self._inout = (self.var.rank > 0 or isinstance(self.var.class_type, CustomDataType)) \
-                        and not self.var.is_const if isinstance(self.var, Variable) else False
+            self._inout = (self.var.rank > 0 or isinstance(self.var.class_type, CustomDataType)) 
+            self._inout &= not (isinstance(self.var, Variable) and self.var.is_const)
 
         super().__init__()
 
