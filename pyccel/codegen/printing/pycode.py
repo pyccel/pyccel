@@ -644,11 +644,10 @@ class PythonCodePrinter(CodePrinter):
         condition = ''
         if isinstance(body, Assign):
             body = self._print(body.rhs)
-        elif isinstance(body, ListAppend):
-            body = self._print(body.args[0])
         else:
-            condition = 'if ' + self._print(body.blocks[0].condition)
-            body = self._print(body.blocks[0].body.body[0].args[0])
+            assert isinstance(body, ListAppend)
+            body = self._print(body.args[0])
+
         for_loops = ' '.join([f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
                              for idx, iters, condition in zip(expr.indices, iterators, expr.conditions)])
 

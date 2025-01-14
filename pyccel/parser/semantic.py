@@ -1859,9 +1859,6 @@ class SemanticParser(BasicParser):
         new_expr = []
         while isinstance(loop, (For, If)):
 
-            if isinstance(loop, If):
-                loop = loop.blocks[0].body.body[0]
-                continue
             nlevels+=1
             self._get_for_iterators(loop.iterable, loop.target, new_expr)
 
@@ -3851,7 +3848,7 @@ class SemanticParser(BasicParser):
             stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
             size = (stop - start) / step
             if (step != 1):
-                size = ceiling(size) 
+                size = ceiling(size)
             body = None if not body.body.body else body.body.body[0]
             dims.append((size, step, start, stop))
             i += 1
@@ -3974,14 +3971,14 @@ class SemanticParser(BasicParser):
         lhs_alloc = ne[0]
 
         if isinstance(target, PythonTuple) and not target.is_homogeneous:
-            errors.report(LIST_OF_TUPLES, symbol=expr, severity='fatal')
+            errors.report(LIST_OF_TUPLES, symbol=expr, severity='error')
 
         target.invalidate_node()
         operations = []
         assign = None
         if target_type_name != 'list':
             old_index   = expr.index
-            new_index   = self.scope.get_new_name() 
+            new_index   = self.scope.get_new_name()
             expr.substitute(old_index, new_index)
             array_ops = create_target_operations('numpy_array')
             assign = array_ops[0]

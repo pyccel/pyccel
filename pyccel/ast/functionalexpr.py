@@ -53,12 +53,12 @@ class FunctionalFor(TypedAstNode):
                   Dummy_0 += 1
               ```
               Index is `Dummy_0`.
-    operations : dict
-        A dictionary mapping each type of comprehension (e.g. list, array, etc.)
-        to the operation used for populating it.
     target_type : PyccelSymbol, optional
         The type of the result of the functional for. This is useful at
         the syntactic stage to pass along the final type of the lhs (list/set/array/etc).
+    operations : dict
+        A dictionary mapping each type of comprehension (e.g. list, array, etc.)
+        to the operation used for populating it.
     conditions : list of If or None, optional
         A list of filter conditions corresponding to each for-loop in the comprehension.
         Each element of this list is either an `If` instance that describes the filtering
@@ -146,8 +146,7 @@ class FunctionalFor(TypedAstNode):
     @property
     def conditions(self):
         """
-        A list of filter conditions corresponding to each for-loop 
-        in the comprehension, or None.
+        A list of filter conditions for each loop in the comprehension.
 
         If not `None`, each element of this list is either an `If` instance 
         that describes the filtering condition for that loop, or `None` if 

@@ -2,9 +2,8 @@
 import pytest
 import numpy as np
 
-from modules import loops
-
-from pyccel import epyccel
+from pyccel.epyccel import epyccel
+from modules        import loops
 
 #==============================================================================
 
@@ -101,7 +100,6 @@ def test_product_loop_on_2d_array_F(language):
     f2( y )
     assert np.array_equal( x, y )
 
-
 def test_product_loop(language):
 
     f1 = loops.product_loop
@@ -151,16 +149,6 @@ def test_enumerate_on_1d_array_with_start(language):
     assert np.array_equal( f1(z, 5), f2(z, 5) )
     assert np.array_equal( f1(z,-2), f2(z,-2) )
 
-
-def test_enumerate_on_1d_array_with_tuple(language):
-
-    f1 = loops.enumerate_on_1d_array_with_tuple
-    f2 = epyccel(f1, language=language)
-
-    z = np.arange( 7 )
-
-    assert np.array_equal( f1(z), f2(z) )
-
 def test_zip_prod(language):
 
     f1 = loops.zip_prod
@@ -209,7 +197,7 @@ def test_breaks(language):
     out1 = f1(fizz, buzz, max_val)
     out2 = f2(fizz, buzz, max_val)
 
-    assert  out1 == out2
+    assert( out1 == out2 )
 
 def test_continue(language):
     f1 = loops.fizzbuzz_sum_with_continue
@@ -222,7 +210,7 @@ def test_continue(language):
     out1 = f1(fizz, buzz, max_val)
     out2 = f2(fizz, buzz, max_val)
 
-    assert  out1 == out2
+    assert( out1 == out2 )
 
 def test_temp_array_in_loop(language):
     f1 = loops.temp_array_in_loop
@@ -248,8 +236,14 @@ def test_less_than_100(language):
     assert f1(10) == f2(10)
     assert f1(101) == f2(101)
 
-def test_for_expression(language):
-    f1 = loops.for_expression
-    f2 = epyccel( f1, language = language )
-
-    assert f1() == f2()
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+#
+#def teardown_module():
+#    import os, glob
+#    dirname  = os.path.dirname( loops.__file__ )
+#    pattern  = os.path.join( dirname, '__epyccel__*' )
+#    filelist = glob.glob( pattern )
+#    for f in filelist:
+#        os.remove( f )

@@ -24,7 +24,8 @@ files = [os.path.join(path_dir,f) \
          if f not in failing_files \
          else pytest.param(os.path.join(path_dir,f), marks = pytest.mark.xfail(reason=failing_files[f])) \
          for f in files \
-         if f.endswith(".py")]
+         if f.endswith(".py") \
+        ]
 @pytest.mark.fortran
 @pytest.mark.parametrize("f", files)
 def test_codegen(f):
