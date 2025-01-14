@@ -2279,9 +2279,11 @@ class FCodePrinter(CodePrinter):
             return ''
 
     def _print_DeallocatePointer(self, expr):
-        assert isinstance(expr.variable.class_type, BindCPointer)
         var_code = self._print(expr.variable)
-        return f'call c_free({var_code})\n'
+        if isinstance(expr.variable.class_type, BindCPointer):
+            return f'call c_free({var_code})\n'
+        else:
+            return f'deallocate({var_code})\n'
 
 #------------------------------------------------------------------------------
 
