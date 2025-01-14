@@ -119,6 +119,4 @@ indexable
 traceback
 STC
 gFTL
-enum
-zip
 CMake
