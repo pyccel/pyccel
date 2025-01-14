@@ -106,10 +106,7 @@ def sympy_to_pyccel(expr, symbol_map):
 
     elif isinstance(expr, sp.Min):
         args = [sympy_to_pyccel(a, symbol_map) for a in expr.args]
-        result = args[0]
-        for a in args[1:]:
-            result = PythonMin(result, a)
-        return result
+        return PythonMin(*args)
 
     elif isinstance(expr, sp.Max):
         args = [sympy_to_pyccel(a, symbol_map) for a in expr.args]
