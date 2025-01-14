@@ -12,7 +12,8 @@ from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import Module, Deallocate
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
-from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt
+from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt, GenericType
+from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.variable import Variable
 from pyccel.errors.errors     import Errors
@@ -29,9 +30,11 @@ __all__ = (
     'BindCFunctionDefResult',
     'BindCModule',
     'BindCPointer',
+    'BindCSizeOf',
     'BindCVariable',
     'CLocFunc',
     'C_F_Pointer',
+    'c_malloc',
     'DeallocatePointer',
 )
 
@@ -820,3 +823,24 @@ class DeallocatePointer(Deallocate):
         The typed variable (usually an array) that needs memory deallocation.
     """
     __slots__ = ()
+
+class BindCSizeOf(PyccelFunction):
+    """
+    Represents a call to a function which can calculate the size of an object in bytes.
+
+    Represents a call to a function which can calculate the size of an object in bytes.
+
+    Parameters
+    ----------
+    element : TypedAstNode
+        The object whose type should be determined.
+    """
+    __slots__ = ()
+    _class_type = PythonNativeInt()
+    _shape = ()
+
+    def __init__(self, element):
+        super().__init__(element)
+
+c_malloc = FunctionDef('c_malloc', (FunctionDefArgument(Variable(PythonNativeInt(), 'size')),),
+                        (), (FunctionDefResult(Variable(BindCPointer(), 'ptr')),))
