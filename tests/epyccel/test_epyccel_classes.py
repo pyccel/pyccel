@@ -9,7 +9,7 @@ ATOL = 1e-15
 
 @pytest.fixture(scope="module")
 def modnew(language):
-    return epyccel(mod, language = language)
+    return epyccel(mod, language = language, debug = True)
 
 def test_class_import(language):
     class A:
@@ -314,10 +314,11 @@ def test_class_out(language):
 
     assert np.array_equal(p_py.x, p_l.x)
     assert np.array_equal(p_py.get_x(), p_l.get_x())
-    assert np.array_equal(p_py.x, p_py.get_x())
 
     p_py.x[:] = 4
     p_l.x[:] = 4
+
+    assert np.array_equal(p_py.x, p_l.x)
 
     if language != 'python':
         with pytest.raises(AttributeError):
