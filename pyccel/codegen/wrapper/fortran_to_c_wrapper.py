@@ -650,9 +650,8 @@ class FortranToCWrapper(Wrapper):
         result = BindCFunctionDefResult(bind_var, local_var, func_scope)
 
         # Define the additional steps necessary to define and fill ptr_var
-        alloc = Assign(bind_var, c_malloc(BindCSizeOf(local_var_elem)))
-        c_loc = C_F_Pointer(bind_var, local_var)
-        body = [alloc, c_loc]
+        alloc = Assign(bind_var, c_malloc(BindCSizeOf(local_var)))
+        body = [alloc]
 
         new_method = BindCFunctionDef(func_name, [], body, [result], original_function = None, scope = func_scope)
 
