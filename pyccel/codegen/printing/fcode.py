@@ -823,10 +823,15 @@ class FCodePrinter(CodePrinter):
         sep = self._print(SeparatorComment(40))
         if isinstance(expr, BindCModule):
             interfaces = ('interface\n'
-                          'type(c_ptr) function c_malloc(size) bind(C,name="malloc")\n'
+                          'function c_malloc(size) bind(C,name="malloc") result(ptr)\n'
                           'use iso_c_binding\n'
                           'integer(c_size_t), value, intent(in) :: size\n'
+                          'type(c_ptr) :: ptr\n'
                           'end function c_malloc\n'
+                          'subroutine c_free(a) bind(C,name="free")\n'
+                          'use iso_c_binding\n'
+                          'type(c_ptr), value, intent(in) :: a\n'
+                          'end subroutine c_free\n'
                           'end interface\n')
         else:
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
@@ -2274,8 +2279,9 @@ class FCodePrinter(CodePrinter):
             return ''
 
     def _print_DeallocatePointer(self, expr):
+        assert isinstance(expr.variable.class_type, BindCPointer)
         var_code = self._print(expr.variable)
-        return f'deallocate({var_code})'
+        return f'call c_free({var_code})\n'
 
 #------------------------------------------------------------------------------
 
