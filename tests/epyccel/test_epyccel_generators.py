@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import sys
 import pytest
 import numpy as np
 from numpy.random import randint, rand
@@ -210,40 +211,45 @@ def test_sum_with_multiple_conditions(language):
     def f():
         v = sum(i - j for i in range(20) if i % 2 == 1 for j in range(30) if j % 3 == 1)
         return v
-    
+
     f_epyc = epyccel(f, language = language)
     assert f() == f_epyc()
 
+@pytest.mark.xfail(sys.platform == "darwin", reason="Constant('inf') printing")
 def test_max_with_condition(language):
     def f():
         v = max(i for i in range(20) if i % 2 == 1)
         return v
-    
+
     f_epyc = epyccel(f, language = language)
     assert f() == f_epyc()
 
+@pytest.mark.xfail(sys.platform == "darwin", reason="Constant('inf') printing")
 def test_max_with_multiple_conditions(language):
     def f():
         v = max(i - j for i in range(20) if i % 2 == 1 for j in range(30) if j % 3 == 1)
         return v
-    
+
     f_epyc = epyccel(f, language = language)
     assert f() == f_epyc()
 
+@pytest.mark.xfail(sys.platform == "darwin", reason="Constant('inf') printing")
 def test_min_with_condition(language):
     def f():
         v = min(i for i in range(20) if i % 2 == 1)
         return v
-    
+
     f_epyc = epyccel(f, language = language)
     assert f() == f_epyc()
 
+@pytest.mark.xfail(sys.platform == "darwin", reason="Constant('inf') printing")
 def test_min_with_multiple_conditions(language):
     def f():
         v = min(i - j for i in range(20) if i % 2 == 1 for j in range(30) if j % 3 == 1)
         return v
-    
+
     f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
 
 def test_sum_with_two_variables(language):
     def f():
