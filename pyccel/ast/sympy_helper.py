@@ -13,7 +13,7 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 
 from pyccel.utilities.strings import create_incremented_string
 
-from .builtins  import PythonRange, PythonTuple, PythonMin
+from .builtins  import PythonRange, PythonTuple, PythonMin, PythonMax
 
 from .datatypes import PrimitiveIntegerType
 from .internals import PyccelArrayShapeElement
@@ -110,10 +110,7 @@ def sympy_to_pyccel(expr, symbol_map):
 
     elif isinstance(expr, sp.Max):
         args = [sympy_to_pyccel(a, symbol_map) for a in expr.args]
-        result = args[0]
-        for a in args[1:]:
-            result = PythonMax(result, a)
-        return result
+        return PythonMax(*args)
 
     elif isinstance(expr, sp.Tuple):
         args = [sympy_to_pyccel(a, symbol_map) for a in expr]
@@ -193,6 +190,10 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     elif isinstance(expr, PythonMin):
         args = [pyccel_to_sympy(ee, symbol_map, used_names) for e in expr.args for ee in e]
         return sp.Min(*args)
+
+    elif isinstance(expr, PythonMax):
+        args = [pyccel_to_sympy(ee, symbol_map, used_names) for e in expr.args for ee in e]
+        return sp.Max(*args)
 
     elif expr in symbol_map.values():
         return list(symbol_map.keys())[list(symbol_map.values()).index(expr)]
