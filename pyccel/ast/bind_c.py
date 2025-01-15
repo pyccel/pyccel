@@ -12,7 +12,7 @@ from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import Module, Deallocate
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
-from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt, GenericType
+from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt
 from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.variable import Variable
