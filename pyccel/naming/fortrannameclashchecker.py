@@ -46,7 +46,7 @@ class FortranNameClashChecker(LanguageNameClashChecker):
             'asin', 'acos', 'atan', 'exp', 'log', 'int', 'nint',
             'floor', 'fraction', 'real', 'max', 'mod', 'count',
             'pack', 'numpy_sign', 'c_associated', 'c_loc', 'c_f_pointer',
-            'c_ptr', 'c_free', 'c_malloc'])
+            'c_ptr', 'c_malloc', 'storage_size'])
 
     def has_clash(self, name, symbols):
         """

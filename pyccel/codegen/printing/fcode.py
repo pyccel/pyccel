@@ -828,10 +828,6 @@ class FCodePrinter(CodePrinter):
                           'integer(c_size_t), value, intent(in) :: size\n'
                           'type(c_ptr) :: ptr\n'
                           'end function c_malloc\n'
-                          'subroutine c_free(a) bind(C,name="free")\n'
-                          'use iso_c_binding\n'
-                          'type(c_ptr), value, intent(in) :: a\n'
-                          'end subroutine c_free\n'
                           'end interface\n')
         else:
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
