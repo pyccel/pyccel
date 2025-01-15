@@ -3503,12 +3503,45 @@ class SemanticParser(BasicParser):
                 else:
                     r_iter = rhs
 
+                # Create variables to handle swap expressions
+                rhs_map = {}
+                unsaved_vars = set()
+                if isinstance(rhs, (PythonTuple, PythonList)):
+                    unsaved_vars = set([a.name for a in rhs.args if isinstance(a, Variable)])
+
+                # Test if the expression describes a basic swap or if the rhs contains expressions
+                # (e.g. arithmetic expressions or further tuples)
+                # using variables from the left-hand side.
+                modified_vars = set(lhs.get_attribute_nodes((PyccelSymbol, DottedName)))
+                used_vars = set(expr.rhs.get_attribute_nodes((PyccelSymbol, DottedName),
+                                    excluded_nodes = (FunctionDef,)))
+                if used_vars.intersection(modified_vars).difference(unsaved_vars):
+                    errors.report("Assign statement is too complex. It seems that some of the variables used non-trivially on the right-hand side appear on the left-hand side.",
+                            severity='error', symbol=expr)
+
                 body = []
                 for i,(l,r) in enumerate(zip(lhs,r_iter)):
+                    # If the lhs element has not yet been saved to a variable create a new
+                    # variable to hold this value
+                    if l in unsaved_vars:
+                        temp = self.scope.get_new_name()
+                        pyccel_stage.set_stage('syntactic')
+                        local_assign = Assign(temp, l, python_ast = expr.python_ast)
+                        pyccel_stage.set_stage('semantic')
+                        body.append(self._visit(local_assign))
+                        # Save the variable containing the value to rhs_map so it can be
+                        # used when it appears in the assignment
+                        rhs_map[l] = temp
+                        unsaved_vars.discard(l)
+
+                    # Check for a replacement right-hand side if the rhs is found among the lhs variables
+                    r_name = r.name if isinstance(r, Variable) else r
                     pyccel_stage.set_stage('syntactic')
-                    local_assign = Assign(l,r, python_ast = expr.python_ast)
+                    local_assign = Assign(l, rhs_map.get(r_name, r), python_ast = expr.python_ast)
                     pyccel_stage.set_stage('semantic')
                     body.append(self._visit(local_assign))
+                    unsaved_vars.discard(r_name)
+
                 return CodeBlock(body)
         else:
             lhs = self._visit(lhs)
