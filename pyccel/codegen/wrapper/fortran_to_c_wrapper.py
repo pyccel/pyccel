@@ -14,7 +14,7 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
 from pyccel.ast.bind_c import BindCClassProperty, c_malloc, BindCSizeOf
-from pyccel.ast.builtins import VariableIterator
+from pyccel.ast.builtins import PythonRange
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
@@ -27,7 +27,7 @@ from pyccel.ast.datatypes import HomogeneousListType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.numpytypes import NumpyNDArrayType
-from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd
+from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd, PyccelMinus
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
 from pyccel.ast.numpyext import NumpyNDArrayType
 from pyccel.errors.errors import Errors
@@ -438,20 +438,18 @@ class FortranToCWrapper(Wrapper):
                     copy = Assign(ptr_var, local_var)
                     self._additional_exprs.append(copy)
                 elif isinstance(local_var.class_type, (HomogeneousSetType, HomogeneousListType)):
-                    iterator = VariableIterator(local_var)
-                    elem = Variable(var.class_type.element_type, self.scope.get_new_name())
-                    idx = Variable(PythonNativeInt(), self.scope.get_new_name())
-                    self.scope.insert_variable(elem)
-                    assign = Assign(idx, LiteralInteger(0))
+                    # Both lists and default Fortran arrays retrieved from C_F_Pointer are 1-indexed
+                    # so the range starts at 1
                     for_scope = self.scope.create_new_loop_scope()
+                    iterator = PythonRange(LiteralInteger(1), PyccelAdd(local_var.shape[0], LiteralInteger(1)))
+                    idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+                    self.scope.insert_variable(idx)
+                    # Lists are 1-indexed but Pyccel adds the shift during printing so they are
+                    # treated as 0-indexed here
+                    elem = IndexedElement(local_var, PyccelMinus(idx, LiteralInteger(1)))
                     for_body = [Assign(IndexedElement(ptr_var, idx), elem)]
-                    if isinstance(local_var.class_type, HomogeneousSetType):
-                        self.scope.insert_variable(idx)
-                        for_body.append(Assign(idx, PyccelAdd(idx, LiteralInteger(1))))
-                    else:
-                        iterator.set_loop_counter(idx)
-                    fill_for = For((elem,), iterator, for_body, scope = for_scope)
-                    self._additional_exprs.extend([assign, fill_for])
+                    fill_for = For((idx,), iterator, for_body, scope = for_scope)
+                    self._additional_exprs.extend([fill_for])
                 else:
                     raise errors.report(f"Don't know how to return an object of type {local_var.class_type} to C code.",
                             severity='fatal', symbol = var)
