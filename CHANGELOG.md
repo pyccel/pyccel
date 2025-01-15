@@ -103,6 +103,7 @@ All notable changes to this project will be documented in this file.
 -   Fix handling of union `typing.TypeAlias` objects as type hints.
 -   #2141 : Fix error when removing `test_node`
 -   #2148 : Fix error due to missing file `numpy_version.h`.
+-   #2104 : Add support for Pythonic swapping and raise errors for expressions which are too complex.
 
 ### Changed
 
