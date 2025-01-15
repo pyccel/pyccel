@@ -3533,9 +3533,9 @@ class ClassDef(ScopedAstNode):
             try:
                 name = self.scope.get_expected_name(name)
             except RuntimeError:
-                if raise_error:
+                if raise_error_from:
                     errors.report(f"Can't find method {name} in class {self.name}",
-                            severity='fatal', symbol=self)
+                            severity='fatal', symbol=raise_error_from)
                 else:
                     return None
 

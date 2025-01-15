@@ -3122,7 +3122,8 @@ class SemanticParser(BasicParser):
                 return LiteralFalse()
 
         container_base = self.scope.find(str(container_type), 'classes') or get_cls_base(container_type)
-        contains_method = container_base.get_method('__contains__', raise_error = expr if isinstance(container_type, CustomDataType) else None)
+        contains_method = container_base.get_method('__contains__',
+                        raise_error_from = expr if isinstance(container_type, CustomDataType) else None)
         if contains_method:
             return contains_method(container, element)
         else:
