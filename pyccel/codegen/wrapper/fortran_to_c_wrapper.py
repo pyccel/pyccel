@@ -422,7 +422,18 @@ class FortranToCWrapper(Wrapper):
             # Save the shapes of the array
             self._additional_exprs.extend([Assign(result.shape[i], local_var.shape[i]) for i in range(var.rank)])
 
-            if not (var.is_alias or wrap_dotted):
+            if var.is_alias or wrap_dotted:
+                ptr_var = var
+                self._additional_exprs.append(CLocFunc(ptr_var, bind_var))
+            elif isinstance(local_var.class_type, CustomDataType):
+                # Create an array variable which can be passed to CLocFunc
+                ptr_var = Variable(var.class_type, scope.get_new_name(name+'_ptr'), memory_handling='alias')
+                scope.insert_variable(ptr_var)
+                alloc = Allocate(ptr_var, shape=result.shape, status='unallocated')
+                copy = Assign(ptr_var, local_var)
+                cloc = CLocFunc(ptr_var, bind_var)
+                self._additional_exprs.extend([alloc, copy, cloc])
+            else:
                 # Create an array variable which can be passed to CLocFunc
                 ptr_var = Variable(NumpyNDArrayType(var.dtype, var.rank, var.order), scope.get_new_name(name+'_ptr'),
                                     memory_handling='alias')
@@ -434,7 +445,7 @@ class FortranToCWrapper(Wrapper):
                 shape = [BindCSizeOf(elem_var), *result.shape]
                 self._additional_exprs.extend([Assign(bind_var, c_malloc(reduce(PyccelMul, shape))),
                             C_F_Pointer(bind_var, ptr_var, result.shape if var.order == 'F' else result.shape[::-1])])
-                if isinstance(local_var.class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
+                if isinstance(local_var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
                     copy = Assign(ptr_var, local_var)
                     self._additional_exprs.append(copy)
                 elif isinstance(local_var.class_type, (HomogeneousSetType, HomogeneousListType)):
@@ -460,9 +471,6 @@ class FortranToCWrapper(Wrapper):
                 else:
                     raise errors.report(f"Don't know how to return an object of type {local_var.class_type} to C code.",
                             severity='fatal', symbol = var)
-            else:
-                ptr_var = var
-                self._additional_exprs.append(CLocFunc(ptr_var, bind_var))
 
             return result
         else:
