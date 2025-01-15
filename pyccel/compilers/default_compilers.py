@@ -52,7 +52,7 @@ ifort_info = {'exec' : 'ifx',
               'general_flags' : ('-fPIC',),
               'standard_flags' : ('-std=f2003',),
               'openmp': {
-                  'flags' : ('-fopenmp','-nostandard-realloc-lhs'),
+                  'flags' : ('-qopenmp','-nostandard-realloc-lhs'),
                   'libs'  : ('iomp5',),
                   },
               'openacc': {
@@ -144,7 +144,7 @@ icc_info = {'exec' : 'icx',
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'openmp': {
-                'flags' : ('-fopenmp',),
+                'flags' : ('-qopenmp',),
                 },
             'openacc': {
                 'flags' : ("-ta=multicore", "-Minfo=accel"),
