@@ -4343,20 +4343,28 @@ class SemanticParser(BasicParser):
             results_names = [i.var.name for i in results]
 
             # Find all nodes which can modify variables
-            assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
+            assigns = body.get_attribute_nodes((Assign, AliasAssign), excluded_nodes = (FunctionCall,))
             calls   = body.get_attribute_nodes(FunctionCall)
+            builtin_calls = body.get_attribute_nodes((Allocate, Deallocate))
 
             # Collect the modified objects
             lhs_assigns   = [a.lhs for a in assigns]
             modified_args = [call_arg.value for f in calls
                                 for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
+            modified_args += [f.variable for f in builtin_calls]
             # Collect modified variables
             all_assigned = [v for a in (lhs_assigns + modified_args) for v in
                             (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
 
+            # Search for Variables in DottedVariable (get_attribute_nodes is not sufficient
+            # as a DottedVariable is a Variable)
+            while any(isinstance(v, DottedVariable) for v in all_assigned):
+                all_assigned = [v for a in all_assigned for v in (a.get_attribute_nodes(Variable) \
+                                                                 if isinstance(a, DottedVariable) else [a])]
+
             # ... computing inout arguments
             for a in arguments:
-                if a.name not in chain(results_names, ['self']) and a.var not in all_assigned:
+                if a.var not in all_assigned and expr.name not in ('__del__', '__init__'):
                     a.make_const()
             # ...
             # Raise an error if one of the return arguments is an alias.
