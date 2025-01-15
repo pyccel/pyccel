@@ -221,7 +221,7 @@ class MyClass:
         return self._param2
 
 if __name__ == '__main__':
-    obj = MyClass1(2, 4)
+    obj = MyClass(2, 4)
     print(obj.param1)
     print(obj.param2)
 ```
@@ -356,7 +356,7 @@ int main()
     implicit none
 
     integer(i64) :: Out_0001
-    class(MyClass), intent(inout) :: self
+    class(MyClass), intent(in) :: self
 
     Out_0001 = self%private_param1
     return
@@ -373,7 +373,7 @@ int main()
     implicit none
 
     real(f64), pointer, intent(out) :: Out_0001(:)
-    class(MyClass), target, intent(inout) :: self
+    class(MyClass), target, intent(in) :: self
 
     Out_0001(0:) => self%private_param2
     return
