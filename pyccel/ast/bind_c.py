@@ -826,9 +826,9 @@ class DeallocatePointer(Deallocate):
 
 class BindCSizeOf(PyccelFunction):
     """
-    Represents a call to a function which can calculate the size of an object in bytes.
+    Represents a call to a function which can calculate the size of an object in bits.
 
-    Represents a call to a function which can calculate the size of an object in bytes.
+    Represents a call to a function which can calculate the size of an object in bits.
 
     Parameters
     ----------
