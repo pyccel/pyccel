@@ -114,7 +114,7 @@ def epyccel_seq(function_or_module, *,
                 accelerators  = (),
                 verbose       = False,
                 time_execution  = False,
-                debug         = False,
+                debug         = None,
                 includes      = (),
                 libdirs       = (),
                 modules       = (),
@@ -154,7 +154,8 @@ def epyccel_seq(function_or_module, *,
     time_execution : bool
         Time the execution of Pyccel's internal stages.
     debug : bool, optional
-        Enable debug mode.
+        Enable debug mode. The default value is taken from the environment variable PYCCEL_DEBUG_MODE.
+        If no such environment variable exists then the default is False.
     includes : tuple, optional
         Additional include directories for the compiler.
     libdirs : tuple, optional

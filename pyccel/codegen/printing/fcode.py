@@ -2468,9 +2468,7 @@ class FCodePrinter(CodePrinter):
                         dec = Declare(v, intent='in')
                         args_decs[v] = dec
                 else:
-                    if i == 0 and expr.cls_name:
-                        dec = Declare(arg_var, intent='inout')
-                    elif arg.inout:
+                    if arg.inout:
                         dec = Declare(arg_var, intent='inout')
                     else:
                         dec = Declare(arg_var, intent='in')
