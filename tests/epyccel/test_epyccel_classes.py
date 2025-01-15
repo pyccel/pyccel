@@ -9,7 +9,7 @@ ATOL = 1e-15
 
 @pytest.fixture(scope="module")
 def modnew(language):
-    return epyccel(mod, language = language, debug = True)
+    return epyccel(mod, language = language)
 
 def test_class_import(language):
     class A:
