@@ -695,7 +695,7 @@ class NumpyArray(NumpyNewArray):
         have.
     """
     __slots__ = ('_arg','_shape')
-    _attribute_nodes = ('_arg',)
+    _attribute_nodes = NumpyNewArray._attribute_nodes + ('_arg',)
     name = 'array'
 
     def __init__(self, arg, dtype=None, order='K', ndmin=None):
@@ -1288,6 +1288,7 @@ class NumpyFull(NumpyNewArray):
         (row- or column-wise) order in memory.
     """
     __slots__ = ('_fill_value','_shape')
+    _attribute_nodes = NumpyNewArray._attribute_nodes + ('_shape',)
     name = 'full'
 
     def __init__(self, shape, fill_value, dtype=None, order='C'):
