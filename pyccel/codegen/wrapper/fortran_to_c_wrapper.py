@@ -12,7 +12,7 @@ from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
-from pyccel.ast.bind_c import BindCClassProperty
+from pyccel.ast.bind_c import BindCClassProperty, BindCResultVariable
 from pyccel.ast.builtins import VariableIterator
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
@@ -416,10 +416,12 @@ class FortranToCWrapper(Wrapper):
                                 is_const=False, memory_handling='alias')
             scope.insert_variable(bind_var)
 
-            result = BindCFunctionDefResult(bind_var, var, scope)
+            shape   = [scope.get_temporary_variable(PythonNativeInt(),
+                                name=f'{name}_shape_{i+1}')
+                             for i in range(var.rank)]
 
             # Save the shapes of the array
-            self._additional_exprs.extend([Assign(result.shape[i], local_var.shape[i]) for i in range(var.rank)])
+            self._additional_exprs.extend([Assign(s, local_var.shape[i]) for i, s in enumerate(shape)])
 
             if not (var.is_alias or wrap_dotted):
                 # Create an array variable which can be passed to CLocFunc
@@ -428,7 +430,7 @@ class FortranToCWrapper(Wrapper):
                 scope.insert_variable(ptr_var)
 
                 # Define the additional steps necessary to define and fill ptr_var
-                alloc = Allocate(ptr_var, shape=result.shape, status='unallocated')
+                alloc = Allocate(ptr_var, shape=shape, status='unallocated')
                 if isinstance(local_var.class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
                     copy = Assign(ptr_var, local_var)
                     self._additional_exprs.extend([alloc, copy])
@@ -455,9 +457,10 @@ class FortranToCWrapper(Wrapper):
 
             self._additional_exprs.append(CLocFunc(ptr_var, bind_var))
 
+            result = BindCFunctionDefResult(bind_var, var, scope)
             return result
         else:
-            return BindCFunctionDefResult(local_var, var, scope)
+            return FunctionDefResult(BindCResultVariable(local_var, var))
 
     def _wrap_Variable(self, expr):
         """

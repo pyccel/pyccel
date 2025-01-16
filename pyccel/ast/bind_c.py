@@ -50,10 +50,19 @@ class BindCPointer(FixedSizeType, metaclass = Singleton):
     _name = 'bindcpointer'
 
 class BindCArrayType(InhomogeneousTupleType):
-    def __init__(self, array_var_type, rank, has_strides):
+    """
+    Datatype for a tuple containing all the information necessary to describe an array.
+
+    Datatype for a tuple containing a pointer to array data and integers describing their
+    shape and strides.
+    """
+    __slots__ = ()
+    _name = 'BindCArrayType'
+
+    def __init__(self, rank, has_strides):
         shape_types = (PythonNativeInt(),)*rank
         stride_types = (PythonNativeInt(),)*rank*has_strides
-        super().__init__(array_var_type, *shape_types, *stride_types)
+        super().__init__(BindCPointer(), *shape_types, *stride_types)
 
 # =======================================================================================
 #                                   Wrapper classes
@@ -95,7 +104,7 @@ class BindCFunctionDef(FunctionDef):
         super().__init__(*args, **kwargs)
         assert self.name == self.name.lower()
         assert all(isinstance(a, BindCFunctionDefArgument) for a in self._arguments)
-        assert all(isinstance(a, BindCFunctionDefResult) for a in self._results)
+        assert all(isinstance(a, FunctionDefResult) for a in self._results)
 
     @property
     def original_function(self):
@@ -128,16 +137,6 @@ class BindCFunctionDef(FunctionDef):
         shapes and strides are hidden.
         """
         return self._results
-
-    @property
-    def results(self):
-        """
-        List of all objects returned by the function.
-
-        A list of all objects returned by the function including variables
-        which contain array metadata.
-        """
-        return [ai for a in self._results for ai in a.get_all_function_def_results()]
 
     @property
     def arguments(self):
@@ -315,6 +314,14 @@ class BindCFunctionDefArgument(FunctionDefArgument):
 
 # =======================================================================================
 
+class BindCResultVariable(Variable):
+    def __init__(self, new_var, original_var):
+        self._new_var = new_var
+        self._original_var = original_var
+        super().__init__(new_var.class_type, new_var.name,
+                    memory_handling = new_var.memory_handling,
+                    is_optional = new_var.is_optional,
+                    shape = new_var.shape)
 
 class BindCFunctionDefResult(FunctionDefResult):
     """
