@@ -8,21 +8,16 @@ import os
 import time
 
 from pyccel.ast.core                             import ModuleHeader
-from pyccel.ast.numpy_wrapper                    import get_numpy_max_acceptable_version_file
+from pyccel.codegen.compiling.basic              import CompileObj
 from pyccel.codegen.printing.cwrappercode        import CWrapperCodePrinter
 from pyccel.codegen.printing.fcode               import FCodePrinter
 from pyccel.codegen.wrapper.fortran_to_c_wrapper import FortranToCWrapper
 from pyccel.codegen.wrapper.c_to_python_wrapper  import CToPythonWrapper
-from pyccel.codegen.utilities                    import recompile_object
-from pyccel.codegen.utilities                    import copy_internal_library
-from pyccel.codegen.utilities                    import internal_libs
 from pyccel.codegen.utilities                    import manage_dependencies
+from pyccel.errors.errors                        import Errors
 from pyccel.naming                               import name_clash_checkers
 from pyccel.parser.scope                         import Scope
 from pyccel.utilities.stage                      import PyccelStage
-from .compiling.basic                            import CompileObj
-
-from pyccel.errors.errors import Errors
 
 errors = Errors()
 
@@ -149,28 +144,8 @@ def create_shared_library(codegen,
         c_ast = codegen.ast
 
     #---------------------------------------
-    #     Compile cwrapper from stdlib
-    #---------------------------------------
-    start_compile_libs = time.time()
-    cwrapper_lib_dest_path = copy_internal_library('cwrapper', pyccel_dirpath,
-                                extra_files = {'numpy_version.h' :
-                                                get_numpy_max_acceptable_version_file()})
-
-    cwrapper_lib = internal_libs["cwrapper"][1]
-    cwrapper_lib.reset_folder(cwrapper_lib_dest_path)
-
-    # get the include folder path and library files
-    recompile_object(cwrapper_lib,
-                      compiler = wrapper_compiler,
-                      verbose  = verbose)
-    timings['Dependency compilation'] = time.time() - start_compile_libs
-
-    wrapper_compile_obj.add_dependencies(cwrapper_lib)
-
-    #---------------------------------------
     #      Print code specific cwrapper
     #---------------------------------------
-    module_old_name = codegen.ast.name
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
     Scope.name_clash_checker = name_clash_checkers['c']
     wrapper = CToPythonWrapper(base_dirpath)

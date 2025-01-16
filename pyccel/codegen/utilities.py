@@ -16,6 +16,8 @@ import pyccel.stdlib as stdlib_folder
 import pyccel.extensions as ext_folder
 from pyccel.errors.errors import Errors
 
+from pyccel.ast.numpy_wrapper                    import get_numpy_max_acceptable_version_file
+
 from .codegen              import printer_registry
 from .compiling.basic      import CompileObj
 from .compiling.file_locks import FileLockSet
@@ -339,7 +341,10 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
     for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
         if lib_name in pyccel_imports:
 
-            lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
+            extra_files = {'numpy_version.h' : get_numpy_max_acceptable_version_file()} \
+                        if lib_name == 'cwrapper' else None
+
+            lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath, extra_files)
 
             # Pylint thinks stdlib is a str
             if stdlib.dependencies: # pylint: disable=E1101

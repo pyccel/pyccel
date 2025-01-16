@@ -677,26 +677,31 @@ class FCodePrinter(CodePrinter):
         Import
             The import which allows the new type to be accessed.
         """
-        # Get the type used in the dict for compatible types (e.g. float vs float64)
-        matching_expr_type = next((t for t in self._generated_gFTL_types if expr_type == t), None)
-        matching_expr_extensions = next((t for t in self._generated_gFTL_extensions if expr_type == t), None)
+        # Get the module describing the type
+        matching_expr_type = next((m for t,m in self._generated_gFTL_types.items() if expr_type == t), None)
+        # Get the module describing the extension
+        matching_expr_extensions = next((m for t,m in self._generated_gFTL_extensions.items() if expr_type == t), None)
         typename = self._print(expr_type)
         mod_name = f'{typename}_extensions_mod'
         if matching_expr_extensions:
-            module = self._generated_gFTL_extensions[matching_expr_extensions]
+            module = matching_expr_extensions
         else:
+            imports_and_macros = []
+
             if matching_expr_type is None:
                 matching_expr_type = self._build_gFTL_module(expr_type)
                 self.add_import(matching_expr_type)
-
-            type_module = matching_expr_type.source_module
+                imports_and_macros.append(matching_expr_type)
+                type_module = matching_expr_type.source_module
+            else:
+                type_module = matching_expr_type
+                imports_and_macros.append(Import(f'gFTL_extensions/{mod_name}', type_module))
 
             if isinstance(expr_type, HomogeneousSetType):
                 set_filename = LiteralString('set/template.inc')
-                imports_and_macros = [Import(LiteralString('Set_extensions.inc'), Module('_', (), ())) \
+                imports_and_macros += [Import(LiteralString('Set_extensions.inc'), Module('_', (), ())) \
                                         if getattr(i, 'source', None) == set_filename else i \
                                         for i in type_module.imports]
-                imports_and_macros.insert(0, matching_expr_type)
                 self.add_import(Import('gFTL_functions/Set_extensions', Module('_', (), ()), ignore_at_print = True))
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
@@ -1416,6 +1421,21 @@ class FCodePrinter(CodePrinter):
         else:
             self._additional_code += code
             return result
+
+    def _print_SetIntersectionUpdate(self, expr):
+        var = expr.set_variable
+        expr_type = var.class_type
+        var_code = self._print(expr.set_variable)
+        type_name = self._print(expr_type)
+        self.add_import(self._build_gFTL_extension_module(expr_type))
+        return ''.join(f'call {type_name}_intersection_update({var_code}, {self._print(arg)})\n' \
+                for arg in expr.args)
+
+    def _print_SetDiscard(self, expr):
+        var = self._print(expr.set_variable)
+        val = self._print(expr.args[0])
+        success = self.scope.get_temporary_variable(PythonNativeInt())
+        return f'{success} = {var} % erase_value({val})\n'
 
     #========================== Numpy Elements ===============================#
 
@@ -2447,9 +2467,7 @@ class FCodePrinter(CodePrinter):
                         dec = Declare(v, intent='in')
                         args_decs[v] = dec
                 else:
-                    if i == 0 and expr.cls_name:
-                        dec = Declare(arg_var, intent='inout')
-                    elif arg.inout:
+                    if arg.inout:
                         dec = Declare(arg_var, intent='inout')
                     else:
                         dec = Declare(arg_var, intent='in')

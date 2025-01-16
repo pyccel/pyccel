@@ -13,13 +13,13 @@ from pyccel.utilities.stage   import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 
-from .bitwise_operators import PyccelBitOr, PyccelBitAnd
+from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRShift
 
 from .builtins  import PythonBool, PythonTuple
 
 from .c_concepts import PointerCast
 
-from .datatypes import (PyccelType, HomogeneousTupleType, VoidType,
+from .datatypes import (PyccelType, HomogeneousTupleType, VoidType, CustomDataType,
                         PythonNativeBool, InhomogeneousTupleType)
 
 from .internals import PyccelSymbol, PyccelFunction, apply_pickle, Iterable
@@ -750,6 +750,8 @@ class AugAssign(Assign):
             '%' : PyccelMod,
             '|' : PyccelBitOr,
             '&' : PyccelBitAnd,
+            '<<': PyccelLShift,
+            '>>': PyccelRShift,
         }
 
     def __init__(
@@ -1570,7 +1572,12 @@ class FunctionDefArgument(TypedAstNode):
             name.declare_as_argument()
 
         if pyccel_stage != "syntactic":
-            self._inout = self.var.rank>0 and not self.var.is_const if isinstance(self.var, Variable) else False
+            if isinstance(self.var, Variable):
+                self._inout = (self.var.rank > 0 or isinstance(self.var.class_type, CustomDataType)) \
+                        and not self.var.is_const
+            else:
+                # If var is not a Variable it is a FunctionAddress
+                self._inout = False
 
         super().__init__()
 

@@ -450,3 +450,23 @@ bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag)
 
 	return true;
 }
+
+extern inline int64_t	PyInt64_to_Int64(PyObject *object);
+extern inline int32_t	PyInt32_to_Int32(PyObject *object);
+extern inline int16_t	PyInt16_to_Int16(PyObject *object);
+extern inline int8_t	PyInt8_to_Int8(PyObject *object);
+extern inline bool	PyBool_to_Bool(PyObject *object);
+extern inline float	PyFloat_to_Float(PyObject *object);
+extern inline double	PyDouble_to_Double(PyObject *object);
+extern inline bool    PyIs_NativeInt(PyObject *o);
+extern inline bool    PyIs_Int8(PyObject *o);
+extern inline bool    PyIs_Int16(PyObject *o);
+extern inline bool    PyIs_Int32(PyObject *o);
+extern inline bool    PyIs_Int64(PyObject *o);
+extern inline bool    PyIs_NativeFloat(PyObject *o);
+extern inline bool    PyIs_Float(PyObject *o);
+extern inline bool    PyIs_Double(PyObject *o);
+extern inline bool    PyIs_Bool(PyObject *o);
+extern inline bool    PyIs_NativeComplex(PyObject *o);
+extern inline bool    PyIs_Complex128(PyObject *o);
+extern inline bool    PyIs_Complex64(PyObject *o);

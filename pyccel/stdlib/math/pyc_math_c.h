@@ -27,14 +27,16 @@ inline double       pyc_degrees(double radians)
 {
     return radians * (180.0 / M_PI);
 }
-inline int64_t      pyc_modulo(int64_t a, int64_t b){
+inline int64_t      pyc_modulo(int64_t a, int64_t b)
+{
         int64_t modulo = a % b;
         if(!((a < 0) ^ (b < 0)) || modulo == 0)
             return modulo;
         else
             return modulo + b;
 }
-inline double        pyc_fmodulo(double a, double b){
+inline double        pyc_fmodulo(double a, double b)
+{
         double modulo = fmod(a, b);
         if(!((a < 0) ^ (b < 0)) || modulo == 0)
             return modulo;

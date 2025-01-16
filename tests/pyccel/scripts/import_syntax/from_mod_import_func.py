@@ -1,8 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy import zeros
 
-#$ header function matmat(double [:,:], double [:,:], double [:,:])
-def matmat(a,b,c):
+def matmat(a : 'float[:,:]', b : 'float[:,:]', c : 'float[:,:]'):
     from numpy import shape
     n, m = shape(a)
     m, p = shape(b)

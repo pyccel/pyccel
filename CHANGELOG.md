@@ -13,8 +13,6 @@ All notable changes to this project will be documented in this file.
 -   #1700 : Add Python support for list method `sort()`.
 -   #1696 : Add Python support for list method `copy()`.
 -   #1693 : Add Python support for list method `remove()`.
--   #1750 : Add Python support for set method `remove()`.
--   #1743 : Add Python support for set method `discard()`.
 -   #1893 : Add Python support for set initialisation with `set()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
@@ -44,9 +42,12 @@ All notable changes to this project will be documented in this file.
 -   #1917 : Add C and Fortran support for set method `add()`.
 -   #1918 : Add support for set method `clear()`.
 -   #1918 : Add support for set method `copy()`.
+-   #1743 : Add support for set method `discard()`.
+-   #1750 : Add support for set method `remove()`.
 -   #1753 : Add support for set method `union()`.
 -   #1754 : Add support for set method `update()`.
--   #1744 : Add Python support for set method `intersection()`.
+-   #1744 : Add support for set method `intersection()`.
+-   #1745 : Add support for set method `intersection_update()`.
 -   #1884 : Add support for dict method `items()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
@@ -54,7 +55,8 @@ All notable changes to this project will be documented in this file.
 -   #1583 : Allow inhomogeneous tuples in classes.
 -   #738 : Add support for homogeneous tuples with scalar elements as arguments.
 -   Add a warning about containers in lists.
--   #2016 : Add support for translating arithmetic magic methods (methods cannot yet be used from Python).
+-   #2016 : Add support for translating arithmetic magic methods.
+-   #2106 : Add support for `__len__` magic method.
 -   #1980 : Extend The C support for min and max to more than two variables
 -   #2081 : Add support for multi operator expressions
 -   #2061 : Add C support for string declarations.
@@ -62,6 +64,7 @@ All notable changes to this project will be documented in this file.
 -   #1834 : Add support for `@property` decorator.
 -   #2099 : Fix translation of modules containing `__all__`.
 -   #983 : Add support for built-in function `round`.
+-   Add support for `type` as a type annotation.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
@@ -97,6 +100,9 @@ All notable changes to this project will be documented in this file.
 -   #2085 : Fix calling class methods before they are defined.
 -   #2111 : Fix declaration of class attributes with name conflicts using type annotations.
 -   #2115 : Fix integer handling with NumPy 2.0 on Windows.
+-   Fix handling of union `typing.TypeAlias` objects as type hints.
+-   #2141 : Fix error when removing `test_node`
+-   #2148 : Fix error due to missing file `numpy_version.h`.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
 
 ### Changed

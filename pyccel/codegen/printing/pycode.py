@@ -21,6 +21,8 @@ from pyccel.ast.variable   import DottedName, Variable
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
 
+from pyccel.parser.semantic import magic_method_map
+
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
@@ -299,11 +301,12 @@ class PythonCodePrinter(CodePrinter):
 
         body = ''.join([docstring, functions, interfaces, imports, body])
 
-        code = ('def {name}({args}):\n'
-                '{body}\n').format(
-                        name=name,
-                        args=args,
-                        body=body)
+        # Put back return removed in semantic stage
+        if name.startswith('__i') and ('__'+name[3:]) in magic_method_map.values():
+            body += f'    return {expr.arguments[0].name}\n'
+
+        code = (f'def {name}({args}):\n'
+                f'{body}\n')
         decorators = expr.decorators.copy()
         if decorators:
             if decorators['template']:

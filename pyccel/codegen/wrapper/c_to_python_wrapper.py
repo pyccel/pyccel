@@ -64,6 +64,26 @@ errors = Errors()
 cwrapper_ndarray_imports = [Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ())),
                             Import('ndarrays', Module('ndarrays', (), ()))]
 
+magic_binary_funcs = ('__add__',
+                      '__sub__',
+                      '__mul__',
+                      '__truediv__',
+                      '__pow__',
+                      '__lshift__',
+                      '__rshift__',
+                      '__and__',
+                      '__or__',
+                      '__iadd__',
+                      '__isub__',
+                      '__imul__',
+                      '__itruediv__',
+                      '__ipow__',
+                      '__ilshift__',
+                      '__irshift__',
+                      '__iand__',
+                      '__ior__',
+                      )
+
 class CToPythonWrapper(Wrapper):
     """
     Class for creating a wrapper exposing C code to Python.
@@ -1406,7 +1426,7 @@ class CToPythonWrapper(Wrapper):
 
     def _wrap_FunctionDef(self, expr):
         """
-        Build a `PyFunctionDef` form a `FunctionDef`.
+        Build a `PyFunctionDef` from a `FunctionDef`.
 
         Create a `PyFunctionDef` which wraps a C-compatible `FunctionDef`.
         The `PyFunctionDef` should take three arguments (`self`, `args`,
@@ -1428,6 +1448,7 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(expr.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
+        original_func_name = original_func.scope.get_python_name(original_func.name)
 
         possible_class_base = expr.get_user_nodes((ClassDef,))
         if possible_class_base:
@@ -1474,7 +1495,7 @@ class CToPythonWrapper(Wrapper):
             func_args = [FunctionDefArgument(a) for a in func_args]
             body = []
         else:
-            if in_interface:
+            if in_interface or original_func_name in magic_binary_funcs or original_func_name == '__len__':
                 func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
                 body = []
             else:
@@ -1487,7 +1508,12 @@ class CToPythonWrapper(Wrapper):
 
         # Get the code required to wrap the C-compatible results into Python objects
         # This function creates variables so it must be called before extracting them from the scope.
-        if len(python_results) == 0:
+        if original_func_name in magic_binary_funcs and original_func_name.startswith('__i'):
+            res = func_args[0].var.clone(self.scope.get_new_name(func_args[0].var.name), is_argument=False)
+            wrapped_results = {'c_results': [], 'py_result': res, 'body': []}
+            body.append(AliasAssign(res, func_args[0].var))
+            body.append(Py_INCREF(res))
+        elif len(python_results) == 0:
             wrapped_results = {'c_results': [], 'py_result': Py_None, 'body': []}
         elif len(python_results) == 1:
             wrapped_results = self._extract_FunctionDefResult(original_func.results[0].var, is_bind_c_function_def, expr)
@@ -1520,7 +1546,12 @@ class CToPythonWrapper(Wrapper):
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
                 else:
                     body.append(Deallocate(v))
-        body.extend(wrapped_results['body'])
+
+        if original_func_name == '__len__':
+            self.scope.remove_variable(python_result_variable)
+            python_result_variable = c_results[0]
+        else:
+            body.extend(wrapped_results['body'])
         body.extend(ai for arg in wrapped_args for ai in arg['clean_up'])
 
         # Pack the Python compatible results of the function into one argument.
@@ -2013,6 +2044,8 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype, wrapped_class.scope))
             elif python_name == '__init__':
                 wrapped_class.add_new_method(self._get_class_initialiser(f, orig_cls_dtype))
+            elif python_name in (*magic_binary_funcs, '__len__'):
+                wrapped_class.add_new_magic_method(self._wrap(f))
             elif 'property' in f.decorators:
                 wrapped_class.add_property(self._wrap(f))
             else:
