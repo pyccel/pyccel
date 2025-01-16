@@ -1126,19 +1126,18 @@ class CCodePrinter(CodePrinter):
         else:
             source = self._print(source)
         if source == 'stc/cspan':
-            code = ''
+            native_int_c_type = self.get_c_type(PythonNativeInt())
+            code = (f'#define STC_CSPAN_INDEX_TYPE {native_int_c_type}\n'
+                    '#include <stc/cspan.h>\n')
             for t in expr.target:
                 dtype = t.object.class_type
                 container_type = t.local_alias
                 element_type = self.get_c_type(dtype.datatype)
                 rank = dtype.rank
-                native_int_c_type = self.get_c_type(PythonNativeInt())
                 header_guard_prefix = import_header_guard_prefix.get(source, '')
                 header_guard = f'{header_guard_prefix}_{container_type.upper()}'
                 code += ''.join((f'#ifndef {header_guard}\n',
                         f'#define {header_guard}\n',
-                        f'#define STC_CSPAN_INDEX_TYPE {native_int_c_type}\n',
-                         '#include <stc/cspan.h>\n',
                         f'using_cspan({container_type}, {element_type}, {rank});\n',
                         f'#endif // {header_guard}\n\n'))
             return code
