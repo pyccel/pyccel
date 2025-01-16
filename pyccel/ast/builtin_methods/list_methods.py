@@ -56,6 +56,10 @@ class ListMethod(PyccelFunction):
         """
         return self._list_obj
 
+    @property
+    def modified_args(self):
+        return (self._list_obj,)
+
 #==============================================================================
 class ListAppend(ListMethod):
     """

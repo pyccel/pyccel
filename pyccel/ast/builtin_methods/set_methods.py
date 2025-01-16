@@ -57,6 +57,10 @@ class SetMethod(PyccelFunction):
         """
         return self._set_variable
 
+    @property
+    def modified_args(self):
+        return (self._set_variable,)
+
 #==============================================================================
 class SetAdd(SetMethod) :
     """
@@ -125,6 +129,10 @@ class SetCopy(SetMethod):
         self._shape = set_variable._shape
         self._class_type = set_variable._class_type
         super().__init__(set_variable)
+
+    @property
+    def modified_args(self):
+        return ()
 
 #==============================================================================
 class SetPop(SetMethod):
@@ -236,6 +244,10 @@ class SetUnion(SetMethod):
         self._shape = (None,)*self._class_type.rank
         super().__init__(set_obj, *others)
 
+    @property
+    def modified_args(self):
+        return ()
+
 #==============================================================================
 
 class SetIntersection(SetMethod):
@@ -255,6 +267,10 @@ class SetIntersection(SetMethod):
     """
     __slots__ = ('_other','_class_type', '_shape')
     name = 'intersection'
+
+    @property
+    def modified_args(self):
+        return ()
 
 #==============================================================================
 

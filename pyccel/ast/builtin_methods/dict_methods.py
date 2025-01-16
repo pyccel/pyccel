@@ -60,6 +60,10 @@ class DictMethod(PyccelFunction):
         """
         return self._dict_obj
 
+    @property
+    def modified_args(self):
+        return (self._dict_obj,)
+
 #==============================================================================
 class DictPop(DictMethod):
     """
@@ -189,6 +193,10 @@ class DictGet(DictMethod):
         """
         return self._args[1]
 
+    @property
+    def modified_args(self):
+        return ()
+
 #==============================================================================
 class DictSetDefault(DictMethod):
     """
@@ -289,6 +297,10 @@ class DictCopy(DictMethod):
         self._shape = dict_obj.shape
         super().__init__(dict_obj)
 
+    @property
+    def modified_args(self):
+        return ()
+
 #==============================================================================
 class DictItems(Iterable):
     """
@@ -334,6 +346,10 @@ class DictItems(Iterable):
         """
         item = DictPopitem(self._dict_obj)
         return [IndexedElement(item, 0), IndexedElement(item, 1)]
+
+    @property
+    def modified_args(self):
+        return ()
 
 #==============================================================================
 class DictKeys(Iterable):
@@ -381,6 +397,10 @@ class DictKeys(Iterable):
         """
         item = DictPopitem(self._dict_obj)
         return [IndexedElement(item, 0)]
+
+    @property
+    def modified_args(self):
+        return ()
 
 #==============================================================================
 class DictGetItem(DictMethod):
