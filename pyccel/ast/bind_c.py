@@ -12,7 +12,7 @@ from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import Module, Deallocate
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
-from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt
+from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt, InhomogeneousTupleType
 from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.variable import Variable
 from pyccel.errors.errors     import Errors
@@ -48,6 +48,12 @@ class BindCPointer(FixedSizeType, metaclass = Singleton):
     """
     __slots__ = ()
     _name = 'bindcpointer'
+
+class BindCArrayType(InhomogeneousTupleType):
+    def __init__(self, array_var_type, rank, has_strides):
+        shape_types = (PythonNativeInt(),)*rank
+        stride_types = (PythonNativeInt(),)*rank*has_strides
+        super().__init__(array_var_type, *shape_types, *stride_types)
 
 # =======================================================================================
 #                                   Wrapper classes
