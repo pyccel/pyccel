@@ -103,10 +103,10 @@ This limitation is due to the fact that the rank of Fortran allocatable objects 
         #include "ex.h"
         #include <stdint.h>
         #include <stdlib.h>
-        #ifndef _ARRAY_DOUBLE_1D
-        #define _ARRAY_DOUBLE_1D
         #define STC_CSPAN_INDEX_TYPE int64_t
         #include <stc/cspan.h>
+        #ifndef _ARRAY_DOUBLE_1D
+        #define _ARRAY_DOUBLE_1D
         using_cspan(array_double_1d, double, 1);
         #endif // _ARRAY_DOUBLE_1D
 
@@ -207,10 +207,10 @@ Some examples:
         #include "ex.h"
         #include <stdint.h>
         #include <stdlib.h>
-        #ifndef _ARRAY_INT64_1D
-        #define _ARRAY_INT64_1D
         #define STC_CSPAN_INDEX_TYPE int64_t
         #include <stc/cspan.h>
+        #ifndef _ARRAY_INT64_1D
+        #define _ARRAY_INT64_1D
         using_cspan(array_int64_1d, int64_t, 1);
         #endif // _ARRAY_INT64_1D
 
@@ -270,10 +270,10 @@ Some examples:
         #include "ex.h"
         #include <stdint.h>
         #include <stdlib.h>
-        #ifndef _ARRAY_DOUBLE_2D
-        #define _ARRAY_DOUBLE_2D
         #define STC_CSPAN_INDEX_TYPE int64_t
         #include <stc/cspan.h>
+        #ifndef _ARRAY_DOUBLE_2D
+        #define _ARRAY_DOUBLE_2D
         using_cspan(array_double_2d, double, 2);
         #endif // _ARRAY_DOUBLE_2D
 
@@ -339,17 +339,15 @@ Some examples:
         #include <stdint.h>
         #include <stdio.h>
         #include <stdlib.h>
-        #ifndef _ARRAY_INT64_2D
-        #define _ARRAY_INT64_2D
         #define STC_CSPAN_INDEX_TYPE int64_t
         #include <stc/cspan.h>
+        #ifndef _ARRAY_INT64_2D
+        #define _ARRAY_INT64_2D
         using_cspan(array_int64_2d, int64_t, 2);
         #endif // _ARRAY_INT64_2D
 
         #ifndef _ARRAY_INT64_1D
         #define _ARRAY_INT64_1D
-        #define STC_CSPAN_INDEX_TYPE int64_t
-        #include <stc/cspan.h>
         using_cspan(array_int64_1d, int64_t, 1);
         #endif // _ARRAY_INT64_1D
 
@@ -426,10 +424,10 @@ Some examples:
         #include <stdint.h>
         #include <stdio.h>
         #include <stdlib.h>
-        #ifndef _ARRAY_INT64_1D
-        #define _ARRAY_INT64_1D
         #define STC_CSPAN_INDEX_TYPE int64_t
         #include <stc/cspan.h>
+        #ifndef _ARRAY_INT64_1D
+        #define _ARRAY_INT64_1D
         using_cspan(array_int64_1d, int64_t, 1);
         #endif // _ARRAY_INT64_1D
 
