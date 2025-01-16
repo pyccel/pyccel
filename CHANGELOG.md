@@ -16,7 +16,7 @@ All notable changes to this project will be documented in this file.
 -   #1893 : Add Python support for set initialisation with `set()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
--   #1886 : Add Python support for dict method `pop()`.
+-   #1886 : Add Python and C support for dict method `pop()`.
 -   #1887 : Add Python support for dict method `popitem()`.
 -   #1888 : Add Python support for dict method `setdefault()`.
 -   #1885 : Add Python support for dict method `get()`.
@@ -103,6 +103,7 @@ All notable changes to this project will be documented in this file.
 -   Fix handling of union `typing.TypeAlias` objects as type hints.
 -   #2141 : Fix error when removing `test_node`
 -   #2148 : Fix error due to missing file `numpy_version.h`.
+-   #2001 : Ensure all memory is correctly deallocated in the Python interface in a way that is compatible with all compilers.
 -   #2153 : Fix missing line information when an unknown class method is called.
 
 ### Changed

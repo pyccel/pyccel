@@ -250,13 +250,19 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'assert',
                  'stc/cstr']}
 
-import_header_guard_prefix = {'stc/hset'    : '_TOOLS_SET',
-                              'stc/vec'   : '_TOOLS_LIST',
-                              'stc/common' : '_TOOLS_COMMON'}
+import_header_guard_prefix = {
+    'stc/common': '_TOOLS_COMMON',
+    'stc/hmap': '_TOOLS_DICT',
+    'stc/hset': '_TOOLS_SET',
+    'stc/vec': '_TOOLS_LIST'
+}
 
-stc_extension_mapping = {'stc/vec': 'List_extensions',
-                      'stc/hset' : 'Set_extensions',
-                      'stc/common' : 'Common_extensions'}
+stc_extension_mapping = {
+    'stc/common': 'Common_extensions',
+    'stc/hmap': 'Dict_extensions',
+    'stc/hset': 'Set_extensions',
+    'stc/vec': 'List_extensions',
+}
 
 class CCodePrinter(CodePrinter):
     """
@@ -1350,6 +1356,9 @@ class CCodePrinter(CodePrinter):
             val_type = self.get_c_type(dtype.value_type).replace(' ', '_')
             i_type = f'{container_type}_{key_type}_{val_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
+            self.add_import(Import(f'{stc_extension_mapping["stc/" + container_type]}',
+                                   AsName(VariableTypeAnnotation(dtype), i_type),
+                                   ignore_at_print=True))
             return i_type
         elif isinstance(dtype, StringType):
             self.add_import(c_imports['stc/cstr'])
@@ -2809,6 +2818,24 @@ class CCodePrinter(CodePrinter):
         set_var = self._print(ObjectAddress(expr.set_variable))
         arg_val = self._print(expr.args[0])
         return f'{var_type}_erase({set_var}, {arg_val});\n'
+
+    #================== Dict methods ==================
+
+    def _print_DictPop(self, expr):
+        target = expr.dict_obj
+        class_type = target.class_type
+        c_type = self.get_c_type(class_type)
+
+        dict_var = self._print(ObjectAddress(target))
+        key = self._print(expr.key)
+
+        if expr.default_value:
+            default = self._print(expr.default_value)
+            pop_expr = f"{c_type}_pop_with_default({dict_var}, {key}, {default})"
+        else:
+            pop_expr = f"{c_type}_pop({dict_var}, {key})"
+
+        return pop_expr
 
     #=================== MACROS ==================
 
