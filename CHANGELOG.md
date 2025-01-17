@@ -104,10 +104,11 @@ All notable changes to this project will be documented in this file.
 -   #2111 : Fix declaration of class attributes with name conflicts using type annotations.
 -   #2115 : Fix integer handling with NumPy 2.0 on Windows.
 -   Fix handling of union `typing.TypeAlias` objects as type hints.
--   #2141 : Fix error when removing `test_node`
+-   #2141 : Fix error when removing `test_node`.
 -   #2148 : Fix error due to missing file `numpy_version.h`.
 -   #2001 : Ensure all memory is correctly deallocated in the Python interface in a way that is compatible with all compilers.
 -   #2153 : Fix missing line information when an unknown class method is called.
+-   #2149 : Fix multi-line expressions in `if` conditions.
 
 ### Changed
 
