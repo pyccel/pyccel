@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 -   #1881 : Add Python support for dict method `copy()`.
--   #1880 : Add Python support for dict method `clear()`.
+-   #1880 : Add Python and C support for dict method `clear()`.
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1787 : Ensure STC is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
@@ -16,7 +16,7 @@ All notable changes to this project will be documented in this file.
 -   #1893 : Add Python support for set initialisation with `set()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
--   #1886 : Add Python support for dict method `pop()`.
+-   #1886 : Add Python and C support for dict method `pop()`.
 -   #1887 : Add Python support for dict method `popitem()`.
 -   #1888 : Add Python support for dict method `setdefault()`.
 -   #1885 : Add Python support for dict method `get()`.
@@ -104,6 +104,7 @@ All notable changes to this project will be documented in this file.
 -   #2141 : Fix error when removing `test_node`.
 -   #2148 : Fix error due to missing file `numpy_version.h`.
 -   #2001 : Ensure all memory is correctly deallocated in the Python interface in a way that is compatible with all compilers.
+-   #2153 : Fix missing line information when an unknown class method is called.
 -   #2149 : Fix multi-line expressions in `if` conditions.
 
 ### Changed
