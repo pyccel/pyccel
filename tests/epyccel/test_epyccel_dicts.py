@@ -177,7 +177,8 @@ def test_get_array(python_only_language):
     def get_array():
         import numpy as np
         a = {1:np.ones(6), 2:np.zeros(4)}
-        return a.get(1)
+        tmp = a.get(1)
+        return tmp[1]
     epyc_array = epyccel(get_array, language = python_only_language)
     pyccel_result = epyc_array()
     python_result = get_array()
