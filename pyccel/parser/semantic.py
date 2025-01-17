@@ -35,7 +35,7 @@ from pyccel.ast.builtins import Lambda, PythonMap
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
-from pyccel.ast.builtin_methods.dict_methods  import DictGetItem
+from pyccel.ast.builtin_methods.dict_methods  import DictGetItem, DictGet
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -693,6 +693,8 @@ class SemanticParser(BasicParser):
             self._indicate_pointer_target(pointer, target.lhs, expr)
         elif isinstance(target, IndexedElement):
             self._indicate_pointer_target(pointer, target.base, expr)
+        elif isinstance(target, (DictGetItem, DictGet)):
+            self._indicate_pointer_target(pointer, target.dict_obj, expr)
         elif isinstance(target, Variable):
             if target.is_alias:
                 try:
@@ -766,6 +768,11 @@ class SemanticParser(BasicParser):
             var = expr.internal_var
 
             d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
+            return d_var
+
+        elif isinstance(expr, (DictGetItem, DictGet)):
+
+            d_var['memory_handling'] = 'alias' if not isinstance(expr.class_type, FixedSizeNumericType) else 'stack'
             return d_var
 
         elif isinstance(expr, TypedAstNode):
