@@ -35,6 +35,7 @@ from pyccel.ast.builtins import Lambda, PythonMap
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
+from pyccel.ast.builtin_methods.dict_methods  import DictGetItem
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -3537,10 +3538,12 @@ class SemanticParser(BasicParser):
 
         if isinstance(lhs, Variable):
             is_pointer = lhs.is_alias
-        elif isinstance(lhs, IndexedElement):
+        elif isinstance(lhs, (IndexedElement, DictGetItem)):
             is_pointer = False
         elif isinstance(lhs, (PythonTuple, PythonList)):
             is_pointer = any(l.is_alias for l in lhs if isinstance(lhs, Variable))
+        else:
+            raise NotImplementedError()
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
         is_pointer = is_pointer and isinstance(rhs, (Variable, Duplicate))
