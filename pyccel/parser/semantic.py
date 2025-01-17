@@ -2740,28 +2740,41 @@ class SemanticParser(BasicParser):
         if isinstance(var, (PyccelFunctionDef, VariableTypeAnnotation, UnionTypeAnnotation)):
             return self._get_indexed_type(var, expr.indices, expr)
 
-        # TODO check consistency of indices with shape/rank
-        args = [self._visit(idx) for idx in expr.indices]
+        class_type = var.class_type
 
-        if (len(args) == 1 and isinstance(getattr(args[0], 'class_type', None), TupleType)):
-            args = args[0]
+        if isinstance(class_type, (NumpyNDArrayType, HomogeneousListType, TupleType)):
+            # TODO check consistency of indices with shape/rank
+            args = [self._visit(idx) for idx in expr.indices]
 
-        elif any(isinstance(getattr(a, 'class_type', None), TupleType) for a in args):
-            n_exprs = None
-            for a in args:
-                if getattr(a, 'shape', None) and isinstance(a.shape[0], LiteralInteger):
-                    a_len = a.shape[0]
-                    if n_exprs:
-                        assert n_exprs == a_len
-                    else:
-                        n_exprs = a_len
+            if (len(args) == 1 and isinstance(getattr(args[0], 'class_type', None), TupleType)):
+                args = args[0]
 
-            if n_exprs is not None:
-                new_expr_args = [[a[i] if hasattr(a, '__getitem__') else a for a in args]
-                                 for i in range(n_exprs)]
-                return NumpyArray(PythonTuple(*[var[a] for a in new_expr_args]))
+            elif any(isinstance(getattr(a, 'class_type', None), TupleType) for a in args):
+                n_exprs = None
+                for a in args:
+                    if getattr(a, 'shape', None) and isinstance(a.shape[0], LiteralInteger):
+                        a_len = a.shape[0]
+                        if n_exprs:
+                            assert n_exprs == a_len
+                        else:
+                            n_exprs = a_len
 
-        return self._extract_indexed_from_var(var, args, expr)
+                if n_exprs is not None:
+                    new_expr_args = [[a[i] if hasattr(a, '__getitem__') else a for a in args]
+                                     for i in range(n_exprs)]
+                    return NumpyArray(PythonTuple(*[var[a] for a in new_expr_args]))
+
+            return self._extract_indexed_from_var(var, args, expr)
+        else:
+            cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+            method = cls_base.get_method('__getitem__')
+            if method:
+                class_args = self._handle_function_args([FunctionCallArgument(a) for a in expr.indices])
+                args = [FunctionCallArgument(var), *class_args]
+                return self._handle_function(expr, method, args)
+            else:
+                raise errors.report(f"No __getitem__ found for type {class_type}",
+                        severity='fatal', symbol=expr)
 
     def _visit_PyccelSymbol(self, expr):
         name = expr
