@@ -821,8 +821,15 @@ class FCodePrinter(CodePrinter):
 
         # ...
         sep = self._print(SeparatorComment(40))
-        interfaces = ''
-        if expr.interfaces and not isinstance(expr, BindCModule):
+        if isinstance(expr, BindCModule):
+            interfaces = ('interface\n'
+                          'function c_malloc(size) bind(C,name="malloc") result(ptr)\n'
+                          'use iso_c_binding\n'
+                          'integer(c_size_t), value, intent(in) :: size\n'
+                          'type(c_ptr) :: ptr\n'
+                          'end function c_malloc\n'
+                          'end interface\n')
+        else:
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
 
         func_strings = []
@@ -2270,7 +2277,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_DeallocatePointer(self, expr):
         var_code = self._print(expr.variable)
-        return f'deallocate({var_code})'
+        return f'deallocate({var_code})\n'
 
 #------------------------------------------------------------------------------
 
@@ -3656,7 +3663,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_C_F_Pointer(self, expr):
         self._constantImports.setdefault('ISO_C_Binding', set()).add('C_F_Pointer')
-        shape = ','.join(self._print(s) for s in expr.shape)
+        shape = ', '.join(self._print(s) for s in expr.shape)
         if shape:
             return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)}, [{shape}])\n'
         else:
@@ -3823,6 +3830,11 @@ class FCodePrinter(CodePrinter):
                  *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes if a.setter]]
         sep = f'\n{self._print(SeparatorComment(40))}\n'
         return '', sep.join(self._print(f) for f in funcs)
+
+    def _print_BindCSizeOf(self, expr):
+        elem = self._print(expr.args[0])
+        self._constantImports.setdefault('ISO_C_Binding', set()).add('c_size_t')
+        return f'storage_size({elem}, kind = c_size_t)'
 
     def _print_MacroDefinition(self, expr):
         name = expr.macro_name

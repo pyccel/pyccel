@@ -945,13 +945,13 @@ class SemanticParser(BasicParser):
         magic_method_name = magic_method_map.get(type(expr), None)
         magic_method = None
         if magic_method_name:
-            magic_method = class_base.get_method(magic_method_name, False)
+            magic_method = class_base.get_method(magic_method_name)
             if magic_method is None:
                 arg2 = visited_args[1]
                 class_type = arg2.class_type
                 class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
                 magic_method_name = '__r'+magic_method_name[2:]
-                magic_method = class_base.get_method(magic_method_name, False)
+                magic_method = class_base.get_method(magic_method_name)
                 if magic_method:
                     visited_args = [visited_args[1], visited_args[0]]
         if magic_method:
@@ -2998,7 +2998,7 @@ class SemanticParser(BasicParser):
                 args = macro.apply(args)
                 return FunctionCall(master, args, self._current_function)
 
-            method = cls_base.get_method(rhs_name)
+            method = cls_base.get_method(rhs_name, expr)
 
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
             if not method.is_semantic:
@@ -3021,7 +3021,7 @@ class SemanticParser(BasicParser):
 
             # class property?
             else:
-                method = cls_base.get_method(rhs_name)
+                method = cls_base.get_method(rhs_name, expr)
                 if not method.is_semantic:
                     if not method.is_inline:
                         method = self._annotate_the_called_function_def(method)
@@ -3132,7 +3132,8 @@ class SemanticParser(BasicParser):
                 return LiteralFalse()
 
         container_base = self.scope.find(str(container_type), 'classes') or get_cls_base(container_type)
-        contains_method = container_base.get_method('__contains__', raise_error = isinstance(container_type, CustomDataType))
+        contains_method = container_base.get_method('__contains__',
+                        raise_error_from = expr if isinstance(container_type, CustomDataType) else None)
         if contains_method:
             return contains_method(container, element)
         else:
@@ -3677,12 +3678,12 @@ class SemanticParser(BasicParser):
             increment_magic_method_name = '__i' + magic_method_name[2:]
             class_type = lhs.class_type
             class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
-            increment_magic_method = class_base.get_method(increment_magic_method_name, False)
+            increment_magic_method = class_base.get_method(increment_magic_method_name)
             args = [FunctionCallArgument(lhs), FunctionCallArgument(rhs)]
             if increment_magic_method:
                 lhs = self._optional_params.get(lhs, lhs)
                 return self._handle_function(expr, increment_magic_method, args)
-            magic_method = class_base.get_method(magic_method_name)
+            magic_method = class_base.get_method(magic_method_name, expr)
             operator_node = self._handle_function(expr, magic_method, args)
             lhs = self._assign_lhs_variable(expr.lhs, self._infer_type(operator_node), test_node,
                     new_expressions, is_augassign = True)
@@ -4586,7 +4587,7 @@ class SemanticParser(BasicParser):
             self.insert_function(del_method)
             cls.add_new_method(del_method)
         else:
-            del_method = cls.get_method('__del__')
+            del_method = cls.get_method('__del__', expr)
 
         # Add destructors to __del__ method
         self._current_function = del_method.name
@@ -5560,7 +5561,7 @@ class SemanticParser(BasicParser):
             return LiteralInteger(len(arg.python_value))
         elif isinstance(arg.class_type, CustomDataType):
             class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
-            magic_method = class_base.get_method('__len__', False)
+            magic_method = class_base.get_method('__len__')
             if magic_method:
                 return self._handle_function(expr, magic_method, function_call_args)
             else:
