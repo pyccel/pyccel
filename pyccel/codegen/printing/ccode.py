@@ -772,20 +772,22 @@ class CCodePrinter(CodePrinter):
             arg2 = self._print(arg[1])
             return f"f{expr.name}({arg1}, {arg2})"
         elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
-            if isinstance(arg[0], Variable):
+            if isinstance(arg[0], (Variable, Literal)):
                 arg1 = self._print(arg[0])
             else:
                 arg1_temp = self.scope.get_temporary_variable(PythonNativeInt())
                 assign1 = Assign(arg1_temp, arg[0])
-                self._additional_code += self._print(assign1)
+                code = self._print(assign1)
+                self._additional_code += code
                 arg1 = self._print(arg1_temp)
 
-            if isinstance(arg[1], Variable):
+            if isinstance(arg[1], (Variable, Literal)):
                 arg2 = self._print(arg[1])
             else:
                 arg2_temp = self.scope.get_temporary_variable(PythonNativeInt())
                 assign2 = Assign(arg2_temp, arg[1])
-                self._additional_code += self._print(assign2)
+                code = self._print(assign2)
+                self._additional_code += code
                 arg2 = self._print(arg2_temp)
 
             op = '<' if isinstance(expr, PythonMin) else '>'
@@ -952,16 +954,26 @@ class CCodePrinter(CodePrinter):
 
     def _print_If(self, expr):
         lines = []
-        for i, (c, e) in enumerate(expr.blocks):
-            var = self._print(e)
-            if i == 0:
-                lines.append("if (%s)\n{\n" % self._print(c))
-            elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
-                lines.append("else\n{\n")
+        condition_setup = []
+        for i, (c, b) in enumerate(expr.blocks):
+            body = self._print(b)
+            if i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
+                lines.append("else\n")
             else:
-                lines.append("else if (%s)\n{\n" % self._print(c))
-            lines.append("%s}\n" % var)
-        return "".join(lines)
+                # Print condition
+                condition = self._print(c)
+                # Retrieve any additional code which cannot be executed in the line containing the condition
+                condition_setup.append(self._additional_code)
+                self._additional_code = ''
+                # Add the condition to the lines of code
+                line = f"if ({condition})\n"
+                if i == 0:
+                    lines.append(line)
+                else:
+                    lines.append("else " + line)
+            lines.append("{\n")
+            lines.append(body + "}\n")
+        return "".join(chain(condition_setup, lines))
 
     def _print_IfTernaryOperator(self, expr):
         cond = self._print(expr.cond)
@@ -1266,7 +1278,8 @@ class CCodePrinter(CodePrinter):
                 tmp_arg_format_list = CStringExpression(', ').join(tmp_arg_format_list)
                 args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
-                self._additional_code += self._print(assign)
+                code = self._print(assign)
+                self._additional_code += code
             elif f.rank > 0 and not isinstance(f.class_type, StringType):
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
@@ -2213,7 +2226,8 @@ class CCodePrinter(CodePrinter):
                 elif not self.is_c_pointer(arg_val):
                     tmp_var = self.scope.get_temporary_variable(f.dtype)
                     assign = Assign(tmp_var, arg_val)
-                    self._additional_code += self._print(assign)
+                    code = self._print(assign)
+                    self._additional_code += code
                     args.append(ObjectAddress(tmp_var))
                 else:
                     args.append(arg_val)
@@ -2452,10 +2466,6 @@ class CCodePrinter(CodePrinter):
             else:
                 stop_condition = f'({step_code} > 0) ? ({index_code} < {stop_code}) : ({index_code} > {stop_code})'
             for_code = f'for ({index_code} = {start_code}; {stop_condition}; {index_code} += {step_code})\n'
-
-        if self._additional_code:
-            for_code = self._additional_code + for_code
-            self._additional_code = ''
 
         if self._additional_code:
             for_code = self._additional_code + for_code
