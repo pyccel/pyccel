@@ -9,7 +9,7 @@ which creates an interface exposing C code to Python.
 """
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
-from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
+from pyccel.ast.bind_c        import BindCModule, BindCVariable
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
 from pyccel.ast.builtins      import VariableIterator
@@ -54,6 +54,7 @@ from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_che
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
 from pyccel.ast.operators     import PyccelLt, IfTernaryOperator, PyccelAnd
 from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
+from pyccel.ast.utilities     import flatten_tuple_var
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
@@ -1485,7 +1486,7 @@ class CToPythonWrapper(Wrapper):
 
         # Get variables describing the arguments and results that are seen from Python
         python_args = expr.bind_c_arguments if is_bind_c_function_def else expr.arguments
-        python_results = expr.bind_c_results if is_bind_c_function_def else expr.results
+        python_results = [v for r in expr.results for v in flatten_tuple_var(r.var, self.scope)] if is_bind_c_function_def else expr.results
 
         # Get variables describing the arguments and results that must be passed to the function
         original_c_args = expr.arguments

@@ -26,7 +26,6 @@ __all__ = (
     'BindCClassProperty',
     'BindCFunctionDef',
     'BindCFunctionDefArgument',
-    'BindCFunctionDefResult',
     'BindCModule',
     'BindCPointer',
     'BindCVariable',
@@ -323,93 +322,7 @@ class BindCResultVariable(Variable):
                     is_optional = new_var.is_optional,
                     shape = new_var.shape)
 
-class BindCFunctionDefResult(FunctionDefResult):
-    """
-    Stores all the information necessary to expose a result to C code.
-
-    Results of a C-compatible function may need additional information
-    in order to fully construct the object. This class is mostly important
-    for array objects. These objects must describe not only the data, but also
-    meta-data. Namely the shape for the array in each dimension.
-    This information is stored in this class.
-
-    Parameters
-    ----------
-    var : Variable
-        The variable being returned (with a C-compatible type).
-
-    original_res_var : Variable
-        The variable which was returned by the function currently being wrapped
-        in a C-Fortran interface. This variable may have a type which is not
-        compatible with C.
-
-    scope : pyccel.parser.scope.Scope
-        The scope in which any arguments to the function should be declared.
-        This is used to create the shape and stride variables.
-
-    **kwargs : dict
-        See FunctionDefResult.
-
-    See Also
-    --------
-    pyccel.ast.core.FunctionDefResult
-        The class from which BindCFunctionDefResult inherits which
-        contains all details about the args and kwargs.
-    """
-    __slots__ = ('_shape', '_original_res_var')
-    _attribute_nodes = FunctionDefResult._attribute_nodes + \
-                        ('_shape', '_original_res_var')
-
-    def __init__(self, var, original_res_var, scope, **kwargs):
-        name = original_res_var.name
-        self._shape   = [scope.get_temporary_variable(PythonNativeInt(),
-                            name=f'{name}_shape_{i+1}')
-                         for i in range(original_res_var.rank)]
-        self._original_res_var = original_res_var
-        super().__init__(var, **kwargs)
-
-    @property
-    def original_function_result_variable(self):
-        """
-        The result returned by the function currently being wrapped.
-
-        The variable which was returned by the function currently being wrapped
-        in a C-Fortran interface. This variable may have a type which is not
-        compatible with C.
-        """
-        return self._original_res_var
-
-    @property
-    def shape(self):
-        """
-        The shape of the array result in each dimension.
-
-        A tuple containing the variables which describe the number of
-        elements along each dimension of an array result. These values
-        must be returned by any C-compatible function returning an array.
-        """
-        return self._shape
-
-    def get_all_function_def_results(self):
-        """
-        Get all result variables which must be printed to fully describe this result.
-
-        Get a list of all the results of the C-compatible function which are
-        required in order to fully describe this result. This includes the data
-        for the object itself as well as any sizes necessary to
-        define arrays.
-
-        Returns
-        -------
-        list
-            A list of FunctionDefResults which will be results of a BindCFunctionDef.
-        """
-        res = [self]
-        res += [FunctionDefResult(size) for size in self.shape]
-        return res
-
 # =======================================================================================
-
 class BindCModule(Module):
     """
     Represents a Module which only contains functions compatible with C.
