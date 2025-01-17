@@ -2102,7 +2102,10 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (FunctionCall, SetUnion, ListPop)):
             return self._print(rhs)
 
-        lhs_code = self._print(expr.lhs)
+        lhs = expr.lhs
+        lhs_code = self._print(lhs)
+        if isinstance(lhs, Variable) and isinstance(lhs.class_type, NumpyNDArrayType):
+            lhs_code += '('+','.join(':'*lhs.rank)+')'
         # we don't print Range
         # TODO treat the case of iterable classes
         if isinstance(rhs, PyccelUnarySub) and rhs.args[0] == INF:
