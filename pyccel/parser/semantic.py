@@ -2041,26 +2041,15 @@ class SemanticParser(BasicParser):
         elif isinstance(base, UnionTypeAnnotation):
             return UnionTypeAnnotation(*[self._get_indexed_type(t, args, expr) for t in base.type_list])
 
-        if all(isinstance(a, Slice) for a in args):
-            rank = len(args)
-            order = None if rank < 2 else 'C'
-            if isinstance(base, VariableTypeAnnotation):
-                dtype = base.class_type
-                if dtype.rank != 0:
-                    raise errors.report("NumPy element must be a scalar type", severity='fatal', symbol=expr)
-                class_type = NumpyNDArrayType(numpy_process_dtype(dtype), rank, order)
-            elif isinstance(base, PyccelFunctionDef):
-                dtype_cls = base.cls_name
-                dtype = numpy_process_dtype(dtype_cls.static_type())
-                class_type = NumpyNDArrayType(dtype, rank, order)
-            return VariableTypeAnnotation(class_type)
+        if isinstance(base, PyccelFunctionDef):
+            dtype_cls = base.cls_name
+        elif isinstance(base, VariableTypeAnnotation):
+            dtype_cls = base.class_type
+        else:
+            raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
+                    severity='fatal', symbol=expr)
 
-        if not any(isinstance(a, Slice) for a in args):
-            if isinstance(base, PyccelFunctionDef):
-                dtype_cls = base.cls_name
-            else:
-                raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
-                        severity='fatal', symbol=expr)
+        if dtype_cls in (PythonListFunction, PythonTupleFunction, PythonSetFunction, PythonDictFunction):
             if (len(args) == 2 and args[1] is LiteralEllipsis()) or \
                     (len(args) == 1 and dtype_cls is not PythonTupleFunction):
                 syntactic_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
@@ -2091,6 +2080,23 @@ class SemanticParser(BasicParser):
             else:
                 raise errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
+
+        rank = len(args)
+        order = None if rank < 2 else 'C'
+        if isinstance(base, PyccelFunctionDef):
+            try:
+                dtype_cls = dtype_cls.static_type()
+            except AttributeError:
+                raise errors.report("Unrecognised datatype was indexed", severity='fatal', symbol=expr)
+        if dtype_cls.rank != 0:
+            raise errors.report("NumPy element must be a scalar type", severity='fatal', symbol=expr)
+        class_type = NumpyNDArrayType(numpy_process_dtype(dtype_cls), rank, order)
+        args = [self._visit(a.dtype) if isinstance(a, SyntacticTypeAnnotation) else a for a in args]
+        for a in args:
+            if isinstance(a, Variable):
+                a.is_temp = True
+        shape = [None if isinstance(a, Slice) else a for a in args]
+        return VariableTypeAnnotation(class_type, shape = shape)
 
         raise errors.report("Unrecognised type slice",
                 severity='fatal', symbol=expr)
@@ -2850,7 +2856,7 @@ class SemanticParser(BasicParser):
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
                 cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
-                shape = len(class_type) if isinstance(class_type, InhomogeneousTupleType) else None
+                shape = t.shape
                 v = var_class(class_type, name, cls_base = cls_base,
                         shape = shape,
                         is_const = t.is_const, is_optional = False,
@@ -4236,7 +4242,12 @@ class SemanticParser(BasicParser):
 
             # Here _visit_AnnotatedPyccelSymbol always give us an list of size 1
             # so we flatten the arguments
-            arguments = [i for a in new_expr_args for i in self._visit(a)]
+            scalar_arguments = [a for a in new_expr_args if isinstance(a.annotation, SyntacticTypeAnnotation) \
+                    and isinstance(a.annotation.dtype, PyccelSymbol)]
+            visited_scalar_arguments = {a: self._visit(a) for a in scalar_arguments}
+            for a in visited_scalar_arguments.values():
+                self.scope.insert_variable(a[0].var, expr.scope.get_python_name(a[0].name))
+            arguments = [i for a in new_expr_args for i in visited_scalar_arguments.get(a, self._visit(a))]
             assert len(arguments) == len(expr.arguments)
             arg_dict  = {a.name:a.var for a in arguments}
             annotated_args.append(arguments)
@@ -4256,12 +4267,12 @@ class SemanticParser(BasicParser):
                 #searching for the other functions
                 found_func = True
 
-            for a in arguments:
-                a_var = a.var
+            for syntactic_a, semantic_a in zip(new_expr_args, arguments):
+                a_var = semantic_a.var
                 if isinstance(a_var, FunctionAddress):
                     self.insert_function(a_var)
-                else:
-                    self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
+                elif syntactic_a not in visited_scalar_arguments:
+                    self.scope.insert_variable(a_var, expr.scope.get_python_name(semantic_a.name))
 
             if arguments and arguments[0].bound_argument:
                 if arguments[0].var.cls_base.name != cls_name:

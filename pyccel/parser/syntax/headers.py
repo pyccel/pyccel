@@ -111,7 +111,7 @@ class Type(BasicStmt):
 
         Parameters
         ----------
-        s : str
+        s : str | int | Type
             The argument in the trailing section.
 
         Returns
@@ -125,6 +125,8 @@ class Type(BasicStmt):
             return Slice(None, None)
         elif s == '...':
             return LiteralEllipsis()
+        elif isinstance(s, int):
+            return LiteralInteger(s)
         else:
             raise NotImplementedError(f"Unrecognised type trailer argument : {s}")
 
