@@ -327,3 +327,43 @@ class DictItems(Iterable):
         """
         item = DictPopitem(self._dict_obj)
         return [IndexedElement(item, 0), IndexedElement(item, 1)]
+
+#==============================================================================
+class DictGetItem(DictMethod):
+    """
+    Represents a call to the .__getitem__() method.
+
+    The __getitem__() method returns the value for the specified key.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+
+    k : TypedAstNode
+        The key which is used to select the value from the dictionary.
+
+    d : TypedAstNode, optional
+        The value that should be returned if the key is not present in the
+        dictionary.
+    """
+    __slots__ = ('_class_type',)
+    _shape = None
+    name = 'get'
+
+    def __init__(self, dict_obj, k):
+        dict_type = dict_obj.class_type
+        self._class_type = dict_type.value_type
+        if k.class_type != dict_type.key_type:
+            raise TypeError(f"Key passed to get method has type {k.class_type}. Expected {dict_type.key_type}")
+
+        super().__init__(dict_obj, k)
+
+    @property
+    def key(self):
+        """
+        The key that is used to select the element from the dict.
+
+        The key that is used to select the element from the dict.
+        """
+        return self._args[0]
