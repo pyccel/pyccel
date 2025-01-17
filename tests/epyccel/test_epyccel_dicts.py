@@ -173,6 +173,17 @@ def test_get_default_element(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
+def test_get_array(python_only_language):
+    def get_array():
+        import numpy as np
+        a = {1:np.ones(6), 2:np.zeros(4)}
+        return a.get(1)
+    epyc_array = epyccel(get_array, language = python_only_language)
+    pyccel_result = epyc_array()
+    python_result = get_array()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
 def test_get_str_keys(python_only_language):
     def get_str_keys():
         a = {'a':1, 'b':2}
@@ -213,13 +224,25 @@ def test_getitem_str_keys(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
+def test_getitem_array_element(python_only_language):
+    def getitem_array_element():
+        import numpy as np
+        a = {1:np.ones(6), 2:np.zeros(4)}
+        tmp = a[1]
+        return tmp[2]
+    epyc_array_element = epyccel(getitem_array_element, language = python_only_language)
+    pyccel_result = epyc_array_element()
+    python_result = getitem_array_element()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
 def test_getitem_modify_element(language):
     def getitem_modify_element():
         a = {1:1.0, 2:2.0}
         a[1] = 3.0
         return a[1]
-    epyc_element = epyccel(getitem_modify_element, language = language)
-    pyccel_result = epyc_element()
+    epyc_modify_element = epyccel(getitem_modify_element, language = language)
+    pyccel_result = epyc_modify_element()
     python_result = getitem_modify_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
