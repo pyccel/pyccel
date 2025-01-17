@@ -193,6 +193,26 @@ def test_get_default_str_keys(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
+def test_getitem_element(python_only_language):
+    def getitem_element():
+        a = {1:1.0, 2:2.0}
+        return a[1]
+    epyc_element = epyccel(getitem_element, language = python_only_language)
+    pyccel_result = epyc_element()
+    python_result = getitem_element()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_getitem_str_keys(python_only_language):
+    def getitem_str_keys():
+        a = {'a':1, 'b':2}
+        return a['a']
+    epyc_str_keys = epyccel(getitem_str_keys, language = python_only_language)
+    pyccel_result = epyc_str_keys()
+    python_result = getitem_str_keys()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
 def test_dict_contains(language):
     def dict_contains():
         a = {1:1.0, 2:2.0, 3:3.0}
