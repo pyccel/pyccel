@@ -2821,6 +2821,11 @@ class CCodePrinter(CodePrinter):
 
     #================== Dict methods ==================
 
+    def _print_DictClear(self, expr):
+        c_type = self.get_c_type(expr.dict_obj.class_type)
+        dict_var = self._print(ObjectAddress(expr.dict_obj))
+        return f"{c_type}_clear({dict_var});\n"
+
     def _print_DictPop(self, expr):
         target = expr.dict_obj
         class_type = target.class_type
