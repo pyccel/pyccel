@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 -   #1881 : Add Python support for dict method `copy()`.
--   #1880 : Add Python support for dict method `clear()`.
+-   #1880 : Add Python and C support for dict method `clear()`.
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1787 : Ensure STC is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.

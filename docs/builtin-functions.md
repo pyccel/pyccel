@@ -120,7 +120,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 
 | Method | Supported |
 |----------|-----------|
-| `clear` | Python-only |
+| `clear` | Python and C |
 | `copy` | Python-only |
 | `get` | Python-only |
 | `items` | **Yes** |
