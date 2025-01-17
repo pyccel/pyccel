@@ -213,6 +213,17 @@ def test_getitem_str_keys(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
+def test_getitem_modify_element(language):
+    def getitem_modify_element():
+        a = {1:1.0, 2:2.0}
+        a[1] = 3.0
+        return a[1]
+    epyc_element = epyccel(getitem_modify_element, language = language)
+    pyccel_result = epyc_element()
+    python_result = getitem_modify_element()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
 def test_dict_contains(language):
     def dict_contains():
         a = {1:1.0, 2:2.0, 3:3.0}
