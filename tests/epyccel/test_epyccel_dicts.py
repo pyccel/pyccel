@@ -193,11 +193,11 @@ def test_get_default_str_keys(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_getitem_element(python_only_language):
+def test_getitem_element(language):
     def getitem_element():
         a = {1:1.0, 2:2.0}
         return a[1]
-    epyc_element = epyccel(getitem_element, language = python_only_language)
+    epyc_element = epyccel(getitem_element, language = language)
     pyccel_result = epyc_element()
     python_result = getitem_element()
     assert isinstance(python_result, type(pyccel_result))
