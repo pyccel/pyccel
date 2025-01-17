@@ -82,5 +82,9 @@ if __name__ == '__main__':
 
         bot.indicate_trust(command_words[2])
 
+    elif command_words == ['approved', 'pr', 'fork']:
+        print(event['comment']['user']['login'])
+        bot.mark_as_ready(following_review = True)
+
     else:
         bot.show_commands()

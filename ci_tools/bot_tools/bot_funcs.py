@@ -497,25 +497,6 @@ class Bot:
         self.mark_as_draft()
         self._GAI.create_comment(self._pr_id, message_from_file('set_draft_failing.txt'))
 
-    def draft_due_to_changes_requested(self, author, reviewer):
-        """
-        Mark the pull request as a draft following requested changes.
-
-        Mark the pull request specified in the constructor as a draft.
-        This function should be called when a review is left on a pull
-        request by a user (non-bot) requesting changes.
-
-        Parameters
-        ----------
-        author : str
-            The login id of the author of the pull request.
-
-        reviewer : str
-            The login id of the reviewer of the pull request.
-        """
-        self.mark_as_draft()
-        self._GAI.create_comment(self._pr_id, message_from_file('set_draft_changes.txt').format(author=author, reviewer=reviewer))
-
     def request_mark_as_ready(self, user):
         """
         Remove the draft status from the pull request.

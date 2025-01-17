@@ -2,8 +2,8 @@
 """
 import json
 import os
-from bot_tools.bot_funcs import Bot
-
+import subprocess
+from bot_tools.bot_funcs import github_cli, review_stage_labels, message_from_file, Bot
 
 if __name__ == '__main__':
     # Parse event payload from $GITHUB_EVENT_PATH variable
@@ -20,11 +20,23 @@ if __name__ == '__main__':
 
     decision = event['review']['state']
 
-    bot = Bot(pr_id = pr_id)
-
     if decision == 'changes_requested':
         author = event['pull_request']['user']['login']
         reviewer = event['review']['user']['login']
-        bot.draft_due_to_changes_requested(author, reviewer)
+        subprocess.run([github_cli, 'pr', 'ready', pr_id, '--undo'], check=False)
+        subprocess.run([github_cli, 'pr', 'comment', pr_id, '--body',
+            message_from_file('set_draft_changes.txt').format(author=author, reviewer=reviewer)],
+            check=True)
+        for l in review_stage_labels:
+            subprocess.run([github_cli, 'pr', 'edit', pr_id, '--remove-label', l], check=False)
     elif decision == 'approved':
-        bot.mark_as_ready(following_review = True)
+        p = subprocess.run([github_cli, 'pr', 'view', pr_id, '--json', 'headRepositoryOwner,headRepository'],
+                check=True, capture_output=True, text=True)
+        repo_info = json.loads(p.stdout)
+        repo = f"{repo_info['headRepositoryOwner']['login']}/{repo_info['headRepository']['login']}"
+        if p.stdout == 'pyccel/pyccel':
+            bot = Bot(pr_id = pr_id)
+            bot.mark_as_ready(following_review = True)
+        else:
+            subprocess.run([github_cli, 'pr', 'comment', pr_id, '--body',
+                '/bot approved pr fork'], check=True)
