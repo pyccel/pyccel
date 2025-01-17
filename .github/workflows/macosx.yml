@@ -75,6 +75,11 @@ jobs:
             python -m pip install --upgrade pip
             python -m pip install .[test]
         shell: bash
+      - name: Test
+        run: |
+          pytest recognised_functions/test_numpy_funcs.py  -v -k reshape -s
+        working-directory: ./tests/epyccel
+        shell: bash
       - name: Fortran/C tests with pytest
         id: f_c_pytest
         timeout-minutes: 60
