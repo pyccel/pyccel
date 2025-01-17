@@ -78,7 +78,7 @@ from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthe
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
-from pyccel.ast.utilities import expand_to_loops
+from pyccel.ast.utilities import expand_to_loops, flatten_tuple_var
 
 from pyccel.ast.variable import Variable, IndexedElement, DottedName
 
@@ -2432,7 +2432,7 @@ class FCodePrinter(CodePrinter):
         """
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        out_args = [r.var for r in expr.results if not r.is_argument]
+        out_args = [v for r in expr.results if not r.is_argument for v in flatten_tuple_var(r.var, self.scope)]
         args_decs = OrderedDict()
         arguments = expr.arguments
         argument_vars = [a.var for a in arguments]
