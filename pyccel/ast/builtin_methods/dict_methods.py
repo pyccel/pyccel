@@ -19,6 +19,7 @@ from pyccel.ast.variable  import IndexedElement
 __all__ = ('DictClear',
            'DictCopy',
            'DictGet',
+           'DictGetItem',
            'DictItems',
            'DictMethod',
            'DictPop',
