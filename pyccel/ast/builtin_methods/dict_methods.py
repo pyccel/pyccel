@@ -348,10 +348,6 @@ class DictGetItem(DictMethod):
 
     k : TypedAstNode
         The key which is used to select the value from the dictionary.
-
-    d : TypedAstNode, optional
-        The value that should be returned if the key is not present in the
-        dictionary.
     """
     __slots__ = ('_class_type', '_shape')
     name = 'get'
