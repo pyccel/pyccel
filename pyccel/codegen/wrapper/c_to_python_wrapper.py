@@ -1486,7 +1486,7 @@ class CToPythonWrapper(Wrapper):
 
         # Get variables describing the arguments and results that are seen from Python
         python_args = expr.bind_c_arguments if is_bind_c_function_def else expr.arguments
-        python_results = [v for r in expr.results for v in flatten_tuple_var(r.var, self.scope)] if is_bind_c_function_def else expr.results
+        python_results = [v for r in expr.results for v in flatten_tuple_var(r.var, expr.scope)] if is_bind_c_function_def else expr.results
 
         # Get variables describing the arguments and results that must be passed to the function
         original_c_args = expr.arguments
