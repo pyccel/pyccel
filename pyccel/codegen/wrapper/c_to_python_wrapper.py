@@ -1319,24 +1319,24 @@ class CToPythonWrapper(Wrapper):
         # Add external functions for functions wrapping array variables
         for v in expr.variable_wrappers:
             f = v.wrapper_function
-            external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = Scope()))
+            external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
 
         # Add external functions for normal functions
         for f in expr.funcs:
-            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = Scope()))
+            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope))
 
         for c in expr.classes:
             m = c.new_func
-            external_funcs.append(FunctionDef(m.name, m.arguments, [], m.results, is_header = True, scope = Scope()))
+            external_funcs.append(FunctionDef(m.name, m.arguments, [], m.results, is_header = True, scope = m.scope))
             for m in c.methods:
-                external_funcs.append(FunctionDef(m.name, m.arguments, [], m.results, is_header = True, scope = Scope()))
+                external_funcs.append(FunctionDef(m.name, m.arguments, [], m.results, is_header = True, scope = m.scope))
             for i in c.interfaces:
                 for f in i.functions:
-                    external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = Scope()))
+                    external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
             for a in c.attributes:
                 for f in (a.getter, a.setter):
                     if f:
-                        external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = Scope()))
+                        external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
         pymod.external_funcs = external_funcs
 
         return pymod
@@ -1486,7 +1486,7 @@ class CToPythonWrapper(Wrapper):
 
         # Get variables describing the arguments and results that are seen from Python
         python_args = expr.bind_c_arguments if is_bind_c_function_def else expr.arguments
-        python_results = [v for r in expr.results for v in flatten_tuple_var(r.var, expr.scope)] if is_bind_c_function_def else expr.results
+        python_results = expr.results
 
         # Get variables describing the arguments and results that must be passed to the function
         original_c_args = expr.arguments
@@ -1520,9 +1520,9 @@ class CToPythonWrapper(Wrapper):
         elif len(python_results) == 0:
             wrapped_results = {'c_results': [], 'py_result': Py_None, 'body': []}
         elif len(python_results) == 1:
-            wrapped_results = self._extract_FunctionDefResult(original_func.results[0].var, is_bind_c_function_def, expr)
+            wrapped_results = self._extract_FunctionDefResult(expr.results[0].var, is_bind_c_function_def, expr)
         else:
-            wrapped_results = self._extract_FunctionDefResult(PythonTuple(*[r.var for r in original_func.results]),
+            wrapped_results = self._extract_FunctionDefResult(PythonTuple(*[r.var for r in expr.results]),
                                         is_bind_c_function_def, expr)
 
         # Get the arguments and results which should be used to call the c-compatible function
@@ -2695,36 +2695,44 @@ class CToPythonWrapper(Wrapper):
         """
         name = orig_var.name
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
-        if is_bind_c:
-            # Result of calling the bind-c function
-            data_var = Variable(VoidType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
-            shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(name+'_shape'),
-                            shape = (orig_var.rank,), memory_handling='alias')
-            typenum = numpy_dtype_registry[orig_var.dtype]
-            # Save so we can find by iterating over func.results
-            self.scope.insert_variable(data_var)
-            self.scope.insert_variable(shape_var)
+        # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
+        c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False, memory_handling='alias')
+        self.scope.insert_variable(c_res)
+        self._wrapping_arrays = True
+        body = [AliasAssign(py_res, FunctionCall(C_to_Python(c_res), [c_res])),
+                Deallocate(c_res)]
+        c_result_vars = [c_res]
 
-            release_memory = False
-            if funcdef:
-                arg_targets = funcdef.result_pointer_map.get(orig_var, ())
-                release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
+        if funcdef:
+            body.extend(self.connect_pointer_targets(orig_var, py_res, funcdef, is_bind_c))
 
-            body = [AliasAssign(py_res, to_pyarray(
-                             LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
-                             convert_to_literal(orig_var.order != 'F'),
-                             convert_to_literal(release_memory)))]
+        return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
-            shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
-            c_result_vars = [ObjectAddress(data_var)]+shape_vars
-        else:
-            # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
-            c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False, memory_handling='alias')
-            self.scope.insert_variable(c_res)
-            self._wrapping_arrays = True
-            body = [AliasAssign(py_res, FunctionCall(C_to_Python(c_res), [c_res])),
-                    Deallocate(c_res)]
-            c_result_vars = [c_res]
+    def _extract_BindCArrayType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
+        orig_var = wrapped_var._original_var
+        name = orig_var.name
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        # Result of calling the bind-c function
+        data_var = Variable(VoidType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
+        shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(name+'_shape'),
+                        shape = (orig_var.rank,), memory_handling='alias')
+        typenum = numpy_dtype_registry[orig_var.dtype]
+        # Save so we can find by iterating over func.results
+        self.scope.insert_variable(data_var)
+        self.scope.insert_variable(shape_var)
+
+        release_memory = False
+        if funcdef:
+            arg_targets = funcdef.result_pointer_map.get(orig_var, ())
+            release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
+
+        body = [AliasAssign(py_res, to_pyarray(
+                         LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
+                         convert_to_literal(orig_var.order != 'F'),
+                         convert_to_literal(release_memory)))]
+
+        shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
+        c_result_vars = [ObjectAddress(data_var)]+shape_vars
 
         if funcdef:
             body.extend(self.connect_pointer_targets(orig_var, py_res, funcdef, is_bind_c))
