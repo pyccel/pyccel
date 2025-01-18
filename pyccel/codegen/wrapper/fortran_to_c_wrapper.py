@@ -682,11 +682,9 @@ class FortranToCWrapper(Wrapper):
         scope.insert_variable(local_var, name)
 
         if orig_var.is_alias or isinstance(orig_var, DottedVariable):
-            return self._get_bind_c_array(name, orig_var.dtype, orig_var.rank, orig_var.order,
-                    local_var.shape, local_var)
+            return self._get_bind_c_array(name, orig_var, local_var.shape, local_var)
         else:
-            result = self._get_bind_c_array(name, orig_var.dtype, orig_var.rank, orig_var.order,
-                    local_var.shape)
+            result = self._get_bind_c_array(name, orig_var, local_var.shape)
 
             result['body'].append(Assign(result['f_array'], local_var))
 
@@ -706,8 +704,7 @@ class FortranToCWrapper(Wrapper):
                             memory_handling = memory_handling)
         scope.insert_variable(local_var, name)
 
-        result = self._get_bind_c_array(name, orig_var.dtype, orig_var.rank, orig_var.order,
-                local_var.shape)
+        result = self._get_bind_c_array(name, orig_var, local_var.shape)
 
         f_array = result['f_array']
         body = result['body']
@@ -739,8 +736,7 @@ class FortranToCWrapper(Wrapper):
                             memory_handling = memory_handling)
         scope.insert_variable(local_var, name)
 
-        result = self._get_bind_c_array(name, orig_var.dtype, orig_var.rank, orig_var.order,
-                local_var.shape)
+        result = self._get_bind_c_array(name, orig_var, local_var.shape)
 
         f_array = result['f_array']
         body = result['body']
@@ -759,7 +755,10 @@ class FortranToCWrapper(Wrapper):
         fill_for = For((elem,), iterator, for_body, scope = for_scope)
         return result
 
-    def _get_bind_c_array(self, name, dtype, rank, order, shape, pointer_target = None):
+    def _get_bind_c_array(self, name, orig_var, shape, pointer_target = None):
+        dtype = orig_var.dtype
+        rank = orig_var.rank
+        order = orig_var.order
         scope = self.scope
         # Create the C-compatible data pointer
         bind_var = Variable(BindCPointer(),
@@ -795,4 +794,4 @@ class FortranToCWrapper(Wrapper):
         for i,s in enumerate(shape_vars):
             scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(i+1)), s)
 
-        return {'c_result': result_var, 'body': body, 'f_array': f_array}
+        return {'c_result': BindCResultVariable(result_var, orig_var), 'body': body, 'f_array': f_array}
