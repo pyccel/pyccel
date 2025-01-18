@@ -13,7 +13,8 @@ from pyccel.ast.bind_c import BindCFunctionDefArgument
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
-from pyccel.ast.bind_c import BindCClassProperty, BindCResultVariable, c_malloc, BindCSizeOf
+from pyccel.ast.bind_c import BindCClassProperty, c_malloc, BindCSizeOf
+from pyccel.ast.bind_c import BindCResultVariable, BindCArrayType
 from pyccel.ast.builtins import VariableIterator
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
@@ -788,8 +789,7 @@ class FortranToCWrapper(Wrapper):
 
             f_array = ptr_var
 
-        inhomog_types = [BindCPointer()] + [PythonNativeInt()]*rank
-        result_var = Variable(InhomogeneousTupleType(*inhomog_types),
+        result_var = Variable(BindCArrayType(rank, has_strides = False),
                         scope.get_new_name())
         scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(0)), bind_var)
         for i,s in enumerate(shape_vars):
