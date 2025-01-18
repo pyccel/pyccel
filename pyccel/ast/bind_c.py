@@ -325,6 +325,14 @@ class BindCResultVariable(Variable):
                     is_optional = new_var.is_optional,
                     shape = new_var.shape)
 
+    @property
+    def new_var(self):
+        return self._new_var
+
+    @property
+    def original_var(self):
+        return self._original_var
+
 # =======================================================================================
 class BindCModule(Module):
     """
