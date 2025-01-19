@@ -400,24 +400,12 @@ class FortranToCWrapper(Wrapper):
             func_scope.imports['variables'][expr.name] = expr
 
             # Create the data pointer
-            bind_var = Variable(BindCPointer(),
-                                scope.get_new_name('bound_'+expr.name),
-                                is_const=True, memory_handling='alias')
-            func_scope.insert_variable(bind_var)
-
-            result = BindCFunctionDefResult(bind_var, expr, func_scope)
-            if expr.rank == 0:
-                #assigns = []
-                #c_loc = CLocFunc(expr, bind_var)
-                raise NotImplementedError("Classes cannot be wrapped")
-            else:
-                assigns = [Assign(result.shape[i], expr.shape[i]) for i in range(expr.rank)]
-                c_loc = CLocFunc(expr, bind_var)
-            body = [*assigns, c_loc]
+            result_wrap = self._get_bind_c_array(expr.name, expr, expr.shape,
+                                            pointer_target = True)
             func = BindCFunctionDef(name = func_name,
-                          body      = body,
+                          body      = result_wrap['body'],
                           arguments = [],
-                          results   = [result],
+                          results   = [result['c_result']],
                           imports   = [import_mod],
                           scope = func_scope,
                           original_function = expr)
@@ -534,26 +522,24 @@ class FortranToCWrapper(Wrapper):
         func_name = self.scope.get_new_name(f'{name}_bind_c_alloc'.lower())
         func_scope = self.scope.new_child_scope(func_name)
 
+        # Allocatable is not returned so it must appear in local scope
         local_var = Variable(expr.class_type, func_scope.get_new_name(f'{name}_obj'),
                              cls_base = expr, memory_handling='alias')
-
-        # Allocatable is not returned so it must appear in local scope
         func_scope.insert_variable(local_var)
 
         # Create the C-compatible data pointer
-        bind_var = Variable(BindCPointer(),
-                            func_scope.get_new_name('bound_'+name),
+        bind_var = Variable(BindCPointer(), func_scope.get_new_name('bound_'+name),
                             is_const=False, memory_handling='alias')
-        func_scope.insert_variable(bind_var)
-
-        result = BindCFunctionDefResult(bind_var, local_var, func_scope)
+        result = BindCResultVariable(bind_var, local_var)
 
         # Define the additional steps necessary to define and fill ptr_var
         alloc = Allocate(local_var, shape=(), status='unallocated')
         c_loc = CLocFunc(local_var, bind_var)
         body = [alloc, c_loc]
 
-        new_method = BindCFunctionDef(func_name, [], body, [result], original_function = None, scope = func_scope)
+        new_method = BindCFunctionDef(func_name, [], body,
+                [FunctionDefResult(result)],
+                original_function = None, scope = func_scope)
 
         methods = [self._wrap(m) for m in expr.methods]
         methods = [m for m in methods if not isinstance(m, EmptyNode)]
@@ -652,23 +638,20 @@ class FortranToCWrapper(Wrapper):
         bind_var = Variable(BindCPointer(),
                             scope.get_new_name('bound_'+name),
                             is_const=False, memory_handling='alias')
-        scope.insert_variable(bind_var)
 
-        result = BindCFunctionDefResult(bind_var, orig_var, scope)
-
-        if wrap_dotted:
+        if isinstance(orig_var, DottedVariable):
             ptr_var = orig_var
             body = [CLocFunc(ptr_var, bind_var)]
         else:
             # Create an array variable which can be passed to CLocFunc
             ptr_var = Variable(orig_var.class_type, scope.get_new_name(name+'_ptr'), memory_handling='alias')
             scope.insert_variable(ptr_var)
-            alloc = Allocate(ptr_var, shape=result.shape, status='unallocated')
+            alloc = Allocate(ptr_var, shape=(), status='unallocated')
             copy = Assign(ptr_var, local_var)
             cloc = CLocFunc(ptr_var, bind_var)
             body = [alloc, copy, cloc]
 
-        return {'body': body, 'c_result': BindCResultVariable(local_var, orig_var)}
+        return {'body': body, 'c_result': BindCResultVariable(bind_var, orig_var)}
 
     def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var):
         name = orig_var.name
@@ -755,7 +738,7 @@ class FortranToCWrapper(Wrapper):
         fill_for = For((elem,), iterator, for_body, scope = for_scope)
         return result
 
-    def _get_bind_c_array(self, name, orig_var, shape, pointer_target = None):
+    def _get_bind_c_array(self, name, orig_var, shape, pointer_target = False):
         dtype = orig_var.dtype
         rank = orig_var.rank
         order = orig_var.order
