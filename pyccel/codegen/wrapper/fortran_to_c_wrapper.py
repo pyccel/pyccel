@@ -622,7 +622,6 @@ class FortranToCWrapper(Wrapper):
         memory_handling = 'alias' if isinstance(orig_var, DottedVariable) else orig_var.memory_handling
         local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
                             memory_handling = memory_handling)
-        local_var = orig_var.clone(self.scope.get_expected_name(name), new_class = Variable)
         # Allocatable is not returned so it must appear in local scope
         scope.insert_variable(local_var, name)
 
