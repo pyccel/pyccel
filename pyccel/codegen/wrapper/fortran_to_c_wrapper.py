@@ -569,9 +569,9 @@ class FortranToCWrapper(Wrapper):
 
     def _wrap_FunctionDefResult(self, expr):
         """
-        Create the equivalent BindCFunctionDefResult for a C-compatible function.
+        Create the equivalent FunctionDefResult for a C-compatible function.
 
-        Take a FunctionDefResult and create a BindCFunctionDefResult describing
+        Take a FunctionDefResult and create a FunctionDefResult describing
         all the information that should be returned from the C-compatible function
         in order to fully describe the result `expr`. This function also adds any
         expressions necessary to build the C-compatible return value to
@@ -579,15 +579,7 @@ class FortranToCWrapper(Wrapper):
 
         In the case of a scalar numerical the function simply creates a local version
         of the variable described by the function result and returns the
-        BindCFunctionDefResult.
-
-        In the case of an array, C cannot represent the array natively. Rather it is
-        stored in a pointer. This function therefore creates a variable to represent
-        that pointer. Additionally information about the shape and strides of the array
-        are necessary. These objects are created by the `BindCFunctionDefResult`
-        class. The assignment expressions which define the shapes and strides are
-        then stored in `self._additional_exprs` along with the allocation of the
-        pointer.
+        FunctionDefResult.
 
         Parameters
         ----------
@@ -596,7 +588,7 @@ class FortranToCWrapper(Wrapper):
 
         Returns
         -------
-        BindCFunctionDefResult
+        FunctionDefResult
             The C-compatible result.
         """
         result = self._extract_FunctionDefResult(expr.var)
@@ -739,6 +731,14 @@ class FortranToCWrapper(Wrapper):
         return result
 
     def _get_bind_c_array(self, name, orig_var, shape, pointer_target = False):
+        """
+
+        In the case of an array, C cannot represent the array natively. Rather it is
+        stored in a pointer. This function therefore creates a variable to represent
+        that pointer. Additionally information about the shape and strides of the array
+        are necessary.  The assignment expressions which define the shapes and strides are
+        then stored in `body` along with the allocation of the pointer.
+        """
         dtype = orig_var.dtype
         rank = orig_var.rank
         order = orig_var.order
