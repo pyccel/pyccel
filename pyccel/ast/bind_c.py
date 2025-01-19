@@ -130,17 +130,6 @@ class BindCFunctionDef(FunctionDef):
         return self._arguments
 
     @property
-    def bind_c_results(self):
-        """
-        Get the BindCFunctionDefResults of the function.
-
-        Return a list of all the results returned by the function.
-        These objects all have the type BindCFunctionDefResult so
-        shapes and strides are hidden.
-        """
-        return self._results
-
-    @property
     def arguments(self):
         """
         List of all arguments passed to the function.

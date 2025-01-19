@@ -1908,7 +1908,7 @@ class CToPythonWrapper(Wrapper):
 
         get_val_arg = expr.getter.arguments[0]
         self.scope.insert_symbol(get_val_arg.original_function_argument_variable.name)
-        get_val_result = expr.getter.bind_c_results[0]
+        get_val_result = expr.getter.results[0]
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
