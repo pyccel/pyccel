@@ -9,7 +9,7 @@ which creates an interface exposing C code to Python.
 """
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
-from pyccel.ast.bind_c        import BindCModule, BindCVariable
+from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCResultVariable
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
 from pyccel.ast.builtins      import VariableIterator
@@ -2585,7 +2585,10 @@ class CToPythonWrapper(Wrapper):
              - setup : An optional key containing a list of PyccelAstNodes with code which should be
                         run before calling the function being wrapped.
         """
-        class_type = orig_var.class_type
+        if isinstance(orig_var, BindCResultVariable):
+            class_type = orig_var.original_var.class_type
+        else:
+            class_type = orig_var.class_type
 
         classes = type(class_type).__mro__
         for cls in classes:
@@ -2597,7 +2600,7 @@ class CToPythonWrapper(Wrapper):
         return errors.report(f"Wrapping function results is not implemented for type {class_type}. " + PYCCEL_RESTRICTION_TODO, symbol=orig_var,
             severity='fatal')
 
-    def _extract_CustomDataType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+    def _extract_CustomDataType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
         """
         Get the code which translates a `Variable` containing a class instance to a PyObject.
 
@@ -2618,6 +2621,7 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to collect the result.
         """
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
         name = orig_var.name
         python_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         setup = self._allocate_class_instance(python_res, python_res.cls_base.scope, orig_var.is_alias)
@@ -2693,6 +2697,8 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to collect the result.
         """
+        if is_bind_c:
+            return self._extract_BindCArrayType_FunctionDefResult(orig_var, funcdef)
         name = orig_var.name
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
@@ -2708,8 +2714,8 @@ class CToPythonWrapper(Wrapper):
 
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
-    def _extract_BindCArrayType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
-        orig_var = wrapped_var._original_var
+    def _extract_BindCArrayType_FunctionDefResult(self, wrapped_var, funcdef):
+        orig_var = wrapped_var.original_var
         name = orig_var.name
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         # Result of calling the bind-c function
@@ -2735,7 +2741,7 @@ class CToPythonWrapper(Wrapper):
         c_result_vars = [ObjectAddress(data_var)]+shape_vars
 
         if funcdef:
-            body.extend(self.connect_pointer_targets(orig_var, py_res, funcdef, is_bind_c))
+            body.extend(self.connect_pointer_targets(orig_var, py_res, funcdef, True))
 
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
