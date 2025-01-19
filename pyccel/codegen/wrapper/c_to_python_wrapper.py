@@ -2569,7 +2569,7 @@ class CToPythonWrapper(Wrapper):
             FunctionDefResult being wrapped.
 
         is_bind_c : bool
-            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result comes from a C-binding from another language. False otherwise.
 
         funcdef : FunctionDef
             The function being wrapped.
@@ -2609,7 +2609,7 @@ class CToPythonWrapper(Wrapper):
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
-            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result comes from a C-binding from another language. False otherwise.
         funcdef : FunctionDef
             The function being wrapped.
 
@@ -2655,7 +2655,7 @@ class CToPythonWrapper(Wrapper):
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
-            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result comes from a C-binding from another language. False otherwise.
         funcdef : FunctionDef
             The function being wrapped.
 
@@ -2684,7 +2684,7 @@ class CToPythonWrapper(Wrapper):
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
-            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result comes from a C-binding from another language. False otherwise.
         funcdef : FunctionDef
             The function being wrapped.
 
@@ -2751,7 +2751,7 @@ class CToPythonWrapper(Wrapper):
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
-            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result comes from a C-binding from another language. False otherwise.
         funcdef : FunctionDef
             The function being wrapped.
 
@@ -2788,7 +2788,7 @@ class CToPythonWrapper(Wrapper):
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
-            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result comes from a C-binding from another language. False otherwise.
         funcdef : FunctionDef
             The function being wrapped.
 
