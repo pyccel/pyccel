@@ -2779,7 +2779,7 @@ class CToPythonWrapper(Wrapper):
         body.extend(Py_DECREF(r) for r in py_result_vars)
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body, 'setup': setup}
 
-    def _extract_HomogeneousContainerType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+    def _extract_HomogeneousContainerType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
         """
         Get the code which translates a `Variable` containing a homogeneous container to a PyObject.
 
@@ -2803,15 +2803,19 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to collect the result.
         """
-        if isinstance(orig_var, PythonTuple):
-            return self._extract_InhomogeneousTupleType_FunctionDefResult(orig_var, is_bind_c, funcdef)
+        if isinstance(wrapped_var, PythonTuple):
+            return self._extract_InhomogeneousTupleType_FunctionDefResult(wrapped_var, is_bind_c, funcdef)
 
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
         name = getattr(orig_var, 'name', 'tmp')
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         if is_bind_c:
+            result = funcdef.results[0].var.new_var
+            ptr_var = funcdef.scope.collect_tuple_element(result[LiteralInteger(0)])
+            shape_var = funcdef.scope.collect_tuple_element(result[1])
             c_res = Variable(CStackArray(orig_var.class_type.element_type),
-                             self.scope.get_new_name(funcdef.results[0].var.name))
-            loop_size = funcdef.results[1].var.clone(self.scope.get_new_name(funcdef.results[1].var.name), is_argument = False)
+                             self.scope.get_new_name(ptr_var.name))
+            loop_size = shape_var.clone(self.scope.get_new_name(shape_var.name), is_argument = False)
             c_results = [ObjectAddress(c_res), loop_size]
         else:
             c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)

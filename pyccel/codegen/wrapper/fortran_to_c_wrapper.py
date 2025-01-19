@@ -694,7 +694,7 @@ class FortranToCWrapper(Wrapper):
         # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
         # Lists are 1-indexed but Pyccel adds the shift during printing so they are
         # treated as 0-indexed here
-        for_body = [Assign(IndexedElement(ptr_var, PyccelAdd(idx, LiteralInteger(1))), elem),
+        for_body = [Assign(IndexedElement(f_array, PyccelAdd(idx, LiteralInteger(1))), elem),
                     Assign(idx, PyccelAdd(idx, LiteralInteger(1)))]
         fill_for = For((elem,), iterator, for_body, scope = for_scope)
         body.extend([Assign(idx, LiteralInteger(0)), fill_for])
@@ -726,8 +726,8 @@ class FortranToCWrapper(Wrapper):
         # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
         # Lists are 1-indexed but Pyccel adds the shift during printing so they are
         # treated as 0-indexed here
-        for_body = [Assign(IndexedElement(ptr_var, PyccelAdd(idx, LiteralInteger(1))), elem)]
-        fill_for = For((elem,), iterator, for_body, scope = for_scope)
+        for_body = [Assign(IndexedElement(f_array, PyccelAdd(idx, LiteralInteger(1))), elem)]
+        body.append(For((elem,), iterator, for_body, scope = for_scope))
         return result
 
     def _get_bind_c_array(self, name, orig_var, shape, pointer_target = False):
