@@ -1444,6 +1444,12 @@ class FCodePrinter(CodePrinter):
         success = self.scope.get_temporary_variable(PythonNativeInt())
         return f'{success} = {var} % erase_value({val})\n'
 
+   #========================== Dict Methods ================================#
+
+    def _print_DictClear(self, expr):
+        var = self._print(expr.dict_obj)
+        return f'call {var} % clear()\n'
+
     #========================== Numpy Elements ===============================#
 
     def _print_NumpySum(self, expr):
