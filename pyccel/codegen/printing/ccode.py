@@ -350,13 +350,11 @@ class CCodePrinter(CodePrinter):
             A sorted list of the imports.
         """
         import_src = [str(i.source) for i in imports]
-        stc_imports = [i for i in import_src if i.startswith('stc/')]
         dependent_imports = [i for i in import_src if i in import_header_guard_prefix]
-        non_stc_imports = [i for i in import_src if i not in chain(stc_imports, dependent_imports)]
-        stc_imports.sort()
+        non_stc_imports = [i for i in import_src if i not in chain(dependent_imports)]
         dependent_imports.sort()
         non_stc_imports.sort()
-        sorted_imports = [imports[import_src.index(name)] for name in chain(non_stc_imports, stc_imports, dependent_imports)]
+        sorted_imports = [imports[import_src.index(name)] for name in chain(non_stc_imports, dependent_imports)]
         return sorted_imports
 
     def _format_code(self, lines):
@@ -1073,9 +1071,6 @@ class CCodePrinter(CodePrinter):
         return self._cast_to(expr, expr.dtype).format(code)
     
     def _print_Import(self, expr):
-        if not hasattr(self.__class__._print_Import, 'cache'):
-            self.__class__._print_Import.cache = set()
-        user_nodes = expr.get_all_user_nodes()
         if expr.ignore:
             return ''
         if isinstance(expr.source, AsName):
@@ -1089,8 +1084,6 @@ class CCodePrinter(CodePrinter):
         if source == 'stc/common':
             code = ''
             for t in expr.target:
-                if (source, t.local_alias, *user_nodes) in self._print_Import.cache:
-                    continue
                 element_decl = f'#define i_key {t.local_alias}\n'
                 header_guard_prefix = import_header_guard_prefix.get(source, '')
                 header_guard = f'{header_guard_prefix}_{t.local_alias.upper()}'
@@ -1100,15 +1093,12 @@ class CCodePrinter(CodePrinter):
                      f'#include <{source}.h>\n',
                      f'#include <{stc_extension_mapping[source]}.h>\n', 
                      f'#endif // {header_guard}\n\n'))
-                self._print_Import.cache.add((source, t.local_alias, *user_nodes))
             return code
         elif source != 'stc/cstr' and (source.startswith('stc/') or source in import_header_guard_prefix):
             code = ''
             for t in expr.target:
                 class_type = t.object.class_type
                 container_type = t.local_alias
-                if (source, class_type, container_type, *user_nodes) in self._print_Import.cache:
-                    continue
                 self.add_import(Import(stc_extension_mapping[source],
                        AsName(VariableTypeAnnotation(class_type), container_type),
                        ignore_at_print=True))
@@ -1133,7 +1123,6 @@ class CCodePrinter(CodePrinter):
                         f'#include <{source}.h>\n', 
                         f'#include <{stc_extension_mapping[source]}.h>\n' if source in stc_extension_mapping else '', 
                         f'#endif // {header_guard}\n\n'))
-                self._print_Import.cache.add((source, class_type, container_type, *user_nodes))
             return code
 
         # Get with a default value is not used here as it is
