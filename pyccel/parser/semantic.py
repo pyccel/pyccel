@@ -3288,17 +3288,17 @@ class SemanticParser(BasicParser):
             if len(semantic_lhs) != 1:
                 errors.report("Cannot declare variable with multiple types",
                         symbol=expr, severity='error')
-            lhs = semantic_lhs[0]
-            if isinstance(lhs, DottedVariable):
-                cls_def = lhs.lhs.cls_base
+            semantic_lhs_var = semantic_lhs[0]
+            if isinstance(semantic_lhs_var, DottedVariable):
+                cls_def = semantic_lhs_var.lhs.cls_base
                 insert_scope = cls_def.scope
-                cls_def.add_new_attribute(lhs)
+                cls_def.add_new_attribute(semantic_lhs_var)
                 lhs_tag = lhs.name.name[-1]
             else:
                 insert_scope = self.scope
                 lhs_tag = lhs.name
 
-            if lhs.class_type is TypeAlias():
+            if semantic_lhs_var.class_type is TypeAlias():
                 pyccel_stage.set_stage('syntactic')
                 if isinstance(rhs, LiteralString):
                     try:
@@ -3317,7 +3317,7 @@ class SemanticParser(BasicParser):
                 return EmptyNode()
 
             try:
-                insert_scope.insert_variable(lhs, lhs_tag)
+                insert_scope.insert_variable(semantic_lhs_var, lhs_tag)
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
 
