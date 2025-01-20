@@ -13,13 +13,13 @@ from pyccel.utilities.stage   import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 
-from .bitwise_operators import PyccelBitOr, PyccelBitAnd
+from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRShift
 
 from .builtins  import PythonBool, PythonTuple
 
 from .c_concepts import PointerCast
 
-from .datatypes import (PyccelType, HomogeneousTupleType, VoidType,
+from .datatypes import (PyccelType, HomogeneousTupleType, VoidType, CustomDataType,
                         PythonNativeBool, InhomogeneousTupleType)
 
 from .internals import PyccelSymbol, PyccelFunction, apply_pickle, Iterable
@@ -750,6 +750,8 @@ class AugAssign(Assign):
             '%' : PyccelMod,
             '|' : PyccelBitOr,
             '&' : PyccelBitAnd,
+            '<<': PyccelLShift,
+            '>>': PyccelRShift,
         }
 
     def __init__(
@@ -1570,7 +1572,12 @@ class FunctionDefArgument(TypedAstNode):
             name.declare_as_argument()
 
         if pyccel_stage != "syntactic":
-            self._inout = self.var.rank>0 and not self.var.is_const if isinstance(self.var, Variable) else False
+            if isinstance(self.var, Variable):
+                self._inout = (self.var.rank > 0 or isinstance(self.var.class_type, CustomDataType)) \
+                        and not self.var.is_const
+            else:
+                # If var is not a Variable it is a FunctionAddress
+                self._inout = False
 
         super().__init__()
 
@@ -3487,7 +3494,7 @@ class ClassDef(ScopedAstNode):
         self._methods = tuple(m for m in self._methods if m is not syntactic_interface)
         self._interfaces = tuple(m for m in self._interfaces if m is not syntactic_interface) + (semantic_interface,)
 
-    def get_method(self, name, raise_error = True):
+    def get_method(self, name, raise_error_from = None):
         """
         Get the method `name` of the current class.
 
@@ -3501,10 +3508,10 @@ class ClassDef(ScopedAstNode):
         name : str
             The name of the attribute we are looking for.
 
-        raise_error : bool, default=True
-            True if an error should be raised, False if None should be returned if
-            the method is not found.
-            False if None can be returned instead.
+        raise_error_from : PyccelAstNode, optional
+            If an error should be raised then this variable should contain
+            the node that the error should be raised from. This allows the
+            correct, line/column error information to be reported.
 
         Returns
         -------
@@ -3526,9 +3533,9 @@ class ClassDef(ScopedAstNode):
             try:
                 name = self.scope.get_expected_name(name)
             except RuntimeError:
-                if raise_error:
+                if raise_error_from:
                     errors.report(f"Can't find method {name} in class {self.name}",
-                            severity='fatal', symbol=self)
+                            severity='fatal', symbol=raise_error_from)
                 else:
                     return None
 
@@ -3540,14 +3547,14 @@ class ClassDef(ScopedAstNode):
             n_classes = len(self.superclasses)
             while method is None and i<n_classes:
                 try:
-                    method = self.superclasses[i].get_method(name, raise_error)
+                    method = self.superclasses[i].get_method(name, raise_error_from)
                 except StopIteration:
                     method = None
                 i += 1
 
-        if method is None and raise_error:
+        if method is None and raise_error_from:
             errors.report(f"Can't find method {name} in class {self.name}",
-                    severity='fatal', symbol=self)
+                    severity='fatal', symbol=raise_error_from)
 
         return method
 

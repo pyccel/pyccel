@@ -114,7 +114,7 @@ def epyccel_seq(function_or_module, *,
                 accelerators  = (),
                 verbose       = False,
                 time_execution  = False,
-                debug         = False,
+                debug         = None,
                 includes      = (),
                 libdirs       = (),
                 modules       = (),
@@ -154,7 +154,8 @@ def epyccel_seq(function_or_module, *,
     time_execution : bool
         Time the execution of Pyccel's internal stages.
     debug : bool, optional
-        Enable debug mode.
+        Enable debug mode. The default value is taken from the environment variable PYCCEL_DEBUG_MODE.
+        If no such environment variable exists then the default is False.
     includes : tuple, optional
         Additional include directories for the compiler.
     libdirs : tuple, optional
@@ -330,11 +331,13 @@ def epyccel( python_function_or_module, **kwargs ):
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
     bcast = kwargs.pop('bcast', True)
+    # This will initialize the singleton ErrorsMode
+    # making this setting available everywhere
+    err_mode = ErrorsMode()
     if kwargs.pop('developer_mode', None):
-        # This will initialize the singleton ErrorsMode
-        # making this setting available everywhere
-        err_mode = ErrorsMode()
         err_mode.set_mode('developer')
+    else:
+        err_mode.set_mode('user')
 
     # Parallel version
     if comm is not None:

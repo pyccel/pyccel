@@ -59,7 +59,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **`range`** | **Yes** |
 | `repr` | No |
 | `reversed` | No |
-| `round` | No |
+| **`round`** | **Yes** |
 | *`set`* | Python-only |
 | `setattr` | No  |
 | `slice` | No |
@@ -87,7 +87,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `insert` | Python-only |
 | `max` | No |
 | `min` | No |
-| `pop` | Python and C only |
+| **`pop`** | **Yes** |
 | `remove` | Python-only |
 | `reverse` | No |
 | `sort` | Python-only |
@@ -101,14 +101,14 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **`copy`** | **Yes** |
 | `difference` | No |
 | `difference_update` | No |
-| `discard` | Python-only |
-| `intersection` | Python-only |
-| `intersection_update` | No |
+| **`discard`** | **Yes** |
+| **`intersection`** | **Yes** |
+| **`intersection_update`** | **Yes** |
 | `isdisjoint` | No |
 | `issubset` | No |
 | `issuperset` | No |
 | **`pop`** | **Yes** |
-| `remove` | Python-only |
+| **`remove`** | **Yes** |
 | `symmetric_difference` | No |
 | `symmetric_difference_update` | No |
 | **`union`** | **Yes** |
@@ -120,12 +120,12 @@ Python contains a limited number of builtin functions defined [here](https://doc
 
 | Method | Supported |
 |----------|-----------|
-| `clear` | Python-only |
+| `clear` | **Yes** |
 | `copy` | Python-only |
 | `get` | Python-only |
 | `items` | **Yes** |
 | `keys` | No |
-| `pop` | Python-only |
+| `pop` | Python and C |
 | `popitem` | Python-only |
 | `reversed` | No |
 | `setdefault` | Python-only |

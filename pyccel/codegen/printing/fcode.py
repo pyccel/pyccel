@@ -26,6 +26,8 @@ from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableItera
 
 from pyccel.ast.builtin_methods.dict_methods import DictItems
 
+from pyccel.ast.builtin_methods.list_methods import ListPop
+
 from pyccel.ast.builtin_methods.set_methods import SetUnion
 
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -69,7 +71,7 @@ from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 
-from pyccel.ast.numpytypes import NumpyNDArrayType
+from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt64Type
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd, PyccelEq
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
@@ -675,26 +677,31 @@ class FCodePrinter(CodePrinter):
         Import
             The import which allows the new type to be accessed.
         """
-        # Get the type used in the dict for compatible types (e.g. float vs float64)
-        matching_expr_type = next((t for t in self._generated_gFTL_types if expr_type == t), None)
-        matching_expr_extensions = next((t for t in self._generated_gFTL_extensions if expr_type == t), None)
+        # Get the module describing the type
+        matching_expr_type = next((m for t,m in self._generated_gFTL_types.items() if expr_type == t), None)
+        # Get the module describing the extension
+        matching_expr_extensions = next((m for t,m in self._generated_gFTL_extensions.items() if expr_type == t), None)
         typename = self._print(expr_type)
         mod_name = f'{typename}_extensions_mod'
         if matching_expr_extensions:
-            module = self._generated_gFTL_extensions[matching_expr_extensions]
+            module = matching_expr_extensions
         else:
+            imports_and_macros = []
+
             if matching_expr_type is None:
                 matching_expr_type = self._build_gFTL_module(expr_type)
                 self.add_import(matching_expr_type)
-
-            type_module = matching_expr_type.source_module
+                imports_and_macros.append(matching_expr_type)
+                type_module = matching_expr_type.source_module
+            else:
+                type_module = matching_expr_type
+                imports_and_macros.append(Import(f'gFTL_extensions/{mod_name}', type_module))
 
             if isinstance(expr_type, HomogeneousSetType):
                 set_filename = LiteralString('set/template.inc')
-                imports_and_macros = [Import(LiteralString('Set_extensions.inc'), Module('_', (), ())) \
+                imports_and_macros += [Import(LiteralString('Set_extensions.inc'), Module('_', (), ())) \
                                         if getattr(i, 'source', None) == set_filename else i \
                                         for i in type_module.imports]
-                imports_and_macros.insert(0, matching_expr_type)
                 self.add_import(Import('gFTL_functions/Set_extensions', Module('_', (), ()), ignore_at_print = True))
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
@@ -814,8 +821,15 @@ class FCodePrinter(CodePrinter):
 
         # ...
         sep = self._print(SeparatorComment(40))
-        interfaces = ''
-        if expr.interfaces and not isinstance(expr, BindCModule):
+        if isinstance(expr, BindCModule):
+            interfaces = ('interface\n'
+                          'function c_malloc(size) bind(C,name="malloc") result(ptr)\n'
+                          'use iso_c_binding\n'
+                          'integer(c_size_t), value, intent(in) :: size\n'
+                          'type(c_ptr) :: ptr\n'
+                          'end function c_malloc\n'
+                          'end interface\n')
+        else:
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
 
         func_strings = []
@@ -1196,6 +1210,25 @@ class FCodePrinter(CodePrinter):
         arg_code = self._get_node_without_gFTL(expr.arg)
         return f"abs({arg_code})"
 
+    def _print_PythonRound(self, expr):
+        arg = expr.arg
+        if not isinstance(arg.dtype.primitive_type, PrimitiveFloatingPointType):
+            arg = self._apply_cast(NumpyInt64Type(), arg)
+        self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+
+        arg_code = self._print(arg)
+        ndigits = self._apply_cast(NumpyInt64Type(), expr.ndigits) if expr.ndigits \
+                else LiteralInteger(0, NumpyInt64Type())
+        ndigits_code = self._print(ndigits)
+
+        code = f'pyc_bankers_round({arg_code}, {ndigits_code})'
+
+        if not isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType):
+            prec = self.print_kind(expr)
+            return f"Int({code}, kind={prec})"
+        else:
+            return code
+
     def _print_PythonTuple(self, expr):
         shape = tuple(reversed(expr.shape))
         if len(shape)>1:
@@ -1310,9 +1343,42 @@ class FCodePrinter(CodePrinter):
     #========================== List Methods ===============================#
 
     def _print_ListAppend(self, expr):
-        target = expr.list_obj
+        target = self._print(expr.list_obj)
         arg = self._print(expr.args[0])
         return f'call {target} % push_back({arg})\n'
+
+    def _print_ListPop(self, expr):
+        list_obj = expr.list_obj
+        target = self._print(list_obj)
+        index_element = expr.index_element
+        parent_assign_nodes = expr.get_direct_user_nodes(lambda u: isinstance(u, Assign))
+        if parent_assign_nodes:
+            lhs = expr.current_user_node.lhs
+        else:
+            lhs = self.scope.get_temporary_variable(expr.class_type)
+
+        lhs_code = self._print(lhs)
+
+        if index_element:
+            _shape = PyccelArrayShapeElement(list_obj, index_element)
+            if isinstance(index_element, PyccelUnarySub) and isinstance(index_element.args[0], LiteralInteger):
+                index_element = PyccelMinus(_shape, index_element.args[0], simplify = True)
+            tmp_iter = self.scope.get_temporary_variable(IteratorType(list_obj.class_type),
+                    name = f'{list_obj}_iter')
+            code = (f'{tmp_iter} = {target} % begin() + {self._print(index_element)}\n'
+                    f'{lhs} = {tmp_iter} % of()\n'
+                    f'{tmp_iter} = {target} % erase({tmp_iter})\n')
+        else:
+            index = expr.index_element or PyccelUnarySub(LiteralInteger(1))
+            rhs = self._print(IndexedElement(list_obj, index))
+            code = (f'{lhs_code} = {rhs}\n'
+                    f'call {target} % pop_back()\n')
+
+        if parent_assign_nodes:
+            return code
+        else:
+            self._additional_code += code
+            return lhs_code
 
     #========================== Set Methods ================================#
 
@@ -1362,6 +1428,27 @@ class FCodePrinter(CodePrinter):
         else:
             self._additional_code += code
             return result
+
+    def _print_SetIntersectionUpdate(self, expr):
+        var = expr.set_variable
+        expr_type = var.class_type
+        var_code = self._print(expr.set_variable)
+        type_name = self._print(expr_type)
+        self.add_import(self._build_gFTL_extension_module(expr_type))
+        return ''.join(f'call {type_name}_intersection_update({var_code}, {self._print(arg)})\n' \
+                for arg in expr.args)
+
+    def _print_SetDiscard(self, expr):
+        var = self._print(expr.set_variable)
+        val = self._print(expr.args[0])
+        success = self.scope.get_temporary_variable(PythonNativeInt())
+        return f'{success} = {var} % erase_value({val})\n'
+
+   #========================== Dict Methods ================================#
+
+    def _print_DictClear(self, expr):
+        var = self._print(expr.dict_obj)
+        return f'call {var} % clear()\n'
 
     #========================== Numpy Elements ===============================#
 
@@ -2017,7 +2104,7 @@ class FCodePrinter(CodePrinter):
     def _print_Assign(self, expr):
         rhs = expr.rhs
 
-        if isinstance(rhs, (FunctionCall, SetUnion)):
+        if isinstance(rhs, (FunctionCall, SetUnion, ListPop)):
             return self._print(rhs)
 
         lhs_code = self._print(expr.lhs)
@@ -2195,7 +2282,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_DeallocatePointer(self, expr):
         var_code = self._print(expr.variable)
-        return f'deallocate({var_code})'
+        return f'deallocate({var_code})\n'
 
 #------------------------------------------------------------------------------
 
@@ -2393,9 +2480,7 @@ class FCodePrinter(CodePrinter):
                         dec = Declare(v, intent='in')
                         args_decs[v] = dec
                 else:
-                    if i == 0 and expr.cls_name:
-                        dec = Declare(arg_var, intent='inout')
-                    elif arg.inout:
+                    if arg.inout:
                         dec = Declare(arg_var, intent='inout')
                     else:
                         dec = Declare(arg_var, intent='in')
@@ -3575,7 +3660,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_C_F_Pointer(self, expr):
         self._constantImports.setdefault('ISO_C_Binding', set()).add('C_F_Pointer')
-        shape = ','.join(self._print(s) for s in expr.shape)
+        shape = ', '.join(self._print(s) for s in expr.shape)
         if shape:
             return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)}, [{shape}])\n'
         else:
@@ -3742,6 +3827,11 @@ class FCodePrinter(CodePrinter):
                  *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes if a.setter]]
         sep = f'\n{self._print(SeparatorComment(40))}\n'
         return '', sep.join(self._print(f) for f in funcs)
+
+    def _print_BindCSizeOf(self, expr):
+        elem = self._print(expr.args[0])
+        self._constantImports.setdefault('ISO_C_Binding', set()).add('c_size_t')
+        return f'storage_size({elem}, kind = c_size_t)'
 
     def _print_MacroDefinition(self, expr):
         name = expr.macro_name

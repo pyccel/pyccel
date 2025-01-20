@@ -615,7 +615,7 @@ class PyccelAdd(PyccelArithmeticOperator):
     __slots__ = ()
     _precedence = 12
 
-    def __new__(cls, arg1, arg2, simplify = False):
+    def __new__(cls, arg1 = None, arg2 = None, simplify = False):
         if simplify:
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelMinus(arg1, arg2.args[0], simplify = True)
@@ -699,7 +699,7 @@ class PyccelMul(PyccelArithmeticOperator):
     __slots__ = ()
     _precedence = 13
 
-    def __new__(cls, arg1, arg2, simplify = False):
+    def __new__(cls, arg1 = None, arg2 = None, simplify = False):
         if simplify:
             if (arg1 == 1):
                 return arg2
@@ -749,7 +749,7 @@ class PyccelMinus(PyccelArithmeticOperator):
     __slots__ = ()
     _precedence = 12
 
-    def __new__(cls, arg1, arg2, simplify = False):
+    def __new__(cls, arg1 = None, arg2 = None, simplify = False):
         if simplify:
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelAdd(arg1, arg2.args[0], simplify = True)
@@ -799,7 +799,7 @@ class PyccelDiv(PyccelArithmeticOperator):
     __slots__ = ()
     _precedence = 13
 
-    def __new__(cls, arg1, arg2, simplify=False):
+    def __new__(cls, arg1 = None, arg2 = None, simplify=False):
         if simplify:
             if (arg2 == 1):
                 return arg1
@@ -975,7 +975,7 @@ class PyccelEq(PyccelComparisonOperator):
     __slots__ = ()
     op = "=="
 
-    def __new__(cls, arg1, arg2, simplify = False):
+    def __new__(cls, arg1 = None, arg2 = None, simplify = False):
         if isinstance(arg1, Nil) or isinstance(arg2, Nil):
             return PyccelIs(arg1, arg2)
         else:
@@ -1007,7 +1007,7 @@ class PyccelNe(PyccelComparisonOperator):
     __slots__ = ()
     op = "!="
 
-    def __new__(cls, arg1, arg2, simplify = False):
+    def __new__(cls, arg1 = None, arg2 = None, simplify = False):
         if isinstance(arg1, Nil) or isinstance(arg2, Nil):
             return PyccelIsNot(arg1, arg2)
         else:

@@ -122,6 +122,32 @@ def test_min_3_args(language):
     assert epyc_f(*int_args) == f(*int_args)
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
+def test_min_if(language):
+    def f(x : 'int', y : 'int'):
+        if min(x+x+y, x+y+y) < (x+y):
+            return x+y
+        else:
+            return x-y
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int//3, max_int//3) for _ in range(2)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+
+def test_min_in_min(language):
+    def f(x : 'int', y : 'int'):
+        if min(min(x+x,+y), min(x+y,y)) < (x+y): #pylint: disable=nested-min-max
+            return x+y
+        else:
+            return x-y
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int//3, max_int//3) for _ in range(2)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
@@ -478,3 +504,185 @@ def test_len_literal_string(language):
     epyc_f = epyccel(f, language = language)
 
     assert epyc_f() == f()
+
+def test_round_int(language):
+    def round_int(x : float):
+        return round(x)
+
+    f = epyccel(round_int, language=language)
+    x = randint(100) / 10
+
+    f_output = f(x)
+    round_int_output = round_int(x)
+    assert round_int_output == f_output
+    assert isinstance(f_output, type(round_int_output))
+
+    # Round down
+    x = 3.345
+
+    f_output = f(x)
+    round_int_output = round_int(x)
+    assert round_int_output == f_output
+    assert isinstance(f_output, type(round_int_output))
+
+    # Round up
+    x = 3.845
+
+    f_output = f(x)
+    round_int_output = round_int(x)
+    assert round_int_output == f_output
+    assert isinstance(f_output, type(round_int_output))
+
+    # Round half
+    x = 6.5
+
+    f_output = f(x)
+    round_int_output = round_int(x)
+    assert round_int_output == f_output
+    assert isinstance(f_output, type(round_int_output))
+
+def test_negative_round_int(language):
+    def round_int(x : float):
+        return round(x)
+
+    f = epyccel(round_int, language=language)
+    x = -randint(100) / 10
+
+    f_output = f(x)
+    round_int_output = round_int(x)
+    assert round_int_output == f_output
+    assert isinstance(f_output, type(round_int_output))
+
+    # Round up
+    x = -3.345
+
+    f_output = f(x)
+    round_int_output = round_int(x)
+    assert round_int_output == f_output
+    assert isinstance(f_output, type(round_int_output))
+
+    # Round down
+    x = -3.845
+
+    f_output = f(x)
+    round_int_output = round_int(x)
+    assert round_int_output == f_output
+    assert isinstance(f_output, type(round_int_output))
+
+    # Round half
+    x = -6.5
+
+    f_output = f(x)
+    round_int_output = round_int(x)
+    assert round_int_output == f_output
+    assert isinstance(f_output, type(round_int_output))
+
+def test_round_ndigits(language):
+    def round_ndigits(x : float, i : int):
+        return round(x,i)
+
+    f = epyccel(round_ndigits, language=language)
+    x = randint(100) / 10
+
+    f_output = f(x, 1)
+    round_ndigits_output = round_ndigits(x, 1)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+    x = 3.343
+
+    f_output = f(x,2)
+    round_ndigits_output = round_ndigits(x,2)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+    x = 3323.0
+
+    f_output = f(x,-2)
+    round_ndigits_output = round_ndigits(x, -2)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+    x = -3390.0
+
+    f_output = f(x,-2)
+    round_ndigits_output = round_ndigits(x, -2)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+def test_round_ndigits_half(language):
+    def round_ndigits(x : float, i : int):
+        return round(x,i)
+
+    f = epyccel(round_ndigits, language=language)
+    x = randint(100) / 10
+
+    f_output = f(x, 1)
+    round_ndigits_output = round_ndigits(x, 1)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+    x = 3.345
+
+    f_output = f(x,2)
+    round_ndigits_output = round_ndigits(x,2)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+    x = -3350.0
+
+    f_output = f(x,-2)
+    round_ndigits_output = round_ndigits(x, -2)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+    x = 45.0
+
+    f_output = f(x,-1)
+    round_ndigits_output = round_ndigits(x,-1)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+def test_round_ndigits_int(language):
+    def round_ndigits(x : int, i : int):
+        return round(x,i)
+
+    f = epyccel(round_ndigits, language=language)
+    x = randint(100) // 10
+
+    f_output = f(x, 1)
+    round_ndigits_output = round_ndigits(x, 1)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+    x = 3
+
+    f_output = f(x,2)
+    round_ndigits_output = round_ndigits(x,2)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+    x = 3323
+
+    f_output = f(x,-2)
+    round_ndigits_output = round_ndigits(x, -2)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+    x = -3390
+
+    f_output = f(x,-2)
+    round_ndigits_output = round_ndigits(x, -2)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+def test_round_ndigits_bool(language):
+    def round_ndigits():
+        return round(True), round(False), round(True, 1), round(True, -1)
+
+    f = epyccel(round_ndigits, language=language)
+
+    f_output = f()
+    round_ndigits_output = round_ndigits()
+    assert all(o == r for o, r in zip(f_output, round_ndigits_output))
+    assert all(isinstance(o, type(r)) for o, r in zip(f_output, round_ndigits_output))

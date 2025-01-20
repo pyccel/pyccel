@@ -250,13 +250,19 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'assert',
                  'stc/cstr']}
 
-import_header_guard_prefix = {'stc/hset'    : '_TOOLS_SET',
-                              'stc/vec'   : '_TOOLS_LIST',
-                              'stc/common' : '_TOOLS_COMMON'}
+import_header_guard_prefix = {
+    'stc/common': '_TOOLS_COMMON',
+    'stc/hmap': '_TOOLS_DICT',
+    'stc/hset': '_TOOLS_SET',
+    'stc/vec': '_TOOLS_LIST'
+}
 
-stc_extension_mapping = {'stc/vec': 'List_extensions',
-                      'stc/hset' : 'Set_extensions',
-                      'stc/common' : 'Common_extensions'}
+stc_extension_mapping = {
+    'stc/common': 'Common_extensions',
+    'stc/hmap': 'Dict_extensions',
+    'stc/hset': 'Set_extensions',
+    'stc/vec': 'List_extensions',
+}
 
 class CCodePrinter(CodePrinter):
     """
@@ -749,6 +755,15 @@ class CCodePrinter(CodePrinter):
             func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
 
+    def _print_PythonRound(self, expr):
+        self.add_import(c_imports['pyc_math_c'])
+        arg = self._print(expr.arg)
+        ndigits = self._print(expr.ndigits or LiteralInteger(0))
+        if isinstance(expr.arg.class_type.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)):
+            return f'ipyc_bankers_round({arg}, {ndigits})'
+        else:
+            return f'fpyc_bankers_round({arg}, {ndigits})'
+
     def _print_PythonMinMax(self, expr):
         arg = expr.args[0]
         if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
@@ -757,20 +772,22 @@ class CCodePrinter(CodePrinter):
             arg2 = self._print(arg[1])
             return f"f{expr.name}({arg1}, {arg2})"
         elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
-            if isinstance(arg[0], Variable):
+            if isinstance(arg[0], (Variable, Literal)):
                 arg1 = self._print(arg[0])
             else:
                 arg1_temp = self.scope.get_temporary_variable(PythonNativeInt())
                 assign1 = Assign(arg1_temp, arg[0])
-                self._additional_code += self._print(assign1)
+                code = self._print(assign1)
+                self._additional_code += code
                 arg1 = self._print(arg1_temp)
 
-            if isinstance(arg[1], Variable):
+            if isinstance(arg[1], (Variable, Literal)):
                 arg2 = self._print(arg[1])
             else:
                 arg2_temp = self.scope.get_temporary_variable(PythonNativeInt())
                 assign2 = Assign(arg2_temp, arg[1])
-                self._additional_code += self._print(assign2)
+                code = self._print(assign2)
+                self._additional_code += code
                 arg2 = self._print(arg2_temp)
 
             op = '<' if isinstance(expr, PythonMin) else '>'
@@ -937,16 +954,26 @@ class CCodePrinter(CodePrinter):
 
     def _print_If(self, expr):
         lines = []
-        for i, (c, e) in enumerate(expr.blocks):
-            var = self._print(e)
-            if i == 0:
-                lines.append("if (%s)\n{\n" % self._print(c))
-            elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
-                lines.append("else\n{\n")
+        condition_setup = []
+        for i, (c, b) in enumerate(expr.blocks):
+            body = self._print(b)
+            if i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
+                lines.append("else\n")
             else:
-                lines.append("else if (%s)\n{\n" % self._print(c))
-            lines.append("%s}\n" % var)
-        return "".join(lines)
+                # Print condition
+                condition = self._print(c)
+                # Retrieve any additional code which cannot be executed in the line containing the condition
+                condition_setup.append(self._additional_code)
+                self._additional_code = ''
+                # Add the condition to the lines of code
+                line = f"if ({condition})\n"
+                if i == 0:
+                    lines.append(line)
+                else:
+                    lines.append("else " + line)
+            lines.append("{\n")
+            lines.append(body + "}\n")
+        return "".join(chain(condition_setup, lines))
 
     def _print_IfTernaryOperator(self, expr):
         cond = self._print(expr.cond)
@@ -1251,7 +1278,8 @@ class CCodePrinter(CodePrinter):
                 tmp_arg_format_list = CStringExpression(', ').join(tmp_arg_format_list)
                 args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
-                self._additional_code += self._print(assign)
+                code = self._print(assign)
+                self._additional_code += code
             elif f.rank > 0 and not isinstance(f.class_type, StringType):
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
@@ -1341,6 +1369,9 @@ class CCodePrinter(CodePrinter):
             val_type = self.get_c_type(dtype.value_type).replace(' ', '_')
             i_type = f'{container_type}_{key_type}_{val_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
+            self.add_import(Import(f'{stc_extension_mapping["stc/" + container_type]}',
+                                   AsName(VariableTypeAnnotation(dtype), i_type),
+                                   ignore_at_print=True))
             return i_type
         elif isinstance(dtype, StringType):
             self.add_import(c_imports['stc/cstr'])
@@ -2195,7 +2226,8 @@ class CCodePrinter(CodePrinter):
                 elif not self.is_c_pointer(arg_val):
                     tmp_var = self.scope.get_temporary_variable(f.dtype)
                     assign = Assign(tmp_var, arg_val)
-                    self._additional_code += self._print(assign)
+                    code = self._print(assign)
+                    self._additional_code += code
                     args.append(ObjectAddress(tmp_var))
                 else:
                     args.append(arg_val)
@@ -2434,10 +2466,6 @@ class CCodePrinter(CodePrinter):
             else:
                 stop_condition = f'({step_code} > 0) ? ({index_code} < {stop_code}) : ({index_code} > {stop_code})'
             for_code = f'for ({index_code} = {start_code}; {stop_condition}; {index_code} += {step_code})\n'
-
-        if self._additional_code:
-            for_code = self._additional_code + for_code
-            self._additional_code = ''
 
         if self._additional_code:
             for_code = self._additional_code + for_code
@@ -2786,6 +2814,43 @@ class CCodePrinter(CodePrinter):
         set_var = self._print(ObjectAddress(expr.set_variable))
         args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
         return f'{var_type}_union({set_var}, {args})'
+
+    def _print_SetIntersectionUpdate(self, expr):
+        class_type = expr.set_variable.class_type
+        var_type = self.get_c_type(class_type)
+        self.add_import(Import('Set_extensions', AsName(VariableTypeAnnotation(class_type), var_type)))
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        return ''.join(f'{var_type}_intersection_update({set_var}, {self._print(ObjectAddress(a))});\n' \
+                for a in expr.args)
+
+    def _print_SetDiscard(self, expr):
+        var_type = self.get_c_type(expr.set_variable.class_type)
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        arg_val = self._print(expr.args[0])
+        return f'{var_type}_erase({set_var}, {arg_val});\n'
+
+    #================== Dict methods ==================
+
+    def _print_DictClear(self, expr):
+        c_type = self.get_c_type(expr.dict_obj.class_type)
+        dict_var = self._print(ObjectAddress(expr.dict_obj))
+        return f"{c_type}_clear({dict_var});\n"
+
+    def _print_DictPop(self, expr):
+        target = expr.dict_obj
+        class_type = target.class_type
+        c_type = self.get_c_type(class_type)
+
+        dict_var = self._print(ObjectAddress(target))
+        key = self._print(expr.key)
+
+        if expr.default_value:
+            default = self._print(expr.default_value)
+            pop_expr = f"{c_type}_pop_with_default({dict_var}, {key}, {default})"
+        else:
+            pop_expr = f"{c_type}_pop({dict_var}, {key})"
+
+        return pop_expr
 
     #=================== MACROS ==================
 
