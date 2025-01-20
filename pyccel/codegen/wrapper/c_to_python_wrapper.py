@@ -2606,7 +2606,7 @@ class CToPythonWrapper(Wrapper):
 
         Parameters
         ----------
-        orig_var : Variable | IndexedElement
+        wrapped_var : Variable | IndexedElement
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
@@ -2713,6 +2713,25 @@ class CToPythonWrapper(Wrapper):
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
     def _extract_BindCArrayType_FunctionDefResult(self, wrapped_var, funcdef):
+        """
+        Get the code which translates a `Variable` containing an array to a PyObject.
+
+        Get the code which translates a `Variable` containing a BindCArray, which describes an
+        array in Fortran, to a PyObject.
+
+        Parameters
+        ----------
+        wrapped_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
         orig_var = wrapped_var.original_var
         name = orig_var.name
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)

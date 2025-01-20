@@ -57,6 +57,13 @@ class BindCArrayType(InhomogeneousTupleType):
 
     Datatype for a tuple containing a pointer to array data and integers describing their
     shape and strides.
+
+    Parameters
+    ----------
+    rank : int
+        The rank of the array being described.
+    has_strides : bool
+        Indicates whether strides are used to describe the array.
     """
     __slots__ = ()
     _name = 'BindCArrayType'

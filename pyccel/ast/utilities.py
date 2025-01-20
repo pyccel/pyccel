@@ -849,8 +849,8 @@ def flatten_tuple_var(expr, scope):
     Get a list of all variables in an inhomogeneous tuple Variable by recursively
     applying this function to the elements of the tuple.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     expr : Variable
         A variable which may have the type InhomogeneousTupleType.
     scope : Scope
