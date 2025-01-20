@@ -2807,7 +2807,7 @@ class CToPythonWrapper(Wrapper):
 
         Parameters
         ----------
-        orig_var : Variable | IndexedElement
+        wrapped_var : Variable | IndexedElement
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
