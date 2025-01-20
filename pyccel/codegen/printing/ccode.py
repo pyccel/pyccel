@@ -351,7 +351,7 @@ class CCodePrinter(CodePrinter):
         """
         import_src = [str(i.source) for i in imports]
         dependent_imports = [i for i in import_src if i in import_header_guard_prefix]
-        non_stc_imports = [i for i in import_src if i not in chain(dependent_imports)]
+        non_stc_imports = [i for i in import_src if i not in dependent_imports]
         dependent_imports.sort()
         non_stc_imports.sort()
         sorted_imports = [imports[import_src.index(name)] for name in chain(non_stc_imports, dependent_imports)]
@@ -1084,6 +1084,8 @@ class CCodePrinter(CodePrinter):
         if source == 'stc/common':
             code = ''
             for t in expr.target:
+                self.add_import(Import(stc_extension_mapping[source],(),
+                       ignore_at_print=True))
                 element_decl = f'#define i_key {t.local_alias}\n'
                 header_guard_prefix = import_header_guard_prefix.get(source, '')
                 header_guard = f'{header_guard_prefix}_{t.local_alias.upper()}'
