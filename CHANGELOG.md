@@ -141,6 +141,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Unify the strategy for handling additional imports in the printing stage for different languages.
 -   \[INTERNALS\] Make `Iterable` into a super-class instead of a storage class.
 -   \[INTERNALS\] Change the order of the constructor arguments of `FunctionDef`.
+-   \[INTERNALS\] Use `_extract_X_FunctionDefResult` methods in Fortran-to-C wrapper.
 
 ### Deprecated
 
@@ -155,6 +156,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 -   \[INTERNALS\] Remove unused classes `SymbolicAssign` and `SymbolicPrint`.
+-   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefResult` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
 
 ## \[1.12.1\] - 2024-10-01
 
