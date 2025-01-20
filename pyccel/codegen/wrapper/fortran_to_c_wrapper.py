@@ -595,6 +595,34 @@ class FortranToCWrapper(Wrapper):
         return FunctionDefResult(result['c_result'])
 
     def _extract_FunctionDefResult(self, orig_var):
+        """
+        Get the code and variables necessary to translate a `Variable` to a C-compatible Variable.
+
+        Get the code and variables necessary to translate a `Variable` which is returned
+        from a function to a `Variable` which can be called from C. A variable `local_var` is
+        created. This variable can be retrieved using its name which matches the name of `orig_var`
+        the variable that was originally returned. `local_var` should be used to retrieve the
+        result of the function call. It will generally be a clone of the return variable but some
+        properties (such as the memory handling) may be modified. A variable describing the
+        object which should be returned from the BindCFunctionDef may also be created if necessary.
+        Finally AST nodes are also created to describe any code which is needed to convert the
+        `local_var` to the returned variable.
+
+        Parameters
+        ----------
+        orig_var : Variable
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result:
+            - c_result: The Variable which should be used in a FunctionDefResult from the wrapped
+                    function.
+            - body: The code which is needed to convert the local_var to the returned variable
+                    saved in c_result.
+        """
         class_type = orig_var.class_type
 
         classes = type(class_type).__mro__
@@ -730,12 +758,45 @@ class FortranToCWrapper(Wrapper):
 
     def _get_bind_c_array(self, name, orig_var, shape, pointer_target = False):
         """
+        Get all the objects necessary to return an array from the BindCFunctionDef.
 
         In the case of an array, C cannot represent the array natively. Rather it is
         stored in a pointer. This function therefore creates a variable to represent
         that pointer. Additionally information about the shape and strides of the array
-        are necessary.  The assignment expressions which define the shapes and strides are
-        then stored in `body` along with the allocation of the pointer.
+        are necessary.  The assignment expressions which define the shapes and strides
+        are then stored in `body` along with the allocation of the pointer. The
+        Fortran-accessible array is returned so that it can be filled differently
+        depending on what type is described by the array (e.g. if the array describes
+        an array a simple copy is required, but if the array describes a set then the
+        elements need to be added one by one.
+
+        Parameters
+        ----------
+        name : str
+            The stem of the names of the objects that should be created.
+
+        orig_var : Variable
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped. This is used to obtain the dtype, rank
+            and order of the array that should be created.
+
+        shape : tuple[TypedAstNode]
+            A tuple describing the shape that the array should be allocated to.
+
+        pointer_target : bool, default=False
+            Indicates if the data in orig_var is a target of the pointer that will be
+            created.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result:
+            - c_result: The Variable which should be used in a FunctionDefResult from the wrapped
+                    function.
+            - body: The code which is needed to convert the local_var to the returned variable
+                    saved in c_result.
+            - f_array: The Fortran-accessible array that will be returned. This is where the data
+                    should be copied to.
         """
         dtype = orig_var.dtype
         rank = orig_var.rank
