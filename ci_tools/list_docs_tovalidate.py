@@ -33,6 +33,9 @@ def should_ignore(name):
     #ignore _print_ methods in the codegen.printing module
     if 'Printer._print_' in name:
         return True
+    #ignore _extract_X_FunctionDefResult methods in the codegen.wrapping module
+    if 'Wrapper._extract_' in name and name.endswith('_FunctionDefResult'):
+        return True
     return False
 
 if __name__ == '__main__':
