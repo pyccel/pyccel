@@ -306,6 +306,21 @@ class BindCFunctionDefArgument(FunctionDefArgument):
 # =======================================================================================
 
 class BindCResultVariable(Variable):
+    """
+    A wrapper linking the new C-compatible variable to the original variable.
+
+    A wrapper linking the new C-compatible variable to the variable that is accessible
+    via this information. This object is a variable which mimics the new variable so
+    it can be used in some of the same contexts but the underlying variables should be
+    extracted before manipulating them.
+
+    Parameters
+    ----------
+    new_var : Variable
+        The new C-compatible variable.
+    original_var : Variable
+        The original variable in the target language.
+    """
     def __init__(self, new_var, original_var):
         self._new_var = new_var
         self._original_var = original_var
@@ -316,10 +331,20 @@ class BindCResultVariable(Variable):
 
     @property
     def new_var(self):
+        """
+        The new C-compatible variable.
+
+        The new C-compatible variable.
+        """
         return self._new_var
 
     @property
     def original_var(self):
+        """
+        The original variable in the target language.
+
+        The original variable from the target language that was wrapped.
+        """
         return self._original_var
 
 # =======================================================================================
