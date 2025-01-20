@@ -1069,7 +1069,7 @@ class CCodePrinter(CodePrinter):
         e = self._print(e if e.dtype.primitive_type is PrimitiveFloatingPointType() else NumpyFloat(e))
         code = 'pow({}, {})'.format(b, e)
         return self._cast_to(expr, expr.dtype).format(code)
-    
+
     def _print_Import(self, expr):
         if expr.ignore:
             return ''
