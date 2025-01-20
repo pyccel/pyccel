@@ -10,6 +10,8 @@ def should_ignore(name):
     '''
     Determine if an object should be ignored from numpydoc validation.
 
+    Determine if an object should be ignored from numpydoc validation.
+
     Parameters
     ----------
     name : str
