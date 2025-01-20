@@ -330,6 +330,9 @@ class BindCResultVariable(Variable):
     original_var : Variable
         The original variable in the target language.
     """
+    __slots__ = ('_new_var', '_original_var')
+    _attribute_nodes = Variable._attribute_nodes + ('_new_var', '_original_var')
+
     def __init__(self, new_var, original_var):
         self._new_var = new_var
         self._original_var = original_var
