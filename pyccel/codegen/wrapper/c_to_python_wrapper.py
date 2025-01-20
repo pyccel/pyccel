@@ -1451,7 +1451,7 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(expr.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
-        original_func_name = original_func.scope.get_python_name(original_func.name)
+        original_func_name = original_func.scope.previous_scope.get_python_name(original_func.name)
 
         possible_class_base = expr.get_user_nodes((ClassDef,))
         if possible_class_base:
