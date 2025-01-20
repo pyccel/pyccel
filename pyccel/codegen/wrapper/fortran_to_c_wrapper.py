@@ -405,7 +405,7 @@ class FortranToCWrapper(Wrapper):
             func = BindCFunctionDef(name = func_name,
                           body      = result_wrap['body'],
                           arguments = [],
-                          results   = [result['c_result']],
+                          results   = [result_wrap['c_result']],
                           imports   = [import_mod],
                           scope = func_scope,
                           original_function = expr)
