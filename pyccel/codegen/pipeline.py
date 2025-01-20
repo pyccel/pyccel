@@ -295,7 +295,6 @@ def execute_pyccel(fname, *,
         if show_timings:
             print_timers(start, timers)
         return
-
     compile_libs = [*libs, parser.metavars['libraries']] \
                     if 'libraries' in parser.metavars else libs
     mod_obj = CompileObj(file_name = fname,

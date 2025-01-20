@@ -51,19 +51,19 @@ internal_libs = {
     "cwrapper"        : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
     "numpy_f90"       : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
     "numpy_c"         : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
-    "Set_extensions"  : ("STC_Extensions", CompileObj("Set_Extensions.h",
+    "STC_Extensions/Set_extensions"  : ("STC_Extensions", CompileObj("Set_Extensions.h",
                                                       folder="STC_Extensions",
                                                       has_target_file = False,
                                                       dependencies = (external_libs['stc'][1],))),
-    "Dict_extensions" : ("STC_Extensions", CompileObj("Dict_Extensions.h",
+    "STC_Extensions/Dict_extensions" : ("STC_Extensions", CompileObj("Dict_Extensions.h",
                                                      folder="STC_Extensions",
                                                      has_target_file=False,
                                                      dependencies=(external_libs["stc"][1],))),
-    "List_extensions" : ("STC_Extensions", CompileObj("List_Extensions.h",
+    "STC_Extensions/List_extensions" : ("STC_Extensions", CompileObj("List_Extensions.h",
                                                       folder="STC_Extensions",
                                                       has_target_file = False,
                                                       dependencies = (external_libs['stc'][1],))),
-    "Common_extensions" : ("STC_Extensions", CompileObj("Common_Extensions.h",
+    "STC_Extensions/Common_extensions" : ("STC_Extensions", CompileObj("Common_Extensions.h",
                                                       folder="STC_Extensions",
                                                       has_target_file = False,
                                                       dependencies = (external_libs['stc'][1],))),
@@ -339,16 +339,18 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
         Indicates if the compilation step is required or not.
     """
     # Copy any necessary external libraries
+    uses_STC = False
     for import_key in pyccel_imports:
         lib_name = str(import_key).split('/', 1)[0]
         if lib_name in external_libs:
+            uses_STC |= lib_name == 'stc'
             lib_dest_path = copy_internal_library(lib_name, pyccel_dirpath)
             external_libs[lib_name][1].reset_folder(lib_dest_path)
 
     # Iterate over the internal_libs list and determine if the printer
     # requires an internal lib to be included.
     for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
-        if lib_name in pyccel_imports:
+        if lib_name in pyccel_imports or (stdlib_folder == 'STC_Extensions' and uses_STC):
 
             extra_files = {'numpy_version.h' : get_numpy_max_acceptable_version_file()} \
                         if lib_name == 'cwrapper' else None
@@ -356,7 +358,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
             lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath, extra_files)
 
             # Pylint thinks stdlib is a str
-            if stdlib.dependencies: # pylint: disable=E1101
+            if stdlib.dependencies and (stdlib_folder == 'STC_Extensions' and not uses_STC): # pylint: disable=E1101
                 manage_dependencies({os.path.splitext(os.path.basename(d.source))[0]: None for d in stdlib.dependencies}, # pylint: disable=E1101
                         compiler, pyccel_dirpath, stdlib, language, verbose, convert_only)
 
