@@ -22,6 +22,7 @@ from pyccel.utilities.metaclasses import Singleton
 errors = Errors()
 
 __all__ = (
+    'BindCArrayType',
     'BindCArrayVariable',
     'BindCClassDef',
     'BindCClassProperty',
@@ -29,6 +30,7 @@ __all__ = (
     'BindCFunctionDefArgument',
     'BindCModule',
     'BindCPointer',
+    'BindCResultVariable',
     'BindCSizeOf',
     'BindCVariable',
     'CLocFunc',
