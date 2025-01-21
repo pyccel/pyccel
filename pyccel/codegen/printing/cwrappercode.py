@@ -234,7 +234,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return code
 
     def _print_PyArgKeywords(self, expr):
-        arg_names = ',\n'.join([f'"{a}"' for a in expr.arg_names] + [self._print(Nil())])
+        arg_names = ',\n'.join([f'(char*)"{a}"' for a in expr.arg_names] + [self._print(Nil())])
         return (f'static char *{expr.name}[] = {{\n'
                         f'{arg_names}\n'
                         '};\n')
