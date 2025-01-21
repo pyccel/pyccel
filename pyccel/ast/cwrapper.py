@@ -44,6 +44,7 @@ __all__ = (
     'PyccelPyObject',
     'PyccelPyClassType',
     'PyccelPyTypeObject',
+    'Py_ssize_t',
     'WrapperCustomDataType',
 # --------- CLASSES -----------
     'PyFunctionDef',
@@ -59,6 +60,7 @@ __all__ = (
     'PyModule_Create',
     'PyModule_AddObject',
     'PyModInitFunc',
+    'Py_ssize_t_Cast',
 #--------- CONSTANTS ----------
     'Py_True',
     'Py_False',
