@@ -120,28 +120,6 @@ class BindCFunctionDef(FunctionDef):
         return self._arguments
 
     @property
-    def bind_c_results(self):
-        """
-        Get the BindCFunctionDefResults of the function.
-
-        Return a list of all the results returned by the function.
-        These objects all have the type BindCFunctionDefResult so
-        shapes and strides are hidden.
-        """
-        return self._results
-
-    @property
-    def results(self):
-        """
-        List of all objects returned by the function.
-
-        A list of all objects returned by the function including variables
-        which contain array metadata.
-        """
-        result_list = self._results.get_all_function_def_results() if isinstance(self._results, BindCFunctionDefResult) else [Nil()]
-        return FunctionDefResult(PythonTuple(*result_list))
-
-    @property
     def arguments(self):
         """
         List of all arguments passed to the function.
