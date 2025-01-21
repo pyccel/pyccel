@@ -9,7 +9,7 @@ which creates an interface exposing C code to Python.
 """
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
-from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCResultVariable
+from pyccel.ast.bind_c        import BindCModule, BindCModuleVariable, BindCResultVariable
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
 from pyccel.ast.builtins      import VariableIterator
@@ -1310,7 +1310,7 @@ class CToPythonWrapper(Wrapper):
 
         # Add declarations for C-compatible variables
         decs = [Declare(v.clone(v.name.lower()), module_variable=True, external = True) \
-                                    for v in expr.variables if not v.is_private and isinstance(v, BindCVariable)]
+                                    for v in expr.variables if not v.is_private and isinstance(v, BindCModuleVariable)]
         pymod.declarations = decs
 
         external_funcs = []

@@ -11,7 +11,7 @@ from functools import reduce
 import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
-from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
+from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCModuleVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
 from pyccel.ast.bind_c import BindCClassProperty, c_malloc, BindCSizeOf
 from pyccel.ast.bind_c import BindCResultVariable, BindCArrayType
@@ -389,7 +389,7 @@ class FortranToCWrapper(Wrapper):
             the wrapping module to expose the variable.
         """
         if isinstance(expr.class_type, FixedSizeNumericType):
-            return expr.clone(expr.name, new_class = BindCVariable)
+            return expr.clone(expr.name, new_class = BindCModuleVariable)
         elif isinstance(expr.class_type, NumpyNDArrayType):
             scope = self.scope
             func_name = scope.get_new_name('bind_c_'+expr.name.lower())

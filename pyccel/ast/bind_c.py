@@ -32,7 +32,7 @@ __all__ = (
     'BindCPointer',
     'BindCResultVariable',
     'BindCSizeOf',
-    'BindCVariable',
+    'BindCModuleVariable',
     'CLocFunc',
     'C_F_Pointer',
     'c_malloc',
@@ -442,7 +442,7 @@ class BindCModule(Module):
 
 # =======================================================================================
 
-class BindCVariable(Variable):
+class BindCModuleVariable(Variable):
     """
     A class which wraps a compatible variable from Fortran to make it available in C.
 
