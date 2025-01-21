@@ -2785,6 +2785,12 @@ class CCodePrinter(CodePrinter):
         else:
             return f'{c_type}_pull({list_obj})'
 
+    def _print_ListReverse(self, expr):
+        class_type = expr.list_obj.class_type
+        c_type = self.get_c_type(class_type)
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+
+
     #================== Set methods ==================
 
     def _print_SetPop(self, expr):

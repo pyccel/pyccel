@@ -11,7 +11,7 @@ from pyccel.ast.builtin_methods.set_methods  import (SetAdd, SetClear, SetCopy, 
                                                      SetIntersection, SetIntersectionUpdate)
 from pyccel.ast.builtin_methods.list_methods import (ListAppend, ListInsert, ListPop,
                                                      ListClear, ListExtend, ListRemove,
-                                                     ListCopy, ListSort)
+                                                     ListCopy, ListSort, ListReverse)
 from pyccel.ast.builtin_methods.dict_methods import (DictPop, DictPopitem, DictGet, DictClear,DictCopy,
                                                      DictSetDefault, DictItems)
 
@@ -154,6 +154,7 @@ ListClass = ClassDef('list',
             PyccelFunctionDef('pop', func_class = ListPop),
             PyccelFunctionDef('sort', func_class = ListSort),
             PyccelFunctionDef('remove', func_class = ListRemove),
+            PyccelFunctionDef('reverse', func_class = ListReverse),
         ])
 
 #=======================================================================================
