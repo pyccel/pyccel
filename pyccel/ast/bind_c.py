@@ -446,8 +446,8 @@ class BindCModuleVariable(Variable):
     """
     A class which wraps a compatible variable from Fortran to make it available in C.
 
-    A class which wraps a compatible variable from Fortran to make it available in C.
-    A compatible variable is a variable which can be exposed to C simply using
+    A class which wraps a compatible module variable from Fortran to make it available
+    in C. A compatible variable is a variable which can be exposed to C simply using
     iso_c_binding (i.e. no wrapper function is required).
 
     Parameters
