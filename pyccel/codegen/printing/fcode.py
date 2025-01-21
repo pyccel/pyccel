@@ -703,6 +703,12 @@ class FCodePrinter(CodePrinter):
                                         if getattr(i, 'source', None) == set_filename else i \
                                         for i in type_module.imports]
                 self.add_import(Import('gFTL_functions/Set_extensions', Module('_', (), ()), ignore_at_print = True))
+            elif isinstance(expr_type, HomogeneousListType):
+                vector_filename = LiteralString('vector/template.inc')
+                imports_and_macros += [Import(LiteralString('Vector_extensions.inc'), Module('_', (), ())) \
+                                        if getattr(i, 'source', None) == vector_filename else i \
+                                        for i in type_module.imports]
+                self.add_import(Import('gFTL_functions/Vector_extensions', Module('_', (), ()), ignore_at_print = True))
             else:
                 raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
 
@@ -1838,27 +1844,37 @@ class FCodePrinter(CodePrinter):
         else:
             return f'minval({arg_code})'
         
-    def _print_PythonMin(self, expr):
+    def _print_PythonMinMax(self, expr):
         args = expr.args
         if len(args) == 1:
-            arg = args[0]
-            arg_code = self._get_node_without_gFTL(arg)
-            code = f'minval({arg_code})'
+            if isinstance(args[0], Variable):
+                arg = args[0]
+                if isinstance(arg.class_type, HomogeneousListType):
+                    self.add_import(self._build_gFTL_extension_module(arg.class_type))
+                    target = self._print(arg)
+                    type_name = self._print(arg.class_type)
+                    code = f'{type_name}_{expr.name}({target})'
+                elif isinstance(arg.class_type, HomogeneousSetType):
+                    self.add_import(self._build_gFTL_extension_module(arg.class_type))
+                    target = self._print(arg)
+                    type_name = self._print(arg.class_type)
+                    code = f'{type_name}_{expr.name}({target})'
+                else:
+                    raise TypeError(f'Expecting a variable of type list or set, given {arg.class_type}')
+            else:        
+                arg = args[0]
+                arg_code = self._get_node_without_gFTL(arg)
+                code = f'{expr.name}val({arg_code})'
         else:
             code = ','.join(self._print(arg) for arg in args)
-            code = 'min('+code+')'
+            code = f'{expr.name}('+code+')'
         return code
 
+    def _print_PythonMin(self, expr):
+        return self._print_PythonMinMax(expr)
+
     def _print_PythonMax(self, expr):
-        args = expr.args
-        if len(args) == 1:
-            arg = args[0]
-            arg_code = self._get_node_without_gFTL(arg)
-            code = f'maxval({arg_code})'
-        else:
-            code = ','.join(self._print(arg) for arg in args)
-            code = 'max('+code+')'
-        return code
+        return self._print_PythonMinMax(expr)
 
     # ... MACROS
     def _print_MacroShape(self, expr):

@@ -20,6 +20,30 @@ static inline i_key _c_MEMB(_pull_elem)(i_type* self, intptr_t pop_idx) {
     return *(itr.ref); // Return the element that is being popped.
 }
 
+// Function to get the minimum element from the vector
+static inline i_key _c_MEMB(_min)(const i_type* self) {
+    i_key min_val = self->data[0];
+    _c_MEMB(_iter) it;
+    c_foreach(it, i_type, *self) {
+        if (*(it.ref) < min_val) {
+            min_val = *(it.ref);
+        }
+    }
+    return min_val;
+}
+
+// Function to get the maximum element from the vector
+static inline i_key _c_MEMB(_max)(const i_type* self) {
+    i_key max_val = self->data[0];
+    _c_MEMB(_iter) it;
+    c_foreach(it, i_type, *self) {
+        if (*(it.ref) > max_val) {
+            max_val = *(it.ref);
+        }
+    }
+    return max_val;
+}
+
 #undef i_type
 #undef i_key
 #include <stc/priv/template2.h>

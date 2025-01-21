@@ -41,4 +41,33 @@ contains
 
   end subroutine __IDENTITY(Set)_intersection_update
 
+   function __IDENTITY(Set)_min(my_set) result(result)
+    class(Set), intent(in) :: my_set
+    __T_declare_dummy__ :: result
+
+    type(SetIterator) :: iter
+    type(SetIterator) :: last
+
+    iter = my_set%begin()
+    last = my_set%end()
+
+    result = iter%of()
+  end function __IDENTITY(Set)_min
+
+  function __IDENTITY(Set)_max(my_set) result(result)
+    class(Set), intent(in) :: my_set
+    __T_declare_dummy__ :: result
+
+    type(SetIterator) :: iter
+    type(SetIterator) :: last
+
+    iter = my_set%begin()
+    last = my_set%end()
+
+
+    call last%prev()
+
+    result = last%of()
+  end function __IDENTITY(Set)_max
+
 #include <set/tail.inc>

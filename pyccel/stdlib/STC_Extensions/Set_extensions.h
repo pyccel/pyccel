@@ -56,6 +56,32 @@ static inline void _c_MEMB(_intersection_update)(i_type* self, i_type* other) {
     }
 }
 
+// Function to get the minimum element from the set
+static inline i_key _c_MEMB(_min)(const i_type* self) {
+    _c_MEMB(_iter) itr = _c_MEMB(_begin)(self);
+    i_key min_val = *(itr.ref);
+    while (itr.ref)
+    {
+        if (*(itr.ref) < min_val)
+            min_val = *(itr.ref);
+        _c_MEMB(_next)(&itr);
+    }
+    return min_val;
+}
+
+// Function to get the maximum element from the set
+static inline i_key _c_MEMB(_max)(const i_type* self) {
+    _c_MEMB(_iter) itr = _c_MEMB(_begin)(self);
+    i_key max_val = *(itr.ref);
+    while (itr.ref)
+    {
+        if (*(itr.ref) > max_val)
+            max_val = *(itr.ref);
+        _c_MEMB(_next)(&itr);
+    }
+    return max_val;
+}
+
 #undef i_type
 #undef i_key
 #include <stc/priv/template2.h>
