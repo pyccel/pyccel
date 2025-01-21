@@ -698,9 +698,8 @@ class CCodePrinter(CodePrinter):
         expr : TypedAstNode
             The object representing the container being printed (e.g., PythonList, PythonSet).
 
-        assignment_var : Assign
-            The assignment node where the Python container (rhs) is being initialized
-            and saved into a variable (lhs).
+        assignment_var : Variable
+            The variable that the Python container is being assigned to.
 
         Returns
         -------
@@ -708,14 +707,14 @@ class CCodePrinter(CodePrinter):
             The generated C code for the container initialization.
         """
 
-        class_type = assignment_var.lhs.class_type
+        class_type = assignment_var.class_type
         dtype = self.get_c_type(class_type)
         if isinstance(expr, PythonDict):
             dict_item_strs = [(self._print(k), self._print(v)) for k,v in zip(expr.keys, expr.values)]
             keyraw = '{' + ', '.join(f'{{{k}, {v}}}' for k,v in dict_item_strs) + '}'
         else:
             keyraw = '{' + ', '.join(self._print(a) for a in expr.args) + '}'
-        container_name = self._print(assignment_var.lhs)
+        container_name = self._print(assignment_var)
         init = f'{container_name} = c_init({dtype}, {keyraw});\n'
         return init
 
@@ -2386,7 +2385,7 @@ class CCodePrinter(CodePrinter):
             return self.arrayFill(expr)
         lhs_code = self._print(lhs)
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
-            return self.init_stc_container(rhs, expr)
+            return self.init_stc_container(rhs, expr.lhs)
         rhs_code = self._print(rhs)
         if isinstance(rhs, LiteralString):
             rhs_code = f'cstr_lit({rhs_code})'
@@ -2828,6 +2827,12 @@ class CCodePrinter(CodePrinter):
         set_var = self._print(ObjectAddress(expr.set_variable))
         arg_val = self._print(expr.args[0])
         return f'{var_type}_erase({set_var}, {arg_val});\n'
+
+    def _print_PythonSet(self, expr):
+        tmp_var = self.scope.get_temporary_variable(expr.class_type, shape = expr.shape,
+                    memory_handling='heap')
+        self._additional_code += self.init_stc_container(expr, tmp_var)
+        return self._print(tmp_var)
 
     #================== Dict methods ==================
 
