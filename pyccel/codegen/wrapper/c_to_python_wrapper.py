@@ -24,7 +24,7 @@ from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, Py
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
-from pyccel.ast.cwrapper      import PyAttributeError
+from pyccel.ast.cwrapper      import PyAttributeError, Py_ssize_t, Py_ssize_t_Cast
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
@@ -1562,6 +1562,9 @@ class CToPythonWrapper(Wrapper):
             res = Py_None
             func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
             body.append(Py_INCREF(res))
+        elif original_func_name == '__len__':
+            res = Py_ssize_t_Cast(python_result_variable)
+            func_results = [FunctionDefResult(Variable(Py_ssize_t(), self.scope.get_new_name(), is_temp = True))]
         else:
             res = python_result_variable
             func_results = [FunctionDefResult(res)]

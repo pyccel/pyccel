@@ -17,6 +17,8 @@ from .basic     import PyccelAstNode
 
 from .bind_c    import BindCPointer
 
+from .builtins  import PythonInt
+
 from .datatypes import FixedSizeType, CustomDataType
 from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import PythonNativeBool, StringType, VoidType
@@ -119,6 +121,16 @@ class WrapperCustomDataType(CustomDataType):
     """
     __slots__ = ()
     _name = 'pycustomclasstype'
+
+class Py_ssize_t(FixedSizeType):
+    """
+    Class representing Python's Py_ssize_t type.
+
+    Class representing Python's Py_ssize_t type.
+    """
+    __slots__ = ()
+    _name = 'int'
+    _primitive_type = PrimitiveIntegerType()
 
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes
@@ -955,6 +967,23 @@ class PyModInitFunc(FunctionDef):
         return [Declare(v, static=(v in self._static_vars),
                         value = (Nil() if isinstance(v.class_type, (VoidType, BindCPointer)) else None)) \
                 for v in self.scope.variables.values()]
+
+class Py_ssize_t_Cast(PythonInt):
+    """
+    A class for casting integers to Python's Py_ssize_t type.
+
+    A class for casting integers to Python's Py_ssize_t type.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
+    """
+    __slots__ = ()
+    _static_type = Py_ssize_t()
+    _class_type = Py_ssize_t()
+    name = 'Py_ssize_t'
+
 
 #-------------------------------------------------------------------
 #                      Python.h Constants
