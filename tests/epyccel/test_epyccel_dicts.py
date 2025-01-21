@@ -153,21 +153,21 @@ def test_pop_item_key(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_get_element(python_only_language):
+def test_get_element(stc_language):
     def get_element():
         a = {1:1.0, 2:2.0}
         return a.get(1)
-    epyc_element = epyccel(get_element, language = python_only_language)
+    epyc_element = epyccel(get_element, language = stc_language)
     pyccel_result = epyc_element()
     python_result = get_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_get_default_element(python_only_language):
+def test_get_default_element(stc_language):
     def get_default_element():
         a = {1:True, 2:False}
         return a.get(3, True)
-    epyc_default_element = epyccel(get_default_element, language = python_only_language)
+    epyc_default_element = epyccel(get_default_element, language = stc_language)
     pyccel_result = epyc_default_element()
     python_result = get_default_element()
     assert isinstance(python_result, type(pyccel_result))
