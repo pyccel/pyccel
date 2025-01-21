@@ -41,7 +41,7 @@ class CustomBuildHook(BuildHookInterface):
         # Build gFTL for installation
         gFTL_folder = (Path(__file__).parent.parent / 'pyccel' / 'extensions' / 'gFTL').absolute()
         subprocess.run([shutil.which('cmake'), '-S', str(gFTL_folder), '-B', str(gFTL_folder / 'build'),
-                        '--install-prefix', str(gFTL_folder / 'install')], cwd = gFTL_folder, check=True)
+                        f'-DCMAKE_INSTALL_PREFIX={gFTL_folder / "install"}'], cwd = gFTL_folder, check=True)
         subprocess.run([shutil.which('cmake'), '--build', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
         subprocess.run([shutil.which('cmake'), '--install', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
 

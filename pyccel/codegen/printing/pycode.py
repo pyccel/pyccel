@@ -21,6 +21,8 @@ from pyccel.ast.variable   import DottedName, Variable
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
 
+from pyccel.parser.semantic import magic_method_map
+
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
@@ -302,7 +304,12 @@ class PythonCodePrinter(CodePrinter):
         result_annotation = ('-> ' + self._print(expr.results.annotation)) \
                                 if expr.results.annotation else ''
 
-        code = ''.join((f'def {name}({args}){result_annotation}:\n', body, '\n'))
+        # Put back return removed in semantic stage
+        if name.startswith('__i') and ('__'+name[3:]) in magic_method_map.values():
+            body += f'    return {expr.arguments[0].name}\n'
+
+        code = (f'def {name}({args}){result_annotation}:\n'
+                f'{body}\n')
         decorators = expr.decorators.copy()
         if decorators:
             if decorators['template']:
@@ -505,6 +512,14 @@ class PythonCodePrinter(CodePrinter):
             return f'len({arg_code})'
         else:
             raise NotImplementedError("The shape access function seems to be poorly defined.")
+
+    def _print_PythonRound(self, expr):
+        arg = self._print(expr.arg)
+        if expr.ndigits:
+            ndigits = self._print(expr.ndigits)
+            return f'round({arg}, {ndigits})'
+        else:
+            return f'round({arg})'
 
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
@@ -833,7 +848,11 @@ class PythonCodePrinter(CodePrinter):
         else:
             method_args = ', '.join(self._print(a) for a in expr.args)
 
-        return f"{list_obj}.{method_name}({method_args})\n"
+        code = f"{list_obj}.{method_name}({method_args})"
+        if isinstance(expr.class_type, VoidType):
+            return code + '\n'
+        else:
+            return code
 
     def _print_DictMethod(self, expr):
         method_name = expr.name

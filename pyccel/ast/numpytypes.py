@@ -432,6 +432,22 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         return isinstance(other, NumpyNDArrayType) and self.element_type == other.element_type \
                 and self.rank == other.rank and self.order == other.order
 
+    def __reduce__(self):
+        """
+        Function called during pickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+        This function is necessary to ensure that DataTypes remain singletons.
+
+        Returns
+        -------
+        callable
+            A callable to create the object.
+        args
+            A tuple containing any arguments to be passed to the callable.
+        """
+        return (self.__class__, (self._element_type, self._container_rank, self._order))
+
 #==============================================================================
 
 numpy_precision_map = {

@@ -88,8 +88,12 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                        help='Compiler flags.')
     group.add_argument('--wrapper-flags', type=str, \
                        help='Compiler flags for the wrapper.')
-    group.add_argument('--debug', action='store_true', \
-                       help='compiles the code in a debug mode.')
+    if sys.version_info < (3, 9):
+        group.add_argument('--debug', action='store_true', default=None, \
+                           help='Compiles the code with debug flags.')
+    else:
+        group.add_argument('--debug', action=argparse.BooleanOptionalAction, default=None, \
+                           help='Compiles the code with debug flags.') # pylint: disable=no-member
 
     group.add_argument('--include',
                         type=str,
@@ -248,11 +252,13 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     # ...
 
     # ...
+    # this will initialize the singelton ErrorsMode
+    # making this settings available everywhere
+    err_mode = ErrorsMode()
     if args.developer_mode:
-        # this will initialize the singelton ErrorsMode
-        # making this settings available everywhere
-        err_mode = ErrorsMode()
         err_mode.set_mode('developer')
+    else:
+        err_mode.set_mode('user')
     # ...
 
     base_dirpath = os.getcwd()

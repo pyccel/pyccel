@@ -22,4 +22,23 @@ contains
   
   end function __IDENTITY(Set)_pop
 
+  subroutine __IDENTITY(Set)_intersection_update(this, other_set)
+    class(Set), intent(inout) :: this
+    class(Set), intent(in) :: other_set
+
+    type(SetIterator) :: iter
+    type(SetIterator) :: last
+
+    iter = this%begin()
+    last = this%end()
+    do while (iter /= last)
+      if (other_set % count(iter%of()) == 0) then
+        iter = this%erase(iter)
+      else
+        call iter%next()
+      end if
+    end do
+
+  end subroutine __IDENTITY(Set)_intersection_update
+
 #include <set/tail.inc>

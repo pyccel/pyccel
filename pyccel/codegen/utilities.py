@@ -16,6 +16,8 @@ import pyccel.stdlib as stdlib_folder
 import pyccel.extensions as ext_folder
 from pyccel.errors.errors import Errors
 
+from pyccel.ast.numpy_wrapper                    import get_numpy_max_acceptable_version_file
+
 from .codegen              import printer_registry
 from .compiling.basic      import CompileObj
 from .compiling.file_locks import FileLockSet
@@ -49,15 +51,19 @@ internal_libs = {
     "cwrapper"        : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
     "numpy_f90"       : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
     "numpy_c"         : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
-    "Set_extensions"  : ("STC_Extensions", CompileObj("Set_Extensions.h",
+    "STC_Extensions/Set_extensions"  : ("STC_Extensions", CompileObj("Set_Extensions.h",
                                                       folder="STC_Extensions",
                                                       has_target_file = False,
                                                       dependencies = (external_libs['stc'][1],))),
-    "List_extensions" : ("STC_Extensions", CompileObj("List_Extensions.h",
+    "STC_Extensions/Dict_extensions" : ("STC_Extensions", CompileObj("Dict_Extensions.h",
+                                                     folder="STC_Extensions",
+                                                     has_target_file=False,
+                                                     dependencies=(external_libs["stc"][1],))),
+    "STC_Extensions/List_extensions" : ("STC_Extensions", CompileObj("List_Extensions.h",
                                                       folder="STC_Extensions",
                                                       has_target_file = False,
                                                       dependencies = (external_libs['stc'][1],))),
-    "Common_extensions" : ("STC_Extensions", CompileObj("Common_Extensions.h",
+    "STC_Extensions/Common_extensions" : ("STC_Extensions", CompileObj("Common_Extensions.h",
                                                       folder="STC_Extensions",
                                                       has_target_file = False,
                                                       dependencies = (external_libs['stc'][1],))),
@@ -344,7 +350,10 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
     for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
         if lib_name in pyccel_imports:
 
-            lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
+            extra_files = {'numpy_version.h' : get_numpy_max_acceptable_version_file()} \
+                        if lib_name == 'cwrapper' else None
+
+            lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath, extra_files)
 
             # Pylint thinks stdlib is a str
             if stdlib.dependencies: # pylint: disable=E1101
