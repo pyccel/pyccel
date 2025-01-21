@@ -12,7 +12,7 @@ from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import Module, Deallocate
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
-from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt
+from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt, InhomogeneousTupleType
 from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.variable import Variable
@@ -22,16 +22,17 @@ from pyccel.utilities.metaclasses import Singleton
 errors = Errors()
 
 __all__ = (
+    'BindCArrayType',
     'BindCArrayVariable',
     'BindCClassDef',
     'BindCClassProperty',
     'BindCFunctionDef',
     'BindCFunctionDefArgument',
-    'BindCFunctionDefResult',
     'BindCModule',
     'BindCPointer',
-    'BindCSizeOf',
     'BindCVariable',
+    'BindCSizeOf',
+    'BindCModuleVariable',
     'CLocFunc',
     'C_F_Pointer',
     'c_malloc',
@@ -51,6 +52,28 @@ class BindCPointer(FixedSizeType, metaclass = Singleton):
     """
     __slots__ = ()
     _name = 'bindcpointer'
+
+class BindCArrayType(InhomogeneousTupleType):
+    """
+    Datatype for a tuple containing all the information necessary to describe an array.
+
+    Datatype for a tuple containing a pointer to array data and integers describing their
+    shape and strides.
+
+    Parameters
+    ----------
+    rank : int
+        The rank of the array being described.
+    has_strides : bool
+        Indicates whether strides are used to describe the array.
+    """
+    __slots__ = ()
+    _name = 'BindCArrayType'
+
+    def __init__(self, rank, has_strides):
+        shape_types = (PythonNativeInt(),)*rank
+        stride_types = (PythonNativeInt(),)*rank*has_strides
+        super().__init__(BindCPointer(), *shape_types, *stride_types)
 
 # =======================================================================================
 #                                   Wrapper classes
@@ -92,7 +115,7 @@ class BindCFunctionDef(FunctionDef):
         super().__init__(*args, **kwargs)
         assert self.name == self.name.lower()
         assert all(isinstance(a, BindCFunctionDefArgument) for a in self._arguments)
-        assert all(isinstance(a, BindCFunctionDefResult) for a in self._results)
+        assert all(isinstance(a, FunctionDefResult) for a in self._results)
 
     @property
     def original_function(self):
@@ -114,27 +137,6 @@ class BindCFunctionDef(FunctionDef):
         shapes and strides are hidden.
         """
         return self._arguments
-
-    @property
-    def bind_c_results(self):
-        """
-        Get the BindCFunctionDefResults of the function.
-
-        Return a list of all the results returned by the function.
-        These objects all have the type BindCFunctionDefResult so
-        shapes and strides are hidden.
-        """
-        return self._results
-
-    @property
-    def results(self):
-        """
-        List of all objects returned by the function.
-
-        A list of all objects returned by the function including variables
-        which contain array metadata.
-        """
-        return [ai for a in self._results for ai in a.get_all_function_def_results()]
 
     @property
     def arguments(self):
@@ -312,94 +314,52 @@ class BindCFunctionDefArgument(FunctionDefArgument):
 
 # =======================================================================================
 
-
-class BindCFunctionDefResult(FunctionDefResult):
+class BindCVariable(Variable):
     """
-    Stores all the information necessary to expose a result to C code.
+    A wrapper linking the new C-compatible variable to the original variable.
 
-    Results of a C-compatible function may need additional information
-    in order to fully construct the object. This class is mostly important
-    for array objects. These objects must describe not only the data, but also
-    meta-data. Namely the shape for the array in each dimension.
-    This information is stored in this class.
+    A wrapper linking the new C-compatible variable to the variable that is accessible
+    via this information. This object is a variable which mimics the new variable so
+    it can be used in some of the same contexts but the underlying variables should be
+    extracted before manipulating them.
 
     Parameters
     ----------
-    var : Variable
-        The variable being returned (with a C-compatible type).
-
-    original_res_var : Variable
-        The variable which was returned by the function currently being wrapped
-        in a C-Fortran interface. This variable may have a type which is not
-        compatible with C.
-
-    scope : pyccel.parser.scope.Scope
-        The scope in which any arguments to the function should be declared.
-        This is used to create the shape and stride variables.
-
-    **kwargs : dict
-        See FunctionDefResult.
-
-    See Also
-    --------
-    pyccel.ast.core.FunctionDefResult
-        The class from which BindCFunctionDefResult inherits which
-        contains all details about the args and kwargs.
+    new_var : Variable
+        The new C-compatible variable.
+    original_var : Variable
+        The original variable in the target language.
     """
-    __slots__ = ('_shape', '_original_res_var')
-    _attribute_nodes = FunctionDefResult._attribute_nodes + \
-                        ('_shape', '_original_res_var')
+    __slots__ = ('_new_var', '_original_var')
+    _attribute_nodes = Variable._attribute_nodes + ('_new_var', '_original_var')
 
-    def __init__(self, var, original_res_var, scope, **kwargs):
-        name = original_res_var.name
-        self._shape   = [scope.get_temporary_variable(PythonNativeInt(),
-                            name=f'{name}_shape_{i+1}')
-                         for i in range(original_res_var.rank)]
-        self._original_res_var = original_res_var
-        super().__init__(var, **kwargs)
-
-    @property
-    def original_function_result_variable(self):
-        """
-        The result returned by the function currently being wrapped.
-
-        The variable which was returned by the function currently being wrapped
-        in a C-Fortran interface. This variable may have a type which is not
-        compatible with C.
-        """
-        return self._original_res_var
+    def __init__(self, new_var, original_var):
+        self._new_var = new_var
+        self._original_var = original_var
+        super().__init__(new_var.class_type, new_var.name,
+                    memory_handling = new_var.memory_handling,
+                    is_optional = new_var.is_optional,
+                    shape = new_var.shape)
 
     @property
-    def shape(self):
+    def new_var(self):
         """
-        The shape of the array result in each dimension.
+        The new C-compatible variable.
 
-        A tuple containing the variables which describe the number of
-        elements along each dimension of an array result. These values
-        must be returned by any C-compatible function returning an array.
+        The new C-compatible variable.
         """
-        return self._shape
+        return self._new_var
 
-    def get_all_function_def_results(self):
+    @property
+    def original_var(self):
         """
-        Get all result variables which must be printed to fully describe this result.
+        The original variable in the target language.
 
-        Get a list of all the results of the C-compatible function which are
-        required in order to fully describe this result. This includes the data
-        for the object itself as well as any sizes necessary to
-        define arrays.
-
-        Returns
-        -------
-        list
-            A list of FunctionDefResults which will be results of a BindCFunctionDef.
+        The original variable from the target language that was wrapped.
         """
-        res = [self]
-        res += [FunctionDefResult(size) for size in self.shape]
-        return res
+        return self._original_var
 
 # =======================================================================================
-
 class BindCModule(Module):
     """
     Represents a Module which only contains functions compatible with C.
@@ -482,12 +442,12 @@ class BindCModule(Module):
 
 # =======================================================================================
 
-class BindCVariable(Variable):
+class BindCModuleVariable(Variable):
     """
     A class which wraps a compatible variable from Fortran to make it available in C.
 
-    A class which wraps a compatible variable from Fortran to make it available in C.
-    A compatible variable is a variable which can be exposed to C simply using
+    A class which wraps a compatible module variable from Fortran to make it available
+    in C. A compatible variable is a variable which can be exposed to C simply using
     iso_c_binding (i.e. no wrapper function is required).
 
     Parameters

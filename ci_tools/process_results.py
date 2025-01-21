@@ -63,10 +63,12 @@ if __name__ == '__main__':
                         lines = code_file.readlines()[start-1:end+2]
                     lines = [l.strip() for l in lines]
                     doc_openings = []
+                    str_opening = None
                     for i,l in enumerate(lines):
-                        if l.startswith('"""'):
+                        if l.startswith('"""') or l.startswith("'''"):
                             doc_openings.append(i)
-                        if l != '"""' and l.endswith('"""'):
+                            str_opening = l[:3]
+                        if str_opening and l != str_opening and l.endswith(str_opening):
                             doc_openings.append(i)
                     lines = lines[doc_openings[0]:doc_openings[1]+1]
                     end = start + doc_openings[1]
