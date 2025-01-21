@@ -62,7 +62,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
-from pyccel.ast.utilities import expand_to_loops, is_literal_integer
+from pyccel.ast.utilities import expand_to_loops, is_literal_integer, flatten_tuple_var
 
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
@@ -1547,8 +1547,7 @@ class CCodePrinter(CodePrinter):
             Signature of the function.
         """
         arg_vars = [a.var for a in expr.arguments]
-        result_vars = [r for r in self.scope.collect_all_tuple_elements(expr.results.var) \
-                if isinstance(r, Variable) and not r.is_argument]
+        result_vars = [v for v in flatten_tuple_var(expr.results.var, expr.scope) if not v.is_argument]
 
         n_results = len(result_vars)
 
@@ -2380,6 +2379,7 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
         if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, TupleType):
+            assert isinstance(lhs.class_type, InhomogeneousTupleType) or isinstance(lhs, (PythonTuple, PythonList))
             self._temporary_args = [ObjectAddress(a) for a in lhs]
             return f'{self._print(rhs)};\n'
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer

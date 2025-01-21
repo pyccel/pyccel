@@ -9,7 +9,7 @@ which creates an interface exposing C code to Python.
 """
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
-from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
+from pyccel.ast.bind_c        import BindCModule, BindCModuleVariable, BindCVariable
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
 from pyccel.ast.builtins      import VariableIterator
@@ -47,8 +47,7 @@ from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type
 from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array, PyccelPyArrayObject
 from pyccel.ast.numpy_wrapper import PyArray_DATA
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
-from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim, to_pyarray
-from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
+from pyccel.ast.numpy_wrapper import to_pyarray
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
@@ -1311,31 +1310,31 @@ class CToPythonWrapper(Wrapper):
 
         # Add declarations for C-compatible variables
         decs = [Declare(v.clone(v.name.lower()), module_variable=True, external = True) \
-                                    for v in expr.variables if not v.is_private and isinstance(v, BindCVariable)]
+                                    for v in expr.variables if not v.is_private and isinstance(v, BindCModuleVariable)]
         pymod.declarations = decs
 
         external_funcs = []
         # Add external functions for functions wrapping array variables
         for v in expr.variable_wrappers:
             f = v.wrapper_function
-            external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = Scope()))
+            external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
 
         # Add external functions for normal functions
         for f in expr.funcs:
-            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = Scope()))
+            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope))
 
         for c in expr.classes:
             m = c.new_func
-            external_funcs.append(FunctionDef(m.name, m.arguments, [], m.results, is_header = True, scope = Scope()))
+            external_funcs.append(FunctionDef(m.name, m.arguments, [], m.results, is_header = True, scope = m.scope))
             for m in c.methods:
-                external_funcs.append(FunctionDef(m.name, m.arguments, [], m.results, is_header = True, scope = Scope()))
+                external_funcs.append(FunctionDef(m.name, m.arguments, [], m.results, is_header = True, scope = m.scope))
             for i in c.interfaces:
                 for f in i.functions:
-                    external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = Scope()))
+                    external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
             for a in c.attributes:
                 for f in (a.getter, a.setter):
                     if f:
-                        external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = Scope()))
+                        external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
         pymod.external_funcs = external_funcs
 
         return pymod
@@ -1485,7 +1484,7 @@ class CToPythonWrapper(Wrapper):
 
         # Get variables describing the arguments and results that are seen from Python
         python_args = expr.bind_c_arguments if is_bind_c_function_def else expr.arguments
-        python_results = expr.bind_c_results if is_bind_c_function_def else expr.results
+        python_results = expr.results
 
         # Get variables describing the arguments and results that must be passed to the function
         original_c_args = expr.arguments
@@ -1902,7 +1901,7 @@ class CToPythonWrapper(Wrapper):
 
         get_val_arg = expr.getter.arguments[0]
         self.scope.insert_symbol(get_val_arg.original_function_argument_variable.name)
-        get_val_result = expr.getter.bind_c_results[0]
+        get_val_result = expr.getter.results[0]
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
@@ -2563,7 +2562,7 @@ class CToPythonWrapper(Wrapper):
             FunctionDefResult being wrapped.
 
         is_bind_c : bool
-            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result comes from a C-binding from another language. False otherwise.
 
         funcdef : FunctionDef
             The function being wrapped.
@@ -2582,7 +2581,10 @@ class CToPythonWrapper(Wrapper):
         if orig_var is Nil():
             return {'c_results': [], 'py_result': Py_None, 'body': []}
 
-        class_type = orig_var.class_type
+        if isinstance(orig_var, BindCVariable):
+            class_type = orig_var.original_var.class_type
+        else:
+            class_type = orig_var.class_type
 
         classes = type(class_type).__mro__
         for cls in classes:
@@ -2594,7 +2596,7 @@ class CToPythonWrapper(Wrapper):
         return errors.report(f"Wrapping function results is not implemented for type {class_type}. " + PYCCEL_RESTRICTION_TODO, symbol=orig_var,
             severity='fatal')
 
-    def _extract_CustomDataType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+    def _extract_CustomDataType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
         """
         Get the code which translates a `Variable` containing a class instance to a PyObject.
 
@@ -2602,11 +2604,11 @@ class CToPythonWrapper(Wrapper):
 
         Parameters
         ----------
-        orig_var : Variable | IndexedElement
+        wrapped_var : Variable | IndexedElement
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
-            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result comes from a C-binding from another language. False otherwise.
         funcdef : FunctionDef
             The function being wrapped.
 
@@ -2615,6 +2617,7 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to collect the result.
         """
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
         name = orig_var.name
         python_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         setup = self._allocate_class_instance(python_res, python_res.cls_base.scope, orig_var.is_alias)
@@ -2652,7 +2655,7 @@ class CToPythonWrapper(Wrapper):
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
-            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result comes from a C-binding from another language. False otherwise.
         funcdef : FunctionDef
             The function being wrapped.
 
@@ -2681,7 +2684,7 @@ class CToPythonWrapper(Wrapper):
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
-            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result comes from a C-binding from another language. False otherwise.
         funcdef : FunctionDef
             The function being wrapped.
 
@@ -2690,41 +2693,70 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to collect the result.
         """
+        if is_bind_c:
+            return self._extract_BindCArrayType_FunctionDefResult(orig_var, funcdef)
         name = orig_var.name
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
-        if is_bind_c:
-            # Result of calling the bind-c function
-            data_var = Variable(VoidType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
-            shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(name+'_shape'),
-                            shape = (orig_var.rank,), memory_handling='alias')
-            typenum = numpy_dtype_registry[orig_var.dtype]
-            # Save so we can find by iterating over func.results
-            self.scope.insert_variable(data_var)
-            self.scope.insert_variable(shape_var)
-
-            release_memory = False
-            if funcdef:
-                arg_targets = funcdef.result_pointer_map.get(orig_var, ())
-                release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
-
-            body = [AliasAssign(py_res, to_pyarray(
-                             LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
-                             convert_to_literal(orig_var.order != 'F'),
-                             convert_to_literal(release_memory)))]
-
-            shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
-            c_result_vars = [ObjectAddress(data_var)]+shape_vars
-        else:
-            # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
-            c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False, memory_handling='alias')
-            self.scope.insert_variable(c_res)
-            self._wrapping_arrays = True
-            body = [AliasAssign(py_res, FunctionCall(C_to_Python(c_res), [c_res])),
-                    Deallocate(c_res)]
-            c_result_vars = [c_res]
+        # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
+        c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False, memory_handling='alias')
+        self.scope.insert_variable(c_res)
+        self._wrapping_arrays = True
+        body = [AliasAssign(py_res, FunctionCall(C_to_Python(c_res), [c_res])),
+                Deallocate(c_res)]
+        c_result_vars = [c_res]
 
         if funcdef:
             body.extend(self.connect_pointer_targets(orig_var, py_res, funcdef, is_bind_c))
+
+        return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
+
+    def _extract_BindCArrayType_FunctionDefResult(self, wrapped_var, funcdef):
+        """
+        Get the code which translates a `Variable` containing an array to a PyObject.
+
+        Get the code which translates a `Variable` containing a BindCArray, which describes an
+        array in Fortran, to a PyObject.
+
+        Parameters
+        ----------
+        wrapped_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
+        orig_var = wrapped_var.original_var
+        name = orig_var.name
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        # Result of calling the bind-c function
+        data_var = Variable(VoidType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
+        shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(name+'_shape'),
+                        shape = (orig_var.rank,), memory_handling='alias')
+        typenum = numpy_dtype_registry[orig_var.dtype]
+        # Save so we can find by iterating over func.results
+        self.scope.insert_variable(data_var)
+        self.scope.insert_variable(shape_var)
+
+        release_memory = False
+        if funcdef:
+            arg_targets = funcdef.result_pointer_map.get(orig_var, ())
+            release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
+
+        body = [AliasAssign(py_res, to_pyarray(
+                         LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
+                         convert_to_literal(orig_var.order != 'F'),
+                         convert_to_literal(release_memory)))]
+
+        shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
+        c_result_vars = [ObjectAddress(data_var)]+shape_vars
+
+        if funcdef:
+            body.extend(self.connect_pointer_targets(orig_var, py_res, funcdef, True))
 
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
@@ -2740,7 +2772,7 @@ class CToPythonWrapper(Wrapper):
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
-            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result comes from a C-binding from another language. False otherwise.
         funcdef : FunctionDef
             The function being wrapped.
 
@@ -2762,7 +2794,7 @@ class CToPythonWrapper(Wrapper):
         body.extend(Py_DECREF(r) for r in py_result_vars)
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body, 'setup': setup}
 
-    def _extract_HomogeneousContainerType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+    def _extract_HomogeneousContainerType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
         """
         Get the code which translates a `Variable` containing a homogeneous container to a PyObject.
 
@@ -2773,11 +2805,11 @@ class CToPythonWrapper(Wrapper):
 
         Parameters
         ----------
-        orig_var : Variable | IndexedElement
+        wrapped_var : Variable | IndexedElement
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
-            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+            True if the result comes from a C-binding from another language. False otherwise.
         funcdef : FunctionDef
             The function being wrapped.
 
@@ -2786,15 +2818,19 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to collect the result.
         """
-        if isinstance(orig_var, PythonTuple):
-            return self._extract_InhomogeneousTupleType_FunctionDefResult(orig_var, is_bind_c, funcdef)
+        if isinstance(wrapped_var, PythonTuple):
+            return self._extract_InhomogeneousTupleType_FunctionDefResult(wrapped_var, is_bind_c, funcdef)
 
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
         name = getattr(orig_var, 'name', 'tmp')
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         if is_bind_c:
+            result = funcdef.results[0].var.new_var
+            ptr_var = funcdef.scope.collect_tuple_element(result[LiteralInteger(0)])
+            shape_var = funcdef.scope.collect_tuple_element(result[1])
             c_res = Variable(CStackArray(orig_var.class_type.element_type),
-                             self.scope.get_new_name(funcdef.results[0].var.name))
-            loop_size = funcdef.results[1].var.clone(self.scope.get_new_name(funcdef.results[1].var.name), is_argument = False)
+                             self.scope.get_new_name(ptr_var.name))
+            loop_size = shape_var.clone(self.scope.get_new_name(shape_var.name), is_argument = False)
             c_results = [ObjectAddress(c_res), loop_size]
         else:
             c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)

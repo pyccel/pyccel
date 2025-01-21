@@ -10,3 +10,5 @@ ignore_patterns:
     - "_visit_.*"
   ".*code":
     - "_print_.*"
+  ".*_wrapper":
+    - "_extract_.*_FunctionDefResult"
