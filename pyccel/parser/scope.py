@@ -6,6 +6,7 @@
 """ Module containing the Scope class
 """
 
+from pyccel.ast.bind_c    import BindCVariable
 from pyccel.ast.core      import ClassDef
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.headers   import MacroFunction, MacroVariable
@@ -895,6 +896,8 @@ class Scope(object):
         Variable | PythonTuple
             An object containing only variables that can be printed in a low-level language.
         """
+        if isinstance(tuple_var, BindCVariable):
+            tuple_var = tuple_var.new_var
         if isinstance(tuple_var.class_type, InhomogeneousTupleType):
             return [vi for v in tuple_var for vi in self.collect_all_tuple_elements(self.collect_tuple_element(v))]
         else:
