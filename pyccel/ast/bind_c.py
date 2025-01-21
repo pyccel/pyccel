@@ -826,4 +826,4 @@ class BindCSizeOf(PyccelFunction):
         super().__init__(element)
 
 c_malloc = FunctionDef('c_malloc', (FunctionDefArgument(Variable(PythonNativeInt(), 'size')),),
-                        (), (FunctionDefResult(Variable(BindCPointer(), 'ptr')),))
+                        (), FunctionDefResult(Variable(BindCPointer(), 'ptr')))
