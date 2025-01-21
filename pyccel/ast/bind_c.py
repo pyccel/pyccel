@@ -15,7 +15,6 @@ from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt, InhomogeneousTupleType
 from pyccel.ast.internals import PyccelFunction
-from pyccel.ast.literals import Nil
 from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.variable import Variable
 from pyccel.errors.errors     import Errors
