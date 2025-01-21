@@ -9,7 +9,7 @@ which creates an interface exposing C code to Python.
 """
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
-from pyccel.ast.bind_c        import BindCModule, BindCModuleVariable, BindCResultVariable
+from pyccel.ast.bind_c        import BindCModule, BindCModuleVariable, BindCVariable
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
 from pyccel.ast.builtins      import VariableIterator
@@ -2583,7 +2583,7 @@ class CToPythonWrapper(Wrapper):
              - setup : An optional key containing a list of PyccelAstNodes with code which should be
                         run before calling the function being wrapped.
         """
-        if isinstance(orig_var, BindCResultVariable):
+        if isinstance(orig_var, BindCVariable):
             class_type = orig_var.original_var.class_type
         else:
             class_type = orig_var.class_type

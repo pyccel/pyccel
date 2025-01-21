@@ -30,7 +30,7 @@ __all__ = (
     'BindCFunctionDefArgument',
     'BindCModule',
     'BindCPointer',
-    'BindCResultVariable',
+    'BindCVariable',
     'BindCSizeOf',
     'BindCModuleVariable',
     'CLocFunc',
@@ -314,7 +314,7 @@ class BindCFunctionDefArgument(FunctionDefArgument):
 
 # =======================================================================================
 
-class BindCResultVariable(Variable):
+class BindCVariable(Variable):
     """
     A wrapper linking the new C-compatible variable to the original variable.
 

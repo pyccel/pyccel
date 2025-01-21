@@ -18,7 +18,7 @@ from .core          import (AsName, Import, FunctionCall,
 
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple, PythonSet)
-from .bind_c        import BindCResultVariable
+from .bind_c        import BindCVariable
 from .cmathext      import cmath_mod
 from .datatypes     import HomogeneousTupleType, InhomogeneousTupleType, PythonNativeInt
 from .datatypes     import StringType
@@ -862,7 +862,7 @@ def flatten_tuple_var(expr, scope):
         A list of all the variables that should be printed to describe the
         inhomogeneous tuple Variable.
     """
-    if isinstance(expr, BindCResultVariable):
+    if isinstance(expr, BindCVariable):
         return flatten_tuple_var(expr.new_var, scope)
     if isinstance(expr.class_type, InhomogeneousTupleType):
         return [v for e in expr for v in flatten_tuple_var(scope.collect_tuple_element(e), scope)]

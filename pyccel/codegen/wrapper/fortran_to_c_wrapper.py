@@ -14,7 +14,7 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCModuleVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
 from pyccel.ast.bind_c import BindCClassProperty, c_malloc, BindCSizeOf
-from pyccel.ast.bind_c import BindCResultVariable, BindCArrayType
+from pyccel.ast.bind_c import BindCVariable, BindCArrayType
 from pyccel.ast.builtins import VariableIterator
 from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
@@ -529,7 +529,7 @@ class FortranToCWrapper(Wrapper):
         # Create the C-compatible data pointer
         bind_var = Variable(BindCPointer(), func_scope.get_new_name('bound_'+name),
                             is_const=False, memory_handling='alias')
-        result = BindCResultVariable(bind_var, local_var)
+        result = BindCVariable(bind_var, local_var)
 
         # Define the additional steps necessary to define and fill ptr_var
         alloc = Allocate(local_var, shape=(), status='unallocated')
@@ -640,7 +640,7 @@ class FortranToCWrapper(Wrapper):
         name = orig_var.name
         self.scope.insert_symbol(name)
         local_var = orig_var.clone(self.scope.get_expected_name(name), new_class = Variable)
-        return {'body': [], 'c_result': BindCResultVariable(local_var, orig_var)}
+        return {'body': [], 'c_result': BindCVariable(local_var, orig_var)}
 
     def _extract_CustomDataType_FunctionDefResult(self, orig_var):
         name = orig_var.name
@@ -669,7 +669,7 @@ class FortranToCWrapper(Wrapper):
             cloc = CLocFunc(ptr_var, bind_var)
             body = [alloc, copy, cloc]
 
-        return {'body': body, 'c_result': BindCResultVariable(bind_var, orig_var)}
+        return {'body': body, 'c_result': BindCVariable(bind_var, orig_var)}
 
     def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var):
         name = orig_var.name
@@ -836,4 +836,4 @@ class FortranToCWrapper(Wrapper):
         for i,s in enumerate(shape_vars):
             scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(i+1)), s)
 
-        return {'c_result': BindCResultVariable(result_var, orig_var), 'body': body, 'f_array': f_array}
+        return {'c_result': BindCVariable(result_var, orig_var), 'body': body, 'f_array': f_array}
