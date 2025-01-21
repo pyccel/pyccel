@@ -2337,16 +2337,8 @@ class FunctionDef(ScopedAstNode):
         argument_vars = [a.var for a in self.arguments]
         result_vars = [self.results.var]
         to_check = True
-        while to_check:
-            to_check = False
-            updated_result_vars = []
-            for r in result_vars:
-                if isinstance(r.class_type, InhomogeneousTupleType):
-                    updated_result_vars.extend(scope.collect_tuple_element(ri) for ri in r)
-                    to_check = True
-                else:
-                    updated_result_vars.append(r)
-            result_vars = updated_result_vars
+        while any(isinstance(r.class_type, InhomogeneousTupleType) for r in result_vars):
+            result_vars = [ri for r in result_vars for ri in scope.collect_all_tuple_elements(r)]
 
         return tuple(l for l in local_vars if l not in chain(argument_vars, result_vars))
 
