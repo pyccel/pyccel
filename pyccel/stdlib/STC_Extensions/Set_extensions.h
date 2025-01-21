@@ -55,7 +55,9 @@ static inline void _c_MEMB(_intersection_update)(i_type* self, i_type* other) {
         }
     }
 }
-
+#if defined(_Imaginary_I) || defined(_Complex_I) || defined(_Complex)
+    /* Do nothing */
+#else
 // Function to get the minimum element from the set
 static inline i_key _c_MEMB(_min)(const i_type* self) {
     _c_MEMB(_iter) itr = _c_MEMB(_begin)(self);
@@ -81,7 +83,7 @@ static inline i_key _c_MEMB(_max)(const i_type* self) {
     }
     return max_val;
 }
-
+#endif
 #undef i_type
 #undef i_key
 #include <stc/priv/template2.h>
