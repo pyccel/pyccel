@@ -55,9 +55,7 @@ static inline void _c_MEMB(_intersection_update)(i_type* self, i_type* other) {
         }
     }
 }
-#if defined(_Imaginary_I) || defined(_Complex_I) || defined(_Complex)
-    /* Do nothing */
-#else
+#if defined(i_use_cmp) 
 // Function to get the minimum element from the set
 static inline i_key _c_MEMB(_min)(const i_type* self) {
     _c_MEMB(_iter) itr = _c_MEMB(_begin)(self);

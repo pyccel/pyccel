@@ -15,9 +15,7 @@ static inline i_key _c_MEMB(_pull_elem)(i_type* self, intptr_t pop_idx) {
     }
     return *(itr.ref); // Return the element that is being popped.
 }
-#if defined(_Imaginary_I) || defined(_Complex_I) || defined(_Complex)
-    /* Do nothing */
-#else
+#if defined(i_use_cmp)
 // Function to get the minimum element from the vector
 static inline i_key _c_MEMB(_min)(const i_type* self) {
     i_key min_val = self->data[0];

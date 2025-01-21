@@ -1134,7 +1134,7 @@ class CCodePrinter(CodePrinter):
                 else:
                     container_key = self.get_c_type(class_type.element_type)
                     element_decl = f'#define i_key {container_key}\n'
-                if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
+                if isinstance(class_type, (HomogeneousListType, HomogeneousSetType)) and isinstance(class_type.element_type, FixedSizeNumericType) \
                         and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
                     element_decl += '#define i_use_cmp\n'
                 header_guard_prefix = import_header_guard_prefix.get(source, '')
