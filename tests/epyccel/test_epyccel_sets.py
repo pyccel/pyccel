@@ -3,20 +3,6 @@ import pytest
 from pyccel import epyccel
 from pyccel.decorators import template
 
-@pytest.fixture( params=[
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="set methods not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="set methods not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("python", marks = pytest.mark.python)
-    ],
-    scope = "module"
-)
-def python_only_language(request):
-    return request.param
-
 def test_add_literal_int(language) :
     def add_int():
         a = {1,3,45}
@@ -278,37 +264,37 @@ def test_update_tuple_as_arg(language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
-def test_set_with_list(python_only_language):
+def test_set_with_list(language):
     def set_With_list():
         a = [1.6, 6.3, 7.2]
         b = set(a)
         return b
 
-    epyc_set_With_list = epyccel(set_With_list, language = python_only_language)
+    epyc_set_With_list = epyccel(set_With_list, language = language)
     pyccel_result = epyc_set_With_list()
     python_result = set_With_list()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_set_with_tuple(python_only_language):
+def test_set_with_tuple(language):
     def set_With_tuple():
         a = (1j, 6j, 7j)
         b = set(a)
         return b
 
-    epyc_set_With_tuple = epyccel(set_With_tuple, language = python_only_language)
+    epyc_set_With_tuple = epyccel(set_With_tuple, language = language)
     pyccel_result = epyc_set_With_tuple()
     python_result = set_With_tuple()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_set_with_set(python_only_language):
+def test_set_with_set(language):
     def set_With_set():
         a = {True, False, True}  #pylint: disable=duplicate-value
         b = set(a)
         return b
 
-    epyc_set_With_set = epyccel(set_With_set, language = python_only_language)
+    epyc_set_With_set = epyccel(set_With_set, language = language)
     pyccel_result = epyc_set_With_set()
     python_result = set_With_set()
     assert isinstance(python_result, type(pyccel_result))
@@ -350,12 +336,12 @@ def test_set_copy_from_arg1(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_set_copy_from_arg2(python_only_language):
+def test_set_copy_from_arg2(language):
     def copy_from_arg2(a : 'set[float]'):
         b = set(a)
         return b
     a = {2.5, 1.4, 9.2}
-    epyc_copy_from_arg = epyccel(copy_from_arg2, language = python_only_language)
+    epyc_copy_from_arg = epyccel(copy_from_arg2, language = language)
     pyccel_result = epyc_copy_from_arg(a)
     python_result = copy_from_arg2(a)
     assert isinstance(python_result, type(pyccel_result))
