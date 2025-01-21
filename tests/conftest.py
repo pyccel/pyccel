@@ -61,8 +61,7 @@ def pytest_addoption(parser):
 def pytest_sessionstart(session):
     # setup_stuff
     if session.config.option.developer_mode:
-        from pyccel.errors.errors import ErrorsMode
-        ErrorsMode().set_mode('developer')
+        os.environ['PYCCEL_USER_MODE'] = 'developer'
 
     if github_debugging:
         logging.basicConfig()
