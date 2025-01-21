@@ -15,6 +15,20 @@ static inline i_key _c_MEMB(_pull_elem)(i_type* self, intptr_t pop_idx) {
     }
     return *(itr.ref); // Return the element that is being popped.
 }
+
+// Function to reverse a list
+static inline void _c_MEMB(_reverse)(i_type* self) {
+    size_t left = 0;
+    size_t right = self->_len - 1;
+    while (left < right) {
+        i_key temp = self->data[left];
+        self->data[left] = self->data[right];
+        self->data[right] = temp;
+        left++;
+        right--;
+    }
+}
+
 #if defined(i_use_cmp)
 // Function to get the minimum element from the vector
 static inline i_key _c_MEMB(_min)(const i_type* self) {

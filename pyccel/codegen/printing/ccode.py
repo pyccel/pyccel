@@ -2789,6 +2789,7 @@ class CCodePrinter(CodePrinter):
         class_type = expr.list_obj.class_type
         c_type = self.get_c_type(class_type)
         list_obj = self._print(ObjectAddress(expr.list_obj))
+        return f'{c_type}_reverse({list_obj});\n'
 
 
     #================== Set methods ==================
