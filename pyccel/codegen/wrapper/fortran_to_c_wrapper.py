@@ -23,7 +23,7 @@ from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
 from pyccel.ast.core import For
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
-from pyccel.ast.datatypes import PythonNativeInt
+from pyccel.ast.datatypes import PythonNativeInt, InhomogeneousTupleType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.numpytypes import NumpyNDArrayType
@@ -264,10 +264,14 @@ class FortranToCWrapper(Wrapper):
         call_arguments = [self._get_call_argument(fa) for fa in func_arguments]
         func_to_call = {fa : ca for ca, fa in zip(call_arguments, func_arguments)}
 
-        func_results = None if expr.results.var is Nil() else self._wrap_FunctionDefResult(expr.results)
-
-        func_call_results = [r for r in self.scope.collect_all_tuple_elements(expr.results.var) \
-                if isinstance(r, Variable)]
+        if expr.results.var is Nil():
+            func_results = Nil()
+            func_call_results = []
+        else:
+            result = self._extract_FunctionDefResult(expr.results.var, expr.scope)
+            self._additional_exprs.extend(result['body'])
+            func_results = result['c_result']
+            func_call_results = self.scope.collect_all_tuple_elements(func_results)
 
         interface = expr.get_direct_user_nodes(lambda u: isinstance(u, Interface))
 
@@ -284,7 +288,7 @@ class FortranToCWrapper(Wrapper):
 
         self.exit_scope()
 
-        func = BindCFunctionDef(name, func_arguments, body, func_results, scope=func_scope, original_function = expr,
+        func = BindCFunctionDef(name, func_arguments, body, FunctionDefResult(func_results), scope=func_scope, original_function = expr,
                 docstring = expr.docstring, result_pointer_map = expr.result_pointer_map)
 
         self.scope.functions[name] = func
@@ -595,7 +599,7 @@ class FortranToCWrapper(Wrapper):
         self._additional_exprs.extend(result['body'])
         return FunctionDefResult(result['c_result'])
 
-    def _extract_FunctionDefResult(self, orig_var):
+    def _extract_FunctionDefResult(self, orig_var, orig_func_scope):
         """
         Get the code and variables necessary to translate a `Variable` to a C-compatible Variable.
 
@@ -630,20 +634,32 @@ class FortranToCWrapper(Wrapper):
         for cls in classes:
             annotation_method = f'_extract_{cls.__name__}_FunctionDefResult'
             if hasattr(self, annotation_method):
-                return getattr(self, annotation_method)(orig_var)
+                return getattr(self, annotation_method)(orig_var, orig_func_scope)
 
         # Unknown object, we raise an error.
         return errors.report(f"Wrapping function results is not implemented for type {class_type}. "
                 + PYCCEL_RESTRICTION_TODO, symbol=orig_var, severity='fatal')
 
+    def _extract_InhomogeneousTupleType_FunctionDefResult(self, orig_var, orig_func_scope):
+        name = orig_var.name
+        self.scope.insert_symbol(name)
+        elements = orig_func_scope.collect_all_tuple_elements(orig_var)
+        func_def_results = [self._extract_FunctionDefResult(e, orig_func_scope) for e in elements]
+        body = [l for r in func_def_results for l in r['body']]
+        element_vars = [r['c_result'] for r in func_def_results]
+        class_types = [e.class_type for e in element_vars]
+        local_var = Variable(InhomogeneousTupleType(*class_types), self.scope.get_expected_name(name))
+        for i, v in enumerate(element_vars):
+            self.scope.insert_symbolic_alias(IndexedElement(local_var, i), v)
+        return {'body': body, 'c_result': local_var}
 
-    def _extract_FixedSizeType_FunctionDefResult(self, orig_var):
+    def _extract_FixedSizeType_FunctionDefResult(self, orig_var, orig_func_scope):
         name = orig_var.name
         self.scope.insert_symbol(name)
         local_var = orig_var.clone(self.scope.get_expected_name(name), new_class = Variable)
         return {'body': [], 'c_result': BindCVariable(local_var, orig_var)}
 
-    def _extract_CustomDataType_FunctionDefResult(self, orig_var):
+    def _extract_CustomDataType_FunctionDefResult(self, orig_var, orig_func_scope):
         name = orig_var.name
         scope = self.scope
         scope.insert_symbol(name)
@@ -672,7 +688,7 @@ class FortranToCWrapper(Wrapper):
 
         return {'body': body, 'c_result': BindCVariable(bind_var, orig_var)}
 
-    def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var):
+    def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var, orig_func_scope):
         name = orig_var.name
         scope = self.scope
         scope.insert_symbol(name)
@@ -692,10 +708,10 @@ class FortranToCWrapper(Wrapper):
 
             return result
 
-    def _extract_HomogeneousTupleType_FunctionDefResult(self, orig_var):
-        return self._extract_NumpyNDArrayType_FunctionDefResult(orig_var)
+    def _extract_HomogeneousTupleType_FunctionDefResult(self, orig_var, orig_func_scope):
+        return self._extract_NumpyNDArrayType_FunctionDefResult(orig_var, orig_func_scope)
 
-    def _extract_HomogeneousSetType_FunctionDefResult(self, orig_var):
+    def _extract_HomogeneousSetType_FunctionDefResult(self, orig_var, orig_func_scope):
         name = orig_var.name
         scope = self.scope
         scope.insert_symbol(name)
@@ -727,7 +743,7 @@ class FortranToCWrapper(Wrapper):
         body.extend([Assign(idx, LiteralInteger(0)), fill_for])
         return result
 
-    def _extract_HomogeneousListType_FunctionDefResult(self, orig_var):
+    def _extract_HomogeneousListType_FunctionDefResult(self, orig_var, orig_func_scope):
         name = orig_var.name
         scope = self.scope
         scope.insert_symbol(name)
