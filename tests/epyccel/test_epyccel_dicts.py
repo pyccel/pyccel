@@ -284,12 +284,12 @@ def test_dict_ptr(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_dict_clear(stc_language):
+def test_dict_clear(language):
     def dict_clear():
         a = {1:1.0, 2:2.0}
         a.clear()
         return len(a)
-    epyc_dict_clear = epyccel(dict_clear, language = stc_language)
+    epyc_dict_clear = epyccel(dict_clear, language = language)
     pyccel_result = epyc_dict_clear()
     python_result = dict_clear()
     assert python_result == pyccel_result

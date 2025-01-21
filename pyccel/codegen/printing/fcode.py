@@ -1444,7 +1444,11 @@ class FCodePrinter(CodePrinter):
         success = self.scope.get_temporary_variable(PythonNativeInt())
         return f'{success} = {var} % erase_value({val})\n'
 
-    #========================== Dict Methods ================================#
+   #========================== Dict Methods ================================#
+
+    def _print_DictClear(self, expr):
+        var = self._print(expr.dict_obj)
+        return f'call {var} % clear()\n'
 
     def _print_DictGetItem(self, expr):
         dict_obj = self._print(expr.dict_obj)

@@ -48,7 +48,7 @@ All notable changes to this project will be documented in this file.
 -   #1745 : Add support for set method `intersection_update()`.
 -   #2164 : Add support for dict indexing.
 -   #1884 : Add support for dict method `items()`.
--   #1880 : Add Python and C support for dict method `clear()`.
+-   #1880 : Add support for dict method `clear()`.
 -   #1886 : Add Python and C support for dict method `pop()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
