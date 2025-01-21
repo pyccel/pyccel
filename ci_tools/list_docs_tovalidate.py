@@ -10,6 +10,8 @@ def should_ignore(name):
     '''
     Determine if an object should be ignored from numpydoc validation.
 
+    Determine if an object should be ignored from numpydoc validation.
+
     Parameters
     ----------
     name : str
@@ -32,6 +34,9 @@ def should_ignore(name):
         return True
     #ignore _print_ methods in the codegen.printing module
     if 'Printer._print_' in name:
+        return True
+    #ignore _extract_X_FunctionDefResult methods in the codegen.wrapping module
+    if 'Wrapper._extract_' in name and name.endswith('_FunctionDefResult'):
         return True
     return False
 
