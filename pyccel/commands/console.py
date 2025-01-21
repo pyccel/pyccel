@@ -258,7 +258,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     if args.developer_mode:
         err_mode.set_mode('developer')
     else:
-        err_mode.set_mode(os.environ.get('PYCCEL_USER_MODE', 'user'))
+        err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
     # ...
 
     base_dirpath = os.getcwd()
