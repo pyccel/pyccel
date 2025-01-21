@@ -316,7 +316,7 @@ class CToPythonWrapper(Wrapper):
             func = FunctionDef(name = cast_function,
                                body      = [],
                                arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                               results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
+                               results   = FunctionDefResult(Variable(dtype, name = 'v')))
 
             type_check_condition = func(py_obj)
         elif isinstance(arg.class_type, NumpyNDArrayType):
@@ -504,7 +504,7 @@ class CToPythonWrapper(Wrapper):
 
         # Build the function
         func = FunctionDef(name, [FunctionDefArgument(a) for a in args], body,
-                            [FunctionDefResult(type_indicator)], docstring=docstring, scope=func_scope)
+                            FunctionDefResult(type_indicator), docstring=docstring, scope=func_scope)
 
         return func, argument_type_flags
 
@@ -537,9 +537,9 @@ class CToPythonWrapper(Wrapper):
         """
         func_args = [FunctionDefArgument(self.get_new_PyObject(n)) for n in ("self", "args", "kwargs")]
         if self._error_exit_code is Nil():
-            func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+            func_results = FunctionDefResult(self.get_new_PyObject("result", is_temp=True))
         else:
-            func_results = [FunctionDefResult(self.scope.get_temporary_variable(self._error_exit_code.class_type, "result"))]
+            func_results = FunctionDefResult(self.scope.get_temporary_variable(self._error_exit_code.class_type, "result"))
         function = PyFunctionDef(name = name, arguments = func_args, results = func_results,
                 body = [PyErr_SetString(PyNotImplementedError, LiteralString(error_msg)),
                         Return(self._error_exit_code)],
@@ -909,7 +909,7 @@ class CToPythonWrapper(Wrapper):
         func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
         func_args = [FunctionDefArgument(a) for a in func_args]
 
-        func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+        func_results = FunctionDefResult(self.get_new_PyObject("result", is_temp=True))
 
         # Get the results of the PyFunctionDef
         python_result_var = self.get_new_PyObject('result_obj', class_dtype)
@@ -1020,7 +1020,7 @@ class CToPythonWrapper(Wrapper):
                     body.append(Deallocate(v))
 
         # Pack the Python compatible results of the function into one argument.
-        func_results = [FunctionDefResult(python_result_variable)]
+        func_results = FunctionDefResult(python_result_variable)
         body.append(Return(LiteralInteger(0, dtype=CNativeInt())))
 
         self.exit_scope()
@@ -1419,7 +1419,7 @@ class CToPythonWrapper(Wrapper):
         interface_func = FunctionDef(func_name,
                                      [FunctionDefArgument(a) for a in func_args],
                                      body,
-                                     [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))],
+                                     FunctionDefResult(self.get_new_PyObject("result", is_temp=True)),
                                      scope=func_scope)
         for a in python_args:
             self._python_object_map.pop(a)
@@ -1824,7 +1824,7 @@ class CToPythonWrapper(Wrapper):
         setter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        self.get_new_PyObject(f'{expr.name}_obj'),
                        setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
-        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))]
+        setter_result = FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))
         self.scope.insert_symbol(expr.name)
         new_set_val_arg = FunctionDefArgument(expr.clone(expr.name, new_class = Variable))
         self._python_object_map[new_set_val_arg] = setter_args[1]
@@ -1964,7 +1964,7 @@ class CToPythonWrapper(Wrapper):
             setter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                            self.get_new_PyObject(f'{name}_obj'),
                            setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
-            setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))]
+            setter_result = FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))
 
             self._python_object_map[self_arg] = setter_args[0]
             self._python_object_map[set_val_arg] = setter_args[1]
@@ -2223,7 +2223,7 @@ class CToPythonWrapper(Wrapper):
         cast_func = FunctionDef(name = cast_function,
                            body      = [],
                            arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                           results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
+                           results   = FunctionDefResult(Variable(dtype, name = 'v')))
 
         body = [Assign(arg_var, cast_func(collect_arg))]
 

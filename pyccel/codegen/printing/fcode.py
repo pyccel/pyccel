@@ -2445,7 +2445,7 @@ class FCodePrinter(CodePrinter):
         """
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        out_args = [v for v in flatten_tuple_var(expr.results.var, self.scope) if not v.is_argument]
+        out_args = [v for v in flatten_tuple_var(expr.results.var, self.scope) if v and not v.is_argument]
         args_decs = OrderedDict()
         arguments = expr.arguments
         argument_vars = [a.var for a in arguments]
@@ -3545,7 +3545,7 @@ class FCodePrinter(CodePrinter):
         for k, m in _default_methods.items():
             f_name = f_name.replace(k, m)
         args   = expr.args
-        func_results  = [r.var for r in func.results]
+        func_results = [v for v in flatten_tuple_var(func.results.var, func.scope) if v]
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, (Assign, AliasAssign)))
         is_function =  len(func_results) == 1 and func_results[0].rank == 0
 

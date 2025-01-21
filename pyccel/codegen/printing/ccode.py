@@ -1547,7 +1547,8 @@ class CCodePrinter(CodePrinter):
             Signature of the function.
         """
         arg_vars = [a.var for a in expr.arguments]
-        result_vars = [v for v in flatten_tuple_var(expr.results.var, expr.scope) if not v.is_argument]
+        result_vars = [v for v in flatten_tuple_var(expr.results.var, expr.scope) \
+                            if v and not v.is_argument]
 
         n_results = len(result_vars)
 
