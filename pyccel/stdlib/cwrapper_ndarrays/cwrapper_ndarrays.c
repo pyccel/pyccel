@@ -347,7 +347,7 @@ PyObject* ndarray_to_pyarray(t_ndarray o)
  * 	Returns		:
  *		return true if no error occurred otherwise it will return false
  */
-bool	pyarray_check(char* name, PyObject *o, int dtype, int rank, int flag)
+bool	pyarray_check(const char* name, PyObject *o, int dtype, int rank, int flag)
 {
     char* array_type = _check_pyarray_type(o);
 	if (array_type != NULL) {
