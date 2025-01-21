@@ -2521,7 +2521,12 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonTuple(self, expr):
         ls = [self._visit(i) for i in expr]
-        return PythonTuple(*ls)
+        prefer_inhomogeneous = False
+        if expr.get_user_nodes(Return):
+            func = expr.get_user_nodes(FunctionDef)[0]
+            n_returns = set(r.n_explicit_results for r in func.get_attribute_nodes(Return))
+            prefer_inhomogeneous = len(n_returns) == 1
+        return PythonTuple(*ls, prefer_inhomogeneous = prefer_inhomogeneous)
 
     def _visit_PythonList(self, expr):
         ls = [self._visit(i) for i in expr]
