@@ -3,6 +3,20 @@ import pytest
 from pyccel import epyccel
 from pyccel.decorators import template
 
+@pytest.fixture( params=[
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="set method not implemented in fortran"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="set method not implemented in c"),
+            pytest.mark.c]),
+        pytest.param("python", marks = pytest.mark.python)
+    ],
+    scope = "module"
+)
+def python_only_language(request):
+    return request.param
+
 def test_add_literal_int(language) :
     def add_int():
         a = {1,3,45}
@@ -336,12 +350,12 @@ def test_set_copy_from_arg1(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_set_copy_from_arg2(language):
+def test_set_copy_from_arg2(stc_language):
     def copy_from_arg2(a : 'set[float]'):
         b = set(a)
         return b
     a = {2.5, 1.4, 9.2}
-    epyc_copy_from_arg = epyccel(copy_from_arg2, language = language)
+    epyc_copy_from_arg = epyccel(copy_from_arg2, language = stc_language)
     pyccel_result = epyc_copy_from_arg(a)
     python_result = copy_from_arg2(a)
     assert isinstance(python_result, type(pyccel_result))
