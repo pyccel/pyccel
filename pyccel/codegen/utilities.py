@@ -44,7 +44,6 @@ external_libs = {"stc" : ("STC/include/stc", CompileObj("stc", folder="stc", has
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
 # The compile object folder will be in the pyccel dirpath
 internal_libs = {
-    "ndarrays"         : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
     "pyc_math_f90"     : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
     "pyc_math_c"       : ("math", CompileObj("pyc_math_c.c",folder="math")),
     "pyc_tools_f90"    : ("tools", CompileObj("pyc_tools_f90.f90",folder="tools")),
