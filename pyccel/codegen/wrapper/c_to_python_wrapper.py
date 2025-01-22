@@ -926,7 +926,7 @@ class CToPythonWrapper(Wrapper):
             body.append(Allocate(c_res, shape=(), status='unallocated',
                          like = result))
 
-        body.append(Return(ObjectAddress(PointerCast(python_result_var, func_results[0].var))))
+        body.append(Return(ObjectAddress(PointerCast(python_result_var, func_results.var))))
 
         self.exit_scope()
 
