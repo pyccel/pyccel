@@ -533,6 +533,9 @@ class TypedAstNode(PyccelAstNode):
         A tuple containing the length of each dimension of the object if the object
         is an array (with rank>0). Otherwise None.
         """
+        if self._shape is not None and len(self._shape) != self.class_type.container_rank:
+            print(self, type(self))
+        assert self._shape is None or len(self._shape) == self.class_type.container_rank
         return self._shape # pylint: disable=no-member
 
     @property
