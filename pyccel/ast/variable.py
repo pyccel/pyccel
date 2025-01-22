@@ -713,10 +713,7 @@ class IndexedElement(TypedAstNode):
             assert len(self._indices) == 1 and isinstance(self._indices[0], LiteralInteger)
             self._class_type = base.class_type[self._indices[0]]
             self._is_slice = False
-            if self.rank:
-                self._shape = (None,)*self._class_type.container_rank
-            else:
-                self._shape = None
+            self._shape = None
 
         else:
             # Calculate new shape
