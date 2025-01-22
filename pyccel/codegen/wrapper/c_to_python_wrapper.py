@@ -1514,7 +1514,7 @@ class CToPythonWrapper(Wrapper):
             body.append(AliasAssign(res, func_args[0].var))
             body.append(Py_INCREF(res))
         else:
-            wrapped_results = self._extract_FunctionDefResult(original_func.results.var, is_bind_c_function_def, expr)
+            wrapped_results = self._extract_FunctionDefResult(expr.results.var, is_bind_c_function_def, expr)
 
         # Get the arguments and results which should be used to call the c-compatible function
         func_call_args = [ca for a in wrapped_args for ca in a['args']]
