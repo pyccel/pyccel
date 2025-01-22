@@ -25,20 +25,15 @@ class CNameClashChecker(LanguageNameClashChecker):
         'unsigned', 'void', 'volatile', 'whie', '_Alignas',
         '_Alignof', '_Atomic', '_Bool', '_Complex', 'Decimal128',
         '_Decimal32', '_Decimal64', '_Generic', '_Imaginary',
-        '_Noreturn', '_Static_assert', '_Thread_local', 't_ndarray',
-        'array_create', 'new_slice', 'array_slicing', 'alias_assign',
-        'transpose_alias_assign', 'array_fill', 't_slice',
-        'GET_INDEX_EXP1', 'GET_INDEX_EXP2', 'GET_INDEX_EXP2',
-        'GET_INDEX_EXP3', 'GET_INDEX_EXP4', 'GET_INDEX_EXP5',
-        'GET_INDEX_EXP6', 'GET_INDEX_EXP7', 'GET_INDEX_EXP8',
-        'GET_INDEX_EXP9', 'GET_INDEX_EXP10', 'GET_INDEX_EXP11',
-        'GET_INDEX_EXP12', 'GET_INDEX_EXP13', 'GET_INDEX_EXP14',
-        'GET_INDEX_EXP15', 'NUM_ARGS_H1', 'NUM_ARGS',
-        'GET_INDEX_FUNC_H2', 'GET_INDEX_FUNC', 'GET_INDEX',
-        'INDEX', 'GET_ELEMENT', 'free_array', 'free_pointer',
-        'get_index', 'numpy_to_ndarray_strides',
-        'numpy_to_ndarray_shape', 'get_size', 'order_f', 'order_c', 'array_copy_data',
-        'I'])
+        '_Noreturn', '_Static_assert', '_Thread_local',
+        'I', 'cspan_copy', 'c_foreach', 'c_COLMAJOR', 'c_ROWMAJOR', 'cspan_md_layout',
+        'using_cspan', 'STC_CSPAN_INDEX_TYPE', 'array_int64_1d', 'array_int64_2d',
+        'array_int64_3d', 'array_int32_1d', 'array_int32_2d', 'array_int32_3d',
+        'array_float_1d', 'array_float_2d', 'array_float_3d', 'array_double_1d',
+        'array_double_2d', 'array_double_3d', 'array_bool_1d', 'array_bool_2d',
+        'array_bool_3d', 'array_float_complex_1d', 'array_float_complex_2d',
+        'array_float_complex_3d', 'array_double_complex_1d', 'array_double_complex_2d',
+        'array_double_complex_3d', 'c_ALL', 'c_END', 'cspan_slice', 'cspan_transpose'])
 
     def has_clash(self, name, symbols):
         """
