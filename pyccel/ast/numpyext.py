@@ -172,18 +172,21 @@ def get_shape_of_multi_level_container(expr, shape_prefix = ()):
     tuple[TypedAstNode, ...]
         A tuple of objects describing the shape of the mult-level container.
     """
-    if isinstance(expr.class_type, ContainerType):
-        shape = shape_prefix + expr.shape
-        if isinstance(expr, (PythonTuple, PythonList)):
-            return get_shape_of_multi_level_container(expr.args[0], shape)
-        elif isinstance(expr, Variable):
-            return get_shape_of_multi_level_container(expr[LiteralInteger(0)], shape)
-        else:
-            errors.report(f"Can't calculate shape of object of type {type(expr)}",
-                    severity = 'error', symbol=expr)
-            return (None,)*expr.rank
+    class_type = expr.class_type
+    assert isinstance(class_type, ContainerType)
+
+    shape = shape_prefix + expr.shape
+
+    if class_type.rank == class_type.container_rank:
+        return shape
+    elif isinstance(expr, (PythonTuple, PythonList)):
+        return get_shape_of_multi_level_container(expr.args[0], shape)
+    elif isinstance(expr, Variable):
+        return get_shape_of_multi_level_container(expr[LiteralInteger(0)], shape)
     else:
-        return shape_prefix
+        errors.report(f"Can't calculate shape of object of type {type(expr)}",
+                severity = 'error', symbol=expr)
+        return (None,)*expr.rank
 
 #=======================================================================================
 def process_shape(is_scalar, shape):
