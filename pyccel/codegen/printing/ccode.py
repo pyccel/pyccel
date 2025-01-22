@@ -1494,7 +1494,7 @@ class CCodePrinter(CodePrinter):
         Raises
         ------
         PyccelCodegenError
-            If the type is not supported in the C code or the rank is too large.
+            If the type is not supported in the C code.
 
         Examples
         --------
