@@ -33,7 +33,8 @@ class CNameClashChecker(LanguageNameClashChecker):
         'array_double_2d', 'array_double_3d', 'array_bool_1d', 'array_bool_2d',
         'array_bool_3d', 'array_float_complex_1d', 'array_float_complex_2d',
         'array_float_complex_3d', 'array_double_complex_1d', 'array_double_complex_2d',
-        'array_double_complex_3d', 'c_ALL', 'c_END', 'cspan_slice', 'cspan_transpose'])
+        'array_double_complex_3d', 'c_ALL', 'c_END', 'cspan_slice', 'cspan_transpose',
+        'complex_max', 'complex_min'])
 
     def has_clash(self, name, symbols):
         """
