@@ -181,7 +181,7 @@ def get_shape_of_multi_level_container(expr, shape_prefix = ()):
         return shape
     elif isinstance(expr, (PythonTuple, PythonList)):
         return get_shape_of_multi_level_container(expr.args[0], shape)
-    elif isinstance(expr, Variable):
+    elif isinstance(expr, (Variable, IndexedElement)):
         return get_shape_of_multi_level_container(expr[LiteralInteger(0)], shape)
     else:
         errors.report(f"Can't calculate shape of object of type {type(expr)}",
