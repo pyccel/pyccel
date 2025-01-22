@@ -92,6 +92,7 @@ from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyResultType
 from pyccel.ast.numpyext import process_dtype as numpy_process_dtype
+from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyNDArrayType
 
@@ -765,6 +766,11 @@ class SemanticParser(BasicParser):
             var = expr.internal_var
 
             d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
+            return d_var
+
+        elif isinstance(expr, PythonTuple):
+
+            d_var['shape'] = get_shape_of_multi_level_container(expr)
             return d_var
 
         elif isinstance(expr, TypedAstNode):
