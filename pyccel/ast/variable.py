@@ -748,10 +748,10 @@ class IndexedElement(TypedAstNode):
                 self._is_slice = False
                 self._shape = None
             else:
-                assert new_rank != rank
-                self._class_type = base.class_type.switch_rank(new_rank)
+                self._class_type = base.class_type.switch_rank(new_rank) if new_rank != rank \
+                                    else base.class_type
                 self._is_slice = True
-                self._shape = tuple(new_shape) + base.shape[rank:]
+                self._shape = tuple(new_shape)
 
         super().__init__()
 
