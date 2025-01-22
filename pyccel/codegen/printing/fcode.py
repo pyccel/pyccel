@@ -1230,13 +1230,12 @@ class FCodePrinter(CodePrinter):
             return code
 
     def _print_PythonTuple(self, expr):
-        shape = tuple(reversed(expr.shape))
+        shape = tuple(reversed(get_shape_of_multi_level_container(expr)))
+        elements = ', '.join(self._print(e) for e in expr)
         if len(shape)>1:
-            elements = ', '.join(self._print(i) for i in expr)
             shape    = ', '.join(self._print(i) for i in shape)
             return 'reshape(['+ elements + '], [' + shape + '])'
-        args = ', '.join(self._print(f) for f in expr)
-        return f'[{args}]'
+        return f'[{elements}]'
 
     def _print_PythonList(self, expr):
         if len(expr.args) == 0:
