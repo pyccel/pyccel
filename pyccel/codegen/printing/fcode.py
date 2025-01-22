@@ -2355,7 +2355,7 @@ class FCodePrinter(CodePrinter):
             return ''
 
         if len(example_func.results) == 1:
-            if len(set(f.results[0].var.rank == 0 for f in interface_funcs)) != 1:
+            if len(set(f.results.var.rank == 0 for f in interface_funcs)) != 1:
                 message = ("Fortran cannot yet handle a templated function returning either a scalar or an array. "
                            "If you are using the terminal interface, please pass --language c, "
                            "if you are using the interactive interfaces epyccel or lambdify, please pass language='c'. "

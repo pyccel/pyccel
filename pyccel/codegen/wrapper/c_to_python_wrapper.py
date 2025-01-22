@@ -1644,7 +1644,7 @@ class CToPythonWrapper(Wrapper):
                                 If(IfSection(check_func, cast), IfSection(LiteralTrue(), [*err, Return(self._error_exit_code)]))])))
         elif not (in_interface or bound_argument):
             check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body)
-            body.append(If( IfSection(PyccelNot(check_func), [*err, Return([self._error_exit_code])])))
+            body.append(If( IfSection(PyccelNot(check_func), [*err, Return(self._error_exit_code)])))
             body.extend(cast)
         else:
             body.extend(cast)

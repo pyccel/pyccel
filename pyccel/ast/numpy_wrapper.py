@@ -91,27 +91,27 @@ PyArray_Check = FunctionDef(name      = 'PyArray_Check',
 PyArray_DATA = FunctionDef(name = 'PyArray_DATA',
                            body = [],
                            arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],
-                           results   = [FunctionDefResult(Variable(VoidType(), name='b', memory_handling='alias'))])
+                           results   = FunctionDefResult(Variable(VoidType(), name='b', memory_handling='alias')))
 
 PyArray_BASE = FunctionDef(name = 'PyArray_BASE',
                            body = [],
                            arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],
-                           results = [FunctionDefResult(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))])
+                           results = FunctionDefResult(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias')))
 
 PyArray_SHAPE = FunctionDef(name = 'PyArray_SHAPE',
                             body = [],
                             arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],
-                            results   = [FunctionDefResult(Variable(CStackArray(NumpyInt32Type()), name='s', memory_handling='alias'))])
+                            results   = FunctionDefResult(Variable(CStackArray(NumpyInt32Type()), name='s', memory_handling='alias')))
 
 PyArray_STRIDES = FunctionDef(name = 'PyArray_STRIDES',
                             body = [],
                             arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],
-                            results   = [FunctionDefResult(Variable(CStackArray(NumpyInt32Type()), name='s', memory_handling='alias'))])
+                            results   = FunctionDefResult(Variable(CStackArray(NumpyInt32Type()), name='s', memory_handling='alias')))
 
 PyArray_ITEMSIZE = FunctionDef(name = 'PyArray_ITEMSIZE',
                             body = [],
                             arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],
-                            results   = [FunctionDefResult(Variable(NumpyInt32Type(), name='s'))])
+                            results   = FunctionDefResult(Variable(NumpyInt32Type(), name='s')))
 
 # NumPy array to c ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_to_ndarray = FunctionDef(
@@ -124,7 +124,7 @@ numpy_to_stc_strides = FunctionDef(
                 name      = 'numpy_to_stc_strides',
                 arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],
                 body      = [],
-                results   = [FunctionDefResult(Variable(CStackArray(NumpyInt32Type()), 'strides'))])
+                results   = FunctionDefResult(Variable(CStackArray(NumpyInt32Type()), 'strides')))
 
 # NumPy array check elements : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_check = FunctionDef(
