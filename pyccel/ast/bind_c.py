@@ -735,7 +735,7 @@ class C_F_Pointer(PyccelAstNode):
     __slots__ = ('_c_expr', '_f_expr', '_shape')
     _attribute_nodes = ('_c_expr', '_f_expr', '_shape')
 
-    def __init__(self, c_expr, f_expr, shape = ()):
+    def __init__(self, c_expr, f_expr, shape = None):
         self._c_expr = c_expr
         self._f_expr = f_expr
         self._shape = shape
@@ -797,7 +797,7 @@ class BindCSizeOf(PyccelFunction):
     """
     __slots__ = ()
     _class_type = PythonNativeInt()
-    _shape = ()
+    _shape = None
 
     def __init__(self, element):
         super().__init__(element)
