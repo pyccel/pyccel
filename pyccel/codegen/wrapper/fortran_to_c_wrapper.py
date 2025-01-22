@@ -271,7 +271,7 @@ class FortranToCWrapper(Wrapper):
             result = self._extract_FunctionDefResult(expr.results.var, expr.scope)
             self._additional_exprs.extend(result['body'])
             func_results = result['c_result']
-            func_call_results = self.scope.collect_all_tuple_elements(func_results)
+            func_call_results = self.scope.collect_all_tuple_elements(result['f_result'])
 
         interface = expr.get_direct_user_nodes(lambda u: isinstance(u, Interface))
 
@@ -627,6 +627,8 @@ class FortranToCWrapper(Wrapper):
                     function.
             - body: The code which is needed to convert the local_var to the returned variable
                     saved in c_result.
+            - f_result: The Variable which should be used in a FunctionCall to collect the results
+                    from the Fortran function.
         """
         class_type = orig_var.class_type
 
@@ -651,13 +653,13 @@ class FortranToCWrapper(Wrapper):
         local_var = Variable(InhomogeneousTupleType(*class_types), self.scope.get_expected_name(name))
         for i, v in enumerate(element_vars):
             self.scope.insert_symbolic_alias(IndexedElement(local_var, i), v)
-        return {'body': body, 'c_result': local_var}
+        return {'body': body, 'c_result': local_var, 'f_result': local_var}
 
     def _extract_FixedSizeType_FunctionDefResult(self, orig_var, orig_func_scope):
         name = orig_var.name
         self.scope.insert_symbol(name)
         local_var = orig_var.clone(self.scope.get_expected_name(name), new_class = Variable)
-        return {'body': [], 'c_result': BindCVariable(local_var, orig_var)}
+        return {'body': [], 'c_result': BindCVariable(local_var, orig_var), 'f_result': local_var}
 
     def _extract_CustomDataType_FunctionDefResult(self, orig_var, orig_func_scope):
         name = orig_var.name
@@ -686,7 +688,7 @@ class FortranToCWrapper(Wrapper):
             cloc = CLocFunc(ptr_var, bind_var)
             body = [alloc, copy, cloc]
 
-        return {'body': body, 'c_result': BindCVariable(bind_var, orig_var)}
+        return {'body': body, 'c_result': BindCVariable(bind_var, orig_var), 'f_result': local_var}
 
     def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var, orig_func_scope):
         name = orig_var.name
@@ -700,13 +702,15 @@ class FortranToCWrapper(Wrapper):
         scope.insert_variable(local_var, name)
 
         if orig_var.is_alias or isinstance(orig_var, DottedVariable):
-            return self._get_bind_c_array(name, orig_var, local_var.shape, local_var)
+            result =  self._get_bind_c_array(name, orig_var, local_var.shape, local_var)
         else:
             result = self._get_bind_c_array(name, orig_var, local_var.shape)
 
             result['body'].append(Assign(result['f_array'], local_var))
 
-            return result
+        result['f_result'] = local_var
+
+        return result
 
     def _extract_HomogeneousTupleType_FunctionDefResult(self, orig_var, orig_func_scope):
         return self._extract_NumpyNDArrayType_FunctionDefResult(orig_var, orig_func_scope)
@@ -726,6 +730,7 @@ class FortranToCWrapper(Wrapper):
 
         f_array = result['f_array']
         body = result['body']
+        result['f_result'] = local_var
 
         for_scope = scope.create_new_loop_scope()
         iterator = VariableIterator(local_var)
@@ -758,6 +763,7 @@ class FortranToCWrapper(Wrapper):
 
         f_array = result['f_array']
         body = result['body']
+        result['f_result'] = local_var
 
         for_scope = scope.create_new_loop_scope()
         iterator = VariableIterator(local_var)
