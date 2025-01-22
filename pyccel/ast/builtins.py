@@ -1234,6 +1234,7 @@ class PythonRange(Iterable):
             self._step  = args[2]
         else:
             raise ValueError('Range has at most 3 arguments')
+        assert self._stop is not None
 
         super().__init__(0)
 

@@ -1014,6 +1014,14 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         """
         return self._order
 
+    def check_shape(self, shape):
+        pass
+        #print(self)
+        #if self.datatype == self or any(not isinstance(e, TupleType) for e in self._element_types):
+        #    assert len(shape) == self.container_rank
+        #else:
+        #    assert len(shape) == self.rank
+
 class DictType(ContainerType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous dictionary type.
