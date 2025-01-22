@@ -14,6 +14,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PyccelType, InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType, DictType
+from .datatypes import ContainerType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .internals import apply_pickle
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
@@ -172,7 +173,9 @@ class Variable(TypedAstNode):
             assert shape is None
 
         elif shape is None:
-            shape = tuple(None for i in range(rank))
+            shape = tuple(None for i in range(class_type.container_rank))
+
+        assert shape is None or len(shape) == class_type.container_rank
 
         self._alloc_shape = shape
         self._class_type = class_type
@@ -711,7 +714,7 @@ class IndexedElement(TypedAstNode):
             self._class_type = base.class_type[self._indices[0]]
             self._is_slice = False
             if self.rank:
-                self._shape = (None,)*self.rank
+                self._shape = (None,)*self.container_rank
             else:
                 self._shape = None
 
@@ -743,20 +746,18 @@ class IndexedElement(TypedAstNode):
             if new_rank == 0:
                 self._class_type = base.class_type.element_type
                 self._is_slice = False
-                if self._class_type.rank:
-                    self._shape = base.shape[rank:]
-                else:
-                    self._shape = None
-            elif new_rank != rank:
-                self._class_type = base.class_type.switch_rank(new_rank)
-                self._is_slice = True
-                self._shape = tuple(new_shape) + base.shape[rank:]
+                self._shape = None
             else:
-                self._class_type = base.class_type
+                assert new_rank != rank
+                self._class_type = base.class_type.switch_rank(new_rank)
                 self._is_slice = True
                 self._shape = tuple(new_shape) + base.shape[rank:]
 
         super().__init__()
+
+        if isinstance(self._class_type, ContainerType) and self._shape is None:
+            self._shape = tuple(PyccelArrayShapeElement(self, i) \
+                                for i in range(self._class_type.container_rank))
 
     @property
     def base(self):
