@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 import functools
-from itertools import chain
+from itertools import chain, product
 import re
 from packaging.version import Version
 
@@ -14,7 +14,7 @@ from pyccel.ast.basic     import ScopedAstNode
 
 from pyccel.ast.bind_c    import BindCPointer
 
-from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonMin
+from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonMin, PythonMax
 from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
@@ -23,7 +23,7 @@ from pyccel.ast.builtin_methods.dict_methods  import DictItems
 
 from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
-from pyccel.ast.core      import Allocate, Deallocate
+from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
@@ -40,17 +40,19 @@ from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, Pri
 from pyccel.ast.datatypes import HomogeneousContainerType, DictType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
+from pyccel.ast.internals import PyccelFunction
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
-from pyccel.ast.literals  import Nil
+from pyccel.ast.literals  import Nil, convert_to_literal
 
 from pyccel.ast.low_level_tools import IteratorType
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray
-from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum
+from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
+from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
 
 from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
@@ -73,7 +75,7 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
-                                    PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
+                                    PYCCEL_RESTRICTION_IS_ISNOT)
 
 numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
@@ -81,7 +83,7 @@ errors = Errors()
 
 # TODO: add examples
 
-__all__ = ["CCodePrinter", "ccode"]
+__all__ = ["CCodePrinter"]
 
 # dictionary mapping numpy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
@@ -240,7 +242,6 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                 ['stdlib',
                  'math',
                  'string',
-                 'ndarrays',
                  'complex',
                  'stdint',
                  'pyc_math_c',
@@ -248,7 +249,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  "inttypes",
                  'stdbool',
                  'assert',
-                 'stc/cstr']}
+                 'stc/cstr',
+                 'CSpan_extensions']}
 
 import_header_guard_prefix = {
     'stc/common': '_TOOLS_COMMON',
@@ -298,17 +300,6 @@ class CCodePrinter(CodePrinter):
                       (PrimitiveIntegerType(),1)     : 'int8_t',
                       (PrimitiveBooleanType(),-1) : 'bool',
                       }
-
-    ndarray_type_registry = {
-                      NumpyFloat64Type()    : 'nd_double',
-                      NumpyFloat32Type()    : 'nd_float',
-                      NumpyComplex128Type() : 'nd_cdouble',
-                      NumpyComplex64Type()  : 'nd_cfloat',
-                      NumpyInt64Type()      : 'nd_int64',
-                      NumpyInt32Type()      : 'nd_int32',
-                      NumpyInt16Type()      : 'nd_int16',
-                      NumpyInt8Type()       : 'nd_int8',
-                      PythonNativeBool()    : 'nd_bool'}
 
     type_to_format = {(PrimitiveFloatingPointType(),8) : '%.15lf',
                       (PrimitiveFloatingPointType(),4) : '%.6f',
@@ -360,13 +351,6 @@ class CCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return self.indent_code(lines)
 
-    def _flatten_list(self, irregular_list):
-        if isinstance(irregular_list, (PythonList, PythonTuple)):
-            f_list = [element for item in irregular_list for element in self._flatten_list(item)]
-            return f_list
-        else:
-            return [irregular_list]
-
     def is_c_pointer(self, a):
         """
         Indicate whether the object is a pointer in C code.
@@ -408,8 +392,38 @@ class CCodePrinter(CodePrinter):
         return a.is_alias or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
+    def _flatten_list(self, irregular_list):
+        """
+        Get a list of all the arguments in a multi-level list/tuple.
+
+        Get a list of all the arguments in a multi-level list/tuple.
+
+        Parameters
+        ----------
+        irregular_list : PythonList | PythonTuple
+            A multi-level list/tuple.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A flattened list of all the elements of the list/tuple.
+        """
+        def to_list(arg):
+            """
+            Get a list containing the scalar elements of a list/tuple.
+            This method is called recursively. If the argument is not
+            a list/tuple then it is returned in a list otherwise the
+            elements of the list/tuple are converted to a list and
+            flattened.
+            """
+            if isinstance(arg, (PythonList, PythonTuple)):
+                return [ai for a in arg.args for ai in to_list(a)]
+            else:
+                return [arg]
+        return to_list(irregular_list)
+
     #========================== Numpy Elements ===============================#
-    def copy_NumpyArray_Data(self, expr):
+    def copy_NumpyArray_Data(self, lhs, rhs):
         """
         Get code which copies data from a Ndarray or a homogeneous tuple into a Ndarray.
 
@@ -420,100 +434,71 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : TypedAstNode
-            The Assign Node used to get the lhs and rhs.
+        lhs : TypedAstNode
+            The left-hand side of the assignment containing the array into which the
+            NumPy array should be copied.
+
+        rhs : TypedAstNode
+            The right-hand side of the assignment containing the array(s) which should
+            be copied into the left-hand side.
 
         Returns
         -------
         str
             A string containing the code which allocates and copies the data.
         """
-        rhs = expr.rhs
-        lhs = expr.lhs
-        if rhs.rank == 0:
-            raise NotImplementedError(str(expr))
+        assert rhs.rank != 0
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         lhs_address = self._print(ObjectAddress(lhs))
 
+        variables = [v for v in arg.get_attribute_nodes((Variable, FunctionCall, PyccelFunction)) if v.rank]
+
         # If the data is copied from a Variable rather than a list or tuple
-        # use the function array_copy_data directly
-        if isinstance(arg, Variable):
-            return f"array_copy_data({lhs_address}, {self._print(arg)}, 0);\n"
-
-        order = lhs.order
-        lhs_dtype = lhs.dtype
-        declare_dtype = self.get_c_type(lhs_dtype)
-        if isinstance(lhs.class_type, NumpyNDArrayType):
-            #set dtype to the C struct types
-            dtype = self.find_in_ndarray_type_registry(lhs_dtype)
-        elif isinstance(lhs.class_type, HomogeneousTupleType):
-            dtype = self.find_in_ndarray_type_registry(numpy_precision_map[
-                        (lhs_dtype.primitive_type, lhs_dtype.precision)])
-        else:
-            raise NotImplementedError(f"Don't know how to index {lhs.class_type} type")
-
-        flattened_list = self._flatten_list(arg)
-        operations = ""
-
-        # Get the variable where the data will be copied
-        if order == "F":
-            # If the order is F then the data should be copied non-contiguously so a temporary
-            # variable is required to pass to array_copy_data
-            new_dtype = lhs.class_type.swap_order()
-            temp_var = self.scope.get_temporary_variable(lhs, class_type=new_dtype)
-            operations += self._print(Allocate(temp_var, shape=lhs.shape, status="unallocated"))
-            copy_to = temp_var
-        else:
-            copy_to = lhs
-        copy_to_data_var = DottedVariable(lhs.dtype, dtype, lhs=copy_to)
-
-        num_elements = len(flattened_list)
-        # Get the offset variable if it is needed
-        if num_elements != 1 and not all(v.rank == 0 for v in flattened_list):
-            offset_var = self.scope.get_temporary_variable(PythonNativeInt(), 'offset')
-            operations += self._print(Assign(offset_var, LiteralInteger(0)))
-        else:
-            offset_var = LiteralInteger(0)
-        offset_str = self._print(offset_var)
-
-        # Copy each of the elements
-        i = 0
-        while i < num_elements:
-            current_element = flattened_list[i]
-            # Copy an array element
-            if isinstance(current_element, (Variable, IndexedElement)) and current_element.rank >= 1:
-                elem_name = self._print(current_element)
-                target = self._print(ObjectAddress(copy_to))
-                operations += f"array_copy_data({target}, {elem_name}, {offset_str});\n"
-                i += 1
-                if i < num_elements:
-                    operations += self._print(AugAssign(offset_var, '+', NumpySize(current_element)))
-
-            # Copy multiple scalar elements
+        # use the function cspan_copy directly
+        if isinstance(arg, (Variable, IndexedElement)):
+            prefix = ''
+            if isinstance(arg, IndexedElement):
+                arg_var = self.scope.get_temporary_variable(arg.class_type, memory_handling='heap')
+                prefix += self._print(Assign(arg_var, arg))
+                arg = arg_var
+            if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+                rhs_address = self._print(ObjectAddress(arg))
+                lhs_c_type = self.get_c_type(lhs.class_type)
+                rhs_c_type = self.get_c_type(arg.class_type)
+                cast_type = self.get_c_type(lhs.class_type.element_type)
+                self.add_import(c_imports['CSpan_extensions'])
+                return prefix + f'cspan_copy({cast_type}, {lhs_c_type}, {rhs_c_type}, {lhs_address}, {rhs_address});\n'
             else:
-                self.add_import(c_imports['string'])
-                remaining_elements = flattened_list[i:]
-                lenSubset = next((i for i,v in enumerate(remaining_elements) if v.rank != 0), len(remaining_elements))
-                if lenSubset == 0:
-                    errors.report(f"Can't copy {rhs} into {lhs}", symbol=expr,
-                            severity='fatal')
-                subset = remaining_elements[:lenSubset]
+                raise NotImplementedError(f"Can't copy variable of type {arg.class_type}")
+        elif variables:
+            body = ''
+            for li, ri in zip(lhs, arg):
+                if li.rank:
+                    li_slice_var = self.scope.get_temporary_variable(li.class_type,
+                            shape = ri.shape, memory_handling='alias')
+                    body += self._print(AliasAssign(li_slice_var, li))
+                    body += self.copy_NumpyArray_Data(li_slice_var, ri)
+                else:
+                    body += self._print(Assign(li, ri))
+            return body
 
-                # Declare list of consecutive elements
-                subset_str = "{" + ', '.join(self._print(elem) for elem in subset) + "}"
-                dummy_array_name = self.scope.get_new_name()
-                operations += f"{declare_dtype} {dummy_array_name}[] = {subset_str};\n"
+        def get_indexed(base, elems):
+            """
+            Get an indexed object. This ensures the necessary levels are created for tuples.
+            """
+            while elems:
+                result = IndexedElement(base, *elems[:base.class_type.container_rank])
+                elems = elems[base.class_type.container_rank:]
+                base = result
+            return result
 
-                copy_to_data = self._print(copy_to_data_var)
-                type_size = self._print(DottedVariable(VoidType(), 'type_size', lhs=copy_to))
-                operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * {type_size});\n"
+        flattened_args = self._flatten_list(arg)
+        flattened_lhs = [get_indexed(lhs, elems) for elems in product(*[range(s) for s in arg.shape])]
 
-                i += lenSubset
-                if i < num_elements:
-                    operations += self._print(AugAssign(offset_var, '+', LiteralInteger(lenSubset)))
+        operations = ''
+        for li, ri in zip(flattened_lhs, flattened_args):
+            operations += f'{self._print(li)} = {self._print(ri)};\n'
 
-        if order == "F":
-            operations += f"array_copy_data({lhs_address}, {self._print(copy_to)}, 0);\n" + self._print(Deallocate(copy_to))
         return operations
 
     def arrayFill(self, expr):
@@ -524,7 +509,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : TypedAstNode
+        expr : Assign
             The Assign Node used to get the lhs and rhs.
 
         Returns
@@ -535,13 +520,16 @@ class CCodePrinter(CodePrinter):
         rhs = expr.rhs
         lhs = expr.lhs
         code_init = ''
-        declare_dtype = self.get_c_type(rhs.dtype)
 
         if rhs.fill_value is not None:
-            if isinstance(rhs.fill_value, Literal):
-                code_init += 'array_fill(({0}){1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
-            else:
-                code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), self._print(lhs))
+            lhs_code = self._print(lhs)
+            fill_val = self._print(rhs.fill_value)
+            c_type = self.get_c_type(lhs.class_type)
+            loop_scope = self.scope.create_new_loop_scope()
+            iter_var_name = loop_scope.get_new_name()
+            code_init += f'c_foreach({iter_var_name}, {c_type}, {lhs_code}) {{\n'
+            code_init += f'*({iter_var_name}.ref) = {fill_val};\n'
+            code_init += '}\n'
         return code_init
 
     def _init_stack_array(self, expr):
@@ -564,30 +552,15 @@ class CCodePrinter(CodePrinter):
         """
         var = expr
         dtype = self.get_c_type(var.dtype)
-        if isinstance(var.class_type, NumpyNDArrayType):
-            np_dtype = self.find_in_ndarray_type_registry(var.dtype)
-        elif isinstance(var.class_type, HomogeneousContainerType):
-            np_dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(var.dtype.primitive_type, var.dtype.precision)])
-        else:
-            raise NotImplementedError(f"Don't know how to index {expr.class_type} type")
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
         tot_shape = self._print(functools.reduce(
             lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
-        declare_dtype = self.get_c_type(NumpyInt64Type())
 
-        dummy_array_name = self.scope.get_new_name('array_dummy')
-        buffer_array = "{dtype} {name}[{size}];\n".format(
-                dtype = dtype,
-                name  = dummy_array_name,
-                size  = tot_shape)
-        shape_init = "({declare_dtype}[]){{{shape}}}".format(declare_dtype=declare_dtype, shape=shape)
-        strides_init = "({declare_dtype}[{length}]){{0}}".format(declare_dtype=declare_dtype, length=len(var.shape))
-        array_init = ' = (t_ndarray){{\n.{0}={1},\n .shape={2},\n .strides={3},\n '
-        array_init += '.nd={4},\n .type={0},\n .is_view={5}\n}};\n'
-        array_init = array_init.format(np_dtype, dummy_array_name,
-                    shape_init, strides_init, len(var.shape), 'false')
-        array_init += 'stack_array_init(&{})'.format(self._print(var))
-        self.add_import(c_imports['ndarrays'])
+        order = 'c_COLMAJOR' if var.order == 'F' else 'c_ROWMAJOR'
+
+        dummy_array_name = self.scope.get_new_name(f'{var.name}_ptr')
+        buffer_array = f"{dtype} {dummy_array_name}[{tot_shape}];\n"
+        array_init = f' = cspan_md_layout({order}, {dummy_array_name}, {shape})'
         return buffer_array, array_init
 
     def _handle_inline_func_call(self, expr):
@@ -740,6 +713,69 @@ class CCodePrinter(CodePrinter):
                     if not func.is_inline:
                         class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
 
+    def _handle_numpy_functional(self, expr, ElementExpression, start_val = None):
+        """
+        Print code describing a NumPy functional for object.
+
+        Print code describing a NumPy functional for object. E.g. sum/min/max.
+
+        Parameters
+        ----------
+        expr : TypedAstNode
+            The expression to be printed.
+        ElementExpression : class type
+            A class describing the operation carried out on each element of the
+            array argument.
+        start_val : TypedAstNode
+            The value that the result should be initialised to before the loop.
+
+        Returns
+        -------
+        str
+            Code which describes the NumPy functional calculation.
+        """
+        assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+        if assign_node:
+            lhs_var = assign_node[0].lhs
+            arg_var = expr.arg
+            class_type = expr.arg.class_type
+
+            lhs = self._print(lhs_var)
+            if not isinstance(arg_var, Variable):
+                tmp = self.scope.get_temporary_variable(arg_var.class_type, shape = arg_var.shape)
+                self._additional_code += self._print(Assign(tmp, arg_var))
+                arg_var = tmp
+            arg = self._print(arg_var)
+            c_type = self.get_c_type(class_type)
+            if start_val is None:
+                arg_address = self._print(ObjectAddress(arg_var))
+                start = f'*cspan_front({arg_address})'
+            else:
+                start = self._print(start_val)
+
+            loop_scope = self.scope.create_new_loop_scope()
+            iter_var_name = loop_scope.get_new_name()
+            iter_var = Variable(IteratorType(class_type), iter_var_name)
+            iter_ref_var = DottedVariable(arg_var.class_type.element_type, 'ref',
+                        memory_handling='alias', lhs=iter_var)
+
+            tmp_additional_code = self._additional_code
+            self._additional_code = ''
+            node = self._print(ElementExpression(lhs_var, iter_ref_var))
+            body = self._additional_code + f'{lhs} = {node};\n'
+            self._additional_code = tmp_additional_code
+
+            return (f'{lhs} = {start};\n'
+                    f'c_foreach({iter_var_name}, {c_type}, {arg}) {{\n'
+                    f'{body}'
+                     '}\n')
+        else:
+            tmp_var = self.scope.get_temporary_variable(expr.class_type)
+            assign_node = Assign(tmp_var, expr)
+            self._additional_code += self._handle_numpy_functional(expr,
+                            ElementExpression, start_val)
+            return self._print(tmp_var)
+
     # ============ Elements ============ #
 
     def _print_PythonAbs(self, expr):
@@ -764,12 +800,14 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonMinMax(self, expr):
         arg = expr.args[0]
-        if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
+        primitive_type = arg.dtype.primitive_type
+
+        if primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
             self.add_import(c_imports['math'])
             arg1 = self._print(arg[0])
             arg2 = self._print(arg[1])
             return f"f{expr.name}({arg1}, {arg2})"
-        elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
+        elif isinstance(primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and len(arg) == 2:
             if isinstance(arg[0], (Variable, Literal)):
                 arg1 = self._print(arg[0])
             else:
@@ -794,6 +832,11 @@ class CCodePrinter(CodePrinter):
             key = self.get_c_type(arg[0].class_type)
             self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
             return  f'{key}_{expr.name}({len(arg)}, {", ".join(self._print(a) for a in arg)})'
+        elif isinstance(primitive_type, PrimitiveComplexType):
+            self.add_import(c_imports['pyc_math_c'])
+            arg1 = self._print(arg[0])
+            arg2 = self._print(arg[1])
+            return f"complex_{expr.name}({arg1}, {arg2})"
         else:
             return errors.report(f"{expr.name} in C does not support arguments of type {arg.dtype}", symbol=expr,
                     severity='fatal')
@@ -881,16 +924,19 @@ class CCodePrinter(CodePrinter):
             if classDef.docstring is not None:
                 classes += self._print(classDef.docstring)
             classes += f"struct {classDef.name} {{\n"
-            classes += ''.join(self._print(Declare(var)) for var in classDef.attributes)
+            # Is external is required to avoid the default initialisation of containers
+            attrib_decl = [self._print(Declare(var, external=True)) for var in classDef.attributes]
+            classes += ''.join(d[len('extern '):] if d.startswith('extern ') else d for d in attrib_decl)
             for method in classDef.methods:
-                    funcs += f"{self.function_signature(method)};\n"
+                funcs += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
                     funcs += f"{self.function_signature(func)};\n"
             classes += "};\n"
         funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs if not f.is_inline)
 
-        global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
+        decls = [Declare(v, external=True, module_variable=True) for v in expr.module.variables if not v.is_private]
+        global_variables = ''.join(self._print(d) for d in decls)
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *self._additional_imports.values()]
@@ -1081,7 +1127,23 @@ class CCodePrinter(CodePrinter):
             source = source.name[-1].python_value
         else:
             source = self._print(source)
-        if source == 'stc/common':
+        if source == 'stc/cspan':
+            native_int_c_type = self.get_c_type(PythonNativeInt())
+            code = (f'#define STC_CSPAN_INDEX_TYPE {native_int_c_type}\n'
+                    '#include <stc/cspan.h>\n')
+            for t in expr.target:
+                dtype = t.object.class_type
+                container_type = t.local_alias
+                element_type = self.get_c_type(dtype.datatype)
+                rank = dtype.rank
+                header_guard_prefix = import_header_guard_prefix.get(source, '')
+                header_guard = f'{header_guard_prefix}_{container_type.upper()}'
+                code += ''.join((f'#ifndef {header_guard}\n',
+                        f'#define {header_guard}\n',
+                        f'using_cspan({container_type}, {element_type}, {rank});\n',
+                        f'#endif // {header_guard}\n\n'))
+            return code
+        elif source == 'stc/common':
             code = ''
             self.add_import(Import(stc_extension_mapping[source], (), ignore_at_print=True))
             for t in expr.target:
@@ -1092,7 +1154,7 @@ class CCodePrinter(CodePrinter):
                      f'#define {header_guard}\n',
                      element_decl,
                      f'#include <{source}.h>\n',
-                     f'#include <{stc_extension_mapping[source]}.h>\n', 
+                     f'#include <{stc_extension_mapping[source]}.h>\n',
                      f'#endif // {header_guard}\n\n'))
             return code
         elif source != 'stc/cstr' and (source.startswith('stc/') or source in import_header_guard_prefix):
@@ -1353,12 +1415,20 @@ class CCodePrinter(CodePrinter):
                 return 'bool'
 
             key = (primitive_type, dtype.precision)
+
+        elif isinstance(dtype, (NumpyNDArrayType, HomogeneousTupleType)):
+            element_type = self.get_c_type(dtype.datatype).replace(' ', '_').rstrip('_t')
+            i_type = f'array_{element_type}_{dtype.rank}d'
+            self.add_import(Import('stc/cspan', AsName(VariableTypeAnnotation(dtype), i_type)))
+            return i_type
+
         elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
             container_type = 'hset' if dtype.name == 'set' else 'vec'
             element_type = self.get_c_type(dtype.element_type).replace(' ', '_')
             i_type = f'{container_type}_{element_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
+
         elif isinstance(dtype, DictType):
             container_type = 'hmap'
             key_type = self.get_c_type(dtype.key_type).replace(' ', '_')
@@ -1366,6 +1436,7 @@ class CCodePrinter(CodePrinter):
             i_type = f'{container_type}_{key_type}_{val_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
+
         elif isinstance(dtype, StringType):
             self.add_import(c_imports['stc/cstr'])
             return 'cstr'
@@ -1374,31 +1445,6 @@ class CCodePrinter(CodePrinter):
 
         try :
             return self.dtype_registry[key]
-        except KeyError:
-            raise errors.report(PYCCEL_RESTRICTION_TODO, #pylint: disable=raise-missing-from
-                    symbol = dtype,
-                    severity='fatal')
-
-    def find_in_ndarray_type_registry(self, dtype):
-        """
-        Find the descriptor for the datatype in the ndarray_type_registry.
-
-        Find the tag which allows the user to access data of the specified
-        type within a ndarray.
-        Raise PYCCEL_RESTRICTION_TODO if not found.
-
-        Parameters
-        ----------
-        dtype : DataType
-            The data type of the expression.
-
-        Returns
-        -------
-        str
-            The code which declares the datatype in C.
-        """
-        try :
-            return self.ndarray_type_registry[dtype]
         except KeyError:
             raise errors.report(PYCCEL_RESTRICTION_TODO, #pylint: disable=raise-missing-from
                     symbol = dtype,
@@ -1427,34 +1473,25 @@ class CCodePrinter(CodePrinter):
         Raises
         ------
         PyccelCodegenError
-            If the type is not supported in the C code or the rank is too large.
+            If the type is not supported in the C code.
 
         Examples
         --------
-        >>> v = Variable('int', 'x')
+        >>> v = Variable(PythonNativeInt(), 'x')
         >>> self.get_declare_type(v)
         'int64_t'
 
         For an object accessed via a pointer:
-        >>> v = Variable('int', 'x', is_optional=True, rank=1)
+        >>> v = Variable(NumpyNDArrayType(PythonNativeInt(), 1, None), 'x', is_optional=True)
         >>> self.get_declare_type(v)
-        't_ndarray*'
+        'array_int64_1d*'
         """
         class_type = expr.class_type
-        rank  = expr.rank
 
-        if rank > 0:
-            if isinstance(class_type, (HomogeneousSetType, HomogeneousListType, DictType, StringType)):
-                dtype = self.get_c_type(class_type)
-            elif isinstance(class_type, CStackArray):
-                return self.get_c_type(class_type.element_type)
-            elif isinstance(class_type, (HomogeneousTupleType, NumpyNDArrayType)):
-                if expr.rank > 15:
-                    errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
-                self.add_import(c_imports['ndarrays'])
-                dtype = 't_ndarray'
-            else:
-                errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
+        if isinstance(expr.class_type, CStackArray):
+            return self.get_c_type(expr.class_type.element_type)
+        elif isinstance(expr.class_type, (HomogeneousContainerType, DictType)):
+            dtype = self.get_c_type(expr.class_type)
         elif not isinstance(class_type, CustomDataType):
             dtype = self.get_c_type(expr.dtype)
         else:
@@ -1490,7 +1527,6 @@ class CCodePrinter(CodePrinter):
             return ''
 
         declaration_type = self.get_declare_type(var)
-        variable = self._print(var.name)
 
         init = f' = {self._print(expr.value)}' if expr.value is not None else ''
 
@@ -1504,22 +1540,15 @@ class CCodePrinter(CodePrinter):
                 init = ''
         elif var.is_stack_array:
             preface, init = self._init_stack_array(var)
-        elif declaration_type == 't_ndarray' and not self._in_header:
-            assert init == ''
-            preface = ''
-            init    = ' = {.shape = NULL}'
-        elif isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-            preface = ''
-            init = ' = {0}'
         else:
             preface = ''
+            if isinstance(var.class_type, (HomogeneousContainerType, DictType)) and not expr.external:
+                init = ' = {0}'
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
 
-        declaration = f'{static}{external}{declaration_type} {variable}{init};\n'
-
-        return preface + declaration
+        return f'{preface}{static}{external}{declaration_type} {var.name}{init};\n'
 
     def function_signature(self, expr, print_arg_names = True):
         """
@@ -1599,8 +1628,20 @@ class CCodePrinter(CodePrinter):
                 inds = list(base.indices) + inds
                 base = base.base
 
+        if expr.rank > 0 and isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            c_type = self.get_c_type(expr.class_type)
+            indices = []
+            for i,idx in enumerate(inds):
+                if isinstance(idx, Slice):
+                    idx = self._new_slice_with_processed_arguments(idx, PyccelArrayShapeElement(base, i),
+                        allow_negative_indexes)
+                indices.append('{'+self._print(idx)+'}')
+            indices_code = ', '.join(indices)
+            base_code = self._print(ObjectAddress(base))
+            return f'cspan_slice({c_type}, {base_code}, {indices_code})'
+
         for i, ind in enumerate(inds):
-            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
+            if is_literal_integer(ind) and int(ind) < 0:
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0], simplify = True)
             else:
                 #indices of indexedElement of len==1 shouldn't be a tuple
@@ -1624,28 +1665,13 @@ class CCodePrinter(CodePrinter):
                     return f"(*{container_type}_at_mut({list_var},{index}))"
             return f"(*{container_type}_at({list_var},{index}))"
 
-        base_name = self._print(base)
-        if isinstance(base.class_type, NumpyNDArrayType):
-            #set dtype to the C struct types
-            dtype = self.find_in_ndarray_type_registry(expr.dtype)
-        elif isinstance(base.class_type, HomogeneousTupleType):
-            dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(expr.dtype.primitive_type, expr.dtype.precision)])
+        indices = ", ".join(self._print(i) for i in inds)
+        if isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            return f'(*cspan_at({self._print(ObjectAddress(base))}, {indices}))'
+        elif isinstance(base.class_type, CStackArray):
+            return f'{self._print(ObjectAddress(base))}[{indices}]'
         else:
-            raise NotImplementedError(f"Don't know how to index {expr.class_type} type")
-        if expr.rank > 0:
-            #managing the Slice input
-            for i , ind in enumerate(inds):
-                if isinstance(ind, Slice):
-                    inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArrayShapeElement(base, i),
-                        allow_negative_indexes)
-                else:
-                    inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1),
-                        Slice.Element)
-            indices = ", ".join(self._print(i) for i in inds)
-            return f"array_slicing({base_name}, {expr.rank}, {indices})"
-        indices = ", ".join(self._cast_to(i, NumpyInt64Type()).format(self._print(i)) for i in inds)
-        return f"GET_ELEMENT({base_name}, {dtype}, {indices})"
-
+            raise NotImplementedError(f"Indexing not implemented for {base.class_type}")
 
     def _cast_to(self, expr, dtype):
         """
@@ -1722,37 +1748,38 @@ class CCodePrinter(CodePrinter):
         elif allow_negative_index and not isinstance(start, (LiteralInteger, PyccelArrayShapeElement)):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
                             PyccelMinus(array_size, start, simplify = True), start)
+        else:
+            start = _slice.start
 
         if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
             stop = PyccelMinus(array_size, stop.args[0], simplify = True)
         elif allow_negative_index and not isinstance(stop, (LiteralInteger, PyccelArrayShapeElement)):
             stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
                             PyccelMinus(array_size, stop, simplify = True), stop)
+        else:
+            stop = _slice.stop
 
         # steps in slices
         step = _slice.step
 
-        if step is None:
-            step = LiteralInteger(1)
-
         # negative step in slice
-        elif isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
+        if step and isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
             start = PyccelMinus(array_size, LiteralInteger(1), simplify = True) if _slice.start is None else start
             stop = LiteralInteger(0) if _slice.stop is None else stop
+            raise NotImplementedError("Negative step not yet handled")
 
         # variable step in slice
-        elif allow_negative_index and step and not isinstance(step, LiteralInteger):
+        elif step and allow_negative_index and step and not isinstance(step, LiteralInteger):
             og_start = start
             start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, PyccelMinus(stop, LiteralInteger(1), simplify = True))
             stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, og_start)
+            raise NotImplementedError("Negative step not yet handled")
 
         return Slice(start, stop, step)
 
     def _print_PyccelArraySize(self, expr):
-        arg = expr.arg
-        if self.is_c_pointer(arg):
-            return '{}->length'.format(self._print(ObjectAddress(arg)))
-        return '{}.length'.format(self._print(arg))
+        arg = self._print(ObjectAddress(expr.arg))
+        return f'cspan_size({arg})'
 
     def _print_PyccelArrayShapeElement(self, expr):
         arg = expr.arg
@@ -1792,33 +1819,43 @@ class CCodePrinter(CodePrinter):
         elif isinstance(variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
-                shape_var = DottedVariable(VoidType(), 'shape', lhs = variable)
-                free_code = f'if ({self._print(shape_var)} != NULL)\n'
-                free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
+                data_ptr = ObjectAddress(DottedVariable(VoidType(), 'data',
+                                        lhs = variable, memory_handling='alias'))
+                free_code = f'if ({self._print(data_ptr)} != NULL)\n'
+                free_code += ''.join(("{\n", self._print(Deallocate(variable)), "}\n"))
             elif (expr.status == 'allocated'):
                 free_code += self._print(Deallocate(variable))
-            self.add_import(c_imports['ndarrays'])
-            shape = ", ".join(self._print(i) for i in expr.shape)
-            if isinstance(variable.class_type, NumpyNDArrayType):
-                #set dtype to the C struct types
-                dtype = self.find_in_ndarray_type_registry(variable.dtype)
-            elif isinstance(variable.class_type, HomogeneousContainerType) and isinstance(variable.dtype, FixedSizeNumericType):
-                dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(variable.dtype.primitive_type, variable.dtype.precision)])
+
+            tot_shape = self._print(functools.reduce(
+                lambda x,y: PyccelMul(x,y,simplify=True), expr.shape))
+            c_type = self.get_c_type(variable.class_type)
+            element_type = self.get_c_type(variable.class_type.element_type)
+
+            if expr.like:
+                buffer_array = ''
+                if isinstance(expr.like.class_type, VoidType):
+                    dummy_array_name = self._print(ObjectAddress(expr.like))
+                else:
+                    raise NotImplementedError("Unexpected type passed to like argument")
             else:
-                raise NotImplementedError(f"The allocation of the type {variable.class_type} is not yet supported.")
-            shape_dtype = self.get_c_type(NumpyInt64Type())
-            shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-            is_view = 'false' if variable.on_heap else 'true'
-            order = "order_f" if expr.order == "F" else "order_c"
-            alloc_code = f"{self._print(variable)} = array_create({variable.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
-            return f'{free_code}{alloc_code}'
+                dummy_array_name = self.scope.get_new_name(f'{variable.name}_ptr')
+                buffer_array_var = Variable(variable.class_type.datatype, dummy_array_name, memory_handling='alias')
+                self.scope.insert_variable(buffer_array_var)
+                buffer_array = f"{dummy_array_name} = malloc(sizeof({element_type}) * ({tot_shape}));\n"
+
+            order = 'c_COLMAJOR' if variable.order == 'F' else 'c_ROWMAJOR'
+            shape = ", ".join(self._print(i) for i in expr.shape)
+
+            return free_code + buffer_array + f'{self._print(variable)} = ({c_type})cspan_md_layout({order}, {dummy_array_name}, {shape});\n'
         elif variable.is_alias:
             var_code = self._print(ObjectAddress(variable))
             if expr.like:
                 declaration_type = self.get_declare_type(expr.like)
                 malloc_size = f'sizeof({declaration_type})'
                 if variable.rank:
-                    malloc_size = ' * '.join([malloc_size, *(self._print(s) for s in expr.shape)])
+                    tot_shape = self._print(functools.reduce(
+                        lambda x,y: PyccelMul(x,y,simplify=True), expr.shape))
+                    malloc_size = f'{malloc_size} * ({tot_shape})'
                 return f'{var_code} = malloc({malloc_size});\n'
             else:
                 raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
@@ -1834,24 +1871,36 @@ class CCodePrinter(CodePrinter):
             return f'{container_type}_drop({variable_address});\n'
         if isinstance(expr.variable.class_type, InhomogeneousTupleType):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
-        variable_address = self._print(ObjectAddress(expr.variable))
         if isinstance(expr.variable.dtype, CustomDataType):
+            variable_address = self._print(ObjectAddress(expr.variable))
             Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
             return f"{Pyccel__del}({variable_address});\n"
         elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             if expr.variable.is_alias:
-                return f'free_pointer({variable_address});\n'
+                return ''
             else:
-                return f'free_array({variable_address});\n'
+                data_ptr = DottedVariable(VoidType(), 'data', lhs = expr.variable, memory_handling='alias')
+                data_ptr_code = self._print(ObjectAddress(data_ptr))
+                return f'free({data_ptr_code});\n{data_ptr_code} = NULL;\n'
         else:
+            variable_address = self._print(ObjectAddress(expr.variable))
             return f'free({variable_address});\n'
 
     def _print_Slice(self, expr):
-        start = self._print(expr.start)
-        stop = self._print(expr.stop)
-        step = self._print(expr.step)
-        slice_type = 'RANGE' if expr.slice_type == Slice.Range else 'ELEMENT'
-        return f'new_slice({start}, {stop}, {step}, {slice_type})'
+        start = expr.start
+        stop = expr.stop
+        step = expr.step
+        if start is None and stop is None and (step in (None, 1)):
+            return 'c_ALL'
+        else:
+            start = start or LiteralInteger(0)
+            stop = stop or 'c_END'
+            assert not(is_literal_integer(start) and int(start) < 0)
+            assert not(is_literal_integer(stop) and int(stop) < 0)
+            args = (start, stop)
+            if step and step != 1:
+                args += (expr.step, )
+            return ', '.join(self._print(a) for a in args)
 
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C
@@ -2074,60 +2123,20 @@ class CCodePrinter(CodePrinter):
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
 
-    def _print_NumpySum(self, expr):
-        '''
-        Convert a call to numpy.sum to the equivalent function in C.
-        '''
-        if not isinstance(expr.arg, (NumpyArray, Variable, IndexedElement)):
-            raise TypeError(f'Expecting a NumpyArray, given {type(expr.arg)}')
-        dtype = expr.arg.dtype
-        primitive_type = dtype.primitive_type
-        prec  = dtype.precision
-        name  = self._print(expr.arg)
-
-        if isinstance(primitive_type, PrimitiveIntegerType):
-            return f'numpy_sum_int{prec * 8}({name})'
-        elif isinstance(primitive_type, PrimitiveFloatingPointType):
-            return f'numpy_sum_float{prec * 8}({name})'
-        elif isinstance(primitive_type, PrimitiveComplexType):
-            return f'numpy_sum_complex{prec * 16}({name})'
-        elif isinstance(primitive_type, PrimitiveBooleanType):
-            return f'numpy_sum_bool({name})'
-        raise NotImplementedError('Sum not implemented for argument')
-
     def _print_NumpyAmax(self, expr):
         '''
         Convert a call to numpy.max to the equivalent function in C.
         '''
-        dtype = expr.arg.dtype
-        primitive_type = dtype.primitive_type
-        prec  = dtype.precision
-        name  = self._print(expr.arg)
-        if isinstance(primitive_type, PrimitiveIntegerType):
-            return f'numpy_amax_int{prec * 8}({name})'
-        elif isinstance(primitive_type, PrimitiveFloatingPointType):
-            return f'numpy_amax_float{prec * 8}({name})'
-        elif isinstance(primitive_type, PrimitiveComplexType):
-            return f'numpy_amax_complex{prec * 16}({name})'
-        elif isinstance(primitive_type, PrimitiveBooleanType):
-            return f'numpy_amax_bool({name})'
+        return self._handle_numpy_functional(expr, PythonMax)
 
     def _print_NumpyAmin(self, expr):
         '''
         Convert a call to numpy.min to the equivalent function in C.
         '''
-        dtype = expr.arg.dtype
-        primitive_type = dtype.primitive_type
-        prec  = dtype.precision
-        name  = self._print(expr.arg)
-        if isinstance(primitive_type, PrimitiveIntegerType):
-            return f'numpy_amin_int{prec * 8}({name})'
-        elif isinstance(primitive_type, PrimitiveFloatingPointType):
-            return f'numpy_amin_float{prec * 8}({name})'
-        elif isinstance(primitive_type, PrimitiveComplexType):
-            return f'numpy_amin_complex{prec * 16}({name})'
-        elif isinstance(primitive_type, PrimitiveBooleanType):
-            return f'numpy_amin_bool({name})'
+        return self._handle_numpy_functional(expr, PythonMin)
+
+    def _print_NumpySum(self, expr):
+        return self._handle_numpy_functional(expr, PyccelAdd, convert_to_literal(0, expr.class_type))
 
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
@@ -2376,7 +2385,9 @@ class CCodePrinter(CodePrinter):
             return f'{self._print(rhs)};\n'
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
-            return self.copy_NumpyArray_Data(expr)
+            return self.copy_NumpyArray_Data(lhs, rhs)
+        if isinstance(rhs, (NumpySum, NumpyAmax, NumpyAmin)):
+            return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)
         lhs_code = self._print(lhs)
@@ -2394,19 +2405,21 @@ class CCodePrinter(CodePrinter):
         lhs_address = ObjectAddress(lhs_var)
         rhs_address = ObjectAddress(rhs_var)
 
-        # the below condition handles the case of reassinging a pointer to an array view.
-        # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
+        # The condition below handles the case of reassigning a pointer to an array view.
         if isinstance(lhs_var, Variable) and lhs_var.is_ndarray and not lhs_var.is_optional:
-            rhs = self._print(rhs_var)
+            lhs = self._print(lhs_var)
 
             if isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
-                lhs = self._print(lhs_address)
-                if lhs_var.order == rhs_var.order:
-                    return 'alias_assign({}, {});\n'.format(lhs, rhs)
-                else:
-                    return 'transpose_alias_assign({}, {});\n'.format(lhs, rhs)
+                lhs_ptr = self._print(lhs_address)
+                rhs = self._print(rhs_address)
+                rhs_type = self.get_c_type(rhs_var.class_type)
+                slicing = ', '.join(['{c_ALL}']*lhs_var.rank)
+                code = f'{lhs} = cspan_slice({rhs_type}, {rhs}, {slicing});\n'
+                if lhs_var.order != rhs_var.order:
+                    code += f'cspan_transpose({lhs_ptr});\n'
+                return code
             else:
-                lhs = self._print(lhs_var)
+                rhs = self._print(rhs_var)
                 return f'{lhs} = {rhs};\n'
         else:
             lhs = self._print(lhs_address)
@@ -2893,20 +2906,32 @@ class CCodePrinter(CodePrinter):
         return ''
 
     def indent_code(self, code):
-        """Accepts a string of code or a list of code lines"""
+        """
+        Add the necessary indentation to a string of code or a list of code lines.
+
+        Add the necessary indentation to a string of code or a list of code lines.
+
+        Parameters
+        ----------
+        code : str | iterable[str]
+            The code which needs indenting.
+
+        Returns
+        -------
+        str | list[str]
+            The indented code. The type matches the type of the argument.
+        """
 
         if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
         tab = " "*self._default_settings["tabwidth"]
-        inc_token = ('{', '(', '{\n', '(\n')
-        dec_token = ('}', ')')
 
         code = [ line.lstrip(' \t') for line in code ]
 
-        increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
-        decrease = [ int(any(map(line.startswith, dec_token)))
+        increase = [ int(line.endswith('{\n')) for line in code ]
+        decrease = [ int(any(map(line.startswith, '}\n')))
                      for line in code ]
 
         pretty = []
@@ -2916,6 +2941,7 @@ class CCodePrinter(CodePrinter):
                 pretty.append(line)
                 continue
             level -= decrease[n]
-            pretty.append("%s%s" % (tab*level, line))
+            indent = tab*level
+            pretty.append(f"{indent}{line}")
             level += increase[n]
         return pretty
