@@ -714,7 +714,7 @@ class IndexedElement(TypedAstNode):
             self._class_type = base.class_type[self._indices[0]]
             self._is_slice = False
             if self.rank:
-                self._shape = (None,)*self.container_rank
+                self._shape = (None,)*self._class_type.container_rank
             else:
                 self._shape = None
 
