@@ -147,6 +147,45 @@ dtype_registry.update({
     })
 
 #=======================================================================================
+def get_shape_of_multi_level_container(expr, shape_prefix = ()):
+    """
+    Get the shape of a multi-level container.
+
+    Get the shape of a multi-level container such as a list of list
+    of tuple of tuple. These objects only store the shape of the top
+    layer as the elements may have different sizes but in NumPy
+    functions we can assume that the shape is homogeneous as otherwise
+    the original Python code would raise errors.
+
+    Parameters
+    ----------
+    expr : TypedAstNode
+        The expression whose shape we want to know.
+    shap_prefix : tuple[TypedAstNode, ...], optional
+        A tuple of objects describing the shape of the containers where
+        the expression is found. This is used internally to call this
+        function recursively. In most cases it is not necessary to
+        provide this value when calling this function.
+
+    Returns
+    -------
+    tuple[TypedAstNode, ...]
+        A tuple of objects describing the shape of the mult-level container.
+    """
+    if isinstance(expr.class_type, ContainerType):
+        shape = shape_prefix + expr.shape
+        if isinstance(expr, (PythonTuple, PythonList)):
+            return get_shape_of_multi_level_container(expr.args[0], shape)
+        elif isinstance(expr, Variable):
+            return get_shape_of_multi_level_container(expr[LiteralInteger(0)], shape)
+        else:
+            errors.report(f"Can't calculate shape of object of type {type(expr)}",
+                    severity = 'error', symbol=expr)
+            return (None,)*expr.rank
+    else:
+        return shape_prefix
+
+#=======================================================================================
 def process_shape(is_scalar, shape):
     """ Modify the input shape to the expected type
 
@@ -710,30 +749,16 @@ class NumpyArray(NumpyNewArray):
             if dtype is None:
                 dtype = arg[0].class_type.datatype
             dtype = process_dtype(dtype)
-
-            shape = (LiteralInteger(len(arg)), *process_shape(False, arg[0].shape))
         else:
             # Verify dtype and get precision
             if dtype is None:
                 dtype = arg.dtype
             dtype = process_dtype(dtype)
 
-            shape = process_shape(False, arg.shape)
+        shape = process_shape(False, get_shape_of_multi_level_container(arg))
 
         rank  = arg.rank
-
-        if len(shape) < rank:
-            # Assume shape is valid otherwise error would be thrown in Python
-            element = arg
-            while len(shape) < rank:
-                if isinstance(element, (PythonTuple, PythonList)):
-                    shape += tuple(element.args[0].shape)
-                elif element.class_type.container_rank < rank:
-                    index = [0]*element.class_type.container_rank
-                    shape += tuple(element.shape)
-                    element = element[index]
-                else:
-                    raise NotImplementedError("Shapes to be handled")
+        assert len(shape) == rank
 
         if ndmin and ndmin>rank:
             shape = (LiteralInteger(1),)*(ndmin-rank) + shape

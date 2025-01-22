@@ -70,6 +70,7 @@ from pyccel.ast.numpyext import NumpyNewArray, NumpyArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
+from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt64Type
 
@@ -731,9 +732,9 @@ class FCodePrinter(CodePrinter):
             The code for the element.
         """
         if isinstance(expr, (PythonList, PythonTuple)):
-            shape = tuple(reversed(expr.shape))
+            shape = tuple(reversed(get_shape_of_multi_level_container(expr)))
+            elements = ', '.join(self._get_node_without_gFTL(i) for i in expr)
             if len(shape)>1:
-                elements = ', '.join(self._get_node_without_gFTL(i) for i in expr)
                 shape    = ', '.join(self._print(i) for i in shape)
                 return 'reshape(['+ elements + '], [' + shape + '])'
             args = ', '.join(self._print(f) for f in expr)
