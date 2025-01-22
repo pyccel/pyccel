@@ -770,7 +770,8 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, PythonTuple):
 
-            d_var['shape'] = get_shape_of_multi_level_container(expr)
+            if expr.is_homogeneous:
+                d_var['shape'] = get_shape_of_multi_level_container(expr)
             return d_var
 
         elif isinstance(expr, TypedAstNode):
