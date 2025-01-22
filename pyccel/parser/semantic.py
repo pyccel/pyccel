@@ -3423,10 +3423,7 @@ class SemanticParser(BasicParser):
             func = rhs.funcdef
             results = func.results
             if results:
-                if len(results)==1:
-                    d_var = self._infer_type(results[0].var)
-                else:
-                    d_var = self._infer_type(PythonTuple(*[r.var for r in results]))
+                d_var = self._infer_type(results.var)
             elif expr.lhs.is_temp:
                 return rhs
             else:
