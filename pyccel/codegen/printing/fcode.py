@@ -3545,7 +3545,7 @@ class FCodePrinter(CodePrinter):
         for k, m in _default_methods.items():
             f_name = f_name.replace(k, m)
         args   = expr.args
-        func_results = [v for v in flatten_tuple_var(func.results.var, func.scope) if v]
+        func_results = [v for v in flatten_tuple_var(func.results.var, func.scope) if v and not v.is_argument]
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, (Assign, AliasAssign)))
         is_function =  len(func_results) == 1 and func_results[0].rank == 0
 
