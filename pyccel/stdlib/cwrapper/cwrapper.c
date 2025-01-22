@@ -174,10 +174,7 @@ void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int6
 
 void capsule_cleanup(PyObject *capsule) {
     void *memory = PyCapsule_GetPointer(capsule, NULL);
-    // TODO: Correct free method. See #2001
-#ifndef __INTEL_LLVM_COMPILER
     free(memory);
-#endif
 }
 
 #if defined(WIN32) && (PyArray_RUNTIME_VERSION >= NPY_2_0_API_VERSION)

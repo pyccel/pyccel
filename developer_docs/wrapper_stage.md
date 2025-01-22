@@ -127,6 +127,8 @@ More complex cases include functions with array arguments or results, optional v
 
 Array arguments and results are handled similarly to array module variables, by adding additional variables for the shape and stride information. Strides are not used for results as pointers cannot be returned from functions.
 
+In order to create all the nodes necessary to describe the unpacking of the results we use functions named `_extract_X_FunctionDefResult` where `X` is the type of the object being extracted from the `FunctionDefResult`. This helps with the readability of the code.
+
 Optional arguments are passed as C pointers. An if/else block then determines whether the pointer is assigned or not. This can be quite lengthy, however it is unavoidable for compilation with Intel, or NVIDIA. It is also unavoidable for arrays as it is important not to index an array (to access the strides) which is not present.
 
 Finally the most complex cases such as functions as arguments are simply not printed. Instead these cases raise warnings or errors to alert the user that support is missing.
