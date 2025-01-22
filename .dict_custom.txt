@@ -12,6 +12,7 @@ LAPACK
 MPI
 OpenMP
 Fortran
+Fortran's
 pyccelise
 pyccelised
 pyccelising
@@ -120,4 +121,6 @@ indexable
 traceback
 STC
 gFTL
+STC's
+gFTL's
 CMake

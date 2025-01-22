@@ -378,7 +378,7 @@ PyObject* func_name(PyObject* self, PyObject* args, PyObject* kwargs);
 
 The arguments and keyword arguments are unpacked into individual `PyObject` pointers.
 Each of these objects is checked to verify the type. If the type does not match the expected type then an error is raised as described in the [C-API documentation](https://docs.python.org/3/c-api/intro.html#exceptions).
-If the type does match then the value is unpacked into a C object. This is done using custom functions defined in `pyccel/stdlib/cwrapper/` or `pyccel/stdlib/cwrapper_ndarrays/` (see these files for more details) or using functions provided by `Python.h`.
+If the type does match then the value is unpacked into a C object. This is done using custom functions defined in `pyccel/stdlib/cwrapper/` (see these files for more details) or using functions provided by `Python.h`.
 
 In order to create all the nodes necessary to describe the unpacking of the arguments we use functions named `_extract_X_FunctionDefArgument` where `X` is the type of the object being extracted from the `FunctionDefArgument`. This allows such functions to call each other recursively. This is notably useful for container types (tuples, lists, etc) whose elements may themselves be container types. The types of scalars are checked in the same way regardless of whether they are arguments or elements of a container so this also reduces code duplication.
 
@@ -398,63 +398,56 @@ def f(x : 'float[:]', y : float = 3):
 
 leads to C code with the following prototype:
 ```c
-t_ndarray f(t_ndarray x, double y);
+array_double_1d f(array_double_1d x, double y);
 ```
 
 which is then wrapped as follows:
 ```c
-PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     PyObject* x_obj;
     PyObject* y_obj;
-    t_ndarray x = {.shape = NULL};
+    void* x_data = NULL;
+    int64_t x_shape[1];
+    int64_t x_strides[1];
+    array_double_1d x_0001 = {0};
+    array_double_1d x = {0};
     double y;
-    t_ndarray Out_0001 = {.shape = NULL};
+    array_double_1d Out_0001 = {0};
     PyObject* Out_0001_obj;
-    // Initialise any optional arguments
     y_obj = Py_None;
-    // Declare the names of the arguments so they can be found when the function is called
     static char *kwlist[] = {
-        "x",
-        "y",
+        (char*)"x",
+        (char*)"y",
         NULL
-    };
-    // Unpack the Python arguments into individual PyObjects (e.g. x_obj, y_obj)
-    // The vertical line splits compulsory arguments from optional arguments
+    }; 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O", kwlist, &x_obj, &y_obj))
+    {   
+        return NULL;
+    }
+    if (!pyarray_check("x", x_obj, NPY_DOUBLE, INT64_C(1), NO_ORDER_CHECK))
     {
         return NULL;
     }
-    // Unpack the PyObject (x_obj) into a C object (x)
-    if (pyarray_check(x_obj, NPY_DOUBLE, INT64_C(1), NO_ORDER_CHECK))
+    x_data = PyArray_DATA((PyArrayObject*)(x_obj));
+    get_strides_and_shape_from_numpy_array(x_obj, x_shape, x_strides);
+    x_0001 = (array_double_1d)cspan_md_layout(c_ROWMAJOR, x_data, x_shape[INT64_C(0)] * x_strides[INT64_C(0)]);
+    x = cspan_slice(array_double_1d, &x_0001, {INT64_C(0), c_END, x_strides[INT64_C(0)]});
+    y = 3.0;
+    if (y_obj != Py_None)
     {
-        x = pyarray_to_ndarray(x_obj);
+        if (PyIs_NativeFloat(y_obj))
+        {
+            y = PyDouble_to_Double(y_obj);
+        }
+        else
+        {
+            PyErr_SetString(PyExc_TypeError, "Expected an argument of type float for argument y");
+            return NULL;
+        }
     }
-    else
-    {
-        // Return in case of an error (raised if the type doesn't match)
-        return NULL;
-    }
-    // Initialise default values
-    y = INT64_C(3);
-    // Unpack the PyObject (y_obj) into a C object (y)
-    if (PyIs_NativeFloat(y_obj))
-    {
-        y = PyDouble_to_Double(y_obj);
-    }
-    else if (y_obj != Py_None)
-    {
-        // Return in case of an error (raised if the type doesn't match)
-        return NULL;
-    }
-    // Call the function
     Out_0001 = f(x, y);
-    // Free memory allocated for the arguments
-    free_pointer(&x);
-    // Pack the results into a PyObject
-    Out_0001_obj = ndarray_to_pyarray(Out_0001);
-    // Free memory allocated for the results
-    free_pointer(&Out_0001);
+    Out_0001_obj = to_pyarray(INT64_C(1), NPY_DOUBLE, Out_0001.data, Out_0001.shape, 1, 0);
     return Out_0001_obj;
 }
 ```
@@ -479,71 +472,49 @@ int bind_c_f(void*, int64_t, int64_t, double, void*, int64_t*);
 
 which is then wrapped as follows:
 ```c
-PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* bind_c_f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 {
-    PyObject* bound_x_obj;
+    PyObject* x_obj;
     PyObject* y_obj;
-    t_ndarray x = {.shape = NULL};
-    void* bound_x;
-    int64_t bound_x_shape_1;
-    int64_t bound_x_stride_1;
+    void* x_data = NULL;
+    int64_t x_shape[1];
+    int64_t x_strides[1];
     double y;
-    void* bound_Out_0001;
-    int64_t Out_0001_shape_1;
-    t_ndarray Out_0001 = {.shape = NULL};
-    PyObject* bound_Out_0001_obj;
-    // Initialise any optional arguments
+    void* Out_0001_data = NULL;
+    int64_t Out_0001_shape[1];
+    PyObject* Out_0001_obj;
     y_obj = Py_None;
-    // Declare the names of the arguments so they can be found when the function is called
     static char *kwlist[] = {
-        "x",
-        "y",
+        (char*)"x",
+        (char*)"y",
         NULL
     };
-    // Unpack the Python arguments into individual PyObjects (e.g. x_obj, y_obj)
-    // The vertical line splits compulsory arguments from optional arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O", kwlist, &bound_x_obj, &y_obj))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O", kwlist, &x_obj, &y_obj))
     {
         return NULL;
     }
-    // Unpack the PyObject (x_obj) into a C object (x)
-    if (pyarray_check(bound_x_obj, NPY_DOUBLE, INT64_C(1), NO_ORDER_CHECK))
+    if (!pyarray_check("x", x_obj, NPY_DOUBLE, INT64_C(1), NO_ORDER_CHECK))
     {
-        x = pyarray_to_ndarray(bound_x_obj);
-    }
-    else
-    {
-        // Return in case of an error (raised if the type doesn't match)
         return NULL;
     }
-    // Unpack the C object into the individual arguments needed to call a Fortran function
-    bound_x = nd_data(&x);
-    bound_x_shape_1 = nd_ndim(&x, INT64_C(0));
-    bound_x_stride_1 = nd_nstep_F(&x, INT64_C(0));
-    // Initialise default values
-    y = INT64_C(3);
-    // Unpack the PyObject (y_obj) into a C object (y)
-    if (PyIs_NativeFloat(y_obj))
+    x_data = PyArray_DATA((PyArrayObject*)(x_obj));
+    get_strides_and_shape_from_numpy_array(x_obj, x_shape, x_strides);
+    y = 3.0;
+    if (y_obj != Py_None)
     {
-        y = PyDouble_to_Double(y_obj);
+        if (PyIs_NativeFloat(y_obj))
+        {
+            y = PyDouble_to_Double(y_obj);
+        }
+        else
+        {
+            PyErr_SetString(PyExc_TypeError, "Expected an argument of type float for argument y");
+            return NULL;
+        }
     }
-    else if (y_obj != Py_None)
-    {
-        // Return in case of an error (raised if the type doesn't match)
-        return NULL;
-    }
-    // Call the function
-    bind_c_f(bound_x, bound_x_shape_1, bound_x_stride_1, y, &bound_Out_0001, &Out_0001_shape_1);
-    // Free memory allocated for the arguments
-    free_pointer(&x);
-    // Pack the results into a `ndarray`
-    Out_0001 = array_create(1, (int64_t[]){Out_0001_shape_1}, nd_double, true, order_c);
-    Out_0001.raw_data = bound_Out_0001;
-    // Pack the results into a PyObject
-    bound_Out_0001_obj = ndarray_to_pyarray(Out_0001);
-    // Free memory allocated for the results
-    free_pointer(&Out_0001);
-    return bound_Out_0001_obj;
+    bind_c_f(x_data, x_shape[INT64_C(0)], x_strides[INT64_C(0)], y, &Out_0001_data, &Out_0001_shape[INT64_C(0)]);
+    Out_0001_obj = to_pyarray(INT64_C(1), NPY_DOUBLE, Out_0001_data, Out_0001_shape, 1, 1);
+    return Out_0001_obj;
 }
 ```
 
@@ -557,7 +528,7 @@ def get_first_element_of_tuple(a : 'tuple[int,...]'):
 
 leads to C code with the following prototype (as homogeneous tuples are treated like arrays):
 ```c
-int64_t get_first_element_of_tuple(t_ndarray a);
+int64_t get_first_element_of_tuple(array_int64_1d a);
 ```
 
 which is then wrapped as follows:
@@ -565,18 +536,19 @@ which is then wrapped as follows:
 static PyObject* get_first_element_of_tuple_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     PyObject* a_obj;
-    t_ndarray a = {.shape = NULL};
+    int64_t a_size_0001;
+    array_int64_1d a = {0};
     int Dummy_0000;
-    int64_t a_size;
     PyObject* Dummy_0001;
     bool is_homog_tuple;
     int64_t size;
     int Dummy_0002;
     PyObject* Dummy_0003;
     int64_t Out_0001;
+    int64_t* a_ptr;
     PyObject* Out_0001_obj;
     static char *kwlist[] = {
-        "a",
+        (char*)"a",
         NULL
     };
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O", kwlist, &a_obj))
@@ -597,20 +569,18 @@ static PyObject* get_first_element_of_tuple_wrapper(PyObject* self, PyObject* ar
     {
         is_homog_tuple = 0;
     }
-    if (is_homog_tuple)
-    {
-        a_size = PyTuple_Size(a_obj);
-        a = array_create(1, (int64_t[]){a_size}, nd_int64, false, order_c);
-        for (Dummy_0000 = INT64_C(0); Dummy_0000 < a_size; Dummy_0000 += INT64_C(1))
-        {
-            Dummy_0001 = PyTuple_GetItem(a_obj, Dummy_0000);
-            GET_ELEMENT(a, nd_int64, (int64_t)Dummy_0000) = PyInt64_to_Int64(Dummy_0001);
-        }
-    }
-    else
+    if (!is_homog_tuple)
     {
         PyErr_SetString(PyExc_TypeError, "Expected an argument of type tuple[int, ...] for argument a");
         return NULL;
+    }
+    a_size_0001 = PyTuple_Size(a_obj);
+    a_ptr = malloc(sizeof(int64_t) * (a_size_0001));
+    a = (array_int64_1d)cspan_md_layout(c_ROWMAJOR, a_ptr, a_size_0001);
+    for (Dummy_0000 = INT64_C(0); Dummy_0000 < a_size_0001; Dummy_0000 += INT64_C(1))
+    {
+        Dummy_0001 = PyTuple_GetItem(a_obj, Dummy_0000);
+        (*cspan_at(&a, Dummy_0000)) = PyInt64_to_Int64(Dummy_0001);
     }
     Out_0001 = get_first_element_of_tuple(a);
     Out_0001_obj = Int64_to_PyLong(&Out_0001);
