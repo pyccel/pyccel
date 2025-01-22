@@ -105,17 +105,19 @@ def f(a : 'int[:,:]', b : 'int[:]'):
 ```
 In C with full unravelling this becomes:
 ```c
-t_ndarray f(t_ndarray a, t_ndarray b)
+array_int64_2d f(array_int64_2d a, array_int64_1d b)
 {
     int64_t i;
     int64_t i_0001;
-    t_ndarray c = {.shape = NULL};
-    c = array_create(2, (int64_t[]){a.shape[INT64_C(0)], a.shape[INT64_C(1)]}, nd_int64, false);
+    int64_t* c_ptr;
+    array_int64_2d c = {0};
+    c_ptr = malloc(sizeof(int64_t) * (a.shape[INT64_C(0)] * a.shape[INT64_C(1)]));
+    c = (array_int64_2d)cspan_md_layout(c_ROWMAJOR, c_ptr, a.shape[INT64_C(0)], a.shape[INT64_C(1)]);
     for (i = INT64_C(0); i < c.shape[INT64_C(0)]; i += INT64_C(1))
     {
         for (i_0001 = INT64_C(0); i_0001 < c.shape[INT64_C(1)]; i_0001 += INT64_C(1))
         {
-            GET_ELEMENT(c, nd_int64, (int64_t)i, (int64_t)i_0001) = GET_ELEMENT(a, nd_int64, (int64_t)i, (int64_t)i_0001) + GET_ELEMENT(b, nd_int64, (int64_t)i_0001);
+            (*cspan_at(&c, i, i_0001)) = (*cspan_at(&a, i, i_0001)) + (*cspan_at(&b, i_0001));
         }
     }
     return c;
@@ -161,7 +163,7 @@ If an address is required then the object must be wrapped in the [`pyccel.ast.c_
 Although this construction ensures that valid code can be written easily, unless care is taken unidiomatic code will be produced (e.g. `(*var).shape` instead of `var->shape`).
 It is therefore very important to use the AST to represent class objects, so that the pointer differentiation can be handled in as few functions as possible.
 The following objects are very useful for this purpose:
--   `DottedVariable` : Used to access member variables of a class. It may be necessary to create a `DottedVariable` to print an object such as a member of the `t_ndarray` class.
+-   `DottedVariable` : Used to access member variables of a class. It may be necessary to create a `DottedVariable` to print an object such as a member of the array classes.
 -   `NumpyArraySize` : The size of an array in a given dimension
 -   `PyccelArraySize` : The total size of an array
 

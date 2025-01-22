@@ -14,7 +14,7 @@ from pyccel.errors.errors import Errors, PyccelError
 
 from .core          import (AsName, Import, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
-                            Concatenate, Module, PyccelFunctionDef)
+                            Concatenate, Module, PyccelFunctionDef, AliasAssign)
 
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple, PythonSet)
@@ -431,7 +431,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             result.append(line)
             current_level = 0
 
-        elif (isinstance(line, Assign) and
+        elif (isinstance(line, Assign) and not isinstance(line, AliasAssign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
                 not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
