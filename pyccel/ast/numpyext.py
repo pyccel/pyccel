@@ -720,7 +720,20 @@ class NumpyArray(NumpyNewArray):
 
             shape = process_shape(False, arg.shape)
 
-        rank  = len(shape)
+        rank  = arg.rank
+
+        if len(shape) < rank:
+            # Assume shape is valid otherwise error would be thrown in Python
+            element = arg
+            while len(shape) < rank:
+                if isinstance(element, (PythonTuple, PythonList)):
+                    shape += tuple(element.args[0].shape)
+                elif element.class_type.container_rank < rank:
+                    index = [0]*element.class_type.container_rank
+                    shape += tuple(element.shape)
+                    element = element[index]
+                else:
+                    raise NotImplementedError("Shapes to be handled")
 
         if ndmin and ndmin>rank:
             shape = (LiteralInteger(1),)*(ndmin-rank) + shape
