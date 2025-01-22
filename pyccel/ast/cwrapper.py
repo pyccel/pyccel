@@ -1043,15 +1043,12 @@ def C_to_Python(c_object):
     FunctionDef
         The function which casts the C object to Python.
     """
-    if c_object.rank != 0:
-        cast_function = 'ndarray_to_pyarray'
-        memory_handling = 'stack'
-    else:
-        try :
-            cast_function = c_to_py_registry[c_object.dtype]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
-        memory_handling = 'alias'
+    assert c_object.rank == 0
+    try :
+        cast_function = c_to_py_registry[c_object.dtype]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
+    memory_handling = 'alias'
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
