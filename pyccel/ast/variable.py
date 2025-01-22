@@ -14,7 +14,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PyccelType, InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType, DictType
-from .datatypes import ContainerType
+from .datatypes import ContainerType, HomogeneousTupleType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .internals import apply_pickle
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
@@ -175,7 +175,8 @@ class Variable(TypedAstNode):
         elif shape is None:
             shape = tuple(None for i in range(class_type.container_rank))
 
-        assert shape is None or len(shape) == class_type.container_rank
+        assert shape is None or (isinstance(class_type, HomogeneousTupleType) and len(shape) == class_type.rank) \
+                or len(shape) == class_type.container_rank
 
         self._alloc_shape = shape
         self._class_type = class_type
