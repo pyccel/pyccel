@@ -737,8 +737,7 @@ class FCodePrinter(CodePrinter):
             if len(shape)>1:
                 shape    = ', '.join(self._print(i) for i in shape)
                 return 'reshape(['+ elements + '], [' + shape + '])'
-            args = ', '.join(self._print(f) for f in expr)
-            return f'[{args}]'
+            return f'[{elements}]'
         else:
             return self._print(expr)
 
@@ -1656,7 +1655,8 @@ class FCodePrinter(CodePrinter):
 
                 # Reshape array element if out of order
                 if a.order == inv_order:
-                    shape = a.shape[::-1] if a.order == 'F' else a.shape
+                    a_shape = get_shape_of_multi_level_container(a)
+                    shape = a_shape[::-1] if a.order == 'F' else a_shape
                     shape_code = ', '.join(self._print(i) for i in shape)
                     order_code = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
                     ac = f'reshape({ac}, [{shape_code}], order=[{order_code}])'
