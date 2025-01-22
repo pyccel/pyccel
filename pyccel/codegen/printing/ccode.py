@@ -2847,11 +2847,7 @@ class CCodePrinter(CodePrinter):
             default_val = self._print(expr.default_value)
             return f"({c_type}_contains({dict_var}, {key}) ? *{c_type}_at({dict_var}, {key}) : {default_val})"
 
-        if target.is_optional:
-            return f"({c_type}_contains({dict_var}, {key}) ? *{c_type}_at({dict_var}, {key}) : NULL)"
-
-        errors.report("Accessing dictionary using get without default might cause runtime issues", severity="warning")
-        return f"*{c_type}_at({dict_var}, {key})"
+        errors.report("Accessing dictionary using get without default is not supported yet", severity="fatal")
 
     def _print_DictPop(self, expr):
         target = expr.dict_obj
