@@ -89,7 +89,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `min` | No |
 | **`pop`** | **Yes** |
 | `remove` | Python-only |
-| `reverse` | No |
+|**`reverse`**|**YES**|
 | `sort` | Python-only |
 
 ## Set methods

@@ -7,33 +7,27 @@ contains
 #include "parameters/T/copy_vector_T_to_internal_T.inc"
 #include "parameters/T/define_derived_macros.inc"
 
-
   subroutine __IDENTITY(Vector)_reverse(my_vector)
     class(Vector), intent(inout) :: my_vector
 
-    type(VectorIterator) :: iter_start
-    type(VectorIterator) :: iter_end
+    integer :: left, right
     __T_declare_dummy__ :: temp
 
-    iter_start = my_vector%begin()
-    iter_end = my_vector%end()
-    call iter_end%prev()  ! Move end iterator to the last valid element
+    left = 1
+    right = my_vector%size()
 
-    do while (iter_start /= iter_end .and. iter_start%next() /= iter_end)
-      temp = iter_start%of()
-      call iter_start%set(iter_end%of())
-      call iter_end%set(temp)
+    do while (left < right)
+        temp = my_vector%at(left)
+        call my_vector%set(left, my_vector%at(right))
+        call my_vector%set(right, temp)
 
-      call iter_start%next()
-      call iter_end%prev()
+        left = left + 1
+        right = right - 1
     end do
 
   end subroutine __IDENTITY(Vector)_reverse
 
-#ifdef __T_IS_COMPLEX
-  #error "Complex types are not supported for min/max operations"
-#else
-
+#ifdef i_use_cmp
   function __IDENTITY(Vector)_min(my_vector) result(result)
     class(Vector), intent(in) :: my_vector
     __T_declare_dummy__ :: result
