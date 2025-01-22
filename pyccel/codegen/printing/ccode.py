@@ -295,17 +295,6 @@ class CCodePrinter(CodePrinter):
                       (PrimitiveBooleanType(),-1) : 'bool',
                       }
 
-    ndarray_type_registry = {
-                      NumpyFloat64Type()    : 'nd_double',
-                      NumpyFloat32Type()    : 'nd_float',
-                      NumpyComplex128Type() : 'nd_cdouble',
-                      NumpyComplex64Type()  : 'nd_cfloat',
-                      NumpyInt64Type()      : 'nd_int64',
-                      NumpyInt32Type()      : 'nd_int32',
-                      NumpyInt16Type()      : 'nd_int16',
-                      NumpyInt8Type()       : 'nd_int8',
-                      PythonNativeBool()    : 'nd_bool'}
-
     type_to_format = {(PrimitiveFloatingPointType(),8) : '%.15lf',
                       (PrimitiveFloatingPointType(),4) : '%.6f',
                       (PrimitiveIntegerType(),4)       : '%d',
@@ -461,7 +450,7 @@ class CCodePrinter(CodePrinter):
         variables = [v for v in arg.get_attribute_nodes((Variable, FunctionCall, PyccelFunction)) if v.rank]
 
         # If the data is copied from a Variable rather than a list or tuple
-        # use the function array_copy_data directly
+        # use the function cspan_copy directly
         if isinstance(arg, (Variable, IndexedElement)):
             prefix = ''
             if isinstance(arg, IndexedElement):
@@ -1446,31 +1435,6 @@ class CCodePrinter(CodePrinter):
                     symbol = dtype,
                     severity='fatal')
 
-    def find_in_ndarray_type_registry(self, dtype):
-        """
-        Find the descriptor for the datatype in the ndarray_type_registry.
-
-        Find the tag which allows the user to access data of the specified
-        type within a ndarray.
-        Raise PYCCEL_RESTRICTION_TODO if not found.
-
-        Parameters
-        ----------
-        dtype : DataType
-            The data type of the expression.
-
-        Returns
-        -------
-        str
-            The code which declares the datatype in C.
-        """
-        try :
-            return self.ndarray_type_registry[dtype]
-        except KeyError:
-            raise errors.report(PYCCEL_RESTRICTION_TODO, #pylint: disable=raise-missing-from
-                    symbol = dtype,
-                    severity='fatal')
-
     def get_declare_type(self, expr):
         """
         Get the string which describes the type in a declaration.
@@ -1498,14 +1462,14 @@ class CCodePrinter(CodePrinter):
 
         Examples
         --------
-        >>> v = Variable('int', 'x')
+        >>> v = Variable(PythonNativeInt(), 'x')
         >>> self.get_declare_type(v)
         'int64_t'
 
         For an object accessed via a pointer:
-        >>> v = Variable('int', 'x', is_optional=True, rank=1)
+        >>> v = Variable(NumpyNDArrayType(PythonNativeInt(), 1, None), 'x', is_optional=True)
         >>> self.get_declare_type(v)
-        't_ndarray*'
+        'array_int64_1d*'
         """
         class_type = expr.class_type
 
@@ -2423,8 +2387,7 @@ class CCodePrinter(CodePrinter):
         lhs_address = ObjectAddress(lhs_var)
         rhs_address = ObjectAddress(rhs_var)
 
-        # the below condition handles the case of reassinging a pointer to an array view.
-        # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
+        # The condition below handles the case of reassigning a pointer to an array view.
         if isinstance(lhs_var, Variable) and lhs_var.is_ndarray and not lhs_var.is_optional:
             lhs = self._print(lhs_var)
 
