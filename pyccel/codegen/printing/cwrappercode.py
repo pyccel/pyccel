@@ -234,7 +234,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return code
 
     def _print_PyArgKeywords(self, expr):
-        arg_names = ',\n'.join([f'"{a}"' for a in expr.arg_names] + [self._print(Nil())])
+        arg_names = ',\n'.join([f'(char*)"{a}"' for a in expr.arg_names] + [self._print(Nil())])
         return (f'static char *{expr.name}[] = {{\n'
                         f'{arg_names}\n'
                         '};\n')
@@ -570,11 +570,3 @@ class CWrapperCodePrinter(CCodePrinter):
                 return f'{static}{external}{declaration_type}* {variable}{init};\n'
         else:
             return CCodePrinter._print_Declare(self, expr)
-
-    def _print_IndexedElement(self, expr):
-        if isinstance(expr.base.class_type, CStackArray):
-            base = self._print(expr.base.name)
-            idxs = ''.join(f'[{self._print(a)}]' for a in expr.indices)
-            return f'{base}{idxs}'
-        else:
-            return CCodePrinter._print_IndexedElement(self, expr)
