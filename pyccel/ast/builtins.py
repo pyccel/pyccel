@@ -618,8 +618,7 @@ class PythonTuple(TypedAstNode):
 
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
-            inner_shape = [() if a.rank == 0 else a.shape for a in args]
-            self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+            self._shape = (LiteralInteger(len(args)), )
 
             if contains_pointers:
                 self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
@@ -770,8 +769,7 @@ class PythonList(TypedAstNode):
         if is_homogeneous:
             dtype = arg0.class_type
 
-            inner_shape = [() if a.rank == 0 else a.shape for a in args]
-            self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+            self._shape = (LiteralInteger(len(args)), )
 
         else:
             raise TypeError("Can't create an inhomogeneous list")
@@ -882,8 +880,7 @@ class PythonSet(TypedAstNode):
                              arg0.class_type == a.class_type for a in args[1:])
         if is_homogeneous:
             elem_type = arg0.class_type
-            inner_shape = [() if a.rank == 0 else a.shape for a in args]
-            self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+            self._shape = (LiteralInteger(len(args)), )
             if elem_type.rank > 0:
                 raise TypeError("Pyccel can't hash non-scalar types")
         else:
