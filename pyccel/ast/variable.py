@@ -175,8 +175,7 @@ class Variable(TypedAstNode):
         elif shape is None:
             shape = tuple(None for i in range(class_type.container_rank))
 
-        assert shape is None or (isinstance(class_type, HomogeneousTupleType) and len(shape) == class_type.rank) \
-                or len(shape) == class_type.container_rank
+        class_type.check_shape(shape)
 
         self._alloc_shape = shape
         self._class_type = class_type

@@ -399,9 +399,7 @@ class Allocate(PyccelAstNode):
         if shape and not isinstance(shape, (int, tuple, list)):
             raise TypeError(f"Cannot understand 'shape' parameter of type '{type(shape)}'")
 
-        class_type = variable.class_type
-        if class_type.rank and class_type.container_rank != len(shape):
-            raise ValueError("Incompatible rank in variable allocation")
+        variable.class_type.check_shape(shape)
 
         if not isinstance(status, str):
             raise TypeError(f"Cannot understand 'status' parameter of type '{type(status)}'")

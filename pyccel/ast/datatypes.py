@@ -194,6 +194,9 @@ class PyccelType:
         """
         raise NotImplementedError(f"switch_basic_type not implemented for {type(self)}")
 
+    def check_shape(self, shape):
+        assert shape is None
+
 #==============================================================================
 
 class FixedSizeType(PyccelType, metaclass=Singleton):
@@ -502,6 +505,9 @@ class ContainerType(PyccelType):
     """
     __slots__ = ()
 
+    def check_shape(self, shape):
+        assert len(shape) == self.container_rank
+
 #==============================================================================
 
 class TupleType:
@@ -680,6 +686,9 @@ class HomogeneousContainerType(ContainerType):
 
     def __hash__(self):
         return hash((self.__class__, self.element_type))
+
+    def check_shape(self, shape):
+        assert len(shape) == self.rank
 
 class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
