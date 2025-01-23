@@ -922,6 +922,7 @@ class AnnotatedPyccelSymbol(PyccelAstNode):
     _attribute_nodes = ()
 
     def __init__(self, name, annotation, is_temp = False):
+        assert isinstance(annotation, PyccelAstNode)
         if isinstance(name, (PyccelSymbol, DottedName)):
             self._name = name
         elif isinstance(name, str):
