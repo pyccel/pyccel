@@ -2583,8 +2583,8 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionTypeAnnotation(self, expr):
         arg_types = [self._visit(a)[0] for a in expr.args]
-        res_types = [self._visit(r)[0] for r in expr.results]
-        return UnionTypeAnnotation(FunctionTypeAnnotation(arg_types, res_types))
+        res_type = self._visit(expr.results)
+        return UnionTypeAnnotation(FunctionTypeAnnotation(arg_types, res_type))
 
     def _visit_TypingFinal(self, expr):
         annotation = self._visit(expr.arg)
@@ -2850,7 +2850,12 @@ class SemanticParser(BasicParser):
         for t in types.type_list:
             if isinstance(t, FunctionTypeAnnotation):
                 args = t.args
-                results = [FunctionDefResult(r.var.clone(r.var.name, is_argument = False), annotation=r.annotation) for r in t.results]
+                if t.results.var:
+                    results = FunctionDefResult(t.results.var.clone(t.results.var.name, is_argument = False),
+                                    annotation=t.results.annotation)
+
+                else:
+                    results = FunctionDefResult(Nil())
                 address = FunctionAddress(name, args, results)
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):

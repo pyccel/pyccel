@@ -17,7 +17,7 @@ from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import FunctionDefArgument, EmptyNode
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
-from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralEllipsis
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralEllipsis, Nil
 from pyccel.ast.internals import PyccelSymbol, Slice
 from pyccel.ast.variable  import AnnotatedPyccelSymbol, IndexedElement
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation, FunctionTypeAnnotation, UnionTypeAnnotation
@@ -146,7 +146,7 @@ class FuncType(BasicStmt):
     **kwargs : dict
         TextX keyword arguments.
     """
-    def __init__(self, args = (), results = (), **kwargs):
+    def __init__(self, args, results, **kwargs):
         self.args = args
         self.results = results
         super().__init__(**kwargs)
@@ -159,7 +159,7 @@ class FuncType(BasicStmt):
         Get the Pyccel object equivalent to this grammar object.
         """
         args = [a.expr for a in self.args]
-        results = [r.expr for r in self.results]
+        results = self.results.expr if self.results else Nil()
 
         return FunctionTypeAnnotation(args, results)
 

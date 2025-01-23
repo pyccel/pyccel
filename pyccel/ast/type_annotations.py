@@ -13,7 +13,7 @@ from .basic import PyccelAstNode
 
 from .bitwise_operators import PyccelBitOr
 
-from .core import FunctionDefArgument
+from .core import FunctionDefArgument, FunctionDefResult
 
 from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import VoidType, GenericType, StringType
@@ -122,7 +122,7 @@ class FunctionTypeAnnotation(PyccelAstNode):
         In the syntactic stage these objects are of type SyntacticTypeAnnotation.
         In the semantic stage these objects are of type UnionTypeAnnotation.
 
-    results : list of SyntacticTypeAnnotation | UnionTypeAnnotation
+    results : SyntacticTypeAnnotation | UnionTypeAnnotation
         The type annotations describing the results of the function address.
         In the syntactic stage these objects are of type SyntacticTypeAnnotation.
         In the semantic stage these objects are of type UnionTypeAnnotation.
@@ -130,18 +130,20 @@ class FunctionTypeAnnotation(PyccelAstNode):
     is_const : bool, default=True
         True if the function pointer cannot be modified, false otherwise.
     """
-    __slots__ = ('_args', '_results', '_is_const')
-    _attribute_nodes = ('_args', '_results', '_is_const')
+    __slots__ = ('_args', '_result', '_is_const')
+    _attribute_nodes = ('_args', '_result', '_is_const')
 
-    def __init__(self, args, results, is_const = True):
+    def __init__(self, args, result, is_const = True):
         if pyccel_stage == 'syntactic':
             self._args = [FunctionDefArgument(AnnotatedPyccelSymbol('_', a), annotation = a) \
                             for i, a in enumerate(args)]
-            self._results = [FunctionDefArgument(AnnotatedPyccelSymbol('_', r), annotation = r) \
-                            for i, r in enumerate(results)]
+            if result:
+                self._result = FunctionDefResult(AnnotatedPyccelSymbol('_', result), annotation = result)
+            else:
+                self._result = FunctionDefResult(result)
         else:
             self._args = args
-            self._results = results
+            self._result = result
 
         self._is_const = is_const
 
@@ -167,7 +169,7 @@ class FunctionTypeAnnotation(PyccelAstNode):
         In the syntactic stage these objects are of type SyntacticTypeAnnotation.
         In the semantic stage these objects are of type UnionTypeAnnotation.
         """
-        return self._results
+        return self._result
 
     def __repr__(self):
         return f'func({repr(self.args)}) -> {repr(self.results)}'
