@@ -310,7 +310,7 @@ class Scope(object):
         self.add_loop(new_scope)
         return new_scope
 
-    def insert_variable(self, var, name = None):
+    def insert_variable(self, var, name = None, tuple_recursive = True):
         """
         Add a variable to the current scope.
 
@@ -334,7 +334,7 @@ class Scope(object):
         if not self.allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_variable(var, name)
         else:
-            if isinstance(var.class_type, InhomogeneousTupleType):
+            if isinstance(var.class_type, InhomogeneousTupleType) and tuple_recursive:
                 for v in var:
                     self.insert_variable(self.collect_tuple_element(v))
 
