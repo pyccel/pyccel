@@ -621,12 +621,21 @@ class FortranToCWrapper(Wrapper):
         elements = orig_func_scope.collect_all_tuple_elements(orig_var)
         func_def_results = [self._extract_FunctionDefResult(e, orig_func_scope) for e in elements]
         body = [l for r in func_def_results for l in r['body']]
+
+        # Pack C results into inhomogeneous tuple object
         element_vars = [r['c_result'] for r in func_def_results]
         class_types = [e.class_type for e in element_vars]
         local_var = Variable(InhomogeneousTupleType(*class_types), self.scope.get_expected_name(name))
         for i, v in enumerate(element_vars):
             self.scope.insert_symbolic_alias(IndexedElement(local_var, i), v)
-        return {'body': body, 'c_result': local_var, 'f_result': local_var}
+
+        # Pack F results into inhomogeneous tuple object
+        element_vars = [r['f_result'] for r in func_def_results]
+        class_types = [e.class_type for e in element_vars]
+        result_var = Variable(InhomogeneousTupleType(*class_types), self.scope.get_new_name('Out_'+name))
+        for i, v in enumerate(element_vars):
+            self.scope.insert_symbolic_alias(IndexedElement(result_var, i), v)
+        return {'body': body, 'c_result': local_var, 'f_result': result_var}
 
     def _extract_FixedSizeType_FunctionDefResult(self, orig_var, orig_func_scope):
         name = orig_var.name
