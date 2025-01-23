@@ -1177,7 +1177,7 @@ class SemanticParser(BasicParser):
             parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign) and not isinstance(x, AugAssign))
 
             func_results = func.results if isinstance(func, FunctionDef) else func.functions[0].results
-            if not parent_assign and len(func_results) == 1 and func_results[0].var.rank > 0:
+            if not parent_assign and len(func_results) == 1 and func_results.var.rank > 0:
                 pyccel_stage.set_stage('syntactic')
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, expr)
@@ -3495,8 +3495,7 @@ class SemanticParser(BasicParser):
         elif isinstance(lhs, (PythonTuple, PythonList)):
             if isinstance(rhs, FunctionCall):
                 new_lhs = []
-                r_iter = [r.var for r in rhs.funcdef.results]
-                for i,(l,r) in enumerate(zip(lhs,r_iter)):
+                for i,(l,r) in enumerate(zip(lhs, rhs.funcdef.results.var)):
                     d = self._infer_type(r)
                     new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions,
                                                     arr_in_multirets=r.rank>0 ) )
