@@ -75,16 +75,16 @@ MyClass Object created!
 ```C
 struct MyClass {
     int64_t param1;
-    t_ndarray param2;
+    array_double_1d param2;
     bool is_freed;
 };
 struct MyClass1 {
     bool is_freed;
-    struct MyClass param;
+    struct MyClass* param;
 };
 
 void MyClass__init__(struct MyClass* self, int64_t param1, int64_t param2);
-void MyClass__get_param(struct MyClass* self);
+void get_param(struct MyClass* self);
 void MyClass__del__(struct MyClass* self);
 void MyClass1__init__(struct MyClass1* self);
 void MyClass1__Method1(struct MyClass1* self, struct MyClass* param1);
@@ -94,14 +94,17 @@ void MyClass1__del__(struct MyClass1* self);
 ### - C File Equivalent
 
 ```C
-/*........................................*/
 void MyClass__init__(struct MyClass* self, int64_t param1, int64_t param2)
 {
+    double* param2_ptr;
     self->is_freed = 0;
     self->param1 = param1;
-    self->param2 = array_create(1, (int64_t[]){param2}, nd_double, false, order_c);
-    array_fill((double)1.0, self->param2);
-    printf("%s\n", "MyClass Object created!");
+    param2_ptr = malloc(sizeof(double) * (param2));
+    self->param2 = (array_double_1d)cspan_md_layout(c_ROWMAJOR, param2_ptr, param2);
+    c_foreach(Dummy_0000, array_double_1d, self->param2) {
+        *(Dummy_0000.ref) = 1.0;
+    }
+    printf("MyClass Object created!\n");
 }
 /*........................................*/
 /*........................................*/
@@ -110,7 +113,8 @@ void MyClass__del__(struct MyClass* self)
     if (!self->is_freed)
     {
         // pass
-        free_array(&self->param2);
+        free(self->param2.data);
+        self->param2.data = NULL;
         self->is_freed = 1;
     }
 }
@@ -119,13 +123,13 @@ void MyClass__del__(struct MyClass* self)
 void MyClass1__init__(struct MyClass1* self)
 {
     self->is_freed = 0;
-    printf("%s\n", "MyClass1 Object created!");
+    printf("MyClass1 Object created!\n");
 }
 /*........................................*/
 /*........................................*/
 void MyClass1__Method1(struct MyClass1* self, struct MyClass* param1)
 {
-    self->param = (*param1);
+    self->param = param1;
 }
 /*........................................*/
 /*........................................*/
@@ -142,7 +146,6 @@ void MyClass1__del__(struct MyClass1* self)
     if (!self->is_freed)
     {
         // pass
-        MyClass__del__(&self->param);
         self->is_freed = 1;
     }
 }
@@ -159,13 +162,14 @@ int main()
     MyClass1__init__(&obj);
     Dummy_0000 = MyClass1__Method2(&obj);
     MyClass1__Method1(&obj, &Dummy_0000);
-    printf("%"PRId64" ", obj.param.param1);
-    printf("%s", "[");
-    for (i = INT64_C(0); i < obj.param.param2.shape[INT64_C(0)] - INT64_C(1); i += INT64_C(1))
+    printf("%"PRId64" ", obj.param->param1);
+    printf("[");
+    for (i = INT64_C(0); i < obj.param->param2.shape[INT64_C(0)] - INT64_C(1); i += INT64_C(1))
     {
-        printf("%.12lf ", GET_ELEMENT(obj.param.param2, nd_double, (int64_t)i));
+        printf("%.15lf ", (*cspan_at(&obj.param->param2, i)));
     }
-    printf("%.12lf]\n", GET_ELEMENT(obj.param.param2, nd_double, (int64_t)obj.param.param2.shape[INT64_C(0)] - INT64_C(1)));
+    printf("%.15lf]\n", (*cspan_at(&obj.param->param2, obj.param->param2.shape[INT64_C(0)] - INT64_C(1))));
+    MyClass__del__(&Dummy_0000);
     MyClass1__del__(&obj);
     return 0;
 }
@@ -176,25 +180,196 @@ int main()
 ```Shell
 MyClass1 Object created!
 MyClass Object created!
-2 [1.000000000000 1.000000000000 1.000000000000 1.000000000000]
+2 [1.000000000000000 1.000000000000000 1.000000000000000 1.000000000000000]
+==36573== 
+==36573== HEAP SUMMARY:
+==36573==     in use at exit: 0 bytes in 0 blocks
+==36573==   total heap usage: 2 allocs, 2 frees, 1,056 bytes allocated
+==36573== 
+==36573== All heap blocks were freed -- no leaks are possible
+==36573== 
+==36573== For lists of detected and suppressed errors, rerun with: -s
+==36573== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+```
 
-==158858== Memcheck, a memory error detector
-==158858== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==158858== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
-==158858== Command: ./MyClass
-==158858==
-MyClass1 Object created!
-MyClass Object created!
-2 [1.000000000000 1.000000000000 1.000000000000 1.000000000000]
-==158858==
-==158858== HEAP SUMMARY:
-==158858==     in use at exit: 0 bytes in 0 blocks
-==158858==   total heap usage: 4 allocs, 4 frees, 1,072 bytes allocated
-==158858==
-==158858== All heap blocks were freed -- no leaks are possible
-==158858==
-==158858== For lists of detected and suppressed errors, rerun with: -s
-==158858== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+### Fortran Module
+```fortran
+module cls_test
+
+  use, intrinsic :: ISO_C_Binding, only : b1 => C_BOOL , i64 => &
+        C_INT64_T , f64 => C_DOUBLE
+  use, intrinsic :: ISO_FORTRAN_ENV, only : stdout => output_unit
+
+  implicit none
+
+  type, public :: MyClass
+    integer(i64) :: param1
+    real(f64), allocatable :: param2(:)
+    logical(b1), private :: is_freed
+
+    contains
+    procedure :: create => myclass_create
+    procedure :: free => myclass_free
+  end type MyClass
+
+  type, public :: MyClass1
+    logical(b1), private :: is_freed
+    type(MyClass), pointer :: param
+
+    contains
+    procedure :: create => myclass1_create
+    procedure :: Method1 => myclass1_Method1
+    procedure :: Method2 => myclass1_Method2
+    procedure :: free => myclass1_free
+  end type MyClass1
+
+  contains
+
+
+  !........................................
+
+  subroutine myclass_create(self, param1, param2)
+
+    implicit none
+
+    class(MyClass), intent(inout) :: self
+    integer(i64), value :: param1
+    integer(i64), value :: param2
+
+    self%is_freed = .False._b1
+    self%param1 = param1
+    allocate(self%param2(0:param2 - 1_i64))
+    self%param2 = 1.0_f64
+    write(stdout, '(A)', advance="yes") 'MyClass Object created!'
+
+  end subroutine myclass_create
+
+  !........................................
+  !........................................
+
+
+  !........................................
+
+  subroutine myclass_free(self)
+
+    implicit none
+
+    class(MyClass), intent(inout) :: self
+
+    if (.not. self%is_freed) then
+      ! pass
+      if (allocated(self%param2)) then
+        deallocate(self%param2)
+      end if
+      self%is_freed = .True._b1
+    end if
+
+  end subroutine myclass_free
+
+  !........................................
+
+
+
+  !........................................
+
+  subroutine myclass1_create(self)
+
+    implicit none
+
+    class(MyClass1), intent(inout) :: self
+
+    self%is_freed = .False._b1
+    write(stdout, '(A)', advance="yes") 'MyClass1 Object created!'
+
+  end subroutine myclass1_create
+
+  !........................................
+
+
+  !........................................
+
+  subroutine myclass1_Method1(self, param1)
+
+    implicit none
+
+    class(MyClass1), intent(inout) :: self
+    class(MyClass), target, intent(in) :: param1
+
+    self%param => param1
+
+  end subroutine myclass1_Method1
+  !........................................
+
+
+  !........................................
+
+  function myclass1_Method2(self) result(Out_0001)
+
+    implicit none
+
+    type(MyClass) :: Out_0001
+    class(MyClass1), intent(inout) :: self
+
+    call Out_0001 % create(2_i64, 4_i64)
+    return
+
+  end function myclass1_Method2
+
+  !........................................
+
+
+  !........................................
+
+  subroutine myclass1_free(self)
+
+    implicit none
+
+    class(MyClass1), intent(inout) :: self
+
+    if (.not. self%is_freed) then
+      ! pass
+      self%is_freed = .True._b1
+    end if
+
+  end subroutine myclass1_free
+
+  !........................................
+
+
+end module cls_test
+```
+
+### Fortran program
+```fortran
+program prog_prog_cls_test
+
+  use cls_test
+
+  use, intrinsic :: ISO_C_Binding, only : b1 => C_BOOL , i64 => &
+        C_INT64_T , f64 => C_DOUBLE
+  use, intrinsic :: ISO_FORTRAN_ENV, only : stdout => output_unit
+
+  implicit none
+
+  type(MyClass1) :: obj
+  type(MyClass), target :: Dummy_0000
+  integer(i64) :: i
+
+  call obj % create()
+  Dummy_0000 = obj % Method2()
+  call obj % Method1(Dummy_0000)
+  write(stdout, '(I0, A)', advance="no") obj%param%param1 , ' '
+  write(stdout, '(A)', advance="no") '['
+  do i = 0_i64, size(obj%param%param2, kind=i64) - 1_i64 - 1_i64
+    write(stdout, '(F0.15, A)', advance="no") obj%param%param2(i) , ' '
+  end do
+  write(stdout, '(F0.15, A)', advance="no") obj%param%param2(size(obj% &
+        param%param2, kind=i64) - 1_i64) , ']'
+  write(stdout, '()', advance="yes")
+  call obj % free()
+  call Dummy_0000 % free()
+
+end program prog_prog_cls_test
 ```
 
 ## Class Properties
@@ -238,26 +413,33 @@ MyClass Object created!
 ```C
 struct MyClass {
     int64_t private_param1;
-    t_ndarray private_param2;
+    array_double_1d private_param2;
     bool is_freed;
 };
 
 void MyClass__init__(struct MyClass* self, int64_t param1, int64_t param2);
 int64_t MyClass__param1(struct MyClass* self);
-t_ndarray MyClass__param2(struct MyClass* self);
+array_double_1d MyClass__param2(struct MyClass* self);
 void MyClass__del__(struct MyClass* self);
 ```
 
 ### - C File Equivalent
 
 ```C
+#include "cls_test.h"
+
+
 /*........................................*/
 void MyClass__init__(struct MyClass* self, int64_t param1, int64_t param2)
 {
+    double* private_param2_ptr;
     self->is_freed = 0;
     self->private_param1 = param1;
-    self->private_param2 = array_create(1, (int64_t[]){param2}, nd_double, false, order_c);
-    array_fill((double)1.0, self->private_param2);
+    private_param2_ptr = malloc(sizeof(double) * (param2));
+    self->private_param2 = (array_double_1d)cspan_md_layout(c_ROWMAJOR, private_param2_ptr, param2);
+    c_foreach(Dummy_0000, array_double_1d, self->private_param2) {
+        *(Dummy_0000.ref) = 1.0;
+    }
     printf("MyClass Object created!\n");
 }
 /*........................................*/
@@ -268,10 +450,10 @@ int64_t MyClass__param1(struct MyClass* self)
 }
 /*........................................*/
 /*........................................*/
-t_ndarray MyClass__param2(struct MyClass* self)
+array_double_1d MyClass__param2(struct MyClass* self)
 {
-    t_ndarray Out_0001 = {.shape = NULL};
-    alias_assign(&Out_0001, self->private_param2);
+    array_double_1d Out_0001 = {0};
+    Out_0001 = cspan_slice(array_double_1d, &self->private_param2, {c_ALL});
     return Out_0001;
 }
 /*........................................*/
@@ -281,7 +463,8 @@ void MyClass__del__(struct MyClass* self)
     if (!self->is_freed)
     {
         // pass
-        free_array(&self->private_param2);
+        free(self->private_param2.data);
+        self->private_param2.data = NULL;
         self->is_freed = 1;
     }
 }
@@ -293,7 +476,7 @@ void MyClass__del__(struct MyClass* self)
 int main()
 {
     struct MyClass obj;
-    t_ndarray Dummy_0000 = {.shape = NULL};
+    array_double_1d Dummy_0000 = {0};
     int64_t i;
     MyClass__init__(&obj, INT64_C(2), INT64_C(4));
     printf("%"PRId64"\n", MyClass__param1(&obj));
@@ -301,11 +484,10 @@ int main()
     printf("[");
     for (i = INT64_C(0); i < Dummy_0000.shape[INT64_C(0)] - INT64_C(1); i += INT64_C(1))
     {
-        printf("%.15lf ", GET_ELEMENT(Dummy_0000, nd_double, i));
+        printf("%.15lf ", (*cspan_at(&Dummy_0000, i)));
     }
-    printf("%.15lf]\n", GET_ELEMENT(Dummy_0000, nd_double, Dummy_0000.shape[INT64_C(0)] - INT64_C(1)));
+    printf("%.15lf]\n", (*cspan_at(&Dummy_0000, Dummy_0000.shape[INT64_C(0)] - INT64_C(1))));
     MyClass__del__(&obj);
-    free_pointer(&Dummy_0000);
     return 0;
 }
 ```
@@ -313,17 +495,34 @@ int main()
 ### - Fortran File Equivalent
 
 ```fortran
+module cls_test
+
+  use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T , b1 => &
+        C_BOOL , f64 => C_DOUBLE
+  use, intrinsic :: ISO_FORTRAN_ENV, only : stdout => output_unit
+
+  implicit none
+
   type, public :: MyClass
-    integer(i64) :: private_param1
-    real(f64), allocatable :: private_param2(:)
+    integer(i64) :: param1
+    real(f64), allocatable :: param2(:)
     logical(b1), private :: is_freed
 
     contains
     procedure :: create => myclass_create
-    procedure :: param1 => myclass_param1
-    procedure :: param2 => myclass_param2
     procedure :: free => myclass_free
   end type MyClass
+
+  type, public :: MyClass1
+    logical(b1), private :: is_freed
+    type(MyClass), pointer :: param
+
+    contains
+    procedure :: create => myclass1_create
+    procedure :: Method1 => myclass1_Method1
+    procedure :: Method2 => myclass1_Method2
+    procedure :: free => myclass1_free
+  end type MyClass1
 
   contains
 
@@ -339,9 +538,9 @@ int main()
     integer(i64), value :: param2
 
     self%is_freed = .False._b1
-    self%private_param1 = param1
-    allocate(self%private_param2(0:param2 - 1_i64))
-    self%private_param2 = 1.0_f64
+    self%param1 = param1
+    allocate(self%param2(0:param2 - 1_i64))
+    self%param2 = 1.0_f64
     write(stdout, '(A)', advance="yes") 'MyClass Object created!'
 
   end subroutine myclass_create
@@ -393,8 +592,8 @@ int main()
 
     if (.not. self%is_freed) then
       ! pass
-      if (allocated(self%private_param2)) then
-        deallocate(self%private_param2)
+      if (allocated(self%param2)) then
+        deallocate(self%param2)
       end if
       self%is_freed = .True._b1
     end if
@@ -402,26 +601,111 @@ int main()
   end subroutine myclass_free
 
   !........................................
+
+
+
+  !........................................
+
+  subroutine myclass1_create(self)
+
+    implicit none
+
+    class(MyClass1), intent(inout) :: self
+
+    self%is_freed = .False._b1
+    write(stdout, '(A)', advance="yes") 'MyClass1 Object created!'
+
+  end subroutine myclass1_create
+
+  !........................................
+
+
+  !........................................
+
+  subroutine myclass1_Method1(self, param1)
+
+    implicit none
+
+    class(MyClass1), intent(inout) :: self
+    class(MyClass), target, intent(in) :: param1
+
+    self%param => param1
+
+  end subroutine myclass1_Method1
+
+  !........................................
+
+
+  !........................................
+
+  function myclass1_Method2(self) result(Out_0001)
+
+    implicit none
+
+    type(MyClass) :: Out_0001
+    class(MyClass1), intent(inout) :: self
+
+    call Out_0001 % create(2_i64, 4_i64)
+    return
+
+  end function myclass1_Method2
+
+  !........................................
+
+
+  !........................................
+
+  subroutine myclass1_free(self)
+
+    implicit none
+
+    class(MyClass1), intent(inout) :: self
+
+    if (.not. self%is_freed) then
+      ! pass
+      self%is_freed = .True._b1
+    end if
+
+  end subroutine myclass1_free
+
+  !........................................
+
+
+end module cls_test
 ```
 
 ### - Fortran Program File Equivalent
 
 ```fortran
-  type(MyClass), target :: obj
-  real(f64), pointer :: Dummy_0000(:)
+program prog_prog_cls_test
+
+  use cls_test
+
+  use, intrinsic :: ISO_C_Binding, only : b1 => C_BOOL , i64 => &
+        C_INT64_T , f64 => C_DOUBLE
+  use, intrinsic :: ISO_FORTRAN_ENV, only : stdout => output_unit
+
+  implicit none
+
+  type(MyClass1) :: obj
+  type(MyClass), target :: Dummy_0000
   integer(i64) :: i
 
-  call obj % create(2_i64, 4_i64)
-  write(stdout, '(I0)', advance="yes") obj % param1()
-  call obj % param2(Out_0001 = Dummy_0000)
+  call obj % create()
+  Dummy_0000 = obj % Method2()
+  call obj % Method1(Dummy_0000)
+  write(stdout, '(I0, A)', advance="no") obj%param%param1 , ' '
   write(stdout, '(A)', advance="no") '['
-  do i = 0_i64, size(Dummy_0000, kind=i64) - 1_i64 - 1_i64
-    write(stdout, '(F0.15, A)', advance="no") Dummy_0000(i) , ' '
+  do i = 0_i64, size(obj%param%param2, kind=i64) - 1_i64 - 1_i64
+    write(stdout, '(F0.15, A)', advance="no") obj%param%param2(i) , ' '
   end do
-  write(stdout, '(F0.15, A)', advance="no") Dummy_0000(size(Dummy_0000, &
-        kind=i64) - 1_i64) , ']'
+  write(stdout, '(F0.15, A)', advance="no") obj%param%param2(size(obj% &
+        param%param2, kind=i64) - 1_i64) , ']'
   write(stdout, '()', advance="yes")
   call obj % free()
+  call Dummy_0000 % free()
+
+end program prog_prog_cls_test
 ```
 
 ## Magic Methods

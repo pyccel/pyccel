@@ -268,7 +268,7 @@ class Slice(PyccelAstNode):
             stop = ''
         else:
             stop = str(self.stop)
-        return f'{start} : {stop}'
+        return f'{start} : {stop} : {self.step}'
 
 
 class PyccelSymbol(str, Immutable):
