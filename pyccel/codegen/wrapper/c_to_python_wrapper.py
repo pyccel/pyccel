@@ -1807,11 +1807,11 @@ class CToPythonWrapper(Wrapper):
                                                                                 lhs = getter_args[0]),
                                                           cast_type = lhs)),
                        *body,
-                       Return((getter_result,))]
+                       Return(getter_result)]
         self.exit_scope()
 
         args = [FunctionDefArgument(a) for a in getter_args]
-        getter = PyFunctionDef(getter_name, args, getter_body, (FunctionDefResult(getter_result),),
+        getter = PyFunctionDef(getter_name, args, getter_body, FunctionDefResult(getter_result),
                                 original_function = expr, scope = getter_scope)
 
         # ----------------------------------------------------------------------------------
@@ -1851,7 +1851,7 @@ class CToPythonWrapper(Wrapper):
                                                               cast_type = lhs)),
                            *self._incref_return_pointer(setter_args[1], setter_args[0], expr.lhs),
                            update,
-                           Return((LiteralInteger(0, dtype=CNativeInt()),))]
+                           Return(LiteralInteger(0, dtype=CNativeInt()))]
         else:
             setter_body = [PyErr_SetString(PyAttributeError,
                                         LiteralString("Can't reallocate memory via Python interface.")),
@@ -1901,7 +1901,7 @@ class CToPythonWrapper(Wrapper):
 
         get_val_arg = expr.getter.arguments[0]
         self.scope.insert_symbol(get_val_arg.original_function_argument_variable.name)
-        get_val_result = expr.getter.results[0]
+        get_val_result = expr.getter.results
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
@@ -1928,18 +1928,18 @@ class CToPythonWrapper(Wrapper):
         if isinstance(expr.getter.original_function, DottedVariable):
             wrapped_var = expr.getter.original_function
         else:
-            wrapped_var = expr.getter.original_function.results[0].var
+            wrapped_var = expr.getter.original_function.results.var
         res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
 
         getter_body = [*setup,
                        *arg_code,
                        call,
                        *res_wrapper,
-                       Return((getter_result,))]
+                       Return(getter_result)]
         self.exit_scope()
 
         args = [FunctionDefArgument(a) for a in getter_args]
-        getter = PyFunctionDef(getter_name, args, getter_body, (FunctionDefResult(getter_result),),
+        getter = PyFunctionDef(getter_name, args, getter_body, FunctionDefResult(getter_result),
                                 original_function = expr.getter, scope = getter_scope)
 
         # ----------------------------------------------------------------------------------
@@ -1977,7 +1977,7 @@ class CToPythonWrapper(Wrapper):
                 setter_body = [*arg_code,
                                expr.setter(*func_call_args),
                                *self._save_referenced_objects(expr.setter, setter_args),
-                               Return((LiteralInteger(0, dtype=CNativeInt()),))]
+                               Return(LiteralInteger(0, dtype=CNativeInt()))]
             else:
                 setter_body = [PyErr_SetString(PyAttributeError,
                                             LiteralString("Can't reallocate memory via Python interface.")),
