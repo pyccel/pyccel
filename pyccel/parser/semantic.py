@@ -101,7 +101,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
 
 from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelAdd, PyccelMinus, PyccelMul, PyccelPow
-from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv, PyccelIn
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv, PyccelIn, PyccelOperator
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -2522,7 +2522,7 @@ class SemanticParser(BasicParser):
     def _visit_PythonTuple(self, expr):
         ls = [self._visit(i) for i in expr]
         prefer_inhomogeneous = False
-        if expr.get_user_nodes(Return):
+        if expr.get_user_nodes(Return, (IndexedElement, FunctionCall, PyccelFunction, PyccelOperator)):
             func = expr.get_user_nodes(FunctionDef)[0]
             n_returns = set(r.n_explicit_results for r in func.get_attribute_nodes(Return))
             prefer_inhomogeneous = len(n_returns) == 1
