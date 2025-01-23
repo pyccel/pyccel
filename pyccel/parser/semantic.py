@@ -1171,7 +1171,7 @@ class SemanticParser(BasicParser):
             return new_expr
         else:
             if self._current_function == func.name:
-                if len(func.results)>0 and not isinstance(func.results[0].var, TypedAstNode):
+                if len(func.results)>0 and not isinstance(func.results.var, TypedAstNode):
                     errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
             parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign) and not isinstance(x, AugAssign))
@@ -2572,7 +2572,7 @@ class SemanticParser(BasicParser):
         if isinstance(value, (PyccelArithmeticOperator, PyccelFunction)) and value.rank:
             a = generate_and_assign_temp_var()
         elif isinstance(value, FunctionCall) and isinstance(value.class_type, CustomDataType):
-            if not value.funcdef.results[0].var.is_alias:
+            if not value.funcdef.results.var.is_alias:
                 a = generate_and_assign_temp_var()
         return a
 
@@ -2926,7 +2926,7 @@ class SemanticParser(BasicParser):
             if len(results) != 1:
                 errors.report("Cannot get attribute of function call with multiple returns",
                         symbol=expr, severity='fatal')
-            first = results[0].var
+            first = results.var
         rhs_name = _get_name(rhs)
 
         # Handle case of imported module
@@ -3603,7 +3603,7 @@ class SemanticParser(BasicParser):
                     new_expr = AliasAssign(l, r)
                     if isinstance(r, FunctionCall):
                         funcdef = r.funcdef
-                        target_r_idx = funcdef.result_pointer_map[funcdef.results[0].var]
+                        target_r_idx = funcdef.result_pointer_map[funcdef.results.var]
                         for ti in target_r_idx:
                             self._indicate_pointer_target(l, r.args[ti].value, expr)
                     else:

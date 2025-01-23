@@ -2847,7 +2847,7 @@ class CToPythonWrapper(Wrapper):
         name = getattr(orig_var, 'name', 'tmp')
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         if is_bind_c:
-            result = funcdef.results[0].var.new_var
+            result = funcdef.results.var.new_var
             ptr_var = funcdef.scope.collect_tuple_element(result[LiteralInteger(0)])
             shape_var = funcdef.scope.collect_tuple_element(result[1])
             c_res = Variable(CStackArray(orig_var.class_type.element_type),

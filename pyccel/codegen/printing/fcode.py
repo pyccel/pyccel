@@ -497,7 +497,7 @@ class FCodePrinter(CodePrinter):
         """
         for key,f in self.scope.imports['functions'].items():
             if isinstance(f, FunctionDef) and f.is_external:
-                v = f.results[0].var.clone(str(key))
+                v = f.results.var.clone(str(key))
                 decs.append(Declare(v, external=True))
 
     def _calculate_class_names(self, expr):
@@ -1311,7 +1311,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         if isinstance(expr.lhs, FunctionCall):
-            base = expr.lhs.funcdef.results[0].var
+            base = expr.lhs.funcdef.results.var
             var_name = self.scope.get_new_name()
             var = base.clone(var_name)
 
@@ -3553,7 +3553,7 @@ class FCodePrinter(CodePrinter):
             class_variable = args[0].value
             args = args[1:]
             if isinstance(class_variable, FunctionCall):
-                base = class_variable.funcdef.results[0].var
+                base = class_variable.funcdef.results.var
                 var = self.scope.get_temporary_variable(base)
 
                 self._additional_code += self._print(Assign(var, class_variable)) + '\n'

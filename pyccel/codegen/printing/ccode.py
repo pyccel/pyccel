@@ -1505,7 +1505,7 @@ class CCodePrinter(CodePrinter):
     def _print_FuncAddressDeclare(self, expr):
         args = list(expr.arguments)
         if len(expr.results) == 1:
-            ret_type = self.get_declare_type(expr.results[0])
+            ret_type = self.get_declare_type(expr.results)
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int'))
             args += [a.clone(name = a.name, memory_handling='alias') for a in expr.results]
