@@ -19,6 +19,7 @@ import numpy as np
 from pyccel.ast.basic import TypedAstNode
 
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule, BindCClassDef
+from pyccel.ast.bind_c import BindCVariable
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
@@ -404,16 +405,29 @@ class FCodePrinter(CodePrinter):
                 args.append(a.value)
 
         # Create new local variables to ensure there are no name collisions
-        new_local_vars = [v.clone(self.scope.get_new_name(v.name)) \
-                            for v in func.local_vars]
-        for v in new_local_vars:
+        new_local_vars = {v: v.clone(self.scope.get_new_name(v.name)) \
+                            for v in func.local_vars}
+        local_vars_to_insert = list(new_local_vars.values())
+        inhomog_vars = {v for v in func.local_vars if isinstance(v.class_type, InhomogeneousTupleType)}
+        while inhomog_vars:
+            v = inhomog_vars.pop()
+            elems = [scope.collect_tuple_element(vi) for vi in v]
+            for i,vi in enumerate(elems):
+                if isinstance(vi, BindCVariable):
+                    vi = vi.new_var
+                new_vi = vi.clone(self.scope.get_new_name(vi.name))
+                new_local_vars[vi] = new_vi
+                self.scope.insert_symbolic_alias(new_local_vars[v][i], new_vi)
+                if isinstance(vi.class_type, InhomogeneousTupleType):
+                    inhomog_vars.add(vi)
+        for v in local_vars_to_insert:
             self.scope.insert_variable(v)
 
         # Put functions into current scope
         for entry in ['variables', 'classes', 'functions']:
             self.scope.imports[entry].update(func.namespace_imports[entry])
 
-        func.swap_in_args(args, new_local_vars)
+        func.swap_in_args(args, local_vars_to_insert)
 
         func.remove_presence_checks()
 
