@@ -2462,14 +2462,19 @@ class SemanticParser(BasicParser):
                                 cls_base = t.class_type,
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
-                            types = [self._visit(d).type_list[0] for d in v.results]
-                            results = [Variable(t.class_type, PyccelSymbol(f'result_{i}'), shape = None,
-                                cls_base = t.class_type,
-                                is_const = t.is_const, is_optional = False,
-                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
+                            if v.results:
+                                types = self._visit(v.results).type_list
+                                assert len(types) == 1
+                                t = types[0]
+                                results = Variable(t.class_type, PyccelSymbol(f'result'), shape = None,
+                                    cls_base = t.class_type,
+                                    is_const = t.is_const, is_optional = False,
+                                    memory_handling = 'heap' if t.rank > 0 else 'stack')
+                            else:
+                                results = Nil()
 
                             args = [FunctionDefArgument(a) for a in args]
-                            results = [FunctionDefResult(r) for r in results]
+                            results = FunctionDefResult(results)
                             func_defs.append(FunctionDef(v.name, args, [], results, is_external = is_external, is_header = True))
 
                         if len(func_defs) == 1:

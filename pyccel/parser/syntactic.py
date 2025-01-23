@@ -205,6 +205,7 @@ class SyntaxParser(BasicParser):
         if line.startswith('#$'):
             env = line[2:].lstrip()
             if env.startswith('omp'):
+                expr = omp_parse(stmts=line)
                 try:
                     expr = omp_parse(stmts=line)
                 except TextXSyntaxError as e:

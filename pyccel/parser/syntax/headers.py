@@ -313,7 +313,7 @@ class HeaderResults(BasicStmt):
 
         Get the Pyccel equivalent of this object.
         """
-        return [d.expr for d in self.decs]
+        return self.decs.expr
 
 
 class VariableHeaderStmt(BasicStmt):
@@ -403,7 +403,7 @@ class FunctionHeaderStmt(BasicStmt):
 
         is_static = self.static
 
-        results = []
+        results = Nil()
         if self.results:
             results = self.results.expr
 

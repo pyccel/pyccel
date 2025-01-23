@@ -184,9 +184,7 @@ class FunctionHeader(Header):
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
-        if results:
-            if not(iterable(results)):
-                raise TypeError("Expecting results to be iterable.")
+        assert not(iterable(results))
 
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
