@@ -40,6 +40,9 @@ language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 external_libs = {"stc" : ("STC/include/stc", CompileObj("stc", folder="stc", has_target_file = False)),
                  "gFTL" : ("gFTL/install/GFTL-1.13/include/v2", CompileObj("gFTL", folder="gFTL", has_target_file = False)),
 }
+
+external_libs["stc/cstr"] = ("STC/src", CompileObj("cstr.c", folder="stc", dependencies = (external_libs['stc'][1],)))
+external_libs["stc/cspan"] = ("STC/src", CompileObj("cspan.c", folder="stc", dependencies = (external_libs['stc'][1],)))
 #==============================================================================
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
 # The compile object folder will be in the pyccel dirpath
@@ -69,7 +72,6 @@ internal_libs = {
                                                                      folder="gFTL_functions",
                                                                      has_target_file = False,
                                                                      dependencies = (external_libs['gFTL'][1],))),
-    "stc/cstr" : ("STC_Extensions", CompileObj("cstr.c", folder="STC_Extensions", dependencies = (external_libs['stc'][1],)))
 }
 
 #==============================================================================
