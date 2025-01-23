@@ -445,7 +445,8 @@ class FortranToCWrapper(Wrapper):
         getter_scope = self.scope.new_child_scope(getter_name)
         self.scope = getter_scope
         self.scope.insert_symbol(expr.name)
-        getter_result = self._wrap(FunctionDefResult(expr))
+        getter_result_info = self._extract_FunctionDefResult(expr, lhs.cls_base.scope)
+        getter_result = getter_result_info['c_result']
 
         getter_arg = self._wrap(FunctionDefArgument(lhs, bound_argument = True))
         self_obj = self._get_call_argument(getter_arg)
@@ -458,12 +459,12 @@ class FortranToCWrapper(Wrapper):
         if expr.rank > 0 or isinstance(expr.dtype, CustomDataType):
             getter_body.append(AliasAssign(wrapped_obj, attrib))
         else:
-            getter_body.append(Assign(getter_result.var, attrib))
-        getter_body.extend(self._additional_exprs)
+            getter_body.append(Assign(getter_result_info['f_result'], attrib))
+        getter_body.extend(getter_result_info['body'])
         self._additional_exprs.clear()
         self.exit_scope()
 
-        getter = BindCFunctionDef(getter_name, (getter_arg,), getter_body, (getter_result,),
+        getter = BindCFunctionDef(getter_name, (getter_arg,), getter_body, FunctionDefResult(getter_result),
                                 original_function = expr, scope = getter_scope)
 
         # ----------------------------------------------------------------------------------
@@ -570,34 +571,6 @@ class FortranToCWrapper(Wrapper):
         return BindCClassDef(expr, new_func = new_method, methods = methods,
                              interfaces = interfaces, attributes = properties_getters + properties,
                              docstring = expr.docstring, class_type = expr.class_type)
-
-    def _wrap_FunctionDefResult(self, expr):
-        """
-        Create the equivalent FunctionDefResult for a C-compatible function.
-
-        Take a FunctionDefResult and create a FunctionDefResult describing
-        all the information that should be returned from the C-compatible function
-        in order to fully describe the result `expr`. This function also adds any
-        expressions necessary to build the C-compatible return value to
-        `self._additional_exprs`.
-
-        In the case of a scalar numerical the function simply creates a local version
-        of the variable described by the function result and returns the
-        FunctionDefResult.
-
-        Parameters
-        ----------
-        expr : FunctionDefResult
-            The result to be wrapped.
-
-        Returns
-        -------
-        FunctionDefResult
-            The C-compatible result.
-        """
-        result = self._extract_FunctionDefResult(expr.var)
-        self._additional_exprs.extend(result['body'])
-        return FunctionDefResult(result['c_result'])
 
     def _extract_FunctionDefResult(self, orig_var, orig_func_scope):
         """
