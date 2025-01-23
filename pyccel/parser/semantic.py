@@ -1361,7 +1361,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(class_type, InhomogeneousTupleType):
             if isinstance(rhs, FunctionCall):
-                iterable = [self.scope.collect_tuple_element(r.var) for r in rhs.funcdef.results]
+                iterable = self.scope.collect_all_tuple_elements(rhs.funcdef.results.var)
             elif isinstance(rhs, PyccelFunction):
                 iterable = [IndexedElement(rhs, i)  for i in range(rhs.shape[0])]
             else:
@@ -4273,7 +4273,6 @@ class SemanticParser(BasicParser):
             results = expr.results
             result_var = self.check_for_variable(results.var)
             if result_var:
-                assert result_var.is_argument
                 if isinstance(result_var.class_type, (FixedSizeNumericType, StringType)):
                     pyccel_stage.set_stage('syntactic')
                     results = FunctionDefResult(self.scope.get_new_name(), annotation = results.annotation)
