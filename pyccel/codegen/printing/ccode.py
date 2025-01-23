@@ -2263,7 +2263,7 @@ class CCodePrinter(CodePrinter):
         if len(args) == 0:
             return 'return;\n'
 
-        if len(args) > 1 or expr.expr.rank > 0:
+        if len(args) > 1:
             if expr.stmt:
                 return self._print(expr.stmt)+'return 0;\n'
             return 'return 0;\n'
