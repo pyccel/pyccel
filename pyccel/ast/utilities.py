@@ -14,10 +14,11 @@ from pyccel.errors.errors import Errors, PyccelError
 
 from .core          import (AsName, Import, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
-                            Concatenate, Module, PyccelFunctionDef)
+                            Concatenate, Module, PyccelFunctionDef, AliasAssign)
 
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple, PythonSet)
+from .bind_c        import BindCVariable
 from .cmathext      import cmath_mod
 from .datatypes     import HomogeneousTupleType, InhomogeneousTupleType, PythonNativeInt
 from .datatypes     import StringType
@@ -430,7 +431,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             result.append(line)
             current_level = 0
 
-        elif (isinstance(line, Assign) and
+        elif (isinstance(line, Assign) and not isinstance(line, AliasAssign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
                 not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
@@ -839,3 +840,32 @@ def is_literal_integer(expr):
     """
     return isinstance(expr, (int, LiteralInteger)) or \
         isinstance(expr, PyccelUnarySub) and isinstance(expr.args[0], (int, LiteralInteger))
+
+#==============================================================================
+def flatten_tuple_var(expr, scope):
+    """
+    Get a list of all variables in an inhomogeneous tuple Variable.
+
+    Get a list of all variables in an inhomogeneous tuple Variable by recursively
+    applying this function to the elements of the tuple.
+
+    Parameters
+    ----------
+    expr : Variable
+        A variable which may have the type InhomogeneousTupleType.
+    scope : Scope
+        A scope describing how tuple elements are mapped to Variables.
+
+    Returns
+    -------
+    list[Variable]
+        A list of all the variables that should be printed to describe the
+        inhomogeneous tuple Variable.
+    """
+    if isinstance(expr, BindCVariable):
+        return flatten_tuple_var(expr.new_var, scope)
+    if isinstance(expr.class_type, InhomogeneousTupleType):
+        return [v for e in expr for v in flatten_tuple_var(scope.collect_tuple_element(e), scope)]
+    else:
+        return [expr]
+

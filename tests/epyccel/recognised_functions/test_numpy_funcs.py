@@ -1189,9 +1189,9 @@ def test_shape_indexed(language):
     from numpy import empty
     f1 = epyccel(test_shape_1d, language = language)
     f2 = epyccel(test_shape_2d, language = language)
-    n1 = randint(20)
-    n2 = randint(20)
-    n3 = randint(20)
+    n1 = randint(1,20)
+    n2 = randint(1,20)
+    n3 = randint(1,20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
     assert f1(x1) == test_shape_1d(x1)
@@ -1208,9 +1208,9 @@ def test_shape_property(language):
     from numpy import empty
     f1 = epyccel(test_shape_1d, language = language)
     f2 = epyccel(test_shape_2d, language = language)
-    n1 = randint(20)
-    n2 = randint(20)
-    n3 = randint(20)
+    n1 = randint(1,20)
+    n2 = randint(1,20)
+    n3 = randint(1,20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
     assert f1(x1) == test_shape_1d(x1)
@@ -1233,9 +1233,9 @@ def test_shape_tuple_output(language):
         return a, b
 
     from numpy import empty
-    n1 = randint(20)
-    n2 = randint(20)
-    n3 = randint(20)
+    n1 = randint(1,20)
+    n2 = randint(1,20)
+    n3 = randint(1,20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
     f1 = epyccel(test_shape_1d, language = language)
@@ -1259,9 +1259,9 @@ def test_shape_real(language):
     from numpy import empty
     f1 = epyccel(test_shape_1d, language = language)
     f2 = epyccel(test_shape_2d, language = language)
-    n1 = randint(20)
-    n2 = randint(20)
-    n3 = randint(20)
+    n1 = randint(1,20)
+    n2 = randint(1,20)
+    n3 = randint(1,20)
     x1 = empty(n1,dtype = float)
     x2 = empty((n2,n3), dtype = float)
     assert f1(x1) == test_shape_1d(x1)
@@ -1282,9 +1282,9 @@ def test_shape_int(language):
     f2 = epyccel(test_shape_2d, language = language)
 
     from numpy import empty
-    n1 = randint(20)
-    n2 = randint(20)
-    n3 = randint(20)
+    n1 = randint(1,20)
+    n2 = randint(1,20)
+    n3 = randint(1,20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
     assert f1(x1) == test_shape_1d(x1)
@@ -1304,9 +1304,9 @@ def test_shape_bool(language):
     from numpy import empty
     f1 = epyccel(test_shape_1d, language = language)
     f2 = epyccel(test_shape_2d, language = language)
-    n1 = randint(20)
-    n2 = randint(20)
-    n3 = randint(20)
+    n1 = randint(1,20)
+    n2 = randint(1,20)
+    n3 = randint(1,20)
     x1 = empty(n1,dtype = bool)
     x2 = empty((n2,n3), dtype = bool)
     assert f1(x1) == test_shape_1d(x1)
@@ -1332,7 +1332,7 @@ def test_full_basic_int(language):
         a = full(fill_value = val, shape = (2,3))
         return a[0,0],a[0,1],a[0,2],a[1,0],a[1,1],a[1,2]
 
-    size = randint(10)
+    size = randint(1,10)
 
     f_shape_1d = epyccel(create_full_shape_1d, language = language)
     assert f_shape_1d(size) == create_full_shape_1d(size)
@@ -1370,9 +1370,9 @@ def test_size(language):
     f2 = epyccel(test_size_2d, language = language)
     f3 = epyccel(test_size_axis_variable_2d, language = language)
     f4 = epyccel(test_size_axis_literal_3d, language = language)
-    n1 = randint(20)
-    n2 = randint(20)
-    n3 = randint(20)
+    n1 = randint(1, 20)
+    n2 = randint(1, 20)
+    n3 = randint(1, 20)
     axis = randint(2)
     x1 = empty(n1, dtype = int)
     x2 = empty((n1, n2), dtype = int)
@@ -1398,9 +1398,9 @@ def test_size_property(language):
     f1 = epyccel(test_size_1d, language = language)
     f2 = epyccel(test_size_2d, language = language)
     f3 = epyccel(test_size_3d, language = language)
-    n1 = randint(20)
-    n2 = randint(20)
-    n3 = randint(20)
+    n1 = randint(1, 20)
+    n2 = randint(1, 20)
+    n3 = randint(1, 20)
     x1 = empty(n1, dtype = int)
     x2 = empty((n1, n2), dtype = int)
     x3 = empty((n1, n2, n3), dtype = int)
@@ -1429,7 +1429,7 @@ def test_full_basic_real(language):
         a = full(fill_value = val, shape = (2,3))
         return a[0,0],a[0,1],a[0,2],a[1,0],a[1,1],a[1,2]
 
-    size = randint(10)
+    size = randint(1,10)
     val  = rand()*5
 
     f_shape_1d  = epyccel(create_full_shape_1d, language = language)
@@ -1466,7 +1466,7 @@ def test_full_basic_bool(language):
         a = full(fill_value = val, shape = (2,3))
         return a[0,0],a[0,1],a[0,2],a[1,0],a[1,1],a[1,2]
 
-    size = randint(10)
+    size = randint(1,10)
     val  = bool(randint(2))
 
     f_shape_1d  = epyccel(create_full_shape_1d, language = language)
@@ -1495,8 +1495,8 @@ def test_full_order(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size_1 = randint(10)
-    size_2 = randint(10)
+    size_1 = randint(1,10)
+    size_2 = randint(1,10)
 
     f_shape_C  = epyccel(create_full_shape_C, language = language)
     assert f_shape_C(size_1,size_2) == create_full_shape_C(size_1,size_2)
@@ -1694,7 +1694,7 @@ def test_empty_basic(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size = randint(10)
+    size = randint(1,10)
 
     f_shape_1d  = epyccel(create_empty_shape_1d, language = language)
     assert f_shape_1d(size) == create_empty_shape_1d(size)
@@ -1714,8 +1714,8 @@ def test_empty_order(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size_1 = randint(10)
-    size_2 = randint(10)
+    size_1 = randint(1,10)
+    size_2 = randint(1,10)
 
     f_shape_C  = epyccel(create_empty_shape_C, language = language)
     assert f_shape_C(size_1,size_2) == create_empty_shape_C(size_1,size_2)
@@ -1837,7 +1837,7 @@ def test_ones_basic(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size = randint(10)
+    size = randint(1,10)
 
     f_shape_1d  = epyccel(create_ones_shape_1d, language = language)
     assert f_shape_1d(size) == create_ones_shape_1d(size)
@@ -1857,8 +1857,8 @@ def test_ones_order(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size_1 = randint(10)
-    size_2 = randint(10)
+    size_1 = randint(1,10)
+    size_2 = randint(1,10)
 
     f_shape_C  = epyccel(create_ones_shape_C, language = language)
     assert f_shape_C(size_1, size_2) == create_ones_shape_C(size_1, size_2)
@@ -1991,7 +1991,7 @@ def test_zeros_basic(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size = randint(10)
+    size = randint(1,10)
 
     f_shape_1d  = epyccel(create_zeros_shape_1d, language = language)
     assert f_shape_1d(size) == create_zeros_shape_1d(size)
@@ -2011,8 +2011,8 @@ def test_zeros_order(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size_1 = randint(10)
-    size_2 = randint(10)
+    size_1 = randint(1,10)
+    size_2 = randint(1,10)
 
     f_shape_C  = epyccel(create_zeros_shape_C, language = language)
     assert f_shape_C(size_1, size_2) == create_zeros_shape_C(size_1, size_2)
@@ -2250,9 +2250,9 @@ def test_rand_args(language):
         a = rand(2,2)
         return a[0,0], a[0,1], a[1,0], a[1,1]
 
-    n = randint(10)
-    m = randint(10)
-    p = randint(5)
+    n = randint(1,10)
+    m = randint(1,10)
+    p = randint(1,5)
     f_1d = epyccel(create_array_size_1d, language = language)
     assert f_1d(n) == create_array_size_1d(n)
 
@@ -2615,7 +2615,7 @@ def test_full_like_basic_int(language):
         a = full_like(arr, val, int, 'F', shape = (2,3))
         return a[0,0],a[0,1],a[0,2],a[1,0],a[1,1],a[1,2]
 
-    size = randint(10)
+    size = randint(1,10)
 
     f_shape_1d  = epyccel(create_full_like_shape_1d, language = language)
     assert f_shape_1d(size) == create_full_like_shape_1d(size)
@@ -2705,7 +2705,7 @@ def test_full_like_basic_bool(language):
         a = full_like(arr ,fill_value = val, dtype=bool, shape = (2,3))
         return a[0,0],a[0,1],a[0,2],a[1,0],a[1,1],a[1,2]
 
-    size = randint(10)
+    size = randint(1,10)
     val  = bool(randint(2))
 
     f_shape_1d  = epyccel(create_full_like_shape_1d, language = language)
@@ -2736,7 +2736,7 @@ def test_full_like_order(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size = randint(10)
+    size = randint(1,10)
 
     f_shape_C  = epyccel(create_full_like_shape_C, language = language)
     assert f_shape_C(size) == create_full_like_shape_C(size)
@@ -2976,7 +2976,7 @@ def test_empty_like_basic(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size = randint(10)
+    size = randint(1,10)
 
     f_shape_1d  = epyccel(create_empty_like_shape_1d, language = language)
     assert f_shape_1d(size) == create_empty_like_shape_1d(size)
@@ -2998,8 +2998,8 @@ def test_empty_like_order(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size_1 = randint(10)
-    size_2 = randint(10)
+    size_1 = randint(1,10)
+    size_2 = randint(1,10)
 
     f_shape_C  = epyccel(create_empty_like_shape_C, language = language)
     assert f_shape_C(size_1, size_2) == create_empty_like_shape_C(size_1, size_2)
@@ -3225,7 +3225,7 @@ def test_ones_like_basic(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size = randint(10)
+    size = randint(1,10)
 
     f_shape_1d  = epyccel(create_ones_like_shape_1d, language = language)
     assert f_shape_1d(size) == create_ones_like_shape_1d(size)
@@ -3247,8 +3247,8 @@ def test_ones_like_order(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size_1 = randint(10)
-    size_2 = randint(10)
+    size_1 = randint(1,10)
+    size_2 = randint(1,10)
 
     f_shape_C  = epyccel(create_ones_like_shape_C, language = language)
     assert f_shape_C(size_1, size_2) == create_ones_like_shape_C(size_1, size_2)
@@ -3492,7 +3492,7 @@ def test_zeros_like_basic(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size = randint(10)
+    size = randint(1,10)
 
     f_shape_1d  = epyccel(create_zeros_like_shape_1d, language = language)
     assert f_shape_1d(size) == create_zeros_like_shape_1d(size)
@@ -3514,8 +3514,8 @@ def test_zeros_like_order(language):
         s = shape(a)
         return len(s),s[0], s[1]
 
-    size_1 = randint(10)
-    size_2 = randint(10)
+    size_1 = randint(1,10)
+    size_2 = randint(1,10)
 
     f_shape_C  = epyccel(create_zeros_like_shape_C, language = language)
     assert f_shape_C(size_1, size_2) == create_zeros_like_shape_C(size_1, size_2)

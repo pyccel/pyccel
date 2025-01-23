@@ -33,7 +33,6 @@ UNRECOGNISED_FUNCTION_CALL = 'Function call cannot be processed. Please ensure t
 
 UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS = "Empty classes are not supported"
 UNSUPPORTED_POINTER_RETURN_VALUE = "A pointer can only be returned from a function if it points at one of the arguments."
-UNSUPPORTED_ARRAY_RANK = 'Arrays of dimensions > 15 are currently not supported'
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
 MUST_HAVE_NONE_RETURN_TYPE = 'The return type of "{}" must be None'
