@@ -7,6 +7,7 @@
 #define         PYC_MATH_C_H
 #include <math.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <complex.h>
 
 /*
@@ -50,5 +51,15 @@ double complex csign(double complex x);
 
 double fpyc_bankers_round(double arg, int64_t ndigits);
 int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits);
+
+inline double complex complex_min(double complex a, double complex b) {
+    bool lt = creal(a) == creal(b) ? cimag(a) < cimag(b) : creal(a) < creal(b);
+    return lt ? a : b;
+}
+
+inline double complex complex_max(double complex a, double complex b) {
+    bool lt = creal(a) == creal(b) ? cimag(a) < cimag(b) : creal(a) < creal(b);
+    return lt ? b : a;
+}
 
 #endif
