@@ -565,7 +565,7 @@ class FCodePrinter(CodePrinter):
                 compare_func = FunctionDef('complex_comparison',
                                            [FunctionDefArgument(tmpVar_x), FunctionDefArgument(tmpVar_y)],
                                            [],
-                                           [FunctionDefResult(Variable(PythonNativeBool(), 'c'))])
+                                           FunctionDefResult(Variable(PythonNativeBool(), 'c')))
                 lt_def = compare_func(tmpVar_x, tmpVar_y)
             else:
                 lt_def = PyccelAssociativeParenthesis(PyccelLt(tmpVar_x, tmpVar_y))

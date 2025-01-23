@@ -409,7 +409,7 @@ class FortranToCWrapper(Wrapper):
             func = BindCFunctionDef(name = func_name,
                           body      = result_wrap['body'],
                           arguments = [],
-                          results   = [FunctionDefResult(result_wrap['c_result'])],
+                          results   = FunctionDefResult(result_wrap['c_result']),
                           imports   = [import_mod],
                           scope = func_scope,
                           original_function = expr)
@@ -542,7 +542,7 @@ class FortranToCWrapper(Wrapper):
         body = [alloc, c_loc]
 
         new_method = BindCFunctionDef(func_name, [], body,
-                [FunctionDefResult(result)],
+                FunctionDefResult(result),
                 original_function = None, scope = func_scope)
 
         methods = [self._wrap(m) for m in expr.methods]
