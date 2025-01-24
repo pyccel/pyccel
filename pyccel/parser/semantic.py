@@ -3454,9 +3454,9 @@ class SemanticParser(BasicParser):
 
         elif isinstance(rhs, FunctionCall):
             func = rhs.funcdef
-            results = func.results
+            results = func.results.var
             if results:
-                d_var = self._infer_type(results.var)
+                d_var = self._infer_type(results)
             elif expr.lhs.is_temp:
                 return rhs
             else:
