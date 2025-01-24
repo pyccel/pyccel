@@ -433,7 +433,7 @@ class FCodePrinter(CodePrinter):
 
         body = func.body
 
-        if len(func.results) == 0:
+        if not func.results.var:
             # If there is no return then the code is already ok
             code = self._print(body)
         else:
@@ -461,7 +461,7 @@ class FCodePrinter(CodePrinter):
                 assigns = [Assign(l, r) for l,r in zip(assign_lhs, assigns.values())]
                 code = ''.join([self._print(a) for a in assigns])
             else:
-                res_return_vars = [assigns.get(v,v) for v in result.expr]
+                res_return_vars = [assigns.get(v,v) for v in scope.collect_all_tuple_elements(result.expr)]
                 if len(res_return_vars) == 1:
                     return_val = res_return_vars[0]
                     parent_assign = return_val.get_direct_user_nodes(lambda x: isinstance(x, Assign))
@@ -472,7 +472,7 @@ class FCodePrinter(CodePrinter):
                     else:
                         code = self._print(return_val)
                 else:
-                    code = self._print(tuple(res_return_vars))
+                    code = ''.join(self._print(a) for a in res_return_vars)
 
         # Put back original arguments
         func.reinstate_presence_checks()
