@@ -257,7 +257,7 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         new_dependencies.append(CompileObj(os.path.basename(filename), folder=folder,
                             includes=includes,
                             libs=libs, libdirs=libdirs,
-                            dependencies=(*dependencies, external_libs['gFTL'][1]),
+                            dependencies=(*dependencies, internal_libs['gFTL'][2]),
                             accelerators=accelerators))
         manage_dependencies({'gFTL':None}, compiler, pyccel_dirpath, new_dependencies[-1],
                 language, verbose, convert_only)
