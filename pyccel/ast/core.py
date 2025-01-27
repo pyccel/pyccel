@@ -1860,7 +1860,7 @@ class FunctionCall(TypedAstNode):
 
         # Handle function as argument
         arg_vals = [None if a is None else a.value for a in args]
-        args = [FunctionCallArgument(FunctionAddress(av.name, av.arguments, av.results), keyword=a.keyword)
+        args = [FunctionCallArgument(FunctionAddress(av.name, av.arguments, av.results, scope=av.scope), keyword=a.keyword)
                 if isinstance(av, FunctionDef) else a for a, av in zip(args, arg_vals)]
 
         if current_function == func.name:
@@ -3087,7 +3087,7 @@ class FunctionAddress(FunctionDef):
         memory_handling='stack',
         **kwargs
         ):
-        super().__init__(name, arguments, body=[], results=results, scope=None, **kwargs)
+        super().__init__(name, arguments, body=[], results=results, **kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
@@ -3148,7 +3148,6 @@ class FunctionAddress(FunctionDef):
         """
         args, kwargs = super().__getnewargs__()
         args = args[:-1] # Remove body argument
-        kwargs.pop('scope')
         kwargs['is_argument'] = self.is_argument
         kwargs['is_kwonly'] = self.is_kwonly
         kwargs['is_optional'] = self.is_optional
