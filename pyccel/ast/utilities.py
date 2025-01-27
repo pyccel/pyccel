@@ -862,7 +862,7 @@ def flatten_tuple_var(expr, scope):
         A list of all the variables that should be printed to describe the
         inhomogeneous tuple Variable.
     """
-    if isinstance(expr, Nil()):
+    if expr is Nil():
         return []
     if isinstance(expr, BindCVariable):
         return flatten_tuple_var(expr.new_var, scope)
