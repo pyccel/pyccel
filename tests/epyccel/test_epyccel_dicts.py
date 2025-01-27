@@ -307,3 +307,30 @@ def test_dict_items(language):
     assert isinstance(python_result[0], type(pyccel_result[0]))
     assert isinstance(python_result[1], type(pyccel_result[1]))
 
+def test_dict_keys(language):
+    def dict_keys():
+        a = {1:1.0, 2:2.0, 3:3.0, 5:4.7}
+        key_sum = 0
+        for key in a.keys():
+            key_sum += key
+
+        return key_sum
+
+    epyc_dict_keys = epyccel(dict_keys, language = language)
+    pyccel_result = epyc_dict_keys()
+    python_result = dict_keys()
+    assert python_result == pyccel_result
+
+def test_dict_keys_iter(language):
+    def dict_keys():
+        a = {1:1.0, 2:2.0, 3:3.0, 5:4.7}
+        key_sum = 0
+        for key in a:
+            key_sum += key
+
+        return key_sum
+
+    epyc_dict_keys = epyccel(dict_keys, language = language)
+    pyccel_result = epyc_dict_keys()
+    python_result = dict_keys()
+    assert python_result == pyccel_result
