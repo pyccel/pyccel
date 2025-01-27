@@ -2844,6 +2844,20 @@ class CCodePrinter(CodePrinter):
         dict_var = self._print(ObjectAddress(expr.dict_obj))
         return f"{c_type}_clear({dict_var});\n"
 
+    def _print_DictGet(self, expr):
+        target = expr.dict_obj
+        class_type = target.class_type
+        c_type = self.get_c_type(class_type)
+
+        dict_var = self._print(ObjectAddress(target))
+        key = self._print(expr.key)
+
+        if expr.default_value is not None:
+            default_val = self._print(expr.default_value)
+            return f"({c_type}_contains({dict_var}, {key}) ? *{c_type}_at({dict_var}, {key}) : {default_val})"
+
+        raise errors.report("Accessing dictionary using get without default is not supported yet", symbol=expr, severity="fatal")
+
     def _print_DictPop(self, expr):
         target = expr.dict_obj
         class_type = target.class_type
@@ -2852,7 +2866,7 @@ class CCodePrinter(CodePrinter):
         dict_var = self._print(ObjectAddress(target))
         key = self._print(expr.key)
 
-        if expr.default_value:
+        if expr.default_value is not None:
             default = self._print(expr.default_value)
             pop_expr = f"{c_type}_pop_with_default({dict_var}, {key}, {default})"
         else:
