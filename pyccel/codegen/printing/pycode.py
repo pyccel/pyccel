@@ -1187,7 +1187,10 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionTypeAnnotation(self, expr):
         args = ', '.join(self._print(a.annotation) for a in expr.args)
-        results = ', '.join(self._print(r.annotation) for r in expr.results)
+        if expr.results.annotation:
+            results = self._print(expr.results.annotation)
+        else:
+            results = ''
         return f"({results})({args})"
 
     def _print_TypingFinal(self, expr):
