@@ -974,7 +974,7 @@ class SyntaxParser(BasicParser):
 
         returns = body.get_attribute_nodes(Return,
                     excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
-        if len(returns) == 0:
+        if len(returns) == 0 or all(r.expr is Nil() for r in returns):
             results = FunctionDefResult(Nil())
         else:
             result_counter = 1
