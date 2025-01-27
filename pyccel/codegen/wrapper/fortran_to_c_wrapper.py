@@ -26,10 +26,9 @@ from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
-from pyccel.ast.numpytypes import NumpyNDArrayType
+from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type
 from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
-from pyccel.ast.numpyext import NumpyNDArrayType, NumpyInt32Type
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.scope import Scope
