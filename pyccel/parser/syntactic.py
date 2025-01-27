@@ -935,6 +935,7 @@ class SyntaxParser(BasicParser):
         #                   End of : To remove when headers are deprecated
         #---------------------------------------------------------------------------------------------------------
 
+        argument_names = {a.var.name for a in arguments}
         # Repack AnnotatedPyccelSymbols to insert argument_annotations from headers or types decorators
         arguments = [FunctionDefArgument(AnnotatedPyccelSymbol(a.var.name, annot), annotation=annot, value=a.value, kwonly=a.is_kwonly)
                            for a, annot in zip(arguments, argument_annotations)]
@@ -977,7 +978,7 @@ class SyntaxParser(BasicParser):
         else:
             result_counter = 1
             suggested_names = set(r.expr for r in returns if isinstance(r.expr, PyccelSymbol))
-            if len(suggested_names) == 1:
+            if len(suggested_names) == 1 and suggested_names.difference(argument_names):
                 results = suggested_names.pop()
             else:
                 results, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
