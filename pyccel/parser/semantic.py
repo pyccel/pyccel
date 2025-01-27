@@ -4345,11 +4345,13 @@ class SemanticParser(BasicParser):
             body.insert2body(*self._garbage_collector(body))
 
             results = self._visit(results)
-            results_vars = results.var
-            if results_vars is Nil():
+            if isinstance(results, EmptyNode):
+                results = FunctionDefResult(Nil())
+
+            if results.var is Nil():
                 results_vars = []
             else:
-                results_vars = self.scope.collect_all_tuple_elements(results_vars)
+                results_vars = self.scope.collect_all_tuple_elements(results.var)
 
             self._check_pointer_targets(results_vars)
 
