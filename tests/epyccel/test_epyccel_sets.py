@@ -469,6 +469,18 @@ def test_temporary_set_union(language):
     python_result = union_int()
     assert python_result == pyccel_result
 
+def test_temporary_set_union_2(language):
+    def union_int():
+        a = [1,2]
+        b = {2}
+        d = set(a).union(b)
+        return d
+
+    epyccel_func = epyccel(union_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = union_int()
+    assert python_result == pyccel_result
+
 def test_set_union_list(language):
     def union_list():
         a = {1.2, 2.3}
