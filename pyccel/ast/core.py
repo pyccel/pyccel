@@ -1779,6 +1779,9 @@ class FunctionDefResult(TypedAstNode):
     def __str__(self):
         return str(self.var)
 
+    def __bool__(self):
+        return self.var is not Nil()
+
 class FunctionCall(TypedAstNode):
     """
     Represents a function call in the code.
