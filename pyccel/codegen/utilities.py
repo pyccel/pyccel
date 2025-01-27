@@ -106,7 +106,7 @@ def not_a_copy(src_folder, dst_folder, filename):
     return src_mod_time > dst_mod_time
 
 #==============================================================================
-def copy_internal_library(dst_folder, lib_path, pyccel_dirpath, *, extra_files = None, is_external = False):
+def copy_internal_library(dst_folder, lib_path, pyccel_dirpath, *, extra_files = None):
     """
     Copy an internal library to the specified Pyccel directory.
 
@@ -119,7 +119,10 @@ def copy_internal_library(dst_folder, lib_path, pyccel_dirpath, *, extra_files =
     Parameters
     ----------
     dst_folder : str
-        The name of the folder to be copied, relative to the stdlib folder.
+        The name of the folder to be copied to, relative to the __pyccel__ folder.
+
+    lib_path : str
+        The absolute path to the folder to be copied.
 
     pyccel_dirpath : str
         The location that the folder should be copied to.
