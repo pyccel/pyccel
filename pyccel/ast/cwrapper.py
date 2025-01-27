@@ -1250,7 +1250,7 @@ PyIter_Next = FunctionDef(name = 'PyIter_Next',
 # https://docs.python.org/3/c-api/dict.html#c.PyDict_New
 PyDict_New = FunctionDef(name = 'PyDict_New',
                     arguments = [],
-                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'dict', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(PyccelPyObject(), 'dict', memory_handling='alias')),
                     body = [])
 
 # https://docs.python.org/3/c-api/dict.html#c.PyDict_SetItem
@@ -1258,7 +1258,7 @@ PyDict_SetItem = FunctionDef(name = 'PyDict_SetItem',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'dict', memory_handling='alias')),
                                  FunctionDefArgument(Variable(PyccelPyObject(), 'key', memory_handling='alias')),
                                  FunctionDefArgument(Variable(PyccelPyObject(), 'val', memory_handling='alias'))],
-                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    results = FunctionDefResult(Variable(PythonNativeInt(), 'i')),
                     body = [])
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
