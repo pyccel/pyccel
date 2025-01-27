@@ -970,9 +970,8 @@ class SyntaxParser(BasicParser):
 
         body = CodeBlock(body)
 
-        returns = [i for i in body.get_attribute_nodes(Return,
-                    excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))]
-        n_returns = [r.n_explicit_results for r in returns]
+        returns = body.get_attribute_nodes(Return,
+                    excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
         if len(returns) == 0:
             results = FunctionDefResult(Nil())
         else:
