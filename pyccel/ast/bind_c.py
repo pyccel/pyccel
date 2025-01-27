@@ -9,7 +9,6 @@ file.
 """
 
 from pyccel.ast.basic import PyccelAstNode
-from pyccel.ast.builtins import PythonTuple
 from pyccel.ast.core import Module, Deallocate
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
