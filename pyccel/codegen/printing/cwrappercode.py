@@ -12,7 +12,7 @@ from pyccel.ast.c_concepts import CStackArray
 from pyccel.ast.core       import FunctionAddress, SeparatorComment
 from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create
-from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
+from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType, Py_ssize_t
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
 from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
@@ -158,6 +158,8 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if expr.dtype is BindCPointer():
             return 'void*'
+        if expr.dtype is Py_ssize_t():
+            return 'Py_ssize_t*' if self.is_c_pointer(expr) else 'Py_ssize_t'
         return CCodePrinter.get_declare_type(self, expr)
 
     def _handle_is_operator(self, Op, expr):
@@ -234,7 +236,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return code
 
     def _print_PyArgKeywords(self, expr):
-        arg_names = ',\n'.join([f'"{a}"' for a in expr.arg_names] + [self._print(Nil())])
+        arg_names = ',\n'.join([f'(char*)"{a}"' for a in expr.arg_names] + [self._print(Nil())])
         return (f'static char *{expr.name}[] = {{\n'
                         f'{arg_names}\n'
                         '};\n')
@@ -478,13 +480,13 @@ class CWrapperCodePrinter(CCodePrinter):
 
         seq_magic_methods_def = f"static PySequenceMethods {seq_magic_method_name} = {{\n"
         if '__len__' in magic_methods:
-            seq_magic_methods_def += f"    .sq_length = {magic_methods['__len__'].name},\n"
+            seq_magic_methods_def += f"    .sq_length = (lenfunc){magic_methods['__len__'].name},\n"
         seq_magic_methods_def += '};\n'
 
         map_magic_method_name = self.scope.get_new_name(f'{expr.name}_mapping_methods')
         map_magic_methods_def = f"static PyMappingMethods {map_magic_method_name} = {{\n"
         if '__len__' in magic_methods:
-            map_magic_methods_def += f"    .mp_length = {magic_methods['__len__'].name},\n"
+            map_magic_methods_def += f"    .mp_length = (lenfunc){magic_methods['__len__'].name},\n"
         map_magic_methods_def += '};\n'
 
         method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
@@ -578,3 +580,7 @@ class CWrapperCodePrinter(CCodePrinter):
             return f'{base}{idxs}'
         else:
             return CCodePrinter._print_IndexedElement(self, expr)
+
+    def _print_Py_ssize_t_Cast(self, expr):
+        var = self._print(expr.args[0])
+        return f'(Py_ssize_t){var}'

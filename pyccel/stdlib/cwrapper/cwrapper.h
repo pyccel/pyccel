@@ -25,6 +25,10 @@
 # define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API
 # include "numpy/arrayobject.h"
 
+
+extern const int NO_TYPE_CHECK;
+extern const int NO_ORDER_CHECK;
+
 /*
  * A function which can be passed to a PyCapsule in order to free data that was created by Pyccel.
  */
@@ -222,6 +226,11 @@ static inline bool    PyIs_Complex64(PyObject *o)
 {
     return PyArray_IsScalar(o, Complex64);
 }
+
+
+/* arrays checkers and helpers */
+bool	pyarray_check(const char* name, PyObject *o, int dtype, int rank, int flag);
+bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag);
 
 /*
  * Functions : Numpy array handling functions
