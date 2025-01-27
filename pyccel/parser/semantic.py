@@ -2456,6 +2456,7 @@ class SemanticParser(BasicParser):
                     if F is None:
                         func_defs = []
                         for v in headers:
+                            scope = self.create_new_function_scope(name)
                             types = [self._visit(d).type_list[0] for d in v.dtypes]
                             args = [Variable(t.class_type, PyccelSymbol(f'anon_{i}'),
                                 shape = None, is_const = t.is_const, is_optional = False,
@@ -2475,7 +2476,9 @@ class SemanticParser(BasicParser):
 
                             args = [FunctionDefArgument(a) for a in args]
                             results = FunctionDefResult(results)
-                            func_defs.append(FunctionDef(v.name, args, [], results, is_external = is_external, is_header = True))
+                            self.exit_function_scope()
+                            func_defs.append(FunctionDef(v.name, args, [], results, is_external = is_external, is_header = True,
+                                scope = scope))
 
                         if len(func_defs) == 1:
                             F = func_defs[0]
@@ -2855,13 +2858,15 @@ class SemanticParser(BasicParser):
         for t in types.type_list:
             if isinstance(t, FunctionTypeAnnotation):
                 args = t.args
+                scope = self.create_new_function_scope(name)
                 if t.results.var:
                     results = FunctionDefResult(t.results.var.clone(t.results.var.name, is_argument = False),
                                     annotation=t.results.annotation)
 
                 else:
                     results = FunctionDefResult(Nil())
-                address = FunctionAddress(name, args, results)
+                self.exit_function_scope()
+                address = FunctionAddress(name, args, results, scope = scope)
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
@@ -4316,7 +4321,7 @@ class SemanticParser(BasicParser):
             # insert the FunctionDef into the scope
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
-            recursive_func_obj = FunctionDef(name, arguments, [], results)
+            recursive_func_obj = FunctionDef(name, arguments, [], results, scope = scope)
             self.insert_function(recursive_func_obj)
 
             # Create a new list that store local variables for each FunctionDef to handle nested functions
