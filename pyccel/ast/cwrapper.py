@@ -1245,6 +1245,24 @@ PyIter_Next = FunctionDef(name = 'PyIter_Next',
                         arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
                         results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
+#-------------------------------------------------------------------
+#                         Dict functions
+#-------------------------------------------------------------------
+
+
+# https://docs.python.org/3/c-api/dict.html#c.PyDict_New
+PyDict_New = FunctionDef(name = 'PyDict_New',
+                    arguments = [],
+                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'dict', memory_handling='alias'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/dict.html#c.PyDict_SetItem
+PyDict_SetItem = FunctionDef(name = 'PyDict_SetItem',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'dict', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'key', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'val', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    body = [])
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
