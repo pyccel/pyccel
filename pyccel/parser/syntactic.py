@@ -397,8 +397,10 @@ class SyntaxParser(BasicParser):
 
         if stmt.asname:
             new = self._visit(stmt.asname)
+            self.scope.insert_symbol(new)
             return AsName(old, new)
         else:
+            self.scope.insert_symbol(old)
             return old
 
     def _visit_Dict(self, stmt):
@@ -977,7 +979,7 @@ class SyntaxParser(BasicParser):
         else:
             result_counter = 1
             suggested_names = set(r.expr for r in returns if isinstance(r.expr, PyccelSymbol))
-            if len(suggested_names) == 1 and suggested_names.difference(argument_names):
+            if len(suggested_names) == 1 and suggested_names.difference(argument_names, self.scope.local_used_symbols):
                 results = suggested_names.pop()
             else:
                 results, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
