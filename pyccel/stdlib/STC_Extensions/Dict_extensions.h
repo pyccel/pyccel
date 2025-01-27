@@ -1,3 +1,4 @@
+#define _i_is_map
 #include <stc/priv/template.h>
 
 /**
@@ -30,3 +31,4 @@ static inline i_val _c_MEMB(_pop_with_default)(Self* self, i_keyraw rkey, i_valr
 }
 
 #include <stc/priv/template2.h>
+#undef _i_is_map
