@@ -311,7 +311,7 @@ def test_dict_keys(language):
     def dict_keys():
         a = {1:1.0, 2:2.0, 3:3.0, 5:4.7}
         key_sum = 0
-        for key in a.keys():
+        for key in a.keys(): #pylint:disable=consider-iterating-dictionary
             key_sum += key
 
         return key_sum
