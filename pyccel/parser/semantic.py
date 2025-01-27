@@ -5459,7 +5459,7 @@ class SemanticParser(BasicParser):
         set_obj = self._visit(syntactic_set_obj)
         class_type = set_obj.class_type
         if all(a.class_type == class_type for a in args):
-            return SetUnion(set_obj, *args)
+            return SetUnion(set_obj, *args[1:])
         else:
             element_type = class_type.element_type
             if any(a.class_type.element_type != element_type for a in args):
