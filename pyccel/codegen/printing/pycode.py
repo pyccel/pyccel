@@ -301,7 +301,7 @@ class PythonCodePrinter(CodePrinter):
 
         body = ''.join([docstring, functions, interfaces, imports, body])
 
-        result_annotation = ('-> ' + self._print(expr.results.annotation)) \
+        result_annotation = ("-> '" + self._print(expr.results.annotation) + "'") \
                                 if expr.results.annotation else ''
 
         # Put back return removed in semantic stage
