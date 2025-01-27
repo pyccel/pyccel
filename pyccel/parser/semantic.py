@@ -4090,9 +4090,9 @@ class SemanticParser(BasicParser):
 
         original_name = self.scope.get_python_name(f_name)
         if original_name.startswith('__i') and ('__'+original_name[3:]) in magic_method_map.values():
-            valid_return = len(expr.expr) == 1 and expr.stmt is None and len(func.arguments) > 0
+            valid_return = isinstance(expr.expr, PyccelSymbol) and expr.stmt is None and len(func.arguments) > 0
             if valid_return:
-                out = self._visit(expr.expr[0])
+                out = self._visit(expr.expr)
                 expected = func.arguments[0].var
                 valid_return &= (out == expected)
             if valid_return:
