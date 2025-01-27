@@ -50,6 +50,7 @@ All notable changes to this project will be documented in this file.
 -   #1745 : Add support for set method `intersection_update()`.
 -   #2059 : Add C support for returning dictionaries from functions.
 -   #1884 : Add support for dict method `items()`.
+-   #1884 : Add support for dict method `keys()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
