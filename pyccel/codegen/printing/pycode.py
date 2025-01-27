@@ -881,6 +881,11 @@ class PythonCodePrinter(CodePrinter):
 
         return f"{dict_obj}.items()"
 
+    def _print_DictKeys(self, expr):
+        dict_obj = self._print(expr.variable)
+
+        return f"{dict_obj}.keys()"
+
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
         stop  = self._print(expr.stop)  if expr.stop  else ''
