@@ -783,7 +783,7 @@ class PythonList(TypedAstNode):
 
     def __str__(self):
         args = ', '.join(str(a) for a in self)
-        return f'({args})'
+        return f'[{args}]'
 
     def __repr__(self):
         args = ', '.join(str(a) for a in self)
@@ -913,6 +913,14 @@ class PythonSet(TypedAstNode):
         are always homogeneous.
         """
         return True
+
+    def __str__(self):
+        args = ', '.join(str(a) for a in self)
+        return f'{{{args}}}'
+
+    def __repr__(self):
+        args = ', '.join(str(a) for a in self)
+        return f'PythonSet({args})'
 
 
 class PythonSetFunction(PyccelFunction):
