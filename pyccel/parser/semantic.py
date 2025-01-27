@@ -5469,11 +5469,8 @@ class SemanticParser(BasicParser):
 
             lhs = expr.get_user_nodes(Assign)[0].lhs
             pyccel_stage.set_stage('syntactic')
-            if isinstance(set_obj, PythonSet):
-                body = [Assign(lhs, set_obj, python_ast = expr.python_ast)]
-            else:
-                body = [Assign(lhs, DottedName(syntactic_set_obj, FunctionCall('copy', ())),
-                               python_ast = expr.python_ast)]
+            body = [Assign(lhs, DottedName(syntactic_set_obj, FunctionCall('copy', ())),
+                           python_ast = expr.python_ast)]
             update_calls = [DottedName(lhs, FunctionCall('update', (s_a,))) for s_a in syntactic_args]
             for c in update_calls:
                 c.set_current_ast(expr.python_ast)
