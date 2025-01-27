@@ -18,7 +18,7 @@ All notable changes to this project will be documented in this file.
 -   #1886 : Add Python and C support for dict method `pop()`.
 -   #1887 : Add Python support for dict method `popitem()`.
 -   #1888 : Add Python support for dict method `setdefault()`.
--   #1885 : Add Python support for dict method `get()`.
+-   #1885 : Add Python and C support for dict method `get()`.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
 -   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the STC library.
 -   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
@@ -70,6 +70,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
+-   \[DEVELOPER\] Added an environment variable to globally activate developer-mode for errors.
 
 ### Fixed
 
@@ -106,6 +107,7 @@ All notable changes to this project will be documented in this file.
 -   #2001 : Ensure all memory is correctly deallocated in the Python interface in a way that is compatible with all compilers.
 -   #2153 : Fix missing line information when an unknown class method is called.
 -   #2149 : Fix multi-line expressions in `if` conditions.
+-   Lifted the restriction on ndarrays limiting them to rank<15.
 
 ### Changed
 
@@ -115,6 +117,7 @@ All notable changes to this project will be documented in this file.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
 -   #1964 : Improve the error message when the wrong type is passed as a NumPy array argument.
 -   #1941 : Rename "target" in `AsName` to `local_alias` to better illustrate its use in the local context.
+-   #1961 : Use STC's `cspan` to describe `np.ndarray` in C. This results in a large speed-up for pathological cases.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.

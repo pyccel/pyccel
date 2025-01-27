@@ -122,7 +122,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 |----------|-----------|
 | `clear` | **Yes** |
 | `copy` | Python-only |
-| `get` | Python-only |
+| `get` | Python and C |
 | `items` | **Yes** |
 | `keys` | No |
 | `pop` | Python and C |
