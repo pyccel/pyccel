@@ -101,7 +101,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
-from pyccel.ast.operators import PyccelNot, PyccelAdd, PyccelMinus, PyccelMul, PyccelPow
+from pyccel.ast.operators import PyccelNot, PyccelAdd, PyccelMinus, PyccelMul, PyccelPow, PyccelOr
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv, PyccelIn
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
@@ -5556,7 +5556,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : DottedName
+        expr : FunctionCall
             The syntactic node that represent the call to `len()`.
 
         function_call_args : iterable[FunctionCallArgument]
@@ -5585,3 +5585,51 @@ class SemanticParser(BasicParser):
         else:
             raise errors.report(f"__len__ not implemented for type {class_type}",
                     severity='fatal', symbol=expr)
+
+    def _build_PythonIsInstance(self, expr, function_call_args):
+        """
+        Method to visit a PythonIsInstance node.
+
+        The purpose of this `_build` method is to construct a literal boolean indicating
+        whether or not the expression has the expected type.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The syntactic node that represent the call to `isinstance()`.
+
+        function_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        Returns
+        -------
+        Literal
+            A LiteralTrue or LiteralFalse node describing the result of the `isinstance`
+            call.
+        """
+        obj = function_call_args[0].value
+        class_or_tuple = function_call_args[1].value
+        if isinstance(class_or_tuple, PythonTuple):
+            obj_arg = function_call_args[0]
+            return PyccelOr(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(class_type)]) \
+                                for class_type in class_or_tuple], simplify=True)
+        else:
+            class_type = class_or_tuple.cls_name
+            try:
+                expected_type = class_type.static_type()
+            except AttributeError:
+                expected_type = None
+            if expected_type:
+                return convert_to_literal(expected_type is obj.class_type)
+            elif class_type is PythonListFunction:
+                return convert_to_literal(isinstance(obj.class_type, HomogeneousListType))
+            elif class_type is PythonTupleFunction:
+                return convert_to_literal(isinstance(obj.class_type, TupleType))
+            elif class_type is PythonSetFunction:
+                return convert_to_literal(isinstance(obj.class_type, HomogeneousSetType))
+            elif class_type is PythonDictFunction:
+                return convert_to_literal(isinstance(obj.class_type, DictType))
+            else:
+                errors.report(f"Type {class_or_tuple} is not handled in isinstance call.",
+                        severity='error', symbol=expr)
+                return LiteralTrue()
