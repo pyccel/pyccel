@@ -5623,12 +5623,14 @@ class SemanticParser(BasicParser):
             if expected_type:
                 class_type = obj.class_type
                 cls_base_to_insert = [self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)]
-                possible_types = []
+                possible_types = {class_type}
                 while cls_base_to_insert:
                     cls_base = cls_base_to_insert.pop()
                     class_type = cls_base.class_type
-                    possible_types.append(class_type)
+                    possible_types.add(class_type)
                     cls_base_to_insert.extend(cls_base.superclasses)
+
+                possible_types.discard(None)
 
                 return convert_to_literal(expected_type in possible_types)
 
