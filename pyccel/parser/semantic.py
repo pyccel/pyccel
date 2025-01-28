@@ -3501,13 +3501,16 @@ class SemanticParser(BasicParser):
                 if isinstance(rhs.class_type, InhomogeneousTupleType):
                     r_iter = [self.scope.collect_tuple_element(v) for v in rhs]
                 else:
-                    r_iter = rhs
+                    r_iter = [rhs[i] for i, li in enumerate(lhs)]
+
+                # Keep r_iter in a PythonTuple to allow calling substitute
+                r_iter = PythonTuple(*r_iter)
 
                 # Create variables to handle swap expressions
                 rhs_map = {}
                 unsaved_vars = set()
                 if isinstance(rhs, (PythonTuple, PythonList)):
-                    unsaved_vars = set([a.name for a in rhs.args if isinstance(a, Variable)])
+                    unsaved_vars = set(a.name for a in rhs.get_attribute_nodes(Variable, excluded_nodes = (FunctionDef,)))
 
                 # Test if the expression describes a basic swap or if the rhs contains expressions
                 # (e.g. arithmetic expressions or further tuples)
@@ -3520,7 +3523,13 @@ class SemanticParser(BasicParser):
                             severity='error', symbol=expr)
 
                 body = []
-                for i,(l,r) in enumerate(zip(lhs,r_iter)):
+                N = len(lhs)
+                for i, l in enumerate(lhs):
+                    r = r_iter[i]
+                    # Get unsaved variables that are still needed
+                    unsaved_vars = set(a.name for a in PythonTuple(*r_iter.args[i+1:]).get_attribute_nodes(Variable,
+                                        excluded_nodes = (FunctionDef,)))
+
                     # If the lhs element has not yet been saved to a variable create a new
                     # variable to hold this value
                     if l in unsaved_vars:
@@ -3529,18 +3538,19 @@ class SemanticParser(BasicParser):
                         local_assign = Assign(temp, l, python_ast = expr.python_ast)
                         pyccel_stage.set_stage('semantic')
                         body.append(self._visit(local_assign))
-                        # Save the variable containing the value to rhs_map so it can be
+                        # Save the variable containing the value to rhs so it can be
                         # used when it appears in the assignment
-                        rhs_map[l] = temp
-                        unsaved_vars.discard(l)
+                        semantic_l = self._visit(l)
+                        semantic_temp = self._visit(temp)
+                        r_iter.substitute(semantic_l, semantic_temp)
+                        if r is semantic_l:
+                            r = semantic_temp
 
                     # Check for a replacement right-hand side if the rhs is found among the lhs variables
-                    r_name = r.name if isinstance(r, Variable) else r
                     pyccel_stage.set_stage('syntactic')
-                    local_assign = Assign(l, rhs_map.get(r_name, r), python_ast = expr.python_ast)
+                    local_assign = Assign(l, r, python_ast = expr.python_ast)
                     pyccel_stage.set_stage('semantic')
                     body.append(self._visit(local_assign))
-                    unsaved_vars.discard(r_name)
 
                 return CodeBlock(body)
         else:
