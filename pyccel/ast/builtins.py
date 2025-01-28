@@ -18,7 +18,7 @@ from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from .datatypes import GenericType, PythonNativeComplex
 from .datatypes import PrimitiveBooleanType, PrimitiveComplexType
-from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
+from .datatypes import HomogeneousTupleType, InhomogeneousTupleType, TupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
 from .datatypes import DictType, VoidType, TypeAlias, StringType
@@ -706,6 +706,7 @@ class PythonTupleFunction(TypedAstNode):
     """
     __slots__ = ()
     _attribute_nodes = ()
+    _static_type = TupleType
 
 #==============================================================================
 class PythonLen(PyccelFunction):
@@ -832,6 +833,7 @@ class PythonListFunction(PyccelFunction):
     name = 'list'
     __slots__ = ('_class_type', '_shape')
     _attribute_nodes = ()
+    _static_type = HomogeneousListType
 
     def __new__(cls, arg = None):
         if arg is None:
@@ -934,9 +936,10 @@ class PythonSetFunction(PyccelFunction):
     arg : TypedAstNode
         The argument passed to the function call.
     """
-
     __slots__ = ('_shape', '_class_type')
     name = 'set'
+    _static_type = HomogeneousSetType
+
     def __new__(cls, arg = None):
         if arg is None:
             return PythonSet()
@@ -1053,6 +1056,7 @@ class PythonDictFunction(PyccelFunction):
     """
     __slots__ = ('_shape', '_class_type')
     name = 'dict'
+    _static_type = DictType
 
     def __new__(cls, *args, **kwargs):
         if len(args) == 0:
