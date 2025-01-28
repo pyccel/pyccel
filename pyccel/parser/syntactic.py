@@ -977,7 +977,7 @@ class SyntaxParser(BasicParser):
         else:
             result_counter = 1
             suggested_names = set(r.expr for r in returns if isinstance(r.expr, PyccelSymbol))
-            if len(suggested_names) == 1 and suggested_names.difference(argument_names, self.scope.local_used_symbols):
+            if len(suggested_names) == 1 and suggested_names.difference(argument_names):
                 results = suggested_names.pop()
             else:
                 results, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
