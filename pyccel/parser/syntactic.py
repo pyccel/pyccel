@@ -397,10 +397,8 @@ class SyntaxParser(BasicParser):
 
         if stmt.asname:
             new = self._visit(stmt.asname)
-            self.scope.insert_symbol(new)
             return AsName(old, new)
         else:
-            self.scope.insert_symbol(old)
             return old
 
     def _visit_Dict(self, stmt):
