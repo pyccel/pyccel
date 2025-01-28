@@ -1150,10 +1150,12 @@ class PyccelAnd(PyccelBooleanOperator):
     __slots__ = ()
     _precedence = 5
 
-    def __new__(self, *args, simplify = False):
+    def __new__(cls, *args, simplify = False):
         if simplify:
             if any(isinstance(a, LiteralFalse) for a in args):
                 return LiteralFalse()
+            if all(isinstance(a, LiteralTrue) for a in args):
+                return LiteralTrue()
         return super().__new__(cls)
 
     def __init__(self, *args, simplify = False):
@@ -1190,10 +1192,12 @@ class PyccelOr(PyccelBooleanOperator):
     __slots__ = ()
     _precedence = 4
 
-    def __new__(self, *args, simplify = False):
+    def __new__(cls, *args, simplify = False):
         if simplify:
             if any(isinstance(a, LiteralTrue) for a in args):
                 return LiteralTrue()
+            elif all(isinstance(a, LiteralFalse) for a in args):
+                return LiteralFalse()
         return super().__new__(cls)
 
     def __init__(self, *args, simplify = False):
