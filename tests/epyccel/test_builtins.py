@@ -746,7 +746,7 @@ def test_isinstance_containers(language):
 )
 def test_isinstance_numpy(language):
     def isinstance_test(a : 'int32 | int64 | int | float32'):
-        import numpy as np
+        import numpy as np #pylint:disable=reimported
         return isinstance(a, np.int32), isinstance(a, np.int64), isinstance(a, int), isinstance(a, np.float32)
 
     f = epyccel(isinstance_test, language=language)
@@ -789,9 +789,9 @@ def test_isinstance_tuple(language):
     )
 )
 def test_isinstance_union(language):
-    def isinstance_test(a : bool | int | float | complex):
-        return (isinstance(a, bool | int), isinstance(a, bool | float), isinstance(a, int | complex),
-                isinstance(a, tuple | list))
+    def isinstance_test(a : bool | int | float | complex): #pylint: disable=unsupported-binary-operation
+        return (isinstance(a, bool | int), isinstance(a, bool | float), isinstance(a, int | complex), #pylint: disable=unsupported-binary-operation
+                isinstance(a, tuple | list)) #pylint: disable=unsupported-binary-operation
 
     f = epyccel(isinstance_test, language=language)
     assert f(True) == isinstance_test(True)
