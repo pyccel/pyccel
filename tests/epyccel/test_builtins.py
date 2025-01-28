@@ -775,3 +775,25 @@ def test_isinstance_tuple(language):
     assert f(4) == isinstance_test(6)
     assert f(3.9) == isinstance_test(6.7)
     assert f(1+2j) == isinstance_test(6.5+8.3j)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [pytest.mark.c]),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
+                "gives wrong results. See #802")),
+            pytest.mark.python]
+        )
+    )
+)
+def test_isinstance_union(language):
+    def isinstance_test(a : bool | int | float | complex):
+        return (isinstance(a, bool | int), isinstance(a, bool | float), isinstance(a, int | complex),
+                isinstance(a, tuple | list))
+
+    f = epyccel(isinstance_test, language=language)
+    assert f(True) == isinstance_test(True)
+    assert f(False) == isinstance_test(False)
+    assert f(4) == isinstance_test(6)
+    assert f(3.9) == isinstance_test(6.7)
+    assert f(1+2j) == isinstance_test(6.5+8.3j)
