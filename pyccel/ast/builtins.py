@@ -45,6 +45,7 @@ __all__ = (
     'PythonFloat',
     'PythonImag',
     'PythonInt',
+    'PythonIsInstance',
     'PythonLen',
     'PythonList',
     'PythonListFunction',
@@ -1719,6 +1720,7 @@ class PythonIsInstance(PyccelFunction):
         A class or a tuple of classes describing the acceptable types for
         the object.
     """
+    __slots__ = ()
     def __init__(self, obj, class_or_tuple):
         super().__init__(obj, class_or_tuple)
 
