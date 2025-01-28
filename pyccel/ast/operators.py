@@ -1146,6 +1146,9 @@ class PyccelAnd(PyccelBooleanOperator):
     ----------
     *args : tuple of TypedAstNode
         The arguments passed to the operator.
+    simplify : bool
+        True if the expression should be simplified to be as compact/readable as
+        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 5
@@ -1188,6 +1191,9 @@ class PyccelOr(PyccelBooleanOperator):
     ----------
     *args : tuple of TypedAstNode
         The arguments passed to the operator.
+    simplify : bool
+        True if the expression should be simplified to be as compact/readable as
+        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 4
