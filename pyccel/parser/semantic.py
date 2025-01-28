@@ -5619,16 +5619,31 @@ class SemanticParser(BasicParser):
                 expected_type = class_type.static_type()
             except AttributeError:
                 expected_type = None
+
             if expected_type:
-                return convert_to_literal(expected_type is obj.class_type)
+                class_type = obj.class_type
+                cls_base_to_insert = [self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)]
+                possible_types = []
+                while cls_base_to_insert:
+                    cls_base = cls_base_to_insert.pop()
+                    class_type = cls_base.class_type
+                    possible_types.append(class_type)
+                    cls_base_to_insert.extend(cls_base.superclasses)
+
+                return convert_to_literal(expected_type in possible_types)
+
             elif class_type is PythonListFunction:
                 return convert_to_literal(isinstance(obj.class_type, HomogeneousListType))
+
             elif class_type is PythonTupleFunction:
                 return convert_to_literal(isinstance(obj.class_type, TupleType))
+
             elif class_type is PythonSetFunction:
                 return convert_to_literal(isinstance(obj.class_type, HomogeneousSetType))
+
             elif class_type is PythonDictFunction:
                 return convert_to_literal(isinstance(obj.class_type, DictType))
+
             else:
                 errors.report(f"Type {class_or_tuple} is not handled in isinstance call.",
                         severity='error', symbol=expr)
