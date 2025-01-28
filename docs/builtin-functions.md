@@ -38,7 +38,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `id` | No |
 | `input` | No |
 | **`int`** | **Yes** |
-| `isinstance` | No |
+| **`isinstance`** | **Yes** |
 | `issubclass` | No |
 | `iter` | No |
 | **`len`** | **Yes** |
