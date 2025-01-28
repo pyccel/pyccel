@@ -4,8 +4,6 @@ All notable changes to this project will be documented in this file.
 ## \[UNRELEASED\]
 
 ### Added
--   #1881 : Add Python support for dict method `copy()`.
--   #1880 : Add Python support for dict method `clear()`.
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1787 : Ensure STC is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
@@ -16,10 +14,10 @@ All notable changes to this project will be documented in this file.
 -   #1893 : Add Python support for set initialisation with `set()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
--   #1886 : Add Python support for dict method `pop()`.
+-   #1881 : Add Python support for dict method `copy()`.
 -   #1887 : Add Python support for dict method `popitem()`.
 -   #1888 : Add Python support for dict method `setdefault()`.
--   #1885 : Add Python support for dict method `get()`.
+-   #1885 : Add Python and C support for dict method `get()`.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
 -   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the STC library.
 -   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
@@ -48,7 +46,11 @@ All notable changes to this project will be documented in this file.
 -   #1754 : Add support for set method `update()`.
 -   #1744 : Add support for set method `intersection()`.
 -   #1745 : Add support for set method `intersection_update()`.
+-   #2059 : Add C support for returning dictionaries from functions.
+-   #2164 : Add support for dict indexing.
 -   #1884 : Add support for dict method `items()`.
+-   #1880 : Add support for dict method `clear()`.
+-   #1886 : Add Python and C support for dict method `pop()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
@@ -70,6 +72,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
+-   \[DEVELOPER\] Added an environment variable to globally activate developer-mode for errors.
 
 ### Fixed
 
@@ -101,9 +104,13 @@ All notable changes to this project will be documented in this file.
 -   #2111 : Fix declaration of class attributes with name conflicts using type annotations.
 -   #2115 : Fix integer handling with NumPy 2.0 on Windows.
 -   Fix handling of union `typing.TypeAlias` objects as type hints.
--   #2141 : Fix error when removing `test_node`
+-   #2141 : Fix error when removing `test_node`.
 -   #2148 : Fix error due to missing file `numpy_version.h`.
+-   #2001 : Ensure all memory is correctly deallocated in the Python interface in a way that is compatible with all compilers.
+-   #2153 : Fix missing line information when an unknown class method is called.
+-   #2149 : Fix multi-line expressions in `if` conditions.
 -   #2104 : Add support for Pythonic swapping and raise errors for expressions which are too complex.
+-   Lifted the restriction on ndarrays limiting them to rank<15.
 
 ### Changed
 
@@ -113,6 +120,7 @@ All notable changes to this project will be documented in this file.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
 -   #1964 : Improve the error message when the wrong type is passed as a NumPy array argument.
 -   #1941 : Rename "target" in `AsName` to `local_alias` to better illustrate its use in the local context.
+-   #1961 : Use STC's `cspan` to describe `np.ndarray` in C. This results in a large speed-up for pathological cases.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -139,6 +147,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Unify the strategy for handling additional imports in the printing stage for different languages.
 -   \[INTERNALS\] Make `Iterable` into a super-class instead of a storage class.
 -   \[INTERNALS\] Change the order of the constructor arguments of `FunctionDef`.
+-   \[INTERNALS\] Use `_extract_X_FunctionDefResult` methods in Fortran-to-C wrapper.
+-   \[INTERNALS\] Rename `BindCVariable`->`BindCModuleVariable`.
 
 ### Deprecated
 
@@ -153,6 +163,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 -   \[INTERNALS\] Remove unused classes `SymbolicAssign` and `SymbolicPrint`.
+-   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefResult` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
 
 ## \[1.12.1\] - 2024-10-01
 

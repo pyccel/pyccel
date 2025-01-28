@@ -17,6 +17,8 @@ from .basic     import PyccelAstNode
 
 from .bind_c    import BindCPointer
 
+from .builtins  import PythonInt
+
 from .datatypes import FixedSizeType, CustomDataType
 from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import PythonNativeBool, StringType, VoidType
@@ -42,6 +44,7 @@ __all__ = (
     'PyccelPyObject',
     'PyccelPyClassType',
     'PyccelPyTypeObject',
+    'Py_ssize_t',
     'WrapperCustomDataType',
 # --------- CLASSES -----------
     'PyFunctionDef',
@@ -57,6 +60,7 @@ __all__ = (
     'PyModule_Create',
     'PyModule_AddObject',
     'PyModInitFunc',
+    'Py_ssize_t_Cast',
 #--------- CONSTANTS ----------
     'Py_True',
     'Py_False',
@@ -119,6 +123,16 @@ class WrapperCustomDataType(CustomDataType):
     """
     __slots__ = ()
     _name = 'pycustomclasstype'
+
+class Py_ssize_t(FixedSizeType):
+    """
+    Class representing Python's Py_ssize_t type.
+
+    Class representing Python's Py_ssize_t type.
+    """
+    __slots__ = ()
+    _name = 'int'
+    _primitive_type = PrimitiveIntegerType()
 
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes
@@ -956,6 +970,23 @@ class PyModInitFunc(FunctionDef):
                         value = (Nil() if isinstance(v.class_type, (VoidType, BindCPointer)) else None)) \
                 for v in self.scope.variables.values()]
 
+class Py_ssize_t_Cast(PythonInt):
+    """
+    A class for casting integers to Python's Py_ssize_t type.
+
+    A class for casting integers to Python's Py_ssize_t type.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
+    """
+    __slots__ = ()
+    _static_type = Py_ssize_t()
+    _class_type = Py_ssize_t()
+    name = 'Py_ssize_t'
+
+
 #-------------------------------------------------------------------
 #                      Python.h Constants
 #-------------------------------------------------------------------
@@ -1043,15 +1074,12 @@ def C_to_Python(c_object):
     FunctionDef
         The function which casts the C object to Python.
     """
-    if c_object.rank != 0:
-        cast_function = 'ndarray_to_pyarray'
-        memory_handling = 'stack'
-    else:
-        try :
-            cast_function = c_to_py_registry[c_object.dtype]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
-        memory_handling = 'alias'
+    assert c_object.rank == 0
+    try :
+        cast_function = c_to_py_registry[c_object.dtype]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
+    memory_handling = 'alias'
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
@@ -1217,6 +1245,24 @@ PyIter_Next = FunctionDef(name = 'PyIter_Next',
                         arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
                         results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
+#-------------------------------------------------------------------
+#                         Dict functions
+#-------------------------------------------------------------------
+
+
+# https://docs.python.org/3/c-api/dict.html#c.PyDict_New
+PyDict_New = FunctionDef(name = 'PyDict_New',
+                    arguments = [],
+                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'dict', memory_handling='alias'))],
+                    body = [])
+
+# https://docs.python.org/3/c-api/dict.html#c.PyDict_SetItem
+PyDict_SetItem = FunctionDef(name = 'PyDict_SetItem',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'dict', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'key', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'val', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    body = [])
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {

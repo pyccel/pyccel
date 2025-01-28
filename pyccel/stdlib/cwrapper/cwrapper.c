@@ -7,6 +7,12 @@
 
 
 
+
+const int NO_TYPE_CHECK = -1;
+const int NO_ORDER_CHECK = -1;
+
+
+
 /* Casting python object to c type
  *
  * Reference of the used c python api function
@@ -168,10 +174,7 @@ void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int6
 
 void capsule_cleanup(PyObject *capsule) {
     void *memory = PyCapsule_GetPointer(capsule, NULL);
-    // TODO: Correct free method. See #2001
-#ifndef __INTEL_LLVM_COMPILER
     free(memory);
-#endif
 }
 
 #if defined(WIN32) && (PyArray_RUNTIME_VERSION >= NPY_2_0_API_VERSION)
@@ -205,6 +208,244 @@ PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[]
         PyArray_SetBaseObject((PyArrayObject*)arr, base);
     }
     return arr;
+}
+
+/*
+ * Function: _check_pyarray_dtype
+ * --------------------
+ * Check Python Object DataType:
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *      dtype : desired data type enum
+ * 	Returns		:
+ *		return NULL if no error occurred otherwise it will return the
+ *      message to be reported in a TypeError exception
+ * reference of the used c/python api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_TYPE
+ */
+static char*	_check_pyarray_dtype(PyArrayObject *a, int dtype)
+{
+	int current_dtype;
+
+	if (dtype == NO_TYPE_CHECK)
+		return NULL;
+
+	current_dtype = PyArray_TYPE(a);
+	if (current_dtype != dtype)
+	{
+        PyObject* current_type_name = PyObject_Str((PyObject*)PyArray_DESCR(a)->typeobj);
+        PyObject* expected_type_name = PyObject_Str(PyArray_TypeObjectFromType(dtype));
+        Py_ssize_t c_size;
+        const char* current_name = PyUnicode_AsUTF8AndSize(current_type_name, &c_size);
+        const char* expected_name = PyUnicode_AsUTF8AndSize(expected_type_name, &c_size);
+        char* error = (char *)malloc(200);
+        sprintf(error, "argument dtype must be %s, not %s",
+			expected_name,
+			current_name);
+		return error;
+	}
+
+	return NULL;
+}
+
+/*
+ * Function: _check_pyarray_rank
+ * --------------------
+ * Check Python Object Rank:
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *      rank  : desired rank
+ * 	Returns		:
+ *		return NULL if no error occurred otherwise it will return the
+ *      message to be reported in a TypeError exception
+ * reference of the used c/python api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_NDIM
+ */
+static char* _check_pyarray_rank(PyArrayObject *a, int rank)
+{
+    int current_rank;
+
+    current_rank = PyArray_NDIM(a);
+    if (current_rank != rank)
+    {
+        char* error = (char *)malloc(200);
+        sprintf(error, "argument rank must be %d, not %d",
+            rank,
+            current_rank);
+        return error;
+    }
+
+    npy_intp* np_shape = PyArray_SHAPE(a);
+    for (int i = 0; i < rank; ++i) {
+        if (np_shape[i] == 0) {
+            char* error = (char *)malloc(200);
+            sprintf(error, "Array has size 0 in dimension %d", i);
+            return error;
+        }
+    }
+
+    return NULL;
+}
+
+/*
+ * Function: _check_pyarray_order
+ * --------------------
+ * Check Python Object Order:
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *      flag  : desired order
+ * 	Returns		:
+ *		return NULL if no error occurred otherwise it will return the
+ *      message to be reported in a TypeError exception
+ * reference of the used c/python api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_CHKFLAGS
+ */
+static char* _check_pyarray_order(PyArrayObject *a, int flag)
+{
+	if (flag == NO_ORDER_CHECK)
+		return NULL;
+
+	if (!PyArray_CHKFLAGS(a, flag))
+	{
+		char order = (flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : (flag == NPY_ARRAY_F_CONTIGUOUS ? 'F' : '?'));
+        char* error = (char *)malloc(200);
+		sprintf(error, "argument does not have the expected ordering (%c)", order);
+		return error;
+	}
+
+	return NULL;
+}
+
+
+/*
+ * Function: _check_pyarray_type
+ * --------------------
+ * Check if Python Object is ArrayType:
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *
+ * 	Returns		:
+ *		return NULL if no error occurred otherwise it will return the
+ *      message to be reported in a TypeError exception
+ * reference of the used c/python api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_Check
+ */
+static char* _check_pyarray_type(PyObject *a)
+{
+	if (!PyArray_Check(a))
+	{
+        char* error = (char *)malloc(200);
+        sprintf(error, "argument must be numpy.ndarray, not %s",
+			 a == Py_None ? "None" : Py_TYPE(a)->tp_name);
+        return error;
+	}
+
+	return NULL;
+}
+
+/*
+ * Function: pyarray_check
+ * --------------------
+ * Check Python Object (DataType, Rank, Order):
+ *
+ * 	Parameters	:
+ * 	    name  : the name of the argument (used for error output)
+ *		a 	  : python array object
+ *      dtype : desired data type enum
+ *		rank  : desired rank
+ *		flag  : desired order flag
+ * 	Returns		:
+ *		return true if no error occurred otherwise it will return false
+ */
+bool	pyarray_check(const char* name, PyObject *o, int dtype, int rank, int flag)
+{
+    char* array_type = _check_pyarray_type(o);
+	if (array_type != NULL) {
+		PyErr_Format(PyExc_TypeError, array_type);
+        free(array_type);
+        return false;
+    }
+
+    PyArrayObject* a = (PyArrayObject*)o;
+
+    bool correct_type = true;
+    char error[800];
+    sprintf(error, "Wrong argument type for argument %s : ", name);
+
+	// check array element type / rank / order
+    char* array_dtype = _check_pyarray_dtype(a, dtype);
+    if (array_dtype != NULL) {
+        strcat(error, array_dtype);
+        free(array_dtype);
+        correct_type = false;
+    }
+
+    char* array_rank = _check_pyarray_rank(a, rank);
+    if (array_rank != NULL) {
+        if (!correct_type)
+            strcat(error, ", ");
+        strcat(error, array_rank);
+        free(array_rank);
+        correct_type = false;
+    }
+
+    if (rank > 1) {
+        char* array_order = _check_pyarray_order(a, flag);
+        if (array_order != NULL) {
+            if (!correct_type)
+                strcat(error, ", ");
+            strcat(error, array_order);
+            free(array_order);
+            correct_type = false;
+        }
+    }
+
+    if (!correct_type) {
+		PyErr_SetString(PyExc_TypeError, error);
+    }
+    return correct_type;
+}
+
+bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag)
+{
+    char* array_type = _check_pyarray_type(o);
+	if (array_type != NULL) {
+        free(array_type);
+        return false;
+    }
+
+    PyArrayObject* a = (PyArrayObject*)o;
+
+	// check array element type / rank / order
+    char* array_dtype = _check_pyarray_dtype(a, dtype);
+	if(array_dtype != NULL) {
+        free(array_dtype);
+        return false;
+    }
+
+    char* array_rank = _check_pyarray_rank(a, rank);
+	if(array_rank != NULL) {
+        free(array_rank);
+        return false;
+    }
+
+    if (rank > 1) {
+        char* array_order = _check_pyarray_order(a, flag);
+        if(array_order != NULL) {
+            free(array_order);
+            return false;
+        }
+    }
+
+	return true;
 }
 
 extern inline int64_t	PyInt64_to_Int64(PyObject *object);
