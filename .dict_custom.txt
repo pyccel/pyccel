@@ -123,3 +123,4 @@ gFTL
 STC's
 gFTL's
 CMake
+pythonic
