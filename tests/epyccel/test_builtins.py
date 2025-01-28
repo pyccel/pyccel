@@ -686,3 +686,24 @@ def test_round_ndigits_bool(language):
     round_ndigits_output = round_ndigits()
     assert all(o == r for o, r in zip(f_output, round_ndigits_output))
     assert all(isinstance(o, type(r)) for o, r in zip(f_output, round_ndigits_output))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [pytest.mark.c]),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
+                "gives wrong results. See #802")),
+            pytest.mark.python]
+        )
+    )
+)
+def test_isinstance_native(language):
+    def isinstance_test(a : bool | int | float | complex):
+        return isinstance(a, bool), isinstance(a, int), isinstance(a, float), isinstance(a, complex)
+
+    f = epyccel(isinstance_test, language=language)
+    assert f(True) == isinstance_test(True)
+    assert f(False) == isinstance_test(False)
+    assert f(4) == isinstance_test(6)
+    assert f(3.9) == isinstance_test(6.7)
+    assert f(1+2j) == isinstance_test(6.5+8.3j)
