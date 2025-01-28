@@ -50,7 +50,7 @@ def test_swap_basic_3(language):
 
 def test_swap_basic_4(language):
     def swp(a : int, b : int, c : int):
-        a, b, c = c, b, a
+        a, b, c = c, b, a #pylint: disable=self-assigning-variable
         return a, b, c
 
     f = epyccel(swp, language=language)
@@ -91,7 +91,7 @@ def test_tuple_assign(language):
 
 def test_tuple_assign2(language):
     def tup_assign(a : int, b : int):
-        a, d = a, a+b
+        a, d = a, a+b #pylint: disable=self-assigning-variable
         return a, b, d
 
     f = epyccel(tup_assign, language=language)
@@ -104,7 +104,7 @@ def test_tuple_assign2(language):
 
 def test_tuple_assign3(language):
     def tup_assign(a : int):
-        a, a = a+3, a+5
+        a, a = a+3, a+5 #pylint: disable=redeclared-assigned-name
         return a
 
     f = epyccel(tup_assign, language=language)
