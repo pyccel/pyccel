@@ -2671,7 +2671,7 @@ class CCodePrinter(CodePrinter):
             if sys.version_info < (3, 9):
                 return ''
             else:
-                return '//' + ast.unparse(expr.python_ast) + '\n'
+                return '//' + ast.unparse(expr.python_ast) + '\n' #pylint: disable=no-member
         condition = self._print(expr.test)
         self.add_import(c_imports['assert'])
         return f"assert({condition});\n"

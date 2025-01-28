@@ -936,8 +936,8 @@ class SemanticParser(BasicParser):
         if all(isinstance(a, PyccelFunctionDef) for a in visited_args):
             try:
                 possible_types = [a.cls_name.static_type() for a in visited_args]
-            except AttributeError as e:
-                errors.report(("Unrecognised type."),
+            except AttributeError:
+                errors.report("Unrecognised type in type union statement",
                         severity='fatal', symbol=expr)
             return UnionTypeAnnotation(*[VariableTypeAnnotation(t) for t in possible_types])
         class_type = arg1.class_type

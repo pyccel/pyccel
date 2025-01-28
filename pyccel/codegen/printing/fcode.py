@@ -2953,7 +2953,7 @@ class FCodePrinter(CodePrinter):
             if sys.version_info < (3, 9):
                 return ''
             else:
-                return '!' + ast.unparse(expr.python_ast) + '\n'
+                return '!' + ast.unparse(expr.python_ast) + '\n' #pylint: disable=no-member
         test_code = self._print(expr.test)
         return (f"if ( .not. ({test_code})) then\n"
                 'stop 1\n'
