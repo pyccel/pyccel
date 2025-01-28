@@ -3529,7 +3529,6 @@ class SemanticParser(BasicParser):
                 r_iter = PythonTuple(*r_iter)
 
                 # Create variables to handle swap expressions
-                rhs_map = {}
                 unsaved_vars = set()
                 if isinstance(rhs, (PythonTuple, PythonList)):
                     unsaved_vars = set(a.name for a in rhs.get_attribute_nodes(Variable, excluded_nodes = (FunctionDef,)))
@@ -3545,7 +3544,6 @@ class SemanticParser(BasicParser):
                             severity='error', symbol=expr)
 
                 body = []
-                N = len(lhs)
                 for i, l in enumerate(lhs):
                     r = r_iter[i]
                     # Get unsaved variables that are still needed
