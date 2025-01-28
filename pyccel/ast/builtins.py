@@ -602,6 +602,12 @@ class PythonTuple(TypedAstNode):
         # Create a set of dtypes using the same key for compatible types
         dtypes = set((d.primitive_type, d.precision) if isinstance(d, FixedSizeNumericType) else d for d in dtypes)
 
+        if any(isinstance(d, SymbolicType) for d in dtypes):
+            self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
+            self._shape = (LiteralInteger(len(args)),)
+            self._is_homogeneous = False
+            return
+
         ranks  = set(a.rank for a in args)
         orders = set(a.order for a in args)
         if len(ranks) == 1:
@@ -1693,6 +1699,25 @@ class VariableIterator(Iterable):
         return self.get_python_iterable_item()
 
 #==============================================================================
+class PythonIsInstance(PyccelFunction):
+    """
+    Represents a call to Python's `isinstance` function.
+
+    Represents a call to Python's `isinstance` function which checks if an
+    object has a specified type.
+
+    Parameters
+    ----------
+    obj : TypedAstNode
+        The object whose type should be checked.
+    class_or_tuple : TypedAstNode
+        A class or a tuple of classes describing the acceptable types for
+        the object.
+    """
+    def __init__(self, obj, class_or_tuple):
+        super().__init__(obj, class_or_tuple)
+
+#==============================================================================
 
 DtypePrecisionToCastFunction = {
         PythonNativeBool()    : PythonBool,
@@ -1704,25 +1729,26 @@ DtypePrecisionToCastFunction = {
 #==============================================================================
 
 builtin_functions_dict = {
-    'abs'      : PythonAbs,
-    'bool'     : PythonBool,
-    'complex'  : PythonComplex,
-    'dict'     : PythonDictFunction,
-    'enumerate': PythonEnumerate,
-    'float'    : PythonFloat,
-    'int'      : PythonInt,
-    'len'      : PythonLen,
-    'list'     : PythonListFunction,
-    'map'      : PythonMap,
-    'max'      : PythonMax,
-    'min'      : PythonMin,
-    'not'      : PyccelNot,
-    'range'    : PythonRange,
-    'round'    : PythonRound,
-    'set'      : PythonSetFunction,
-    'str'      : LiteralString,
-    'sum'      : PythonSum,
-    'tuple'    : PythonTupleFunction,
-    'type'     : PythonType,
-    'zip'      : PythonZip,
+    'abs'        : PythonAbs,
+    'bool'       : PythonBool,
+    'complex'    : PythonComplex,
+    'dict'       : PythonDictFunction,
+    'enumerate'  : PythonEnumerate,
+    'float'      : PythonFloat,
+    'int'        : PythonInt,
+    'isinstance' : PythonIsInstance,
+    'len'        : PythonLen,
+    'list'       : PythonListFunction,
+    'map'        : PythonMap,
+    'max'        : PythonMax,
+    'min'        : PythonMin,
+    'not'        : PyccelNot,
+    'range'      : PythonRange,
+    'round'      : PythonRound,
+    'set'        : PythonSetFunction,
+    'str'        : LiteralString,
+    'sum'        : PythonSum,
+    'tuple'      : PythonTupleFunction,
+    'type'       : PythonType,
+    'zip'        : PythonZip,
 }
