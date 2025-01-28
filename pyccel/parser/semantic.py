@@ -933,12 +933,13 @@ class SemanticParser(BasicParser):
             The new operator.
         """
         arg1 = visited_args[0]
-        if isinstance(arg1, FunctionDef):
-            msg = ("Function found in a mathematical operation. "
-                   "Are you trying to declare a type? "
-                   "If so then the type object must be used as a type hint.")
-            errors.report(msg,
-                    severity='fatal', symbol=expr)
+        if all(isinstance(a, PyccelFunctionDef) for a in visited_args):
+            try:
+                possible_types = [a.cls_name.static_type() for a in visited_args]
+            except AttributeError as e:
+                errors.report(("Unrecognised type."),
+                        severity='fatal', symbol=expr)
+            return UnionTypeAnnotation(*[VariableTypeAnnotation(t) for t in possible_types])
         class_type = arg1.class_type
         class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
         magic_method_name = magic_method_map.get(type(expr), None)
@@ -5613,14 +5614,24 @@ class SemanticParser(BasicParser):
             obj_arg = function_call_args[0]
             return PyccelOr(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(class_type)]) \
                                 for class_type in class_or_tuple], simplify=True)
+        elif isinstance(class_or_tuple, UnionTypeAnnotation):
+            obj_arg = function_call_args[0]
+            return PyccelOr(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(var_annot)]) \
+                                for var_annot in class_or_tuple.type_list], simplify=True)
         else:
-            class_type = class_or_tuple.cls_name
-            try:
-                expected_type = class_type.static_type()
-            except AttributeError:
-                expected_type = None
+            if isinstance(class_or_tuple, VariableTypeAnnotation):
+                expected_type = class_or_tuple.class_type
+            else:
+                class_type = class_or_tuple.cls_name
+                try:
+                    expected_type = class_type.static_type()
+                except AttributeError:
+                    expected_type = None
 
-            if expected_type:
+            if isinstance(expected_type, type):
+                return convert_to_literal(isinstance(obj.class_type, expected_type))
+
+            elif expected_type:
                 class_type = obj.class_type
                 cls_base_to_insert = [self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)]
                 possible_types = {class_type}
@@ -5633,18 +5644,6 @@ class SemanticParser(BasicParser):
                 possible_types.discard(None)
 
                 return convert_to_literal(expected_type in possible_types)
-
-            elif class_type is PythonListFunction:
-                return convert_to_literal(isinstance(obj.class_type, HomogeneousListType))
-
-            elif class_type is PythonTupleFunction:
-                return convert_to_literal(isinstance(obj.class_type, TupleType))
-
-            elif class_type is PythonSetFunction:
-                return convert_to_literal(isinstance(obj.class_type, HomogeneousSetType))
-
-            elif class_type is PythonDictFunction:
-                return convert_to_literal(isinstance(obj.class_type, DictType))
 
             else:
                 errors.report(f"Type {class_or_tuple} is not handled in isinstance call.",
