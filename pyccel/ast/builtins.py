@@ -1708,7 +1708,8 @@ class PythonIsInstance(PyccelFunction):
     Represents a call to Python's `isinstance` function.
 
     Represents a call to Python's `isinstance` function which checks if an
-    object has a specified type.
+    object has a specified type. This class exists to find a definition of
+    `isinstance` in builtin_functions_dict but it should not be instantiated.
 
     Parameters
     ----------
