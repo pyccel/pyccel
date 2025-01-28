@@ -699,7 +699,7 @@ def test_round_ndigits_bool(language):
     )
 )
 def test_isinstance_native(language):
-    def isinstance_test(a : bool | int | float | complex):
+    def isinstance_test(a : 'bool | int | float | complex'):
         return isinstance(a, bool), isinstance(a, int), isinstance(a, float), isinstance(a, complex)
 
     f = epyccel(isinstance_test, language=language)
