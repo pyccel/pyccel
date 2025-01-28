@@ -707,3 +707,49 @@ def test_isinstance_native(language):
     assert f(4) == isinstance_test(6)
     assert f(3.9) == isinstance_test(6.7)
     assert f(1+2j) == isinstance_test(6.5+8.3j)
+
+def test_isinstance_containers(language):
+    def isinstance_tup(a : int, b : int):
+        container = (a, b)
+        return (isinstance(container, tuple), isinstance(container, list),
+                isinstance(container, set), isinstance(container, dict))
+    def isinstance_lst(a : int, b : int):
+        container = [a, b]
+        return (isinstance(container, tuple), isinstance(container, list),
+                isinstance(container, set), isinstance(container, dict))
+    def isinstance_set(a : int, b : int):
+        container = {a, b}
+        return (isinstance(container, tuple), isinstance(container, list),
+                isinstance(container, set), isinstance(container, dict))
+    def isinstance_dict(a : int, b : int):
+        container = {a: False, b: True}
+        return (isinstance(container, tuple), isinstance(container, list),
+                isinstance(container, set), isinstance(container, dict))
+
+    test_funcs = (isinstance_tup, isinstance_lst, isinstance_set, isinstance_dict)
+
+    for f in test_funcs:
+        f_epyc = epyccel(f, language=language)
+
+        assert f(2, 5) == f_epyc(2, 5)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [pytest.mark.c]),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
+                "gives wrong results. See #802")),
+            pytest.mark.python]
+        )
+    )
+)
+def test_isinstance_numpy(language):
+    def isinstance_test(a : 'int32 | int64 | int | float32'):
+        import numpy as np
+        return isinstance(a, np.int32), isinstance(a, np.int64), isinstance(a, int), isinstance(a, np.float32)
+
+    f = epyccel(isinstance_test, language=language)
+    assert f(np.int32(4)) == isinstance_test(np.int32(4))
+    assert f(np.int64(4)) == isinstance_test(np.int64(4))
+    assert f(4) == isinstance_test(4)
+    assert f(np.float32(4)) == isinstance_test(np.float32(4))
