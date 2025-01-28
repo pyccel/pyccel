@@ -1,7 +1,8 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 
 def Mi(x: float, M0: 'float[:, :]') -> 'float[:, :]':
-    M1 = x * M0 + 1.    
+    M1 = x * M0 + 1.
     return M1
 
 def M_GEN(x: float) -> 'float[:, :, :]':
