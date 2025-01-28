@@ -998,8 +998,6 @@ def test_assert(language, test_file):
 
     cwd = get_abs_path(test_dir)
 
-    if not language:
-        language = "fortran"
     pyccel_commands = " --language="+language
     pyccel_commands += " --output="+ output_dir
 
