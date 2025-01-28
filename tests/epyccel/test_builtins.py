@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import sys
 import pytest
 from numpy.random import randint, uniform
 from numpy import iinfo, finfo
@@ -776,6 +777,7 @@ def test_isinstance_tuple(language):
     assert f(3.9) == isinstance_test(6.7)
     assert f(1+2j) == isinstance_test(6.5+8.3j)
 
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="Union of types implemented in Python 3.10")
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [pytest.mark.c]),
