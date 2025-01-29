@@ -3342,29 +3342,12 @@ class SemanticParser(BasicParser):
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
 
-        if isinstance(rhs, PythonTuple):
-            if isinstance(lhs, PythonTuple):
-                pyccel_stage.set_stage('syntactic')
-                syntactic_assign_elems = [Assign(l, r, python_ast=expr.python_ast) for l, r in zip(lhs, rhs)]
-                pyccel_stage.set_stage('semantic')
-                assign_elems = [self._visit(a) for a in syntactic_assign_elems]
-                return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
-            elif isinstance(lhs, (PyccelSymbol, DottedName)):
-                syntactic_assign_elems = []
-                syntactic_elems = []
-                pyccel_stage.set_stage('syntactic')
-                for i, r in enumerate(rhs):
-                    elem_name = self.scope.get_new_name( lhs + '_' + str(i) )
-                    syntactic_assign_elems.append(Assign(elem_name, r, python_ast=expr.python_ast))
-                    syntactic_elems.append(elem_name)
-                pyccel_stage.set_stage('semantic')
-                assign_elems = [self._visit(a) for a in syntactic_assign_elems]
-                elems = [self._visit(e) for e in syntactic_elems]
-                lhs = Variable(InhomogeneousTupleType(*[e.class_type for e in elems]), lhs, is_temp = lhs.is_temp)
-                for i, e in enumerate(elems):
-                    self.scope.insert_symbolic_alias(lhs[i], e)
-                self.scope.insert_variable(lhs, tuple_recursive = False)
-                return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
+        if isinstance(lhs, PythonTuple) and isinstance(rhs, PythonTuple):
+            pyccel_stage.set_stage('syntactic')
+            syntactic_assign_elems = [Assign(l, r, python_ast=expr.python_ast) for l, r in zip(lhs, rhs)]
+            pyccel_stage.set_stage('semantic')
+            assign_elems = [self._visit(a) for a in syntactic_assign_elems]
+            return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
 
         # Steps before visiting
         if isinstance(rhs, GeneratorComprehension):
