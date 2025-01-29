@@ -3368,12 +3368,22 @@ class SemanticParser(BasicParser):
                 else:
                     syntactic_assign_elems = []
                     syntactic_elems = []
+
                     pyccel_stage.set_stage('syntactic')
                     for i, r in enumerate(rhs):
-                        elem_name = self.scope.get_new_name( lhs + '_' + str(i) )
-                        syntactic_assign_elems.append(Assign(elem_name, r, python_ast=expr.python_ast))
+                        # Check if lhs element was named in the syntactic stage (this can happen for
+                        # results of functions)
+                        idx_name = IndexedElement(lhs, i)
+                        if idx_name in self.scope.symbolic_alias:
+                            elem_name = self.scope.symbolic_alias[idx_name]
+                        else:
+                            elem_name = self.scope.get_new_name( f'{lhs}_{i}' )
+                        # Check we aren't doing x=x
+                        if elem_name != r:
+                            syntactic_assign_elems.append(Assign(elem_name, r, python_ast=expr.python_ast))
                         syntactic_elems.append(elem_name)
                     pyccel_stage.set_stage('semantic')
+
                     assign_elems = [self._visit(a) for a in syntactic_assign_elems]
                     elems = [self._visit(e) for e in syntactic_elems]
                     class_type = InhomogeneousTupleType(*[e.class_type for e in elems])
@@ -4288,7 +4298,8 @@ class SemanticParser(BasicParser):
 
             scope = self.create_new_function_scope(name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
-                    original_symbols = expr.scope.python_names.copy())
+                    original_symbols = expr.scope.python_names.copy(),
+                    symbolic_aliases = expr.scope.symbolic_alias)
 
             for n, v in zip(template_names, template_combinations[tmpl_idx]):
                 self.scope.insert_symbolic_alias(n, v)
