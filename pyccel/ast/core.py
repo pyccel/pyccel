@@ -2672,6 +2672,13 @@ class InlineFunctionDef(FunctionDef):
         """ List of global functions used in the function """
         return self._global_funcs
 
+    def __getnewargs_ex__(self):
+        args, kwargs = super().__getnewargs_ex__()
+        kwargs['namespace_imports'] = self._namespace_imports
+        kwargs['global_funcs'] = self._global_funcs
+        return args, kwargs
+
+
 class PyccelFunctionDef(FunctionDef):
     """
     Class used for storing `PyccelFunction` objects in a FunctionDef.
