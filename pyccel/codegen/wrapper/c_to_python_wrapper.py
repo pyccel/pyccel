@@ -2556,12 +2556,12 @@ class CToPythonWrapper(Wrapper):
             elem_set = PySet_Add(collect_arg, element_extraction['py_result'])
             for_body = [*element_extraction['body'],
                     If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
-                                             [Return([self._error_exit_code])]))]
+                                             [Return(self._error_exit_code)]))]
 
             loop_iterator = VariableIterator(arg_var)
             loop_iterator.set_loop_counter(idx)
             clean_up = [If(IfSection(PyccelEq(PySet_Clear(collect_arg), PyccelUnarySub(LiteralInteger(1))),
-                                             [Return([self._error_exit_code])])),
+                                             [Return(self._error_exit_code)])),
                     For((element_extraction['c_results'][0],), loop_iterator, for_body, for_scope)]
 
         return {'body': body, 'args': arg_vars, 'clean_up': clean_up}
@@ -2946,7 +2946,7 @@ class CToPythonWrapper(Wrapper):
         elem_set = PyDict_SetItem(py_res, key_extraction['py_result'], value_extraction['py_result'])
         for_body = [*key_extraction['body'], *value_extraction['body'],
                     If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
-                                         [Return([self._error_exit_code])]))]
+                                         [Return(self._error_exit_code)]))]
         self.exit_scope()
         for_loop = For((key_extraction['c_results'][0], value_extraction['c_results'][0]),
                         iterable, for_body, for_scope)
