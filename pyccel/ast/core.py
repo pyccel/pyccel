@@ -3053,6 +3053,15 @@ class FunctionAddress(FunctionDef):
     def is_optional(self):
         return self._is_optional
 
+    def __getnewargs__(self):
+        args, kwargs = super().__getnewargs__()
+        args = args[:2] + (kwargs.pop('results'),)
+        kwargs['is_optional'] = self._is_optional
+        kwargs['is_kwonly'] = self._is_kwonly
+        kwargs['is_argument'] = self._is_argument
+        kwargs['memory_handling'] = self._memory_handling
+        return args, kwargs
+
 class SympyFunction(FunctionDef):
 
     """Represents a function definition."""
