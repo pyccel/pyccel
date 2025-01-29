@@ -3378,7 +3378,8 @@ class SemanticParser(BasicParser):
                     elems = [self._visit(e) for e in syntactic_elems]
                     class_type = InhomogeneousTupleType(*[e.class_type for e in elems])
 
-                    lhs = Variable(class_type, lhs, is_temp = lhs.is_temp)
+                    shape = (LiteralInteger(len(elems)),)
+                    lhs = Variable(class_type, lhs, is_temp = lhs.is_temp, shape = shape)
                     for i, e in enumerate(elems):
                         self.scope.insert_symbolic_alias(lhs[i], e)
                     self.scope.insert_variable(lhs, tuple_recursive = False)
