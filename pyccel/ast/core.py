@@ -2476,7 +2476,7 @@ class FunctionDef(ScopedAstNode):
         FunctionDef
             The clone of the function definition.
         """
-        args, kwargs = self.__getnewargs__()
+        args, kwargs = self.__getnewargs_ex__()
         kwargs.update(new_kwargs)
         cls = type(self)
         new_func = cls(*args, **kwargs)
@@ -2496,7 +2496,7 @@ class FunctionDef(ScopedAstNode):
 
         self._name = newname
 
-    def __getnewargs__(self):
+    def __getnewargs_ex__(self):
         """
           This method returns the positional and keyword arguments
             used to create an instance of this class.
@@ -2876,14 +2876,14 @@ class Interface(PyccelAstNode):
             The clone of the interface.
         """
 
-        args, kwargs = self.__getnewargs__()
+        args, kwargs = self.__getnewargs_ex__()
         kwargs.update(new_kwargs)
         cls = type(self)
         new_func = cls(*args, **kwargs)
         new_func.rename(newname)
         return new_func
 
-    def __getnewargs__(self):
+    def __getnewargs_ex__(self):
         """
           This method returns the positional and keyword arguments
             used to create an instance of this class.
@@ -3053,8 +3053,8 @@ class FunctionAddress(FunctionDef):
     def is_optional(self):
         return self._is_optional
 
-    def __getnewargs__(self):
-        args, kwargs = super().__getnewargs__()
+    def __getnewargs_ex__(self):
+        args, kwargs = super().__getnewargs_ex__()
         args = args[:2] + (kwargs.pop('results'),)
         kwargs['is_optional'] = self._is_optional
         kwargs['is_kwonly'] = self._is_kwonly
