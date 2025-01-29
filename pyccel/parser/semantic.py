@@ -3384,6 +3384,12 @@ class SemanticParser(BasicParser):
                         self.scope.insert_symbolic_alias(lhs[i], e)
                     self.scope.insert_variable(lhs, tuple_recursive = False)
                 return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
+            elif isinstance(lhs, IndexedElement):
+                semantic_lhs = self._visit(lhs)
+                pyccel_stage.set_stage('syntactic')
+                syntactic_assign_elems = [Assign(IndexedElement(lhs,i), r, python_ast=expr.python_ast) for i, r in enumerate(rhs)]
+                pyccel_stage.set_stage('semantic')
+                assign_elems = [self._visit(a) for a in syntactic_assign_elems]
 
         # Steps before visiting
         if isinstance(rhs, GeneratorComprehension):
