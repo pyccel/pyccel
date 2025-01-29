@@ -2673,6 +2673,11 @@ class InlineFunctionDef(FunctionDef):
         return self._global_funcs
 
     def __getnewargs_ex__(self):
+        """
+        This method returns the positional and keyword arguments used to create
+        an instance of this class. This is used by clone and can be used for pickling.
+        See https://docs.python.org/3/library/pickle.html#object.__getnewargs_ex__
+        """
         args, kwargs = super().__getnewargs_ex__()
         kwargs['namespace_imports'] = self._namespace_imports
         kwargs['global_funcs'] = self._global_funcs
