@@ -70,7 +70,7 @@ class Scope(object):
 
     def __init__(self, *, name=None, decorators = (), is_loop = False,
                     parent_scope = None, used_symbols = None,
-                    original_symbols = None):
+                    original_symbols = None, symbolic_aliases = None):
 
         self._name    = name
         self._imports = {k:{} for k in self.categories}
@@ -88,6 +88,8 @@ class Scope(object):
         self._dummy_counter = 0
 
         self._locals['decorators'].update(decorators)
+        if symbolic_aliases:
+            self._locals['symbolic_alias'].update(symbolic_aliases)
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
