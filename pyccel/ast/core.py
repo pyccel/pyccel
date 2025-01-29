@@ -2498,8 +2498,9 @@ class FunctionDef(ScopedAstNode):
 
     def __getnewargs_ex__(self):
         """
-          This method returns the positional and keyword arguments
-            used to create an instance of this class.
+        This method returns the positional and keyword arguments used to create
+        an instance of this class. This is used by clone and can be used for pickling.
+        See https://docs.python.org/3/library/pickle.html#object.__getnewargs_ex__
         """
         args = (
         self._name,
@@ -2885,8 +2886,9 @@ class Interface(PyccelAstNode):
 
     def __getnewargs_ex__(self):
         """
-          This method returns the positional and keyword arguments
-            used to create an instance of this class.
+        This method returns the positional and keyword arguments used to create
+        an instance of this class. This is used by clone and can be used for pickling.
+        See https://docs.python.org/3/library/pickle.html#object.__getnewargs_ex__
         """
         args = (
         self._name,
@@ -3054,6 +3056,11 @@ class FunctionAddress(FunctionDef):
         return self._is_optional
 
     def __getnewargs_ex__(self):
+        """
+        This method returns the positional and keyword arguments used to create
+        an instance of this class. This is used by clone and can be used for pickling.
+        See https://docs.python.org/3/library/pickle.html#object.__getnewargs_ex__
+        """
         args, kwargs = super().__getnewargs_ex__()
         args = args[:2] + (kwargs.pop('results'),)
         kwargs['is_optional'] = self._is_optional
