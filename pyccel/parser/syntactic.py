@@ -297,6 +297,45 @@ class SyntaxParser(BasicParser):
                         symbol = stmt, severity='error')
             return EmptyNode()
 
+    def _get_unique_name(self, possible_names, forbidden_names, suggestion):
+        """
+        Get a name for a variable amongst multiple possibilities.
+
+        Get a name for a variable. If the name is the only possibility it is
+        chosen. Otherwise a new name is constructed from the suggestions.
+        This function is usually used to find the name(s) of the result of a
+        FunctionDef.
+
+        Parameters
+        ----------
+        possible_names : iterable[PyccelSymbol | TypedAstNode]
+            The possible names found for the variable.
+        forbidden_names : iterable[PyccelSymbol]
+            The names that should not be used.
+        suggestion : PyccelSymbol
+            The name that may be used instead.
+        """
+        if all(isinstance(n, (PythonTuple, PythonList)) for n in possible_names) and \
+                len(set(len(n) for n in possible_names)) == 1:
+            # If all possible names are iterables of the same length then find a name
+            # for each element and link them to an element describing this variable
+            # via IndexedElement (these are tuple elements).
+            possible_names = [p for p in zip(*[n.args for n in possible_names])]
+            unique_names = [self._get_unique_name(n, forbidden_names, f'{suggestion}_{i}') \
+                            for i,n in enumerate(possible_names)]
+            temp_name = self.scope.get_new_name(suggestion)
+            for i, n in enumerate(unique_names):
+                self.scope.insert_symbolic_alias(IndexedElement(temp_name, i), n)
+            return temp_name
+        else:
+            suggested_names = set(n for n in possible_names if isinstance(n, PyccelSymbol))
+            if len(suggested_names) == 1:
+                # If one name is suggested then return it unless it is forbidden
+                new_name = suggested_names.pop()
+                if new_name not in forbidden_names:
+                    return new_name
+            return self.scope.get_new_name(suggestion)
+
     #====================================================
     #                 _visit functions
     #====================================================
@@ -975,12 +1014,7 @@ class SyntaxParser(BasicParser):
         if len(returns) == 0 or all(r.expr is Nil() for r in returns):
             results = FunctionDefResult(Nil())
         else:
-            result_counter = 1
-            suggested_names = set(r.expr for r in returns if isinstance(r.expr, PyccelSymbol))
-            if len(suggested_names) == 1 and suggested_names.difference(argument_names):
-                results = suggested_names.pop()
-            else:
-                results, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
+            results = self._get_unique_name([r.expr for r in returns], argument_names, 'result')
 
             if result_annotation:
                 results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
