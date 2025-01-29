@@ -3249,7 +3249,13 @@ class SemanticParser(BasicParser):
                     }
             new_expression = []
 
-            lhs = expr.get_user_nodes(Assign)[0].lhs
+            assigns = expr.get_direct_user_nodes(lambda a: isinstance(a, Assign))
+            if assigns:
+                lhs = assigns[0].lhs
+            else:
+                errors.report("Can't find the variable where the class will be saved.",
+                        severity='fatal', symbol=expr)
+
             if isinstance(lhs, AnnotatedPyccelSymbol):
                 annotation = self._visit(lhs.annotation)
                 if len(annotation.type_list) != 1 or annotation.type_list[0].class_type != method.arguments[0].var.class_type:
@@ -3342,12 +3348,42 @@ class SemanticParser(BasicParser):
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
 
-        if isinstance(lhs, PythonTuple) and isinstance(rhs, PythonTuple):
-            pyccel_stage.set_stage('syntactic')
-            syntactic_assign_elems = [Assign(l, r, python_ast=expr.python_ast) for l, r in zip(lhs, rhs)]
-            pyccel_stage.set_stage('semantic')
-            assign_elems = [self._visit(a) for a in syntactic_assign_elems]
-            return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
+        if isinstance(rhs, PythonTuple):
+            if isinstance(lhs, PythonTuple):
+                pyccel_stage.set_stage('syntactic')
+                syntactic_assign_elems = [Assign(l, r, python_ast=expr.python_ast) for l, r in zip(lhs, rhs)]
+                pyccel_stage.set_stage('semantic')
+                assign_elems = [self._visit(a) for a in syntactic_assign_elems]
+                return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
+            elif isinstance(lhs, (PyccelSymbol, DottedName)):
+                semantic_lhs = self.scope.find(lhs)
+                if semantic_lhs:
+                    if not isinstance(semantic_lhs.class_type, TupleType):
+                        errors.report(f"Type of {lhs} has changed from {semantic_lhs.class_type} to a tuple type.",
+                                severity="fatal", symbol=expr)
+
+                    pyccel_stage.set_stage('syntactic')
+                    syntactic_assign_elems = [Assign(IndexedElement(lhs,i), r, python_ast=expr.python_ast) for i, r in enumerate(rhs)]
+                    pyccel_stage.set_stage('semantic')
+                    assign_elems = [self._visit(a) for a in syntactic_assign_elems]
+                else:
+                    syntactic_assign_elems = []
+                    syntactic_elems = []
+                    pyccel_stage.set_stage('syntactic')
+                    for i, r in enumerate(rhs):
+                        elem_name = self.scope.get_new_name( lhs + '_' + str(i) )
+                        syntactic_assign_elems.append(Assign(elem_name, r, python_ast=expr.python_ast))
+                        syntactic_elems.append(elem_name)
+                    pyccel_stage.set_stage('semantic')
+                    assign_elems = [self._visit(a) for a in syntactic_assign_elems]
+                    elems = [self._visit(e) for e in syntactic_elems]
+                    class_type = InhomogeneousTupleType(*[e.class_type for e in elems])
+
+                    lhs = Variable(class_type, lhs, is_temp = lhs.is_temp)
+                    for i, e in enumerate(elems):
+                        self.scope.insert_symbolic_alias(lhs[i], e)
+                    self.scope.insert_variable(lhs, tuple_recursive = False)
+                return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
 
         # Steps before visiting
         if isinstance(rhs, GeneratorComprehension):
