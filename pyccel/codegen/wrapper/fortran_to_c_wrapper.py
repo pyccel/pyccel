@@ -635,7 +635,7 @@ class FortranToCWrapper(Wrapper):
         result_var = Variable(InhomogeneousTupleType(*class_types), self.scope.get_new_name('Out_'+name))
         for i, v in enumerate(element_vars):
             self.scope.insert_symbolic_alias(IndexedElement(result_var, i), v)
-        return {'body': body, 'c_result': local_var, 'f_result': result_var}
+        return {'body': body, 'c_result': BindCVariable(local_var, result_var), 'f_result': result_var}
 
     def _extract_FixedSizeType_FunctionDefResult(self, orig_var, orig_func_scope):
         name = orig_var.name

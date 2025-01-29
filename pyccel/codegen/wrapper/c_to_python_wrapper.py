@@ -2787,7 +2787,7 @@ class CToPythonWrapper(Wrapper):
 
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
-    def _extract_InhomogeneousTupleType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+    def _extract_InhomogeneousTupleType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
         """
         Get the code which translates a `Variable` containing an inhomogeneous tuple to a PyObject.
 
@@ -2795,7 +2795,7 @@ class CToPythonWrapper(Wrapper):
 
         Parameters
         ----------
-        orig_var : Variable | IndexedElement
+        wrapped_var : Variable | IndexedElement
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
@@ -2808,10 +2808,11 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to collect the result.
         """
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
         name = orig_var.name if isinstance(orig_var, Variable) else 'Out'
-        original_func = getattr(funcdef, 'original_function', funcdef)
-        extract_elems = [self._extract_FunctionDefResult(original_func.scope.collect_tuple_element(e),
-                                                         is_bind_c, funcdef) for e in orig_var]
+        c_compatible_var = getattr(wrapped_var, 'new_var', wrapped_var)
+        extract_elems = [self._extract_FunctionDefResult(funcdef.scope.collect_tuple_element(e),
+                                                         is_bind_c, funcdef) for e in c_compatible_var]
         body = [l for e in extract_elems for l in e['body']]
         setup = [l for e in extract_elems for l in e.get('setup', ())]
         c_result_vars = [r for e in extract_elems for r in e['c_results']]
