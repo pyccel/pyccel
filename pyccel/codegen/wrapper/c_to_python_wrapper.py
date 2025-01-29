@@ -1558,7 +1558,7 @@ class CToPythonWrapper(Wrapper):
             body.append(Py_INCREF(res))
         elif original_func_name == '__len__':
             res = Py_ssize_t_Cast(python_result_variable)
-            func_results = [FunctionDefResult(Variable(Py_ssize_t(), self.scope.get_new_name(), is_temp = True))]
+            func_results = FunctionDefResult(Variable(Py_ssize_t(), self.scope.get_new_name(), is_temp = True))
         else:
             res = python_result_variable
             func_results = FunctionDefResult(res)
