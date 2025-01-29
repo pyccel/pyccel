@@ -2457,6 +2457,7 @@ class SemanticParser(BasicParser):
                         func_defs = []
                         for v in headers:
                             scope = self.create_new_function_scope(name)
+                            scope.insert_symbol(name)
                             types = [self._visit(d).type_list[0] for d in v.dtypes]
                             args = [Variable(t.class_type, PyccelSymbol(f'anon_{i}'),
                                 shape = None, is_const = t.is_const, is_optional = False,
@@ -2464,18 +2465,16 @@ class SemanticParser(BasicParser):
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             if v.results:
-                                types = self._visit(v.results).type_list
-                                assert len(types) == 1
-                                t = types[0]
-                                results = Variable(t.class_type, PyccelSymbol(f'result'), shape = None,
-                                    cls_base = t.class_type,
-                                    is_const = t.is_const, is_optional = False,
-                                    memory_handling = 'heap' if t.rank > 0 else 'stack')
+                                name = self.scope.get_new_name('result')
+                                pyccel_stage.set_stage('syntactic')
+                                syntactic_result = FunctionDefResult(AnnotatedPyccelSymbol(name, v.results), annotation = v.results)
+                                pyccel_stage.set_stage('semantic')
+                                results = self._visit(syntactic_result)
                             else:
-                                results = Nil()
+                                results = FunctionDefResult(Nil())
 
                             args = [FunctionDefArgument(a) for a in args]
-                            results = FunctionDefResult(results)
+                            results = results
                             self.exit_function_scope()
                             func_defs.append(FunctionDef(v.name, args, [], results, is_external = is_external, is_header = True,
                                 scope = scope))
