@@ -481,36 +481,6 @@ class Variable(TypedAstNode):
         # The name is part of the hash so it must never change
         raise RuntimeError('Cannot modify hash definition')
 
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments.
-        """
-        args = (
-            self.class_type,
-            self.name)
-        kwargs = {
-            'memory_handling': self.memory_handling,
-            'is_optional':self.is_optional,
-            'cls_base':self.cls_base,
-            }
-
-        out =  (apply_pickle, (self.__class__, args, kwargs))
-        return out
-
     def __getitem__(self, *args):
 
         if self.rank < len(args):
@@ -952,7 +922,4 @@ class AnnotatedPyccelSymbol(PyccelAstNode):
 
     def __str__(self):
         return f'{self.name} : {self.annotation}'
-
-    def __reduce_ex__(self, i):
-        return (self.__class__, (self.name, self.annotation))
 

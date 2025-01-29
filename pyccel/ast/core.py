@@ -22,7 +22,7 @@ from .c_concepts import PointerCast
 from .datatypes import (PyccelType, HomogeneousTupleType, VoidType, CustomDataType,
                         PythonNativeBool, InhomogeneousTupleType)
 
-from .internals import PyccelSymbol, PyccelFunction, apply_pickle, Iterable
+from .internals import PyccelSymbol, PyccelFunction, Iterable
 
 from .literals  import Nil, LiteralFalse, LiteralInteger, LiteralString
 from .literals  import NilArgument, LiteralTrue
@@ -605,27 +605,6 @@ class CodeBlock(PyccelAstNode):
 
     def __repr__(self):
         return f'CodeBlock({self.body})'
-
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments.
-        """
-        kwargs = dict(body = self.body)
-        return (apply_pickle, (self.__class__, (), kwargs))
 
     def set_current_ast(self, ast_node):
         """
@@ -2024,12 +2003,6 @@ class Return(PyccelAstNode):
     def stmt(self):
         return self._stmt
 
-    def __getnewargs__(self):
-        """used for Pickling self."""
-
-        args = (self.expr, self.stmt)
-        return args
-
     def __repr__(self):
         if self.stmt:
             code = repr(self.stmt)+';'
@@ -2555,29 +2528,6 @@ class FunctionDef(ScopedAstNode):
             'scope':self._scope}
         return args, kwargs
 
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments.
-        """
-        args, kwargs = self.__getnewargs__()
-        out = (apply_pickle, (self.__class__, args, kwargs))
-        return out
-
-
     def __str__(self):
         result = 'None' if len(self.results) == 0 else \
                     ', '.join(str(r) for r in self.results)
@@ -2721,15 +2671,6 @@ class InlineFunctionDef(FunctionDef):
         """ List of global functions used in the function """
         return self._global_funcs
 
-    def __getnewargs__(self):
-        """
-        This method returns the positional and keyword arguments
-        used to create an instance of this class.
-        """
-        args, kwargs = super().__getnewargs__()
-        kwargs.update({'namespace_imports':self._namespace_imports, 'global_funcs':self._global_funcs})
-        return args, kwargs
-
 class PyccelFunctionDef(FunctionDef):
     """
     Class used for storing `PyccelFunction` objects in a FunctionDef.
@@ -2779,20 +2720,6 @@ class PyccelFunctionDef(FunctionDef):
         the `PyccelFunctionDef`
         """
         return self._argument_description
-
-    def __getnewargs__(self):
-        """
-          This method returns the positional and keyword arguments
-            used to create an instance of this class.
-        """
-        args = (
-        self._name,
-        self._cls_name)
-
-        kwargs = {
-            'decorators':self._decorators,
-            'argument_description':self._argument_description}
-        return args, kwargs
 
     def __call__(self, *args, **kwargs):
         return self._cls_name(*args, **kwargs)
@@ -3125,28 +3052,6 @@ class FunctionAddress(FunctionDef):
     @property
     def is_optional(self):
         return self._is_optional
-
-    def __getnewargs__(self):
-        """
-        Function called during unpickling.
-
-        For more details see : https://docs.python.org/3/library/pickle.html#object.__getnewargs__.
-
-        Returns
-        -------
-        args
-            A tuple containing any arguments to be passed to the constructor.
-        kwargs
-            A dict containing any keyword arguments to be passed to the constructor.
-        """
-        args, kwargs = super().__getnewargs__()
-        args = args[:-1] # Remove body argument
-        kwargs.pop('scope')
-        kwargs['is_argument'] = self.is_argument
-        kwargs['is_kwonly'] = self.is_kwonly
-        kwargs['is_optional'] = self.is_optional
-        kwargs['memory_handling'] = self.memory_handling
-        return args, kwargs
 
 class SympyFunction(FunctionDef):
 
@@ -4110,27 +4015,6 @@ class Comment(PyccelAstNode):
     def __str__(self):
         return f'# {self.text}'
 
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments.
-        """
-        kwargs = dict(text = self.text)
-        return (apply_pickle, (self.__class__, (), kwargs))
-
 
 class SeparatorComment(Comment):
 
@@ -4186,12 +4070,6 @@ class AnnotatedComment(PyccelAstNode):
     @property
     def txt(self):
         return self._txt
-
-    def __getnewargs__(self):
-        """used for Pickling self."""
-
-        args = (self.accel, self.txt)
-        return args
 
 class CommentBlock(PyccelAstNode):
 
