@@ -1966,6 +1966,8 @@ class ConstructorCall(FunctionCall):
 
         self._cls_variable = cls_variable
         super().__init__(func, arguments, self._cls_variable)
+        self._class_type = cls_variable.class_type
+        self._shape      = cls_variable.shape
 
     @property
     def cls_variable(self):
