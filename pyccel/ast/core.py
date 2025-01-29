@@ -3063,6 +3063,7 @@ class FunctionAddress(FunctionDef):
         """
         args, kwargs = super().__getnewargs_ex__()
         args = args[:2] + (kwargs.pop('results'),)
+        kwargs.pop('scope')
         kwargs['is_optional'] = self._is_optional
         kwargs['is_kwonly'] = self._is_kwonly
         kwargs['is_argument'] = self._is_argument
