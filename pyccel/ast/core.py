@@ -1771,7 +1771,7 @@ class FunctionDefResult(TypedAstNode):
 
     def __len__(self):
         return 0 if self.var is None else \
-                (self.var.shape[0] if isinstance(self.var.class_type, TupleType) else 1)
+                (self.var.shape[0] if isinstance(self.var.class_type, InhomogeneousTupleType) else 1)
 
     def __repr__(self):
         return f'FunctionDefResult({repr(self.var)})'
