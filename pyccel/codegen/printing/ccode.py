@@ -623,7 +623,7 @@ class CCodePrinter(CodePrinter):
         return_regex = re.compile(r'\breturn\b')
         has_results = [return_regex.search(l) is not None for l in code_lines]
 
-        if len(func.results) == 0 and not any(has_results):
+        if func.results.var is Nil() and not any(has_results):
             code = body_code
         else:
             result_idx = has_results.index(True)
