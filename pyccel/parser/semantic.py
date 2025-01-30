@@ -70,6 +70,7 @@ from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNative
 from pyccel.ast.datatypes import DataTypeFactory, HomogeneousContainerType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType, HomogeneousSetType, HomogeneousListType
 from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType, DictType, TypeAlias
+from pyccel.ast.datatypes import ContainerType
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
@@ -3386,14 +3387,21 @@ class SemanticParser(BasicParser):
 
                     assign_elems = [self._visit(a) for a in syntactic_assign_elems]
                     elems = [self._visit(e) for e in syntactic_elems]
-                    class_type = InhomogeneousTupleType(*[e.class_type for e in elems])
+                    elem_class_type = [e.class_type for e in elems]
+                    if len(set(elem_class_type)) == 1 and not isinstance(elem_class_type[0], ContainerType):
+                        class_type = HomogeneousTupleType(elem_class_type.pop())
+                    else:
+                        class_type = InhomogeneousTupleType(*elem_class_type)
 
                     shape = (LiteralInteger(len(elems)),)
-                    lhs = Variable(class_type, lhs, is_temp = lhs.is_temp, shape = shape)
+                    semantic_lhs = Variable(class_type, lhs, is_temp = lhs.is_temp, shape = shape)
                     for i, e in enumerate(elems):
-                        self.scope.insert_symbolic_alias(lhs[i], e)
-                    self.scope.insert_variable(lhs, tuple_recursive = False)
-                return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
+                        self.scope.insert_symbolic_alias(semantic_lhs[i], e)
+                    self.scope.insert_variable(semantic_lhs, tuple_recursive = False)
+                assert all(isinstance(a, Assign) for a in assign_elems)
+                rhs = PythonTuple(*[a.rhs for a in assign_elems])
+                return Assign(semantic_lhs, rhs)
+                #return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
             elif isinstance(lhs, IndexedElement):
                 semantic_lhs = self._visit(lhs)
                 pyccel_stage.set_stage('syntactic')
