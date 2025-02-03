@@ -58,11 +58,8 @@ include = [
   "pyccel/stdlib/**/*.c",
   "pyccel/stdlib/**/*.f90",
   "pyccel/stdlib/**/*.inc",
-  "pyccel/extensions/STC/include"
-]
-exclude = [
-    "pyccel/extensions/STC/src",
-    "pyccel/extensions/STC/misc"
+  "pyccel/extensions/STC/include",
+  "pyccel/extensions/STC/src/*.c"
 ]
 
 [tool.hatch.build.targets.wheel.hooks.custom]

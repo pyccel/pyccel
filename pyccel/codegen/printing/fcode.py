@@ -24,7 +24,7 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableIterator
 
-from pyccel.ast.builtin_methods.dict_methods import DictItems
+from pyccel.ast.builtin_methods.dict_methods import DictItems, DictKeys
 
 from pyccel.ast.builtin_methods.list_methods import ListPop
 
@@ -1417,9 +1417,16 @@ class FCodePrinter(CodePrinter):
         self.add_import(self._build_gFTL_extension_module(expr_type))
         args_insert = []
         for arg in expr.args:
-            a = self._print(arg)
             if arg.class_type == expr_type:
-                args_insert.append(f'call {result} % merge({a})\n')
+                # Create a temporary variable to be able to call begin()/end()
+                if not isinstance(arg, Variable):
+                    var = self.scope.get_temporary_variable(arg.class_type)
+                    self._additional_code += self._print(Assign(var, arg)) + '\n'
+                    a = self._print(var)
+                else:
+                    a = self._print(arg)
+
+                args_insert.append(f'call {result} % insert({a} % begin(), {a} % end())\n')
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO, severity = 'error', symbol = expr)
         code = f'{result} = {type_name}({var_code})\n' + ''.join(args_insert)
@@ -2670,7 +2677,7 @@ class FCodePrinter(CodePrinter):
         iterable = expr.iterable
         indices = iterable.loop_counters
 
-        if isinstance(iterable, (VariableIterator, DictItems)) and \
+        if isinstance(iterable, (VariableIterator, DictItems, DictKeys)) and \
                 isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType)):
             var = iterable.variable
             iterable_type = var.class_type
@@ -2690,6 +2697,9 @@ class FCodePrinter(CodePrinter):
                 val = self._print(expr.target[1])
                 target_assign = (f'{key} = {iterator} % first()\n'
                                  f'{val} = {iterator} % second()\n')
+            elif isinstance(iterable, DictKeys):
+                key = self._print(expr.target[0])
+                target_assign = (f'{key} = {iterator} % first()\n')
             else:
                 target = self._print(expr.target[0])
                 target_assign = f'{target} = {iterator} % of()\n'
