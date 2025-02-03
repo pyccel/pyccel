@@ -28,7 +28,7 @@ from pyccel.ast.datatypes import HomogeneousListType, StringType, CharType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type
-from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd, PyccelMinus
+from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
@@ -773,6 +773,7 @@ class FortranToCWrapper(Wrapper):
                             is_const=False, memory_handling='alias')
 
         shape_var = Variable(NumpyInt32Type(), scope.get_new_name(f'{name}_len'))
+        scope.insert_variable(shape_var)
 
         # Create an array variable which can be passed to CLocFunc
         ptr_var = Variable(NumpyNDArrayType(CharType(), 1, None), scope.get_new_name(name+'_ptr'),
@@ -782,19 +783,14 @@ class FortranToCWrapper(Wrapper):
         scope.insert_variable(elem_var)
 
         # Define the additional steps necessary to define and fill ptr_var
-        last_element = PyccelMinus(shape_var, LiteralInteger(1))
-        body = [Assign(shape_var, PyccelAdd(local_var.shape[0], LiteralInteger(1))),
-                Assign(bind_var, c_malloc(PyccelMul(BindCSizeOf(elem_var), shape_var))),
-                C_F_Pointer(bind_var, ptr_var, [shape_var]),
-                Assign(IndexedElement(ptr_var, Slice(LiteralInteger(0), last_element)), local_var),
-                Assign(IndexedElement(ptr_var, last_element), C_NULL_CHAR())]
+        alloc_shape = PyccelAdd(shape_var, LiteralInteger(1))
+        body = [Assign(shape_var, local_var.shape[0]),
+                Assign(bind_var, c_malloc(PyccelMul(BindCSizeOf(elem_var), alloc_shape))),
+                C_F_Pointer(bind_var, ptr_var, [alloc_shape]),
+                Assign(IndexedElement(ptr_var, Slice(LiteralInteger(0), shape_var)), local_var),
+                Assign(IndexedElement(ptr_var, shape_var), C_NULL_CHAR())]
 
-        result_var = Variable(BindCArrayType(1, has_strides = False),
-                        scope.get_new_name())
-        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(0)), bind_var)
-        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(1)), shape_var)
-
-        return {'c_result': BindCVariable(result_var, orig_var), 'body': body, 'f_array': ptr_var}
+        return {'c_result': BindCVariable(bind_var, orig_var), 'body': body, 'f_array': ptr_var}
 
     def _get_bind_c_array(self, name, orig_var, shape, pointer_target = False):
         """
