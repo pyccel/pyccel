@@ -111,6 +111,7 @@ All notable changes to this project will be documented in this file.
 -   #2001 : Ensure all memory is correctly deallocated in the Python interface in a way that is compatible with all compilers.
 -   #2153 : Fix missing line information when an unknown class method is called.
 -   #2149 : Fix multi-line expressions in `if` conditions.
+-   #2181 : Allow saving an array result of a function to a slice but raise a warning about suboptimal performance.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
 
 ### Changed
