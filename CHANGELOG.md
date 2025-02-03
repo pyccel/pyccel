@@ -5,13 +5,12 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
--   #1787 : Ensure STC is installed with Pyccel.
+-   #1787 : Ensure STC v5.0 is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
 -   #1694 : Add Python support for list method `extend()`.
 -   #1700 : Add Python support for list method `sort()`.
 -   #1696 : Add Python support for list method `copy()`.
 -   #1693 : Add Python support for list method `remove()`.
--   #1893 : Add Python support for set initialisation with `set()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
 -   #1881 : Add Python support for dict method `copy()`.
@@ -36,6 +35,7 @@ All notable changes to this project will be documented in this file.
 -   #1663 : Add C support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
+-   #1893 : Add support for set initialisation with `set()`.
 -   #1877 : Add C and Fortran Support for set method `pop()`.
 -   #1917 : Add C and Fortran support for set method `add()`.
 -   #1918 : Add support for set method `clear()`.
@@ -48,8 +48,9 @@ All notable changes to this project will be documented in this file.
 -   #1745 : Add support for set method `intersection_update()`.
 -   #2059 : Add C support for returning dictionaries from functions.
 -   #2164 : Add support for dict indexing.
--   #1884 : Add support for dict method `items()`.
 -   #1880 : Add support for dict method `clear()`.
+-   #1884 : Add support for dict method `items()`.
+-   #1884 : Add support for dict method `keys()`.
 -   #1886 : Add Python and C support for dict method `pop()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
