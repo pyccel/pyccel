@@ -24,11 +24,11 @@ from pyccel.ast.core import For, Concatenate
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import HomogeneousSetType, PythonNativeInt
-from pyccel.ast.datatypes import HomogeneousListType, StringType
+from pyccel.ast.datatypes import HomogeneousListType, StringType, CharType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type
-from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd
+from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd, PyccelMinus
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
@@ -755,6 +755,46 @@ class FortranToCWrapper(Wrapper):
         for_body = [Assign(IndexedElement(f_array, PyccelAdd(idx, LiteralInteger(1))), elem)]
         body.append(For((elem,), iterator, for_body, scope = for_scope))
         return result
+
+    def _extract_StringType_FunctionDefResult(self, orig_var):
+        name = orig_var.name
+        scope = self.scope
+        scope.insert_symbol(name)
+        memory_handling = 'alias' if isinstance(orig_var, DottedVariable) else orig_var.memory_handling
+
+        # Allocatable is not returned so it must appear in local scope
+        local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
+                            memory_handling = memory_handling)
+        scope.insert_variable(local_var, name)
+
+        # Create the C-compatible data pointer
+        bind_var = Variable(BindCPointer(),
+                            scope.get_new_name('bound_'+name),
+                            is_const=False, memory_handling='alias')
+
+        shape_var = Variable(NumpyInt32Type(), scope.get_new_name(f'{name}_len'))
+
+        # Create an array variable which can be passed to CLocFunc
+        ptr_var = Variable(NumpyNDArrayType(CharType(), 1, None), scope.get_new_name(name+'_ptr'),
+                            memory_handling='alias')
+        elem_var = Variable(CharType(), scope.get_new_name(name+'_elem'))
+        scope.insert_variable(ptr_var)
+        scope.insert_variable(elem_var)
+
+        # Define the additional steps necessary to define and fill ptr_var
+        last_element = PyccelMinus(shape_var, LiteralInteger(1))
+        body = [Assign(shape_var, PyccelAdd(local_var.shape[0], LiteralInteger(1))),
+                Assign(bind_var, c_malloc(PyccelMul(BindCSizeOf(elem_var), shape_var))),
+                C_F_Pointer(bind_var, ptr_var, [shape_var]),
+                Assign(IndexedElement(ptr_var, Slice(LiteralInteger(0), last_element)), local_var),
+                Assign(IndexedElement(ptr_var, last_element), C_NULL_CHAR())]
+
+        result_var = Variable(BindCArrayType(1, has_strides = False),
+                        scope.get_new_name())
+        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(0)), bind_var)
+        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(1)), shape_var)
+
+        return {'c_result': BindCVariable(result_var, orig_var), 'body': body, 'f_array': ptr_var}
 
     def _get_bind_c_array(self, name, orig_var, shape, pointer_target = False):
         """
