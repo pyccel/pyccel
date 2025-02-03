@@ -51,9 +51,8 @@ artifacts = [
   "pyccel/extensions/gFTL/install/GFTL-1.13/include/v2"
 ]
 include = [
-  "*.py",
-  "*.pyh",
-  "*.pyccel",
+  "pyccel/**/*.py",
+  "pyccel/**/*.pyh",
   "pyccel/parser/grammar/*.tx",
   "pyccel/stdlib/**/*.h",
   "pyccel/stdlib/**/*.c",

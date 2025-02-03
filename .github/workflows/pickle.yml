@@ -1,4 +1,4 @@
-name: Pickled-installation
+name: Installation
 
 on:
   workflow_dispatch:
@@ -53,7 +53,7 @@ jobs:
         echo "matrix={\"editable_string\": $editable}" >> $GITHUB_OUTPUT
       shell: bash
 
-  Pickled-installation:
+  Installation:
     runs-on: ubuntu-latest
     name: Deploy tests
     needs: Python_version_picker
@@ -76,19 +76,16 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py pickle
+          python ci_tools/setup_check_run.py installation
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel
-        id: pickle
+        id: installation
         run: |
           python -m pip install --upgrade pip
           echo "python -m pip install ${{ matrix.editable_string }} ."
           python -m pip install ${{ matrix.editable_string }} .
         shell: bash
-      - name: Check for existence of pickled files
-        id: pickle_check
-        uses: ./.github/actions/check_for_pickled
       - name: Check for STC installation
         id: stc_check
         uses: ./.github/actions/check_for_stc
@@ -102,5 +99,5 @@ jobs:
       - name: "Post completed"
         if: always() && github.event_name != 'push'
         run: |
-          python ci_tools/basic_json_check_output.py --statuses ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}} --reasons "Installation failed." "Pickled files were not found in installaion." "STC was not found during installation." "gFTL was not found during installation."
-          python ci_tools/complete_check_run.py ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}}
+          python ci_tools/basic_json_check_output.py --statuses ${{ steps.installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}} --reasons "Installation failed." "STC was not found during installation." "gFTL was not found during installation."
+          python ci_tools/complete_check_run.py ${{ steps.installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}}

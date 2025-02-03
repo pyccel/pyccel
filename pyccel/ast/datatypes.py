@@ -75,22 +75,6 @@ class PrimitiveType(metaclass=Singleton):
     def __str__(self):
         return self._name
 
-    def __reduce__(self):
-        """
-        Function called during pickling.
-
-        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
-        This function is necessary to ensure that DataTypes remain singletons.
-
-        Returns
-        -------
-        callable
-            A callable to create the object.
-        args
-            A tuple containing any arguments to be passed to the callable.
-        """
-        return (self.__class__, ())
-
 class PrimitiveBooleanType(PrimitiveType):
     """
     Class representing a boolean datatype.
@@ -243,22 +227,6 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
         this function returns None.
         """
         return None
-
-    def __reduce__(self):
-        """
-        Function called during pickling.
-
-        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
-        This function is necessary to ensure that DataTypes remain singletons.
-
-        Returns
-        -------
-        callable
-            A callable to create the object.
-        args
-            A tuple containing any arguments to be passed to the callable.
-        """
-        return (self.__class__, ())
 
     def switch_basic_type(self, new_type):
         """
@@ -572,22 +540,6 @@ class HomogeneousContainerType(ContainerType):
     def __str__(self):
         return f'{self._name}[{self._element_type}]' # pylint: disable=no-member
 
-    def __reduce__(self):
-        """
-        Function called during pickling.
-
-        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
-        This function is necessary to ensure that DataTypes remain singletons.
-
-        Returns
-        -------
-        callable
-            A callable to create the object.
-        args
-            A tuple containing any arguments to be passed to the callable.
-        """
-        return (self.__class__, (self.element_type,))
-
     def switch_basic_type(self, new_type):
         """
         Change the basic type to the new type.
@@ -704,22 +656,6 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
 
     def __str__(self):
         return 'str'
-
-    def __reduce__(self):
-        """
-        Function called during pickling.
-
-        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
-        This function is necessary to ensure that DataTypes remain singletons.
-
-        Returns
-        -------
-        callable
-            A callable to create the object.
-        args
-            A tuple containing any arguments to be passed to the callable.
-        """
-        return (self.__class__, ())
 
     @property
     def primitive_type(self):
@@ -853,22 +789,6 @@ class CustomDataType(ContainerType, metaclass=Singleton):
         """
         return self
 
-    def __reduce__(self):
-        """
-        Function called during pickling.
-
-        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
-        This function is necessary to ensure that DataTypes remain singletons.
-
-        Returns
-        -------
-        callable
-            A callable to create the object.
-        args
-            A tuple containing any arguments to be passed to the callable.
-        """
-        return (self.__class__, ())
-
     @property
     def rank(self):
         """
@@ -947,22 +867,6 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
     def __iter__(self):
         return self._element_types.__iter__()
 
-    def __reduce__(self):
-        """
-        Function called during pickling.
-
-        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
-        This function is necessary to ensure that DataTypes remain singletons.
-
-        Returns
-        -------
-        callable
-            A callable to create the object.
-        args
-            A tuple containing any arguments to be passed to the callable.
-        """
-        return (self.__class__, tuple(self._element_types))
-
     @property
     def datatype(self):
         """
@@ -1031,22 +935,6 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
 
     def __str__(self):
         return f'dict[{self._key_type}, {self._value_type}]'
-
-    def __reduce__(self):
-        """
-        Function called during pickling.
-
-        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
-        This function is necessary to ensure that DataTypes remain singletons.
-
-        Returns
-        -------
-        callable
-            A callable to create the object.
-        args
-            A tuple containing any arguments to be passed to the callable.
-        """
-        return (self.__class__, (self._key_type, self._value_type))
 
     @property
     def datatype(self):
