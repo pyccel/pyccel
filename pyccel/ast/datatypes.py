@@ -442,7 +442,7 @@ class CharType(FixedSizeType):
     """
     __slots__ = ()
     _name = 'char'
-    _primitive_type = PrimitiveCharacterType
+    _primitive_type = PrimitiveCharacterType()
 
 #==============================================================================
 class TypeAlias(SymbolicType):
