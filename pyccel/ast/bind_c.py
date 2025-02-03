@@ -31,14 +31,15 @@ __all__ = (
     'BindCFunctionDef',
     'BindCFunctionDefArgument',
     'BindCModule',
-    'BindCPointer',
-    'BindCVariable',
-    'BindCSizeOf',
     'BindCModuleVariable',
+    'BindCPointer',
+    'BindCSizeOf',
+    'BindCVariable',
     'CLocFunc',
     'C_F_Pointer',
-    'c_malloc',
+    'C_NULL_CHAR',
     'DeallocatePointer',
+    'c_malloc',
 )
 
 # =======================================================================================
@@ -805,6 +806,13 @@ class BindCSizeOf(PyccelFunction):
         super().__init__(element)
 
 class C_NULL_CHAR(TypedAstNode):
+    """
+    A class representing the C_NULL_CHAR character from the iso_c_binding module.
+
+    A class representing the C_NULL_CHAR character from the iso_c_binding module.
+    This object should be appended to strings before returning them from Fortran
+    to C.
+    """
     __slots__ = ()
     _class_type = StringType()
     _shape = (LiteralInteger(1),)
