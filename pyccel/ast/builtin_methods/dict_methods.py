@@ -11,13 +11,15 @@ This module contains objects which describe these methods within Pyccel's AST.
 """
 
 from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType, SymbolicType
-from pyccel.ast.internals import PyccelFunction, Iterable
+from pyccel.ast.internals import PyccelFunction, Iterable, PyccelArrayShapeElement
+from pyccel.ast.literals  import LiteralInteger
 from pyccel.ast.variable  import IndexedElement
 
 
 __all__ = ('DictClear',
            'DictCopy',
            'DictGet',
+           'DictGetItem',
            'DictItems',
            'DictKeys',
            'DictMethod',
@@ -151,19 +153,23 @@ class DictGet(DictMethod):
         The value that should be returned if the key is not present in the
         dictionary.
     """
-    __slots__ = ('_class_type',)
-    _shape = None
+    __slots__ = ('_class_type', '_shape')
     name = 'get'
 
     def __init__(self, dict_obj, k, d = None):
         dict_type = dict_obj.class_type
         self._class_type = dict_type.value_type
+        self._shape = None
         if k.class_type != dict_type.key_type:
             raise TypeError(f"Key passed to get method has type {k.class_type}. Expected {dict_type.key_type}")
         if d and d.class_type != dict_type.value_type:
             raise TypeError(f"Default value passed to get method has type {d.class_type}. Expected {dict_type.value_type}")
 
         super().__init__(dict_obj, k, d)
+
+        if self._class_type.rank:
+            self._shape = [PyccelArrayShapeElement(self,LiteralInteger(i)) \
+                    for i in range(self._class_type.rank)]
 
     @property
     def key(self):
@@ -214,7 +220,7 @@ class DictSetDefault(DictMethod):
         dict_type = dict_obj.class_type
         self._class_type = dict_type.value_type
 
-        self._shape = (None) * self._class_type.rank if self._class_type.rank else None
+        self._shape = (None,) * self._class_type.rank if self._class_type.rank else None
 
         if k.class_type != dict_type.key_type:
             raise TypeError(f"Key passed to setdefault method has type {k.class_type}. Expected {dict_type.key_type}")
@@ -274,13 +280,13 @@ class DictCopy(DictMethod):
     dict_obj : TypedAstNode
         The object from which the method is called.
     """
-    __slots__ = ('_class_type',)
-    _shape = None
+    __slots__ = ('_class_type', '_shape')
     name = 'copy'
 
     def __init__(self, dict_obj):
         dict_type = dict_obj.class_type
         self._class_type = dict_type
+        self._shape = dict_obj.shape
         super().__init__(dict_obj)
 
 #==============================================================================
@@ -375,3 +381,43 @@ class DictKeys(Iterable):
         """
         item = DictPopitem(self._dict_obj)
         return [IndexedElement(item, 0)]
+
+#==============================================================================
+class DictGetItem(DictMethod):
+    """
+    Represents a call to the .__getitem__() method.
+
+    The __getitem__() method returns the value for the specified key.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+
+    k : TypedAstNode
+        The key which is used to select the value from the dictionary.
+    """
+    __slots__ = ('_class_type', '_shape')
+    name = 'get'
+
+    def __init__(self, dict_obj, k):
+        dict_type = dict_obj.class_type
+        self._class_type = dict_type.value_type
+        self._shape = None
+        if k.class_type != dict_type.key_type:
+            raise TypeError(f"Key passed to get method has type {k.class_type}. Expected {dict_type.key_type}")
+
+        super().__init__(dict_obj, k)
+
+        if self._class_type.rank:
+            self._shape = [PyccelArrayShapeElement(self,LiteralInteger(i)) \
+                    for i in range(self._class_type.rank)]
+
+    @property
+    def key(self):
+        """
+        The key that is used to select the element from the dict.
+
+        The key that is used to select the element from the dict.
+        """
+        return self._args[0]

@@ -872,9 +872,9 @@ class PythonCodePrinter(CodePrinter):
         key = self._print(expr.key)
         if expr.default_value:
             val = self._print(expr.default_value)
-            return f"{dict_obj}.get({key}, {val})\n"
+            return f"{dict_obj}.get({key}, {val})"
         else:
-            return f"{dict_obj}.get({key})\n"
+            return f"{dict_obj}.get({key})"
 
     def _print_DictItems(self, expr):
         dict_obj = self._print(expr.variable)
@@ -885,6 +885,11 @@ class PythonCodePrinter(CodePrinter):
         dict_obj = self._print(expr.variable)
 
         return f"{dict_obj}.keys()"
+
+    def _print_DictGetItem(self, expr):
+        dict_obj = self._print(expr.dict_obj)
+        key = self._print(expr.key)
+        return f"{dict_obj}[{key}]"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''

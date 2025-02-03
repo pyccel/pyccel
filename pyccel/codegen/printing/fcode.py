@@ -1450,6 +1450,11 @@ class FCodePrinter(CodePrinter):
         var = self._print(expr.dict_obj)
         return f'call {var} % clear()\n'
 
+    def _print_DictGetItem(self, expr):
+        dict_obj = self._print(expr.dict_obj)
+        key = self._print(expr.key)
+        return f'{dict_obj} % of( {key} )'
+
     #========================== Numpy Elements ===============================#
 
     def _print_NumpySum(self, expr):
