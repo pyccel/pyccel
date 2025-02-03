@@ -783,7 +783,7 @@ class PythonList(TypedAstNode):
 
     def __str__(self):
         args = ', '.join(str(a) for a in self)
-        return f'({args})'
+        return f'[{args}]'
 
     def __repr__(self):
         args = ', '.join(str(a) for a in self)
@@ -914,6 +914,14 @@ class PythonSet(TypedAstNode):
         """
         return True
 
+    def __str__(self):
+        args = ', '.join(str(a) for a in self)
+        return f'{{{args}}}'
+
+    def __repr__(self):
+        args = ', '.join(str(a) for a in self)
+        return f'PythonSet({args})'
+
 
 class PythonSetFunction(PyccelFunction):
     """
@@ -931,13 +939,6 @@ class PythonSetFunction(PyccelFunction):
 
     __slots__ = ('_shape', '_class_type')
     name = 'set'
-    def __new__(cls, arg = None):
-        if arg is None:
-            return PythonSet()
-        elif isinstance(arg, (PythonList, PythonSet, PythonTuple)):
-            return PythonSet(*arg)
-        else:
-            return super().__new__(cls)
 
     def __init__(self, copied_obj):
         self._class_type = copied_obj.class_type
