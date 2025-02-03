@@ -15,7 +15,7 @@ from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCModuleVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
 from pyccel.ast.bind_c import BindCClassProperty, c_malloc, BindCSizeOf
 from pyccel.ast.bind_c import BindCVariable, BindCArrayType, C_NULL_CHAR
-from pyccel.ast.builtins import VariableIterator
+from pyccel.ast.builtins import VariableIterator, PythonRange
 from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
@@ -782,12 +782,23 @@ class FortranToCWrapper(Wrapper):
         scope.insert_variable(ptr_var)
         scope.insert_variable(elem_var)
 
+        for_scope = scope.create_new_loop_scope()
+        iterator = PythonRange(LiteralInteger(1), shape_var)
+        idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+        iterator.set_loop_counter(idx)
+        self.scope.insert_variable(idx)
+
+        # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
+        # Lists are 1-indexed but Pyccel adds the shift during printing so they are
+        # treated as 0-indexed here
+        for_body = [Assign(IndexedElement(ptr_var, idx), IndexedElement(local_var, idx))]
+
         # Define the additional steps necessary to define and fill ptr_var
         # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
         body = [Assign(shape_var, PyccelAdd(local_var.shape[0], LiteralInteger(1))),
                 Assign(bind_var, c_malloc(PyccelMul(BindCSizeOf(elem_var), shape_var))),
                 C_F_Pointer(bind_var, ptr_var, [shape_var]),
-                Assign(IndexedElement(ptr_var, Slice(LiteralInteger(1), shape_var)), local_var),
+                For((idx,), iterator, for_body, scope = for_scope),
                 Assign(IndexedElement(ptr_var, shape_var), C_NULL_CHAR())]
 
         return {'c_result': BindCVariable(bind_var, orig_var), 'body': body, 'f_array': ptr_var}
