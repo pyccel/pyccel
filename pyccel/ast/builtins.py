@@ -18,7 +18,7 @@ from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from .datatypes import GenericType, PythonNativeComplex
 from .datatypes import PrimitiveBooleanType, PrimitiveComplexType
-from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
+from .datatypes import HomogeneousTupleType, InhomogeneousTupleType, TupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
 from .datatypes import DictType, VoidType, TypeAlias, StringType
@@ -45,6 +45,7 @@ __all__ = (
     'PythonFloat',
     'PythonImag',
     'PythonInt',
+    'PythonIsInstance',
     'PythonLen',
     'PythonList',
     'PythonListFunction',
@@ -602,6 +603,12 @@ class PythonTuple(TypedAstNode):
         # Create a set of dtypes using the same key for compatible types
         dtypes = set((d.primitive_type, d.precision) if isinstance(d, FixedSizeNumericType) else d for d in dtypes)
 
+        if any(isinstance(d, SymbolicType) for d in dtypes):
+            self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
+            self._shape = (LiteralInteger(len(args)),)
+            self._is_homogeneous = False
+            return
+
         ranks  = set(a.rank for a in args)
         orders = set(a.order for a in args)
         if len(ranks) == 1:
@@ -700,6 +707,7 @@ class PythonTupleFunction(TypedAstNode):
     """
     __slots__ = ()
     _attribute_nodes = ()
+    _static_type = TupleType
 
 #==============================================================================
 class PythonLen(PyccelFunction):
@@ -826,6 +834,7 @@ class PythonListFunction(PyccelFunction):
     name = 'list'
     __slots__ = ('_class_type', '_shape')
     _attribute_nodes = ()
+    _static_type = HomogeneousListType
 
     def __new__(cls, arg = None):
         if arg is None:
@@ -933,12 +942,12 @@ class PythonSetFunction(PyccelFunction):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    copied_obj : TypedAstNode
         The argument passed to the function call.
     """
-
     __slots__ = ('_shape', '_class_type')
     name = 'set'
+    _static_type = HomogeneousSetType
 
     def __init__(self, copied_obj):
         self._class_type = copied_obj.class_type
@@ -1048,6 +1057,7 @@ class PythonDictFunction(PyccelFunction):
     """
     __slots__ = ('_shape', '_class_type')
     name = 'dict'
+    _static_type = DictType
 
     def __new__(cls, *args, **kwargs):
         if len(args) == 0:
@@ -1694,6 +1704,27 @@ class VariableIterator(Iterable):
         return self.get_python_iterable_item()
 
 #==============================================================================
+class PythonIsInstance(PyccelFunction):
+    """
+    Represents a call to Python's `isinstance` function.
+
+    Represents a call to Python's `isinstance` function which checks if an
+    object has a specified type. This class exists to find a definition of
+    `isinstance` in builtin_functions_dict but it should not be instantiated.
+
+    Parameters
+    ----------
+    obj : TypedAstNode
+        The object whose type should be checked.
+    class_or_tuple : TypedAstNode
+        A class or a tuple of classes describing the acceptable types for
+        the object.
+    """
+    __slots__ = ()
+    def __init__(self, obj, class_or_tuple):
+        super().__init__(obj, class_or_tuple)
+
+#==============================================================================
 
 DtypePrecisionToCastFunction = {
         PythonNativeBool()    : PythonBool,
@@ -1705,25 +1736,26 @@ DtypePrecisionToCastFunction = {
 #==============================================================================
 
 builtin_functions_dict = {
-    'abs'      : PythonAbs,
-    'bool'     : PythonBool,
-    'complex'  : PythonComplex,
-    'dict'     : PythonDictFunction,
-    'enumerate': PythonEnumerate,
-    'float'    : PythonFloat,
-    'int'      : PythonInt,
-    'len'      : PythonLen,
-    'list'     : PythonListFunction,
-    'map'      : PythonMap,
-    'max'      : PythonMax,
-    'min'      : PythonMin,
-    'not'      : PyccelNot,
-    'range'    : PythonRange,
-    'round'    : PythonRound,
-    'set'      : PythonSetFunction,
-    'str'      : LiteralString,
-    'sum'      : PythonSum,
-    'tuple'    : PythonTupleFunction,
-    'type'     : PythonType,
-    'zip'      : PythonZip,
+    'abs'        : PythonAbs,
+    'bool'       : PythonBool,
+    'complex'    : PythonComplex,
+    'dict'       : PythonDictFunction,
+    'enumerate'  : PythonEnumerate,
+    'float'      : PythonFloat,
+    'int'        : PythonInt,
+    'isinstance' : PythonIsInstance,
+    'len'        : PythonLen,
+    'list'       : PythonListFunction,
+    'map'        : PythonMap,
+    'max'        : PythonMax,
+    'min'        : PythonMin,
+    'not'        : PyccelNot,
+    'range'      : PythonRange,
+    'round'      : PythonRound,
+    'set'        : PythonSetFunction,
+    'str'        : LiteralString,
+    'sum'        : PythonSum,
+    'tuple'      : PythonTupleFunction,
+    'type'       : PythonType,
+    'zip'        : PythonZip,
 }
