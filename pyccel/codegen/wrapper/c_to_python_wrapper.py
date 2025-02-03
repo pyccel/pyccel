@@ -2965,12 +2965,14 @@ class CToPythonWrapper(Wrapper):
         if is_bind_c:
             c_res = Variable(CharType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
             self.scope.insert_variable(c_res)
-            char_data = c_res
+            char_data = ObjectAddress(c_res)
         else:
             c_res = Variable(StringType(), self.scope.get_new_name(name), memory_handling='heap')
             self.scope.insert_variable(c_res)
             char_data = cstr_data(ObjectAddress(c_res))
 
         body = [AliasAssign(py_res, PyBuildValueNode([char_data]))]
+        if is_bind_c:
+            body.append(Deallocate(c_res))
         return {'c_results': [c_res], 'py_result': py_res, 'body': body}
 
