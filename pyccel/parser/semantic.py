@@ -35,6 +35,7 @@ from pyccel.ast.builtins import Lambda, PythonMap
 
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
+from pyccel.ast.builtin_methods.dict_methods  import DictGetItem, DictGet
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -692,6 +693,8 @@ class SemanticParser(BasicParser):
             self._indicate_pointer_target(pointer, target.lhs, expr)
         elif isinstance(target, IndexedElement):
             self._indicate_pointer_target(pointer, target.base, expr)
+        elif isinstance(target, (DictGetItem, DictGet)):
+            self._indicate_pointer_target(pointer, target.dict_obj, expr)
         elif isinstance(target, Variable):
             if target.is_alias:
                 try:
@@ -765,6 +768,11 @@ class SemanticParser(BasicParser):
             var = expr.internal_var
 
             d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
+            return d_var
+
+        elif isinstance(expr, (DictGetItem, DictGet)):
+
+            d_var['memory_handling'] = 'alias' if not isinstance(expr.class_type, FixedSizeNumericType) else 'stack'
             return d_var
 
         elif isinstance(expr, TypedAstNode):
@@ -2740,28 +2748,41 @@ class SemanticParser(BasicParser):
         if isinstance(var, (PyccelFunctionDef, VariableTypeAnnotation, UnionTypeAnnotation)):
             return self._get_indexed_type(var, expr.indices, expr)
 
-        # TODO check consistency of indices with shape/rank
-        args = [self._visit(idx) for idx in expr.indices]
+        class_type = var.class_type
 
-        if (len(args) == 1 and isinstance(getattr(args[0], 'class_type', None), TupleType)):
-            args = args[0]
+        if isinstance(class_type, (NumpyNDArrayType, HomogeneousListType, TupleType)):
+            # TODO check consistency of indices with shape/rank
+            args = [self._visit(idx) for idx in expr.indices]
 
-        elif any(isinstance(getattr(a, 'class_type', None), TupleType) for a in args):
-            n_exprs = None
-            for a in args:
-                if getattr(a, 'shape', None) and isinstance(a.shape[0], LiteralInteger):
-                    a_len = a.shape[0]
-                    if n_exprs:
-                        assert n_exprs == a_len
-                    else:
-                        n_exprs = a_len
+            if (len(args) == 1 and isinstance(getattr(args[0], 'class_type', None), TupleType)):
+                args = args[0]
 
-            if n_exprs is not None:
-                new_expr_args = [[a[i] if hasattr(a, '__getitem__') else a for a in args]
-                                 for i in range(n_exprs)]
-                return NumpyArray(PythonTuple(*[var[a] for a in new_expr_args]))
+            elif any(isinstance(getattr(a, 'class_type', None), TupleType) for a in args):
+                n_exprs = None
+                for a in args:
+                    if getattr(a, 'shape', None) and isinstance(a.shape[0], LiteralInteger):
+                        a_len = a.shape[0]
+                        if n_exprs:
+                            assert n_exprs == a_len
+                        else:
+                            n_exprs = a_len
 
-        return self._extract_indexed_from_var(var, args, expr)
+                if n_exprs is not None:
+                    new_expr_args = [[a[i] if hasattr(a, '__getitem__') else a for a in args]
+                                     for i in range(n_exprs)]
+                    return NumpyArray(PythonTuple(*[var[a] for a in new_expr_args]))
+
+            return self._extract_indexed_from_var(var, args, expr)
+        else:
+            cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+            method = cls_base.get_method('__getitem__')
+            if method:
+                class_args = self._handle_function_args([FunctionCallArgument(a) for a in expr.indices])
+                args = [FunctionCallArgument(var), *class_args]
+                return self._handle_function(expr, method, args)
+            else:
+                raise errors.report(f"No __getitem__ found for type {class_type}",
+                        severity='fatal', symbol=expr)
 
     def _visit_PyccelSymbol(self, expr):
         name = expr
@@ -3524,10 +3545,12 @@ class SemanticParser(BasicParser):
 
         if isinstance(lhs, Variable):
             is_pointer = lhs.is_alias
-        elif isinstance(lhs, IndexedElement):
+        elif isinstance(lhs, (IndexedElement, DictGetItem)):
             is_pointer = False
         elif isinstance(lhs, (PythonTuple, PythonList)):
             is_pointer = any(l.is_alias for l in lhs if isinstance(lhs, Variable))
+        else:
+            raise NotImplementedError()
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
         is_pointer = is_pointer and isinstance(rhs, (Variable, Duplicate))

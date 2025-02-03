@@ -2865,6 +2865,21 @@ class CCodePrinter(CodePrinter):
 
         return pop_expr
 
+    def _print_DictGetItem(self, expr):
+        dict_obj = expr.dict_obj
+        dict_obj_code = self._print(ObjectAddress(dict_obj))
+        container_type = self.get_c_type(dict_obj.class_type)
+        key = self._print(expr.key)
+        assign = expr.get_user_nodes(Assign)
+        if assign:
+            assert len(assign) == 1
+            assign_node = assign[0]
+            lhs = assign_node.lhs
+            if lhs == expr or lhs.is_user_of(expr):
+                return f"(*{container_type}_at_mut({dict_obj_code}, {key}))"
+
+        return f"(*{container_type}_at({dict_obj_code}, {key}))"
+
     #=================== MACROS ==================
 
     def _print_MacroShape(self, expr):
