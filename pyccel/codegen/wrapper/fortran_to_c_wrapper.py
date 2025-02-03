@@ -783,6 +783,7 @@ class FortranToCWrapper(Wrapper):
         scope.insert_variable(elem_var)
 
         # Define the additional steps necessary to define and fill ptr_var
+        # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
         body = [Assign(shape_var, PyccelAdd(local_var.shape[0], LiteralInteger(1))),
                 Assign(bind_var, c_malloc(PyccelMul(BindCSizeOf(elem_var), shape_var))),
                 C_F_Pointer(bind_var, ptr_var, [shape_var]),
