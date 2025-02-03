@@ -52,11 +52,7 @@ void capsule_cleanup(PyObject *capsule);
  * c_order : True if the data is in C order, False otherwise.
  * release_memory : If true a Capsule is created to automatically free the data when the created PyArrayObject goes out of scope.
  */
-#if defined(_WIN32) && (PyArray_RUNTIME_VERSION >= NPY_2_0_API_VERSION)
 PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order, bool release_memory);
-#else
-PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order, bool release_memory);
-#endif
 
 /*
  * Functions : Cast functions

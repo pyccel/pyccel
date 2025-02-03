@@ -655,9 +655,10 @@ def test_set_iter(language):
 
 def test_set_iter_prod(language):
     def set_iter_prod():
+        # Integers must be used to get an exact result to compare sets
         from itertools import product
         a = {1,2,3,4,5,6,7,8,9,12}
-        b = {2.0, 4.0, 9.0, 2.5, 8.3}
+        b = {2, 4, 9, 1, 8}
         assemble = 0.0
         for ai, bi in product(a,b):
             assemble += ai*bi

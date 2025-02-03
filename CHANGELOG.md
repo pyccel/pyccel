@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
--   #1787 : Ensure STC is installed with Pyccel.
+-   #1787 : Ensure STC v5.0 is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
 -   #1694 : Add Python support for list method `extend()`.
 -   #1700 : Add Python support for list method `sort()`.
