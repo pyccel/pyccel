@@ -20,11 +20,10 @@ from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
-from pyccel.ast.core import For, Concatenate
+from pyccel.ast.core import For
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
-from pyccel.ast.datatypes import HomogeneousSetType, PythonNativeInt
-from pyccel.ast.datatypes import HomogeneousListType, StringType, CharType
+from pyccel.ast.datatypes import PythonNativeInt, CharType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type
