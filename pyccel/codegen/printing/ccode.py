@@ -19,7 +19,7 @@ from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
-from pyccel.ast.builtin_methods.dict_methods  import DictItems
+from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys
 
 from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
@@ -1168,23 +1168,23 @@ class CCodePrinter(CodePrinter):
                     container_key_key = self.get_c_type(class_type.key_type)
                     container_val_key = self.get_c_type(class_type.value_type)
                     container_key = f'{container_key_key}_{container_val_key}'
-                    element_decl = f'#define i_key {container_key_key}\n#define i_val {container_val_key}\n'
+                    type_decl = f'{container_key_key},{container_val_key}'
                 else:
-                    container_key = self.get_c_type(class_type.element_type)
-                    element_decl = f'#define i_key {container_key}\n'
+                    type_decl = self.get_c_type(class_type.element_type)
+                decl_line = f'#define i_type {container_type},{type_decl}\n'
                 if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
                         and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
-                    element_decl += '#define i_use_cmp\n'
+                    decl_line += '#define i_use_cmp\n'
                 header_guard_prefix = import_header_guard_prefix.get(source, '')
                 header_guard = f'{header_guard_prefix}_{container_type.upper()}'
                 code += ''.join((f'#ifndef {header_guard}\n',
-                        f'#define {header_guard}\n',
-                        f'#define i_type {container_type}\n',
-                        element_decl,
-                        '#define i_more\n' if source in stc_extension_mapping else '',
-                        f'#include <{source}.h>\n', 
-                        f'#include <{stc_extension_mapping[source]}.h>\n' if source in stc_extension_mapping else '', 
-                        f'#endif // {header_guard}\n\n'))
+                                 f'#define {header_guard}\n',
+                                 decl_line,
+                                 f'#include <{source}.h>\n'))
+                if source in stc_extension_mapping:
+                    code += (f'#define i_type {container_type},{type_decl}\n'
+                             f'#include <{stc_extension_mapping[source]}.h>\n')
+                code += f'#endif // {header_guard}\n\n'
             return code
 
         # Get with a default value is not used here as it is
@@ -2432,7 +2432,7 @@ class CCodePrinter(CodePrinter):
         iterable = expr.iterable
         indices = iterable.loop_counters
 
-        if isinstance(iterable, (VariableIterator, DictItems)) and \
+        if isinstance(iterable, (VariableIterator, DictItems, DictKeys)) and \
                 isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
             var = iterable.variable
             iterable_type = var.class_type
@@ -2444,6 +2444,8 @@ class CCodePrinter(CodePrinter):
             if isinstance(iterable, DictItems):
                 assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'first', lhs = tmp_ref)),
                            Assign(expr.target[1], DottedVariable(VoidType(), 'second', lhs = tmp_ref))]
+            elif isinstance(iterable, DictKeys):
+                assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'first', lhs = tmp_ref))]
             else:
                 assigns = [Assign(expr.target[0], tmp_ref)]
             additional_assign = CodeBlock(assigns)
@@ -2869,6 +2871,21 @@ class CCodePrinter(CodePrinter):
             pop_expr = f"{c_type}_pop({dict_var}, {key})"
 
         return pop_expr
+
+    def _print_DictGetItem(self, expr):
+        dict_obj = expr.dict_obj
+        dict_obj_code = self._print(ObjectAddress(dict_obj))
+        container_type = self.get_c_type(dict_obj.class_type)
+        key = self._print(expr.key)
+        assign = expr.get_user_nodes(Assign)
+        if assign:
+            assert len(assign) == 1
+            assign_node = assign[0]
+            lhs = assign_node.lhs
+            if lhs == expr or lhs.is_user_of(expr):
+                return f"(*{container_type}_at_mut({dict_obj_code}, {key}))"
+
+        return f"(*{container_type}_at({dict_obj_code}, {key}))"
 
     #=================== MACROS ==================
 

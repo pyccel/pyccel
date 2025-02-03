@@ -120,11 +120,11 @@ Python contains a limited number of builtin functions defined [here](https://doc
 
 | Method | Supported |
 |----------|-----------|
-| `clear` | **Yes** |
+| **`clear`** | **Yes** |
 | `copy` | Python-only |
 | `get` | Python and C |
-| `items` | **Yes** |
-| `keys` | No |
+| **`items`** | **Yes** |
+| **`keys`** | **Yes** |
 | `pop` | Python and C |
 | `popitem` | Python-only |
 | `reversed` | No |

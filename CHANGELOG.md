@@ -4,10 +4,8 @@ All notable changes to this project will be documented in this file.
 ## \[UNRELEASED\]
 
 ### Added
--   #1881 : Add Python support for dict method `copy()`.
--   #1880 : Add support for dict method `clear()`.
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
--   #1787 : Ensure STC is installed with Pyccel.
+-   #1787 : Ensure STC v5.0 is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
 -   #1694 : Add Python support for list method `extend()`.
 -   #1700 : Add Python support for list method `sort()`.
@@ -15,7 +13,7 @@ All notable changes to this project will be documented in this file.
 -   #1693 : Add Python support for list method `remove()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
--   #1886 : Add Python and C support for dict method `pop()`.
+-   #1881 : Add Python support for dict method `copy()`.
 -   #1887 : Add Python support for dict method `popitem()`.
 -   #1888 : Add Python support for dict method `setdefault()`.
 -   #1885 : Add Python and C support for dict method `get()`.
@@ -49,7 +47,11 @@ All notable changes to this project will be documented in this file.
 -   #1744 : Add support for set method `intersection()`.
 -   #1745 : Add support for set method `intersection_update()`.
 -   #2059 : Add C support for returning dictionaries from functions.
+-   #2164 : Add support for dict indexing.
+-   #1880 : Add support for dict method `clear()`.
 -   #1884 : Add support for dict method `items()`.
+-   #1884 : Add support for dict method `keys()`.
+-   #1886 : Add Python and C support for dict method `pop()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
