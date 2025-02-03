@@ -1708,13 +1708,15 @@ class SemanticParser(BasicParser):
                     self.current_ast_node.col_offset),
                         severity='error', symbol=var.name)
 
-        elif not is_augassign and var.rank > 0 and isinstance(rhs, (Variable, IndexedElement)) and var.on_heap:
+        elif not is_augassign and not var.is_alias and var.rank > 0 and \
+                isinstance(rhs, (Variable, IndexedElement)) and \
+                not isinstance(var.class_type, (StringType, TupleType)):
             errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                 bounding_box=(self.current_ast_node.lineno,
                     self.current_ast_node.col_offset),
                         severity='error', symbol=var)
 
-        elif var.is_ndarray and var.is_alias and isinstance(rhs, NumpyNewArray):
+        elif var.rank > 0 and var.is_alias and isinstance(rhs, (NumpyNewArray, PythonList, PythonSet, PythonDict)):
             errors.report(INVALID_POINTER_REASSIGN,
                 bounding_box=(self.current_ast_node.lineno,
                     self.current_ast_node.col_offset),
