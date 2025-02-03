@@ -9,8 +9,11 @@ Module representing concepts that are only applicable to C code (e.g. ObjectAddr
 
 from pyccel.utilities.metaclasses import ArgumentSingleton
 from .basic     import TypedAstNode, PyccelAstNode
+from .core      import FunctionDef, FunctionDefArgument, FunctionDefResult
 from .datatypes import HomogeneousContainerType, FixedSizeType, PrimitiveIntegerType
+from .datatypes import CharType, StringType
 from .literals  import LiteralString
+from .variable  import Variable
 
 __all__ = ('CMacro',
            'CNativeInt',
@@ -332,3 +335,11 @@ class CMacro(PyccelAstNode):
         """ The string containing macro name
         """
         return self._macro
+
+#-------------------------------------------------------------------
+#                         String functions
+#-------------------------------------------------------------------
+cstr_data = FunctionDef(name = 'cstr_data',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(StringType(), name='s', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(CharType(), name='o', memory_handling='alias'))])

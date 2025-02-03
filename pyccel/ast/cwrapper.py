@@ -1265,14 +1265,6 @@ PyDict_SetItem = FunctionDef(name = 'PyDict_SetItem',
                     results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
                     body = [])
 
-#-------------------------------------------------------------------
-#                         String functions
-#-------------------------------------------------------------------
-cstr_data = FunctionDef(name = 'cstr_data',
-                        body = [],
-                        arguments = [FunctionDefArgument(Variable(StringType(), name='s', memory_handling='alias'))],
-                        results = [FunctionDefResult(Variable(CharType(), name='o', memory_handling='alias'))])
-
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
