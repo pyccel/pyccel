@@ -89,11 +89,6 @@ class OmpAnnotatedComment(PyccelAstNode):
         """Used to store the combined construct of a directive."""
         return self._combined
 
-    def __getnewargs__(self):
-        """Used for Pickling self."""
-        args = (self.txt, self.combined)
-        return args
-
     def __str__(self):
         instructions = [self.name, self.combined, self.txt]
         return '#$ omp '+' '.join(i for i in instructions if i)

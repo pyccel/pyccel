@@ -46,7 +46,7 @@ from pyccel.ast.datatypes     import TupleType
 from pyccel.ast.internals     import Slice
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
-from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type
+from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type, NumpyInt32Type
 from pyccel.ast.numpy_wrapper import PyArray_DATA
 from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
@@ -1685,7 +1685,7 @@ class CToPythonWrapper(Wrapper):
             typenum = numpy_dtype_registry[expr.dtype]
             data_var = DottedVariable(VoidType(), 'data', memory_handling='alias',
                         lhs=expr)
-            shape_var = DottedVariable(CStackArray(PythonNativeInt()), 'shape',
+            shape_var = DottedVariable(CStackArray(NumpyInt32Type()), 'shape',
                         lhs=expr)
             release_memory = False
             return [AliasAssign(py_equiv, to_pyarray(
@@ -1729,7 +1729,7 @@ class CToPythonWrapper(Wrapper):
         data_var = self.scope.get_temporary_variable(dtype_or_var = VoidType(),
                 name = v.name + '_data', memory_handling = 'alias')
         # Create variables to store the shape of the array
-        shape_var = self.scope.get_temporary_variable(CStackArray(PythonNativeInt()), name = v.name+'_size',
+        shape_var = self.scope.get_temporary_variable(CStackArray(NumpyInt32Type()), name = v.name+'_size',
                 shape = (v.rank,))
         shape = [IndexedElement(shape_var, i) for i in range(v.rank)]
         # Get the bind_c function which wraps a fortran array and returns c objects
@@ -1744,7 +1744,7 @@ class CToPythonWrapper(Wrapper):
         release_memory = False
         # Save the ndarray to vars_to_wrap to be handled as if it came from C
         return [call, AliasAssign(py_equiv, to_pyarray(LiteralInteger(v.rank), typenum,
-                            data_var, shape_var,convert_to_literal(v.order != 'F'),
+                            data_var, shape_var, convert_to_literal(v.order != 'F'),
                             convert_to_literal(release_memory)))]
 
     def _wrap_DottedVariable(self, expr):
@@ -2762,7 +2762,7 @@ class CToPythonWrapper(Wrapper):
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         # Result of calling the bind-c function
         data_var = Variable(VoidType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
-        shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(name+'_shape'),
+        shape_var = Variable(CStackArray(NumpyInt32Type()), self.scope.get_new_name(name+'_shape'),
                         shape = (orig_var.rank,), memory_handling='alias')
         typenum = numpy_dtype_registry[orig_var.dtype]
         # Save so we can find by iterating over func.results

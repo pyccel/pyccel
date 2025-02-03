@@ -769,6 +769,7 @@ def test_return_numpy_arrays(language):
     types += [float]*5 # 5 floats for h
     types += [int]*5 # 5 ints for g
     types += [int]*4 # 4 ints for k
+    types += [float]*48 # 48 floats for x
     pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------

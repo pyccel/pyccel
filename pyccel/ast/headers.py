@@ -56,26 +56,6 @@ class MetaVariable(Header):
     def value(self):
         return self._value
 
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable that can be called
-           to create the initial version of the object
-           and its arguments
-        """
-        return (self.__class__, (self.name, self.value))
-
 #==============================================================================
 class Template(Header):
     """
@@ -119,27 +99,6 @@ class Template(Header):
 
     def __iter__(self):
         return self._dtypes.__iter__()
-
-    def __reduce_ex__(self, i):
-
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments
-        """
-        return (self.__class__, (self.name, self.dtypes))
 
 #==============================================================================
 class FunctionHeader(Header):
@@ -229,32 +188,6 @@ class FunctionHeader(Header):
                               self.is_static)
 
 
-    def __reduce_ex__(self, i):
-
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments
-        """
-
-        args = (self.name,
-                self.dtypes,
-                self.results,
-                self.is_static,)
-        return (self.__class__, args)
-
 
 #==============================================================================
 class MethodHeader(FunctionHeader):
@@ -313,32 +246,6 @@ class MethodHeader(FunctionHeader):
             raise TypeError('is_static must be a boolean')
 
         super().__init__(name, dtypes, results, is_static)
-
-    def __reduce_ex__(self, i):
-
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments
-        """
-
-        args = (self.name.split('.'),
-                self.dtypes,
-                self.results,
-                self.is_static,)
-        return (self.__class__, args)
 
 #==============================================================================
 class InterfaceHeader(Header):
