@@ -5672,6 +5672,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : FunctionCall
+            The syntactic node that represent the call to `PythonSetFunction`.
 
         function_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
