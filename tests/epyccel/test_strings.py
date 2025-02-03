@@ -25,4 +25,4 @@ def test_strings(test_func, language):
     pyccel_out = f2()
     print(python_out)
     print(pyccel_out)
-    assert python_out == pyccel_out.strip()
+    assert python_out == pyccel_out
