@@ -1708,7 +1708,7 @@ class SemanticParser(BasicParser):
                     self.current_ast_node.col_offset),
                         severity='error', symbol=var.name)
 
-        elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.on_heap:
+        elif not is_augassign and var.rank > 0 and isinstance(rhs, (Variable, IndexedElement)) and var.on_heap:
             errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                 bounding_box=(self.current_ast_node.lineno,
                     self.current_ast_node.col_offset),
