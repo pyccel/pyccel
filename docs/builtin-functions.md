@@ -60,7 +60,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `repr` | No |
 | `reversed` | No |
 | **`round`** | **Yes** |
-| *`set`* | Python-only |
+| **`set`** | **Yes** |
 | `setattr` | No  |
 | `slice` | No |
 | `sorted` | No |
