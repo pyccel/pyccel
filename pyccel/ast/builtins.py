@@ -942,7 +942,7 @@ class PythonSetFunction(PyccelFunction):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    copied_obj : TypedAstNode
         The argument passed to the function call.
     """
     __slots__ = ('_shape', '_class_type')
