@@ -33,6 +33,7 @@ from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet, Variabl
 from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonTuple
 from pyccel.ast.builtins import Lambda, PythonMap
 
+from pyccel.ast.builtin_methods.dict_methods import DictKeys
 from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
 from pyccel.ast.builtin_methods.dict_methods  import DictGetItem, DictGet
@@ -2157,7 +2158,10 @@ class SemanticParser(BasicParser):
         """
         iterable = self._visit(syntactic_iterable)
         if isinstance(iterable, (Variable, IndexedElement)):
-            iterable = VariableIterator(iterable)
+            if isinstance(iterable.class_type, DictType):
+                iterable = DictKeys(iterable)
+            else:
+                iterable = VariableIterator(iterable)
         elif not isinstance(iterable, Iterable):
             if isinstance(iterable, TypedAstNode):
                 pyccel_stage.set_stage('syntactic')
