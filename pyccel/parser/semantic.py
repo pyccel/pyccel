@@ -3452,6 +3452,16 @@ class SemanticParser(BasicParser):
             else:
                 raise NotImplementedError("Cannot assign result of a function without a return")
 
+            if len(results) == 1 and results[0].var.rank > 1 and isinstance(lhs, IndexedElement):
+                temp = self.scope.get_new_name()
+                semantic_temp = self._assign_lhs_variable(temp, d_var, rhs, new_expressions)
+                new_expressions.append(Assign(semantic_temp, rhs))
+                rhs = semantic_temp
+                errors.report((f"Saving the result of the function {func.name} to a slice requires unnecessary "
+                               "data allocation and copies. This has a performance cost. Consider modifying "
+                               f"{func.name} so {lhs} can be passed as an argument whose contents are modified."),
+                        severity='warning', symbol=expr)
+
             # case of elemental function
             # if the input and args of func do not have the same shape,
             # then the lhs must be already declared
