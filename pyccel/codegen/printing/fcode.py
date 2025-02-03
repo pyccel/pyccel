@@ -3480,6 +3480,11 @@ class FCodePrinter(CodePrinter):
         elif isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             inds_code = ", ".join(self._print(i) for i in inds)
             return f"{base_code}({inds_code})"
+        elif isinstance(base.class_type, StringType):
+            # Fortran strings require slice indexing. The ubound has already been processed at this point
+            inds = [i if isinstance(i, Slice) else Slice(i, i) for i in inds]
+            inds_code = ", ".join(self._print(i) for i in inds)
+            return f"{base_code}({inds_code})"
         else:
             errors.report(f"Don't know how to index type {base.class_type}",
                     symbol=expr, severity='fatal')
