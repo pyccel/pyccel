@@ -19,7 +19,7 @@ from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
-from pyccel.ast.builtin_methods.dict_methods  import DictItems
+from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys
 
 from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
@@ -2433,7 +2433,7 @@ class CCodePrinter(CodePrinter):
         iterable = expr.iterable
         indices = iterable.loop_counters
 
-        if isinstance(iterable, (VariableIterator, DictItems)) and \
+        if isinstance(iterable, (VariableIterator, DictItems, DictKeys)) and \
                 isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
             var = iterable.variable
             iterable_type = var.class_type
@@ -2445,6 +2445,8 @@ class CCodePrinter(CodePrinter):
             if isinstance(iterable, DictItems):
                 assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'first', lhs = tmp_ref)),
                            Assign(expr.target[1], DottedVariable(VoidType(), 'second', lhs = tmp_ref))]
+            elif isinstance(iterable, DictKeys):
+                assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'first', lhs = tmp_ref))]
             else:
                 assigns = [Assign(expr.target[0], tmp_ref)]
             additional_assign = CodeBlock(assigns)
