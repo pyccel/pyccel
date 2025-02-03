@@ -783,11 +783,10 @@ class FortranToCWrapper(Wrapper):
         scope.insert_variable(elem_var)
 
         # Define the additional steps necessary to define and fill ptr_var
-        alloc_shape = PyccelAdd(shape_var, LiteralInteger(1))
-        body = [Assign(shape_var, local_var.shape[0]),
-                Assign(bind_var, c_malloc(PyccelMul(BindCSizeOf(elem_var), alloc_shape))),
-                C_F_Pointer(bind_var, ptr_var, [alloc_shape]),
-                Assign(IndexedElement(ptr_var, Slice(LiteralInteger(0), shape_var)), local_var),
+        body = [Assign(shape_var, PyccelAdd(local_var.shape[0], LiteralInteger(1))),
+                Assign(bind_var, c_malloc(PyccelMul(BindCSizeOf(elem_var), shape_var))),
+                C_F_Pointer(bind_var, ptr_var, [shape_var]),
+                Assign(IndexedElement(ptr_var, Slice(LiteralInteger(1), shape_var)), local_var),
                 Assign(IndexedElement(ptr_var, shape_var), C_NULL_CHAR())]
 
         return {'c_result': BindCVariable(bind_var, orig_var), 'body': body, 'f_array': ptr_var}
