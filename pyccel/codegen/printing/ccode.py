@@ -39,7 +39,7 @@ from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
-from pyccel.ast.datatypes import HomogeneousContainerType, DictType
+from pyccel.ast.datatypes import HomogeneousContainerType, DictType, FixedSizeType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 from pyccel.ast.internals import PyccelFunction
@@ -1167,13 +1167,29 @@ class CCodePrinter(CodePrinter):
                        AsName(VariableTypeAnnotation(class_type), container_type),
                        ignore_at_print=True))
                 if isinstance(class_type, DictType):
+                    key_type = class_type.key_type
                     container_key_key = self.get_c_type(class_type.key_type)
                     container_val_key = self.get_c_type(class_type.value_type)
                     container_key = f'{container_key_key}_{container_val_key}'
                     type_decl = f'{container_key_key},{container_val_key}'
+                    if isinstance(key_type, FixedSizeType):
+                        decl_line = f'#define i_type {container_type},{type_decl}\n'
+                    elif isinstance(key_type, StringType):
+                        decl_line = (f'#define i_type {container_type}\n'
+                                     f'#define i_keypro cstr\n'
+                                     f'#define i_val {container_val_key}\n')
                 else:
-                    type_decl = self.get_c_type(class_type.element_type)
-                decl_line = f'#define i_type {container_type},{type_decl}\n'
+                    element_type = class_type.element_type
+                    if isinstance(element_type, FixedSizeType):
+                        type_decl = self.get_c_type(element_type)
+                        decl_line = f'#define i_type {container_type},{type_decl}\n'
+                    elif isinstance(element_type, StringType):
+                        decl_line = (f'#define i_type {container_type}\n'
+                                     f'#define i_keypro cstr\n')
+                    else:
+                        decl_line = ''
+                        errors.report("The declaration of type {class_type} is not yet implemented.",
+                                symbol=expr, severity='error')
                 if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
                         and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
                     decl_line += '#define i_use_cmp\n'
@@ -1184,8 +1200,7 @@ class CCodePrinter(CodePrinter):
                                  decl_line,
                                  f'#include <{source}.h>\n'))
                 if source in stc_extension_mapping:
-                    code += (f'#define i_type {container_type},{type_decl}\n'
-                             f'#include <{stc_extension_mapping[source]}.h>\n')
+                    code += decl_line + f'#include <{stc_extension_mapping[source]}.h>\n'
                 code += f'#endif // {header_guard}\n\n'
             return code
 
