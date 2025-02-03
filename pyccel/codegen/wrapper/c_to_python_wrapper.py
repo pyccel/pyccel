@@ -36,9 +36,10 @@ from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_New
 from pyccel.ast.cwrapper      import PyTuple_GetItem, PyTuple_SetItem
 from pyccel.ast.cwrapper      import PySet_New, PySet_Add
 from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PySet_GetIter, PySet_Clear
-from pyccel.ast.cwrapper      import PyIter_Next, cstr_data
+from pyccel.ast.cwrapper      import PyIter_Next
 from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
+from pyccel.ast.c_concepts    import cstr_data
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
 from pyccel.ast.datatypes     import HomogeneousSetType, HomogeneousListType
@@ -2957,16 +2958,19 @@ class CToPythonWrapper(Wrapper):
 
         return {'c_results': c_results, 'py_result': py_res, 'body': body}
 
-    def _extract_StringType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+    def _extract_StringType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
+        name = getattr(orig_var, 'name', 'tmp')
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         if is_bind_c:
-            return errors.report(f"Wrapping function results is not implemented for type string. " + PYCCEL_RESTRICTION_TODO, symbol=orig_var,
-                severity='fatal')
+            c_res = Variable(CharType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
+            self.scope.insert_variable(c_res)
+            char_data = c_res
         else:
-            name = getattr(orig_var, 'name', 'tmp')
-            py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
             c_res = Variable(StringType(), self.scope.get_new_name(name), memory_handling='heap')
             self.scope.insert_variable(c_res)
+            char_data = cstr_data(ObjectAddress(c_res))
 
-            body = [AliasAssign(py_res, PyBuildValueNode([cstr_data(ObjectAddress(c_res))]))]
-            return {'c_results': [c_res], 'py_result': py_res, 'body': body}
+        body = [AliasAssign(py_res, PyBuildValueNode([char_data]))]
+        return {'c_results': [c_res], 'py_result': py_res, 'body': body}
 
