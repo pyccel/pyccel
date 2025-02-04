@@ -12,6 +12,7 @@ from .basic     import TypedAstNode, PyccelAstNode
 from .core      import FunctionDef, FunctionDefArgument, FunctionDefResult
 from .datatypes import HomogeneousContainerType, FixedSizeType, PrimitiveIntegerType
 from .datatypes import CharType, StringType
+from .internals import PyccelFunction
 from .literals  import LiteralString
 from .variable  import Variable
 
@@ -339,7 +340,9 @@ class CMacro(PyccelAstNode):
 #-------------------------------------------------------------------
 #                         String functions
 #-------------------------------------------------------------------
-cstr_data = FunctionDef(name = 'cstr_data',
-                        body = [],
-                        arguments = [FunctionDefArgument(Variable(StringType(), name='s', memory_handling='alias'))],
-                        results = [FunctionDefResult(Variable(CharType(), name='o', memory_handling='alias'))])
+class CStrData(PyccelFunction):
+    __slots__ = ()
+    _class_type = CharType()
+
+    def __init__(self, arg):
+        super().__init__(arg)

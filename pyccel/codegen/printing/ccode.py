@@ -32,7 +32,7 @@ from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName
 
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
-from pyccel.ast.c_concepts import CStackArray
+from pyccel.ast.c_concepts import CStackArray, CStrData
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType
@@ -379,7 +379,7 @@ class CCodePrinter(CodePrinter):
         bool
             True if a C pointer, False otherwise.
         """
-        if isinstance(a, (Nil, ObjectAddress, PointerCast)):
+        if isinstance(a, (Nil, ObjectAddress, PointerCast, CStrData)):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
@@ -2895,6 +2895,14 @@ class CCodePrinter(CodePrinter):
                 return f"(*{container_type}_at_mut({dict_obj_code}, {key}))"
 
         return f"(*{container_type}_at({dict_obj_code}, {key}))"
+
+    def _print_CStrData(self, expr):
+        arg = expr.args[0]
+        code = self._print(arg)
+        if isinstance(arg, LiteralString):
+            return code[9:-1]
+        else:
+            return f'cstr_data({code})'
 
     #=================== MACROS ==================
 

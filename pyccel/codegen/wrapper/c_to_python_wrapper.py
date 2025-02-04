@@ -39,7 +39,7 @@ from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PySet_GetIter, PyS
 from pyccel.ast.cwrapper      import PyIter_Next
 from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
-from pyccel.ast.c_concepts    import cstr_data
+from pyccel.ast.c_concepts    import CStrData
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
 from pyccel.ast.datatypes     import HomogeneousSetType, HomogeneousListType
@@ -338,7 +338,7 @@ class CToPythonWrapper(Wrapper):
                 flag = numpy_flag_c_contig
 
             if raise_error:
-                type_check_condition = pyarray_check(ObjectAddress(LiteralString(arg.name)), py_obj, type_ref,
+                type_check_condition = pyarray_check(CStrData(LiteralString(arg.name)), py_obj, type_ref,
                                  LiteralInteger(rank), flag)
             else:
                 type_check_condition = is_numpy_array(py_obj, type_ref, LiteralInteger(rank), flag)
@@ -399,7 +399,7 @@ class CToPythonWrapper(Wrapper):
         if raise_error and not isinstance(arg.class_type, NumpyNDArrayType):
             # No error code required for arrays as the error is raised inside pyarray_check
             message = LiteralString(f"Expected an argument of type {arg.class_type} for argument {arg.name}")
-            python_error = PyErr_SetString(PyTypeError, message)
+            python_error = PyErr_SetString(PyTypeError, CStrData(message))
             error_code = (python_error,)
 
         return type_check_condition, error_code
@@ -491,7 +491,7 @@ class CToPythonWrapper(Wrapper):
                     check_func_call, _ = self._get_type_check_condition(py_arg, type_to_example_arg[t], False, body)
                     if_blocks.append(IfSection(check_func_call, [AugAssign(type_indicator, '+', LiteralInteger(index*step))]))
                 body.append(If(*if_blocks, IfSection(LiteralTrue(),
-                            [PyErr_SetString(PyTypeError, f"Unexpected type for argument {interface_args[0].name}"),
+                            [PyErr_SetString(PyTypeError, CStrData(LiteralString(f"Unexpected type for argument {interface_args[0].name}"))),
                              Return([PyccelUnarySub(LiteralInteger(1))])])))
 
             # Update the step to ensure unique indices for each argument
@@ -543,7 +543,7 @@ class CToPythonWrapper(Wrapper):
         else:
             func_results = [FunctionDefResult(self.scope.get_temporary_variable(self._error_exit_code.class_type, "result"))]
         function = PyFunctionDef(name = name, arguments = func_args, results = func_results,
-                body = [PyErr_SetString(PyNotImplementedError, LiteralString(error_msg)),
+                body = [PyErr_SetString(PyNotImplementedError, CStrData(LiteralString(error_msg))),
                         Return([self._error_exit_code])],
                 scope = scope, original_function = original_function)
 
@@ -1412,7 +1412,7 @@ class CToPythonWrapper(Wrapper):
                                 [Return([wrapped_func(*python_arg_objs)])]))
             functions.append(wrapped_func)
         if_sections.append(IfSection(LiteralTrue(),
-                    [PyErr_SetString(PyTypeError, "Unexpected type combination"),
+                    [PyErr_SetString(PyTypeError, CStrData(LiteralString("Unexpected type combination"))),
                      Return([self._error_exit_code])]))
         body.append(If(*if_sections))
         self.exit_scope()
@@ -1865,7 +1865,7 @@ class CToPythonWrapper(Wrapper):
                            Return((LiteralInteger(0, dtype=CNativeInt()),))]
         else:
             setter_body = [PyErr_SetString(PyAttributeError,
-                                        LiteralString("Can't reallocate memory via Python interface.")),
+                                        CStrData(LiteralString("Can't reallocate memory via Python interface."))),
                         Return([self._error_exit_code])]
         self.exit_scope()
 
@@ -1878,7 +1878,7 @@ class CToPythonWrapper(Wrapper):
 
         python_name = class_type.scope.get_python_name(expr.name)
         return PyGetSetDefElement(python_name, getter, setter,
-                                LiteralString(f"The attribute {python_name}"))
+                                CStrData(LiteralString(f"The attribute {python_name}")))
 
     def _wrap_BindCClassProperty(self, expr):
         """
@@ -1991,7 +1991,7 @@ class CToPythonWrapper(Wrapper):
                                Return((LiteralInteger(0, dtype=CNativeInt()),))]
             else:
                 setter_body = [PyErr_SetString(PyAttributeError,
-                                            LiteralString("Can't reallocate memory via Python interface.")),
+                                            CStrData(LiteralString("Can't reallocate memory via Python interface."))),
                             Return([self._error_exit_code])]
             self.exit_scope()
 
@@ -2006,7 +2006,7 @@ class CToPythonWrapper(Wrapper):
         docstring = LiteralString(
                         '\n'.join(expr.docstring.comments)
                         if expr.docstring else f"The attribute {expr.python_name}")
-        return PyGetSetDefElement(expr.python_name, getter, setter, docstring)
+        return PyGetSetDefElement(expr.python_name, getter, setter, CStrData(docstring))
 
     def _wrap_ClassDef(self, expr):
         """
@@ -2969,7 +2969,7 @@ class CToPythonWrapper(Wrapper):
         else:
             c_res = Variable(StringType(), self.scope.get_new_name(name), memory_handling='heap')
             self.scope.insert_variable(c_res)
-            char_data = cstr_data(ObjectAddress(c_res))
+            char_data = CStrData(ObjectAddress(c_res))
 
         body = [AliasAssign(py_res, PyBuildValueNode([char_data]))]
         if is_bind_c:

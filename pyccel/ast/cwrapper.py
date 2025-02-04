@@ -19,6 +19,8 @@ from .bind_c    import BindCPointer
 
 from .builtins  import PythonInt
 
+from .c_concepts import CStackArray
+
 from .datatypes import FixedSizeType, CustomDataType
 from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import PythonNativeBool, StringType, VoidType, CharType
@@ -1111,7 +1113,7 @@ PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
 PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
               body      = [],
               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o')),
-                           FunctionDefArgument(Variable(StringType(), name = 's'))],
+                           FunctionDefArgument(Variable(CharType(), name = 's', memory_handling='alias'))],
               results   = [])
 
 PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
