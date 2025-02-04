@@ -328,8 +328,7 @@ class PyModule_AddObject(PyccelFunction):
     _class_type = PythonNativeInt()
 
     def __init__(self, mod_name, name, variable):
-        if not isinstance(name, LiteralString):
-            raise TypeError("Name must be a string")
+        assert isinstance(name.dtype, CharType)
         if not isinstance(variable, Variable) or \
                 variable.dtype not in (PyccelPyObject(), PyccelPyClassType()):
             raise TypeError("Variable must be a PyObject Variable")

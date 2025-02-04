@@ -665,7 +665,7 @@ class CToPythonWrapper(Wrapper):
         list[PyccelAstNode]
             The code which adds the object to the module.
         """
-        add_expr = PyModule_AddObject(module_var, CStrStr(LiteralString(name), obj))
+        add_expr = PyModule_AddObject(module_var, CStrStr(LiteralString(name)), obj)
         if_expr = If(IfSection(PyccelLt(add_expr, LiteralInteger(0)),
                         [Py_DECREF(i) for i in initialised] +
                         [Return([self._error_exit_code])]))
