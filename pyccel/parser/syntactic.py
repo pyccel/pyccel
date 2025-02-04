@@ -1283,12 +1283,12 @@ class SyntaxParser(BasicParser):
 
         while len(generators) > 1:
             indices.append(generators[-1].target)
-            outter_loop = generators.pop()
+            outer_loop = generators.pop()
             inserted_into = generators[-1]
             if inserted_into.body.body:
-                inserted_into.body.body[0].blocks[0].body.insert2body(outter_loop)
+                inserted_into.body.body[0].blocks[0].body.insert2body(outer_loop)
             else:
-                inserted_into.insert2body(outter_loop)
+                inserted_into.insert2body(outer_loop)
         indices.append(generators[-1].target)
 
         indices = indices[::-1]
