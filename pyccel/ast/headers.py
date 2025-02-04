@@ -1,17 +1,16 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 from ..errors.errors    import Errors
 from .basic             import PyccelAstNode, iterable
 from .core              import Assign, FunctionCallArgument
 from .core              import FunctionCall
-from .datatypes         import UnionType
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
-from .type_annotations  import SyntacticTypeAnnotation
+from .type_annotations  import SyntacticTypeAnnotation, UnionTypeAnnotation
 from .variable          import DottedName, DottedVariable
 from .variable          import Variable
 
@@ -57,26 +56,6 @@ class MetaVariable(Header):
     def value(self):
         return self._value
 
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable that can be called
-           to create the initial version of the object
-           and its arguments
-        """
-        return (self.__class__, (self.name, self.value))
-
 #==============================================================================
 class Template(Header):
     """
@@ -120,27 +99,6 @@ class Template(Header):
 
     def __iter__(self):
         return self._dtypes.__iter__()
-
-    def __reduce_ex__(self, i):
-
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments
-        """
-        return (self.__class__, (self.name, self.dtypes))
 
 #==============================================================================
 class FunctionHeader(Header):
@@ -232,32 +190,6 @@ class FunctionHeader(Header):
                               self.is_static)
 
 
-    def __reduce_ex__(self, i):
-
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments
-        """
-
-        args = (self.name,
-                self.dtypes,
-                self.results,
-                self.is_static,)
-        return (self.__class__, args)
-
 
 #==============================================================================
 class MethodHeader(FunctionHeader):
@@ -304,11 +236,11 @@ class MethodHeader(FunctionHeader):
             raise TypeError("Expecting dtypes to be iterable.")
 
         for d in dtypes:
-            if not isinstance(d, (UnionType, SyntacticTypeAnnotation)):
+            if not isinstance(d, (UnionTypeAnnotation, SyntacticTypeAnnotation)):
                 raise TypeError("Wrong element in dtypes.")
 
         for d in results:
-            if not isinstance(d, (UnionType, SyntacticTypeAnnotation)):
+            if not isinstance(d, (UnionTypeAnnotation, SyntacticTypeAnnotation)):
                 raise TypeError("Wrong element in dtypes.")
 
 
@@ -316,32 +248,6 @@ class MethodHeader(FunctionHeader):
             raise TypeError('is_static must be a boolean')
 
         super().__init__(name, dtypes, results, is_static)
-
-    def __reduce_ex__(self, i):
-
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments
-        """
-
-        args = (self.name.split('.'),
-                self.dtypes,
-                self.results,
-                self.is_static,)
-        return (self.__class__, args)
 
 #==============================================================================
 class InterfaceHeader(Header):

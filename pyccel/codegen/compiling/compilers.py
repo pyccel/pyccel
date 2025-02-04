@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Module handling everything related to the compilers used to compile the various generated files
@@ -53,7 +53,7 @@ def get_condaless_search_path(conda_warnings = 'basic'):
     conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
     if conda_folders:
         if conda_warnings in ('basic', 'verbose'):
-            message_warning = "Conda paths are ignored. See https://github.com/pyccel/pyccel/blob/devel/tutorial/compiler.md#utilising-pyccel-within-anaconda-environment for details"
+            message_warning = "Conda paths are ignored. See https://github.com/pyccel/pyccel/blob/devel/docs/compiler.md#utilising-pyccel-within-anaconda-environment for details"
             if conda_warnings == 'verbose':
                 message_warning = message_warning + "\nConda ignored PATH:\n"
                 message_warning = message_warning + ":".join(conda_folders)
@@ -329,6 +329,9 @@ class Compiler:
         verbose : bool
             Indicates whether additional output should be shown.
         """
+        if not compile_obj.has_target_file:
+            return
+
         accelerators = compile_obj.accelerators
 
         # Get flags

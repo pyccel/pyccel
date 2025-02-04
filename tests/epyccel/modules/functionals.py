@@ -56,3 +56,7 @@ def functional_for_2d_range_const():
 def functional_for_3d_range():
     a = [i*j for i in range(1,3) for j in range(i,4) for k in range(i,j)]
     return len(a), a[0], a[1], a[2], a[3]
+
+def unknown_length_functional(x : 'int[:]'):
+    a = [i*3 for i in range(len(x)*2)]
+    return len(a), a[0], a[-1]

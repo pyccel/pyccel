@@ -1,17 +1,16 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Module handling all Python builtin operators
 These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
-They also have specific rules to determine the dtype, precision, rank, shape
+They also have specific rules to determine the datatype, rank, shape
 """
 from .builtins     import PythonInt
-from .datatypes    import (NativeBool, NativeInteger, NativeFloat,
-                           NativeComplex, NativeString, NativeGeneric)
-from .internals    import max_precision
+from .datatypes    import PrimitiveBooleanType, PrimitiveIntegerType
+from .datatypes    import PythonNativeBool, PythonNativeInt
 from .operators    import PyccelUnaryOperator, PyccelOperator
 
 __all__ = (
@@ -45,32 +44,28 @@ class PyccelInvert(PyccelUnaryOperator):
     __slots__ = ()
     _precedence = 14
 
-    def _calculate_dtype(self, arg):
+    def _calculate_type(self, arg):
         """
-        Get the dtype and precision.
+        Get the type of the result of the function.
 
         Arguments must be integers or booleans. Any booleans are cast
         to integers.
 
         Parameters
         ----------
-        arg : tuple of TypedAstNode
+        arg : TypedAstNode
             The argument passed to the operator.
 
         Returns
         -------
-        dtype : DataType
+        DataType
             The  datatype of the result of the operation.
-        precision : integer
-            The precision of the result of the operation.
         """
-        dtype = NativeInteger()
-        if arg.dtype not in (NativeInteger(), NativeBool()):
-            raise TypeError(f'unsupported operand type(s): {arg}')
+        dtype = PythonNativeInt()
+        assert isinstance(getattr(arg.dtype, 'primitive_type', None), (PrimitiveBooleanType, PrimitiveIntegerType))
 
-        self._args      = (PythonInt(arg) if arg.dtype is NativeBool() else arg,)
-        precision = arg.precision
-        return dtype, precision, dtype
+        self._args      = (PythonInt(arg) if arg.dtype is PythonNativeBool() else arg,)
+        return dtype
 
     def __repr__(self):
         return f'~{repr(self.args[0])}'
@@ -91,9 +86,7 @@ class PyccelBitOperator(PyccelOperator):
         The second argument passed to the operator.
     """
     _shape = None
-    _rank  = 0
-    _order = None
-    __slots__ = ('_dtype','_precision','_class_type')
+    __slots__ = ('_class_type',)
 
     def __init__(self, arg1, arg2):
         super().__init__(arg1, arg2)
@@ -101,78 +94,50 @@ class PyccelBitOperator(PyccelOperator):
     def _set_order(self):
         pass
 
-    def _calculate_dtype(self, *args):
+    def _calculate_type(self, arg1, arg2):
         """
-        Get the dtype and precision.
+        Get the type of the result of the function.
 
         If one argument is a string then all arguments must be strings.
 
-        If the arguments are numeric then the dtype and precision
-        match the broadest type and the largest precision.
+        If the arguments are numeric then the datatype
+        matches the broadest type.
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
 
         Parameters
         ----------
-        *args : tuple of TypedAstNode
-            The arguments passed to the operator.
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
 
         Returns
         -------
-        dtype : DataType
+        DataType
             The  datatype of the result of the operation.
-        precision : integer
-            The precision of the result of the operation.
         """
         try:
-            dtype = sum((a.dtype for a in args), start=NativeGeneric())
-            class_type = sum((a.class_type for a in args), start=NativeGeneric())
-        except NotImplementedError:
-            raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
+            class_type = arg1.class_type + arg2.class_type
+        except NotImplementedError as err:
+            raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err # pylint: disable=no-member
 
-        if dtype in (NativeString(), NativeComplex(), NativeFloat()):
-            raise TypeError(f'unsupported operand type(s): {args}')
-        elif (dtype in (NativeInteger(), NativeBool())):
-            if class_type is NativeBool():
-                class_type = NativeInteger()
-            return *self._handle_integer_type(args), class_type
-        else:
-            raise TypeError(f'Cannot determine the type of {args}')
+        assert isinstance(getattr(class_type, 'primitive_type', None), (PrimitiveBooleanType, PrimitiveIntegerType))
 
-    def _set_shape_rank(self):
-        pass
+        self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in (arg1, arg2)]
 
-    def _handle_integer_type(self, args):
+        return class_type
+
+    def _set_shape(self):
         """
-        Set dtype and precision when the result is an integer.
+        Set the shape of the resulting object.
 
-        Calculate the dtype and precision of the result from the arguments in
-        the case where the result is an integer, ie. when the arguments are all
-        booleans or integers.
-
-        Parameters
-        ----------
-        args : tuple of TypedAstNode
-            The arguments passed to the operator.
-
-        Returns
-        -------
-        dtype : DataType
-            The datatype of the result of the operator.
-
-        precision : int
-            The precision of the result of the operator.
+        Set the shape of the resulting object. For a PyccelBitOperator,
+        the shape is a class attribute so nothing needs to be done.
         """
-        dtype    = NativeInteger()
-        integers = [a for a in args if a.dtype is NativeInteger()]
 
-        if not integers:
-            precision = -1
-        else:
-            precision = max_precision(integers)
-
-        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
-        return dtype, precision
+    def __repr__(self):
+        return f'{self.args[0]} {self.op} {self.args[1]}' # pylint: disable=no-member
 
 #==============================================================================
 
@@ -195,9 +160,7 @@ class PyccelRShift(PyccelBitOperator):
     """
     __slots__ = ()
     _precedence = 11
-
-    def __repr__(self):
-        return f'{self.args[0]} >> {self.args[1]}'
+    op = ">>"
 
 #==============================================================================
 
@@ -220,9 +183,7 @@ class PyccelLShift(PyccelBitOperator):
     """
     __slots__ = ()
     _precedence = 11
-
-    def __repr__(self):
-        return f'{self.args[0]} << {self.args[1]}'
+    op = "<<"
 
 #==============================================================================
 
@@ -241,36 +202,41 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
         The second argument passed to the operator.
     """
     __slots__ = ()
-    def _handle_integer_type(self, args):
+    def _calculate_type(self, arg1, arg2):
         """
-        Set dtype and precision when the result is an integer.
+        Get the type of the result of the function.
 
-        Calculate the dtype and precision of the result from the arguments in
-        the case where the result is an integer, ie. when the arguments are all
-        booleans or integers.
+        If one argument is a string then all arguments must be strings.
+
+        If the arguments are numeric then the dtype
+        matches the broadest type.
+        e.g.
+            1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
 
         Parameters
         ----------
-        args : tuple of TypedAstNode
-            The arguments passed to the operator.
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
 
         Returns
         -------
-        dtype : DataType
-            The datatype of the result of the operator.
-
-        precision : int
-            The precision of the result of the operator.
+        DataType
+            The  datatype of the result of the operation.
         """
-        if all(a.dtype is NativeInteger() for a in args):
-            dtype = NativeInteger()
-        elif all(a.dtype is NativeBool() for a in args):
-            dtype = NativeBool()
-        else:
-            dtype = NativeInteger()
-            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
-        precision = max_precision(args, NativeInteger())
-        return dtype, precision
+        try:
+            class_type = arg1.class_type & arg2.class_type
+        except NotImplementedError as err:
+            raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err # pylint: disable=no-member
+
+        primitive_type = class_type.primitive_type
+        assert isinstance(primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType))
+
+        if isinstance(primitive_type, PrimitiveIntegerType):
+            self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in (arg1, arg2)]
+
+        return class_type
 
 #==============================================================================
 
@@ -293,9 +259,7 @@ class PyccelBitXor(PyccelBitComparisonOperator):
     """
     __slots__ = ()
     _precedence = 9
-
-    def __repr__(self):
-        return f'{self.args[0]} ^ {self.args[1]}'
+    op = "^"
 
 #==============================================================================
 
@@ -318,9 +282,7 @@ class PyccelBitOr(PyccelBitComparisonOperator):
     """
     __slots__ = ()
     _precedence = 8
-
-    def __repr__(self):
-        return f'{self.args[0]} | {self.args[1]}'
+    op = "|"
 
 #==============================================================================
 
@@ -343,6 +305,4 @@ class PyccelBitAnd(PyccelBitComparisonOperator):
     """
     __slots__ = ()
     _precedence = 10
-
-    def __repr__(self):
-        return f'{self.args[0]} & {self.args[1]}'
+    op = "&"

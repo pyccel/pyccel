@@ -4,7 +4,7 @@ import sys
 from numpy.random import randint, uniform
 from numpy import allclose
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 # Relative and absolute tolerances for array comparisons in the form
 # numpy.isclose(a, b, rtol, atol). Windows has larger round-off errors.
@@ -12,8 +12,8 @@ if sys.platform == 'win32':
     RTOL = 1e-13
     ATOL = 1e-14
 elif os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'intel':
-    RTOL = 1e-11
-    ATOL = 1e-14
+    RTOL = 1e-10
+    ATOL = 1e-10
 else:
     RTOL = 2e-14
     ATOL = 1e-15

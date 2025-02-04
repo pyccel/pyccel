@@ -1,19 +1,61 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 """
-Module representing object address.
+Module representing concepts that are only applicable to C code (e.g. ObjectAddress).
 """
 
-from .basic import TypedAstNode, PyccelAstNode
+from pyccel.utilities.metaclasses import ArgumentSingleton
+from .basic     import TypedAstNode, PyccelAstNode
+from .datatypes import HomogeneousContainerType, FixedSizeType, PrimitiveIntegerType
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
+           'CNativeInt',
+           'CStackArray',
            'CStringExpression',
-           'ObjectAddress')
+           'ObjectAddress',
+           'PointerCast')
 
+#------------------------------------------------------------------------------
+
+class CNativeInt(FixedSizeType):
+    """
+    Class representing C's native integer type.
+
+    Class representing C's native integer type.
+    """
+    __slots__ = ()
+    _name = 'int'
+    _primitive_type = PrimitiveIntegerType()
+
+#------------------------------------------------------------------------------
+
+class CStackArray(HomogeneousContainerType, metaclass=ArgumentSingleton):
+    """
+    A data type representing an array allocated on the stack.
+
+    A data type representing an array allocated on the stack.
+    E.g. `float a[4];`
+
+    Parameters
+    ----------
+    element_type : FixedSizeType
+        The type of the elements inside the array.
+    """
+    __slots__ = ('_element_type',)
+    _name = 'c_stackarray'
+    _container_rank = 1
+    _order = None
+
+    def __init__(self, element_type):
+        assert isinstance(element_type, FixedSizeType)
+        self._element_type = element_type
+        super().__init__()
+
+#------------------------------------------------------------------------------
 class ObjectAddress(TypedAstNode):
     """
     Class representing the address of an object.
@@ -30,24 +72,20 @@ class ObjectAddress(TypedAstNode):
 
     Examples
     --------
-    >>> CCodePrinter._print(ObjectAddress(Variable('int','a')))
+    >>> CCodePrinter._print(ObjectAddress(Variable(PythonNativeInt(),'a')))
     '&a'
-    >>> CCodePrinter._print(ObjectAddress(Variable('int','a', memory_handling='alias')))
+    >>> CCodePrinter._print(ObjectAddress(Variable(PythonNativeInt(),'a', memory_handling='alias')))
     'a'
     """
 
-    __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order', '_class_type')
+    __slots__ = ('_obj', '_shape', '_class_type')
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):
         if not isinstance(obj, TypedAstNode):
             raise TypeError("object must be an instance of TypedAstNode")
         self._obj        = obj
-        self._rank       = obj.rank
         self._shape      = obj.shape
-        self._precision  = obj.precision
-        self._dtype      = obj.dtype
-        self._order      = obj.order
         self._class_type = obj.class_type
         super().__init__()
 
@@ -56,6 +94,72 @@ class ObjectAddress(TypedAstNode):
         """The object whose address is of interest
         """
         return self._obj
+
+    @property
+    def is_alias(self):
+        """
+        Indicate that an ObjectAddress uses alias memory handling.
+
+        Indicate that an ObjectAddress uses alias memory handling.
+        """
+        return True
+
+#------------------------------------------------------------------------------
+class PointerCast(TypedAstNode):
+    """
+    A class which represents the casting of one pointer to another.
+
+    A class which represents the casting of one pointer to another in C code.
+    This is useful for storing addresses in a void pointer.
+    Using this class is not strictly necessary to produce correct C code,
+    but avoids compiler warnings about the implicit conversion of pointers.
+
+    Parameters
+    ----------
+    obj : Variable
+        The pointer being cast.
+    cast_type : TypedAstNode
+        A TypedAstNode describing the object resulting from the cast.
+    """
+    __slots__ = ('_obj', '_shape', '_class_type', '_cast_type')
+    _attribute_nodes = ('_obj',)
+
+    def __init__(self, obj, cast_type):
+        if not isinstance(obj, TypedAstNode):
+            raise TypeError("object must be an instance of TypedAstNode")
+        assert getattr(obj, 'is_alias', False)
+        self._obj        = obj
+        self._shape      = cast_type.shape
+        self._class_type = cast_type.class_type
+        self._cast_type  = cast_type
+        super().__init__()
+
+    @property
+    def obj(self):
+        """
+        The object whose address is of interest.
+
+        The object whose address is of interest.
+        """
+        return self._obj
+
+    @property
+    def cast_type(self):
+        """
+        Get the TypedAstNode which describes the object resulting from the cast.
+
+        Get the TypedAstNode which describes the object resulting from the cast.
+        """
+        return self._cast_type
+
+    @property
+    def is_argument(self):
+        """
+        Indicates whether the variable is an argument.
+
+        Indicates whether the variable is an argument.
+        """
+        return self._obj.is_argument
 
 #------------------------------------------------------------------------------
 class CStringExpression(PyccelAstNode):

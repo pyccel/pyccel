@@ -1,11 +1,67 @@
 [build-system]
-requires = [
-    "setuptools >= 37, < 61",
-    "wheel",
-    "numpy >= 1.16",
+requires = ["hatchling",]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyccel"
+dynamic = ["version"]
+readme = "README.md"
+license = "MIT"
+requires-python = ">= 3.8"
+authors = [
+    { name = "Pyccel development team" },
+]
+keywords = [
+    "math",
+]
+dependencies = [
+    "filelock >= 3.4.0",
+    "numpy >= 1.16, != 2.0.*",
     "sympy >= 1.2",
     "termcolor >= 1.0.0",
     "textx >= 2.2",
-    "filelock >= 3.4.0",
+    "astunparse >= 1.6.0", # astunparse is only needed for Python3.8, we should use ast.unparse when we drop Python3.8.
+    "packaging",
 ]
-build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+test = [
+    "coverage >= 3.1",
+    "mpi4py >= 3.0.0",
+    "pytest >= 7.0",
+    "pytest-xdist >= 1.16",
+    "scipy >= 1.5.0",
+    "tblib >= 1.7.0",
+]
+
+[project.scripts]
+pyccel = "pyccel.commands.console:pyccel"
+pyccel-clean = "pyccel.commands.pyccel_clean:pyccel_clean_command"
+pyccel-init = "pyccel.commands.pyccel_init:pyccel_init_command"
+
+[project.urls]
+Homepage = "https://github.com/pyccel/pyccel"
+
+[tool.hatch.version]
+path = "pyccel/version.py"
+
+[tool.hatch.build.targets.wheel]
+artifacts = [
+  "*.pyccel",
+  "pyccel/extensions/gFTL/install/GFTL-1.13/include/v2"
+]
+include = [
+  "pyccel/**/*.py",
+  "pyccel/**/*.pyh",
+  "pyccel/parser/grammar/*.tx",
+  "pyccel/stdlib/**/*.h",
+  "pyccel/stdlib/**/*.c",
+  "pyccel/stdlib/**/*.f90",
+  "pyccel/stdlib/**/*.inc",
+  "pyccel/extensions/STC/include",
+  "pyccel/extensions/STC/src/*.c"
+]
+
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "install_scripts/hook.py"
+require-runtime-dependencies = true

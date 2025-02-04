@@ -1,0 +1,141 @@
+name: Deploy new version to PyPi
+
+on:
+  workflow_run:
+    workflows: [Anaconda-Windows]
+    types:
+      - completed
+
+jobs:
+  waitForWorklows:
+    name: Wait for workflows
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.head_branch == 'main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+      - name: Install python dependencies
+        run: |
+          python -m pip install requests jwt
+      - name: Wait for workflows
+        run: |
+          python3 wait_for_main_workflows.py
+        working-directory: ./ci_tools
+        shell: bash
+        env:
+          COMMIT: ${{ github.event.workflow_run.head_sha }}
+
+  deployVersion:
+    runs-on: ubuntu-latest
+    needs: [waitForWorklows]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          ref: main
+          fetch-depth: 2
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
+      - name: Update build
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade build
+          python -m pip install --upgrade twine
+      - name: Build and deploy
+        if: github.repository == 'pyccel/pyccel'
+        run: |
+          echo ${{ github.event.workflow_run.head_branch }}
+          python3 -m build
+          ls dist/*
+          python3 -m twine upload --repository pypi dist/* --non-interactive
+        shell: bash
+        env:
+          TWINE_USERNAME: '__token__'
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Install Pyccel without tests
+        run: |
+          python -m pip install .
+      - name: "Get tag name"
+        id: tag_name
+        run: |
+          version=$(python -c "from pyccel import __version__; print(__version__)")
+          echo "VERSION=${version}" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=v${version}" >> $GITHUB_OUTPUT
+      - name: "Get release notes"
+        id: release_notes
+        run: |
+          START_LINE=$(grep "^## " CHANGELOG.md -n | head -1 | cut -d: -f -1)
+          END_LINE=$(grep "^## " CHANGELOG.md -n | head -2 | tail -1 | cut -d: -f -1)
+          START_LINE=$((${START_LINE}+1))
+          END_LINE=$((${END_LINE}-1))
+          echo "## What's Changed" > release_notes.md
+          sed -n ${START_LINE},${END_LINE}p CHANGELOG.md >> release_notes.md
+      - name: "Get contributors"
+        run: |
+          # Get relevant commits
+          LAST_RELEASE_COMMIT=$(git log -2 --pretty=%H | tail -1)
+          CURRENT_RELEASE_COMMIT=$(git log -1 --pretty=%H)
+
+          # Find any new lines in the AUTHORS file
+          NEW_CONTRIBUTORS=$(git diff --no-indent-heuristic --unified=0 --no-color ${LAST_RELEASE_COMMIT}..${CURRENT_RELEASE_COMMIT} AUTHORS | { grep "^\+[^+]" || true; } | cut -d ' ' -f 2-)
+          if [ -n "${NEW_CONTRIBUTORS}" ]
+          then
+            # If there are new contributors then add a section with their names
+            echo "## New Contributors" >> release_notes.md
+            while IFS= read -r c
+            do
+              echo "- ${c}" >> release_notes.md
+            done <<< "${NEW_CONTRIBUTORS}"
+            echo "" >> release_notes.md
+          fi
+
+          # Find the PR which created the release
+          PR_ID=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /search/issues?q="${CURRENT_RELEASE_COMMIT}" | jq '.["items"][0]["number"]')
+          # Extract authors from all commits in the PR
+          CONTRIBUTORS=$(gh pr view ${PR_ID} --json commits | jq '.["commits"][]["authors"][]["login"]' | tr -d '"' | sort -u)
+
+          # Add a hidden section listing the user names of all authors on commits in this release
+          echo "<details>" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "## Contributors" >> release_notes.md
+          for c in ${CONTRIBUTORS}
+          do
+            echo "- @$c" >> release_notes.md
+          done
+          echo "" >> release_notes.md
+          echo "</details>" >> release_notes.md
+
+          # Get the full changelog link
+          PREVIOUS_TAG=$(gh release list --limit 1 --json tagName | jq '.[]["tagName"]' | tr -d '"')
+
+          echo "" >> release_notes.md
+          echo "**Full list of changes**: [${PREVIOUS_TAG}..${tag_name}](https://github.com/pyccel/pyccel/compare/${PREVIOUS_TAG}..${tag_name})" >> release_notes.md
+
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          tag_name: ${{ steps.tag_name.outputs.TAG_NAME }}
+      - name: "Update repo tags"
+        uses: EndBug/latest-tag@latest
+        with:
+          ref: ${{ steps.tag_name.outputs.TAG_NAME }}
+      - name: "Update releases"
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/pyccel/pyccel/releases \
+             -f "tag_name=${tag_name}" -f "name=Version ${version}" -F "body=@release_notes.md" -F "draft=false" -F "prerelease=false" -F "generate_release_notes=false"
+        shell: bash
+        env:
+          tag_name: ${{ steps.tag_name.outputs.TAG_NAME }}
+          version: ${{ steps.tag_name.outputs.VERSION }}
+          release_notes: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
+          GH_TOKEN: ${{ github.token }}
+

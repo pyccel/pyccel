@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """ Module containing objects from the math module understood by pyccel
 """
@@ -8,8 +8,8 @@
 import math
 
 from pyccel.ast.core      import PyccelFunctionDef, Module
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat
-from pyccel.ast.internals import PyccelInternalFunction
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
+from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.variable  import Constant
 
 __all__ = (
@@ -75,7 +75,7 @@ __all__ = (
 #==============================================================================
 # Base classes
 #==============================================================================
-class MathFunctionBase(PyccelInternalFunction):
+class MathFunctionBase(PyccelFunction):
     """
     Abstract base class for the Math Functions.
 
@@ -89,8 +89,6 @@ class MathFunctionBase(PyccelInternalFunction):
     """
     __slots__ = ()
     _shape = None
-    _rank  = 0
-    _order = None
 
 
 class MathFunctionFloat(MathFunctionBase):
@@ -107,9 +105,7 @@ class MathFunctionFloat(MathFunctionBase):
     """
     __slots__ = ()
     name = 'float'
-    _dtype = NativeFloat()
-    _precision = -1
-    _class_type = NativeFloat()
+    _class_type = PythonNativeFloat()
 
 
 class MathFunctionInt(MathFunctionBase):
@@ -126,9 +122,7 @@ class MathFunctionInt(MathFunctionBase):
     """
     __slots__ = ()
     name = 'int'
-    _dtype = NativeInteger()
-    _precision = -1
-    _class_type = NativeInteger()
+    _class_type = PythonNativeInt()
 
 
 class MathFunctionBool(MathFunctionBase):
@@ -145,9 +139,7 @@ class MathFunctionBool(MathFunctionBase):
     """
     __slots__ = ()
     name = 'bool'
-    _dtype = NativeBool()
-    _precision = -1
-    _class_type = NativeBool()
+    _class_type = PythonNativeBool()
 
 #==============================================================================
 # Functions that return one value
@@ -949,11 +941,11 @@ math_functions = [PyccelFunctionDef(v.name, v) for k, v in globals().copy().item
 # Constants
 #==============================================================================
 math_constants = {
-    'e'  : Constant('float', 'e'  , value=math.e  ),
-    'pi' : Constant('float', 'pi' , value=math.pi ),
-    'inf': Constant('float', 'inf', value=math.inf),
-    'nan': Constant('float', 'nan', value=math.nan),
-    'tau': Constant('float', 'tau', value=2.*math.pi),
+    'e'  : Constant(PythonNativeFloat(), 'e'  , value=math.e  ),
+    'pi' : Constant(PythonNativeFloat(), 'pi' , value=math.pi ),
+    'inf': Constant(PythonNativeFloat(), 'inf', value=math.inf),
+    'nan': Constant(PythonNativeFloat(), 'nan', value=math.nan),
+    'tau': Constant(PythonNativeFloat(), 'tau', value=2.*math.pi),
 }
 
 math_mod = Module('math',

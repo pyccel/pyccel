@@ -72,6 +72,7 @@ disable=invalid-name,
         no-else-continue,
         no-else-raise,
         too-many-arguments,
+        too-many-positional-arguments,
         too-many-locals,
         too-many-instance-attributes,
         too-many-statements,
@@ -100,8 +101,11 @@ disable=invalid-name,
         abstract-method, # Raised when a method contains raise NotImplementedError
         redundant-keyword-arg,
         duplicate-code,
+        cyclic-import, # Output not consistent between pylint calls. This should be reactivated if cyclic dependencies can be fixed.
         unused-wildcard-import, # Raised by everything not used in pyccel.errors.messages when using 'from pyccel.errors.messages import *'
-        isinstance-second-argument-not-valid-type # prevents doing isinstance(a, acceptable_iterable_types)
+        isinstance-second-argument-not-valid-type, # prevents doing isinstance(a, acceptable_iterable_types)
+        syntax-error, # Ignore syntax errors (usually from testing future Python versions). If the file doesn't run this will be obvious in the tests
+        invalid-getnewargs-ex-returned # Raises false positive. See https://github.com/pylint-dev/pylint/issues/10208
         
 
 # Enable the message, report, category or checker with the given id(s). You can
@@ -407,7 +411,7 @@ name-group=
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
-no-docstring-rgx=^(_visit_)|(_print_)|(__.*__)
+no-docstring-rgx=^(_visit_)|(_print_)|(__.*__)|(_extract_.*_FunctionDefResult)
 
 # List of decorators that produce properties, such as abc.abstractproperty. Add
 # to this list to register other decorators that produce valid properties.

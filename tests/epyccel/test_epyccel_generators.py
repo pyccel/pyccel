@@ -3,14 +3,14 @@ import pytest
 import numpy as np
 from numpy.random import randint, rand
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 def test_sum_range(language):
     def f(a0 : 'int[:]'):
         return sum(a0[i] for i in range(len(a0)))
 
     n = randint(1,50)
-    x = randint(100,size=n)
+    x = np.array(randint(100, size=n), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -21,7 +21,7 @@ def test_sum_var(language):
         return sum(ai for ai in a)
 
     n = randint(1,50)
-    x = randint(100,size=n)
+    x = np.array(randint(100, size=n), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -33,7 +33,7 @@ def test_sum_var2(language):
 
     n1 = randint(1,10)
     n2 = randint(1,10)
-    x = randint(10,size=(n1,n2))
+    x = np.array(randint(10, size=(n1,n2)), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -47,7 +47,7 @@ def test_sum_var3(language):
     n1 = randint(1,10)
     n2 = randint(1,10)
     n3 = randint(1,10)
-    x = randint(10,size=(n1,n2,n3))
+    x = np.array(randint(10, size=(n1,n2,n3)), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -59,7 +59,18 @@ def test_sum_var4(language):
         return sum(ai for ai in a),s
 
     n = randint(1,50)
-    x = randint(100,size=n)
+    x = np.array(randint(100, size=n), dtype=int)
+
+    f_epyc = epyccel(f, language = language)
+
+    assert f(x) == f_epyc(x)
+
+def test_sum_var5(language):
+    def f(a : 'bool[:]'):
+        return sum(ai for ai in a)
+
+    n = randint(1,50)
+    x = np.ones(n, dtype=bool)
 
     f_epyc = epyccel(f, language = language)
 
@@ -105,11 +116,11 @@ def test_expression1(language):
         return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9
 
     n = randint(1,10)
-    x = np.array(randint(100,size=n), dtype=float)
+    x = np.array(randint(100, size=n), dtype=float)
 
     f_epyc = epyccel(f, language = language)
 
-    assert f(x) == f_epyc(x)
+    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -121,15 +132,15 @@ def test_expression1(language):
     )
 )
 def test_expression2(language):
-    def f(b : 'int[:]'):
-        def incr(x : int):
+    def f(b : 'int64[:]'):
+        def incr(x : 'int64'):
             y = x + 1
             return y
         n = b.shape[0]
         return 5+incr(2+incr(6+sum(b[i] for i in range(n))))
 
     n = randint(1,10)
-    x = randint(100,size=n)
+    x = randint(100, size=n).astype(np.int64)
 
     f_epyc = epyccel(f, language = language)
 
@@ -147,7 +158,7 @@ def test_nested_generators1(language):
 
 def test_nested_generators2(language):
     def f(a : 'float[:,:,:,:]'):
-        return min(min(sum(min(max(a[i,k,o,l]*l for i in range(5)) for k in range(5)) for o in range(5)) for l in range(5)),0.)
+        return min(min(sum(min(max(a[i,k,o,l]*l for i in range(5)) for k in range(5)) for o in range(5)) for l in range(5)), 0.)
 
     x = randint(0, 50, size=(5,5,5,5)).astype(float)
 
@@ -174,3 +185,25 @@ def test_nested_generators4(language):
     f_epyc = epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
+
+def test_sum_range_overwrite(language):
+    def f(a0 : 'int[:]'):
+        v = sum(a0[i] for i in range(len(a0)))
+        v = sum(a0[i] for i in range(len(a0)))
+        return v
+
+    n = randint(1,50)
+    x = np.array(randint(100, size=n), dtype=int)
+
+    f_epyc = epyccel(f, language = language)
+
+    assert f(x) == f_epyc(x)
+
+def test_sum_with_two_variables(language):
+    def f():
+        x = sum(i-j for i in range(10) for j in range(7))
+        return x
+
+    f_epyc = epyccel(f, language=language)
+
+    assert f() == f_epyc()

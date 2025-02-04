@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 """
@@ -13,18 +13,17 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 
 from pyccel.utilities.strings import create_incremented_string
 
+from .builtins  import PythonRange, PythonTuple
+from .datatypes import PrimitiveIntegerType
 from .internals import PyccelArrayShapeElement
+from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
+from .mathext   import MathCeil
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .core      import Iterable
-from .builtins  import PythonRange, PythonTuple
-from .mathext   import MathCeil
-from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
-from .datatypes import NativeInteger
 from .variable  import Variable
 
-__all__ = ('sympy_to_pyccel',
-           'pyccel_to_sympy')
+__all__ = ('pyccel_to_sympy',
+           'sympy_to_pyccel')
 
 #==============================================================================
 def sympy_to_pyccel(expr, symbol_map):
@@ -99,7 +98,7 @@ def sympy_to_pyccel(expr, symbol_map):
     elif isinstance(expr, sp.ceiling):
         arg = sympy_to_pyccel(expr.args[0], symbol_map)
         # Only apply ceiling where appropriate
-        if arg.dtype is NativeInteger():
+        if getattr(arg.dtype, 'primitive_type', None) is PrimitiveIntegerType():
             return arg
         else:
             return MathCeil(arg)
@@ -193,9 +192,6 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         sym = sp.Symbol(sym_name)
         symbol_map[sym] = expr
         return sym
-
-    elif isinstance(expr, Iterable):
-        return pyccel_to_sympy(expr.iterable, symbol_map, used_names)
 
     elif isinstance(expr, PythonRange):
         start = pyccel_to_sympy(expr.start, symbol_map, used_names)

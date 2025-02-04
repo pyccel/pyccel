@@ -1,35 +1,33 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
 """
 
-from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, Immutable
-from .datatypes import NativeInteger, default_precision
+from .datatypes import PythonNativeInt, PrimitiveIntegerType, SymbolicType
 from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'Iterable',
     'PrecomputedCode',
     'PyccelArrayShapeElement',
     'PyccelArraySize',
-    'PyccelInternalFunction',
+    'PyccelFunction',
     'PyccelSymbol',
     'Slice',
-    'get_final_precision',
-    'max_precision',
 )
 
 
-class PyccelInternalFunction(TypedAstNode):
+class PyccelFunction(TypedAstNode):
     """
     Abstract class for function calls translated to Pyccel objects.
 
@@ -70,7 +68,7 @@ class PyccelInternalFunction(TypedAstNode):
         return False
 
 
-class PyccelArraySize(PyccelInternalFunction):
+class PyccelArraySize(PyccelFunction):
     """
     Gets the total number of elements in an array.
 
@@ -85,12 +83,8 @@ class PyccelArraySize(PyccelInternalFunction):
     __slots__ = ()
     name = 'size'
 
-    _dtype = NativeInteger()
-    _precision = -1
-    _rank  = 0
     _shape = None
-    _order = None
-    _class_type = NativeInteger()
+    _class_type = PythonNativeInt()
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -115,7 +109,7 @@ class PyccelArraySize(PyccelInternalFunction):
             return False
 
 
-class PyccelArrayShapeElement(PyccelInternalFunction):
+class PyccelArrayShapeElement(PyccelFunction):
     """
     Gets the number of elements in a given dimension of an array.
 
@@ -133,12 +127,8 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     __slots__ = ()
     name = 'shape'
 
-    _dtype = NativeInteger()
-    _precision = -1
-    _rank  = 0
     _shape = None
-    _order = None
-    _class_type = NativeInteger()
+    _class_type = PythonNativeInt()
 
     def __init__(self, arg, index):
         if not isinstance(arg, TypedAstNode):
@@ -236,12 +226,9 @@ class Slice(PyccelAstNode):
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
-        if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
-            raise TypeError('Slice start must be Integer or None')
-        if stop is not None and not (hasattr(stop, 'dtype') and isinstance(stop.dtype, NativeInteger)):
-            raise TypeError('Slice stop must be Integer or None')
-        if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger)):
-            raise TypeError('Slice step must be Integer or None')
+        assert start is None or isinstance(getattr(start.dtype, 'primitive_type', None), PrimitiveIntegerType)
+        assert stop is None or isinstance(getattr(stop.dtype, 'primitive_type', None), PrimitiveIntegerType)
+        assert step is None or isinstance(getattr(step.dtype, 'primitive_type', None), PrimitiveIntegerType)
         if slice_type not in (Slice.Range, Slice.Element):
             raise TypeError('Slice type must be Range (1) or Element (0)')
 
@@ -281,7 +268,7 @@ class Slice(PyccelAstNode):
             stop = ''
         else:
             stop = str(self.stop)
-        return '{0} : {1}'.format(start, stop)
+        return f'{start} : {stop} : {self.step}'
 
 
 class PyccelSymbol(str, Immutable):
@@ -356,6 +343,94 @@ class PrecomputedCode(PyccelAstNode):
         return self._code
 
 
+class Iterable(TypedAstNode):
+    """
+    Wrapper around iterable types helping to convert between those types and a range.
+
+    Wrapper around iterable types helping to convert between those
+    types and a range (necessary in low level languages, e.g. C and Fortran).
+
+    If an iterable can be iterated over using a range then this can be done automatically
+    by defining the following 3 functions:
+    - get_range : Returns the range required for the iteration.
+    - get_python_iterable_item : Returns the item of the iterable that will be saved to the
+        variables which are the loop targets.
+        E.g. for the loop:
+        >>> for idx, v in enumerate(var)
+
+        this function should return the range index `idx` (this may be set using
+        set_loop_counter) and var[idx].
+        These objects are used for type deductions.
+    - get_assign_targets : Returns any objects that should be assigned to targets
+        E.g. for the loop:
+        >>> for idx, v in enumerate(var)
+
+        The object `var[idx]` is returned. The printer is then responsible for
+        creating the Assign(v, var[idx])
+        E.g. for the loop:
+        >>> for r,p in zip(r_var,p_var)
+
+        The objects `r_var[idx]` and `p_var[idx]` are returned. The index is retrieved
+        from this class where it was set using set_loop_counter.
+        The printer is then responsible for creating the Assign(r, r_var[idx]) and
+        Assign(p, p_var[idx]).
+
+    Parameters
+    ----------
+    num_indices_required : int
+        The number of indices that the semantic stage should generate to correctly
+        iterate over the object.
+    """
+    __slots__ = ('_indices', '_num_indices_required')
+    _attribute_nodes = ('_indices',)
+    _class_type = SymbolicType()
+    _shape = None
+
+    def __init__(self, num_indices_required):
+        assert isinstance(num_indices_required, int)
+        self._indices  = None
+        self._num_indices_required = num_indices_required
+
+        super().__init__()
+
+    @property
+    def num_loop_counters_required(self):
+        """
+        Number of indices that should be generate by the semantic stage.
+
+        Number of indices which must be generated in order to convert this
+        iterable to a range. This is usually 1.
+        """
+        return self._num_indices_required
+
+    def set_loop_counter(self, *indices):
+        """
+        Set the iterator(s) for the generated range.
+
+        These are iterators generated by Pyccel that were not needed for the
+        original Python code. Ideally they will also not be necessary in the
+        generated Python code so these objects should only be inserted into
+        the scope during printing.
+
+        Parameters
+        ----------
+        *indices : TypedAstNode
+            The iterator(s) generated by Pyccel.
+        """
+        assert self._indices is None
+        for i in indices:
+            i.set_current_user_node(self)
+        self._indices = indices
+
+    @property
+    def loop_counters(self):
+        """
+        Returns the iterator(s) of the generated range.
+
+        Returns the iterator(s) of the generated range.
+        """
+        return self._indices
+
 def symbols(names):
     """
     Transform strings into instances of PyccelSymbol class.
@@ -384,52 +459,27 @@ def symbols(names):
     return tuple(symbols)
 
 
-def max_precision(objs : list, allow_native : bool = True):
+def apply_pickle(class_type, args, kwargs):
     """
-    Return the largest precision amongst the objects in the list.
+    Utility function which recreates a class instance for pickle.
 
-    Return the largest precision amongst the objects in the list.
+    Utility function which recreates a class instance for pickle. Pickle cannot
+    handle lambdas so this is necessary.
 
     Parameters
     ----------
-    objs : list
-       A list of TypedAstNodes.
+    class_type : type
+        The type being recreated.
 
-    allow_native : bool, default=True
-        Allow the final result to be a native precision (i.e. -1).
+    args : tuple
+        The positional arguments to be passed to the constructor.
 
-    Returns
-    -------
-    int
-        The largest precision found.
-    """
-    if allow_native and all(o.precision == -1 for o in objs):
-        return -1
-    else:
-        ndarray_list = [o for o in objs if getattr(o, 'is_ndarray', False)]
-        if ndarray_list:
-            return get_final_precision(max(ndarray_list, key=attrgetter('precision')))
-        return max(get_final_precision(o) for o in objs)
-
-
-def get_final_precision(obj):
-    """
-    Get the usable precision of an object.
-
-    Get the usable precision of an object. I.e. the precision that you
-    can use to print, e.g. 8 instead of -1 for a default precision float.
-
-    If the precision is set to the default then the value of the default
-    precision is returned, otherwise the provided precision is returned.
-
-    Parameters
-    ----------
-    obj : TypedAstNode
-        The object whose precision we want to investigate.
+    kwargs : dict
+        The keyword arguments to be passed to the constructor.
 
     Returns
     -------
-    int
-        The precision of the object to be used in the code.
+    class_type
+        An object of class_type built from the args and kwargs.
     """
-    return default_precision[obj.dtype] if obj.precision == -1 else obj.precision
+    return class_type(*args, **kwargs)

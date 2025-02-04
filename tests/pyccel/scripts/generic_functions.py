@@ -3,39 +3,33 @@ import numpy as np
 from pyccel.decorators import template
 from pyccel.decorators import types
 
-#$ header function gen_2(float, int)
-#$ header function gen_2(int, float)
-#$ header function gen_4(T, T)
-#$ header template T(int|float)
-#$ header template R(int|float)
-#$ header template O(bool|complex)
-#$ header template S(int|float)
+T : type = 'int | float'
+R : type = 'int | float'
+O : type = 'bool | complex'
+S : type = 'int | float'
 
-@types('float', results=['float'])
-def gen_1(a):
+def gen_1(a : float) -> float:
     return a * 10
 
-def gen_2(y, x):
+def gen_2(y : 'float | int', x : 'int | float'):
     return y * x
 
-def gen_3(x : 'T', y : 'T'):
+def gen_3(x : T, y : T):
     return x - y
 
-def gen_4(x, y):
+def gen_4(x : T, y : T):
     return x + y
 
-def gen_5(x : 'T', y : 'R'):
+def gen_5(x : T, y : R):
     return x + y
 
-def gen_6(x : 'S', y : 'S'):
+def gen_6(x : S, y : S):
     return x + y
 
-def gen_7(x : 'T', y : 'T', z : 'R'):
+def gen_7(x : T, y : T, z : R):
     return x + y + z
 
-@types('int', 'int')
-@types('int', 'float')
-def multi_heads_1(x, y):
+def multi_heads_1(x : int, y : 'int | float'):
     return x + y
 
 @template('z', types=['int', 'float'])
@@ -56,11 +50,10 @@ def local_overide_1(x : 'O', y : 'O'):
     return x + y
 
 @template('z', types=['int', 'float'])
-def tmplt_tmplt_1(x : 'z', y : 'z', z : 'R'):
+def tmplt_tmplt_1(x : 'z', y : 'z', z : R):
     return x + y + z
 
-#$ header function array_elem1(int64 [:]|float64[:])
-def array_elem1(x):
+def array_elem1(x : 'int64 [:] | float64[:]'):
     return x[0]
 
 @template('k', types='int')
@@ -72,7 +65,7 @@ def multi_tmplt_2(y : 'k', z : 'g'):
 def dup_types_1(a : 'g'):
     return a
 
-def dup_types_2(a : 'int|int'):
+def dup_types_2(a : 'int | int'):
     return a
 
 def tst_gen_1():

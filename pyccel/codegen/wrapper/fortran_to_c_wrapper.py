@@ -1,28 +1,40 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Module describing the code-wrapping class : FortranToCWrapper
 which creates an interface exposing Fortran code to C.
 """
+from functools import reduce
 import warnings
-from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
+from pyccel.ast.bind_c import BindCFunctionDefArgument
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
-from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
-from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef
-from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
+from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCModuleVariable
+from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
+from pyccel.ast.bind_c import BindCClassProperty, c_malloc, BindCSizeOf
+from pyccel.ast.bind_c import BindCVariable, BindCArrayType
+from pyccel.ast.builtins import VariableIterator
+from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
-from pyccel.ast.core import If, IfSection, Import, Interface
-from pyccel.ast.core import AsName, Module, AliasAssign
-from pyccel.ast.datatypes import NativeNumeric
+from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
+from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
+from pyccel.ast.core import For
+from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
+from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
+from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
-from pyccel.ast.operators import PyccelIsNot, PyccelMul
-from pyccel.ast.variable import Variable, IndexedElement
+from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type
+from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd
+from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.scope import Scope
 from .wrapper import Wrapper
+
+errors = Errors()
 
 class FortranToCWrapper(Wrapper):
     """
@@ -93,20 +105,29 @@ class FortranToCWrapper(Wrapper):
             body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa].base, s)
                     for fa,s in zip(func_def_args, orig_size)
                     if isinstance(func_arg_to_call_arg[fa], IndexedElement)]
+            body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa], [fa.shape[0]])
+                    for fa in func_def_args
+                    if isinstance(fa.original_function_argument_variable.class_type, HomogeneousTupleType)]
             body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa])
                      for fa in func_def_args
                      if not isinstance(func_arg_to_call_arg[fa], IndexedElement) \
                         and fa.original_function_argument_variable.is_optional]
+            body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa]) for fa in func_def_args
+                    if isinstance(func_arg_to_call_arg[fa].dtype, CustomDataType)]
 
             # If the function is inlined and takes an array argument create a pointer to ensure that the bounds
             # are respected
-            if func.is_inline and any(isinstance(a.value, IndexedElement) for a in args):
+            if getattr(func, 'is_inline', False) and any(isinstance(a.value, IndexedElement) for a in args):
                 array_args = {a: self.scope.get_temporary_variable(a.value.base, a.keyword, memory_handling = 'alias') for a in args if isinstance(a.value, IndexedElement)}
                 body += [AliasAssign(v, k.value) for k,v in array_args.items()]
                 args = [FunctionCallArgument(array_args[a], keyword=a.keyword) if a in array_args else a for a in args]
 
-            func_call = Assign(results[0], FunctionCall(func, args)) if len(results) == 1 else \
-                        Assign(results, FunctionCall(func, args))
+            if len(results) == 1:
+                res = results[0]
+                func_call = AliasAssign(res, func(*args)) if res.is_alias else \
+                            Assign(res, func(*args))
+            else:
+                func_call = Assign(results, func(*args))
             return body + [func_call]
 
     def _get_call_argument(self, bind_c_arg):
@@ -132,7 +153,7 @@ class FortranToCWrapper(Wrapper):
             being wrapped.
         """
         original_arg = bind_c_arg.original_function_argument_variable
-        arg_var = self.scope.find(original_arg.name, category='variables')
+        arg_var = self.scope.find(self.scope.get_expected_name(original_arg.name), category='variables')
         if original_arg.is_ndarray:
             start = LiteralInteger(1) # C_F_Pointer leads to default Fortran lbound
             stop = None
@@ -165,7 +186,9 @@ class FortranToCWrapper(Wrapper):
         self.scope = mod_scope
 
         # Wrap contents
-        funcs_to_wrap = expr.funcs
+        # We only wrap the non inlined functions
+        funcs_to_wrap = [f for f in expr.funcs if f.is_semantic and not f.is_inline]
+
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         if expr.init_func:
             init_func = funcs[next(i for i,f in enumerate(funcs_to_wrap) if f == expr.init_func)]
@@ -177,14 +200,14 @@ class FortranToCWrapper(Wrapper):
             free_func = None
         removed_functions = [f for f,w in zip(funcs_to_wrap, funcs) if isinstance(w, EmptyNode)]
         funcs = [f for f in funcs if not isinstance(f, EmptyNode)]
-        interfaces = [self._wrap(f) for f in expr.interfaces]
+        interfaces = [self._wrap(f) for f in expr.interfaces if not f.is_inline]
         classes = [self._wrap(f) for f in expr.classes]
         variables = [self._wrap(v) for v in expr.variables if not v.is_private]
         variable_getters = [v for v in variables if isinstance(v, BindCArrayVariable)]
-        imports = [Import(expr.name, target = expr, mod=expr)]
+        imports = [Import(self.scope.get_python_name(expr.name), target = expr, mod=expr)]
 
-        name = mod_scope.get_new_name(f'bind_c_{expr.name.target}')
-        self._wrapper_names_dict[expr.name.target] = name
+        name = mod_scope.get_new_name(f'bind_c_{expr.name}')
+        self._wrapper_names_dict[expr.name] = name
 
         self.exit_scope()
 
@@ -220,8 +243,10 @@ class FortranToCWrapper(Wrapper):
         if expr.is_private:
             return EmptyNode()
 
-        name = self.scope.get_new_name(f'bind_c_{expr.name.lower()}')
+        orig_name = expr.cls_name or expr.name
+        name = self.scope.get_new_name(f'bind_c_{orig_name.lower()}')
         self._wrapper_names_dict[expr.name] = name
+        in_cls = expr.arguments and expr.arguments[0].bound_argument
 
         # Create the scope
         func_scope = self.scope.new_child_scope(name)
@@ -242,15 +267,23 @@ class FortranToCWrapper(Wrapper):
 
         func_call_results = [r.var.clone(self.scope.get_expected_name(r.var.name)) for r in expr.results]
 
-        body = self._get_function_def_body(expr, func_arguments, func_to_call, func_call_results)
+        interface = expr.get_direct_user_nodes(lambda u: isinstance(u, Interface))
+
+        if in_cls and interface:
+            body = self._get_function_def_body(interface[0], func_arguments, func_to_call, func_call_results)
+        else:
+            body = self._get_function_def_body(expr, func_arguments, func_to_call, func_call_results)
 
         body.extend(self._additional_exprs)
         self._additional_exprs.clear()
 
+        if expr.scope.get_python_name(expr.name) == '__del__':
+            body.append(DeallocatePointer(call_arguments[0]))
+
         self.exit_scope()
 
-        func = BindCFunctionDef(name, func_arguments, func_results, body, scope=func_scope, original_function = expr,
-                docstring = expr.docstring)
+        func = BindCFunctionDef(name, func_arguments, body, func_results, scope=func_scope, original_function = expr,
+                docstring = expr.docstring, result_pointer_map = expr.result_pointer_map)
 
         self.scope.functions[name] = func
 
@@ -315,88 +348,21 @@ class FortranToCWrapper(Wrapper):
         name = var.name
         self.scope.insert_symbol(name)
         collisionless_name = self.scope.get_expected_name(var.name)
-        if var.is_ndarray or var.is_optional:
+        if isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)) or \
+                var.is_optional or isinstance(var.dtype, CustomDataType):
             new_var = Variable(BindCPointer(), self.scope.get_new_name(f'bound_{name}'),
                                 is_argument = True, is_optional = False, memory_handling='alias')
             arg_var = var.clone(collisionless_name, is_argument = False, is_optional = False,
-                                memory_handling = 'alias', allows_negative_indexes=False)
+                                memory_handling = 'alias', allows_negative_indexes=False,
+                                new_class = Variable)
             self.scope.insert_variable(arg_var)
         else:
-            new_var = var.clone(collisionless_name)
+            new_var = var.clone(collisionless_name, new_class = Variable)
         self.scope.insert_variable(new_var)
 
         return BindCFunctionDefArgument(new_var, value = expr.value, original_arg_var = expr.var,
-                kwonly = expr.is_kwonly, annotation = expr.annotation, scope=self.scope)
-
-    def _wrap_FunctionDefResult(self, expr):
-        """
-        Create the equivalent BindCFunctionDefResult for a C-compatible function.
-
-        Take a FunctionDefResult and create a BindCFunctionDefResult describing
-        all the information that should be returned from the C-compatible function
-        in order to fully describe the result `expr`. This function also adds any
-        expressions necessary to build the C-compatible return value to
-        `self._additional_exprs`.
-
-        In the case of a scalar numerical the function simply creates a local version
-        of the variable described by the function result and returns the
-        BindCFunctionDefResult.
-
-        In the case of an array, C cannot represent the array natively. Rather it is
-        stored in a pointer. This function therefore creates a variable to represent
-        that pointer. Additionally information about the shape and strides of the array
-        are necessary. These objects are created by the `BindCFunctionDefResult`
-        class. The assignment expressions which define the shapes and strides are
-        then stored in `self._additional_exprs` along with the allocation of the
-        pointer.
-
-        Parameters
-        ----------
-        expr : FunctionDefResult
-            The result to be wrapped.
-
-        Returns
-        -------
-        BindCFunctionDefResult
-            The C-compatible result.
-        """
-        var = expr.var
-        name = var.name
-        scope = self.scope
-        # Make name available for later
-        scope.insert_symbol(name)
-        local_var = var.clone(scope.get_expected_name(name))
-
-        if local_var.rank:
-            # Allocatable is not returned so it must appear in local scope
-            scope.insert_variable(local_var, name)
-
-            # Create the C-compatible data pointer
-            bind_var = Variable(dtype=BindCPointer(),
-                                name=scope.get_new_name('bound_'+name),
-                                is_const=False, memory_handling='alias')
-            scope.insert_variable(bind_var)
-
-            result = BindCFunctionDefResult(bind_var, var, scope)
-
-            # Save the shapes of the array
-            self._additional_exprs.extend([Assign(result.shape[i], var.shape[i]) for i in range(var.rank)])
-
-            # Create an array variable which can be passed to CLocFunc
-            ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
-                                memory_handling='alias')
-            scope.insert_variable(ptr_var)
-
-            # Define the additional steps necessary to define and fill ptr_var
-            alloc = Allocate(ptr_var, shape=result.shape,
-                             order=var.order, status='unallocated')
-            copy = Assign(ptr_var, var)
-            c_loc = CLocFunc(ptr_var, bind_var)
-            self._additional_exprs.extend([alloc, copy, c_loc])
-
-            return result
-        else:
-            return BindCFunctionDefResult(local_var, var, scope)
+                kwonly = expr.is_kwonly, annotation = expr.annotation, scope=self.scope,
+                wrapping_bound_argument = expr.bound_argument, persistent_target = expr.persistent_target)
 
     def _wrap_Variable(self, expr):
         """
@@ -421,9 +387,9 @@ class FortranToCWrapper(Wrapper):
             The AST object describing the code which must be printed in
             the wrapping module to expose the variable.
         """
-        if expr.rank == 0 and expr.dtype in NativeNumeric:
-            return expr.clone(expr.name, new_class = BindCVariable)
-        else:
+        if isinstance(expr.class_type, FixedSizeNumericType):
+            return expr.clone(expr.name, new_class = BindCModuleVariable)
+        elif isinstance(expr.class_type, NumpyNDArrayType):
             scope = self.scope
             func_name = scope.get_new_name('bind_c_'+expr.name.lower())
             func_scope = scope.new_child_scope(func_name)
@@ -432,29 +398,107 @@ class FortranToCWrapper(Wrapper):
             func_scope.imports['variables'][expr.name] = expr
 
             # Create the data pointer
-            bind_var = Variable(dtype=BindCPointer(),
-                                name=scope.get_new_name('bound_'+expr.name),
-                                is_const=True, memory_handling='alias')
-            func_scope.insert_variable(bind_var)
-
-            result = BindCFunctionDefResult(bind_var, expr, func_scope)
-            if expr.rank == 0:
-                #assigns = []
-                #c_loc = CLocFunc(expr, bind_var)
-                raise NotImplementedError("Classes cannot be wrapped")
-            else:
-                assigns = [Assign(result.shape[i], expr.shape[i]) for i in range(expr.rank)]
-                c_loc = CLocFunc(expr, bind_var)
-            body = [*assigns, c_loc]
+            result_wrap = self._get_bind_c_array(expr.name, expr, expr.shape,
+                                            pointer_target = True)
             func = BindCFunctionDef(name = func_name,
-                          body      = body,
+                          body      = result_wrap['body'],
                           arguments = [],
-                          results   = [result],
+                          results   = [FunctionDefResult(result_wrap['c_result'])],
                           imports   = [import_mod],
                           scope = func_scope,
                           original_function = expr)
             return expr.clone(expr.name, new_class = BindCArrayVariable, wrapper_function = func,
                                 original_variable = expr)
+        else:
+            raise NotImplementedError(f"Objects of type {expr.class_type} cannot be wrapped yet")
+
+    def _wrap_DottedVariable(self, expr):
+        """
+        Create all objects necessary to expose a class attribute to C.
+
+        Create the getter and setter functions which expose the class attribute
+        to C. Return these objects in a BindCClassProperty.
+
+        Parameters
+        ----------
+        expr : DottedVariable
+            The class attribute.
+
+        Returns
+        -------
+        BindCClassProperty
+            An object containing the getter and setter functions which expose
+            the class attribute to C.
+        """
+        lhs = expr.lhs
+        class_dtype = lhs.dtype
+        # ----------------------------------------------------------------------------------
+        #                        Create getter
+        # ----------------------------------------------------------------------------------
+        getter_name = self.scope.get_new_name(f'{class_dtype.name}_{expr.name}_getter'.lower())
+        getter_scope = self.scope.new_child_scope(getter_name)
+        self.scope = getter_scope
+        self.scope.insert_symbol(expr.name)
+        getter_result = self._wrap(FunctionDefResult(expr))
+
+        getter_arg = self._wrap(FunctionDefArgument(lhs, bound_argument = True))
+        self_obj = self._get_call_argument(getter_arg)
+
+        getter_body = [C_F_Pointer(getter_arg.var, self_obj)]
+
+        attrib = expr.clone(expr.name, lhs = self_obj)
+        wrapped_obj = self.scope.find(expr.name)
+        # Cast the C variable into a Python variable
+        if expr.rank > 0 or isinstance(expr.dtype, CustomDataType):
+            getter_body.append(AliasAssign(wrapped_obj, attrib))
+        else:
+            getter_body.append(Assign(getter_result.var, attrib))
+        getter_body.extend(self._additional_exprs)
+        self._additional_exprs.clear()
+        self.exit_scope()
+
+        getter = BindCFunctionDef(getter_name, (getter_arg,), getter_body, (getter_result,),
+                                original_function = expr, scope = getter_scope)
+
+        # ----------------------------------------------------------------------------------
+        #                        Create setter
+        # ----------------------------------------------------------------------------------
+        setter_name = self.scope.get_new_name(f'{class_dtype.name}_{expr.name}_setter'.lower())
+        setter_scope = self.scope.new_child_scope(setter_name)
+        self.scope = setter_scope
+        self.scope.insert_symbol(expr.name)
+
+        setter_args = (self._wrap(FunctionDefArgument(lhs, bound_argument = True)),
+                       self._wrap(FunctionDefArgument(expr)))
+        if expr.is_alias:
+            setter_args[1].persistent_target = True
+
+        self_obj = self._get_call_argument(setter_args[0])
+        set_val = self._get_call_argument(setter_args[1])
+
+        setter_body = [C_F_Pointer(setter_args[0].var, self_obj)]
+
+        if isinstance(set_val.dtype, CustomDataType):
+            setter_body.append(C_F_Pointer(setter_args[1].var, set_val))
+        elif isinstance(set_val, IndexedElement):
+            func_arg = setter_args[1]
+            size = func_arg.shape[::-1] if expr.order == 'C' else func_arg.shape
+            stride = func_arg.strides[::-1] if expr.order == 'C' else func_arg.strides
+            orig_size = [PyccelMul(sz,st) for sz,st in zip(size, stride)]
+            setter_body.append(C_F_Pointer(func_arg.var, set_val.base, orig_size))
+
+        attrib = expr.clone(expr.name, lhs = self_obj)
+        # Cast the C variable into a Python variable
+        if expr.memory_handling == 'alias':
+            setter_body.append(AliasAssign(attrib, set_val))
+        else:
+            setter_body.append(Assign(attrib, set_val))
+        self.exit_scope()
+
+        setter = BindCFunctionDef(setter_name, setter_args, setter_body,
+                                original_function = expr, scope = setter_scope)
+        return BindCClassProperty(lhs.cls_base.scope.get_python_name(expr.name),
+                                  getter, setter, lhs.dtype)
 
     def _wrap_ClassDef(self, expr):
         """
@@ -472,4 +516,323 @@ class FortranToCWrapper(Wrapper):
         BindCClassDef
             The wrapped class.
         """
-        return BindCClassDef(expr, docstring = expr.docstring)
+        name = expr.name
+        func_name = self.scope.get_new_name(f'{name}_bind_c_alloc'.lower())
+        func_scope = self.scope.new_child_scope(func_name)
+
+        # Allocatable is not returned so it must appear in local scope
+        local_var = Variable(expr.class_type, func_scope.get_new_name(f'{name}_obj'),
+                             cls_base = expr, memory_handling='alias')
+        func_scope.insert_variable(local_var)
+
+        # Create the C-compatible data pointer
+        bind_var = Variable(BindCPointer(), func_scope.get_new_name('bound_'+name),
+                            is_const=False, memory_handling='alias')
+        result = BindCVariable(bind_var, local_var)
+
+        # Define the additional steps necessary to define and fill ptr_var
+        alloc = Allocate(local_var, shape=(), status='unallocated')
+        c_loc = CLocFunc(local_var, bind_var)
+        body = [alloc, c_loc]
+
+        new_method = BindCFunctionDef(func_name, [], body,
+                [FunctionDefResult(result)],
+                original_function = None, scope = func_scope)
+
+        methods = [self._wrap(m) for m in expr.methods]
+        methods = [m for m in methods if not isinstance(m, EmptyNode)]
+        for i in expr.interfaces:
+            for f in i.functions:
+                self._wrap(f)
+        interfaces = [self._wrap(i) for i in expr.interfaces]
+
+        if any(isinstance(v.class_type, TupleType) for v in expr.attributes):
+            errors.report("Tuples cannot yet be exposed to Python.",
+                    severity='warning',
+                    symbol=expr)
+
+        properties_getters = [BindCClassProperty(expr.scope.get_python_name(m.original_function.name),
+                                                 m, None, expr.class_type, m.original_function.docstring)
+                                for m in methods if 'property' in m.original_function.decorators]
+        methods = [m for m in methods if m not in properties_getters
+                        if 'property' not in m.original_function.decorators]
+
+        # Pseudo-self variable is useful for pre-defined attributes which are not DottedVariables
+        pseudo_self = Variable(expr.class_type, 'self', cls_base = expr)
+        properties = [self._wrap(v if isinstance(v, DottedVariable) else v.clone(v.name, new_class = DottedVariable, lhs=pseudo_self)) \
+                        for v in expr.attributes if not v.is_private and not isinstance(v.class_type, TupleType)]
+        return BindCClassDef(expr, new_func = new_method, methods = methods,
+                             interfaces = interfaces, attributes = properties_getters + properties,
+                             docstring = expr.docstring, class_type = expr.class_type)
+
+    def _wrap_FunctionDefResult(self, expr):
+        """
+        Create the equivalent FunctionDefResult for a C-compatible function.
+
+        Take a FunctionDefResult and create a FunctionDefResult describing
+        all the information that should be returned from the C-compatible function
+        in order to fully describe the result `expr`. This function also adds any
+        expressions necessary to build the C-compatible return value to
+        `self._additional_exprs`.
+
+        In the case of a scalar numerical the function simply creates a local version
+        of the variable described by the function result and returns the
+        FunctionDefResult.
+
+        Parameters
+        ----------
+        expr : FunctionDefResult
+            The result to be wrapped.
+
+        Returns
+        -------
+        FunctionDefResult
+            The C-compatible result.
+        """
+        result = self._extract_FunctionDefResult(expr.var)
+        self._additional_exprs.extend(result['body'])
+        return FunctionDefResult(result['c_result'])
+
+    def _extract_FunctionDefResult(self, orig_var):
+        """
+        Get the code and variables necessary to translate a `Variable` to a C-compatible Variable.
+
+        Get the code and variables necessary to translate a `Variable` which is returned
+        from a function to a `Variable` which can be called from C. A variable `local_var` is
+        created. This variable can be retrieved using its name which matches the name of `orig_var`
+        the variable that was originally returned. `local_var` should be used to retrieve the
+        result of the function call. It will generally be a clone of the return variable but some
+        properties (such as the memory handling) may be modified. A variable describing the
+        object which should be returned from the BindCFunctionDef may also be created if necessary.
+        Finally AST nodes are also created to describe any code which is needed to convert the
+        `local_var` to the returned variable.
+
+        Parameters
+        ----------
+        orig_var : Variable
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result:
+            - c_result: The Variable which should be used in a FunctionDefResult from the wrapped
+                    function.
+            - body: The code which is needed to convert the local_var to the returned variable
+                    saved in c_result.
+        """
+        class_type = orig_var.class_type
+
+        classes = type(class_type).__mro__
+        for cls in classes:
+            annotation_method = f'_extract_{cls.__name__}_FunctionDefResult'
+            if hasattr(self, annotation_method):
+                return getattr(self, annotation_method)(orig_var)
+
+        # Unknown object, we raise an error.
+        return errors.report(f"Wrapping function results is not implemented for type {class_type}. "
+                + PYCCEL_RESTRICTION_TODO, symbol=orig_var, severity='fatal')
+
+
+    def _extract_FixedSizeType_FunctionDefResult(self, orig_var):
+        name = orig_var.name
+        self.scope.insert_symbol(name)
+        local_var = orig_var.clone(self.scope.get_expected_name(name), new_class = Variable)
+        return {'body': [], 'c_result': BindCVariable(local_var, orig_var)}
+
+    def _extract_CustomDataType_FunctionDefResult(self, orig_var):
+        name = orig_var.name
+        scope = self.scope
+        scope.insert_symbol(name)
+        memory_handling = 'alias' if isinstance(orig_var, DottedVariable) else orig_var.memory_handling
+        local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
+                            memory_handling = memory_handling)
+        # Allocatable is not returned so it must appear in local scope
+        scope.insert_variable(local_var, name)
+
+        # Create the C-compatible data pointer
+        bind_var = Variable(BindCPointer(),
+                            scope.get_new_name('bound_'+name),
+                            is_const=False, memory_handling='alias')
+
+        if isinstance(orig_var, DottedVariable):
+            ptr_var = orig_var
+            body = [CLocFunc(ptr_var, bind_var)]
+        else:
+            # Create an array variable which can be passed to CLocFunc
+            ptr_var = Variable(orig_var.class_type, scope.get_new_name(name+'_ptr'), memory_handling='alias')
+            scope.insert_variable(ptr_var)
+            alloc = Allocate(ptr_var, shape=(), status='unallocated')
+            copy = Assign(ptr_var, local_var)
+            cloc = CLocFunc(ptr_var, bind_var)
+            body = [alloc, copy, cloc]
+
+        return {'body': body, 'c_result': BindCVariable(bind_var, orig_var)}
+
+    def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var):
+        name = orig_var.name
+        scope = self.scope
+        scope.insert_symbol(name)
+        memory_handling = 'alias' if isinstance(orig_var, DottedVariable) else orig_var.memory_handling
+
+        # Allocatable is not returned so it must appear in local scope
+        local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
+                            memory_handling = memory_handling)
+        scope.insert_variable(local_var, name)
+
+        if orig_var.is_alias or isinstance(orig_var, DottedVariable):
+            return self._get_bind_c_array(name, orig_var, local_var.shape, local_var)
+        else:
+            result = self._get_bind_c_array(name, orig_var, local_var.shape)
+
+            result['body'].append(Assign(result['f_array'], local_var))
+
+            return result
+
+    def _extract_HomogeneousTupleType_FunctionDefResult(self, orig_var):
+        return self._extract_NumpyNDArrayType_FunctionDefResult(orig_var)
+
+    def _extract_HomogeneousSetType_FunctionDefResult(self, orig_var):
+        name = orig_var.name
+        scope = self.scope
+        scope.insert_symbol(name)
+        memory_handling = 'alias' if isinstance(orig_var, DottedVariable) else orig_var.memory_handling
+
+        # Allocatable is not returned so it must appear in local scope
+        local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
+                            memory_handling = memory_handling)
+        scope.insert_variable(local_var, name)
+
+        result = self._get_bind_c_array(name, orig_var, local_var.shape)
+
+        f_array = result['f_array']
+        body = result['body']
+
+        for_scope = scope.create_new_loop_scope()
+        iterator = VariableIterator(local_var)
+        elem = Variable(orig_var.class_type.element_type, self.scope.get_new_name())
+        idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+        self.scope.insert_variable(elem)
+        self.scope.insert_variable(idx)
+
+        # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
+        # Lists are 1-indexed but Pyccel adds the shift during printing so they are
+        # treated as 0-indexed here
+        for_body = [Assign(IndexedElement(f_array, PyccelAdd(idx, LiteralInteger(1))), elem),
+                    Assign(idx, PyccelAdd(idx, LiteralInteger(1)))]
+        fill_for = For((elem,), iterator, for_body, scope = for_scope)
+        body.extend([Assign(idx, LiteralInteger(0)), fill_for])
+        return result
+
+    def _extract_HomogeneousListType_FunctionDefResult(self, orig_var):
+        name = orig_var.name
+        scope = self.scope
+        scope.insert_symbol(name)
+        memory_handling = 'alias' if isinstance(orig_var, DottedVariable) else orig_var.memory_handling
+
+        # Allocatable is not returned so it must appear in local scope
+        local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
+                            memory_handling = memory_handling)
+        scope.insert_variable(local_var, name)
+
+        result = self._get_bind_c_array(name, orig_var, local_var.shape)
+
+        f_array = result['f_array']
+        body = result['body']
+
+        for_scope = scope.create_new_loop_scope()
+        iterator = VariableIterator(local_var)
+        elem = Variable(orig_var.class_type.element_type, self.scope.get_new_name())
+        idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+        self.scope.insert_variable(elem)
+        iterator.set_loop_counter(idx)
+
+        # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
+        # Lists are 1-indexed but Pyccel adds the shift during printing so they are
+        # treated as 0-indexed here
+        for_body = [Assign(IndexedElement(f_array, PyccelAdd(idx, LiteralInteger(1))), elem)]
+        body.append(For((elem,), iterator, for_body, scope = for_scope))
+        return result
+
+    def _get_bind_c_array(self, name, orig_var, shape, pointer_target = False):
+        """
+        Get all the objects necessary to return an array from the BindCFunctionDef.
+
+        In the case of an array, C cannot represent the array natively. Rather it is
+        stored in a pointer. This function therefore creates a variable to represent
+        that pointer. Additionally information about the shape and strides of the array
+        are necessary.  The assignment expressions which define the shapes and strides
+        are then stored in `body` along with the allocation of the pointer. The
+        Fortran-accessible array is returned so that it can be filled differently
+        depending on what type is described by the array (e.g. if the array describes
+        an array a simple copy is required, but if the array describes a set then the
+        elements need to be added one by one.
+
+        Parameters
+        ----------
+        name : str
+            The stem of the names of the objects that should be created.
+
+        orig_var : Variable
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped. This is used to obtain the dtype, rank
+            and order of the array that should be created.
+
+        shape : tuple[TypedAstNode]
+            A tuple describing the shape that the array should be allocated to.
+
+        pointer_target : bool, default=False
+            Indicates if the data in orig_var is a target of the pointer that will be
+            created.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result:
+            - c_result: The Variable which should be used in a FunctionDefResult from the wrapped
+                    function.
+            - body: The code which is needed to convert the local_var to the returned variable
+                    saved in c_result.
+            - f_array: The Fortran-accessible array that will be returned. This is where the data
+                    should be copied to.
+        """
+        dtype = orig_var.dtype
+        rank = orig_var.rank
+        order = orig_var.order
+        scope = self.scope
+        # Create the C-compatible data pointer
+        bind_var = Variable(BindCPointer(),
+                            scope.get_new_name('bound_'+name),
+                            is_const=False, memory_handling='alias')
+
+        shape_vars = [Variable(NumpyInt32Type(), scope.get_new_name(f'{name}_shape_{i+1}'))
+                         for i in range(rank)]
+
+        body = [Assign(s_v, s) for s_v, s in zip(shape_vars, shape)]
+
+        if pointer_target:
+            body.append(CLocFunc(orig_var, bind_var))
+            f_array = orig_var
+        else:
+            # Create an array variable which can be passed to CLocFunc
+            ptr_var = Variable(NumpyNDArrayType(dtype, rank, order), scope.get_new_name(name+'_ptr'),
+                                memory_handling='alias')
+            elem_var = Variable(dtype, scope.get_new_name(name+'_elem'))
+            scope.insert_variable(ptr_var)
+            scope.insert_variable(elem_var)
+
+            # Define the additional steps necessary to define and fill ptr_var
+            size = reduce(PyccelMul, [BindCSizeOf(elem_var), *shape_vars])
+            body += [Assign(bind_var, c_malloc(size)),
+                        C_F_Pointer(bind_var, ptr_var, shape_vars if order == 'F' else shape_vars[::-1])]
+
+            f_array = ptr_var
+
+        result_var = Variable(BindCArrayType(rank, has_strides = False),
+                        scope.get_new_name())
+        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(0)), bind_var)
+        for i,s in enumerate(shape_vars):
+            scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(i+1)), s)
+
+        return {'c_result': BindCVariable(result_var, orig_var), 'body': body, 'f_array': f_array}

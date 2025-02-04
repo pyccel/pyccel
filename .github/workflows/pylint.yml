@@ -9,6 +9,9 @@ on:
       ref:
         required: false
         type: string
+      base:
+        required: true
+        type: string
       check_run_id:
         required: false
         type: string
@@ -29,12 +32,14 @@ jobs:
     name: Python best practices
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+          fetch-depth: 0
+          submodules: true
       - name: Set up Python ${{ inputs.python_version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python_version }}
       - name: "Setup"
@@ -42,24 +47,27 @@ jobs:
         run: |
           pip install jwt requests
           python ci_tools/setup_check_run.py pylint
-      - name: Check branch
-        run: |
-          git branch
-          git status
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install pylint
+          python -m pip install defusedxml
         shell: bash
-      - name: Pylint
+      - name: Run Pylint
+        run: |
+          check_files=$(git diff ${{ inputs.base }}..HEAD --name-only --diff-filter=AM | grep "\.py$" || true)
+          if [ -z ${check_files} ]
+          then
+            touch pylint_results.txt
+          else
+            python -m pylint --rcfile=.pylintrc ${check_files} 2>&1 | tee pylint_results.txt || true
+          fi
+        shell: bash
+      - name: Filter Pylint output
         id: pylint
         run: |
-          echo $GITHUB_WORKFLOW_SHA
-          ast_files="basic.py bind_c.py bitwise_operators.py builtin_imports.py builtins.py c_concepts.py class_defs.py cmathext.py itertoolsext.py omp.py operators.py scipyext.py sympy_helper.py sysext.py type_annotations.py"
-          pylintable_files="pyccel/parser/semantic.py"
-          for f in $ast_files; do pylintable_files="$pylintable_files pyccel/ast/$f"; done
-          python -m pylint --rcfile=.pylintrc $pylintable_files | tee pylint_output.out || true
-          python ci_tools/parse_pylint_output.py pylint_output.out $GITHUB_STEP_SUMMARY
+          git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          python ci_tools/parse_pylint_output.py pylint_results.txt pull_diff.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
         if: always()

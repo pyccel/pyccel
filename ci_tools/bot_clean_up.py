@@ -3,9 +3,30 @@
 import json
 import os
 import sys
-from bot_tools.bot_funcs import Bot, test_dependencies, pr_test_keys as bot_pr_test_keys
+from bot_tools.bot_funcs import Bot, test_dependencies, pr_test_keys as bot_pr_test_keys, default_python_versions
 
-pr_test_keys = list(bot_pr_test_keys) + ['Codacy']
+pr_test_keys = [(t, default_python_versions[t]) for t in bot_pr_test_keys] + ['Codacy']
+
+def get_name_from_key(name_key):
+    """
+    Get the name from a name key by dropping the information about the Python version.
+
+    Get the name from a name key by dropping the information about the Python version.
+
+    Parameters
+    ----------
+    name_key : str | tuple
+        The key used to uniquely identify the run configuration.
+
+    Returns
+    -------
+    str
+        A string indicating the run tool (but not the Python version).
+    """
+    if isinstance(name_key, tuple):
+        # Ignore Python version
+        return name_key[0]
+    return name_key
 
 if __name__ == '__main__':
     # Parse event payload from $GITHUB_EVENT_PATH variable
@@ -15,7 +36,7 @@ if __name__ == '__main__':
     with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
         event = json.load(event_file)
 
-    name = event['check_run']['name']
+    full_name = event['check_run']['name']
 
     print(event)
 
@@ -30,7 +51,7 @@ if __name__ == '__main__':
     except StopIteration:
         pr_id = 0
 
-    name_key = bot.get_name_key(name)
+    name = get_name_from_key(bot.get_name_key(full_name))
 
     runs = bot.get_check_runs()
 
@@ -46,11 +67,14 @@ if __name__ == '__main__':
 
     for q in queued_runs:
         q_name = q['name']
-        deps = test_dependencies.get(bot.get_name_key(q_name), ())
-        if name_key in deps:
-            if all(d in successful_runs for d in deps):
-                q_key = q_name.split('(')[1].split(')')[0].strip()
-                q_name, python_version = q_key.split(',')
+        q_key = bot.get_name_key(q_name)
+        if not isinstance(q_key, tuple):
+            # Not a Pyccel triggered test
+            continue
+        deps = test_dependencies.get(q_key[0], ())
+        if name in deps:
+            if all(d in (get_name_from_key(r) for r in successful_runs) for d in deps):
+                q_name, python_version = q_key
                 workflow_ids = None
                 if q_name == 'coverage':
                     workflow_ids = [int(r['details_url'].split('/')[-1]) for r in runs if r['conclusion'] == "success" and '(' in r['name']]

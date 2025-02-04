@@ -16,7 +16,7 @@ on:
         required: false
         type: string
   push:
-    branches: devel
+    branches: [devel, main]
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -52,10 +52,11 @@ jobs:
     needs: Python_version_picker
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+          submodules: true
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - uses: conda-incubator/setup-miniconda@v2
@@ -68,6 +69,7 @@ jobs:
         with:
           mpi_type: openmpi
       - name: "Setup"
+        if: github.event_name != 'push'
         id: token
         run: |
           pip install jwt requests
@@ -101,13 +103,14 @@ jobs:
         with:
           shell_cmd: "bash -l {0}"
       - name: Save code coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-artifact
           path: .coverage
           retention-days: 1
+          include-hidden-files: true
       - name: "Post completed"
-        if: always()
+        if: always() && github.event_name != 'push'
         run:
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }}
         shell: bash -l {0}

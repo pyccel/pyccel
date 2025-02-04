@@ -6,7 +6,7 @@ import pytest
 from recognised_functions.test_numpy_funcs import (min_int, max_int, min_int8, max_int8,
                                 min_int16, max_int16, min_int32, max_int32, max_int64, min_int64)
 from recognised_functions.test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from pyccel.decorators import template
 
 
@@ -734,15 +734,6 @@ def test_c_array_return(language):
         assert f_output.flags.c_contiguous == test_output.flags.c_contiguous
         assert f_output.flags.f_contiguous == test_output.flags.f_contiguous
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.xfail(reason="Order not printed in Python. See #1260"),
-            pytest.mark.python
-        ])
-    )
-)
 def test_f_array_return(language):
     @template('T', ['int', 'int8', 'int16', 'int32', 'int64',
                     'float', 'float32', 'float64',
@@ -898,3 +889,19 @@ def test_copy_f_to_default(language):
         assert pyth_out.dtype is pycc_out.dtype
         assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
+
+def test_annotated_return(language):
+    def annotated_return(b : 'float[:,:]', c : 'float[:,:]') -> 'float[:,:]':
+        return b + c
+
+    epyccel_func = epyccel(annotated_return, language=language)
+    fl_b = np.array(uniform(min_float / 2, max_float / 2, (3,4)))
+    fl_c = np.array(uniform(min_float / 2, max_float / 2, (3,4)))
+
+    pyth_out = annotated_return(fl_b, fl_c)
+    pycc_out = epyccel_func(fl_b, fl_c)
+
+    assert np.array_equal(pyth_out, pycc_out)
+    assert pyth_out.dtype is pycc_out.dtype
+    assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
+    assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous

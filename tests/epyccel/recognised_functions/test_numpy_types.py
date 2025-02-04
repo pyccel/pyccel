@@ -1,16 +1,16 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
 import pytest
-from numpy.random import randint, uniform
+from numpy.random import uniform
 import numpy as np
 
 from test_numpy_funcs import (min_int, max_int, min_int8, max_int8,
                                 min_int16, max_int16, min_int32, max_int32, max_int64, min_int64)
 from test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
-from test_numpy_funcs import matching_types
+from test_numpy_funcs import matching_types, RTOL, ATOL, RTOL32, ATOL32, randint
 
 from pyccel.decorators import template
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 numpy_basic_types_deprecated = tuple(int(v) for v in np.version.version.split('.'))>=(1,24,0)
 
@@ -111,25 +111,13 @@ def test_numpy_scalar_promotion(language):
     assert pyccel_result == python_result
     assert isinstance(pyccel_result, type(python_result))
 
-    pyccel_result = epyccel_func(integer64, fl32)
-    python_result = add_numpy_to_numpy_type(integer64, fl32)
-    assert pyccel_result == python_result
-    assert isinstance(pyccel_result, type(python_result))
-
-    pyccel_result = epyccel_func(integer64, fl64)
-    python_result = add_numpy_to_numpy_type(integer64, fl64)
-    assert pyccel_result == python_result
-    assert isinstance(pyccel_result, type(python_result))
-
-    pyccel_result = epyccel_func(fl64, complex64)
-    python_result = add_numpy_to_numpy_type(fl64, complex64)
-    assert pyccel_result == python_result
-    assert isinstance(pyccel_result, type(python_result))
-
-    pyccel_result = epyccel_func(complex128, fl64)
-    python_result = add_numpy_to_numpy_type(complex128, fl64)
-    assert pyccel_result == python_result
-    assert isinstance(pyccel_result, type(python_result))
+    for type1, type2 in ((integer64, fl32), (integer64, fl64), (fl64, complex64), (complex128, fl64)):
+        pyccel_result = epyccel_func(type1, type2)
+        python_result = add_numpy_to_numpy_type(type1, type2)
+        rtol = RTOL32 if isinstance(python_result, (np.float64, np.complex128)) else RTOL
+        atol = ATOL32 if isinstance(python_result, (np.float64, np.complex128)) else ATOL
+        assert np.isclose(pyccel_result, python_result, rtol=rtol, atol=atol)
+        assert isinstance(pyccel_result, type(python_result))
 
 @pytest.mark.skipif(numpy_basic_types_deprecated, reason="Can't import bool from numpy")
 def test_numpy_bool_scalar(language):
@@ -190,13 +178,11 @@ def test_numpy_bool_scalar(language):
     assert f_integer32_output == test_int32_output
     assert matching_types(f_integer32_output, test_int32_output)
 
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64)
-        test_int64_output = get_bool(integer64)
+    f_integer64_output = epyccel_func(integer64)
+    test_int64_output = get_bool(integer64)
 
-        assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output)
+    assert f_integer64_output == test_int64_output
+    assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl_output = epyccel_func(fl)
     test_float_output = get_bool(fl)
@@ -312,31 +298,29 @@ def test_numpy_int_scalar(language, function_boundaries):
     assert f_integer32_output == test_int32_output
     assert matching_types(f_integer32_output, test_int32_output)
 
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64)
-        test_int64_output = get_int(integer64)
+    f_integer64_output = epyccel_func(integer64)
+    test_int64_output = get_int(integer64)
 
-        assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output)
+    assert f_integer64_output == test_int64_output
+    assert matching_types(f_integer64_output, test_int64_output)
 
-        f_fl_output = epyccel_func(fl)
-        test_float_output = get_int(fl)
+    f_fl_output = epyccel_func(fl)
+    test_float_output = get_int(fl)
 
-        assert f_fl_output == test_float_output
-        assert matching_types(f_fl_output, test_float_output)
+    assert f_fl_output == test_float_output
+    assert matching_types(f_fl_output, test_float_output)
 
-        f_fl64_output = epyccel_func(fl64)
-        test_float64_output = get_int(fl64)
+    f_fl64_output = epyccel_func(fl64)
+    test_float64_output = get_int(fl64)
 
-        assert f_fl64_output == test_float64_output
-        assert matching_types(f_fl64_output, test_float64_output)
+    assert f_fl64_output == test_float64_output
+    assert matching_types(f_fl64_output, test_float64_output)
 
-        f_fl32_output = epyccel_func(fl32)
-        test_float32_output = get_int(fl32)
+    f_fl32_output = epyccel_func(fl32)
+    test_float32_output = get_int(fl32)
 
-        assert f_fl32_output == test_float32_output
-        assert matching_types(f_fl32_output, test_float32_output)
+    assert f_fl32_output == test_float32_output
+    assert matching_types(f_fl32_output, test_float32_output)
 
 @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
 def get_int64_arr_1d(arr : 'T'):
@@ -399,12 +383,10 @@ def test_numpy_int_array_like_1d(language, function_boundaries):
     assert epyccel_func(integer16) == get_int(integer16)
     assert epyccel_func(integer) == get_int(integer)
     assert epyccel_func(integer32) == get_int(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_int(integer64)
-        assert epyccel_func(fl) == get_int(fl)
-        assert epyccel_func(fl64) == get_int(fl64)
-        assert epyccel_func(fl32) == get_int(fl32)
+    assert epyccel_func(integer64) == get_int(integer64)
+    assert epyccel_func(fl) == get_int(fl)
+    assert epyccel_func(fl64) == get_int(fl64)
+    assert epyccel_func(fl32) == get_int(fl32)
 
 @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
 def get_int64_arr_2d(arr : 'T'):
@@ -467,12 +449,10 @@ def test_numpy_int_array_like_2d(language, function_boundaries):
     assert epyccel_func(integer16) == get_int(integer16)
     assert epyccel_func(integer) == get_int(integer)
     assert epyccel_func(integer32) == get_int(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_int(integer64)
-        assert epyccel_func(fl) == get_int(fl)
-        assert epyccel_func(fl64) == get_int(fl64)
-        assert epyccel_func(fl32) == get_int(fl32)
+    assert epyccel_func(integer64) == get_int(integer64)
+    assert epyccel_func(fl) == get_int(fl)
+    assert epyccel_func(fl64) == get_int(fl64)
+    assert epyccel_func(fl32) == get_int(fl32)
 
 @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
 def get_float(a : 'T'):
@@ -550,13 +530,11 @@ def test_numpy_float_scalar(language, get_float):
     assert f_integer32_output == test_int32_output
     assert matching_types(f_integer32_output, test_int32_output)
 
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64)
-        test_int64_output = get_float(integer64)
+    f_integer64_output = epyccel_func(integer64)
+    test_int64_output = get_float(integer64)
 
-        assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output)
+    assert f_integer64_output == test_int64_output
+    assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl_output = epyccel_func(fl)
     test_float_output = get_float(fl)
@@ -616,11 +594,9 @@ def test_numpy_float_array_like_1d(language, get_float):
     assert epyccel_func(integer16) == get_float(integer16)
     assert epyccel_func(integer) == get_float(integer)
     assert epyccel_func(integer32) == get_float(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_float(integer64)
-        assert epyccel_func(fl) == get_float(fl)
-        assert epyccel_func(fl64) == get_float(fl64)
+    assert epyccel_func(integer64) == get_float(integer64)
+    assert epyccel_func(fl) == get_float(fl)
+    assert epyccel_func(fl64) == get_float(fl64)
     assert epyccel_func(fl32) == get_float(fl32)
 
 @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
@@ -662,11 +638,9 @@ def test_numpy_float_array_like_2d(language, get_float):
     assert epyccel_func(integer16) == get_float(integer16)
     assert epyccel_func(integer) == get_float(integer)
     assert epyccel_func(integer32) == get_float(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_float(integer64)
-        assert epyccel_func(fl) == get_float(fl)
-        assert epyccel_func(fl64) == get_float(fl64)
+    assert epyccel_func(integer64) == get_float(integer64)
+    assert epyccel_func(fl) == get_float(fl)
+    assert epyccel_func(fl64) == get_float(fl64)
     assert epyccel_func(fl32) == get_float(fl32)
 
 def test_numpy_double_scalar(language):
@@ -727,13 +701,11 @@ def test_numpy_double_scalar(language):
     assert f_integer32_output == test_int32_output
     assert matching_types(f_integer32_output, test_int32_output)
 
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64)
-        test_int64_output = get_double(integer64)
+    f_integer64_output = epyccel_func(integer64)
+    test_int64_output = get_double(integer64)
 
-        assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output)
+    assert f_integer64_output == test_int64_output
+    assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl_output = epyccel_func(fl)
     test_float_output = get_double(fl)
@@ -785,11 +757,9 @@ def test_numpy_double_array_like_1d(language):
     assert epyccel_func(integer16) == get_double(integer16)
     assert epyccel_func(integer) == get_double(integer)
     assert epyccel_func(integer32) == get_double(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_double(integer64)
-        assert epyccel_func(fl) == get_double(fl)
-        assert epyccel_func(fl64) == get_double(fl64)
+    assert epyccel_func(integer64) == get_double(integer64)
+    assert epyccel_func(fl) == get_double(fl)
+    assert epyccel_func(fl64) == get_double(fl64)
     assert epyccel_func(fl32) == get_double(fl32)
 
 def test_numpy_double_array_like_2d(language):
@@ -823,11 +793,9 @@ def test_numpy_double_array_like_2d(language):
     assert epyccel_func(integer16) == get_double(integer16)
     assert epyccel_func(integer) == get_double(integer)
     assert epyccel_func(integer32) == get_double(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_double(integer64)
-        assert epyccel_func(fl) == get_double(fl)
-        assert epyccel_func(fl64) == get_double(fl64)
+    assert epyccel_func(integer64) == get_double(integer64)
+    assert epyccel_func(fl) == get_double(fl)
+    assert epyccel_func(fl64) == get_double(fl64)
     assert epyccel_func(fl32) == get_double(fl32)
 
 
@@ -906,13 +874,11 @@ def test_numpy_complex_scalar(language, get_complex):
     assert f_integer32_output == test_int32_output
     assert matching_types(f_integer32_output, test_int32_output)
 
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64)
-        test_int64_output = get_complex(integer64)
+    f_integer64_output = epyccel_func(integer64)
+    test_int64_output = get_complex(integer64)
 
-        assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output)
+    assert f_integer64_output == test_int64_output
+    assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl_output = epyccel_func(fl)
     test_float_output = get_complex(fl)
@@ -986,24 +952,27 @@ def test_numpy_complex_array_like_1d(language, get_complex):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
+    # float32 is used as the maximum for all float types to avoid overflow errors
+    fl = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(min_float32 / 2, max_float32 / 2, size = size)
 
     epyccel_func = epyccel(get_complex, language=language)
 
-    assert epyccel_func(bl) == get_complex(bl)
-    assert epyccel_func(integer8) == get_complex(integer8)
-    assert epyccel_func(integer16) == get_complex(integer16)
-    assert epyccel_func(integer) == get_complex(integer)
-    assert epyccel_func(integer32) == get_complex(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_complex(integer64)
-        assert epyccel_func(fl) == get_complex(fl)
-        assert epyccel_func(fl64) == get_complex(fl64)
-    assert epyccel_func(fl32) == get_complex(fl32)
+    is_complex64 = get_complex(bl)[-1].dtype == np.complex64
+    rtol = RTOL32 if is_complex64 else RTOL
+    atol = ATOL32 if is_complex64 else ATOL
+
+    assert np.allclose(epyccel_func(bl), get_complex(bl), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(integer8), get_complex(integer8), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(integer16), get_complex(integer16), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(integer), get_complex(integer), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(integer32), get_complex(integer32), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(integer64), get_complex(integer64), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(fl), get_complex(fl), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(fl64), get_complex(fl64), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(fl32), get_complex(fl32), rtol=rtol, atol=atol)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -1028,24 +997,27 @@ def test_numpy_complex_array_like_2d(language, get_complex):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
+    # float32 is used as the maximum for all float types to avoid overflow errors
+    fl = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(min_float32 / 2, max_float32 / 2, size = size)
 
     epyccel_func = epyccel(get_complex, language=language)
 
-    assert epyccel_func(bl) == get_complex(bl)
-    assert epyccel_func(integer8) == get_complex(integer8)
-    assert epyccel_func(integer16) == get_complex(integer16)
-    assert epyccel_func(integer) == get_complex(integer)
-    assert epyccel_func(integer32) == get_complex(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_complex(integer64)
-        assert epyccel_func(fl) == get_complex(fl)
-        assert epyccel_func(fl64) == get_complex(fl64)
-    assert epyccel_func(fl32) == get_complex(fl32)
+    is_complex64 = get_complex(bl)[-1].dtype == np.complex64
+    rtol = RTOL32 if is_complex64 else RTOL
+    atol = ATOL32 if is_complex64 else ATOL
+
+    assert np.allclose(epyccel_func(bl), get_complex(bl), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(integer8), get_complex(integer8), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(integer16), get_complex(integer16), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(integer), get_complex(integer), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(integer32), get_complex(integer32), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(integer64), get_complex(integer64), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(fl), get_complex(fl), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(fl64), get_complex(fl64), rtol=rtol, atol=atol)
+    assert np.allclose(epyccel_func(fl32), get_complex(fl32), rtol=rtol, atol=atol)
 
 def test_literal_complex64(language):
     def get_complex64():

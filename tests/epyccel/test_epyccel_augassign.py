@@ -4,7 +4,7 @@ from numpy.random import random
 import pytest
 
 import modules.augassign as mod
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 # += tests
 RTOL = 1e-12

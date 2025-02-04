@@ -20,7 +20,7 @@ The entry point for the class `Wrapper` is the function `wrap`.
 The `_wrap` function internally calls a function named `_wrap_X`, where `X` is the type of the object.
 These functions must have the form:
 ```python
-def _print_ClassName(self, stmt):
+def _wrap_ClassName(self, stmt):
     ...
     return Y
 ```
@@ -127,7 +127,9 @@ More complex cases include functions with array arguments or results, optional v
 
 Array arguments and results are handled similarly to array module variables, by adding additional variables for the shape and stride information. Strides are not used for results as pointers cannot be returned from functions.
 
-Optional arguments are passed as C pointers. An if/else block then determines whether the pointer is assigned or not. This can be quite lengthy, however it is unavoidable for compilation with intel, or nvidia. It is also unavoidable for arrays as it is important not to index an array (to access the strides) which is not present.
+In order to create all the nodes necessary to describe the unpacking of the results we use functions named `_extract_X_FunctionDefResult` where `X` is the type of the object being extracted from the `FunctionDefResult`. This helps with the readability of the code.
+
+Optional arguments are passed as C pointers. An if/else block then determines whether the pointer is assigned or not. This can be quite lengthy, however it is unavoidable for compilation with Intel, or NVIDIA. It is also unavoidable for arrays as it is important not to index an array (to access the strides) which is not present.
 
 Finally the most complex cases such as functions as arguments are simply not printed. Instead these cases raise warnings or errors to alert the user that support is missing.
 
@@ -359,11 +361,9 @@ int bind_c_f(void*, int64_t, int64_t, void*, int64_t*);
 
 ### Class module variables
 
-**Class module variables are not yet wrapped. This describes the future implementation**
+Unlike Fortran, C does not have classes in the language. The wrapper therefore cannot pass the class to C via a description. Instead the wrapper prints a function which returns a pointer to the module variable.
 
-Unlike Fortran, C does not have classes in the language. The wrapper therefore cannot pass the class to C via a description. Instead the wrapper should print a function which returns a pointer to the module variable.
-
-Additionally the class method functions will be wrapped as described for functions. The attributes of the class will be exposed via wrapper functions.
+Additionally the class method functions are be wrapped as described for functions. The attributes of the class are be exposed via getter and setter wrapper functions.
 
 ## C To Python
 
@@ -378,15 +378,17 @@ PyObject* func_name(PyObject* self, PyObject* args, PyObject* kwargs);
 
 The arguments and keyword arguments are unpacked into individual `PyObject` pointers.
 Each of these objects is checked to verify the type. If the type does not match the expected type then an error is raised as described in the [C-API documentation](https://docs.python.org/3/c-api/intro.html#exceptions).
-If the type does match then the value is unpacked into a C object. This is done using custom functions defined in `pyccel/stdlib/cwrapper/` or `pyccel/stdlib/cwrapper_ndarrays/` (see these files for more details).
+If the type does match then the value is unpacked into a C object. This is done using custom functions defined in `pyccel/stdlib/cwrapper/` (see these files for more details) or using functions provided by `Python.h`.
+
+In order to create all the nodes necessary to describe the unpacking of the arguments we use functions named `_extract_X_FunctionDefArgument` where `X` is the type of the object being extracted from the `FunctionDefArgument`. This allows such functions to call each other recursively. This is notably useful for container types (tuples, lists, etc) whose elements may themselves be container types. The types of scalars are checked in the same way regardless of whether they are arguments or elements of a container so this also reduces code duplication.
+
+Similarly in order to create all the nodes necessary to describe the packing of the results we use functions named `_extract_X_FunctionDefResult` where `X` is the type of the object being packed from the `FunctionDefResult`. This allows such functions to call each other recursively. This is notably useful for container types (tuples, lists, etc) whose elements may themselves be container types.
 
 Once C objects have been retrieved the function is called normally.
 
-Finally all the arguments are packed into a Python tuple stored in a `PyObject` and are returned.
-
 The wrapper is attached to the module via a `PyMethodDef` (see C-API [docs](https://docs.python.org/3/c-api/structures.html#c.PyMethodDef)).
 
-#### Example
+#### Example 1
 
 The following Python code:
 ```python
@@ -396,63 +398,56 @@ def f(x : 'float[:]', y : float = 3):
 
 leads to C code with the following prototype:
 ```c
-t_ndarray f(t_ndarray x, double y);
+array_double_1d f(array_double_1d x, double y);
 ```
 
 which is then wrapped as follows:
 ```c
-PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     PyObject* x_obj;
     PyObject* y_obj;
-    t_ndarray x = {.shape = NULL};
+    void* x_data = NULL;
+    int64_t x_shape[1];
+    int64_t x_strides[1];
+    array_double_1d x_0001 = {0};
+    array_double_1d x = {0};
     double y;
-    t_ndarray Out_0001 = {.shape = NULL};
+    array_double_1d Out_0001 = {0};
     PyObject* Out_0001_obj;
-    // Initialise any optional arguments
     y_obj = Py_None;
-    // Declare the names of the arguments so they can be found when the function is called
     static char *kwlist[] = {
-        "x",
-        "y",
+        (char*)"x",
+        (char*)"y",
         NULL
-    };
-    // Unpack the Python arguments into individual PyObjects (e.g. x_obj, y_obj)
-    // The vertical line splits compulsory arguments from optional arguments
+    }; 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O", kwlist, &x_obj, &y_obj))
+    {   
+        return NULL;
+    }
+    if (!pyarray_check("x", x_obj, NPY_DOUBLE, INT64_C(1), NO_ORDER_CHECK))
     {
         return NULL;
     }
-    // Unpack the PyObject (x_obj) into a C object (x)
-    if (pyarray_check(x_obj, NPY_DOUBLE, INT64_C(1), NO_ORDER_CHECK))
+    x_data = PyArray_DATA((PyArrayObject*)(x_obj));
+    get_strides_and_shape_from_numpy_array(x_obj, x_shape, x_strides);
+    x_0001 = (array_double_1d)cspan_md_layout(c_ROWMAJOR, x_data, x_shape[INT64_C(0)] * x_strides[INT64_C(0)]);
+    x = cspan_slice(array_double_1d, &x_0001, {INT64_C(0), c_END, x_strides[INT64_C(0)]});
+    y = 3.0;
+    if (y_obj != Py_None)
     {
-        x = pyarray_to_ndarray(x_obj);
+        if (PyIs_NativeFloat(y_obj))
+        {
+            y = PyDouble_to_Double(y_obj);
+        }
+        else
+        {
+            PyErr_SetString(PyExc_TypeError, "Expected an argument of type float for argument y");
+            return NULL;
+        }
     }
-    else
-    {
-        // Return in case of an error (raised if the type doesn't match)
-        return NULL;
-    }
-    // Initialise default values
-    y = INT64_C(3);
-    // Unpack the PyObject (y_obj) into a C object (y)
-    if (PyIs_NativeFloat(y_obj))
-    {
-        y = PyDouble_to_Double(y_obj);
-    }
-    else if (y_obj != Py_None)
-    {
-        // Return in case of an error (raised if the type doesn't match)
-        return NULL;
-    }
-    // Call the function
     Out_0001 = f(x, y);
-    // Free memory allocated for the arguments
-    free_pointer(&x);
-    // Pack the results into a PyObject
-    Out_0001_obj = ndarray_to_pyarray(Out_0001);
-    // Free memory allocated for the results
-    free_pointer(&Out_0001);
+    Out_0001_obj = to_pyarray(INT64_C(1), NPY_DOUBLE, Out_0001.data, Out_0001.shape, 1, 0);
     return Out_0001_obj;
 }
 ```
@@ -477,71 +472,119 @@ int bind_c_f(void*, int64_t, int64_t, double, void*, int64_t*);
 
 which is then wrapped as follows:
 ```c
-PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* bind_c_f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 {
-    PyObject* bound_x_obj;
+    PyObject* x_obj;
     PyObject* y_obj;
-    t_ndarray x = {.shape = NULL};
-    void* bound_x;
-    int64_t bound_x_shape_1;
-    int64_t bound_x_stride_1;
+    void* x_data = NULL;
+    int64_t x_shape[1];
+    int64_t x_strides[1];
     double y;
-    void* bound_Out_0001;
-    int64_t Out_0001_shape_1;
-    t_ndarray Out_0001 = {.shape = NULL};
-    PyObject* bound_Out_0001_obj;
-    // Initialise any optional arguments
+    void* Out_0001_data = NULL;
+    int64_t Out_0001_shape[1];
+    PyObject* Out_0001_obj;
     y_obj = Py_None;
-    // Declare the names of the arguments so they can be found when the function is called
     static char *kwlist[] = {
-        "x",
-        "y",
+        (char*)"x",
+        (char*)"y",
         NULL
     };
-    // Unpack the Python arguments into individual PyObjects (e.g. x_obj, y_obj)
-    // The vertical line splits compulsory arguments from optional arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O", kwlist, &bound_x_obj, &y_obj))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O", kwlist, &x_obj, &y_obj))
     {
         return NULL;
     }
-    // Unpack the PyObject (x_obj) into a C object (x)
-    if (pyarray_check(bound_x_obj, NPY_DOUBLE, INT64_C(1), NO_ORDER_CHECK))
+    if (!pyarray_check("x", x_obj, NPY_DOUBLE, INT64_C(1), NO_ORDER_CHECK))
     {
-        x = pyarray_to_ndarray(bound_x_obj);
+        return NULL;
+    }
+    x_data = PyArray_DATA((PyArrayObject*)(x_obj));
+    get_strides_and_shape_from_numpy_array(x_obj, x_shape, x_strides);
+    y = 3.0;
+    if (y_obj != Py_None)
+    {
+        if (PyIs_NativeFloat(y_obj))
+        {
+            y = PyDouble_to_Double(y_obj);
+        }
+        else
+        {
+            PyErr_SetString(PyExc_TypeError, "Expected an argument of type float for argument y");
+            return NULL;
+        }
+    }
+    bind_c_f(x_data, x_shape[INT64_C(0)], x_strides[INT64_C(0)], y, &Out_0001_data, &Out_0001_shape[INT64_C(0)]);
+    Out_0001_obj = to_pyarray(INT64_C(1), NPY_DOUBLE, Out_0001_data, Out_0001_shape, 1, 1);
+    return Out_0001_obj;
+}
+```
+
+#### Example 2 : function with tuple arguments
+
+The following Python code:
+```python
+def get_first_element_of_tuple(a : 'tuple[int,...]'):
+    return a[0]
+```
+
+leads to C code with the following prototype (as homogeneous tuples are treated like arrays):
+```c
+int64_t get_first_element_of_tuple(array_int64_1d a);
+```
+
+which is then wrapped as follows:
+```c
+static PyObject* get_first_element_of_tuple_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    PyObject* a_obj;
+    int64_t a_size_0001;
+    array_int64_1d a = {0};
+    int Dummy_0000;
+    PyObject* Dummy_0001;
+    bool is_homog_tuple;
+    int64_t size;
+    int Dummy_0002;
+    PyObject* Dummy_0003;
+    int64_t Out_0001;
+    int64_t* a_ptr;
+    PyObject* Out_0001_obj;
+    static char *kwlist[] = {
+        (char*)"a",
+        NULL
+    };
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O", kwlist, &a_obj))
+    {
+        return NULL;
+    }
+    if (PyTuple_Check(a_obj))
+    {
+        size = PyTuple_Size(a_obj);
+        is_homog_tuple = 1;
+        for (Dummy_0002 = INT64_C(0); Dummy_0002 < size; Dummy_0002 += INT64_C(1))
+        {
+            Dummy_0003 = PyTuple_GetItem(a_obj, Dummy_0002);
+            is_homog_tuple = is_homog_tuple && PyIs_NativeInt(Dummy_0003);
+        }
     }
     else
     {
-        // Return in case of an error (raised if the type doesn't match)
+        is_homog_tuple = 0;
+    }
+    if (!is_homog_tuple)
+    {
+        PyErr_SetString(PyExc_TypeError, "Expected an argument of type tuple[int, ...] for argument a");
         return NULL;
     }
-    // Unpack the C object into the individual arguments needed to call a Fortran function
-    bound_x = nd_data(&x);
-    bound_x_shape_1 = nd_ndim(&x, INT64_C(0));
-    bound_x_stride_1 = nd_nstep_F(&x, INT64_C(0));
-    // Initialise default values
-    y = INT64_C(3);
-    // Unpack the PyObject (y_obj) into a C object (y)
-    if (PyIs_NativeFloat(y_obj))
+    a_size_0001 = PyTuple_Size(a_obj);
+    a_ptr = malloc(sizeof(int64_t) * (a_size_0001));
+    a = (array_int64_1d)cspan_md_layout(c_ROWMAJOR, a_ptr, a_size_0001);
+    for (Dummy_0000 = INT64_C(0); Dummy_0000 < a_size_0001; Dummy_0000 += INT64_C(1))
     {
-        y = PyDouble_to_Double(y_obj);
+        Dummy_0001 = PyTuple_GetItem(a_obj, Dummy_0000);
+        (*cspan_at(&a, Dummy_0000)) = PyInt64_to_Int64(Dummy_0001);
     }
-    else if (y_obj != Py_None)
-    {
-        // Return in case of an error (raised if the type doesn't match)
-        return NULL;
-    }
-    // Call the function
-    bind_c_f(bound_x, bound_x_shape_1, bound_x_stride_1, y, &bound_Out_0001, &Out_0001_shape_1);
-    // Free memory allocated for the arguments
-    free_pointer(&x);
-    // Pack the results into a `ndarray`
-    Out_0001 = array_create(1, (int64_t[]){Out_0001_shape_1}, nd_double, true, order_c);
-    Out_0001.raw_data = bound_Out_0001;
-    // Pack the results into a PyObject
-    bound_Out_0001_obj = ndarray_to_pyarray(Out_0001);
-    // Free memory allocated for the results
-    free_pointer(&Out_0001);
-    return bound_Out_0001_obj;
+    Out_0001 = get_first_element_of_tuple(a);
+    Out_0001_obj = Int64_to_PyLong(&Out_0001);
+    return Out_0001_obj;
 }
 ```
 
@@ -699,3 +742,23 @@ int32_t tmp_exec_func(PyObject* mod)
     return INT64_C(0);
 }
 ```
+
+### Classes
+
+The wrapping of classes is described in detail at <https://docs.python.org/3/extending/newtypes_tutorial.html>.
+
+The class methods are wrapped similarly to normal functions. The main difference is that the first argument (`self`) is used and represents the class instance instead of the module instance.
+
+In order to wrap class attributes, a getter and a setter function are created. These are then linked to the class as described in the tutorial.
+
+Classes have an additional difficulty which is not present for module functions and variables. The difficulty is that they define a new type which may be imported and used in other modules. This difficulty is managed using capsules. Capsules are objects in the C-Python API which are designed to expose the API to other compiled Python libraries. The use of these capsules is described at <https://docs.python.org/3/extending/extending.html#using-capsules>.
+
+### Returning pointers
+
+Pyccel allows the user to return a pointer to an object which is an argument of a function (including an attribute of a bound argument). Pointers are created when pointing at non-trivial objects (e.g. classes, NumPy arrays, lists). When doing this it is very important to ensure that the reference counter on the target is incremented and will be decremented when the pointer goes out of scope.
+
+Python and Pyccel handle this slightly differently. Python directly returns the object passed as argument so we have `pointer is target`. The C to Python backend could theoretically do this, but they would have to compare the pointer for the results with the pointer for each of the target arguments to find the correct argument. This is unnecessarily complex and class attributes would have to be handled as a special case. Instead what is done is that a new object is created which operates on the same data.
+
+For a NumPy array pointer, a `numpy.ndarray` is created which operates on the same data. NumPy uses the base property to track the object whose reference counter should be decremented when this object is destroyed. If there is only 1 possible target then the base is set to this target (i.e. to the class for a class property, or to the argument for a pointer to an argument) so the data is not deleted and the decremented object can take care of destroying it when necessary. If there are multiple possible NumPy targets then a warning is raised advising the user to avoid using this function. In reality it can be used as long as one takes care with scoping to ensure dangling pointers cannot occur.
+
+For a class pointer, a new class instance is created. This class has a `referenced_objects` attribute which contains a Python list. All possible targets are added to this list. They are decremented by removing them from the Python list when the pointer class goes out of scope and is garbage collected.

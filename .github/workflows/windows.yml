@@ -16,7 +16,7 @@ on:
         required: false
         type: string
   push:
-    branches: devel
+    branches: [devel, main]
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -53,15 +53,17 @@ jobs:
     needs: Python_version_picker
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+          submodules: true
       - name: Set up Python ${{ needs.Python_version_picker.outputs.python_version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ needs.Python_version_picker.outputs.python_version }}
       - name: "Setup"
+        if: github.event_name != 'push'
         id: token
         run: |
           pip install jwt requests
@@ -89,6 +91,6 @@ jobs:
         timeout-minutes: 20
         uses: ./.github/actions/pytest_parallel
       - name: "Post completed"
-        if: always()
+        if: always() && github.event_name != 'push'
         run:
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }}

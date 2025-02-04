@@ -1,7 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-#$ header function pairwise_python(double[:,:],double[:,:])
-def pairwise_python (X, D) :
+def pairwise_python (X : 'double[:,:]', D : 'double[:,:]') :
     from numpy import sqrt, shape
 
     M, N = shape( X )

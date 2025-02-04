@@ -5,7 +5,7 @@ import pytest
 from numpy.random import rand, randint
 
 import modules.complex_func as mod
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 ATOL = 1e-15
 RTOL = 2e-14

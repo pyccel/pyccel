@@ -3,8 +3,8 @@
 
 import pytest
 import numpy as np
-from pyccel.epyccel import epyccel
-from pyccel.decorators import private, inline
+from pyccel import epyccel
+from pyccel.decorators import private, inline, template
 
 @pytest.mark.parametrize( 'lang', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -146,3 +146,45 @@ def test_nested_inline_call(language):
     g = epyccel(f, language=language)
 
     assert f() == g()
+
+def test_indexed_template(language):
+    @template(name='T', types=[float, complex])
+    def my_sum(v: 'T[:]'):
+        return v.sum()
+
+    pyccel_sum = epyccel(my_sum, language=language)
+
+    x = np.ones(4, dtype=float)
+
+    python_fl = my_sum(x)
+    pyccel_fl = pyccel_sum(x)
+
+    assert python_fl == pyccel_fl
+    assert isinstance(python_fl, type(pyccel_fl))
+
+    y = np.full(4, 1 + 3j)
+
+    python_cmplx = my_sum(y)
+    pyccel_cmplx = pyccel_sum(y)
+
+    assert python_cmplx == pyccel_cmplx
+    assert isinstance(python_cmplx, type(pyccel_cmplx))
+
+@pytest.mark.parametrize("language", (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="lists not implemented in fortran"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+        )
+)
+def test_allow_negative_index_list(language):
+    def allow_negative_index_annotation():
+        a = [1,2,3,4]
+        return a[-1], a[-2], a[-3], a[0]
+
+    epyc_allow_negative_index_annotation = epyccel(allow_negative_index_annotation, language=language)
+
+    assert epyc_allow_negative_index_annotation() == allow_negative_index_annotation()
+    assert isinstance(epyc_allow_negative_index_annotation(), type(allow_negative_index_annotation()))
+

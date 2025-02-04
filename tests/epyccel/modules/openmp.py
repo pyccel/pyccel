@@ -212,7 +212,7 @@ def test_omp_get_initial_device():
 def test_omp_get_set_schedule():
     import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_schedule, omp_set_schedule
-    func_result = 0
+    func_result = np.int32(0)
     i = 0
     #$ omp parallel private(i)
     omp_set_schedule(np.int32(2), np.int32(3))

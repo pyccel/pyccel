@@ -111,7 +111,8 @@ Built-in functions do not need importing.
 Instead they are recognised via the function [`pyccel.ast.utilities.builtin_function`](../pyccel/ast/utilities.py) which uses the dictionary [`pyccel.ast.builtins.builtin_functions_dict`](../pyccel/ast/builtins.py) to identify supported functions.
 Functions from supported libraries are saved in an object of type [`pyccel.ast.core.PyccelFunctionDef`](../pyccel/ast/core.py) when they are imported.
 These functions are handled one of two ways.
-If there is special treatment which requires functions from the `SemanticParser` then a `_visit_X` function should be created.
+If there is special treatment which requires functions from the `SemanticParser` (e.g. handling inhomogeneous tuples or adding new imports) then a `_build_X` function should be created.
+Differently than the `_visit_X` functions, a `_build_X` function does not take an object of type `X` as argument, but rather a `FunctionCall` to the class `X` and the visited `FunctionCallArgument` objects. In other words it does not visit `X`, but rather the call `X()`. If `X` represents a method of a class then `_build_X` takes a `DottedName` instead of a `FunctionCall`.
 The `SemanticParser._visit_FunctionCall` function will call this visitation function internally if it exists.
 Otherwise the object will be created in the `SemanticParser._handle_function` function and its type will be determined by its constructor.
 
@@ -143,6 +144,8 @@ In this case it is important to use the scope to avoid name collisions.
 These variables that are created should be tagged as `is_temp = True`.
 This allows Pyccel to differentiate between variables which appear in the code and should be preserved at all costs, and variables which are created by Pyccel and may be omitted if it leads to cleaner code.
 
+### Saving additional objects
+
 Additional objects can often appear in awkward places where they cannot be easily returned as a `CodeBlock`.
 This is the case for example if the object is needed to properly define something inside the right hand side of an `Assign`.
 As the right hand side of an Assign cannot be a `CodeBlock` the additional expressions must be collected outside the usual flow.
@@ -153,6 +156,14 @@ A list of lists is necessary in case a `CodeBlock` can be found inside another (
 In order to avoid problems arising from forgetfulness we try to add additional objects in the most general place possible.
 For example, allocation occurs in the function `SemanticParser._assign_lhs_variable`.
 Variable declarations are created in the printer when needed from the scope variables (this allows each language to place the declarations in the most appropriate location).
+
+### Garbage collection
+
+The semantic stage takes care of collecting all objects which may need deallocating when they go out of scope. This includes all objects allocated on the heap and pointers (which may contain additional heap data, such as shape information, and should be set to `nullptr` when out of scope). If there is nothing to do to deallocate an object then this can be handled in the printer for the associated language. In order to indicate that an object will need to be deallocated it is added to `SemanticParser._allocs`. This object is a list of sets. Each element of the list represents a different scope. The current scope is the last element of the list. When a scope ends this list is used to create the necessary `Deallocate` nodes and the last element is removed from the list. This is done by calling `SemanticParser._garbage_collector`. The list of sets therefore describes a hierarchy of nested scopes in which each element represents a scope which is contained in the one before (e.g. a function scope which is contained inside a module scope).
+
+### Pointers
+
+Pointers are also handled in the semantic stage. They are allowed in a local context but cannot (currently) be returned from a function. This makes it easier to prevent misuse. This restriction is lifted slightly for classes however. Classes can store pointers. It is therefore important to ensure that these pointers never become dangling pointers (pointers to objects that no longer exist). To manage this, pointers and their targets are added to `SemanticParser._pointer_targets`. This object is a list of dictionaries. As for `SemanticParser._allocs`, each element of the list represents a different scope. The dictionaries keys are pointers and the values are lists of 2-tuples. The first element of the tuple is the target while the second element is the AST object where the pointer and the tuple were associated (this object is useful for creating clear error messages). This dictionary is examined in `SemanticParser._check_pointer_targets`. This function is called from `SemanticParser._garbage_collector` when the end of a scope is reached and in `_visit_Return`.
 
 ## Object Tree
 

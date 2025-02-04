@@ -257,12 +257,12 @@ def get_json_summary(untested, content_lines, existing_comments, diff):
             if j < n_code_lines-1:
                 end_line = line_indices[j]-1
             else:
-                end_line = line_indices[j]
+                end_line = line_indices[-1]
             last_valid_line = start_line
-            last_valid_line_idx = next(i for i in diff[f]['addition'] if i == last_valid_line)
-            for i in diff[f]['addition'][last_valid_line_idx:]:
-                if i-last_valid_line < 6:
-                    last_valid_line = i
+            last_valid_line_idx = next(k for k,l in enumerate(diff[f]['addition']) if l == last_valid_line)
+            for k in diff[f]['addition'][last_valid_line_idx:]:
+                if k-last_valid_line < 6:
+                    last_valid_line = k
                 else:
                     break
             end_line = min(end_line, last_valid_line)

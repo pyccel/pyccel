@@ -130,6 +130,15 @@ def enumerate_on_1d_array_with_start(z : 'int[:]', k : 'int'):
     return res
 
 # ...
+def enumerate_on_1d_array_with_tuple(z : 'int[:]'):
+
+    res = 0
+    for v in enumerate( z ):
+        res += v[0]*v[1]
+
+    return res
+
+# ...
 def zip_prod(m : int):
 
     x = [  i for i in range(m)]
@@ -248,3 +257,18 @@ def temp_array_in_loop(a : 'int[:]', b : 'int[:]'):
         d2[:] = np.abs(b - a)
     return d1, d2
 
+def less_than_100(n : int):
+    for i in range(100):
+        if i > n:
+            return True
+    return False
+
+def for_expression():
+    import numpy as np
+    c = np.array([1,2,3,4,5])
+    d = np.array([2.0,3.0,1.0,9.0,11.0])
+    sum_e = 0.0
+    for ei in c+d:
+        sum_e = ei
+
+    return sum_e

@@ -9,7 +9,7 @@ class Point(object):
         pass
 
     def translate(self : 'Point', a : 'float[:]'):
-        self.x = self.x + a
+        self.x += a
 
 
 class Points(object):

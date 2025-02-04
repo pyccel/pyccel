@@ -4,7 +4,7 @@ import numpy as np
 from numpy.random import randint, uniform
 
 from modules import types
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 def test_int_default(language):
     f1 = types.test_int_default

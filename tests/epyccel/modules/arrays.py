@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring, reimported
 import numpy as np
 
 from pyccel.decorators import template, stack_array, allow_negative_index
@@ -70,6 +70,11 @@ def array_int_1d_initialization_3():
     a = (1, 2, 4, 8, 16)
     b = np.array(a)
     return np.sum(b), b[0], b[-1]
+
+def array_int_1d_initialization_4():
+    import numpy as np
+    b = np.array([i*2 for i in range(10)])
+    return b
 
 #==============================================================================
 # 2D ARRAYS OF INT-32 WITH C ORDERING
@@ -324,20 +329,20 @@ def array_float_4d_C_array_initialization(x : 'float[:,:,:]', y : 'float[:,:,:]'
 
 def array_float_nested_C_array_initialization(x : 'float[:,:,:]', y : 'float[:,:]', z : 'float[:,:]', a : 'float[:,:,:,:]'):
     from numpy import array
-    tmp      = array([x, [y, z, z], x], dtype='float')
+    tmp      = array((x, (y, z, z), x), dtype='float')
     a[:,:,:,:] = tmp[:,:,:,:]
 
 def array_float_nested_C_array_initialization_2(a : 'float[:,:,:]', e : 'float[:,:]', f : 'float[:]', x : 'float[:,:,:,:]'):
     from numpy import array
-    tmp      = array([[e, [f, f]], a, [[f, f], [f, f]]], dtype='float')
+    tmp      = array(((e, (f, f)), a, ((f, f), (f, f))), dtype='float')
     x[:,:,:,:] = tmp[:,:,:,:]
 
 def array_float_nested_C_array_initialization_3(a : 'float[:,:,:]', e : 'float[:,:]', x : 'float[:,:,:,:]'):
     from numpy import array
-    tmp      = array([[e, [[1., 2., 3.], [1., 2., 3.]]],
+    tmp      = array(((e, ((1., 2., 3.), (1., 2., 3.))),
                        a,
-                       [[[1., 2., 3.], [1., 2., 3.]],
-                        [[1., 2., 3.], [1., 2., 3.]]]], dtype='float')
+                       (((1., 2., 3.), (1., 2., 3.)),
+                        ((1., 2., 3.), (1., 2., 3.)))), dtype='float')
     x[:,:,:,:] = tmp[:,:,:,:]
 
 ##==============================================================================
@@ -346,21 +351,26 @@ def array_float_nested_C_array_initialization_3(a : 'float[:,:,:]', e : 'float[:
 
 def array_float_nested_F_array_initialization(x : 'float[:,:,:]', y : 'float[:,:]', z : 'float[:,:]', a : 'float[:,:,:,:](order=F)'):
     from numpy import array
-    tmp      = array([x, [y, z, z], x], dtype='float', order="F")
+    tmp      = array((x, (y, z, z), x), dtype='float', order="F")
     a[:,:,:,:] = tmp[:,:,:,:]
 
 def array_float_nested_F_array_initialization_2(a : 'float[:,:,:]', e : 'float[:,:]', f : 'float[:]', x : 'float[:,:,:,:](order=F)'):
     from numpy import array
-    tmp      = array([[e, [f, f]], a, [[f, f], [f, f]]], dtype='float', order="F")
+    tmp      = array(((e, (f, f)), a, ((f, f), (f, f))), dtype='float', order="F")
     x[:,:,:,:] = tmp[:,:,:,:]
 
 def array_float_nested_F_array_initialization_3(a : 'float[:,:,:]', e : 'float[:,:]', x : 'float[:,:,:,:](order=F)'):
     from numpy import array
-    tmp      = array([[e, [[1., 2., 3.], [1., 2., 3.]]],
+    tmp      = array(((e, ((1., 2., 3.), (1., 2., 3.))),
                        a,
-                       [[[1., 2., 3.], [1., 2., 3.]],
-                        [[1., 2., 3.], [1., 2., 3.]]]], dtype='float', order="F")
+                       (((1., 2., 3.), (1., 2., 3.)),
+                        ((1., 2., 3.), (1., 2., 3.)))), dtype='float', order="F")
     x[:,:,:,:] = tmp[:,:,:,:]
+
+def array_float_nested_F_array_initialization_mixed(x : 'float[:,:,:](order=F)', y : 'float[:,:](order=F)', z : 'float[:,:](order=F)', a : 'float[:,:,:,:](order=F)'):
+    from numpy import array
+    tmp      = array((x, (y, z, z), x), dtype='float', order="F")
+    a[:,:,:,:] = tmp[:,:,:,:]
 
 ##==============================================================================
 ## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER C 1D
@@ -1582,36 +1592,58 @@ def array_2d_C_slice_stride_23(a : 'int[:,:]'):
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 #==============================================================================
+# Slice assignment
+#==============================================================================
+
+def copy_to_slice_issue_1218(n : int):
+    from numpy import zeros, array
+    x = 2
+    arr = zeros((3, n))
+    arr[0:x, 0:6:2] = array([2, 5, 6])
+    return arr
+
+def copy_to_slice_1(a : 'float[:]', b : 'float[:]'):
+    a[1:-1] = b
+
+def copy_to_slice_2(a : 'float[:,:]', b : 'float[:]'):
+    a[:, 1:-1] = b
+
+def copy_to_slice_3(a : 'float[:,:]', b : 'float[:]'):
+    a[:, 0] = b
+
+def copy_to_slice_4(a : 'float[:]', b : 'float[:]'):
+    a[::2] = b
+
+#==============================================================================
 # ARITHMETIC OPERATIONS
 #==============================================================================
 
 def arrs_similar_shapes_0():
     import numpy as np
-    a = np.zeros(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[2:4]+a[4:6]
-    return np.shape(b)[0]
+    return b
 
 def arrs_similar_shapes_1():
     import numpy as np
     i = 4
-    a = np.zeros(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[2:i]+a[4:i + 2]
-    return np.shape(b)[0]
+    return b
 
 def arrs_different_shapes_0():
     import numpy as np
-    i = 5
-    a = np.zeros(10)
-    b = a[2:4]+a[4:i]
-    return np.shape(b)[0]
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    b = a[2:4]+a[4:5]
+    return b
 
 def arrs_uncertain_shape_1():
     import numpy as np
     i = 4
     j = 6
-    a = np.zeros(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[2:i]+a[4:j]
-    return np.shape(b)[0]
+    return b
 
 def arrs_2d_similar_shapes_0():
     import numpy as np
@@ -1621,58 +1653,67 @@ def arrs_2d_similar_shapes_0():
     pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
     x = ((dy**2 * (pn[1:shape(pn)[0]-1, 2:] + pn[1:shape(pn)[0]-1, 0:shape(pn)[1]-2]) +
         dx**2 *(pn[2:, 1:shape(pn)[1]-1] + pn[0:shape(pn)[0]-2, 1:shape(pn)[1]-1])) / (2 * (dx**2 + dy**2)))
-    return np.shape(x)[0], np.shape(x)[1]
+    return x
 
 def arrs_2d_different_shapes_0():
     import numpy as np
     pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
     pm = np.array([[1, 1, 1]])
     x = pn + pm
-    return np.shape(x)[0], np.shape(x)[1]
+    return x
 
 def arrs_1d_negative_index_1():
     import numpy as np
-    a = np.zeros(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[:-1]+a[-9:]
-    return np.shape(b)[0], np.sum(b)
+    return b
 
 def arrs_1d_negative_index_2():
     import numpy as np
-    a = np.ones(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[1:-1] + a[2:]
-    return np.shape(b)[0], np.sum(b)
+    return b
 
 def arrs_1d_int32_index():
     import numpy as np
     i = np.int32(1)
-    a = np.ones(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[i] + a[i + 2]
     return b
 
 def arrs_1d_int64_index():
     import numpy as np
     i = np.int64(1)
-    a = np.ones(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[i] + a[i + 2]
     return b
 
 def arrs_1d_negative_index_negative_step():
     import numpy as np
-    a = np.ones(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[-1:1:-2] + a[:2:-2]
-    return np.shape(b)[0], np.sum(b)
+    return b
 
 def arrs_1d_negative_step_positive_step():
     import numpy as np
-    a = np.ones(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[1:-1: 3] + a[2::3]
-    return np.shape(b)[0], np.sum(b)
+    return b
 
 def arrs_2d_negative_index():
     import numpy as np
-    a = np.ones((10, 10))
+    a = np.array([[ 1,  2,  3,  4,  5,  6,  7,  8,  9,  10],
+                  [11, 12, 13, 14, 15, 16, 17, 18, 19,  20],
+                  [21, 22, 23, 24, 25, 26, 27, 28, 29,  30],
+                  [31, 32, 33, 34, 35, 36, 37, 38, 39,  40],
+                  [41, 42, 43, 44, 45, 46, 47, 48, 49,  50],
+                  [51, 52, 53, 54, 55, 56, 57, 58, 59,  60],
+                  [61, 62, 63, 64, 65, 66, 67, 68, 69,  70],
+                  [71, 72, 73, 74, 75, 76, 77, 78, 79,  80],
+                  [81, 82, 83, 84, 85, 86, 87, 88, 89,  90],
+                  [91, 92, 93, 94, 95, 96, 97, 98, 99, 100]])
     b = a[1:-1, :-1] + a[2:, -9:]
-    return np.shape(b)[0], np.shape(b)[1], np.sum(b)
+    return b
 
 def arr_tuple_slice_index(a : 'int[:,:]'):
     r = a[(0,1,3),1:]
@@ -1718,14 +1759,6 @@ def arr_arange_7(arr : 'int[:,:]'):
     for i in range(n):
         arr[i] = np.arange(i, i+m)
 
-def iterate_slice(i : int):
-    import numpy as np
-    a = np.arange(15)
-    res = 0
-    for ai in a[:i]:
-        res += ai
-    return res
-
 #==============================================================================
 # NUMPY SUM
 #==============================================================================
@@ -1753,3 +1786,340 @@ def multiple_np_linspace():
     y = np.linspace(0, 4, 128)
     z = np.linspace(0, 8, 128)
     return x[0] + y[1] + z[2] + linspace_index
+
+#==============================================================================
+# NUMPY ARRAY DATA TYPE CONVERSION
+#==============================================================================
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def dtype_convert_to_bool(arr : 'T1'):
+    from numpy import shape, array
+    c = array(arr, dtype='bool')
+    s = shape(c)
+    return len(s), c[0,0], c[0,1], c[1,0], c[1,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def dtype_convert_to_int8(arr : 'T1'):
+    from numpy import shape, array
+    c = array(arr, dtype='int8')
+    s = shape(c)
+    return len(s), c[0,0], c[0,1], c[1,0], c[1,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def dtype_convert_to_int16(arr : 'T1'):
+    from numpy import shape, array
+    c = array(arr, dtype='int16')
+    s = shape(c)
+    return len(s), c[0,0], c[0,1], c[1,0], c[1,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def dtype_convert_to_int32(arr : 'T1'):
+    from numpy import shape, array
+    c = array(arr, dtype='int32')
+    s = shape(c)
+    return len(s), c[0,0], c[0,1], c[1,0], c[1,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def dtype_convert_to_int64(arr : 'T1'):
+    from numpy import shape, array
+    c = array(arr, dtype='int64')
+    s = shape(c)
+    return len(s), c[0,0], c[0,1], c[1,0], c[1,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def dtype_convert_to_float32(arr : 'T1'):
+    from numpy import shape, array
+    c = array(arr, dtype='float32')
+    s = shape(c)
+    return len(s), c[0,0], c[0,1], c[1,0], c[1,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def dtype_convert_to_float64(arr : 'T1'):
+    from numpy import shape, array
+    c = array(arr, dtype='float64')
+    s = shape(c)
+    return len(s), c[0,0], c[0,1], c[1,0], c[1,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def dtype_convert_to_cfloat(arr : 'T1'):
+    from numpy import shape, array
+    c = array(arr, dtype='complex64')
+    s = shape(c)
+    return len(s), c[0,0], c[0,1], c[1,0], c[1,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def dtype_convert_to_cdouble(arr : 'T1'):
+    from numpy import shape, array
+    c = array(arr, dtype='complex128')
+    s = shape(c)
+    return len(s), c[0,0], c[0,1], c[1,0], c[1,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def dtype_convert_to_pyint(arr : 'T1'):
+    from numpy import shape, array
+    c = array(arr, dtype=int)
+    s = shape(c)
+    return len(s), c[0,0], c[0,1], c[1,0], c[1,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def dtype_convert_to_pyfloat(arr : 'T1'):
+    from numpy import shape, array
+    c = array(arr, dtype=float)
+    s = shape(c)
+    return len(s), c[0,0], c[0,1], c[1,0], c[1,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_bool(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='bool')
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_int8(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='int8')
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_int16(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='int16')
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_int32(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='int32')
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_int64(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='int64')
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_float32(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='float32')
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_float64(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='float64')
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_cfloat(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='complex64')
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_cdouble(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='complex128')
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_pyint(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype=int)
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_pyfloat(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype=float)
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_bool_orderF(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='bool', order="F")
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_int8_orderF(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='int8', order="F")
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_int16_orderF(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='int16', order="F")
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_int32_orderF(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='int32', order="F")
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_int64_orderF(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='int64', order="F")
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_float32_orderF(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='float32', order="F")
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_float64_orderF(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='float64', order="F")
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='complex64', order="F")
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype='complex128', order="F")
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_pyint_orderF(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype=int, order="F")
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+@template('T1', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
+def src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(arr1 : 'T1', arr2 : 'T1', arr3 : 'T1'):
+    from numpy import shape, array
+    a = array(arr1)
+    b = array(arr2)
+    c = array(arr3)
+    d = array([a, c, b], dtype=float, order="F")
+    s = shape(d)
+    return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+
+#==============================================================================
+# Iteration
+#==============================================================================
+
+def iterate_slice(i : int):
+    from numpy import arange
+    a = arange(15)
+    res = 0
+    for ai in a[:i]:
+        res += ai
+    return res
+
+@template('T', ['int[:]', 'int[:,:]', 'int[:,:,:]', 'int[:,:](order=F)', 'int[:,:,:](order=F)'])
+def unpack_array(arr : 'T'):
+    x, y, z = arr[:]
+    return x, y, z
+
+def unpack_array_of_known_size():
+    from numpy import array
+    arr = array([1,2,3], dtype='float64')
+    x, y, z = arr[:]
+    return x, y, z
+
+def unpack_array_2D_of_known_size():
+    from numpy import array
+    arr = array([[1,2,3], [4,5,6], [7,8,9]], dtype='float64')
+    x, y, z = arr[:]
+    return x.sum(), y.sum(), z.sum()
+
+#==============================================================================
+# Indexing
+#==============================================================================
+
+def multi_layer_index(x : 'int[:]', start : int, stop : int, step : int, idx : int):
+    return x[start:stop:step][idx]

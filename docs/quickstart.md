@@ -124,8 +124,8 @@ Such type annotations are compatible with mypy and as such are recommended for u
 ### Installation
 
 Pyccel's official releases can be downloaded from PyPI (the Python Package Index) using `pip`.
-To get the latest (trunk) version of Pyccel, one can clone the `git` repository from GitHub and checkout the `master` branch.
-Detailed installation instructions are found in the [README](https://github.com/pyccel/pyccel/blob/master/README.rst) file.
+To get the latest (trunk) version of Pyccel, one can clone the `git` repository from GitHub and checkout the `devel` branch.
+Detailed installation instructions are found in the [README](https://github.com/pyccel/pyccel/blob/devel/README.md) file.
 
 ### Command Line Usage
 
@@ -289,14 +289,14 @@ def matmul(a: 'float[:,:](order=C)',
     if p != q or m != r or n != s:
         return -1
 
-#$ omp parallel
-#$ omp for schedule(runtime)
+    #$ omp parallel
+    #$ omp for schedule(runtime)
     for i in range(m):
         for j in range(n):
             c[i, j] = 0.0
             for k in range(p):
                 c[i, j] += a[i, k] * b[k, j]
-#$ omp end parallel
+    #$ omp end parallel
 
     return 0
 ```
@@ -331,57 +331,59 @@ And this is the Fortran file `mod.f90`:
 ```fortran
 module mod
 
-use, intrinsic :: ISO_C_BINDING
 
-implicit none
-
-contains
-
-!........................................
-function matmul(a, b, c) result(Out_0001)
-
+  use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T , f64 => &
+        C_DOUBLE
   implicit none
 
-  integer(C_INT64_T) :: Out_0001
-  real(C_DOUBLE), intent(in) :: a(0:,0:)
-  real(C_DOUBLE), intent(in) :: b(0:,0:)
-  real(C_DOUBLE), intent(inout) :: c(0:,0:)
-  integer(C_INT64_T) :: m
-  integer(C_INT64_T) :: p
-  integer(C_INT64_T) :: q
-  integer(C_INT64_T) :: n
-  integer(C_INT64_T) :: r
-  integer(C_INT64_T) :: s
-  integer(C_INT64_T) :: i
-  integer(C_INT64_T) :: j
-  integer(C_INT64_T) :: k
+  contains
 
-  m = size(a, 2, C_INT64_T)
-  p = size(a, 1, C_INT64_T)
-  q = size(b, 1, C_INT64_T)
-  n = size(b, 2, C_INT64_T)
-  r = size(c, 2, C_INT64_T)
-  s = size(c, 1, C_INT64_T)
-  if (p /= q .or. m /= r .or. n /= s) then
-    Out_0001 = -1_C_INT64_T
-    return
-  end if
-  !$omp parallel
-  !$omp do schedule(runtime)
-  do i = 0_C_INT64_T, m-1_C_INT64_T, 1_C_INT64_T
-    do j = 0_C_INT64_T, n-1_C_INT64_T, 1_C_INT64_T
-      c(j, i) = 0.0_C_DOUBLE
-      do k = 0_C_INT64_T, p-1_C_INT64_T, 1_C_INT64_T
-        c(j, i) = c(j, i) + a(k, i) * b(k, j)
+  !........................................
+  function matmul(a, b, c) result(Out_0001)
+
+    implicit none
+
+    integer(i64) :: Out_0001
+    real(f64), intent(in) :: a(0:,0:)
+    real(f64), intent(in) :: b(0:,0:)
+    real(f64), intent(inout) :: c(0:,0:)
+    integer(i64) :: m
+    integer(i64) :: p
+    integer(i64) :: q
+    integer(i64) :: n
+    integer(i64) :: r
+    integer(i64) :: s
+    integer(i64) :: i
+    integer(i64) :: j
+    integer(i64) :: k
+
+    m = size(a, 2_i64, i64)
+    p = size(a, 1_i64, i64)
+    q = size(b, 1_i64, i64)
+    n = size(b, 2_i64, i64)
+    r = size(c, 2_i64, i64)
+    s = size(c, 1_i64, i64)
+    if (p /= q .or. m /= r .or. n /= s) then
+      Out_0001 = -1_i64
+      return
+    end if
+    !$omp parallel
+    !$omp do schedule(runtime)
+    do i = 0_i64, m - 1_i64
+      do j = 0_i64, n - 1_i64
+        c(j, i) = 0.0_f64
+        do k = 0_i64, p - 1_i64
+          c(j, i) = c(j, i) + a(k, i) * b(k, j)
+        end do
       end do
     end do
-  end do
-  !$omp end parallel
-  Out_0001 = 0_C_INT64_T
-  return
+    !$omp end do
+    !$omp end parallel
+    Out_0001 = 0_i64
+    return
 
-end function matmul
-!........................................
+  end function matmul
+  !........................................
 
 end module mod
 ```
@@ -391,7 +393,7 @@ end module mod
 In addition to the `pyccel` command, the Pyccel library provides the `epyccel` Python function, whose name stands for "embedded Pyccel": given a pure Python function `f` with type annotations, `epyccel` returns a "pyccelised" function `f_fast` that can be used in the same Python session.
 For example:
 ```python
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from mod import f
 
 f_fast = epyccel(f)
@@ -432,7 +434,7 @@ Finally we compare the timings obtained on an Intel Core 3 architecture.
 ```bash
 In [1]: from numpy.random import random
 In [2]: from mod import quicksort
-In [3]: from pyccel.epyccel import epyccel
+In [3]: from pyccel import epyccel
 
 In [4]: quicksort_fast = epyccel(quicksort)
 In [5]: x = random(100)
@@ -451,9 +453,54 @@ Out[9]: 210.99245283018868
 ```
 After subtracting the amount of time required to create an array copy from the given times, we can conclude that the pyccelised function is approximately 210 times faster than the original Python function.
 
+### Interactive Usage with `lambdify`
+
+While Pyccel is usually used to accelerate Python code, it is also possible to accelerate other expressions. The Pyccel library provides the `lambdify` Python function. This function is similar to SymPy's [`lambdify`](https://docs.sympy.org/latest/modules/utilities/lambdify.html) function, given a SymPy expression `f` and type annotations, `lambdify` returns a "pyccelised" function `f_fast` that can be used in the same Python session.
+For example:
+```python
+import numpy as np
+import sympy as sp
+from pyccel import lambdify
+
+x = sp.Symbol('x')
+expr = x**2 + x*5
+f = lambdify(expr, {x : 'float'})
+print(f(3.0))
+
+expr2 = x-x
+f2 = lambdify(expr, {x : 'float'}, result_type = 'float')
+print(f2(3.0))
+
+expr = x**2 + x*5 + 4.5
+f3 = lambdify(expr, {x : 'T'}, templates = {'T': ['float[:]', 'float[:,:]']})
+x_1d = np.ones(4)
+x_2d = np.ones((4,2))
+print(f3(x_1d))
+print(f3(x_2d))
+```
+In practice `lambdify` uses SymPy's `NumPyPrinter` to generate code which is passed to the `epyccel` function. The `epyccel` function copies the code into a temporary Python file in the `__epyccel__` directory.
+Once the file has been copied, `epyccel` calls the `pyccel` command to generate a Python C extension module that contains a single pyccelised function.
+Then finally, it imports this function and returns it to the caller.
+
+In order to make functions even faster it may be desirable to avoid unnecessary allocations inside the function. This functionality is similar to using an `out` argument in NumPy. Pyccel makes this functionality possible through the use of the `use_out` argument.
+For example:
+```python
+import numpy as np
+import sympy as sp
+from pyccel import lambdify
+
+x = sp.Symbol('x')
+expr = x**2 + x*5
+f = lambdify(expr, {x : 'float[:,:]'}, result_type = 'float[:,:]')
+x_2d = np.ones((4,2))
+y_2d = np.empty_like(x_2d)
+f(x_2d, y_2d)
+print(y_2d)
+```
+
 ## Other Features
 
-Pyccel's generated code can use parallel multi-threading through [OpenMP](https://en.wikipedia.org/wiki/OpenMP); please read [our documentation](https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md) for more details.
+Pyccel's generated code can use parallel multi-threading through [OpenMP](https://en.wikipedia.org/wiki/OpenMP); please read [our documentation](https://github.com/pyccel/pyccel/blob/devel/docs/openmp.md) for more details.
 
 We are also working on supporting [MPI](https://en.wikipedia.org/wiki/Open_MPI), [LAPACK](https://en.wikipedia.org/wiki/LAPACK)/[BLAS](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms), and [OpenACC](https://en.wikipedia.org/wiki/OpenACC).
 
@@ -468,7 +515,7 @@ This tool removes all folders whose name begins with `__pyccel__` or `__epyccel_
 
 If you face problems with Pyccel, please take the following steps:
 
-1.  Consult our documentation in the tutorial directory;
+1.  Consult our documentation in the  [`docs/`](https://github.com/pyccel/pyccel/blob/devel/docs) directory;
 2.  Send an email message to pyccel@googlegroups.com;
 3.  Open an issue on GitHub.
 

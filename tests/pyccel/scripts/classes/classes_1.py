@@ -16,6 +16,9 @@ class Point(object):
     def print_x(self : 'Point'):
         print(self._x)
 
+    def print_X(self : 'Point'):
+        print(self._X)
+
 class Line(object):
     def __init__(self : 'Line', l : Point):
         self.l = l
@@ -32,6 +35,7 @@ if __name__ == '__main__':
 
     p.translate(a)
     p.print_x()
+    p.print_X()
 
     p = Point(np.array([6.,6.,6.]))
     p.translate(a)

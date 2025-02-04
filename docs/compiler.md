@@ -3,9 +3,8 @@
 
 Pyccel provides default compiler settings for 4 different compiler families:
 -   **GNU** : `gcc` / `gfortran`
--   **intel** : `icc` / `ifort`
--   **PGI** : `pgcc` / `pgfortran`
--   **nvidia** : `nvc` / `nvfort`
+-   **Intel** : `icx` / `ifx`
+-   **NVIDIA** : `nvc` / `nvfort`
 
 **Warning** : The **GNU** compiler is currently the only compiler which is tested regularly
 

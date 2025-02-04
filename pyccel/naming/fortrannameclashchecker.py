@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Handles name clash problems in Fortran.
@@ -45,13 +45,31 @@ class FortranNameClashChecker(LanguageNameClashChecker):
             'unlock', 'test', 'abs', 'sqrt', 'sin', 'cos', 'tan',
             'asin', 'acos', 'atan', 'exp', 'log', 'int', 'nint',
             'floor', 'fraction', 'real', 'max', 'mod', 'count',
-            'pack', 'numpy_sign', 'c_associated', 'c_loc', 'c_f_pointer', 'c_ptr'])
+            'pack', 'numpy_sign', 'c_associated', 'c_loc', 'c_f_pointer',
+            'c_ptr', 'c_malloc', 'storage_size', 'c_size_t'])
 
     def has_clash(self, name, symbols):
-        """ Indicate whether the proposed name causes any clashes
+        """
+        Indicate whether the proposed name causes any clashes.
+
+        Indicate whether the proposed name causes any clashes by comparing it with the
+        reserved keywords and the symbols which are already defined in the scope. The
+        comparison is carried out without case sensitviity to match Fortran's behaviour.
+
+        Parameters
+        ----------
+        name : str
+            The proposed name.
+        symbols : set of str
+            The symbols already used in the scope.
+
+        Returns
+        -------
+        bool
+            True if the name clashes with an existing name. False otherwise.
         """
         name = name.lower()
-        return any(name == k for k in self.keywords) or \
+        return name in self.keywords or \
                any(name == s.lower() for s in symbols)
 
     def get_collisionless_name(self, name, symbols):
@@ -74,9 +92,10 @@ class FortranNameClashChecker(LanguageNameClashChecker):
         str
             A new name which is collision free.
         """
-        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
-            # Ignore magic methods
+        if name in ('__init__', '__del__'):
             return name
+        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
+            name = 'operator' + name[1:-2]
         if name[0] == '_':
             name = 'private'+name
         name = self._get_collisionless_name(name, symbols)

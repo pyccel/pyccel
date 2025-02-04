@@ -24,6 +24,9 @@ def augsub_mixed_order(a : 'float[:,:]', b : 'float[:,:](order=F)'):
 def augdiv_mixed_order(a : 'float[:,:]', b : 'float[:,:](order=F)'):
     a[:] /= b
 
+def add_mixed_order_ellipsis(a : 'float[:,:]', b : 'float[:,:](order=F)'):
+    a[...] = a + b
+
 def mul_by_vector_C(a : 'int[:,:]', b : 'int[:]'):
     a[:] *= b
 

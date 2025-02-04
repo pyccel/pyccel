@@ -13,3 +13,5 @@ method = 3
 compl = 3+5j
 
 tiny = np.int32(4)
+
+I = 4

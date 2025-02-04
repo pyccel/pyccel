@@ -1,24 +1,28 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 This module represent a call to the itertools functions for code generation.
 """
-from .builtins  import PythonLen, PythonRange
 from .core      import PyccelFunctionDef, Module
-from .internals import PyccelInternalFunction
+from .internals import Iterable
 
 __all__ = (
     'Product',
     'itertools_mod',
 )
 
-class Product(PyccelInternalFunction):
+class Product(Iterable):
     """
     Represents a call to itertools.product for code generation.
 
-    arg : list, tuple
+    Represents a call to itertools.product for code generation.
+
+    Parameters
+    ----------
+    *args : PyccelAstType
+        The arguments passed to the product function.
     """
     __slots__ = ('_elements',)
     _attribute_nodes = ('_elements',)
@@ -33,29 +37,26 @@ class Product(PyccelInternalFunction):
 
     def __init__(self, *args):
         self._elements = args
-        super().__init__(args)
+        super().__init__(len(args))
 
     @property
     def elements(self):
         """get expression's elements"""
         return self._elements
 
-    def __getitem__(self, indices):
-        return [elem[idx] for idx, elem in zip(indices, self.elements)]
-
-    def to_range(self):
-        """ Get the range iterator(s) needed to access all elements of Product
+    def get_python_iterable_item(self):
         """
-        lengths = [getattr(e, '__len__',
-                getattr(e, 'length', PythonLen(e))) for e in self.elements]
-        lengths = [l() if callable(l) else l for l in lengths]
-        return [PythonRange(l) for l in lengths]
+        Get the item of the iterable that will be saved to the loop targets.
 
-    @property
-    def n_indices(self):
-        """ Number of indices required
+        This is an element from each of the variables indexed using the
+        iterators previously provided via the set_loop_counters method.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
         """
-        return len(self._elements)
+        return [elem[idx] for idx, elem in zip(self._indices, self.elements)]
 
 #==============================================================================
 itertools_mod = Module('itertools',(),

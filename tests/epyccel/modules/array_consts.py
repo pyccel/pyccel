@@ -6,7 +6,6 @@ b = np.array([1,2,3,4,5])
 c = np.zeros((2,3), dtype=np.int32)
 d = np.array([1+2j, 3+4j])
 e = np.empty((2,3,4))
-F = [False for _ in range(5)]
 
 def update_a():
     a[:] = a+1

@@ -9,9 +9,12 @@
 import os
 import pytest
 
+from wrapper import HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS
+
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors   import Errors
+from pyccel                 import epyccel
 
 def get_files_from_folder(foldername):
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -32,8 +35,9 @@ def get_files_from_folder(foldername):
 #
 #    ast = pyccel.parse()
 #
-#    assert(errors.num_messages()!=0)
+#    assert errors.num_messages()!=0
 
+@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize("f",get_files_from_folder('semantic'))
 def test_semantic_warnings(f):
 
@@ -47,8 +51,8 @@ def test_semantic_warnings(f):
     settings = {}
     pyccel.annotate(**settings)
 
-    assert(not errors.has_errors())
-    assert(errors.has_warnings())
+    assert not errors.has_errors()
+    assert errors.has_warnings()
 
 #@pytest.mark.parametrize("f", codegen_errors_args)
 #def test_codegen_warnings(f):
@@ -66,11 +70,24 @@ def test_semantic_warnings(f):
 #    name = os.path.basename(f)
 #    name = os.path.splitext(name)[0]
 #
-#    codegen = Codegen(ast, name)
-#    code = codegen.doprint()
+#    codegen = Codegen(ast, name, 'fortran')
+#    code = codegen.printer.doprint(codegen.ast)
 #
-#    assert(errors.has_warnings())
-#    assert(not errors.has_errors())
+#    assert errors.has_warnings()
+#    assert not errors.has_errors()
+
+
+@pytest.mark.parametrize("f", [HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS])
+@pytest.mark.c
+def test_cwrapper_warnings(f):
+    with pytest.warns(UserWarning):
+        epyccel(f, language='c')
+
+@pytest.mark.parametrize("f", [HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS])
+@pytest.mark.fortran
+def test_bind_c_warnings(f):
+    with pytest.warns(UserWarning):
+        epyccel(f, language='fortran')
 
 ######################
 if __name__ == '__main__':

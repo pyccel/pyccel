@@ -10,6 +10,8 @@ def should_ignore(name):
     '''
     Determine if an object should be ignored from numpydoc validation.
 
+    Determine if an object should be ignored from numpydoc validation.
+
     Parameters
     ----------
     name : str
@@ -33,8 +35,8 @@ def should_ignore(name):
     #ignore _print_ methods in the codegen.printing module
     if 'Printer._print_' in name:
         return True
-    #ignore _wrap_ methods in the codegen.wrapper module
-    if 'Wrapper._wrap_' in name:
+    #ignore _extract_X_FunctionDefResult methods in the codegen.wrapping module
+    if 'Wrapper._extract_' in name and name.endswith('_FunctionDefResult'):
         return True
     return False
 
@@ -81,16 +83,16 @@ if __name__ == '__main__':
                 # inside a function or a class is updated to include
                 # the name of the parent object.
                 if isinstance(node, (FunctionDef, ClassDef)):
-                    if should_ignore('.'.join([prefix, node.name])):
+                    if should_ignore(f'{prefix}.{node.name}'):
                         continue
                     if any((node.lineno <= x <= node.end_lineno
                             for x in line_nos)):
-                        objects.append('.'.join([prefix, node.name]))
+                        objects.append(f'{prefix}.{node.name}')
                     if isinstance(node, ClassDef):
                         obj_pref = node.name
                         for child in node.body:
                             if isinstance(child, (FunctionDef, ClassDef)):
-                                child.name = '.'.join([obj_pref, child.name])
+                                child.name = f'{obj_pref}.{child.name}'
                                 to_visit.append(child)
 
             for obj in objects:

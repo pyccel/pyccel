@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import array, zeros
+from numpy import array, zeros, ones
 
 def create_array():
     a = array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])# pylint: disable=unused-variable
@@ -45,6 +45,9 @@ def arrays_in_multi_returns():
     b = zeros(4)
     return a, b, 4
 
+def type_annotated_numpy_array():
+    a : 'float[:]' = ones(5) # pylint: disable=unused-variable
+
 # testing garbage collecting in a Function
 
 if __name__ == '__main__':
@@ -56,6 +59,7 @@ if __name__ == '__main__':
     conditional_alloc(True,True)
     conditional_alloc(True,False)
     conditional_alloc(False,False)
+    type_annotated_numpy_array()
 
     # testing garbage collecting in a Program
 
@@ -64,5 +68,5 @@ if __name__ == '__main__':
     a = array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
     b = a
     c = a[1:]
-    b = c[1:]
+    b = c[:,1:]
     b = c

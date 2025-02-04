@@ -1,11 +1,37 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """ Module containing helper functions for managing strings
 """
+import string
+import random
 
+__all__ = ('random_string', 'create_incremented_string')
+#==============================================================================
+random_selector = random.SystemRandom()
+
+def random_string( n ):
+    """
+    Generate a random string.
+
+    Generate a random string with length n made of lower case characters and digits.
+
+    Parameters
+    ----------
+    n : int
+      The length of the random string.
+
+    Returns
+    -------
+    str
+       The random string.
+    """
+    chars    = string.ascii_lowercase + string.digits
+    return ''.join( random_selector.choice( chars ) for _ in range(n) )
+
+#==============================================================================
 def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1, name_clash_checker = None):
     """
     Create a new unique string by incrementing a prefix.

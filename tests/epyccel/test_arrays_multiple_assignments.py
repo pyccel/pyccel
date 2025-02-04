@@ -4,7 +4,7 @@ import sys
 import warnings
 import pytest
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from pyccel.decorators import stack_array
 from pyccel.errors.errors import Errors, PyccelSemanticError
 from pyccel.errors.messages import (ARRAY_REALLOCATION,
@@ -60,7 +60,8 @@ def test_reallocation_heap(language):
     # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
-    assert warning_info.message == ARRAY_REALLOCATION
+    expected_msg = ARRAY_REALLOCATION.split()[1:]
+    assert warning_info.message.split()[-len(expected_msg):] == expected_msg
 
 #==============================================================================
 def test_reallocation_stack(language):
@@ -94,7 +95,7 @@ def test_creation_in_loop_heap(language):
     def f():
         import numpy as np
         for i in range(3):
-            x = np.ones(i, dtype=int)
+            x = np.ones(i+1, dtype=int)
         return x.sum()
 
     # Initialize singleton that stores Pyccel errors
@@ -122,7 +123,7 @@ def test_creation_in_loop_stack(language):
     def f():
         import numpy as np
         for i in range(3):
-            x = np.ones(i, dtype=int)
+            x = np.ones(i+1, dtype=int)
         return x.sum()
 
     # Initialize singleton that stores Pyccel errors
@@ -160,6 +161,26 @@ def test_creation_in_if_heap(language):
         return x.sum()
 
     # TODO: check if we get the correct Pyccel warning
+    g = epyccel(f, language=language)
+
+    # Check result of pyccelized function
+    import numpy as np
+    c = np.random.random()
+    assert f(c) == g(c)
+
+#==============================================================================
+def test_creation_in_if_heap_shape(language):
+
+    def f(c : 'float'):
+        import numpy as np
+        if c > 0.5:
+            x = np.ones(3, dtype=int)
+        else:
+            x = np.ones(7, dtype=int)
+
+        y = x[1:-1]
+        return y.sum()
+
     g = epyccel(f, language=language)
 
     # Check result of pyccelized function
@@ -249,7 +270,8 @@ def test_Assign_after_If():
     # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
-    assert warning_info.message == ARRAY_REALLOCATION
+    expected_msg = ARRAY_REALLOCATION.split()[1:]
+    assert warning_info.message.split()[-len(expected_msg):] == expected_msg
 
     assert f(True) == f2(True)
     assert f(False) == f2(False)
@@ -274,11 +296,7 @@ def test_stack_array_if(language):
 
 #==============================================================================
 
-@pytest.mark.parametrize('lang',[
-    pytest.param('fortran', marks = pytest.mark.fortran),
-    pytest.param('python', marks = pytest.mark.python),
-    pytest.param('c'      , marks = pytest.mark.c)])
-def test_Assign_between_nested_If(lang):
+def test_Assign_between_nested_If(language):
 
     def f(b1 : bool, b2 : bool):
         import numpy as np
@@ -297,7 +315,7 @@ def test_Assign_between_nested_If(lang):
     errors = Errors()
 
     # epyccel should raise an Exception
-    f2 = epyccel(f, language=lang)
+    f2 = epyccel(f, language=language)
 
     # Check that we don't get a Pyccel warning
     assert not errors.has_warnings()

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 from pyccel.utilities.stage import PyccelStage
@@ -53,9 +53,12 @@ class FunctionalFor(TypedAstNode):
                   Dummy_0 += 1
               ```
               Index is `Dummy_0`.
+    target_type : PyccelSymbol, optional
+        The type of the result of the functional for. This is useful at
+        the syntactic stage to pass along the final type of the lhs (list/set/array/etc).
     """
     __slots__ = ('_loops','_expr', '_lhs', '_indices','_index',
-            '_dtype','_precision','_rank','_shape','_order','_class_type')
+            '_shape','_class_type', '_target_type')
     _attribute_nodes = ('_loops','_expr', '_lhs', '_indices','_index')
 
     def __init__(
@@ -64,21 +67,19 @@ class FunctionalFor(TypedAstNode):
         expr=None,
         lhs=None,
         indices=None,
-        index=None
+        index=None,
+        target_type=None
         ):
         self._loops   = loops
         self._expr    = expr
         self._lhs     = lhs
         self._indices = indices
         self._index   = index
+        self._target_type = target_type
         super().__init__()
 
         if pyccel_stage != 'syntactic':
-            self._dtype      = lhs.dtype
-            self._precision  = lhs.precision
-            self._rank       = lhs.rank
             self._shape      = lhs.shape
-            self._order      = lhs.order
             self._class_type = lhs.class_type
 
     @property
@@ -100,6 +101,16 @@ class FunctionalFor(TypedAstNode):
     @property
     def index(self):
         return self._index
+
+    @property
+    def target_type(self):
+        """
+        The type of the result of the functional for.
+
+        The type of the result of the functional for. This is useful at
+        the syntactic stage to pass along the final type of the lhs (list/set/array/etc).
+        """
+        return self._target_type
 
 #==============================================================================
 class GeneratorComprehension(FunctionalFor):

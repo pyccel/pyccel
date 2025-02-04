@@ -34,18 +34,20 @@ jobs:
     name: Documentation Format
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.base }}
           path: base
-      - uses: actions/checkout@v3
+          submodules: true
+      - uses: actions/checkout@v4
         with:
           path: compare
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
           fetch-depth: 0
+          submodules: true
       - name: Set up Python ${{ inputs.python_version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python_version }}
       - name: "Setup check run"
@@ -68,14 +70,14 @@ jobs:
         run: |
           cd compare
           pip3 install .[test]
+          pip3 install hatchling
           cd ..
         shell: bash
       - name: Check doc coverage
         id: doc_coverage
         run: |
-          echo "${{ github.event.pull_request.base.sha }}"
-          docstr-coverage --skip-magic --skip-init --fail-under=0 --docstr-ignore-file=base/.docstr_coverage base/pyccel base/ci_tools 2>&1 | tee base_cov
-          docstr-coverage --skip-magic --skip-init --fail-under=0 --docstr-ignore-file=compare/.docstr_coverage compare/pyccel compare/ci_tools 2>&1 | tee compare_cov
+          docstr-coverage --config=base/.docstr.yaml base/pyccel base/ci_tools 2>&1 | tee base_cov
+          docstr-coverage --config=compare/.docstr.yaml compare/pyccel compare/ci_tools 2>&1 | tee compare_cov
           export PYTHONPATH=compare
           python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov $GITHUB_STEP_SUMMARY
         shell: bash
@@ -89,11 +91,13 @@ jobs:
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
           touch report.txt
+          export PYTHONPATH=ci_tools
           while read line; do
             echo "python -m numpydoc --validate $line"
             python -m numpydoc --validate $line 2>&1 | tee -a report.txt || true 
           done < objects.txt
           cd ..
+          export PYTHONPATH=compare
           python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"

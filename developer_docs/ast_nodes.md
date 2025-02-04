@@ -4,13 +4,12 @@ While translating from Python to the target language, Pyccel needs to store all 
 
 All objects in the Abstract Syntax Tree inherit from the class `pyccel.ast.basic.PyccelAstNode`. This class serves 2 roles. Firstly it provides a super class from which all our AST nodes can inherit which makes them easy to identify. Secondly it provides functionalities common to all AST nodes. For example it provides the `ast` property which allows the original code parsed by Python's `ast` module to be stored in the class. This object is important in order to report neat errors for code that cannot be handled by Pyccel. It also contains functions involving the relations between the nodes. These are explained in the section [Constructing a tree](#Constructing-a-tree).
 
-The inheritance tree for a Python AST node is often more complicated than directly inheriting from `PyccelAstNode`. In particular there are two classes which you will see in the inheritance throughout the code. These classes are `TypedAstNode` and `PyccelInternalFunction`. These classes are explained in more detail below.
+The inheritance tree for a Python AST node is often more complicated than directly inheriting from `PyccelAstNode`. In particular there are two classes which you will see in the inheritance throughout the code. These classes are `TypedAstNode` and `PyccelFunction`. These classes are explained in more detail below.
 
 ## Typed AST Node
 
 The class `TypedAstNode` is a super class. This class should never be used directly but provides functionalities which are common to certain AST objects. These AST nodes are those which describe objects which take up space in memory in a running program. For example a Variable requires space in memory, as does the result of a function call or an arithmetic operation, however a loop or a module does not require runtime memory to store the concept. Objects which require memory must therefore contain all information necessary to declare them in the generated code. A `TypedAstNode` therefore exposes the following properties:
 -   `dtype`
--   `precision`
 -   `rank`
 -   `shape`
 -   `order`
@@ -18,25 +17,26 @@ The class `TypedAstNode` is a super class. This class should never be used direc
 
 The contents of these types are explained in more detail below.
 
-When examining the class `TypedAstNode` you may notice that there are two methods for getting each of these properties. Each time, one is a standard method, while the other is a static class method. In general in the code you will always use the normal method. This will return the instance attribute if it is available, otherwise it will return the static class attribute. The static class method is used for type deductions when [parsing type annotations](./type_inference.md). In type annotations we do not generally have an instance of a class, however we can get access to the class itself. For instance let us consider the following type annotation:
+The class `TypedAstNode` also contains static class methods. The static class method is used for type deductions when [parsing type annotations](./type_inference.md). In type annotations we do not generally have an instance of a class, however we can get access to the class itself. The available class methods are:
+-   `static_type`
+-   `static_rank`
+-   `static_order`
+
+For instance let us consider the following type annotation:
 ```python
 a : int
 ```
-When we visit `int` in the [semantic stage](./semantic_stage.md) the `SemanticParser` will return the class `PythonInt`. This is usually used as a function (e.g to cast a variable), however here we use it to deduce the type. Following the [development conventions](./development_conventions.md#Class-variables-vs.-Instance-variables) any attributes which will remain constant over all instances of a class should be stored in static class attributes. This means that they can be accessed via these static methods. Returning to our example, a call to the function `int` always returns a scalar object with an integer type and default precision. This means that all the properties of a `TypedAstNode` can be defined without having an instance of this class. These properties cannot be defined statically for all nodes (e.g. it would not be possible for `PyccelAdd`), however generally they can be defined for the nodes which can be used in type annotations.
+When we visit `int` in the [semantic stage](./semantic_stage.md) the `SemanticParser` will return the class `PythonInt`. This is usually used as a function (e.g to cast a variable), however here we use it to deduce the type. Following the [development conventions](./development_conventions.md#Class-variables-vs.-Instance-variables) any attributes which will remain constant over all instances of a class should be stored in static class attributes. This means that they can be accessed via these static methods. Returning to our example, a call to the function `int` always returns a scalar object with the built-in `float` type. This means that all the properties of a `TypedAstNode` can be defined without having an instance of this class. These properties cannot be defined statically for all nodes (e.g. it would not be possible for `PyccelAdd`), however generally they can be defined for the nodes which can be used in type annotations.
 
 ### Class type
 
-The class type is the type reported by Python when you call the built-in function `type`. The object stored in this attribute should inherit from `pyccel.ast.datatypes.DataType`.
+The `class_type` property represents the type reported by Python when you call the built-in function `type`. This property should return an object which inherits from `pyccel.ast.datatypes.PyccelType`.
 
 ### Datatype
 
-Some types in Python are containers which contain elements of other types. This is the case for NumPy arrays, tuples, lists, etc. In this case, the class type does not provide enough information to write the declaration in the low-level target language. Additionally a data type is required. The data type is the type of an element of the container, as for the class type, the object stored in this attribute should inherit from `pyccel.ast.datatypes.DataType`. If the class type is not a container then the class type and the data type will be the same.
+Some types in Python are containers which contain elements of other types. This is the case for NumPy arrays, tuples, lists, etc. In this case, the class type does not provide enough information to write the declaration in the low-level target language. Additionally a data type is required. The data type is the type of an element of the container and can be accessed via the `dtype` property. As for the class type the object returned by this property should inherit from `pyccel.ast.datatypes.PyccelType`. If the class type is not a container then the class type and the data type will be the same, otherwise the class type will inherit from `pyccel.ast.datatypes.ContainerType` and the data type will inherit from `pyccel.ast.datatypes.FixedSizeType`.
 
-### Precision
-
-The precision indicates the precision of the datatype. This number is related to the number of bytes that the datatype takes up in memory (e.g. `float64` has precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as it is comprised of two `float64` objects). The precision is equivalent to the `kind` parameter in Fortran.
-
-In Python the precision of some types depends on the system where the code is run. This is notably the case for integers which have a precision of 4 on Windows but a precision of 8 on Linux and MacOS. This is the case for native types. In order to differentiate these types from the fixed-precision objects provided by NumPy, the precision -1 is used to denote the default precision.
+A `FixedSizeType` represents a built-in scalar datatype which can be represented in memory. E.g. `int32`, `int64`. It is characterised by a primitive type which describes the category of datatype (integer, floating point, etc) and a precision. The precision is related to the number of bytes that the datatype takes up in memory (e.g. `float64` has precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as it is comprised of two `float64` objects). The precision is equivalent to the `kind` parameter in Fortran.
 
 ### Rank
 
@@ -50,13 +50,17 @@ The shape of an array indicates the number of elements in each dimension of the 
 
 The order indicates how an array is laid out in memory. This can either be row-major (C-style) ordering or column-major (Fortran-style) ordering. For more information about this, please see the [dedicated documentation](./order_docs.md).
 
+### Static Type
+
+The static type is the class type that would be assigned to an object created using an instance of this class as a type annotation.
+
 ## Pyccel Internal Function
 
-The class `pyccel.ast.internals.PyccelInternalFunction` is a super class. This class should never be used directly but provides functionalities which are common to certain AST objects. These AST nodes are those which describe functions which are supported by Pyccel. For example it is used for functions from the `math` library, the `cmath` library, the `numpy` library, etc. `PyccelInternalFunction` inherits from `TypedAstNode`. The type information for the sub-class describes the type of the result of the function.
+The class `pyccel.ast.internals.PyccelFunction` is a super class. This class should never be used directly but provides functionalities which are common to certain AST objects. These AST nodes are those which describe functions which are supported by Pyccel. For example it is used for functions from the `math` library, the `cmath` library, the `numpy` library, etc. `PyccelFunction` inherits from `TypedAstNode`. The type information for the sub-class describes the type of the result of the function.
 
-Instances of the subclasses of `PyccelInternalFunction` are created from a `FunctionCall` object resulting from the syntactic stage. The `PyccelInternalFunction` objects are initialised by passing the contents of the `FunctionCallArgument`s used in the `FunctionCall` to the constructor. The actual arguments may be either positional or keyword arguments, but the constructor of `PyccelInternalFunction` only accepts positional arguments through the variadic `*args`. It is therefore important that any subclasses of `PyccelInternalFunction` provide their own `__init__` with the correct function signature. I.e. a constructor whose positional and keyword arguments match the names of the positional and keyword arguments of the Python function being described.
+Instances of the subclasses of `PyccelFunction` are created from a `FunctionCall` object resulting from the syntactic stage. The `PyccelFunction` objects are initialised by passing the contents of the `FunctionCallArgument`s used in the `FunctionCall` to the constructor. The actual arguments may be either positional or keyword arguments, but the constructor of `PyccelFunction` only accepts positional arguments through the variadic `*args`. It is therefore important that any subclasses of `PyccelFunction` provide their own `__init__` with the correct function signature. I.e. a constructor whose positional and keyword arguments match the names of the positional and keyword arguments of the Python function being described.
 
-The constructor of `PyccelInternalFunction` takes a tuple of arguments passed to the function. The arguments can be passed through in the constructor of the sub-class to let `PyccelInternalFunction` take care of saving the arguments, or the arguments can be saved with more useful names inside the class. However care must be taken to ensure that the argument is not saved inside the class twice. Additionally if the arguments are saved inside the sub-class then the `_attribute_nodes` static class attribute must be correctly set to ensure the tree is correctly constructed (see below). As `PyccelInternalFunction` implements `_attribute_nodes` these classes are some of the only ones which will not raise an error during the pull request tests if this information is missing.
+The constructor of `PyccelFunction` takes a tuple of arguments passed to the function. The arguments can be passed through in the constructor of the sub-class to let `PyccelFunction` take care of saving the arguments, or the arguments can be saved with more useful names inside the class. However care must be taken to ensure that the argument is not saved inside the class twice. Additionally if the arguments are saved inside the sub-class then the `_attribute_nodes` static class attribute must be correctly set to ensure the tree is correctly constructed (see below). As `PyccelFunction` implements `_attribute_nodes` these classes are some of the only ones which will not raise an error during the pull request tests if this information is missing.
 
 ## Constructing a tree
 
