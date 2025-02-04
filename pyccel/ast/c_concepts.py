@@ -17,8 +17,8 @@ from .literals  import LiteralString
 __all__ = ('CMacro',
            'CNativeInt',
            'CStackArray',
-           'CStringExpression',
            'CStrStr',
+           'CStringExpression',
            'ObjectAddress',
            'PointerCast')
 
