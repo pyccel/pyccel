@@ -13,6 +13,7 @@ from pyccel.ast.core       import FunctionAddress, SeparatorComment
 from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType, Py_ssize_t
+from pyccel.ast.cwrapper   import PyModule_AddObject, PyArgKeywords
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
 from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
@@ -584,3 +585,9 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Py_ssize_t_Cast(self, expr):
         var = self._print(expr.args[0])
         return f'(Py_ssize_t){var}'
+
+    def _print_LiteralString(self, expr):
+        code = super()._print_LiteralString(expr)
+        if expr.get_direct_user_nodes(lambda u: isinstance(u, (PyModule_AddObject, PyArgKeywords))):
+            code = code[9:-1]
+        return code

@@ -1216,7 +1216,10 @@ class CCodePrinter(CodePrinter):
                                .replace('\v', '\\v')\
                                .replace('"', '\\"')\
                                .replace("'", "\\'")
-        return '"{}"'.format(format_str)
+        code = f'"{format_str}"'
+        if not expr.get_direct_user_nodes(lambda u: isinstance(u, PythonPrint)):
+            code = f'cstr_lit({code})'
+        return code
 
     def get_print_format_and_arg(self, var):
         """
@@ -2396,8 +2399,6 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
             return self.init_stc_container(rhs, expr.lhs)
         rhs_code = self._print(rhs)
-        if isinstance(rhs, LiteralString):
-            rhs_code = f'cstr_lit({rhs_code})'
         return f'{lhs_code} = {rhs_code};\n'
 
     def _print_AliasAssign(self, expr):
