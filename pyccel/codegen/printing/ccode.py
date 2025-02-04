@@ -32,7 +32,7 @@ from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName
 
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
-from pyccel.ast.c_concepts import CStackArray, CStrData
+from pyccel.ast.c_concepts import CStackArray, CStrStr
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType
@@ -379,7 +379,7 @@ class CCodePrinter(CodePrinter):
         bool
             True if a C pointer, False otherwise.
         """
-        if isinstance(a, (Nil, ObjectAddress, PointerCast, CStrData)):
+        if isinstance(a, (Nil, ObjectAddress, PointerCast, CStrStr)):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
@@ -1254,7 +1254,7 @@ class CCodePrinter(CodePrinter):
                     errors.report(f"Printing {var.dtype} type is not supported currently", severity='fatal')
                 arg = self._print(var)
         elif isinstance(var.dtype, StringType):
-            arg = self._print(CStrData(var))
+            arg = self._print(CStrStr(var))
             arg_format = '%s'
         else:
             try:
@@ -1267,7 +1267,7 @@ class CCodePrinter(CodePrinter):
         return arg_format, arg
 
     def _print_CStringExpression(self, expr):
-        return "".join(self._print(CStrData(e)) for e in expr.get_flat_expression_list())
+        return "".join(self._print(CStrStr(e)) for e in expr.get_flat_expression_list())
 
     def _print_CMacro(self, expr):
         return str(expr.macro)
@@ -2889,13 +2889,13 @@ class CCodePrinter(CodePrinter):
 
         return f"(*{container_type}_at({dict_obj_code}, {key}))"
 
-    def _print_CStrData(self, expr):
+    def _print_CStrStr(self, expr):
         arg = expr.args[0]
         code = self._print(arg)
         if code.startswith('cstr_lit('):
             return code[9:-1]
         else:
-            return f'cstr_data({code})'
+            return f'cstr_str({code})'
 
     #=================== MACROS ==================
 

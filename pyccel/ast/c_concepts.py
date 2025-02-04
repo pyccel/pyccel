@@ -340,7 +340,7 @@ class CMacro(PyccelAstNode):
 #-------------------------------------------------------------------
 #                         String functions
 #-------------------------------------------------------------------
-class CStrData(PyccelFunction):
+class CStrStr(PyccelFunction):
     __slots__ = ()
     _class_type = CharType()
 
