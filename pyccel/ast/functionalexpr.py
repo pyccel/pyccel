@@ -155,7 +155,7 @@ class FunctionalFor(TypedAstNode):
 
         Returns
         -------
-        list of If or None, or None
+        list[If|None], or None
             The list of filter conditions for each for-loop in 
             the comprehension, or `None` if not specified.
         """
