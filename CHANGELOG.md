@@ -87,8 +87,6 @@ All notable changes to this project will be documented in this file.
 -   #1913 : Fix function calls to renamed functions.
 -   #1930 : Preserve ordering of import targets.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
--   #1924 : Fix internal error arising in Duplicate or list comprehensions.
--   #1970 : Fix missing `TypeError` for wrong type passed as optional argument.
 -   #1297 : Fix iteration over an `enumerate`, `map` or `zip` in a list comprehension.
 -   #1979 : Fix memory leaks in C due to homogeneous container redefinition.
 -   #1972 : Simplified `printf` statement for Literal String.
