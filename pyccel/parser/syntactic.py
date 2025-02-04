@@ -11,7 +11,6 @@ import ast
 import warnings
 
 from textx.exceptions import TextXSyntaxError
-from functools import reduce
 
 #==============================================================================
 
