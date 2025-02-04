@@ -585,9 +585,3 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Py_ssize_t_Cast(self, expr):
         var = self._print(expr.args[0])
         return f'(Py_ssize_t){var}'
-
-    def _print_LiteralString(self, expr):
-        code = super()._print_LiteralString(expr)
-        if expr.get_direct_user_nodes(lambda u: isinstance(u, (PyModule_AddObject, PyArgKeywords))):
-            code = code[9:-1]
-        return code
