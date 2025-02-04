@@ -11,6 +11,7 @@ import ast
 import warnings
 
 from textx.exceptions import TextXSyntaxError
+from functools import reduce
 
 #==============================================================================
 
@@ -1156,8 +1157,7 @@ class SyntaxParser(BasicParser):
         iterable = self._visit(stmt.iter)
 
         if stmt.ifs:
-            from functools import reduce
-            cond = reduce(PyccelAnd, [self._visit(if_cond)
+            cond = PyccelAnd(*[self._visit(if_cond)
                                       for if_cond in stmt.ifs])
             condition = If(IfSection(cond, CodeBlock([])))
 
@@ -1204,7 +1204,6 @@ class SyntaxParser(BasicParser):
 
         result = self._visit(stmt.elt)
         output_type = None
-
         comprehensions = list(self._visit(stmt.generators))
         generators, conditions = zip(*comprehensions)
         generators, conditions = map(list, [generators, conditions])
@@ -1277,12 +1276,13 @@ class SyntaxParser(BasicParser):
             if condition:
                 loop.insert2body(condition)
 
-        if generators[-1].body.body:
-            generators[-1].body.body[0].blocks[0].body.insert2body(body)
+        if generators[-1].body.body: # this is an If node
+            if_node = generators[-1].body.body[0]
+            if_node.blocks[0].body.insert2body(body)
         else:
             generators[-1].insert2body(body)
 
-        while(len(generators)) > 1:
+        while len(generators) > 1:
             indices.append(generators[-1].target)
             outter_loop = generators.pop()
             inserted_into = generators[-1]
