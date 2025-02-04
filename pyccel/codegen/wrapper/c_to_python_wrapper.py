@@ -2969,7 +2969,7 @@ class CToPythonWrapper(Wrapper):
         else:
             c_res = Variable(StringType(), self.scope.get_new_name(name), memory_handling='heap')
             self.scope.insert_variable(c_res)
-            char_data = CStrStr(ObjectAddress(c_res))
+            char_data = CStrStr(c_res)
 
         body = [AliasAssign(py_res, PyBuildValueNode([char_data]))]
         if is_bind_c:
