@@ -343,6 +343,7 @@ class CMacro(PyccelAstNode):
 class CStrStr(PyccelFunction):
     __slots__ = ()
     _class_type = CharType()
+    _shape = (None,)
 
     def __new__(cls, arg):
         if isinstance(arg, CMacro):

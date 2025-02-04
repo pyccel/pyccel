@@ -1246,7 +1246,9 @@ class CCodePrinter(CodePrinter):
                 float_format, imag_part = self.get_print_format_and_arg(NumpyImag(var))
                 return f'({float_format} + {float_format}j)', f'{real_part}, {imag_part}'
             elif isinstance(primitive_type, PrimitiveBooleanType):
-                return self.get_print_format_and_arg(IfTernaryOperator(var, LiteralString("True"), LiteralString("False")))
+                return self.get_print_format_and_arg(IfTernaryOperator(var,
+                                CStrStr(LiteralString("True")),
+                                CStrStr(LiteralString("False"))))
             else:
                 try:
                     arg_format = self.type_to_format[(primitive_type, var.dtype.precision)]
@@ -1255,6 +1257,9 @@ class CCodePrinter(CodePrinter):
                 arg = self._print(var)
         elif isinstance(var.dtype, StringType):
             arg = self._print(CStrStr(var))
+            arg_format = '%s'
+        elif isinstance(var.dtype, CharType):
+            arg = self._print(var)
             arg_format = '%s'
         else:
             try:
@@ -2891,9 +2896,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_CStrStr(self, expr):
         arg = expr.args[0]
-        code = self._print(arg)
-        if code.startswith('cstr_lit('):
-            return code[9:-1]
+        code = self._print(ObjectAddress(arg))
+        if code.startswith('&cstr_lit('):
+            return code[10:-1]
         else:
             return f'cstr_str({code})'
 

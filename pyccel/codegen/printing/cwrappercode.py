@@ -89,7 +89,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if isinstance(a.class_type, (WrapperCustomDataType, BindCPointer, CStackArray)):
             return True
-        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create, LiteralString)):
+        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create)):
             return True
         else:
             return CCodePrinter.is_c_pointer(self,a)
