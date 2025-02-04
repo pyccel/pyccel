@@ -341,6 +341,18 @@ class CMacro(PyccelAstNode):
 #                         String functions
 #-------------------------------------------------------------------
 class CStrStr(PyccelFunction):
+    """
+    A class which extracts a const char* from a literal string.
+
+    A class which extracts a const char* from a literal string. This
+    is useful for calling C functions which were not designed for
+    STC.
+
+    Parameters
+    ----------
+    arg : TypedAstNode | CMacro
+        The object which should be passed as a const char*.
+    """
     __slots__ = ()
     _class_type = CharType()
     _shape = (None,)
