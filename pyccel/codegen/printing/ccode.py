@@ -1216,10 +1216,7 @@ class CCodePrinter(CodePrinter):
                                .replace('\v', '\\v')\
                                .replace('"', '\\"')\
                                .replace("'", "\\'")
-        code = f'"{format_str}"'
-        if not expr.get_direct_user_nodes(lambda u: isinstance(u, PythonPrint)):
-            code = f'cstr_lit({code})'
-        return code
+        return f'cstr_lit("{format_str}")'
 
     def get_print_format_and_arg(self, var):
         """
@@ -1257,11 +1254,7 @@ class CCodePrinter(CodePrinter):
                     errors.report(f"Printing {var.dtype} type is not supported currently", severity='fatal')
                 arg = self._print(var)
         elif isinstance(var.dtype, StringType):
-            if isinstance(var, Variable):
-                var_obj = self._print(ObjectAddress(var))
-                arg = f'cstr_str({var_obj})'
-            else:
-                arg = self._print(var)
+            arg = self._print(CStrData(var))
             arg_format = '%s'
         else:
             try:
@@ -1274,7 +1267,7 @@ class CCodePrinter(CodePrinter):
         return arg_format, arg
 
     def _print_CStringExpression(self, expr):
-        return "".join(self._print(e) for e in expr.get_flat_expression_list())
+        return "".join(self._print(CStrData(e)) for e in expr.get_flat_expression_list())
 
     def _print_CMacro(self, expr):
         return str(expr.macro)
@@ -2899,7 +2892,7 @@ class CCodePrinter(CodePrinter):
     def _print_CStrData(self, expr):
         arg = expr.args[0]
         code = self._print(arg)
-        if isinstance(arg, LiteralString):
+        if code.startswith('cstr_lit('):
             return code[9:-1]
         else:
             return f'cstr_data({code})'

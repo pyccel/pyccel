@@ -344,5 +344,11 @@ class CStrData(PyccelFunction):
     __slots__ = ()
     _class_type = CharType()
 
+    def __new__(cls, arg):
+        if isinstance(arg, CMacro):
+            return arg
+        else:
+            return super().__new__(cls)
+
     def __init__(self, arg):
         super().__init__(arg)
