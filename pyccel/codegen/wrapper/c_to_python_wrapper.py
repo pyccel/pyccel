@@ -665,7 +665,7 @@ class CToPythonWrapper(Wrapper):
         list[PyccelAstNode]
             The code which adds the object to the module.
         """
-        add_expr = PyModule_AddObject(module_var, LiteralString(name), obj)
+        add_expr = PyModule_AddObject(module_var, CStrData(LiteralString(name), obj))
         if_expr = If(IfSection(PyccelLt(add_expr, LiteralInteger(0)),
                         [Py_DECREF(i) for i in initialised] +
                         [Return([self._error_exit_code])]))
@@ -821,11 +821,11 @@ class CToPythonWrapper(Wrapper):
         current_path = func_scope.get_temporary_variable(PyccelPyObject(), 'current_path', memory_handling='alias')
         stash_path = func_scope.get_temporary_variable(PyccelPyObject(), 'stash_path', memory_handling='alias')
 
-        body = [AliasAssign(current_path, PySys_GetObject(LiteralString("path"))),
+        body = [AliasAssign(current_path, PySys_GetObject(CStrData(LiteralString("path")))),
                 AliasAssign(stash_path, PyList_GetItem(current_path, LiteralInteger(0, dtype=CNativeInt()))),
                 Py_INCREF(stash_path),
                 If(IfSection(PyccelEq(PyList_SetItem(current_path, LiteralInteger(0, dtype=CNativeInt()),
-                                                PyUnicode_FromString(LiteralString(self._file_location))),
+                                                PyUnicode_FromString(CStrData(LiteralString(self._file_location)))),
                                       PyccelUnarySub(LiteralInteger(1))),
                              [Return([self._error_exit_code])])),
                 AliasAssign(API_var, PyCapsule_Import(self.scope.get_python_name(mod_name))),
@@ -1586,7 +1586,7 @@ class CToPythonWrapper(Wrapper):
             docstring = LiteralString(
                             '\n'.join(original_func.docstring.comments)
                             if original_func.docstring else f"The attribute {python_name}")
-            return PyGetSetDefElement(python_name, function, None, docstring)
+            return PyGetSetDefElement(python_name, function, None, CStrData(docstring))
         else:
             return function
 
