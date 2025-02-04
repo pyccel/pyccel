@@ -11,7 +11,6 @@ All notable changes to this project will be documented in this file.
 -   #1700 : Add Python support for list method `sort()`.
 -   #1696 : Add Python support for list method `copy()`.
 -   #1693 : Add Python support for list method `remove()`.
--   #1893 : Add Python support for set initialisation with `set()`.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
 -   #1881 : Add Python support for dict method `copy()`.
@@ -36,6 +35,7 @@ All notable changes to this project will be documented in this file.
 -   #1663 : Add C support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
+-   #1893 : Add support for set initialisation with `set()`.
 -   #1877 : Add C and Fortran Support for set method `pop()`.
 -   #1917 : Add C and Fortran support for set method `add()`.
 -   #1918 : Add support for set method `clear()`.
@@ -68,6 +68,7 @@ All notable changes to this project will be documented in this file.
 -   #2099 : Fix translation of modules containing `__all__`.
 -   #983 : Add support for built-in function `round`.
 -   Add support for `type` as a type annotation.
+-   #2182 : Add support for `isinstance`.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
@@ -110,6 +111,7 @@ All notable changes to this project will be documented in this file.
 -   #2001 : Ensure all memory is correctly deallocated in the Python interface in a way that is compatible with all compilers.
 -   #2153 : Fix missing line information when an unknown class method is called.
 -   #2149 : Fix multi-line expressions in `if` conditions.
+-   #2181 : Allow saving an array result of a function to a slice but raise a warning about suboptimal performance.
 -   #2190 : Fix missing error for list pointer assignment.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
 
@@ -122,6 +124,7 @@ All notable changes to this project will be documented in this file.
 -   #1964 : Improve the error message when the wrong type is passed as a NumPy array argument.
 -   #1941 : Rename "target" in `AsName` to `local_alias` to better illustrate its use in the local context.
 -   #1961 : Use STC's `cspan` to describe `np.ndarray` in C. This results in a large speed-up for pathological cases.
+-   #2187 : Removed use of pickle.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.

@@ -17,9 +17,9 @@ default_python_versions = {
         'intel': '3.10',
         'linux': '3.8',
         'macosx': '3.12',
-        'pickle_wheel': '3.8',
-        'pickle': '3.8',
-        'editable_pickle': '3.8',
+        'wheel': '3.8',
+        'installation': '3.8',
+        'editable_installation': '3.8',
         'pyccel_lint': '3.8',
         'pylint': '3.8',
         'spelling': '3.8',
@@ -34,9 +34,9 @@ test_names = {
         'intel': "Unit tests on Linux with Intel compiler",
         'linux': "Unit tests on Linux",
         'macosx': "Unit tests on MacOSX",
-        'pickle_wheel': "Test pickling during wheel installation",
-        'pickle': "Test pickling during source installation",
-        'editable_pickle': "Test pickling during editable source installation",
+        'wheel': "Test file generation during wheel installation",
+        'installation': "Test file generation during source installation",
+        'editable_installation': "Test file generation during editable source installation",
         'pyccel_lint': "Pyccel best practices",
         'pylint': "Python linting",
         'spelling': "Spelling verification",
@@ -396,8 +396,8 @@ class Bot:
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
             inputs['pr_id'] = str(self._pr_id)
-        elif test == "editable_pickle":
-            test = "pickle"
+        elif test == "editable_installation":
+            test = "installation"
             inputs["editable_string"] = "-e"
         print("Post workflow")
         self._GAI.run_workflow(f'{test}.yml', inputs)
@@ -441,7 +441,7 @@ class Bot:
                                                     for f in diff)
         elif key in ('spelling',):
             has_relevant_change = lambda diff: any(f.endswith('.md') or f == '.dict_custom.txt' for f in diff) #pylint: disable=unnecessary-lambda-assignment
-        elif key in ('pickle', 'pickle_wheel', 'editable_pickle'):
+        elif key in ('installation', 'wheel', 'editable_installation'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') and f.endswith('.py') #pylint: disable=unnecessary-lambda-assignment
                                                     and f != 'pyccel/version.py') or f == 'pyproject.toml'
                                                     or f.startswith('install_scripts/')

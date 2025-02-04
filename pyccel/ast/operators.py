@@ -19,9 +19,8 @@ from .datatypes             import PythonNativeBool, PythonNativeFloat
 from .datatypes             import StringType, FixedSizeNumericType, ContainerType
 from .datatypes             import PrimitiveBooleanType, PrimitiveIntegerType
 
-
 from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex
-from .literals              import Nil, NilArgument
+from .literals              import Nil, NilArgument, LiteralTrue, LiteralFalse
 from .literals              import convert_to_literal
 
 errors = Errors()
@@ -1147,9 +1146,26 @@ class PyccelAnd(PyccelBooleanOperator):
     ----------
     *args : tuple of TypedAstNode
         The arguments passed to the operator.
+    simplify : bool
+        True if the expression should be simplified to be as compact/readable as
+        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 5
+
+    def __new__(cls, *args, simplify = False):
+        if simplify:
+            if any(isinstance(a, LiteralFalse) for a in args):
+                return LiteralFalse()
+            if all(isinstance(a, LiteralTrue) for a in args):
+                return LiteralTrue()
+        return super().__new__(cls)
+
+    def __init__(self, *args, simplify = False):
+        if simplify:
+            args = tuple(a for a in args if not isinstance(a, LiteralTrue))
+        super().__init__(*args)
+
 
     def _handle_precedence(self, args):
         args = PyccelBooleanOperator._handle_precedence(self, args)
@@ -1175,9 +1191,25 @@ class PyccelOr(PyccelBooleanOperator):
     ----------
     *args : tuple of TypedAstNode
         The arguments passed to the operator.
+    simplify : bool
+        True if the expression should be simplified to be as compact/readable as
+        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 4
+
+    def __new__(cls, *args, simplify = False):
+        if simplify:
+            if any(isinstance(a, LiteralTrue) for a in args):
+                return LiteralTrue()
+            elif all(isinstance(a, LiteralFalse) for a in args):
+                return LiteralFalse()
+        return super().__new__(cls)
+
+    def __init__(self, *args, simplify = False):
+        if simplify:
+            args = tuple(a for a in args if not isinstance(a, LiteralFalse))
+        super().__init__(*args)
 
     def _handle_precedence(self, args):
         args = PyccelBooleanOperator._handle_precedence(self, args)

@@ -6,9 +6,10 @@
 """Print to F90 standard. Trying to follow the information provided at
 www.fortran90.org as much as possible."""
 
-
+import ast
 import functools
 import string
+import sys
 import re
 from collections import OrderedDict
 from itertools import chain
@@ -1417,9 +1418,16 @@ class FCodePrinter(CodePrinter):
         self.add_import(self._build_gFTL_extension_module(expr_type))
         args_insert = []
         for arg in expr.args:
-            a = self._print(arg)
             if arg.class_type == expr_type:
-                args_insert.append(f'call {result} % merge({a})\n')
+                # Create a temporary variable to be able to call begin()/end()
+                if not isinstance(arg, Variable):
+                    var = self.scope.get_temporary_variable(arg.class_type)
+                    self._additional_code += self._print(Assign(var, arg)) + '\n'
+                    a = self._print(var)
+                else:
+                    a = self._print(arg)
+
+                args_insert.append(f'call {result} % insert({a} % begin(), {a} % end())\n')
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO, severity = 'error', symbol = expr)
         code = f'{result} = {type_name}({var_code})\n' + ''.join(args_insert)
@@ -2951,12 +2959,15 @@ class FCodePrinter(CodePrinter):
         return 'STOP'
 
     def _print_Assert(self, expr):
-        prolog = "if ( .not. ({0})) then".format(self._print(expr.test))
-        body = 'stop 1'
-        epilog = 'end if'
-        return ('{prolog}\n'
-                '{body}\n'
-                '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
+        if isinstance(expr.test, LiteralTrue):
+            if sys.version_info < (3, 9):
+                return ''
+            else:
+                return '!' + ast.unparse(expr.python_ast) + '\n' #pylint: disable=no-member
+        test_code = self._print(expr.test)
+        return (f"if ( .not. ({test_code})) then\n"
+                'stop 1\n'
+                'end if\n')
 
     def _handle_not_none(self, lhs, lhs_var):
         """

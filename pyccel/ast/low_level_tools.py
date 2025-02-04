@@ -75,22 +75,6 @@ class IteratorType(PyccelType, metaclass=ArgumentSingleton):
         """
         return None
 
-    def __reduce__(self):
-        """
-        Function called during pickling.
-
-        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
-        This function is necessary to ensure that DataTypes remain singletons.
-
-        Returns
-        -------
-        callable
-            A callable to create the object.
-        args
-            A tuple containing any arguments to be passed to the callable.
-        """
-        return (self.__class__, ())
-
 #------------------------------------------------------------------------------
 class PairType(PyccelType, metaclass=ArgumentSingleton):
     """
