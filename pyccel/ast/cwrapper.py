@@ -19,8 +19,6 @@ from .bind_c    import BindCPointer
 
 from .builtins  import PythonInt
 
-from .c_concepts import CStackArray
-
 from .datatypes import FixedSizeType, CustomDataType
 from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import PythonNativeBool, StringType, VoidType, CharType

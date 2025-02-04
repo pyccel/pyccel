@@ -9,12 +9,10 @@ Module representing concepts that are only applicable to C code (e.g. ObjectAddr
 
 from pyccel.utilities.metaclasses import ArgumentSingleton
 from .basic     import TypedAstNode, PyccelAstNode
-from .core      import FunctionDef, FunctionDefArgument, FunctionDefResult
 from .datatypes import HomogeneousContainerType, FixedSizeType, PrimitiveIntegerType
-from .datatypes import CharType, StringType
+from .datatypes import CharType
 from .internals import PyccelFunction
 from .literals  import LiteralString
-from .variable  import Variable
 
 __all__ = ('CMacro',
            'CNativeInt',
