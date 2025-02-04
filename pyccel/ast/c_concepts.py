@@ -18,6 +18,7 @@ __all__ = ('CMacro',
            'CNativeInt',
            'CStackArray',
            'CStringExpression',
+           'CStrStr',
            'ObjectAddress',
            'PointerCast')
 
