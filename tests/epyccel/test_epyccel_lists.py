@@ -688,6 +688,7 @@ def test_mutable_indexing(stc_language):
     epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
 
+@pytest.mark.xfail(reason="No way to tell from type if b is a list of pointers or a list of values")
 def test_mutable_multi_level_indexing(stc_language):
     def f():
         a = [1,2,3,4]
