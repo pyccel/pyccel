@@ -1043,7 +1043,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(lhs.class_type, StringType) and isinstance(rhs.class_type, StringType):
             lhs_code = self._print(CStrStr(lhs))
             rhs_code = self._print(CStrStr(rhs))
-            return f'strcmp({lhs_code}, {rhs_code})'
+            return f'!strcmp({lhs_code}, {rhs_code})'
         else:
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
@@ -1051,11 +1051,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelNe(self, expr):
         lhs, rhs = expr.args
-        lhs_code = self._print(lhs)
-        rhs_code = self._print(rhs)
         if isinstance(lhs.class_type, StringType) and isinstance(rhs.class_type, StringType):
-            return f'!strcmp({lhs_code}, {rhs_code})'
+            lhs_code = self._print(CStrStr(lhs))
+            rhs_code = self._print(CStrStr(rhs))
+            return f'strcmp({lhs_code}, {rhs_code})'
         else:
+            lhs_code = self._print(lhs)
+            rhs_code = self._print(rhs)
             return f'{lhs_code} != {rhs_code}'
 
     def _print_PyccelLt(self, expr):
