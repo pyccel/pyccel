@@ -255,11 +255,11 @@ def test_getitem_element(language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_getitem_str_keys(language):
+def test_getitem_str_keys(stc_language):
     def getitem_str_keys():
         a = {'a':1, 'b':2}
         return a['a']
-    epyc_str_keys = epyccel(getitem_str_keys, language = language)
+    epyc_str_keys = epyccel(getitem_str_keys, language = stc_language)
     pyccel_result = epyc_str_keys()
     python_result = getitem_str_keys()
     assert isinstance(python_result, type(pyccel_result))
