@@ -641,9 +641,6 @@ class StringType(PyccelType, metaclass = Singleton):
     """
     __slots__ = ()
     _name = 'str'
-    _element_type = CharType()
-    _container_rank = 1
-    _order = None
 
     @property
     def datatype(self):
@@ -677,6 +674,16 @@ class StringType(PyccelType, metaclass = Singleton):
         return 1
 
     @property
+    def container_rank(self):
+        """
+        Number of dimensions of the container.
+
+        Number of dimensions of the object described by the container. This is
+        equal to the number of values required to index an element of this container.
+        """
+        return 1
+
+    @property
     def order(self):
         """
         The data layout ordering in memory.
@@ -686,6 +693,15 @@ class StringType(PyccelType, metaclass = Singleton):
         this function returns None.
         """
         return None
+
+    @property
+    def element_type(self):
+        """
+        The type of elements of the object.
+
+        The PyccelType describing an element of the container.
+        """
+        return CharType()
 
     def __eq__(self, other):
         return isinstance(other, self.__class__)
