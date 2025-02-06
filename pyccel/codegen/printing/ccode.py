@@ -1186,9 +1186,13 @@ class CCodePrinter(CodePrinter):
                     elif isinstance(element_type, StringType):
                         decl_line = (f'#define i_type {container_type}\n'
                                      f'#define i_keypro cstr\n')
+                    elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+                        type_decl = self.get_c_type(element_type)
+                        decl_line = (f'#define i_type {container_type}\n'
+                                     f'#define i_keyclass {type_decl}\n')
                     else:
                         decl_line = ''
-                        errors.report("The declaration of type {class_type} is not yet implemented.",
+                        errors.report(f"The declaration of type {class_type} is not yet implemented.",
                                 symbol=expr, severity='error')
                 if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
                         and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
