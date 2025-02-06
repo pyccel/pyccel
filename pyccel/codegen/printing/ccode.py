@@ -2906,6 +2906,8 @@ class CCodePrinter(CodePrinter):
 
         return f"(*{container_type}_at({dict_obj_code}, {key}))"
 
+    #================== String methods ==================
+
     def _print_CStrStr(self, expr):
         arg = expr.args[0]
         code = self._print(ObjectAddress(arg))
@@ -2913,6 +2915,15 @@ class CCodePrinter(CodePrinter):
             return code[10:-1]
         else:
             return f'cstr_str({code})'
+
+    def _print_PythonString(self, expr):
+        arg = expr.args[0]
+        arg_code = self._print(arg)
+        if isinstance(arg.class_type, StringType):
+            return f'cstr_clone({arg_code})'
+        else:
+            assert isinstance(arg.class_type, CharType) and getattr(arg, 'is_alias', True)
+            return f'cstr_from({arg_code})'
 
     #=================== MACROS ==================
 
