@@ -633,7 +633,7 @@ class HomogeneousContainerType(ContainerType):
     def __hash__(self):
         return hash((self.__class__, self.element_type))
 
-class StringType(HomogeneousContainerType, metaclass = Singleton):
+class StringType(PyccelType, metaclass = Singleton):
     """
     Class representing Python's native string type.
 
@@ -675,6 +675,17 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
         this is equal to 0.
         """
         return 1
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return None
 
     def __eq__(self, other):
         return isinstance(other, self.__class__)
