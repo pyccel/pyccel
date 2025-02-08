@@ -690,6 +690,9 @@ class SemanticParser(BasicParser):
             The expression where the pointer was created (used for clear error
             messages).
         """
+        if pointer is target:
+            return
+
         assert pointer != target
         if isinstance(pointer, DottedVariable):
             self._indicate_pointer_target(pointer.lhs, target, expr)
