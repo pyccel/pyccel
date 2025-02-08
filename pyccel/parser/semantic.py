@@ -690,6 +690,7 @@ class SemanticParser(BasicParser):
             The expression where the pointer was created (used for clear error
             messages).
         """
+        assert pointer != target
         if isinstance(pointer, DottedVariable):
             self._indicate_pointer_target(pointer.lhs, target, expr)
         elif isinstance(target, DottedVariable):
@@ -1382,20 +1383,25 @@ class SemanticParser(BasicParser):
                 # results of functions)
                 pyccel_stage.set_stage('syntactic')
                 idx_name = IndexedElement(name, i)
+                var = None
                 if idx_name in self.scope.symbolic_alias:
                     elem_name = self.scope.symbolic_alias[idx_name]
+                    var = self.check_for_variable(elem_name)
                 else:
                     elem_name = self.scope.get_new_name( f'{name}_{i}' )
                 pyccel_stage.set_stage('semantic')
-                elem_d_lhs = self._infer_type( tuple_elem )
 
-                if not arr_in_multirets:
-                    self._ensure_target( tuple_elem, elem_d_lhs )
+                if var is None:
+                    elem_d_lhs = self._infer_type( tuple_elem )
 
-                elem_type = elem_d_lhs.pop('class_type')
+                    if not arr_in_multirets:
+                        self._ensure_target( tuple_elem, elem_d_lhs )
 
-                var = self._create_variable(elem_name, elem_type, tuple_elem, elem_d_lhs,
-                        insertion_scope = insertion_scope)
+                    elem_type = elem_d_lhs.pop('class_type')
+
+                    var = self._create_variable(elem_name, elem_type, tuple_elem, elem_d_lhs,
+                            insertion_scope = insertion_scope)
+
                 elem_vars.append(var)
 
             if any(v.is_alias for v in elem_vars):
