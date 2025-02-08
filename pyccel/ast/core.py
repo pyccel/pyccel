@@ -1930,7 +1930,7 @@ class ConstructorCall(FunctionCall):
         Used to store data inside the class, set during object creation.
     """
     __slots__ = ('_cls_variable',)
-    _attribute_nodes = ()
+    _attribute_nodes = FunctionCall._attribute_nodes + ('_cls_variable',)
 
     # TODO improve
 

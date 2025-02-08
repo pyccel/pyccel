@@ -3293,8 +3293,7 @@ class SemanticParser(BasicParser):
             if assigns:
                 lhs = assigns[0].lhs
             else:
-                errors.report("Can't find the variable where the class will be saved.",
-                        severity='fatal', symbol=expr)
+                lhs = self.scope.get_new_name()
 
             if isinstance(lhs, AnnotatedPyccelSymbol):
                 annotation = self._visit(lhs.annotation)
@@ -3663,23 +3662,37 @@ class SemanticParser(BasicParser):
                     new_rhs.append(r)
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
-                elif isinstance(l, Variable) and l.is_optional:
-                    if l in self._optional_params:
-                        # Collect temporary variable which provides
-                        # allocated memory space for this optional variable
-                        new_lhs.append(self._optional_params[l])
-                    else:
-                        # Create temporary variable to provide allocated
-                        # memory space before assigning to the pointer value
-                        # (may be NULL)
-                        tmp_var = self.scope.get_temporary_variable(l,
-                                name = l.name+'_loc', is_optional = False)
-                        self._optional_params[l] = tmp_var
-                        new_lhs.append(tmp_var)
-                    new_rhs.append(r)
                 else:
-                    new_lhs.append(l)
-                    new_rhs.append(r)
+                    # Manage a non-tuple assignment
+
+                    # Manage memeory for optionals
+                    if isinstance(l, Variable) and l.is_optional:
+                        if l in self._optional_params:
+                            # Collect temporary variable which provides
+                            # allocated memory space for this optional variable
+                            new_lhs.append(self._optional_params[l])
+                        else:
+                            # Create temporary variable to provide allocated
+                            # memory space before assigning to the pointer value
+                            # (may be NULL)
+                            tmp_var = self.scope.get_temporary_variable(l,
+                                    name = l.name+'_loc', is_optional = False)
+                            self._optional_params[l] = tmp_var
+                            l = tmp_var
+
+                    if isinstance(r, ConstructorCall):
+                        # Manage a ConstructorCall in a tuple assignment.
+                        # In this case a temporary variable is created which must be
+                        # replaced with the tuple element.
+                        cls_var = r.cls_variable
+                        if cls_var.is_temp:
+                            r.substitute(cls_var, l)
+                            self._allocs[-1].remove(cls_var)
+                            self.scope.remove_variable(cls_var)
+                        new_expressions.append(r)
+                    else:
+                        new_lhs.append(l)
+                        new_rhs.append(r)
             lhs = new_lhs
             rhs = new_rhs
 
