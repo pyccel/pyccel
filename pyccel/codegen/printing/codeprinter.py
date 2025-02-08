@@ -106,13 +106,25 @@ class CodePrinter:
         self._scope = self._scope.parent_scope
 
     def _print(self, expr):
-        """Print the AST node in the printer language
+        """
+        Print the AST node in the printer language
 
         The printing is done by finding the appropriate function _print_X
         for the object expr. X is the type of the object expr. If this function
         does not exist then the method resolution order is used to search for
         other compatible _print_X functions. If none are found then an error is
-        raised
+        raised.
+
+        Parameters
+        ----------
+        expr : PyccelAstNode
+            The expression that should be printed.
+
+        Returns
+        -------
+        str
+            A string containing code in the printer language which is equivalent
+            to the expression.
         """
 
         current_ast = self._current_ast_node
