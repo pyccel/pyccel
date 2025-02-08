@@ -107,7 +107,7 @@ class CodePrinter:
 
     def _print(self, expr):
         """
-        Print the AST node in the printer language
+        Print the AST node in the printer language.
 
         The printing is done by finding the appropriate function _print_X
         for the object expr. X is the type of the object expr. If this function
