@@ -2277,10 +2277,13 @@ class CCodePrinter(CodePrinter):
             # Check the Assign objects list in case of
             # the user assigns a variable to an object contains IndexedElement object.
             if not last_assign:
-                code = ''+self._print(expr.stmt)
+                code = self._print(expr.stmt)
             elif isinstance(last_assign[-1], (AugAssign, AliasAssign)):
                 last_assign[-1].lhs.is_temp = False
-                code = ''+self._print(expr.stmt)
+                code = self._print(expr.stmt)
+            elif isinstance(last_assign[-1].rhs, PythonTuple):
+                code = self._print(expr.stmt)
+                last_assign[-1].lhs.is_temp = False
             else:
                 # make sure that stmt contains one assign node.
                 last_assign = last_assign[-1]
