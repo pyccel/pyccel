@@ -1585,7 +1585,8 @@ class SemanticParser(BasicParser):
                 # ...
                 # Add memory allocation if needed
                 array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
-                                            and not getattr(rhs.funcdef, 'is_elemental', False) and not isinstance(lhs.class_type, HomogeneousTupleType)) or arr_in_multirets
+                                            and not getattr(rhs.funcdef, 'is_elemental', False) and \
+                                            not isinstance(lhs.class_type, HomogeneousTupleType)) or arr_in_multirets
                 if lhs.on_heap and not array_declared_in_function:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
@@ -1655,7 +1656,8 @@ class SemanticParser(BasicParser):
                 else:
                     know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape)
 
-                if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType)) and not know_lhs_shape:
+                if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType)) and not know_lhs_shape \
+                        and not array_declared_in_function:
                     msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
