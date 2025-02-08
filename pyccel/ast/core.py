@@ -20,7 +20,7 @@ from .builtins  import PythonBool, PythonTuple, PythonList
 from .c_concepts import PointerCast
 
 from .datatypes import (PyccelType, HomogeneousTupleType, VoidType, CustomDataType,
-                        PythonNativeBool, InhomogeneousTupleType, TupleType)
+                        PythonNativeBool, InhomogeneousTupleType, TupleType, SymbolicType)
 
 from .internals import PyccelSymbol, PyccelFunction, Iterable
 
@@ -2731,6 +2731,8 @@ class PyccelFunctionDef(FunctionDef):
         different default values.
     """
     __slots__ = ('_argument_description',)
+    class_type = SymbolicType()
+
     def __init__(self, name, func_class, *, decorators = {}, argument_description = {}):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelFunction, TypedAstNode, Iterable))

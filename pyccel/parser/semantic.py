@@ -103,7 +103,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
-from pyccel.ast.operators import PyccelNot, PyccelAdd, PyccelMinus, PyccelMul, PyccelPow
+from pyccel.ast.operators import PyccelNot, PyccelAdd, PyccelMinus, PyccelMul, PyccelPow, PyccelOr
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv, PyccelIn, PyccelOperator
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
@@ -939,12 +939,13 @@ class SemanticParser(BasicParser):
             The new operator.
         """
         arg1 = visited_args[0]
-        if isinstance(arg1, FunctionDef):
-            msg = ("Function found in a mathematical operation. "
-                   "Are you trying to declare a type? "
-                   "If so then the type object must be used as a type hint.")
-            errors.report(msg,
-                    severity='fatal', symbol=expr)
+        if all(isinstance(a, PyccelFunctionDef) for a in visited_args):
+            try:
+                possible_types = [a.cls_name.static_type() for a in visited_args]
+            except AttributeError:
+                errors.report("Unrecognised type in type union statement",
+                        severity='fatal', symbol=expr)
+            return UnionTypeAnnotation(*[VariableTypeAnnotation(t) for t in possible_types])
         class_type = arg1.class_type
         class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
         magic_method_name = magic_method_map.get(type(expr), None)
@@ -1728,13 +1729,15 @@ class SemanticParser(BasicParser):
                     self.current_ast_node.col_offset),
                         severity='error', symbol=var.name)
 
-        elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.on_heap:
+        elif not is_augassign and not var.is_alias and var.rank > 0 and \
+                isinstance(rhs, (Variable, IndexedElement)) and \
+                not isinstance(var.class_type, (StringType, TupleType)):
             errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                 bounding_box=(self.current_ast_node.lineno,
                     self.current_ast_node.col_offset),
                         severity='error', symbol=var)
 
-        elif var.is_ndarray and var.is_alias and isinstance(rhs, NumpyNewArray):
+        elif var.rank > 0 and var.is_alias and isinstance(rhs, (NumpyNewArray, PythonList, PythonSet, PythonDict)):
             errors.report(INVALID_POINTER_REASSIGN,
                 bounding_box=(self.current_ast_node.lineno,
                     self.current_ast_node.col_offset),
@@ -5668,7 +5671,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : DottedName
+        expr : FunctionCall
             The syntactic node that represent the call to `len()`.
 
         function_call_args : iterable[FunctionCallArgument]
@@ -5753,3 +5756,67 @@ class SemanticParser(BasicParser):
             else:
                 self._additional_exprs[-1].extend(body)
                 return lhs_semantic_var
+
+    def _build_PythonIsInstance(self, expr, function_call_args):
+        """
+        Method to visit a PythonIsInstance node.
+
+        The purpose of this `_build` method is to construct a literal boolean indicating
+        whether or not the expression has the expected type.
+            The syntactic node that represent the call to `isinstance()`.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The syntactic node that represent the call to `PythonSetFunction`.
+
+        function_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        Returns
+        -------
+        Literal
+            A LiteralTrue or LiteralFalse node describing the result of the `isinstance`
+            call.
+        """
+        obj = function_call_args[0].value
+        class_or_tuple = function_call_args[1].value
+        if isinstance(class_or_tuple, PythonTuple):
+            obj_arg = function_call_args[0]
+            return PyccelOr(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(class_type)]) \
+                                for class_type in class_or_tuple], simplify=True)
+        elif isinstance(class_or_tuple, UnionTypeAnnotation):
+            obj_arg = function_call_args[0]
+            return PyccelOr(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(var_annot)]) \
+                                for var_annot in class_or_tuple.type_list], simplify=True)
+        else:
+            if isinstance(class_or_tuple, VariableTypeAnnotation):
+                expected_type = class_or_tuple.class_type
+            else:
+                class_type = class_or_tuple.cls_name
+                try:
+                    expected_type = class_type.static_type()
+                except AttributeError:
+                    expected_type = None
+
+            if isinstance(expected_type, type):
+                return convert_to_literal(isinstance(obj.class_type, expected_type))
+
+            elif expected_type:
+                class_type = obj.class_type
+                cls_base_to_insert = [self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)]
+                possible_types = {class_type}
+                while cls_base_to_insert:
+                    cls_base = cls_base_to_insert.pop()
+                    class_type = cls_base.class_type
+                    possible_types.add(class_type)
+                    cls_base_to_insert.extend(cls_base.superclasses)
+
+                possible_types.discard(None)
+
+                return convert_to_literal(expected_type in possible_types)
+
+            else:
+                errors.report(f"Type {class_or_tuple} is not handled in isinstance call.",
+                        severity='error', symbol=expr)
+                return LiteralTrue()

@@ -6,9 +6,10 @@
 """Print to F90 standard. Trying to follow the information provided at
 www.fortran90.org as much as possible."""
 
-
+import ast
 import functools
 import string
+import sys
 import re
 from collections import OrderedDict
 from itertools import chain
@@ -2972,12 +2973,15 @@ class FCodePrinter(CodePrinter):
         return 'STOP'
 
     def _print_Assert(self, expr):
-        prolog = "if ( .not. ({0})) then".format(self._print(expr.test))
-        body = 'stop 1'
-        epilog = 'end if'
-        return ('{prolog}\n'
-                '{body}\n'
-                '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
+        if isinstance(expr.test, LiteralTrue):
+            if sys.version_info < (3, 9):
+                return ''
+            else:
+                return '!' + ast.unparse(expr.python_ast) + '\n' #pylint: disable=no-member
+        test_code = self._print(expr.test)
+        return (f"if ( .not. ({test_code})) then\n"
+                'stop 1\n'
+                'end if\n')
 
     def _handle_not_none(self, lhs, lhs_var):
         """

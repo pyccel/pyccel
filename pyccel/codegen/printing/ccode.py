@@ -3,9 +3,11 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+import ast
 import functools
 from itertools import chain, product
 import re
+import sys
 from packaging.version import Version
 
 import numpy as np
@@ -2678,9 +2680,14 @@ class CCodePrinter(CodePrinter):
         return '/*' + comments + '*/\n'
 
     def _print_Assert(self, expr):
+        if isinstance(expr.test, LiteralTrue):
+            if sys.version_info < (3, 9):
+                return ''
+            else:
+                return '//' + ast.unparse(expr.python_ast) + '\n' #pylint: disable=no-member
         condition = self._print(expr.test)
         self.add_import(c_imports['assert'])
-        return "assert({0});\n".format(condition)
+        return f"assert({condition});\n"
 
     def _print_PyccelSymbol(self, expr):
         return expr
