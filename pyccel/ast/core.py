@@ -3091,22 +3091,12 @@ class FunctionAddress(FunctionDef):
         an instance of this class. This is used by clone and can be used for pickling.
         See https://docs.python.org/3/library/pickle.html#object.__getnewargs_ex__
         """
-<<<<<<< HEAD
         args, kwargs = super().__getnewargs__()
         args = args[:-1] # Remove body argument
         kwargs['is_argument'] = self.is_argument
         kwargs['is_kwonly'] = self.is_kwonly
         kwargs['is_optional'] = self.is_optional
         kwargs['memory_handling'] = self.memory_handling
-=======
-        args, kwargs = super().__getnewargs_ex__()
-        args = args[:2] + (kwargs.pop('results'),)
-        kwargs.pop('scope')
-        kwargs['is_optional'] = self._is_optional
-        kwargs['is_kwonly'] = self._is_kwonly
-        kwargs['is_argument'] = self._is_argument
-        kwargs['memory_handling'] = self._memory_handling
->>>>>>> origin/devel
         return args, kwargs
 
 class SympyFunction(FunctionDef):
