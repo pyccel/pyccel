@@ -511,7 +511,7 @@ class FCodePrinter(CodePrinter):
             functions will be stored.
         """
         for key,f in self.scope.imports['functions'].items():
-            if isinstance(f, FunctionDef) and f.is_external:
+            if isinstance(f, FunctionDef) and f.is_external and f.results.var:
                 v = f.results.var.clone(str(key))
                 decs.append(Declare(v, external=True))
 
