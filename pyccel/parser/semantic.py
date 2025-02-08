@@ -122,8 +122,7 @@ from pyccel.ast.variable import Variable
 from pyccel.ast.variable import IndexedElement, AnnotatedPyccelSymbol
 from pyccel.ast.variable import DottedName, DottedVariable
 
-from pyccel.errors.errors import Errors, ErrorsMode
-from pyccel.errors.errors import PyccelSemanticError
+from pyccel.errors.errors import Errors, ErrorsMode, PyccelError, PyccelSemanticError
 
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_THROWAWAY,
         UNDEFINED_VARIABLE, IMPORTING_EXISTING_IDENTIFIED, INDEXED_TUPLE, LIST_OF_TUPLES,
@@ -2312,6 +2311,8 @@ class SemanticParser(BasicParser):
                         obj.set_current_ast(self.current_ast_node)
                     self._current_ast_node = current_ast
                     return obj
+            except (PyccelError, NotImplementedError) as err:
+                raise err
             except Exception as err:
                 if ErrorsMode().value == 'user':
                     errors.report(PYCCEL_INTERNAL_ERROR,

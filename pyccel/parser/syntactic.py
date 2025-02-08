@@ -76,7 +76,7 @@ from pyccel.parser.syntax.openacc import parse as acc_parse
 
 from pyccel.utilities.stage import PyccelStage
 
-from pyccel.errors.errors import Errors, ErrorsMode
+from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
 
 # TODO - remove import * and only import what we need
 from pyccel.errors.messages import *
@@ -330,6 +330,8 @@ class SyntaxParser(BasicParser):
                 result = getattr(self, syntax_method)(stmt)
                 if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
                     result.set_current_ast(stmt)
+            except (PyccelError, NotImplementedError) as err:
+                raise err
             except Exception as err:
                 if ErrorsMode().value == 'user':
                     errors.report(PYCCEL_INTERNAL_ERROR,

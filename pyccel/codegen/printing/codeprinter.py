@@ -10,7 +10,7 @@ from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core      import Module, ModuleHeader, Program
 from pyccel.ast.internals import PyccelSymbol
 
-from pyccel.errors.errors     import Errors, ErrorsMode
+from pyccel.errors.errors     import Errors, ErrorsMode, PyccelError
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
 
 # TODO: add examples
@@ -125,6 +125,8 @@ class CodePrinter:
             if hasattr(self, print_method):
                 try:
                     obj = getattr(self, print_method)(expr)
+                except (PyccelError, NotImplementedError) as err:
+                    raise err
                 except Exception as err:
                     if ErrorsMode().value == 'user':
                         errors.report(PYCCEL_INTERNAL_ERROR,

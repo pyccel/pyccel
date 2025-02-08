@@ -8,7 +8,7 @@ Module describing the base code-wrapping class : Wrapper.
 """
 
 from pyccel.parser.scope      import Scope
-from pyccel.errors.errors     import Errors, ErrorsMode
+from pyccel.errors.errors     import Errors, ErrorsMode, PyccelError
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
 
 __all__ = ["Wrapper"]
@@ -107,6 +107,8 @@ class Wrapper:
             if hasattr(self, wrap_method):
                 try:
                     obj = getattr(self, wrap_method)(expr)
+                except (PyccelError, NotImplementedError) as err:
+                    raise err
                 except Exception as err:
                     if ErrorsMode().value == 'user':
                         errors.report(PYCCEL_INTERNAL_ERROR,
