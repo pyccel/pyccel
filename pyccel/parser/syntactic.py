@@ -320,7 +320,8 @@ class SyntaxParser(BasicParser):
             # If all possible names are iterables of the same length then find a name
             # for each element and link them to an element describing this variable
             # via IndexedElement (these are tuple elements).
-            possible_names = [p for p in zip(n.args for n in possible_names)]
+            possible_element_names = [n.args for n in possible_names]
+            possible_names = [p for p in zip(*possible_element_names)]
             unique_names = [self._get_unique_name(n, valid_names, forbidden_names, f'{suggestion}_{i}') \
                             for i,n in enumerate(possible_names)]
             temp_name = self.scope.get_new_name(suggestion, is_temp = True)
@@ -1015,7 +1016,7 @@ class SyntaxParser(BasicParser):
             results = FunctionDefResult(Nil())
         else:
             results = self._get_unique_name([r.expr for r in returns],
-                                        valid_names = self.scope.local_used_symbols,
+                                        valid_names = self.scope.local_used_symbols.keys(),
                                         forbidden_names = argument_names,
                                         suggestion = 'result')
 
