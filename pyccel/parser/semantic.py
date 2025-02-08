@@ -782,7 +782,6 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, TypedAstNode):
 
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
-            d_var['cls_base'   ] = get_cls_base(expr.class_type)
             return d_var
 
         else:
@@ -3689,6 +3688,7 @@ class SemanticParser(BasicParser):
                             r.substitute(cls_var, l)
                             self._allocs[-1].remove(cls_var)
                             self.scope.remove_variable(cls_var)
+                            self._allocs[-1].add(l)
                         new_expressions.append(r)
                     else:
                         new_lhs.append(l)
