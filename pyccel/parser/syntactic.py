@@ -320,7 +320,7 @@ class SyntaxParser(BasicParser):
             possible_names = [p for p in zip(*[n.args for n in possible_names])]
             unique_names = [self._get_unique_name(n, forbidden_names, f'{suggestion}_{i}') \
                             for i,n in enumerate(possible_names)]
-            temp_name = self.scope.get_new_name(suggestion)
+            temp_name = self.scope.get_new_name(suggestion, is_temp = True)
             for i, n in enumerate(unique_names):
                 self.scope.insert_symbolic_alias(IndexedElement(temp_name, i), n)
             return temp_name
@@ -331,7 +331,7 @@ class SyntaxParser(BasicParser):
                 new_name = suggested_names.pop()
                 if new_name not in forbidden_names:
                     return new_name
-            return self.scope.get_new_name(suggestion)
+            return self.scope.get_new_name(suggestion, is_temp = True)
 
     #====================================================
     #                 _visit functions
