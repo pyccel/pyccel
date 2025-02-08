@@ -10,8 +10,8 @@ from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core      import Module, ModuleHeader, Program
 from pyccel.ast.internals import PyccelSymbol
 
-from pyccel.errors.errors     import Errors
-from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
+from pyccel.errors.errors     import Errors, ErrorsMode
+from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
 
 # TODO: add examples
 
@@ -29,6 +29,7 @@ class CodePrinter:
     language = None
     def __init__(self):
         self._scope = None
+        self._current_ast_node = None
         self._additional_imports = {}
 
     def doprint(self, expr):
@@ -114,11 +115,23 @@ class CodePrinter:
         raised
         """
 
+        current_ast = self._current_ast_node
+        if getattr(expr,'python_ast', None) is not None:
+            self._current_ast_node = expr.python_ast
+
         classes = type(expr).__mro__
         for cls in classes:
             print_method = '_print_' + cls.__name__
             if hasattr(self, print_method):
-                obj = getattr(self, print_method)(expr)
+                try:
+                    obj = getattr(self, print_method)(expr)
+                except Exception as err:
+                    if ErrorsMode().value == 'user':
+                        errors.report(PYCCEL_INTERNAL_ERROR,
+                                symbol = self._current_ast_node, severity='fatal')
+                    else:
+                        raise err
+                self._current_ast_node = current_ast
                 return obj
         return self._print_not_supported(expr)
 
