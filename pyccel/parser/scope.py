@@ -341,7 +341,13 @@ class Scope(object):
                     self.insert_variable(self.collect_tuple_element(v))
 
             if name in self._locals['variables']:
-                raise RuntimeError(f'New variable {name} already exists in scope')
+                if name in self.symbolic_alias.values():
+                    # If the syntactic name is in the symbolic aliases then the link was created
+                    # at the syntactic stage. In this case the element will be created before the
+                    # tuple
+                    return
+                else:
+                    raise RuntimeError(f'New variable {name} already exists in scope')
             if name == '_':
                 self._temporary_variables.append(var)
             else:
