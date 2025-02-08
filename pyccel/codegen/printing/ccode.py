@@ -1657,10 +1657,11 @@ class CCodePrinter(CodePrinter):
             list_var = self._print(ObjectAddress(base))
             container_type = self.get_c_type(base.class_type)
             if assign:
-                assert len(assign) == 1
-                assign_node = assign[0]
-                lhs = assign_node.lhs
-                if lhs == expr or lhs.is_user_of(expr):
+                is_mut = False
+                for a in assign:
+                    lhs = a.lhs
+                    is_mut = is_mut or lhs == expr or lhs.is_user_of(expr)
+                if is_mut:
                     return f"(*{container_type}_at_mut({list_var},{index}))"
             return f"(*{container_type}_at({list_var},{index}))"
 
@@ -2387,8 +2388,7 @@ class CCodePrinter(CodePrinter):
     def _print_Assign(self, expr):
         lhs = expr.lhs
         rhs = expr.rhs
-        if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, TupleType):
-            assert isinstance(lhs.class_type, InhomogeneousTupleType) or isinstance(lhs, (PythonTuple, PythonList))
+        if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, InhomogeneousTupleType):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
             return f'{self._print(rhs)};\n'
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
