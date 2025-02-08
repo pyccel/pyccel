@@ -336,10 +336,6 @@ class Scope(object):
         if not self.allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_variable(var, name)
         else:
-            if isinstance(var.class_type, InhomogeneousTupleType) and tuple_recursive:
-                for v in var:
-                    self.insert_variable(self.collect_tuple_element(v))
-
             if name in self._locals['variables']:
                 if name in self.symbolic_alias.values():
                     # If the syntactic name is in the symbolic aliases then the link was created
@@ -348,6 +344,11 @@ class Scope(object):
                     return
                 else:
                     raise RuntimeError(f'New variable {name} already exists in scope')
+
+            if isinstance(var.class_type, InhomogeneousTupleType) and tuple_recursive:
+                for v in var:
+                    self.insert_variable(self.collect_tuple_element(v))
+
             if name == '_':
                 self._temporary_variables.append(var)
             else:
