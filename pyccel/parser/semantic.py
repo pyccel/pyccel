@@ -1378,7 +1378,15 @@ class SemanticParser(BasicParser):
                 iterable = [self.scope.collect_tuple_element(r) for r in rhs]
             elem_vars = []
             for i,tuple_elem in enumerate(iterable):
-                elem_name = self.scope.get_new_name( name + '_' + str(i) )
+                # Check if lhs element was named in the syntactic stage (this can happen for
+                # results of functions)
+                pyccel_stage.set_stage('syntactic')
+                idx_name = IndexedElement(name, i)
+                if idx_name in self.scope.symbolic_alias:
+                    elem_name = self.scope.symbolic_alias[idx_name]
+                else:
+                    elem_name = self.scope.get_new_name( f'{name}_{i}' )
+                pyccel_stage.set_stage('semantic')
                 elem_d_lhs = self._infer_type( tuple_elem )
 
                 if not arr_in_multirets:
