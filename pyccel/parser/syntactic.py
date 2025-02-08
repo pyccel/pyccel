@@ -332,7 +332,7 @@ class SyntaxParser(BasicParser):
                     result.set_current_ast(stmt)
             except (PyccelError, NotImplementedError) as err:
                 raise err
-            except Exception as err:
+            except Exception as err: #pylint: disable=broad-exception-caught
                 if ErrorsMode().value == 'user':
                     errors.report(PYCCEL_INTERNAL_ERROR,
                             symbol = self._context[-1], severity='fatal')
