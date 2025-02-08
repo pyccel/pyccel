@@ -666,7 +666,7 @@ class Scope(object):
 
         return new_name
 
-    def get_temporary_variable(self, dtype_or_var, name = None, **kwargs):
+    def get_temporary_variable(self, dtype_or_var, name = None, *, clone_scope = None, **kwargs):
         """
         Get a temporary variable.
 
@@ -679,6 +679,9 @@ class Scope(object):
             In the case of a Variable: a Variable which will be cloned to set all the Variable properties.
         name : str, optional
             The requested name for the new variable.
+        clone_scope : Scope
+            A scope which can be used to look for tuple elements when cloning a
+            Variable.
         **kwargs : dict
             See Variable keyword arguments.
 
@@ -693,6 +696,13 @@ class Scope(object):
             var = dtype_or_var.clone(name, **kwargs, is_temp = True)
         else:
             var = Variable(dtype_or_var, name, **kwargs, is_temp = True)
+        if isinstance(var.class_type, InhomogeneousTupleType):
+            assert isinstance(dtype_or_var, Variable)
+            assert clone_scope is not None
+            for orig_vi, vi_idx in zip(dtype_or_var, var):
+                vi = self.get_temporary_variable(clone_scope.collect_tuple_element(orig_vi), clone_scope = clone_scope)
+                self.insert_symbolic_alias(vi_idx, vi)
+                self.remove_variable(vi)
         self.insert_variable(var)
         return var
 
