@@ -3091,7 +3091,7 @@ class FunctionAddress(FunctionDef):
         an instance of this class. This is used by clone and can be used for pickling.
         See https://docs.python.org/3/library/pickle.html#object.__getnewargs_ex__
         """
-        args, kwargs = super().__getnewargs__()
+        args, kwargs = super().__getnewargs_ex__()
         args = args[:-1] # Remove body argument
         kwargs['is_argument'] = self.is_argument
         kwargs['is_kwonly'] = self.is_kwonly
