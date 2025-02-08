@@ -3392,42 +3392,6 @@ class SemanticParser(BasicParser):
                     syntactic_assign_elems = [Assign(IndexedElement(lhs,i), r, python_ast=expr.python_ast) for i, r in enumerate(rhs)]
                     pyccel_stage.set_stage('semantic')
                     assign_elems = [self._visit(a) for a in syntactic_assign_elems]
-                else:
-                    syntactic_assign_elems = []
-                    syntactic_elems = []
-
-                    pyccel_stage.set_stage('syntactic')
-                    for i, r in enumerate(rhs):
-                        # Check if lhs element was named in the syntactic stage (this can happen for
-                        # results of functions)
-                        idx_name = IndexedElement(lhs, i)
-                        if idx_name in self.scope.symbolic_alias:
-                            elem_name = self.scope.symbolic_alias[idx_name]
-                        else:
-                            elem_name = self.scope.get_new_name( f'{lhs}_{i}' )
-                        # Check we aren't doing x=x
-                        if elem_name != r:
-                            syntactic_assign_elems.append(Assign(elem_name, r, python_ast=expr.python_ast))
-                        syntactic_elems.append(elem_name)
-                    pyccel_stage.set_stage('semantic')
-
-                    assign_elems = [self._visit(a) for a in syntactic_assign_elems]
-                    elems = [self._visit(e) for e in syntactic_elems]
-                    elem_class_type = [e.class_type for e in elems]
-                    if len(set(elem_class_type)) == 1 and not isinstance(elem_class_type[0], ContainerType):
-                        class_type = HomogeneousTupleType(elem_class_type.pop())
-                    else:
-                        class_type = InhomogeneousTupleType(*elem_class_type)
-
-                    shape = (LiteralInteger(len(elems)),)
-                    semantic_lhs = Variable(class_type, lhs, is_temp = lhs.is_temp, shape = shape)
-                    for i, e in enumerate(elems):
-                        self.scope.insert_symbolic_alias(semantic_lhs[i], e)
-                    self.scope.insert_variable(semantic_lhs, tuple_recursive = False)
-                assert all(isinstance(a, Assign) for a in assign_elems)
-                rhs = PythonTuple(*[a.rhs for a in assign_elems])
-                return Assign(semantic_lhs, rhs)
-                #return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
             elif isinstance(lhs, IndexedElement):
                 semantic_lhs = self._visit(lhs)
                 pyccel_stage.set_stage('syntactic')
