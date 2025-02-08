@@ -3586,6 +3586,15 @@ class SemanticParser(BasicParser):
                     return None
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions)
 
+            # If lhs is a purely symbolic object to link tuple elements to their containing tuple
+            # then no semantic object should be returned
+            # This can happen when returning an inhomogeneous tuple
+            if isinstance(rhs, PythonTuple) and isinstance(lhs.class_type, InhomogeneousTupleType) and \
+                    all(self.scope.collect_tuple_element(li) == ri for li, ri in zip(lhs, rhs)):
+                for l in new_expressions:
+                    l.invalidate_node()
+                return EmptyNode()
+
         # Handle assignment to multiple variables
         elif isinstance(lhs, (PythonTuple, PythonList)):
             if isinstance(rhs, FunctionCall):
