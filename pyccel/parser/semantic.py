@@ -4987,12 +4987,18 @@ class SemanticParser(BasicParser):
                 pyccel_stage.set_stage('syntactic')
                 syntactic_args = [AnnotatedPyccelSymbol(f'arg_{i}', annotation = arg) \
                         for i, arg in enumerate(hd.dtypes)]
-                syntactic_results = [AnnotatedPyccelSymbol(f'out_{i}', annotation = arg) \
-                        for i, arg in enumerate(hd.results)]
                 pyccel_stage.set_stage('semantic')
-
                 arguments = [FunctionDefArgument(self._visit(a)[0]) for a in syntactic_args]
-                results = [FunctionDefResult(self._visit(r)[0]) for r in syntactic_results]
+
+                if hd.results:
+                    pyccel_stage.set_stage('syntactic')
+                    syntactic_results = [AnnotatedPyccelSymbol(f'out_{i}', annotation = arg) \
+                            for i, arg in enumerate(hd.results)]
+                    pyccel_stage.set_stage('semantic')
+                    results = [FunctionDefResult(self._visit(r)[0]) for r in syntactic_results]
+                else:
+                    results = FunctionDefResult(Nil())
+
                 interfaces.append(FunctionDef(f_name, arguments, [], results))
 
             # TODO -> Said: must handle interface
