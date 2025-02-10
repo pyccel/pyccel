@@ -152,8 +152,7 @@ class BasicParser(object):
 
         # represent the scope of a function
         self._scope = Scope()
-        self._current_function_name = None
-        self._current_function = []
+        self._current_function = None
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
