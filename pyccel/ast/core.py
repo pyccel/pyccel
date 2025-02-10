@@ -2012,12 +2012,6 @@ class Return(PyccelAstNode):
         """
         return self._n_returns
 
-    def __getnewargs__(self):
-        """used for Pickling self."""
-
-        args = (self.expr, self.stmt)
-        return args
-
     def __repr__(self):
         if self.stmt:
             code = repr(self.stmt)+';'
