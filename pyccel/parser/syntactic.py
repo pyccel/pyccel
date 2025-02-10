@@ -314,6 +314,11 @@ class SyntaxParser(BasicParser):
             The names that should not be used.
         suggestion : PyccelSymbol
             The name that may be used instead.
+
+        Returns
+        -------
+        str
+            The new name of the variable.
         """
         if all(isinstance(n, (PythonTuple, PythonList)) for n in possible_names) and \
                 len(set(len(n) for n in possible_names)) == 1:
