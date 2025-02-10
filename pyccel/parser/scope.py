@@ -623,9 +623,12 @@ class Scope(object):
         new_name, counter = create_incremented_string(self.local_used_symbols.values(),
                                     prefix = prefix, counter = counter, name_clash_checker = self.name_clash_checker)
 
-        new_symbol = PyccelSymbol(new_name, is_temp=True)
+        chosen_new_symbol = PyccelSymbol(new_name, is_temp=True)
 
-        self.insert_symbol(new_symbol)
+        self.insert_symbol(chosen_new_symbol)
+
+        # The symbol may be different to the one chosen in the case of collisions with language-specific terms)
+        new_symbol = self._used_symbols[new_symbol]
 
         return new_symbol, counter
 
