@@ -2129,12 +2129,13 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_Assign(self, expr):
+        lhs = expr.lhs
         rhs = expr.rhs
 
         if isinstance(rhs, (FunctionCall, SetUnion, ListPop)):
             return self._print(rhs)
 
-        lhs_code = self._print(expr.lhs)
+        lhs_code = self._print(lhs)
         # we don't print Range
         # TODO treat the case of iterable classes
         if isinstance(rhs, PyccelUnarySub) and rhs.args[0] == INF:
@@ -2149,14 +2150,13 @@ class FCodePrinter(CodePrinter):
             return ''
 
         if isinstance(rhs, NumpyRand):
-            return 'call random_number({0})\n'.format(self._print(expr.lhs))
+            return f'call random_number({lhs_code})\n'
 
         if isinstance(rhs, NumpyEmpty):
             return ''
 
         if isinstance(rhs, NumpyNonZero):
             code = ''
-            lhs = expr.lhs
             for i,e in enumerate(rhs.elements):
                 l_c = self._print(lhs[i])
                 e_c = self._print(e)
@@ -2185,9 +2185,12 @@ class FCodePrinter(CodePrinter):
             code_args = ', '.join(self._print(i) for i in rhs.arguments)
             return 'call {0}({1})\n'.format(rhs_code, code_args)
 
-        if (isinstance(expr.lhs, Variable) and
-              isinstance(expr.lhs.dtype, SymbolicType)):
+        if (isinstance(lhs, Variable) and
+              isinstance(lhs.dtype, SymbolicType)):
             return ''
+
+        if isinstance(lhs, Variable) and isinstance(lhs.class_type, NumpyNDArrayType):
+            lhs_code += '('+','.join(':'*lhs.rank)+')'
 
         # Right-hand side code
         rhs_code = self._print(rhs)
