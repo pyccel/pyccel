@@ -1749,6 +1749,7 @@ class SemanticParser(BasicParser):
             # pointers reassigning need to call free_pointer func
             # to remove memory leaks
             new_expressions.append(Deallocate(var))
+            return
 
         elif class_type != var.class_type:
             if is_augassign:
@@ -1786,7 +1787,7 @@ class SemanticParser(BasicParser):
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
 
-        elif not is_augassign:
+        if not is_augassign:
 
             shape = var.shape
 
