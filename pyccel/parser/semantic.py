@@ -3406,7 +3406,7 @@ class SemanticParser(BasicParser):
                 if semantic_lhs:
                     if not isinstance(semantic_lhs.class_type, TupleType):
                         errors.report(f"Type of {lhs} has changed from {semantic_lhs.class_type} to a tuple type.",
-                                severity="fatal", symbol=expr)
+                                severity="error", symbol=expr)
 
                     pyccel_stage.set_stage('syntactic')
                     syntactic_assign_elems = [Assign(IndexedElement(lhs,i), r, python_ast=expr.python_ast) for i, r in enumerate(rhs)]
