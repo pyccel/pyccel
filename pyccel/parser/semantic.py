@@ -600,7 +600,7 @@ class SemanticParser(BasicParser):
         """
 
         deallocs = []
-        if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
+        if all(r.expr is None for r in expr.get_attribute_nodes(Return)):
             for i in self._allocs[-1]:
                 if isinstance(i, DottedVariable):
                     if isinstance(i.lhs.class_type, CustomDataType) and self._current_function != '__del__':
