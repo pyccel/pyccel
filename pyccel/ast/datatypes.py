@@ -777,7 +777,7 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
 
 #==============================================================================
 
-class CustomDataType(ContainerType, metaclass=Singleton):
+class CustomDataType(DataType, metaclass=Singleton):
     """
     Class from which user-defined types inherit.
 
