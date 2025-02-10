@@ -777,7 +777,7 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
 
 #==============================================================================
 
-class CustomDataType(DataType, metaclass=Singleton):
+class CustomDataType(PyccelType, metaclass=Singleton):
     """
     Class from which user-defined types inherit.
 
