@@ -628,7 +628,7 @@ class Scope(object):
         self.insert_symbol(chosen_new_symbol)
 
         # The symbol may be different to the one chosen in the case of collisions with language-specific terms)
-        new_symbol = self._used_symbols[new_symbol]
+        new_symbol = self._used_symbols[chosen_new_symbol]
 
         return new_symbol, counter
 
