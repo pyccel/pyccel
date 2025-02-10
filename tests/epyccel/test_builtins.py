@@ -506,6 +506,16 @@ def test_len_literal_string(language):
 
     assert epyc_f() == f()
 
+def test_len_multi_layer(stc_language):
+    def f():
+        x = [1,2,3]
+        y = [x]
+        return len(y), len(y[0])
+
+    epyc_f = epyccel(f, language = language)
+
+    assert epyc_f() == f()
+
 def test_round_int(language):
     def round_int(x : float):
         return round(x)
