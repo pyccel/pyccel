@@ -246,6 +246,7 @@ class Variable(TypedAstNode):
         an If block.
         """
         self._shape = tuple(PyccelArrayShapeElement(self, LiteralInteger(i)) for i in range(self.rank))
+        self._alloc_shape = tuple(PyccelArrayShapeElement(self, LiteralInteger(i)) for i in range(self.rank))
 
     def set_init_shape(self, shape):
         """
