@@ -4214,6 +4214,8 @@ class SemanticParser(BasicParser):
         results_vars = self.scope.collect_all_tuple_elements(results)
         self._check_pointer_targets(results_vars)
         code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results_vars]
+        if results is Nil():
+            results = None
         if code:
             expr  = Return(results, CodeBlock(code))
         else:

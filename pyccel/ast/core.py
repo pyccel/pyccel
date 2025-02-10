@@ -1984,7 +1984,7 @@ class Return(PyccelAstNode):
     def __init__(self, expr, stmt=None):
 
         assert stmt is None or isinstance(stmt, CodeBlock)
-        assert isinstance(expr, (TypedAstNode, PyccelSymbol, DottedName))
+        assert expr is None or isinstance(expr, (TypedAstNode, PyccelSymbol, DottedName))
 
         self._expr = expr
         self._stmt = stmt
