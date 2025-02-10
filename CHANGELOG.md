@@ -69,6 +69,7 @@ All notable changes to this project will be documented in this file.
 -   #983 : Add support for built-in function `round`.
 -   Add support for `type` as a type annotation.
 -   #2182 : Add support for `isinstance`.
+-   #337 : Add support for returning tuples from functions.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
@@ -114,6 +115,7 @@ All notable changes to this project will be documented in this file.
 -   #2181 : Allow saving an array result of a function to a slice but raise a warning about suboptimal performance.
 -   #2190 : Fix missing error for list pointer assignment.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
+-   #1321 : Fix use of tuples returned from functions in a non-assign statement.
 
 ### Changed
 
@@ -153,6 +155,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Change the order of the constructor arguments of `FunctionDef`.
 -   \[INTERNALS\] Use `_extract_X_FunctionDefResult` methods in Fortran-to-C wrapper.
 -   \[INTERNALS\] Rename `BindCVariable`->`BindCModuleVariable`.
+-   \[INTERNALS\] Restrict use of `FunctionDefResult` to one instance per function.
 
 ### Deprecated
 
