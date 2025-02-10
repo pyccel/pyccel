@@ -55,6 +55,7 @@ from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
+from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
@@ -477,7 +478,7 @@ class CCodePrinter(CodePrinter):
             for li, ri in zip(lhs, arg):
                 if li.rank:
                     li_slice_var = self.scope.get_temporary_variable(li.class_type,
-                            shape = ri.shape, memory_handling='alias')
+                            shape = get_shape_of_multi_level_container(ri), memory_handling='alias')
                     body += self._print(AliasAssign(li_slice_var, li))
                     body += self.copy_NumpyArray_Data(li_slice_var, ri)
                 else:
@@ -495,7 +496,8 @@ class CCodePrinter(CodePrinter):
             return result
 
         flattened_args = self._flatten_list(arg)
-        flattened_lhs = [get_indexed(lhs, elems) for elems in product(*[range(s) for s in lhs.shape])]
+
+        flattened_lhs = [get_indexed(lhs, elems) for elems in product(*[range(s) for s in get_shape_of_multi_level_container(arg)])]
 
         operations = ''
         for li, ri in zip(flattened_lhs, flattened_args):
