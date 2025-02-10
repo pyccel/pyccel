@@ -1081,7 +1081,7 @@ def test_function_aliasing():
 
 def test_function(language):
     pyccel_test("scripts/functions.py",
-            language = language, output_dtype=[str]+[int]*8 )
+            language = language, output_dtype=[str]+[int]*10 )
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
