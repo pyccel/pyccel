@@ -3952,10 +3952,7 @@ class SemanticParser(BasicParser):
 
             class_type = type_container[conversion_func.cls_name](numpy_process_dtype(class_type), rank=1, order=None)
         d_var['class_type'] = class_type
-        shape = [dim]
-        if d_var['shape']:
-            shape.extend(d_var['shape'])
-        d_var['shape'] = shape
+        d_var['shape'] = (dim,)
         d_var['cls_base'] = get_cls_base(class_type)
 
         # ...
