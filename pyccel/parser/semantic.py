@@ -1774,7 +1774,7 @@ class SemanticParser(BasicParser):
             elif isinstance(var.class_type, HomogeneousTupleType) and \
                     isinstance(class_type, InhomogeneousTupleType):
                 # TODO: Remove isinstance(rhs, Variable) condition when tuples are saved like lists
-                raise_error = any(a != var.class_type.element_type for a in class_type) or not isinstance(rhs, Variable)
+                raise_error = any(a != var.class_type.element_type for a in class_type) or not isinstance(rhs, (Variable, PythonTuple))
             else:
                 raise_error = True
 
