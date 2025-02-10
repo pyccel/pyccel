@@ -115,6 +115,7 @@ All notable changes to this project will be documented in this file.
 -   #2181 : Allow saving an array result of a function to a slice but raise a warning about suboptimal performance.
 -   #2190 : Fix missing error for list pointer assignment.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
+-   #2206 : Fix returning an array of unknown literal size.
 -   #1321 : Fix use of tuples returned from functions in a non-assign statement.
 
 ### Changed
