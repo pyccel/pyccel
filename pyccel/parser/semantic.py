@@ -1490,7 +1490,6 @@ class SemanticParser(BasicParser):
         pyccel.ast.variable.Variable
             The representation of the lhs provided by the SemanticParser.
         """
-
         if isinstance(lhs, IndexedElement):
             lhs = self._visit(lhs)
         elif isinstance(lhs, (PyccelSymbol, DottedName)):
@@ -3589,7 +3588,8 @@ class SemanticParser(BasicParser):
                     errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
                         severity='error')
                     return None
-            lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions)
+            lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions,
+                    arr_in_multirets = isinstance(rhs, FunctionCall))
 
             # If lhs is a purely symbolic object to link tuple elements to their containing tuple
             # then no semantic object should be returned
