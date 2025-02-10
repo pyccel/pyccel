@@ -512,10 +512,10 @@ def homogeneous_tuple_of_arrays():
             b[2,j,k] = a[2][j,k]
     return b
 
-def annotated_tuple_inhomog_return() -> tuple[int,int]:
+def annotated_tuple_inhomog_return() -> 'tuple[int,int]':
     return 1,2
 
-def annotated_tuple_homog_return() -> tuple[int,...]:
+def annotated_tuple_homog_return() -> 'tuple[int,...]':
     return 1,2
 
 def tuple_return_unknown_length():
