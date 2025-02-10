@@ -307,7 +307,7 @@ class SyntaxParser(BasicParser):
         ----------
         possible_names : iterable[PyccelSymbol | TypedAstNode]
             The possible names found for the variable.
-        valid_names = iterable[PyccelSymbol]
+        valid_names : iterable[PyccelSymbol]
             The names found in the scope that can be used for this variable (this is
             important to avoid accidentally using an imported variable).
         forbidden_names : iterable[PyccelSymbol]
