@@ -72,7 +72,6 @@ from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNative
 from pyccel.ast.datatypes import DataTypeFactory, HomogeneousContainerType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType, HomogeneousSetType, HomogeneousListType
 from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType, DictType, TypeAlias
-from pyccel.ast.datatypes import ContainerType
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
@@ -2509,7 +2508,6 @@ class SemanticParser(BasicParser):
                                 results = FunctionDefResult(Nil())
 
                             args = [FunctionDefArgument(a) for a in args]
-                            results = results
                             self.exit_function_scope()
                             func_defs.append(FunctionDef(v.name, args, [], results, is_external = is_external, is_header = True,
                                 scope = scope))
@@ -4477,8 +4475,6 @@ class SemanticParser(BasicParser):
 
             namespace_imports = self.scope.imports
             self.exit_function_scope()
-
-            results_names = [v.name for v in results_vars]
 
             # Find all nodes which can modify variables
             assigns = body.get_attribute_nodes((Assign, AliasAssign), excluded_nodes = (FunctionCall,))
