@@ -142,7 +142,7 @@ INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` or `pyh`, but fou
 INVALID_PYTHON_SYNTAX = 'Python syntax error'
 
 # ARRAY ERRORS
-ASSIGN_ARRAYS_ONE_ANOTHER = 'Arrays which own their data cannot become views on other arrays'
+ASSIGN_ARRAYS_ONE_ANOTHER = 'Containers (arrays, lists, etc) which own their data cannot become views on other containers'
 ARRAY_ALREADY_IN_USE = 'Attempt to reallocate an array which is being used by another variable'
 ARRAY_IS_ARG = 'Attempt to reallocate an array which is an argument. Array arguments cannot be used as local variables'
 INVALID_POINTER_REASSIGN = 'Attempt to give data ownership to a pointer'

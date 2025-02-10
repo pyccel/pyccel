@@ -769,6 +769,7 @@ def test_return_numpy_arrays(language):
     types += [float]*5 # 5 floats for h
     types += [int]*5 # 5 ints for g
     types += [int]*4 # 4 ints for k
+    types += [float]*48 # 48 floats for x
     pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
@@ -998,8 +999,6 @@ def test_assert(language, test_file):
 
     cwd = get_abs_path(test_dir)
 
-    if not language:
-        language = "fortran"
     pyccel_commands = " --language="+language
     pyccel_commands += " --output="+ output_dir
 

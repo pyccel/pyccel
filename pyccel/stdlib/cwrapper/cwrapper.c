@@ -177,11 +177,7 @@ void capsule_cleanup(PyObject *capsule) {
     free(memory);
 }
 
-#if defined(WIN32) && (PyArray_RUNTIME_VERSION >= NPY_2_0_API_VERSION)
 PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order, bool release_memory)
-#else
-PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order, bool release_memory)
-#endif
 {
     int FLAGS;
     if (nd == 1) {
@@ -235,7 +231,7 @@ static char*	_check_pyarray_dtype(PyArrayObject *a, int dtype)
 	current_dtype = PyArray_TYPE(a);
 	if (current_dtype != dtype)
 	{
-        PyObject* current_type_name = PyObject_Str(PyArray_DESCR(a)->typeobj);
+        PyObject* current_type_name = PyObject_Str((PyObject*)PyArray_DESCR(a)->typeobj);
         PyObject* expected_type_name = PyObject_Str(PyArray_TypeObjectFromType(dtype));
         Py_ssize_t c_size;
         const char* current_name = PyUnicode_AsUTF8AndSize(current_type_name, &c_size);

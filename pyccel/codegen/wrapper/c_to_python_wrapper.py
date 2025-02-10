@@ -14,6 +14,7 @@ from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
 from pyccel.ast.builtins      import VariableIterator
 from pyccel.ast.builtin_methods.set_methods import SetAdd, SetPop
+from pyccel.ast.builtin_methods.dict_methods import DictItems
 from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -24,7 +25,7 @@ from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, Py
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
-from pyccel.ast.cwrapper      import PyAttributeError
+from pyccel.ast.cwrapper      import PyAttributeError, Py_ssize_t, Py_ssize_t_Cast
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
@@ -36,6 +37,7 @@ from pyccel.ast.cwrapper      import PyTuple_GetItem, PyTuple_SetItem
 from pyccel.ast.cwrapper      import PySet_New, PySet_Add
 from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PySet_GetIter, PySet_Clear
 from pyccel.ast.cwrapper      import PyIter_Next
+from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
@@ -44,7 +46,7 @@ from pyccel.ast.datatypes     import TupleType
 from pyccel.ast.internals     import Slice
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
-from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type
+from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type, NumpyInt32Type
 from pyccel.ast.numpy_wrapper import PyArray_DATA
 from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
@@ -1559,6 +1561,9 @@ class CToPythonWrapper(Wrapper):
             res = Py_None
             func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
             body.append(Py_INCREF(res))
+        elif original_func_name == '__len__':
+            res = Py_ssize_t_Cast(python_result_variable)
+            func_results = [FunctionDefResult(Variable(Py_ssize_t(), self.scope.get_new_name(), is_temp = True))]
         else:
             res = python_result_variable
             func_results = [FunctionDefResult(res)]
@@ -1685,7 +1690,7 @@ class CToPythonWrapper(Wrapper):
             typenum = numpy_dtype_registry[expr.dtype]
             data_var = DottedVariable(VoidType(), 'data', memory_handling='alias',
                         lhs=expr)
-            shape_var = DottedVariable(CStackArray(PythonNativeInt()), 'shape',
+            shape_var = DottedVariable(CStackArray(NumpyInt32Type()), 'shape',
                         lhs=expr)
             release_memory = False
             return [AliasAssign(py_equiv, to_pyarray(
@@ -1729,7 +1734,7 @@ class CToPythonWrapper(Wrapper):
         data_var = self.scope.get_temporary_variable(dtype_or_var = VoidType(),
                 name = v.name + '_data', memory_handling = 'alias')
         # Create variables to store the shape of the array
-        shape_var = self.scope.get_temporary_variable(CStackArray(PythonNativeInt()), name = v.name+'_size',
+        shape_var = self.scope.get_temporary_variable(CStackArray(NumpyInt32Type()), name = v.name+'_size',
                 shape = (v.rank,))
         shape = [IndexedElement(shape_var, i) for i in range(v.rank)]
         # Get the bind_c function which wraps a fortran array and returns c objects
@@ -1744,7 +1749,7 @@ class CToPythonWrapper(Wrapper):
         release_memory = False
         # Save the ndarray to vars_to_wrap to be handled as if it came from C
         return [call, AliasAssign(py_equiv, to_pyarray(LiteralInteger(v.rank), typenum,
-                            data_var, shape_var,convert_to_literal(v.order != 'F'),
+                            data_var, shape_var, convert_to_literal(v.order != 'F'),
                             convert_to_literal(release_memory)))]
 
     def _wrap_DottedVariable(self, expr):
@@ -2759,7 +2764,7 @@ class CToPythonWrapper(Wrapper):
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         # Result of calling the bind-c function
         data_var = Variable(VoidType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
-        shape_var = Variable(CStackArray(PythonNativeInt()), self.scope.get_new_name(name+'_shape'),
+        shape_var = Variable(CStackArray(NumpyInt32Type()), self.scope.get_new_name(name+'_shape'),
                         shape = (orig_var.rank,), memory_handling='alias')
         typenum = numpy_dtype_registry[orig_var.dtype]
         # Save so we can find by iterating over func.results
@@ -2898,5 +2903,56 @@ class CToPythonWrapper(Wrapper):
                  For((idx,), PythonRange(loop_size), for_body, for_scope)]
         if is_bind_c:
             body.append(Deallocate(c_res))
+
+        return {'c_results': c_results, 'py_result': py_res, 'body': body}
+
+    def _extract_DictType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+        """
+        Get the code which translates a `Variable` containing a dictionary to a PyObject.
+
+        Get the code which translates a `Variable` containing a dictionary to a PyObject.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        is_bind_c : bool
+            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
+        name = getattr(orig_var, 'name', 'tmp')
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        if is_bind_c:
+            raise NotImplementedError("Can't return a dict from Fortran")
+        else:
+            c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)
+            c_results = [c_res]
+            iterable = DictItems(c_res)
+
+        iterable.set_loop_counter(Variable(PythonNativeInt(), self.scope.get_new_name()))
+        self.scope.insert_variable(c_res)
+
+        for_scope = self.scope.create_new_loop_scope()
+        self.scope = for_scope
+        key_elem, val_elem = iterable.get_python_iterable_item()
+        key_extraction = self._extract_FunctionDefResult(key_elem, is_bind_c, funcdef)
+        value_extraction = self._extract_FunctionDefResult(val_elem, is_bind_c, funcdef)
+        elem_set = PyDict_SetItem(py_res, key_extraction['py_result'], value_extraction['py_result'])
+        for_body = [*key_extraction['body'], *value_extraction['body'],
+                    If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
+                                         [Return([self._error_exit_code])]))]
+        self.exit_scope()
+        for_loop = For((key_extraction['c_results'][0], value_extraction['c_results'][0]),
+                        iterable, for_body, for_scope)
+
+        body = [AliasAssign(py_res, PyDict_New()),
+                for_loop]
 
         return {'c_results': c_results, 'py_result': py_res, 'body': body}
