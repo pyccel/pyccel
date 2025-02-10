@@ -598,6 +598,8 @@ class PythonTuple(TypedAstNode):
             self._is_homogeneous = False
             return
 
+        element_types = [a.class_type for a in args]
+
         # Get possible datatypes
         dtypes = [a.class_type.datatype for a in args]
         # Create a set of dtypes using the same key for compatible types
@@ -609,17 +611,13 @@ class PythonTuple(TypedAstNode):
             self._is_homogeneous = False
             return
 
-        ranks  = set(a.rank for a in args)
-        orders = set(a.order for a in args)
-        if len(ranks) == 1:
-            rank = next(iter(ranks))
-            shapes = tuple(set(a.shape[i] for a in args if not (a.shape[i] is None or isinstance(a.shape[i], PyccelArrayShapeElement) or \
-                               a.shape[i].get_attribute_nodes(PyccelArrayShapeElement))) \
-                               for i in range(rank))
-        else:
-            shapes = ()
-        is_homogeneous = (not prefer_inhomogeneous) and len(dtypes) == 1 and len(ranks) == 1 and \
-                         len(orders) == 1 and all(len(s) <= 1 for s in shapes)
+        is_homogeneous = (not prefer_inhomogeneous) and len(set(element_types)) == 1
+        if is_homogeneous and args[0].rank > 0:
+            shapes = [tuple(None if isinstance(s, PyccelArrayShapeElement) else s for s in a.shape)
+                        for a in args]
+            if len(set(shapes))>1:
+                is_homogeneous = False
+
         contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
                             not isinstance(a.class_type, HomogeneousTupleType) for a in args)
 
@@ -628,9 +626,9 @@ class PythonTuple(TypedAstNode):
             self._shape = (LiteralInteger(len(args)), )
 
             if contains_pointers:
-                self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
+                self._class_type = InhomogeneousTupleType(*element_types)
             else:
-                self._class_type = HomogeneousTupleType(args[0].class_type)
+                self._class_type = HomogeneousTupleType(element_types.pop())
 
         else:
             self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
