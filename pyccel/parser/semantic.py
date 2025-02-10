@@ -4322,8 +4322,8 @@ class SemanticParser(BasicParser):
             if len(annotation)>1:
                 tmp_template_name = a.name + '_' + random_string(12)
                 tmp_template_name = self.scope.get_new_name(tmp_template_name)
-                pyccel_stage.set_stage('syntactic')
                 tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in annotation])
+                pyccel_stage.set_stage('syntactic')
                 dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
                 dtype_symb = SyntacticTypeAnnotation(dtype_symb)
                 var_clone = AnnotatedPyccelSymbol(a.var.name, annotation=dtype_symb, is_temp=a.var.name.is_temp)
@@ -5067,9 +5067,12 @@ class SemanticParser(BasicParser):
         f_name      = self._current_function
         if isinstance(f_name, DottedName):
             f_name = f_name.name[-1]
-        original_name = self.scope.get_python_name(f_name)
-        if original_name.startswith('__i') and ('__'+original_name[3:]) in magic_method_map.values():
-            return EmptyNode()
+
+        # There may be no name if we are in a FunctionTypeAnnotation
+        if f_name:
+            original_name = self.scope.get_python_name(f_name)
+            if original_name.startswith('__i') and ('__'+original_name[3:]) in magic_method_map.values():
+                return EmptyNode()
 
         var = self._visit(expr.var)
         if isinstance(var, list):
