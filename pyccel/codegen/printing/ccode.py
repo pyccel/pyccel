@@ -24,7 +24,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict,
 from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys
 
 from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
-from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
+from pyccel.ast.core      import FunctionCall, FunctionCallArgument
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
@@ -2165,7 +2165,7 @@ class CCodePrinter(CodePrinter):
 
         body  = self._print(expr.body)
         decs = [Declare(i, value=(Nil() if i.is_alias and isinstance(i.class_type, (VoidType, BindCPointer)) else None))
-                if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
+                for i in expr.local_vars]
 
         if len(results) == 1 :
             res = results[0]
