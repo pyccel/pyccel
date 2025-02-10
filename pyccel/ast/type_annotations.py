@@ -122,10 +122,10 @@ class FunctionTypeAnnotation(PyccelAstNode):
         In the syntactic stage these objects are of type SyntacticTypeAnnotation.
         In the semantic stage these objects are of type UnionTypeAnnotation.
 
-    results : SyntacticTypeAnnotation | UnionTypeAnnotation
-        The type annotations describing the results of the function address.
-        In the syntactic stage these objects are of type SyntacticTypeAnnotation.
-        In the semantic stage these objects are of type UnionTypeAnnotation.
+    result : SyntacticTypeAnnotation | UnionTypeAnnotation
+        The type annotation describing the result of the function address.
+        In the syntactic stage this object is of type SyntacticTypeAnnotation.
+        In the semantic stage this object is of type UnionTypeAnnotation.
 
     is_const : bool, default=True
         True if the function pointer cannot be modified, false otherwise.
