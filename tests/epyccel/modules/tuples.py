@@ -77,6 +77,9 @@ __all__ = [
         'tuple_homogeneous',
         'tuple_inhomogeneous',
         'tuple_multilevel_inhomogeneous',
+        'annotated_tuple_inhomog_return',
+        'annotated_tuple_homog_return',
+        'tuple_return_unknown_length',
         ]
 
 def homogeneous_tuple_int():
@@ -508,3 +511,19 @@ def homogeneous_tuple_of_arrays():
             b[1,j,k] = a[1][j,k]
             b[2,j,k] = a[2][j,k]
     return b
+
+def annotated_tuple_inhomog_return() -> tuple[int,int]:
+    return 1,2
+
+def annotated_tuple_homog_return() -> tuple[int,...]:
+    return 1,2
+
+def tuple_return_unknown_length():
+    b = False
+    a = 1
+    if b:
+        return a,
+    else:
+        c = 2
+        return a, c
+
