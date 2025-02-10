@@ -639,9 +639,6 @@ class HomogeneousContainerType(ContainerType):
     def __hash__(self):
         return hash((self.__class__, self.element_type))
 
-    def check_shape(self, shape):
-        assert len(shape) == self.rank
-
 class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
     Class representing Python's native string type.
@@ -917,14 +914,6 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         this function returns None.
         """
         return self._order
-
-    def check_shape(self, shape):
-        pass
-        #print(self)
-        #if self.datatype == self or any(not isinstance(e, TupleType) for e in self._element_types):
-        #    assert len(shape) == self.container_rank
-        #else:
-        #    assert len(shape) == self.rank
 
 class DictType(ContainerType, metaclass = ArgumentSingleton):
     """
