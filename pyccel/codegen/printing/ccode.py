@@ -607,7 +607,7 @@ class CCodePrinter(CodePrinter):
 
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
         if parent_assign:
-            results = {r : l for r,l in zip(func.scope.collect_all_tuple_elements(func.results.var), parent_assign[0].lhs)}
+            results = dict(zip(func.scope.collect_all_tuple_elements(func.results.var), parent_assign[0].lhs))
             orig_res_vars = list(results.keys())
             new_res_vars  = self._temporary_args
             new_res_vars = [a.obj if isinstance(a, ObjectAddress) else a for a in new_res_vars]
