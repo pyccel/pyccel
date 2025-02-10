@@ -776,6 +776,7 @@ class SemanticParser(BasicParser):
 
             if expr.is_homogeneous:
                 d_var['shape'] = get_shape_of_multi_level_container(expr)
+            return d_var
 
         elif isinstance(expr, (DictGetItem, DictGet)):
 
