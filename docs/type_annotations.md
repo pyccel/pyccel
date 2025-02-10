@@ -41,7 +41,7 @@ In general string type hints must be used to provide Pyccel with information abo
 
 ## Tuples
 
-Currently Pyccel supports tuples used locally in functions and in certain cases as arguments, but not as returned objects or module variables. The implementation of the type annotations (including adding the missing support) is in progress.
+Currently Pyccel supports tuples used locally in functions, as returned objects and in certain cases as arguments, however module variables are not yet handled. The implementation of the type annotations (including adding the missing support) is in progress.
 
 Tuples can be homogeneous or inhomogeneous. A homogeneous tuple is a tuple whose elements all have the same type and shape. Pyccel translates homogeneous tuples in a similar way to NumPy arrays. When creating multiple dimensional tuples it is therefore important to ensure that all objects have compatible sizes otherwise they will be handled as inhomogeneous tuples. An inhomogeneous tuple describes all other types, but comes with extra restrictions. An inhomogeneous tuple is translated to multiple objects in the target language so it can only be used if the element can be identified during the translation. This means that expressions such as `a[i]` are not possible for inhomogeneous tuples while `a[0]` is valid.
 
