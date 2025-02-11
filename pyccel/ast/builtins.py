@@ -614,11 +614,12 @@ class PythonTuple(TypedAstNode):
         contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
                             not isinstance(a.class_type, HomogeneousTupleType) for a in args)
 
-        is_homogeneous = (not prefer_inhomogeneous) and len(unique_element_types) == 1
+        is_homogeneous = (not prefer_inhomogeneous) and len(unique_element_types) == 1 and \
+                        not isinstance(args[0].class_type, InhomogeneousTupleType)
         if is_homogeneous and args[0].rank > 0:
             shapes = [tuple(None if isinstance(s, PyccelArrayShapeElement) else s for s in a.shape)
                         for a in args]
-            if len(set(shapes))>1:
+            if len(set(shapes)) > 1:
                 is_homogeneous = False
             elif not contains_pointers:
                 self._shape += shapes[0]
