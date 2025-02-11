@@ -208,7 +208,7 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         if isinstance(arg, bool):
             return not arg
         else:
-            return ~args[0]
+            return ~arg
 
     elif isinstance(expr, PyccelPow):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
