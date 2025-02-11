@@ -660,10 +660,6 @@ class PythonTuple(TypedAstNode):
         else:
             raise NotImplementedError(f"Can't index PythonTuple with type {type(i)}")
 
-    @property
-    def shape(self):
-        return self._shape
-
     def __iter__(self):
         return self._args.__iter__()
 
