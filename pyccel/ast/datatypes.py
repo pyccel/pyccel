@@ -506,7 +506,7 @@ class ContainerType(PyccelType):
         bool
             True if the shape is acceptable, False otherwise.
         """
-        return isinstance(shape, tuple) and len(shape) == self.container_rank
+        return isinstance(shape, tuple) and len(shape) == self.container_rank # pylint: disable=no-member
 
 #==============================================================================
 
