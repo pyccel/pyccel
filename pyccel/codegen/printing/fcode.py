@@ -3432,7 +3432,17 @@ class FCodePrinter(CodePrinter):
         if len(inds) == 1 and isinstance(inds[0], LiteralEllipsis):
             inds = [Slice(None,None)]*expr.rank
 
+        # Condense all indices on homogeneous objects into one IndexedElement for printing
+        # This should be removed when support for lists is added
+        if isinstance(base, IndexedElement):
+            while isinstance(base, IndexedElement) and isinstance(base.class_type, HomogeneousTupleType):
+                inds = list(base.indices) + inds
+                base = base.base
+
         rank = base.rank
+
+        if len(inds)<rank and isinstance(base.class_type, HomogeneousTupleType):
+            inds += [Slice(None,None)]*(rank-base.class_type.container_rank)
 
         base_code = self._print(base)
 

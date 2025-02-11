@@ -712,6 +712,10 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
     def __str__(self):
         return f'tuple[{self._element_type}, ...]'
 
+    def check_shape(self, shape):
+        # TODO: Remove if tuples are saved in lists instead of ndarrays
+        assert len(shape) == self.rank
+
 class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous list type.
