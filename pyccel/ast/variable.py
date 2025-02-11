@@ -715,8 +715,13 @@ class IndexedElement(TypedAstNode):
             if new_rank == 0:
                 self._class_type = base.class_type.element_type
                 self._is_slice = False
-            elif isinstance(base.class_type, HomogeneousTupleType) and new_rank != base.rank:
-                self._class_type = base.class_type.element_type
+            elif isinstance(base.class_type, HomogeneousTupleType):
+                class_type = base.class_type
+                rank = base.rank
+                while new_rank != rank:
+                    class_type = class_type.element_type
+                    rank -= 1
+                self._class_type = class_type
                 self._shape = tuple(new_shape)
                 self._is_slice = False
             else:
