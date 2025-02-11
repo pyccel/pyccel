@@ -161,7 +161,7 @@ def get_shape_of_multi_level_container(expr, shape_prefix = ()):
     ----------
     expr : TypedAstNode
         The expression whose shape we want to know.
-    shap_prefix : tuple[TypedAstNode, ...], optional
+    shape_prefix : tuple[TypedAstNode, ...], optional
         A tuple of objects describing the shape of the containers where
         the expression is found. This is used internally to call this
         function recursively. In most cases it is not necessary to
