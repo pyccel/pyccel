@@ -16,6 +16,8 @@ from sympy.utilities.iterables import iterable as sympy_iterable
 from sympy import Sum as Summation
 from sympy import Symbol as sp_Symbol
 from sympy import Integer as sp_Integer
+from sympy.logic.boolalg import BooleanTrue as sp_True
+from sympy.logic.boolalg import BooleanFalse as sp_False
 from sympy import ceiling
 
 from textx.exceptions import TextXSyntaxError
@@ -4019,9 +4021,9 @@ class SemanticParser(BasicParser):
         except TypeError:
             sympy_cond = 'unknown'
 
-        if sympy_cond is False:
+        if sympy_cond == sp_False():
             return IfSection(LiteralFalse(), CodeBlock([]))
-        elif sympy_cond is True:
+        elif sympy_cond == sp_True():
             cond = LiteralTrue()
 
         body = self._visit(expr.body)

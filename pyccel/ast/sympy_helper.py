@@ -173,11 +173,11 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     elif isinstance(expr, PyccelEq):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return args[0] == args[1]
+        return sp.Eq(args[0], args[1])
 
     elif isinstance(expr, PyccelNe):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return args[0] != args[1]
+        return sp.Ne(args[0], args[1])
 
     elif isinstance(expr, PyccelLe):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
@@ -197,18 +197,15 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     elif isinstance(expr, PyccelAnd):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return args[0] & args[1]
+        return sp.And(*args)
 
     elif isinstance(expr, PyccelOr):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return args[0] | args[1]
+        return sp.Or(*args)
 
     elif isinstance(expr, PyccelNot):
         arg = pyccel_to_sympy(expr.args[0], symbol_map, used_names)
-        if isinstance(arg, bool):
-            return not arg
-        else:
-            return ~arg
+        return sp.Not(arg)
 
     elif isinstance(expr, PyccelPow):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
@@ -246,10 +243,10 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         return sp.Tuple(*args)
 
     elif isinstance(expr, LiteralTrue):
-        return True
+        return sp.logic.boolalg.BooleanTrue()
 
     elif isinstance(expr, LiteralFalse):
-        return False
+        return sp.logic.boolalg.BooleanFalse()
 
     elif isinstance(expr, (sp.core.basic.Atom, sp.core.operations.AssocOp, sp.Set)):
         # Already translated
