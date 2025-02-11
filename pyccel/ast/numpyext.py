@@ -2520,16 +2520,18 @@ class NumpyCountNonZero(PyccelFunction):
             rank  = a.rank
             order = a.order
             if axis is not None:
-                self._shape = list(a.shape)
-                self._shape[axis.python_value] = LiteralInteger(1)
+                shape = list(a.shape)
+                shape[axis.python_value] = LiteralInteger(1)
+                self._shape = tuple(shape)
             else:
                 self._shape = (LiteralInteger(1),)*rank
             self._class_type = NumpyNDArrayType(dtype, rank, order)
         else:
             if axis is not None:
                 dtype = NumpyInt64Type()
-                self._shape = list(a.shape)
-                self._shape.pop(axis.python_value)
+                shape = list(a.shape)
+                shape.pop(axis.python_value)
+                self._shape = tuple(shape)
                 rank  = a.rank-1
                 order = a.order
                 self._class_type = NumpyNDArrayType(dtype, rank, order)
