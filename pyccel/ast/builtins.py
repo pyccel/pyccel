@@ -605,11 +605,15 @@ class PythonTuple(TypedAstNode):
         # Create a set of dtypes using the same key for compatible types
         dtypes = set((d.primitive_type, d.precision) if isinstance(d, FixedSizeNumericType) else d for d in dtypes)
 
+        self._shape = (LiteralInteger(len(args)),)
+
         if any(isinstance(d, SymbolicType) for d in dtypes):
             self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
-            self._shape = (LiteralInteger(len(args)),)
             self._is_homogeneous = False
             return
+
+        contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
+                            not isinstance(a.class_type, HomogeneousTupleType) for a in args)
 
         is_homogeneous = (not prefer_inhomogeneous) and len(set(element_types)) == 1
         if is_homogeneous and args[0].rank > 0:
@@ -617,14 +621,11 @@ class PythonTuple(TypedAstNode):
                         for a in args]
             if len(set(shapes))>1:
                 is_homogeneous = False
-
-        contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
-                            not isinstance(a.class_type, HomogeneousTupleType) for a in args)
+            elif not contains_pointers:
+                self._shape += shapes[0]
 
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
-            self._shape = (LiteralInteger(len(args)), )
-
             if contains_pointers:
                 self._class_type = InhomogeneousTupleType(*element_types)
             else:
@@ -632,7 +633,8 @@ class PythonTuple(TypedAstNode):
 
         else:
             self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
-            self._shape      = (LiteralInteger(len(args)), )
+
+        self._class_type.check_shape(self._shape)
 
     def __getitem__(self,i):
         def is_int(a):
