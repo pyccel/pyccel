@@ -622,7 +622,7 @@ class PythonTuple(TypedAstNode):
             if len(set(shapes)) > 1:
                 is_homogeneous = False
             elif not contains_pointers:
-                self._shape += shapes[0]
+                self._shape += args[0].shape
 
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
