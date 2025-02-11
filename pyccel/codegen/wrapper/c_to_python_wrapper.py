@@ -2375,7 +2375,7 @@ class CToPythonWrapper(Wrapper):
                                     is_optional=False, memory_handling='alias', new_class = Variable)
             self.scope.insert_variable(sliced_arg_var, orig_var.name)
 
-        original_size = [PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems)]
+        original_size = tuple(PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems))
 
         body.append(Allocate(arg_var, shape=original_size, status='unallocated', like=args[0]))
         body.append(AliasAssign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, None, s) for s in stride_elems])))
