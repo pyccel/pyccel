@@ -34,7 +34,7 @@ from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonT
 from pyccel.ast.builtins import Lambda, PythonMap
 
 from pyccel.ast.builtin_methods.dict_methods import DictKeys
-from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend, ListPop
+from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
 from pyccel.ast.builtin_methods.set_methods  import SetPop
 from pyccel.ast.builtin_methods.dict_methods  import DictGetItem, DictGet, DictPop, DictPopitem
