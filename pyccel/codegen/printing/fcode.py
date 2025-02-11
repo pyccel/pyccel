@@ -3436,11 +3436,9 @@ class FCodePrinter(CodePrinter):
             inds = [Slice(None,None)]*expr.rank
 
         # Condense all indices on homogeneous objects into one IndexedElement for printing
-        # This should be removed when support for lists is added
-        if isinstance(base, IndexedElement):
-            while isinstance(base, IndexedElement) and isinstance(base.class_type, HomogeneousTupleType):
-                inds = list(base.indices) + inds
-                base = base.base
+        while isinstance(base, IndexedElement) and isinstance(base.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
+            inds = list(base.indices) + inds
+            base = base.base
 
         rank = base.rank
 
