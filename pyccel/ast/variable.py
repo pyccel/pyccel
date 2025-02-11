@@ -708,17 +708,25 @@ class IndexedElement(TypedAstNode):
 
                         _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                     new_shape.append(_shape)
+            if isinstance(base.class_type, HomogeneousTupleType):
+                new_shape.extend(shape[1:])
             new_rank = len(new_shape)
 
             if new_rank == 0:
                 self._class_type = base.class_type.element_type
                 self._is_slice = False
                 self._shape = None
+            elif isinstance(base.class_type, HomogeneousTupleType) and new_rank != base.rank:
+                self._class_type = base.class_type.element_type
+                self._shape = tuple(new_shape)
+                self._is_slice = False
             else:
                 self._class_type = base.class_type.switch_rank(new_rank) if new_rank != rank \
                                     else base.class_type
                 self._is_slice = True
                 self._shape = tuple(new_shape)
+
+        self._class_type.check_shape(self._shape)
 
         super().__init__()
 
