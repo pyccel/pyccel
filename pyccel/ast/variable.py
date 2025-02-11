@@ -175,7 +175,8 @@ class Variable(TypedAstNode):
         elif shape is None:
             shape = tuple(None for i in range(class_type.container_rank))
 
-        class_type.check_shape(shape)
+        if pyccel_stage != 'codegen':
+            class_type.check_shape(shape)
 
         self._alloc_shape = shape
         self._class_type = class_type
@@ -726,7 +727,8 @@ class IndexedElement(TypedAstNode):
                 self._is_slice = True
                 self._shape = tuple(new_shape)
 
-        self._class_type.check_shape(self._shape)
+        if pyccel_stage != 'codegen':
+            self._class_type.check_shape(self._shape)
 
         super().__init__()
 
