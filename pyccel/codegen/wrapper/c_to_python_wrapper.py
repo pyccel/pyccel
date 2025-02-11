@@ -873,7 +873,7 @@ class CToPythonWrapper(Wrapper):
 
         alias_val = LiteralTrue() if is_alias else LiteralFalse()
 
-        return [Allocate(class_var, shape=(), status='unallocated'),
+        return [Allocate(class_var, shape=None, status='unallocated'),
                 AliasAssign(ref_list, PyList_New()),
                 Assign(alias_bool, alias_val)]
 
@@ -925,7 +925,7 @@ class CToPythonWrapper(Wrapper):
         else:
             result_name = self.scope.get_new_name('result')
             result = Variable(class_dtype, result_name)
-            body.append(Allocate(c_res, shape=(), status='unallocated',
+            body.append(Allocate(c_res, shape=None, status='unallocated',
                          like = result))
 
         body.append(Return([ObjectAddress(PointerCast(python_result_var, func_results[0].var))]))
@@ -1804,7 +1804,7 @@ class CToPythonWrapper(Wrapper):
         elif isinstance(expr.dtype, CustomDataType):
             if isinstance(new_res_val, PointerCast):
                 new_res_val = new_res_val.obj
-            body = [Allocate(getter_result, shape=(), status='unallocated'),
+            body = [Allocate(getter_result, shape=None, status='unallocated'),
                     AliasAssign(new_res_val, attrib),
                     *res_wrapper]
         else:
@@ -1933,7 +1933,7 @@ class CToPythonWrapper(Wrapper):
         call = self._call_wrapped_function(expr.getter, (class_obj,), c_results)
 
         if isinstance(getter_result.dtype, CustomDataType):
-            arg_code.append(Allocate(getter_result, shape=(), status='unallocated'))
+            arg_code.append(Allocate(getter_result, shape=None, status='unallocated'))
 
         if isinstance(expr.getter.original_function, DottedVariable):
             wrapped_var = expr.getter.original_function
@@ -2654,7 +2654,7 @@ class CToPythonWrapper(Wrapper):
             scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-            setup.append(Allocate(c_res, shape=(), status='unallocated', like=orig_var))
+            setup.append(Allocate(c_res, shape=None, status='unallocated', like=orig_var))
             result = PointerCast(c_res, cast_type = orig_var)
             body = []
 
