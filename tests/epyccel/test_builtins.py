@@ -512,7 +512,7 @@ def test_len_multi_layer(stc_language):
         y = [x]
         return len(y), len(y[0])
 
-    epyc_f = epyccel(f, language = language)
+    epyc_f = epyccel(f, language = stc_language)
 
     assert epyc_f() == f()
 
