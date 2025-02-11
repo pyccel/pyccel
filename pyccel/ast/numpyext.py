@@ -177,7 +177,9 @@ def get_shape_of_multi_level_container(expr, shape_prefix = ()):
 
     shape = shape_prefix + expr.shape
 
-    if class_type.rank == class_type.container_rank:
+    assert len(shape) <= class_type.rank
+
+    if class_type.rank == len(shape):
         return shape
     elif isinstance(expr, (PythonTuple, PythonList)):
         return get_shape_of_multi_level_container(expr.args[0], shape)
