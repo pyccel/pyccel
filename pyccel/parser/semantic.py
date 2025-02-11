@@ -4012,14 +4012,32 @@ class SemanticParser(BasicParser):
 
         cond = self._visit(expr.condition)
 
+        symbol_map = {}
+        used_names = self.scope.all_used_symbols.copy()
+        try:
+            sympy_cond = pyccel_to_sympy(cond, symbol_map, used_names)
+        except TypeError:
+            sympy_cond = 'unknown'
+
+        if sympy_cond is False:
+            return IfSection(LiteralFalse(), CodeBlock([]))
+        elif sympy_cond is True:
+            cond = LiteralTrue()
+
         body = self._visit(expr.body)
 
         return IfSection(cond, body)
 
     def _visit_If(self, expr):
-        args = [self._visit(i) for i in expr.blocks]
+        args = []
 
-        conds = [b.condition for b in args]
+        for b in expr.blocks:
+            new_b = self._visit(b)
+            cond = new_b.condition
+            if not isinstance(new_b.condition, LiteralFalse):
+                args.append(new_b)
+            if isinstance(new_b.condition, LiteralTrue):
+                break
 
         allocations = [arg.get_attribute_nodes(Allocate) for arg in args]
 
