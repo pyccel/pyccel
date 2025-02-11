@@ -762,7 +762,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
             True if the shape is acceptable, False otherwise.
         """
         # TODO: Remove this specialisation if tuples are saved in lists instead of ndarrays
-        assert isinstance(shape, tuple) and len(shape) == self.rank
+        return isinstance(shape, tuple) and len(shape) == self.rank
 
 class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     """
