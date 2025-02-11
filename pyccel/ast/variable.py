@@ -684,12 +684,6 @@ class IndexedElement(TypedAstNode):
             assert len(self._indices) == 1 and isinstance(self._indices[0], LiteralInteger)
             self._class_type = base.class_type[self._indices[0]]
             self._is_slice = False
-            if self._class_type.rank == 0:
-                self._shape = None
-            elif isinstance(self._class_type, HomogeneousTupleType):
-                self._shape = (None,)*self._class_type.rank
-            else:
-                self._shape = (None,)*self._class_type.container_rank
 
         else:
             # Calculate new shape
@@ -721,7 +715,6 @@ class IndexedElement(TypedAstNode):
             if new_rank == 0:
                 self._class_type = base.class_type.element_type
                 self._is_slice = False
-                self._shape = None
             elif isinstance(base.class_type, HomogeneousTupleType) and new_rank != base.rank:
                 self._class_type = base.class_type.element_type
                 self._shape = tuple(new_shape)
@@ -732,14 +725,14 @@ class IndexedElement(TypedAstNode):
                 self._is_slice = True
                 self._shape = tuple(new_shape)
 
-        if pyccel_stage != 'codegen':
-            self._class_type.check_shape(self._shape)
-
         super().__init__()
 
         if isinstance(self._class_type, ContainerType) and self._shape is None:
             self._shape = tuple(PyccelArrayShapeElement(self, i) \
                                 for i in range(self._class_type.container_rank))
+
+        if pyccel_stage != 'codegen':
+            self._class_type.check_shape(self._shape)
 
     @property
     def base(self):
