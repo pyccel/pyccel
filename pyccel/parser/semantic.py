@@ -4034,9 +4034,9 @@ class SemanticParser(BasicParser):
         for b in expr.blocks:
             new_b = self._visit(b)
             cond = new_b.condition
-            if not isinstance(new_b.condition, LiteralFalse):
+            if not isinstance(cond, LiteralFalse):
                 args.append(new_b)
-            if isinstance(new_b.condition, LiteralTrue):
+            if isinstance(cond, LiteralTrue):
                 break
 
         allocations = [arg.get_attribute_nodes(Allocate) for arg in args]
