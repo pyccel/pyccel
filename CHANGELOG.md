@@ -114,6 +114,7 @@ All notable changes to this project will be documented in this file.
 -   #2181 : Allow saving an array result of a function to a slice but raise a warning about suboptimal performance.
 -   #2190 : Fix missing error for list pointer assignment.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
+-   #2175 : Fix the shape of multi-level containers.
 
 ### Changed
 
@@ -153,6 +154,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Change the order of the constructor arguments of `FunctionDef`.
 -   \[INTERNALS\] Use `_extract_X_FunctionDefResult` methods in Fortran-to-C wrapper.
 -   \[INTERNALS\] Rename `BindCVariable`->`BindCModuleVariable`.
+-   \[INTERNALS\] Save a shape whose length is limited to the container length.
 
 ### Deprecated
 
