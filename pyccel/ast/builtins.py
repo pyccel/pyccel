@@ -634,7 +634,7 @@ class PythonTuple(TypedAstNode):
         else:
             self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
 
-        self._class_type.check_shape(self._shape)
+        assert self._class_type.shape_is_compatible(self._shape)
 
     def __getitem__(self,i):
         def is_int(a):

@@ -178,8 +178,24 @@ class PyccelType:
         """
         raise NotImplementedError(f"switch_basic_type not implemented for {type(self)}")
 
-    def check_shape(self, shape):
-        assert shape is None
+    def shape_is_compatible(self, shape):
+        """
+        Check if the provided shape is compatible with the datatype.
+
+        Check if the provided shape is compatible with the format expected for
+        this datatype.
+
+        Parameters
+        ----------
+        shape : Any
+            The proposed shape.
+
+        Returns
+        -------
+        bool
+            True if the shape is acceptable, False otherwise.
+        """
+        return shape is None
 
 #==============================================================================
 
@@ -473,8 +489,24 @@ class ContainerType(PyccelType):
     """
     __slots__ = ()
 
-    def check_shape(self, shape):
-        assert len(shape) == self.container_rank
+    def shape_is_compatible(self, shape):
+        """
+        Check if the provided shape is compatible with the datatype.
+
+        Check if the provided shape is compatible with the format expected for
+        this datatype.
+
+        Parameters
+        ----------
+        shape : Any
+            The proposed shape.
+
+        Returns
+        -------
+        bool
+            True if the shape is acceptable, False otherwise.
+        """
+        return isinstance(shape, tuple) and len(shape) == self.container_rank
 
 #==============================================================================
 
@@ -712,9 +744,25 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
     def __str__(self):
         return f'tuple[{self._element_type}, ...]'
 
-    def check_shape(self, shape):
-        # TODO: Remove if tuples are saved in lists instead of ndarrays
-        assert len(shape) == self.rank
+    def shape_is_compatible(self, shape):
+        """
+        Check if the provided shape is compatible with the datatype.
+
+        Check if the provided shape is compatible with the format expected for
+        this datatype.
+
+        Parameters
+        ----------
+        shape : Any
+            The proposed shape.
+
+        Returns
+        -------
+        bool
+            True if the shape is acceptable, False otherwise.
+        """
+        # TODO: Remove this specialisation if tuples are saved in lists instead of ndarrays
+        assert isinstance(shape, tuple) and len(shape) == self.rank
 
 class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     """

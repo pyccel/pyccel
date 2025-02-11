@@ -175,8 +175,8 @@ class Variable(TypedAstNode):
         elif shape is None:
             shape = tuple(None for i in range(class_type.container_rank))
 
-        if pyccel_stage != 'codegen':
-            class_type.check_shape(shape)
+        # Ignore codegen stage due to #861
+        assert pyccel_stage == 'codegen' or class_type.shape_is_compatible(shape)
 
         self._alloc_shape = shape
         self._class_type = class_type
@@ -736,8 +736,8 @@ class IndexedElement(TypedAstNode):
             self._shape = tuple(PyccelArrayShapeElement(self, i) \
                                 for i in range(self._class_type.container_rank))
 
-        if pyccel_stage != 'codegen':
-            self._class_type.check_shape(self._shape)
+        # Ignore codegen stage due to #861
+        assert pyccel_stage == 'codegen' or self._class_type.shape_is_compatible(self._shape)
 
     @property
     def base(self):

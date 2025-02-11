@@ -399,7 +399,7 @@ class Allocate(PyccelAstNode):
         if shape and not isinstance(shape, (int, tuple, list)):
             raise TypeError(f"Cannot understand 'shape' parameter of type '{type(shape)}'")
 
-        variable.class_type.check_shape(shape)
+        assert variable.class_type.shape_is_compatible(shape)
 
         if not isinstance(status, str):
             raise TypeError(f"Cannot understand 'status' parameter of type '{type(status)}'")
