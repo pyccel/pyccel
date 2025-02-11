@@ -1011,10 +1011,7 @@ class NumpyShape(PyccelFunction):
     name = 'shape'
 
     def __new__(cls, arg):
-        if isinstance(arg.shape, PythonTuple):
-            return arg.shape
-        else:
-            return PythonTuple(*arg.shape)
+        return PythonTuple(*get_shape_of_multi_level_container(arg))
 
 #==============================================================================
 class NumpyLinspace(NumpyNewArray):
