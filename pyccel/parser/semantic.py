@@ -34,9 +34,10 @@ from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonT
 from pyccel.ast.builtins import Lambda, PythonMap
 
 from pyccel.ast.builtin_methods.dict_methods import DictKeys
-from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
+from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend, ListPop
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
-from pyccel.ast.builtin_methods.dict_methods  import DictGetItem, DictGet
+from pyccel.ast.builtin_methods.set_methods  import SetPop
+from pyccel.ast.builtin_methods.dict_methods  import DictGetItem, DictGet, DictPop, DictPopitem
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -1574,7 +1575,9 @@ class SemanticParser(BasicParser):
                 # ...
                 # Add memory allocation if needed
                 array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
-                                            and not getattr(rhs.funcdef, 'is_elemental', False) and not isinstance(lhs.class_type, HomogeneousTupleType)) or arr_in_multirets
+                                            and not getattr(rhs.funcdef, 'is_elemental', False) and \
+                                            not isinstance(lhs.class_type, HomogeneousTupleType)) or arr_in_multirets or \
+                                            isinstance(rhs, (ListPop, SetPop, DictPop, DictPopitem, DictGet, DictGetItem))
                 if lhs.on_heap and not array_declared_in_function:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
@@ -1639,7 +1642,9 @@ class SemanticParser(BasicParser):
 
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
-                if isinstance(lhs.dtype, StringType):
+                if array_declared_in_function:
+                    know_lhs_shape = True
+                elif isinstance(lhs.dtype, StringType):
                     know_lhs_shape = (lhs.rank == 1) or all(sh is not None for sh in lhs.alloc_shape[:-1])
                 else:
                     know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape)
