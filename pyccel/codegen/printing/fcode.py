@@ -2219,7 +2219,10 @@ class FCodePrinter(CodePrinter):
         class_type = expr.variable.class_type
         if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
             # Transpose indices because of Fortran column-major ordering
-            shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
+            if expr.variable.rank == 0:
+                shape = ()
+            else:
+                shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
 
             var_code = self._print(expr.variable)
             size_code = ', '.join(self._print(i) for i in shape)
