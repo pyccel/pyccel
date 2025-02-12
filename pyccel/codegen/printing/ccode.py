@@ -385,7 +385,8 @@ class CCodePrinter(CodePrinter):
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
         # STC _at and _at_mut functions return pointers
-        if isinstance(a, IndexedElement) and len(a.indices) == a.base.class_type.container_rank:
+        if isinstance(a, IndexedElement) and not isinstance(a.base.class_type, CStackArray) and \
+                len(a.indices) == a.base.class_type.container_rank:
             return True
         if not isinstance(a, Variable):
             return False
