@@ -47,12 +47,12 @@ ifort_info = {'exec' : 'ifx',
               'mpi_exec' : 'mpiifx',
               'language': 'fortran',
               'module_output_flag': '-module',
-              'debug_flags': ("-check=bounds","-g","-O0"),
+              'debug_flags': ("-check", "bounds","-g","-O0"),
               'release_flags': ("-O3","-funroll-loops",),
               'general_flags' : ('-fPIC',),
               'standard_flags' : ('-std=f2003',),
               'openmp': {
-                  'flags' : ('-fopenmp','-nostandard-realloc-lhs'),
+                  'flags' : ('-qopenmp','-nostandard-realloc-lhs'),
                   'libs'  : ('iomp5',),
                   },
               'openacc': {
@@ -144,7 +144,7 @@ icc_info = {'exec' : 'icx',
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'openmp': {
-                'flags' : ('-fopenmp',),
+                'flags' : ('-qopenmp',),
                 },
             'openacc': {
                 'flags' : ("-ta=multicore", "-Minfo=accel"),
@@ -288,8 +288,6 @@ pgcc_info.update(python_info)
 pgfortran_info.update(python_info)
 nvc_info.update(python_info)
 nvfort_info.update(python_info)
-
-gcc_info['python']['flags'].append('-Wno-incompatible-pointer-types')
 
 available_compilers = {('GNU', 'c') : gcc_info,
                        ('GNU', 'fortran') : gfort_info,

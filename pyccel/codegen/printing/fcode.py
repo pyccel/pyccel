@@ -6,9 +6,10 @@
 """Print to F90 standard. Trying to follow the information provided at
 www.fortran90.org as much as possible."""
 
-
+import ast
 import functools
 import string
+import sys
 import re
 from collections import OrderedDict
 from itertools import chain
@@ -24,7 +25,7 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableIterator
 
-from pyccel.ast.builtin_methods.dict_methods import DictItems
+from pyccel.ast.builtin_methods.dict_methods import DictItems, DictKeys
 
 from pyccel.ast.builtin_methods.list_methods import ListPop
 
@@ -78,7 +79,7 @@ from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthe
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
-from pyccel.ast.utilities import expand_to_loops
+from pyccel.ast.utilities import expand_to_loops, flatten_tuple_var
 
 from pyccel.ast.variable import Variable, IndexedElement, DottedName
 
@@ -821,8 +822,15 @@ class FCodePrinter(CodePrinter):
 
         # ...
         sep = self._print(SeparatorComment(40))
-        interfaces = ''
-        if expr.interfaces and not isinstance(expr, BindCModule):
+        if isinstance(expr, BindCModule):
+            interfaces = ('interface\n'
+                          'function c_malloc(size) bind(C,name="malloc") result(ptr)\n'
+                          'use iso_c_binding\n'
+                          'integer(c_size_t), value, intent(in) :: size\n'
+                          'type(c_ptr) :: ptr\n'
+                          'end function c_malloc\n'
+                          'end interface\n')
+        else:
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
 
         func_strings = []
@@ -1410,9 +1418,16 @@ class FCodePrinter(CodePrinter):
         self.add_import(self._build_gFTL_extension_module(expr_type))
         args_insert = []
         for arg in expr.args:
-            a = self._print(arg)
             if arg.class_type == expr_type:
-                args_insert.append(f'call {result} % merge({a})\n')
+                # Create a temporary variable to be able to call begin()/end()
+                if not isinstance(arg, Variable):
+                    var = self.scope.get_temporary_variable(arg.class_type)
+                    self._additional_code += self._print(Assign(var, arg)) + '\n'
+                    a = self._print(var)
+                else:
+                    a = self._print(arg)
+
+                args_insert.append(f'call {result} % insert({a} % begin(), {a} % end())\n')
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO, severity = 'error', symbol = expr)
         code = f'{result} = {type_name}({var_code})\n' + ''.join(args_insert)
@@ -1436,6 +1451,17 @@ class FCodePrinter(CodePrinter):
         val = self._print(expr.args[0])
         success = self.scope.get_temporary_variable(PythonNativeInt())
         return f'{success} = {var} % erase_value({val})\n'
+
+   #========================== Dict Methods ================================#
+
+    def _print_DictClear(self, expr):
+        var = self._print(expr.dict_obj)
+        return f'call {var} % clear()\n'
+
+    def _print_DictGetItem(self, expr):
+        dict_obj = self._print(expr.dict_obj)
+        key = self._print(expr.key)
+        return f'{dict_obj} % of( {key} )'
 
     #========================== Numpy Elements ===============================#
 
@@ -2269,7 +2295,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_DeallocatePointer(self, expr):
         var_code = self._print(expr.variable)
-        return f'deallocate({var_code})'
+        return f'deallocate({var_code})\n'
 
 #------------------------------------------------------------------------------
 
@@ -2432,7 +2458,7 @@ class FCodePrinter(CodePrinter):
         """
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        out_args = [r.var for r in expr.results if not r.is_argument]
+        out_args = [v for r in expr.results if not r.is_argument for v in flatten_tuple_var(r.var, self.scope)]
         args_decs = OrderedDict()
         arguments = expr.arguments
         argument_vars = [a.var for a in arguments]
@@ -2467,9 +2493,7 @@ class FCodePrinter(CodePrinter):
                         dec = Declare(v, intent='in')
                         args_decs[v] = dec
                 else:
-                    if i == 0 and expr.cls_name:
-                        dec = Declare(arg_var, intent='inout')
-                    elif arg.inout:
+                    if arg.inout:
                         dec = Declare(arg_var, intent='inout')
                     else:
                         dec = Declare(arg_var, intent='in')
@@ -2654,7 +2678,7 @@ class FCodePrinter(CodePrinter):
         iterable = expr.iterable
         indices = iterable.loop_counters
 
-        if isinstance(iterable, (VariableIterator, DictItems)) and \
+        if isinstance(iterable, (VariableIterator, DictItems, DictKeys)) and \
                 isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType)):
             var = iterable.variable
             iterable_type = var.class_type
@@ -2674,6 +2698,9 @@ class FCodePrinter(CodePrinter):
                 val = self._print(expr.target[1])
                 target_assign = (f'{key} = {iterator} % first()\n'
                                  f'{val} = {iterator} % second()\n')
+            elif isinstance(iterable, DictKeys):
+                key = self._print(expr.target[0])
+                target_assign = (f'{key} = {iterator} % first()\n')
             else:
                 target = self._print(expr.target[0])
                 target_assign = f'{target} = {iterator} % of()\n'
@@ -2932,12 +2959,15 @@ class FCodePrinter(CodePrinter):
         return 'STOP'
 
     def _print_Assert(self, expr):
-        prolog = "if ( .not. ({0})) then".format(self._print(expr.test))
-        body = 'stop 1'
-        epilog = 'end if'
-        return ('{prolog}\n'
-                '{body}\n'
-                '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
+        if isinstance(expr.test, LiteralTrue):
+            if sys.version_info < (3, 9):
+                return ''
+            else:
+                return '!' + ast.unparse(expr.python_ast) + '\n' #pylint: disable=no-member
+        test_code = self._print(expr.test)
+        return (f"if ( .not. ({test_code})) then\n"
+                'stop 1\n'
+                'end if\n')
 
     def _handle_not_none(self, lhs, lhs_var):
         """
@@ -3649,7 +3679,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_C_F_Pointer(self, expr):
         self._constantImports.setdefault('ISO_C_Binding', set()).add('C_F_Pointer')
-        shape = ','.join(self._print(s) for s in expr.shape)
+        shape = ', '.join(self._print(s) for s in expr.shape)
         if shape:
             return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)}, [{shape}])\n'
         else:
@@ -3816,6 +3846,11 @@ class FCodePrinter(CodePrinter):
                  *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes if a.setter]]
         sep = f'\n{self._print(SeparatorComment(40))}\n'
         return '', sep.join(self._print(f) for f in funcs)
+
+    def _print_BindCSizeOf(self, expr):
+        elem = self._print(expr.args[0])
+        self._constantImports.setdefault('ISO_C_Binding', set()).add('c_size_t')
+        return f'storage_size({elem}, kind = c_size_t)'
 
     def _print_MacroDefinition(self, expr):
         name = expr.macro_name

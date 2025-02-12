@@ -131,13 +131,6 @@ def test_same_float(language):
     test = epyccel_test(base.isnot_same_float, lang=language)
     test.compare_epyccel( 22.2 )
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Strings are not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_same_string(language):
     test = epyccel_test(base.is_same_string, lang=language)
     test.compare_epyccel()
@@ -175,18 +168,13 @@ def test_pass2_if(language):
     test.compare_epyccel(0.2)
     test.compare_epyccel(0.0)
 
-optional_marks = [
+@pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python),
-    ]
-if os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel':
-    optional_marks.append(pytest.param("fortran", marks = [
+        pytest.param("fortran", marks = [
             pytest.mark.skip(reason="Intel does not use lazy evaluation. See #1668"),
-            pytest.mark.fortran]))
-else:
-    optional_marks.append(pytest.param("fortran", marks = pytest.mark.fortran))
-
-@pytest.mark.parametrize( 'language', optional_marks)
+            pytest.mark.fortran]),
+        pytest.param("python", marks = pytest.mark.python),
+    ])
 def test_use_optional(language):
     test = epyccel_test(base.use_optional, lang=language)
     test.compare_epyccel()

@@ -314,10 +314,11 @@ def test_class_out(language):
 
     assert np.array_equal(p_py.x, p_l.x)
     assert np.array_equal(p_py.get_x(), p_l.get_x())
-    assert np.array_equal(p_py.x, p_py.get_x())
 
     p_py.x[:] = 4
     p_l.x[:] = 4
+
+    assert np.array_equal(p_py.x, p_l.x)
 
     if language != 'python':
         with pytest.raises(AttributeError):
@@ -346,6 +347,20 @@ def test_ptr_in_class(language):
     y[0] = -3
 
     assert np.array_equal(a_py.x, a_l.x)
+
+def test_class_constness(language):
+    import classes.class_constness as mod
+    modnew = epyccel(mod, language = language)
+
+    a_py = mod.ArrProperties(4)
+    a_l = modnew.ArrProperties(4)
+
+    assert a_py.n_points == a_l.n_points
+
+    x_py = mod.f(a_py)
+    x_l = modnew.f(a_l)
+
+    assert np.array_equal(x_py, x_l)
 
 def test_class_magic(language):
     import classes.class_magic as mod
@@ -444,3 +459,4 @@ def test_class_magic(language):
 
     assert a_py.x == a_l.x
 
+    assert len(a_py) == len(a_l)
