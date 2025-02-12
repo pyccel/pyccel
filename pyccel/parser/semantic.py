@@ -34,9 +34,10 @@ from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonT
 from pyccel.ast.builtins import Lambda, PythonMap
 
 from pyccel.ast.builtin_methods.dict_methods import DictKeys
-from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
+from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
-from pyccel.ast.builtin_methods.dict_methods  import DictGetItem, DictGet
+from pyccel.ast.builtin_methods.set_methods  import SetPop
+from pyccel.ast.builtin_methods.dict_methods  import DictGetItem, DictGet, DictPop, DictPopitem
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -94,6 +95,7 @@ from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyResultType
 from pyccel.ast.numpyext import process_dtype as numpy_process_dtype
+from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyNDArrayType
 
@@ -122,8 +124,7 @@ from pyccel.ast.variable import Variable
 from pyccel.ast.variable import IndexedElement, AnnotatedPyccelSymbol
 from pyccel.ast.variable import DottedName, DottedVariable
 
-from pyccel.errors.errors import Errors
-from pyccel.errors.errors import PyccelSemanticError
+from pyccel.errors.errors import Errors, ErrorsMode, PyccelError, PyccelSemanticError
 
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_THROWAWAY,
         UNDEFINED_VARIABLE, IMPORTING_EXISTING_IDENTIFIED, INDEXED_TUPLE, LIST_OF_TUPLES,
@@ -139,7 +140,8 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
         UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
-        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC)
+        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,
+        PYCCEL_INTERNAL_ERROR)
 
 from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
@@ -769,6 +771,12 @@ class SemanticParser(BasicParser):
             var = expr.internal_var
 
             d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
+            return d_var
+
+        elif isinstance(expr, PythonTuple):
+
+            if isinstance(expr.class_type, HomogeneousTupleType):
+                d_var['shape'] = get_shape_of_multi_level_container(expr)
             return d_var
 
         elif isinstance(expr, (DictGetItem, DictGet)):
@@ -1567,7 +1575,9 @@ class SemanticParser(BasicParser):
                 # ...
                 # Add memory allocation if needed
                 array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
-                                            and not getattr(rhs.funcdef, 'is_elemental', False) and not isinstance(lhs.class_type, HomogeneousTupleType)) or arr_in_multirets
+                                            and not getattr(rhs.funcdef, 'is_elemental', False) and \
+                                            not isinstance(lhs.class_type, HomogeneousTupleType)) or arr_in_multirets or \
+                                            isinstance(rhs, (ListPop, SetPop, DictPop, DictPopitem, DictGet, DictGetItem))
                 if lhs.on_heap and not array_declared_in_function:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
@@ -1632,7 +1642,9 @@ class SemanticParser(BasicParser):
 
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
-                if isinstance(lhs.dtype, StringType):
+                if array_declared_in_function:
+                    know_lhs_shape = True
+                elif isinstance(lhs.dtype, StringType):
                     know_lhs_shape = (lhs.rank == 1) or all(sh is not None for sh in lhs.alloc_shape[:-1])
                 else:
                     know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape)
@@ -2304,12 +2316,21 @@ class SemanticParser(BasicParser):
         classes = type(expr).__mro__
         for cls in classes:
             annotation_method = '_visit_' + cls.__name__
-            if hasattr(self, annotation_method):
-                obj = getattr(self, annotation_method)(expr)
-                if isinstance(obj, PyccelAstNode) and self.current_ast_node:
-                    obj.set_current_ast(self.current_ast_node)
-                self._current_ast_node = current_ast
-                return obj
+            try:
+                if hasattr(self, annotation_method):
+                    obj = getattr(self, annotation_method)(expr)
+                    if isinstance(obj, PyccelAstNode) and self.current_ast_node:
+                        obj.set_current_ast(self.current_ast_node)
+                    self._current_ast_node = current_ast
+                    return obj
+            except (PyccelError, NotImplementedError) as err:
+                raise err
+            except Exception as err: #pylint: disable=broad-exception-caught
+                if ErrorsMode().value == 'user':
+                    errors.report(PYCCEL_INTERNAL_ERROR,
+                            symbol = self._current_ast_node, severity='fatal')
+                else:
+                    raise err
 
         # Unknown object, we raise an error.
         return errors.report(PYCCEL_RESTRICTION_TODO, symbol=type(expr),
@@ -2879,7 +2900,14 @@ class SemanticParser(BasicParser):
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
                 cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
-                shape = len(class_type) if isinstance(class_type, InhomogeneousTupleType) else None
+                if isinstance(class_type, InhomogeneousTupleType):
+                    shape = (len(class_type),)
+                elif isinstance(class_type, HomogeneousTupleType):
+                    shape = (None,)*class_type.rank
+                elif class_type.rank:
+                    shape = (None,)*class_type.container_rank
+                else:
+                    shape = None
                 v = var_class(class_type, name, cls_base = cls_base,
                         shape = shape,
                         is_const = t.is_const, is_optional = False,
@@ -3945,10 +3973,7 @@ class SemanticParser(BasicParser):
 
             class_type = type_container[conversion_func.cls_name](numpy_process_dtype(class_type), rank=1, order=None)
         d_var['class_type'] = class_type
-        shape = [dim]
-        if d_var['shape']:
-            shape.extend(d_var['shape'])
-        d_var['shape'] = shape
+        d_var['shape'] = (dim,)
         d_var['cls_base'] = get_cls_base(class_type)
 
         # ...

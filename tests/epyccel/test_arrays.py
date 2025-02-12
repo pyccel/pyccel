@@ -1744,7 +1744,6 @@ def test_array_float_4d_F_array_initialization(language):
     assert np.array_equal(x1, x2)
 
 
-@pytest.mark.xfail(reason='Inhomogeneous arguments due to unknown shape')
 def test_array_float_4d_F_array_initialization_mixed_ordering(language):
 
     f1 = arrays.array_float_4d_F_array_initialization_mixed_ordering

@@ -116,6 +116,9 @@ All notable changes to this project will be documented in this file.
 -   #2195 : Fix string comparisons.
 -   Fixed returning strings from functions.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
+-   #2175 : Fix the shape of multi-level containers.
+-   Catch all internal errors arising in the syntactic, semantic, printing or code generation stages.
+-   #2206 : Fix returning an array of unknown literal size.
 
 ### Changed
 
@@ -155,6 +158,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Change the order of the constructor arguments of `FunctionDef`.
 -   \[INTERNALS\] Use `_extract_X_FunctionDefResult` methods in Fortran-to-C wrapper.
 -   \[INTERNALS\] Rename `BindCVariable`->`BindCModuleVariable`.
+-   \[INTERNALS\] Save a shape whose length is limited to the container length.
 
 ### Deprecated
 
@@ -170,6 +174,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 -   \[INTERNALS\] Remove unused classes `SymbolicAssign` and `SymbolicPrint`.
 -   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefResult` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
+-   \[INTERNALS\] Remove unused class `ast.core.FuncAddressDeclare`.
 
 ## \[1.12.1\] - 2024-10-01
 

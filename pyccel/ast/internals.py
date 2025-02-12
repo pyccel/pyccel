@@ -161,7 +161,7 @@ class PyccelArrayShapeElement(PyccelFunction):
         """
         return self._args[1]
 
-    def __str__(self):
+    def __repr__(self):
         return f'Shape({self.arg}, {self.index})'
 
     def __eq__(self, other):

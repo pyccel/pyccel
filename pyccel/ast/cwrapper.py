@@ -281,7 +281,7 @@ class PyBuildValueNode(PyccelFunction):
     """
     __slots__ = ('_flags','_result_args')
     _attribute_nodes = ('_result_args',)
-    _shape = ()
+    _shape = None
     _class_type = PyccelPyObject()
 
     def __init__(self, result_args = ()):
@@ -370,7 +370,7 @@ class PyModule_Create(PyccelFunction):
     """
     __slots__ = ('_module_def_name',)
     _attribute_nodes = ()
-    _shape = ()
+    _shape = None
     _class_type = PyccelPyObject()
 
     def __init__(self, module_def_name):
@@ -410,7 +410,7 @@ class PyCapsule_New(PyccelFunction):
     """
     __slots__ = ('_capsule_name', '_API_var')
     _attribute_nodes = ('_API_var',)
-    _shape = ()
+    _shape = None
     _class_type = PyccelPyObject()
 
     def __init__(self, API_var, module_name):
@@ -458,7 +458,7 @@ class PyCapsule_Import(PyccelFunction):
     """
     __slots__ = ('_capsule_name',)
     _attribute_nodes = ()
-    _shape = ()
+    _shape = None
     _class_type = BindCPointer()
 
     def __init__(self, module_name):
