@@ -4058,7 +4058,7 @@ class SemanticParser(BasicParser):
     def _visit_If(self, expr):
         args = []
 
-        for i,b in enumerate(expr.blocks):
+        for b in expr.blocks:
             new_b = self._visit(b)
             cond = new_b.condition
             if not isinstance(cond, LiteralFalse):
