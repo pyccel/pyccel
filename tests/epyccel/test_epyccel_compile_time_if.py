@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import numpy as np
 from pyccel import epyccel
 
 def test_rank_differentiation_1(language):
