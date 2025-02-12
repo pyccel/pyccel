@@ -42,9 +42,10 @@ from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
+from pyccel.ast.datatypes import PrimitiveCharacterType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
 from pyccel.ast.datatypes import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType, DictType
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, FixedSizeType
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type, PyccelType
 
@@ -207,7 +208,10 @@ iso_c_binding = {
         8  : 'C_DOUBLE_COMPLEX',
         16 : 'C_LONG_DOUBLE_COMPLEX'}, #not supported yet
     PrimitiveBooleanType() : {
-        -1 : "C_BOOL"}
+        -1 : "C_BOOL"},
+    PrimitiveCharacterType() : {
+        -1 : "C_CHAR"
+        }
 }
 
 iso_c_binding_shortcut_mapping = {
@@ -1977,10 +1981,14 @@ class FCodePrinter(CodePrinter):
             else:
                 sig = 'type'
             dtype_str = f'{sig}({name})'
-        elif isinstance(dtype, FixedSizeNumericType) and \
-                isinstance(expr_type, (NumpyNDArrayType, HomogeneousTupleType, FixedSizeNumericType)):
+        elif isinstance(dtype, BindCPointer):
+            dtype_str = 'type(c_ptr)'
+            self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
+        elif isinstance(dtype, FixedSizeType) and \
+                isinstance(expr_type, (NumpyNDArrayType, HomogeneousTupleType, FixedSizeType)):
             dtype_str = self._print(dtype.primitive_type)
-            dtype_str += f'({self.print_kind(var)})'
+            if isinstance(dtype, FixedSizeNumericType):
+                dtype_str += f'({self.print_kind(var)})'
 
             if rank > 0:
                 # arrays are 0-based in pyccel, to avoid ambiguity with range
@@ -2005,9 +2013,6 @@ class FCodePrinter(CodePrinter):
                 dtype_str += '(len = *)'
             else:
                 dtype_str += '(len = :)'
-        elif isinstance(dtype, BindCPointer):
-            dtype_str = 'type(c_ptr)'
-            self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
         else:
             errors.report(f"Don't know how to print type {expr_type} in Fortran",
                     symbol=expr, severity='fatal')
@@ -2310,6 +2315,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_PrimitiveComplexType(self, expr):
         return 'complex'
+
+    def _print_PrimitiveCharacterType(self, expr):
+        return 'character'
 
     def _print_StringType(self, expr):
         return 'character'
@@ -3472,6 +3480,11 @@ class FCodePrinter(CodePrinter):
         elif isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             inds_code = ", ".join(self._print(i) for i in inds)
             return f"{base_code}({inds_code})"
+        elif isinstance(base.class_type, StringType):
+            # Fortran strings require slice indexing. The ubound has already been processed at this point
+            inds = [i if isinstance(i, Slice) else Slice(i, i) for i in inds]
+            inds_code = ", ".join(self._print(i) for i in inds)
+            return f"{base_code}({inds_code})"
         else:
             errors.report(f"Don't know how to index type {base.class_type}",
                     symbol=expr, severity='fatal')
@@ -3675,7 +3688,9 @@ class FCodePrinter(CodePrinter):
         self._constantImports.setdefault('ISO_C_Binding', set()).add('c_loc')
         return f'{lhs} = c_loc({rhs})\n'
 
-#=======================================================================================
+    def _print_C_NULL_CHAR(self, expr):
+        self._constantImports.setdefault('ISO_C_Binding', set()).add('C_NULL_CHAR')
+        return 'C_NULL_CHAR'
 
     def _print_C_F_Pointer(self, expr):
         self._constantImports.setdefault('ISO_C_Binding', set()).add('C_F_Pointer')
