@@ -17,8 +17,6 @@ from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRS
 
 from .builtins  import PythonBool, PythonTuple
 
-from .c_concepts import PointerCast
-
 from .datatypes import (PyccelType, HomogeneousTupleType, VoidType, CustomDataType,
                         PythonNativeBool, InhomogeneousTupleType, SymbolicType)
 
@@ -389,7 +387,7 @@ class Allocate(PyccelAstNode):
     # ...
     def __init__(self, variable, *, shape, status, like = None, alloc_type = None):
 
-        if not isinstance(variable, (Variable, PointerCast)):
+        if pyccel_stage == 'semantic' and not isinstance(variable, Variable):
             raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
 
         if variable.on_stack:
