@@ -442,7 +442,7 @@ class CharType(FixedSizeType):
     """
     __slots__ = ()
     _name = 'char'
-    _primitive_type = PrimitiveCharacterType
+    _primitive_type = PrimitiveCharacterType()
 
 #==============================================================================
 class TypeAlias(SymbolicType):
@@ -641,7 +641,7 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
     __slots__ = ()
     _name = 'str'
-    _element_type = PrimitiveCharacterType()
+    _element_type = CharType()
     _container_rank = 1
     _order = None
 

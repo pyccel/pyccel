@@ -21,7 +21,7 @@ from .builtins  import PythonInt
 
 from .datatypes import FixedSizeType, CustomDataType
 from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
-from .datatypes import PythonNativeBool, StringType, VoidType
+from .datatypes import PythonNativeBool, StringType, VoidType, CharType
 from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 
 from .core      import FunctionDefArgument, FunctionDefResult
@@ -326,8 +326,7 @@ class PyModule_AddObject(PyccelFunction):
     _class_type = PythonNativeInt()
 
     def __init__(self, mod_name, name, variable):
-        if not isinstance(name, LiteralString):
-            raise TypeError("Name must be a string")
+        assert isinstance(name.dtype, CharType)
         if not isinstance(variable, Variable) or \
                 variable.dtype not in (PyccelPyObject(), PyccelPyClassType()):
             raise TypeError("Variable must be a PyObject Variable")
@@ -1036,6 +1035,7 @@ pytype_parse_registry = {
     PythonNativeComplex() : 'O',
     PythonNativeBool()    : 'p',
     StringType()          : 's',
+    CharType()            : 's',
     PyccelPyObject()      : 'O',
     }
 
@@ -1110,7 +1110,7 @@ PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
 PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
               body      = [],
               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o')),
-                           FunctionDefArgument(Variable(StringType(), name = 's'))],
+                           FunctionDefArgument(Variable(CharType(), name = 's', memory_handling='alias'))],
               results   = [])
 
 PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
@@ -1263,6 +1263,7 @@ PyDict_SetItem = FunctionDef(name = 'PyDict_SetItem',
                                  FunctionDefArgument(Variable(PyccelPyObject(), 'val', memory_handling='alias'))],
                     results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
                     body = [])
+
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
