@@ -119,6 +119,7 @@ All notable changes to this project will be documented in this file.
 -   Fixed returning strings from functions.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
 -   #2175 : Fix the shape of multi-level containers.
+-   Catch all internal errors arising in the syntactic, semantic, printing or code generation stages.
 
 ### Changed
 
