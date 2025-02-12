@@ -181,6 +181,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 -   \[INTERNALS\] Remove unused classes `SymbolicAssign` and `SymbolicPrint`.
 -   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefResult` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
+-   \[INTERNALS\] Remove unused class `ast.core.FuncAddressDeclare`.
 
 ## \[1.12.1\] - 2024-10-01
 
