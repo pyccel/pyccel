@@ -78,6 +78,9 @@ jobs:
         shell: bash
       - name: Coverage install
         uses: ./.github/actions/coverage_install
+      - name: Test internals
+        run: |
+          pytest tests/internal -v
       - name: Fortran/C tests with pytest
         id: f_c_pytest
         timeout-minutes: 60
