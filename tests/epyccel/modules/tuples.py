@@ -522,8 +522,8 @@ def tuple_return_unknown_length():
     b = False
     a = 1
     if b:
-        return a,
+        return (a,)
     else:
         c = 2
-        return a, c
+        return (a, c)
 
