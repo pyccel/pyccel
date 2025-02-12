@@ -760,7 +760,7 @@ class FortranToCWrapper(Wrapper):
         body.append(For((elem,), iterator, for_body, scope = for_scope))
         return result
 
-    def _extract_StringType_FunctionDefResult(self, orig_var):
+    def _extract_StringType_FunctionDefResult(self, orig_var, orig_func_scope):
         name = orig_var.name
         scope = self.scope
         scope.insert_symbol(name)
@@ -805,7 +805,8 @@ class FortranToCWrapper(Wrapper):
                 For((idx,), iterator, for_body, scope = for_scope),
                 Assign(IndexedElement(ptr_var, shape_var), C_NULL_CHAR())]
 
-        return {'c_result': BindCVariable(bind_var, orig_var), 'body': body, 'f_array': ptr_var}
+        return {'c_result': BindCVariable(bind_var, orig_var), 'body': body, 'f_array': ptr_var,
+                'f_result': local_var}
 
     def _get_bind_c_array(self, name, orig_var, shape, pointer_target = False):
         """
