@@ -130,6 +130,17 @@ def test_pop_str_keys(stc_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
+def test_pop_non_literal_str_keys(stc_language):
+    def pop_str_keys():
+        a = {'a':1, 'b':2}
+        my_str = 'a'
+        return a.pop(my_str)
+    epyc_str_keys = epyccel(pop_str_keys, language = stc_language)
+    pyccel_result = epyc_str_keys()
+    python_result = pop_str_keys()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
 @pytest.mark.skip("Returning tuples is not yet implemented. See #337")
 def test_pop_item(python_only_language):
     def pop_item():
