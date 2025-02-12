@@ -8,7 +8,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.bind_c     import BindCPointer
 from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
-from pyccel.ast.c_concepts import CStackArray
+from pyccel.ast.c_concepts import CStackArray, CStrStr
 from pyccel.ast.core       import FunctionAddress, SeparatorComment
 from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create
@@ -88,7 +88,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if isinstance(a.class_type, (WrapperCustomDataType, BindCPointer, CStackArray)):
             return True
-        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create, LiteralString)):
+        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create)):
             return True
         else:
             return CCodePrinter.is_c_pointer(self,a)
@@ -350,7 +350,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                      '}},\n').format(
                                             name = self.get_python_name(expr.scope, f.original_function),
                                             wrapper_name = f.name,
-                                            docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+                                            docstring = self._print(CStrStr(LiteralString('\n'.join(f.docstring.comments)))) \
                                                         if f.docstring else '""')
                                      for f in funcs if not getattr(f, 'is_header', False))
 
@@ -391,7 +391,7 @@ class CWrapperCodePrinter(CCodePrinter):
         struct_name = expr.struct_name
         type_name = expr.type_name
         name = self.scope.get_python_name(expr.name)
-        docstring = self._print(LiteralString('\n'.join(expr.docstring.comments))) \
+        docstring = self._print(CStrStr(LiteralString('\n'.join(expr.docstring.comments)))) \
                     if expr.docstring else '""'
 
         original_scope = expr.original_class.scope
@@ -410,13 +410,13 @@ class CWrapperCodePrinter(CCodePrinter):
             elif py_name == '__del__':
                 del_string = f"    .tp_dealloc = (destructor) {f.name},\n"
             else:
-                docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+                docstring = self._print(CStrStr(LiteralString('\n'.join(f.docstring.comments)))) \
                                                         if f.docstring else '""'
                 funcs[py_name] = (f.name, docstring)
 
         for f in expr.interfaces:
             py_name = self.get_python_name(original_scope, f.original_function)
-            docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+            docstring = self._print(CStrStr(LiteralString('\n'.join(f.docstring.comments)))) \
                                                     if f.docstring else '""'
             funcs[py_name] = (f.name, docstring)
 
