@@ -39,7 +39,7 @@ from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
-from pyccel.ast.datatypes import HomogeneousContainerType, DictType
+from pyccel.ast.datatypes import HomogeneousContainerType, DictType, FixedSizeType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 from pyccel.ast.internals import PyccelFunction
@@ -690,10 +690,18 @@ class CCodePrinter(CodePrinter):
         class_type = assignment_var.class_type
         dtype = self.get_c_type(class_type)
         if isinstance(expr, PythonDict):
-            dict_item_strs = [(self._print(k), self._print(v)) for k,v in zip(expr.keys, expr.values)]
-            keyraw = '{' + ', '.join(f'{{{k}, {v}}}' for k,v in dict_item_strs) + '}'
+            values = [self._print(k) for k in expr.values]
+            if isinstance(class_type.key_type, StringType):
+                keys = [self._print(CStrStr(k)) for k in expr.keys]
+            else:
+                keys = [self._print(k) for k in expr.keys]
+            keyraw = '{' + ', '.join(f'{{{k}, {v}}}' for k,v in zip(keys, values)) + '}'
         else:
-            keyraw = '{' + ', '.join(self._print(a) for a in expr.args) + '}'
+            if isinstance(class_type.element_type, StringType):
+                args = [self._print(CStrStr(a)) for a in expr.args]
+            else:
+                args = [self._print(a) for a in expr.args]
+            keyraw = '{' + ', '.join(args) + '}'
         container_name = self._print(assignment_var)
         init = f'{container_name} = c_init({dtype}, {keyraw});\n'
         return init
@@ -1186,13 +1194,33 @@ class CCodePrinter(CodePrinter):
                        AsName(VariableTypeAnnotation(class_type), container_type),
                        ignore_at_print=True))
                 if isinstance(class_type, DictType):
+                    key_type = class_type.key_type
                     container_key_key = self.get_c_type(class_type.key_type)
                     container_val_key = self.get_c_type(class_type.value_type)
                     container_key = f'{container_key_key}_{container_val_key}'
                     type_decl = f'{container_key_key},{container_val_key}'
+                    if isinstance(key_type, FixedSizeType):
+                        decl_line = f'#define i_type {container_type},{type_decl}\n'
+                    elif isinstance(key_type, StringType):
+                        decl_line = (f'#define i_type {container_type}\n'
+                                     f'#define i_keypro cstr\n'
+                                     f'#define i_val {container_val_key}\n')
                 else:
-                    type_decl = self.get_c_type(class_type.element_type)
-                decl_line = f'#define i_type {container_type},{type_decl}\n'
+                    element_type = class_type.element_type
+                    if isinstance(element_type, FixedSizeType):
+                        type_decl = self.get_c_type(element_type)
+                        decl_line = f'#define i_type {container_type},{type_decl}\n'
+                    elif isinstance(element_type, StringType):
+                        decl_line = (f'#define i_type {container_type}\n'
+                                     f'#define i_keypro cstr\n')
+                    elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+                        type_decl = self.get_c_type(element_type)
+                        decl_line = (f'#define i_type {container_type}\n'
+                                     f'#define i_keyclass {type_decl}\n')
+                    else:
+                        decl_line = ''
+                        errors.report(f"The declaration of type {class_type} is not yet implemented.",
+                                symbol=expr, severity='error')
                 if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
                         and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
                     decl_line += '#define i_use_cmp\n'
@@ -1203,8 +1231,7 @@ class CCodePrinter(CodePrinter):
                                  decl_line,
                                  f'#include <{source}.h>\n'))
                 if source in stc_extension_mapping:
-                    code += (f'#define i_type {container_type},{type_decl}\n'
-                             f'#include <{stc_extension_mapping[source]}.h>\n')
+                    code += decl_line + f'#include <{stc_extension_mapping[source]}.h>\n'
                 code += f'#endif // {header_guard}\n\n'
             return code
 
@@ -2854,7 +2881,10 @@ class CCodePrinter(CodePrinter):
         c_type = self.get_c_type(class_type)
 
         dict_var = self._print(ObjectAddress(target))
-        key = self._print(expr.key)
+        if isinstance(class_type.key_type, StringType):
+            key = self._print(CStrStr(expr.key))
+        else:
+            key = self._print(expr.key)
 
         if expr.default_value is not None:
             default_val = self._print(expr.default_value)
@@ -2868,7 +2898,10 @@ class CCodePrinter(CodePrinter):
         c_type = self.get_c_type(class_type)
 
         dict_var = self._print(ObjectAddress(target))
-        key = self._print(expr.key)
+        if isinstance(class_type.key_type, StringType):
+            key = self._print(CStrStr(expr.key))
+        else:
+            key = self._print(expr.key)
 
         if expr.default_value is not None:
             default = self._print(expr.default_value)
@@ -2881,8 +2914,12 @@ class CCodePrinter(CodePrinter):
     def _print_DictGetItem(self, expr):
         dict_obj = expr.dict_obj
         dict_obj_code = self._print(ObjectAddress(dict_obj))
-        container_type = self.get_c_type(dict_obj.class_type)
-        key = self._print(expr.key)
+        class_type = dict_obj.class_type
+        container_type = self.get_c_type(class_type)
+        if isinstance(class_type.key_type, StringType):
+            key = self._print(CStrStr(expr.key))
+        else:
+            key = self._print(expr.key)
         assign = expr.get_user_nodes(Assign)
         if assign:
             assert len(assign) == 1
