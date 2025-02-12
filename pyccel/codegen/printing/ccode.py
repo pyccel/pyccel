@@ -24,7 +24,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict,
 from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys
 
 from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
-from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
+from pyccel.ast.core      import FunctionCall, FunctionCallArgument
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
@@ -55,6 +55,7 @@ from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
+from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
@@ -383,6 +384,10 @@ class CCodePrinter(CodePrinter):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
+        # STC _at and _at_mut functions return pointers
+        if isinstance(a, IndexedElement) and not isinstance(a.base.class_type, CStackArray) and \
+                len(a.indices) == a.base.class_type.container_rank:
+            return True
         if not isinstance(a, Variable):
             return False
         if isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
@@ -478,7 +483,7 @@ class CCodePrinter(CodePrinter):
             for li, ri in zip(lhs, arg):
                 if li.rank:
                     li_slice_var = self.scope.get_temporary_variable(li.class_type,
-                            shape = ri.shape, memory_handling='alias')
+                            shape = get_shape_of_multi_level_container(ri), memory_handling='alias')
                     body += self._print(AliasAssign(li_slice_var, li))
                     body += self.copy_NumpyArray_Data(li_slice_var, ri)
                 else:
@@ -496,7 +501,8 @@ class CCodePrinter(CodePrinter):
             return result
 
         flattened_args = self._flatten_list(arg)
-        flattened_lhs = [get_indexed(lhs, elems) for elems in product(*[range(s) for s in arg.shape])]
+
+        flattened_lhs = [get_indexed(lhs, elems) for elems in product(*[range(s) for s in get_shape_of_multi_level_container(arg)])]
 
         operations = ''
         for li, ri in zip(flattened_lhs, flattened_args):
@@ -1505,25 +1511,6 @@ class CCodePrinter(CodePrinter):
         else:
             return dtype
 
-    def _print_FuncAddressDeclare(self, expr):
-        args = list(expr.arguments)
-        if len(expr.results) == 1:
-            ret_type = self.get_declare_type(expr.results[0])
-        elif len(expr.results) > 1:
-            ret_type = self._print(datatype('int'))
-            args += [a.clone(name = a.name, memory_handling='alias') for a in expr.results]
-        else:
-            ret_type = self._print(datatype('void'))
-        name = expr.name
-        if not args:
-            arg_code = 'void'
-        else:
-            # TODO: extract informations needed for printing in case of function argument which itself has a function argument
-            arg_code = ', '.join('{}'.format(self._print_FuncAddressDeclare(i))
-                        if isinstance(i, FunctionAddress) else f'{self.get_declare_type(i)} {i}'
-                        for i in args)
-        return f'{ret_type} (*{name})({arg_code});\n'
-
     def _print_Declare(self, expr):
         var = expr.variable
         if isinstance(var.class_type, InhomogeneousTupleType):
@@ -2186,7 +2173,7 @@ class CCodePrinter(CodePrinter):
 
         body  = self._print(expr.body)
         decs = [Declare(i, value=(Nil() if i.is_alias and isinstance(i.class_type, (VoidType, BindCPointer)) else None))
-                if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
+                for i in expr.local_vars]
 
         if len(results) == 1 :
             res = results[0]
