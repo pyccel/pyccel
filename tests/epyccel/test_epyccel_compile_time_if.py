@@ -10,7 +10,7 @@ def test_rank_differentiation_1(language):
             return a[0,0]
 
     x = np.arange(10, dtype=int)
-    y = np.reshape(x[::-1], (2,5))
+    y = np.array(np.reshape(x[::-1], (2,5)), dtype=int)
 
     f_epyc = epyccel(f, language=language)
     assert f_epyc(x) == f(x)
@@ -24,7 +24,7 @@ def test_rank_differentiation_2(language):
             return a[0,0]
 
     x = np.arange(10, dtype=int)
-    y = np.reshape(x[::-1], (2,5))
+    y = np.array(np.reshape(x[::-1], (2,5)), dtype=int)
 
     f_epyc = epyccel(f, language=language)
     assert f_epyc(x) == f(x)
