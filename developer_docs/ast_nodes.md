@@ -46,6 +46,8 @@ The rank of an array is the number of dimensions in the array. This object is an
 
 The shape of an array indicates the number of elements in each dimension of the array. This property is a tuple. The tuple contains `TypedAstNode`s. If the shape is known then these objects will be `LiteralInteger`s. If the shape is unknown then these objects will be `PyccelArrayShapeElement`s.
 
+The length of the shape should be equal to the number of indices necessary to print this object in a low-level language. Generally this is equal to the `container_rank`, however homogeneous tuples are an exception to this rule as they are saved in multi-dimensional arrays.
+
 ### Order
 
 The order indicates how an array is laid out in memory. This can either be row-major (C-style) ordering or column-major (Fortran-style) ordering. For more information about this, please see the [dedicated documentation](./order_docs.md).
