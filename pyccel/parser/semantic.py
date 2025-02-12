@@ -3616,7 +3616,8 @@ class SemanticParser(BasicParser):
                         severity='error')
                     return None
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions,
-                    arr_in_multirets = isinstance(rhs, FunctionCall))
+                    arr_in_multirets = (isinstance(rhs, FunctionCall) and \
+                                        not getattr(rhs.funcdef, 'is_elemental', False)))
 
             # If lhs is a purely symbolic object to link tuple elements to their containing tuple
             # then no semantic object should be returned
