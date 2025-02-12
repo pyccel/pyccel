@@ -16,6 +16,8 @@ from sympy.utilities.iterables import iterable as sympy_iterable
 from sympy import Sum as Summation
 from sympy import Symbol as sp_Symbol
 from sympy import Integer as sp_Integer
+from sympy.logic.boolalg import BooleanTrue as sp_True
+from sympy.logic.boolalg import BooleanFalse as sp_False
 from sympy import ceiling
 
 from textx.exceptions import TextXSyntaxError
@@ -4037,14 +4039,34 @@ class SemanticParser(BasicParser):
 
         cond = self._visit(expr.condition)
 
+        symbol_map = {}
+        used_names = self.scope.all_used_symbols.copy()
+        try:
+            sympy_cond = pyccel_to_sympy(cond, symbol_map, used_names)
+        except TypeError:
+            sympy_cond = 'unknown'
+
+        if sympy_cond == sp_False():
+            return IfSection(LiteralFalse(), CodeBlock([]))
+        elif sympy_cond == sp_True():
+            cond = LiteralTrue()
+
         body = self._visit(expr.body)
 
         return IfSection(cond, body)
 
     def _visit_If(self, expr):
-        args = [self._visit(i) for i in expr.blocks]
+        args = []
 
-        conds = [b.condition for b in args]
+        for b in expr.blocks:
+            new_b = self._visit(b)
+            cond = new_b.condition
+            if not isinstance(cond, LiteralFalse):
+                args.append(new_b)
+            if isinstance(cond, LiteralTrue):
+                if len(args) == 1:
+                    return new_b.body
+                break
 
         allocations = [arg.get_attribute_nodes(Allocate) for arg in args]
 

@@ -2270,7 +2270,7 @@ class FCodePrinter(CodePrinter):
                 return f'call {var_code} % reserve({size_code})\n'
             else:
                 return ''
-        elif isinstance(class_type, (HomogeneousContainerType, DictType)):
+        elif isinstance(class_type, (HomogeneousContainerType, DictType, StringType)):
             return ''
 
         else:
@@ -2354,19 +2354,21 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_LiteralString(self, expr):
+        if expr.python_value == '':
+            return "''"
         sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
         sub_str = ''
         formatted_str = []
         for c in expr.python_value:
             if c in sp_chars:
                 if sub_str != '':
-                    formatted_str.append("'{}'".format(sub_str))
+                    formatted_str.append(f"'{sub_str}'")
                     sub_str = ''
-                formatted_str.append('ACHAR({})'.format(ord(c)))
+                formatted_str.append(f'ACHAR({ord(c)})')
             else:
                 sub_str += c
         if sub_str != '':
-            formatted_str.append("'{}'".format(sub_str))
+            formatted_str.append(f"'{sub_str}'")
         return ' // '.join(formatted_str)
 
     def _print_Interface(self, expr):

@@ -69,6 +69,7 @@ All notable changes to this project will be documented in this file.
 -   #983 : Add support for built-in function `round`.
 -   Add support for `type` as a type annotation.
 -   #2182 : Add support for `isinstance`.
+-   #2183 : Add compile time analysis of if block conditions.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
@@ -113,11 +114,14 @@ All notable changes to this project will be documented in this file.
 -   #2149 : Fix multi-line expressions in `if` conditions.
 -   #2181 : Allow saving an array result of a function to a slice but raise a warning about suboptimal performance.
 -   #2190 : Fix missing error for list pointer assignment.
+-   #2198 : Fix saving an empty string in Fortran.
+-   #2195 : Fix string comparisons.
 -   Fixed returning strings from functions.
 -   #2197 : Allow strings as dictionary keys in C.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
 -   #2175 : Fix the shape of multi-level containers.
 -   Catch all internal errors arising in the syntactic, semantic, printing or code generation stages.
+-   #2206 : Fix returning an array of unknown literal size.
 
 ### Changed
 
@@ -173,6 +177,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 -   \[INTERNALS\] Remove unused classes `SymbolicAssign` and `SymbolicPrint`.
 -   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefResult` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
+-   \[INTERNALS\] Remove unused class `ast.core.FuncAddressDeclare`.
 
 ## \[1.12.1\] - 2024-10-01
 
