@@ -383,6 +383,9 @@ class CCodePrinter(CodePrinter):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
+        # STC _at and _at_mut functions return pointers
+        if isinstance(a, IndexedElement) and len(a.indices) == a.base.class_type.container_rank:
+            return True
         if not isinstance(a, Variable):
             return False
         if isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
