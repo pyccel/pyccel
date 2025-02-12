@@ -117,6 +117,7 @@ All notable changes to this project will be documented in this file.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
 -   #2175 : Fix the shape of multi-level containers.
 -   Catch all internal errors arising in the syntactic, semantic, printing or code generation stages.
+-   #2206 : Fix returning an array of unknown literal size.
 
 ### Changed
 
