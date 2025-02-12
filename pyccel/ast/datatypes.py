@@ -671,7 +671,7 @@ class HomogeneousContainerType(ContainerType):
     def __hash__(self):
         return hash((self.__class__, self.element_type))
 
-class StringType(PyccelType, metaclass = Singleton):
+class StringType(ContainerType, metaclass = Singleton):
     """
     Class representing Python's native string type.
 
