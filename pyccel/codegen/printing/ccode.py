@@ -690,8 +690,12 @@ class CCodePrinter(CodePrinter):
         class_type = assignment_var.class_type
         dtype = self.get_c_type(class_type)
         if isinstance(expr, PythonDict):
-            dict_item_strs = [(self._print(k), self._print(v)) for k,v in zip(expr.keys, expr.values)]
-            keyraw = '{' + ', '.join(f'{{{k}, {v}}}' for k,v in dict_item_strs) + '}'
+            values = [self._print(k) for k in expr.values]
+            if isinstance(class_type.key_type, StringType):
+                keys = [self._print(CStrStr(k)) for k in expr.keys]
+            else:
+                keys = [self._print(k) for k in expr.keys]
+            keyraw = '{' + ', '.join(f'{{{k}, {v}}}' for k,v in zip(keys, values)) + '}'
         else:
             keyraw = '{' + ', '.join(self._print(a) for a in expr.args) + '}'
         container_name = self._print(assignment_var)
