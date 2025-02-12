@@ -2884,7 +2884,10 @@ class CCodePrinter(CodePrinter):
         c_type = self.get_c_type(class_type)
 
         dict_var = self._print(ObjectAddress(target))
-        key = self._print(expr.key)
+        if isinstance(class_type.key_type, StringType):
+            key = self._print(CStrStr(expr.key))
+        else:
+            key = self._print(expr.key)
 
         if expr.default_value is not None:
             default_val = self._print(expr.default_value)
@@ -2898,7 +2901,10 @@ class CCodePrinter(CodePrinter):
         c_type = self.get_c_type(class_type)
 
         dict_var = self._print(ObjectAddress(target))
-        key = self._print(expr.key)
+        if isinstance(class_type.key_type, StringType):
+            key = self._print(CStrStr(expr.key))
+        else:
+            key = self._print(expr.key)
 
         if expr.default_value is not None:
             default = self._print(expr.default_value)
@@ -2911,8 +2917,12 @@ class CCodePrinter(CodePrinter):
     def _print_DictGetItem(self, expr):
         dict_obj = expr.dict_obj
         dict_obj_code = self._print(ObjectAddress(dict_obj))
-        container_type = self.get_c_type(dict_obj.class_type)
-        key = self._print(expr.key)
+        class_type = dict_obj.class_type
+        container_type = self.get_c_type(class_type)
+        if isinstance(class_type.key_type, StringType):
+            key = self._print(CStrStr(expr.key))
+        else:
+            key = self._print(expr.key)
         assign = expr.get_user_nodes(Assign)
         if assign:
             assert len(assign) == 1
