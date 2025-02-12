@@ -17,8 +17,6 @@ from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRS
 
 from .builtins  import PythonBool, PythonTuple
 
-from .c_concepts import PointerCast
-
 from .datatypes import (PyccelType, HomogeneousTupleType, VoidType, CustomDataType,
                         PythonNativeBool, InhomogeneousTupleType, SymbolicType)
 
@@ -389,7 +387,7 @@ class Allocate(PyccelAstNode):
     # ...
     def __init__(self, variable, *, shape, status, like = None, alloc_type = None):
 
-        if not isinstance(variable, (Variable, PointerCast)):
+        if pyccel_stage == 'semantic' and not isinstance(variable, Variable):
             raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
 
         if variable.on_stack:
@@ -399,9 +397,7 @@ class Allocate(PyccelAstNode):
         if shape and not isinstance(shape, (int, tuple, list)):
             raise TypeError(f"Cannot understand 'shape' parameter of type '{type(shape)}'")
 
-        class_type = variable.class_type
-        if class_type.rank != len(shape):
-            raise ValueError("Incompatible rank in variable allocation")
+        assert variable.class_type.shape_is_compatible(shape)
 
         if not isinstance(status, str):
             raise TypeError(f"Cannot understand 'status' parameter of type '{type(status)}'")

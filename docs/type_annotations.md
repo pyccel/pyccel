@@ -107,6 +107,8 @@ Strings are not yet supported as keys in Fortran.
 
 Pyccel contains very minimal support for strings. This is mostly provided to allow the use of strings as keys of dictionaries.
 
+Currently strings can be used as local variables and can be returned from functions.
+
 ## Handling multiple types
 
 The basic type annotations indicate only one type however it is common to need a function to be able to handle multiple types, e.g. integers and floats. In this case it is possible to provide a union type.
