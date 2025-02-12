@@ -598,44 +598,43 @@ class PythonTuple(TypedAstNode):
             self._is_homogeneous = False
             return
 
-        # Get possible datatypes
-        dtypes = [a.class_type.datatype for a in args]
-        # Create a set of dtypes using the same key for compatible types
-        dtypes = set((d.primitive_type, d.precision) if isinstance(d, FixedSizeNumericType) else d for d in dtypes)
+        # Get possible types of elements
+        element_types = [a.class_type for a in args]
+        # Create a set of types using the same key for compatible types
+        unique_element_types = {((d.primitive_type, d.precision) if isinstance(d, FixedSizeNumericType) \
+                                 else d) : d for d in element_types}
 
-        if any(isinstance(d, SymbolicType) for d in dtypes):
+        self._shape = (LiteralInteger(len(args)),)
+
+        if any(isinstance(d, SymbolicType) for d in unique_element_types):
             self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
-            self._shape = (LiteralInteger(len(args)),)
             self._is_homogeneous = False
             return
 
-        ranks  = set(a.rank for a in args)
-        orders = set(a.order for a in args)
-        if len(ranks) == 1:
-            rank = next(iter(ranks))
-            shapes = tuple(set(a.shape[i] for a in args if not (a.shape[i] is None or isinstance(a.shape[i], PyccelArrayShapeElement) or \
-                               a.shape[i].get_attribute_nodes(PyccelArrayShapeElement))) \
-                               for i in range(rank))
-        else:
-            shapes = ()
-        is_homogeneous = (not prefer_inhomogeneous) and len(dtypes) == 1 and len(ranks) == 1 and \
-                         len(orders) == 1 and all(len(s) <= 1 for s in shapes)
         contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
                             not isinstance(a.class_type, HomogeneousTupleType) for a in args)
 
+        is_homogeneous = (not prefer_inhomogeneous) and len(unique_element_types) == 1 and \
+                        not isinstance(args[0].class_type, InhomogeneousTupleType)
+        if is_homogeneous and args[0].rank > 0:
+            shapes = [tuple(None if isinstance(s, PyccelArrayShapeElement) else s for s in a.shape)
+                        for a in args]
+            if len(set(shapes)) > 1:
+                is_homogeneous = False
+            elif not contains_pointers:
+                self._shape += args[0].shape
+
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
-            inner_shape = [() if a.rank == 0 else a.shape for a in args]
-            self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
-
             if contains_pointers:
-                self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
+                self._class_type = InhomogeneousTupleType(*element_types)
             else:
-                self._class_type = HomogeneousTupleType(args[0].class_type)
+                self._class_type = HomogeneousTupleType(unique_element_types.popitem()[1])
 
         else:
             self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
-            self._shape      = (LiteralInteger(len(args)), )
+
+        assert self._class_type.shape_is_compatible(self._shape)
 
     def __getitem__(self,i):
         def is_int(a):
@@ -778,8 +777,7 @@ class PythonList(TypedAstNode):
         if is_homogeneous:
             dtype = arg0.class_type
 
-            inner_shape = [() if a.rank == 0 else a.shape for a in args]
-            self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+            self._shape = (LiteralInteger(len(args)), )
 
         else:
             raise TypeError("Can't create an inhomogeneous list")
@@ -891,8 +889,7 @@ class PythonSet(TypedAstNode):
                              arg0.class_type == a.class_type for a in args[1:])
         if is_homogeneous:
             elem_type = arg0.class_type
-            inner_shape = [() if a.rank == 0 else a.shape for a in args]
-            self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+            self._shape = (LiteralInteger(len(args)), )
             if elem_type.rank > 0:
                 raise TypeError("Pyccel can't hash non-scalar types")
         else:
@@ -1244,6 +1241,7 @@ class PythonRange(Iterable):
             self._step  = args[2]
         else:
             raise ValueError('Range has at most 3 arguments')
+        assert self._stop is not None
 
         super().__init__(0)
 

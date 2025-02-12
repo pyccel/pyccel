@@ -26,8 +26,8 @@ from .internals     import PyccelFunction, Slice, PyccelArrayShapeElement
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
 from .mathext       import math_mod
-from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
-                            NumpyTranspose, NumpyLinspace)
+from .numpyext      import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace
+from .numpyext      import get_shape_of_multi_level_container
 from .numpytypes    import NumpyNDArrayType
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .operators     import PyccelUnarySub
@@ -527,7 +527,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 current_level = 0
 
             rank = line.lhs.rank
-            shape = line.lhs.shape
+            shape = get_shape_of_multi_level_container(line.lhs) if isinstance(line.lhs.class_type, HomogeneousTupleType) \
+                    else line.lhs.shape
             new_vars = variables
             handled_funcs = transposed_vars + indexed_funcs
             # Loop over indexes, inserting until the expression can be evaluated
