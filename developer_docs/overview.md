@@ -84,6 +84,8 @@ Pyccel tries to fail cleanly and raise readable errors for users. This is manage
 
 If the error prevents further translation (e.g. the type of an object is now unknown) then the severity should be indicated as `'fatal'`.
 
+This error handling can make it easier to debug developments. Pyccel therefore includes a developer mode which ensures that all errors include a traceback.
+
 ## Getting Help
 
 While discussions within the associated GitHub issue are often sufficient, should you require more help you can join our [Pyccel Discord Server](https://discord.gg/2Q6hwjfFVb).

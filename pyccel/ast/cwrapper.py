@@ -21,7 +21,7 @@ from .builtins  import PythonInt
 
 from .datatypes import FixedSizeType, CustomDataType
 from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
-from .datatypes import PythonNativeBool, StringType, VoidType
+from .datatypes import PythonNativeBool, StringType, VoidType, CharType
 from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 
 from .core      import FunctionDefArgument, FunctionDefResult
@@ -281,7 +281,7 @@ class PyBuildValueNode(PyccelFunction):
     """
     __slots__ = ('_flags','_result_args')
     _attribute_nodes = ('_result_args',)
-    _shape = ()
+    _shape = None
     _class_type = PyccelPyObject()
 
     def __init__(self, result_args = ()):
@@ -326,8 +326,7 @@ class PyModule_AddObject(PyccelFunction):
     _class_type = PythonNativeInt()
 
     def __init__(self, mod_name, name, variable):
-        if not isinstance(name, LiteralString):
-            raise TypeError("Name must be a string")
+        assert isinstance(name.dtype, CharType)
         if not isinstance(variable, Variable) or \
                 variable.dtype not in (PyccelPyObject(), PyccelPyClassType()):
             raise TypeError("Variable must be a PyObject Variable")
@@ -371,7 +370,7 @@ class PyModule_Create(PyccelFunction):
     """
     __slots__ = ('_module_def_name',)
     _attribute_nodes = ()
-    _shape = ()
+    _shape = None
     _class_type = PyccelPyObject()
 
     def __init__(self, module_def_name):
@@ -411,7 +410,7 @@ class PyCapsule_New(PyccelFunction):
     """
     __slots__ = ('_capsule_name', '_API_var')
     _attribute_nodes = ('_API_var',)
-    _shape = ()
+    _shape = None
     _class_type = PyccelPyObject()
 
     def __init__(self, API_var, module_name):
@@ -459,7 +458,7 @@ class PyCapsule_Import(PyccelFunction):
     """
     __slots__ = ('_capsule_name',)
     _attribute_nodes = ()
-    _shape = ()
+    _shape = None
     _class_type = BindCPointer()
 
     def __init__(self, module_name):
@@ -1034,6 +1033,7 @@ pytype_parse_registry = {
     PythonNativeComplex() : 'O',
     PythonNativeBool()    : 'p',
     StringType()          : 's',
+    CharType()            : 's',
     PyccelPyObject()      : 'O',
     }
 
@@ -1108,7 +1108,7 @@ PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
 PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
               body      = [],
               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o')),
-                           FunctionDefArgument(Variable(StringType(), name = 's'))])
+                           FunctionDefArgument(Variable(CharType(), name = 's', memory_handling='alias'))])
 
 PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
 PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
@@ -1260,6 +1260,7 @@ PyDict_SetItem = FunctionDef(name = 'PyDict_SetItem',
                                  FunctionDefArgument(Variable(PyccelPyObject(), 'val', memory_handling='alias'))],
                     results = FunctionDefResult(Variable(PythonNativeInt(), 'i')),
                     body = [])
+
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {

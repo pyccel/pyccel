@@ -39,10 +39,11 @@ from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PySet_GetIter, PyS
 from pyccel.ast.cwrapper      import PyIter_Next
 from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
+from pyccel.ast.c_concepts    import CStrStr
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
 from pyccel.ast.datatypes     import HomogeneousSetType, HomogeneousListType
-from pyccel.ast.datatypes     import TupleType
+from pyccel.ast.datatypes     import TupleType, CharType, StringType
 from pyccel.ast.internals     import Slice
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
@@ -337,7 +338,7 @@ class CToPythonWrapper(Wrapper):
                 flag = numpy_flag_c_contig
 
             if raise_error:
-                type_check_condition = pyarray_check(ObjectAddress(LiteralString(arg.name)), py_obj, type_ref,
+                type_check_condition = pyarray_check(CStrStr(LiteralString(arg.name)), py_obj, type_ref,
                                  LiteralInteger(rank), flag)
             else:
                 type_check_condition = is_numpy_array(py_obj, type_ref, LiteralInteger(rank), flag)
@@ -398,7 +399,7 @@ class CToPythonWrapper(Wrapper):
         if raise_error and not isinstance(arg.class_type, NumpyNDArrayType):
             # No error code required for arrays as the error is raised inside pyarray_check
             message = LiteralString(f"Expected an argument of type {arg.class_type} for argument {arg.name}")
-            python_error = PyErr_SetString(PyTypeError, message)
+            python_error = PyErr_SetString(PyTypeError, CStrStr(message))
             error_code = (python_error,)
 
         return type_check_condition, error_code
@@ -490,7 +491,7 @@ class CToPythonWrapper(Wrapper):
                     check_func_call, _ = self._get_type_check_condition(py_arg, type_to_example_arg[t], False, body)
                     if_blocks.append(IfSection(check_func_call, [AugAssign(type_indicator, '+', LiteralInteger(index*step))]))
                 body.append(If(*if_blocks, IfSection(LiteralTrue(),
-                            [PyErr_SetString(PyTypeError, f"Unexpected type for argument {interface_args[0].name}"),
+                            [PyErr_SetString(PyTypeError, CStrStr(LiteralString(f"Unexpected type for argument {interface_args[0].name}"))),
                              Return(PyccelUnarySub(LiteralInteger(1)))])))
 
             # Update the step to ensure unique indices for each argument
@@ -542,7 +543,7 @@ class CToPythonWrapper(Wrapper):
         else:
             func_results = FunctionDefResult(self.scope.get_temporary_variable(self._error_exit_code.class_type, "result"))
         function = PyFunctionDef(name = name, arguments = func_args, results = func_results,
-                body = [PyErr_SetString(PyNotImplementedError, LiteralString(error_msg)),
+                body = [PyErr_SetString(PyNotImplementedError, CStrStr(LiteralString(error_msg))),
                         Return(self._error_exit_code)],
                 scope = scope, original_function = original_function)
 
@@ -664,7 +665,7 @@ class CToPythonWrapper(Wrapper):
         list[PyccelAstNode]
             The code which adds the object to the module.
         """
-        add_expr = PyModule_AddObject(module_var, LiteralString(name), obj)
+        add_expr = PyModule_AddObject(module_var, CStrStr(LiteralString(name)), obj)
         if_expr = If(IfSection(PyccelLt(add_expr, LiteralInteger(0)),
                         [Py_DECREF(i) for i in initialised] +
                         [Return(self._error_exit_code)]))
@@ -820,11 +821,11 @@ class CToPythonWrapper(Wrapper):
         current_path = func_scope.get_temporary_variable(PyccelPyObject(), 'current_path', memory_handling='alias')
         stash_path = func_scope.get_temporary_variable(PyccelPyObject(), 'stash_path', memory_handling='alias')
 
-        body = [AliasAssign(current_path, PySys_GetObject(LiteralString("path"))),
+        body = [AliasAssign(current_path, PySys_GetObject(CStrStr(LiteralString("path")))),
                 AliasAssign(stash_path, PyList_GetItem(current_path, LiteralInteger(0, dtype=CNativeInt()))),
                 Py_INCREF(stash_path),
                 If(IfSection(PyccelEq(PyList_SetItem(current_path, LiteralInteger(0, dtype=CNativeInt()),
-                                                PyUnicode_FromString(LiteralString(self._file_location))),
+                                                PyUnicode_FromString(CStrStr(LiteralString(self._file_location)))),
                                       PyccelUnarySub(LiteralInteger(1))),
                              [Return(self._error_exit_code)])),
                 AliasAssign(API_var, PyCapsule_Import(self.scope.get_python_name(mod_name))),
@@ -873,7 +874,7 @@ class CToPythonWrapper(Wrapper):
 
         alias_val = LiteralTrue() if is_alias else LiteralFalse()
 
-        return [Allocate(class_var, shape=(), status='unallocated'),
+        return [Allocate(class_var, shape=None, status='unallocated'),
                 AliasAssign(ref_list, PyList_New()),
                 Assign(alias_bool, alias_val)]
 
@@ -925,7 +926,7 @@ class CToPythonWrapper(Wrapper):
         else:
             result_name = self.scope.get_new_name('result')
             result = Variable(class_dtype, result_name)
-            body.append(Allocate(c_res, shape=(), status='unallocated',
+            body.append(Allocate(c_res, shape=None, status='unallocated',
                          like = result))
 
         body.append(Return(PointerCast(python_result_var, func_results.var)))
@@ -1411,7 +1412,7 @@ class CToPythonWrapper(Wrapper):
                                 [Return(wrapped_func(*python_arg_objs))]))
             functions.append(wrapped_func)
         if_sections.append(IfSection(LiteralTrue(),
-                    [PyErr_SetString(PyTypeError, "Unexpected type combination"),
+                    [PyErr_SetString(PyTypeError, CStrStr(LiteralString("Unexpected type combination"))),
                      Return(self._error_exit_code)]))
         body.append(If(*if_sections))
         self.exit_scope()
@@ -1580,7 +1581,7 @@ class CToPythonWrapper(Wrapper):
             docstring = LiteralString(
                             '\n'.join(original_func.docstring.comments)
                             if original_func.docstring else f"The attribute {python_name}")
-            return PyGetSetDefElement(python_name, function, None, docstring)
+            return PyGetSetDefElement(python_name, function, None, CStrStr(docstring))
         else:
             return function
 
@@ -1799,7 +1800,7 @@ class CToPythonWrapper(Wrapper):
         elif isinstance(expr.dtype, CustomDataType):
             if isinstance(new_res_val, PointerCast):
                 new_res_val = new_res_val.obj
-            body = [Allocate(getter_result, shape=(), status='unallocated'),
+            body = [Allocate(getter_result, shape=None, status='unallocated'),
                     AliasAssign(new_res_val, attrib),
                     *res_wrapper]
         else:
@@ -1859,7 +1860,7 @@ class CToPythonWrapper(Wrapper):
                            Return(LiteralInteger(0, dtype=CNativeInt()))]
         else:
             setter_body = [PyErr_SetString(PyAttributeError,
-                                        LiteralString("Can't reallocate memory via Python interface.")),
+                                        CStrStr(LiteralString("Can't reallocate memory via Python interface."))),
                         Return(self._error_exit_code)]
         self.exit_scope()
 
@@ -1872,7 +1873,7 @@ class CToPythonWrapper(Wrapper):
 
         python_name = class_type.scope.get_python_name(expr.name)
         return PyGetSetDefElement(python_name, getter, setter,
-                                LiteralString(f"The attribute {python_name}"))
+                                CStrStr(LiteralString(f"The attribute {python_name}")))
 
     def _wrap_BindCClassProperty(self, expr):
         """
@@ -1928,7 +1929,7 @@ class CToPythonWrapper(Wrapper):
         call = self._call_wrapped_function(expr.getter, (class_obj,), c_results)
 
         if isinstance(getter_result.dtype, CustomDataType):
-            arg_code.append(Allocate(getter_result, shape=(), status='unallocated'))
+            arg_code.append(Allocate(getter_result, shape=None, status='unallocated'))
 
         if isinstance(expr.getter.original_function, DottedVariable):
             wrapped_var = expr.getter.original_function
@@ -1985,7 +1986,7 @@ class CToPythonWrapper(Wrapper):
                                Return(LiteralInteger(0, dtype=CNativeInt()))]
             else:
                 setter_body = [PyErr_SetString(PyAttributeError,
-                                            LiteralString("Can't reallocate memory via Python interface.")),
+                                            CStrStr(LiteralString("Can't reallocate memory via Python interface."))),
                             Return(self._error_exit_code)]
             self.exit_scope()
 
@@ -2000,7 +2001,7 @@ class CToPythonWrapper(Wrapper):
         docstring = LiteralString(
                         '\n'.join(expr.docstring.comments)
                         if expr.docstring else f"The attribute {expr.python_name}")
-        return PyGetSetDefElement(expr.python_name, getter, setter, docstring)
+        return PyGetSetDefElement(expr.python_name, getter, setter, CStrStr(docstring))
 
     def _wrap_ClassDef(self, expr):
         """
@@ -2370,7 +2371,7 @@ class CToPythonWrapper(Wrapper):
                                     is_optional=False, memory_handling='alias', new_class = Variable)
             self.scope.insert_variable(sliced_arg_var, orig_var.name)
 
-        original_size = [PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems)]
+        original_size = tuple(PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems))
 
         body.append(Allocate(arg_var, shape=original_size, status='unallocated', like=args[0]))
         body.append(AliasAssign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, None, s) for s in stride_elems])))
@@ -2652,7 +2653,7 @@ class CToPythonWrapper(Wrapper):
             scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-            setup.append(Allocate(c_res, shape=(), status='unallocated', like=orig_var))
+            setup.append(Allocate(c_res, shape=None, status='unallocated', like=orig_var))
             result = PointerCast(c_res, cast_type = orig_var)
             body = []
 
@@ -2955,3 +2956,22 @@ class CToPythonWrapper(Wrapper):
                 for_loop]
 
         return {'c_results': c_results, 'py_result': py_res, 'body': body}
+
+    def _extract_StringType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
+        name = getattr(orig_var, 'name', 'tmp')
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        if is_bind_c:
+            c_res = Variable(CharType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
+            self.scope.insert_variable(c_res)
+            char_data = ObjectAddress(c_res)
+        else:
+            c_res = Variable(StringType(), self.scope.get_new_name(name), memory_handling='heap')
+            self.scope.insert_variable(c_res)
+            char_data = CStrStr(c_res)
+
+        body = [AliasAssign(py_res, PyBuildValueNode([char_data]))]
+        if is_bind_c:
+            body.append(Deallocate(c_res))
+        return {'c_results': [c_res], 'py_result': py_res, 'body': body}
+

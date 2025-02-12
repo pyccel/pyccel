@@ -168,8 +168,8 @@ class DictGet(DictMethod):
         super().__init__(dict_obj, k, d)
 
         if self._class_type.rank:
-            self._shape = [PyccelArrayShapeElement(self,LiteralInteger(i)) \
-                    for i in range(self._class_type.rank)]
+            self._shape = tuple(PyccelArrayShapeElement(self,LiteralInteger(i)) \
+                    for i in range(self._class_type.rank))
 
     @property
     def key(self):
@@ -410,8 +410,8 @@ class DictGetItem(DictMethod):
         super().__init__(dict_obj, k)
 
         if self._class_type.rank:
-            self._shape = [PyccelArrayShapeElement(self,LiteralInteger(i)) \
-                    for i in range(self._class_type.rank)]
+            self._shape = tuple(PyccelArrayShapeElement(self,LiteralInteger(i)) \
+                    for i in range(self._class_type.rank))
 
     @property
     def key(self):

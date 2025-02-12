@@ -8,12 +8,14 @@ Module describing all elements of the AST needed to represent elements which app
 file.
 """
 
-from pyccel.ast.basic import PyccelAstNode
+from pyccel.ast.basic import PyccelAstNode, TypedAstNode
 from pyccel.ast.core import Module, Deallocate
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt, InhomogeneousTupleType
+from pyccel.ast.datatypes import StringType
 from pyccel.ast.internals import PyccelFunction
+from pyccel.ast.literals import LiteralInteger
 from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.variable import Variable
 from pyccel.errors.errors     import Errors
@@ -29,14 +31,15 @@ __all__ = (
     'BindCFunctionDef',
     'BindCFunctionDefArgument',
     'BindCModule',
-    'BindCPointer',
-    'BindCVariable',
-    'BindCSizeOf',
     'BindCModuleVariable',
+    'BindCPointer',
+    'BindCSizeOf',
+    'BindCVariable',
     'CLocFunc',
     'C_F_Pointer',
-    'c_malloc',
+    'C_NULL_CHAR',
     'DeallocatePointer',
+    'c_malloc',
 )
 
 # =======================================================================================
@@ -734,7 +737,7 @@ class C_F_Pointer(PyccelAstNode):
     __slots__ = ('_c_expr', '_f_expr', '_shape')
     _attribute_nodes = ('_c_expr', '_f_expr', '_shape')
 
-    def __init__(self, c_expr, f_expr, shape = ()):
+    def __init__(self, c_expr, f_expr, shape = None):
         self._c_expr = c_expr
         self._f_expr = f_expr
         self._shape = shape
@@ -796,10 +799,23 @@ class BindCSizeOf(PyccelFunction):
     """
     __slots__ = ()
     _class_type = PythonNativeInt()
-    _shape = ()
+    _shape = None
 
     def __init__(self, element):
         super().__init__(element)
+
+class C_NULL_CHAR(TypedAstNode):
+    """
+    A class representing the C_NULL_CHAR character from the iso_c_binding module.
+
+    A class representing the C_NULL_CHAR character from the iso_c_binding module.
+    This object should be appended to strings before returning them from Fortran
+    to C.
+    """
+    __slots__ = ()
+    _class_type = StringType()
+    _shape = (LiteralInteger(1),)
+    _attribute_nodes = ()
 
 c_malloc = FunctionDef('c_malloc', (FunctionDefArgument(Variable(PythonNativeInt(), 'size')),),
                         (), FunctionDefResult(Variable(BindCPointer(), 'ptr')))

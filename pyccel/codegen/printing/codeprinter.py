@@ -10,8 +10,8 @@ from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core      import Module, ModuleHeader, Program
 from pyccel.ast.internals import PyccelSymbol
 
-from pyccel.errors.errors     import Errors
-from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
+from pyccel.errors.errors     import Errors, ErrorsMode, PyccelError
+from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
 
 # TODO: add examples
 
@@ -29,6 +29,7 @@ class CodePrinter:
     language = None
     def __init__(self):
         self._scope = None
+        self._current_ast_node = None
         self._additional_imports = {}
 
     def doprint(self, expr):
@@ -105,20 +106,46 @@ class CodePrinter:
         self._scope = self._scope.parent_scope
 
     def _print(self, expr):
-        """Print the AST node in the printer language
+        """
+        Print the AST node in the printer language.
 
         The printing is done by finding the appropriate function _print_X
         for the object expr. X is the type of the object expr. If this function
         does not exist then the method resolution order is used to search for
         other compatible _print_X functions. If none are found then an error is
-        raised
+        raised.
+
+        Parameters
+        ----------
+        expr : PyccelAstNode
+            The expression that should be printed.
+
+        Returns
+        -------
+        str
+            A string containing code in the printer language which is equivalent
+            to the expression.
         """
+
+        current_ast = self._current_ast_node
+        if getattr(expr,'python_ast', None) is not None:
+            self._current_ast_node = expr.python_ast
 
         classes = type(expr).__mro__
         for cls in classes:
             print_method = '_print_' + cls.__name__
             if hasattr(self, print_method):
-                obj = getattr(self, print_method)(expr)
+                try:
+                    obj = getattr(self, print_method)(expr)
+                except (PyccelError, NotImplementedError) as err:
+                    raise err
+                except Exception as err: #pylint: disable=broad-exception-caught
+                    if ErrorsMode().value == 'user':
+                        errors.report(PYCCEL_INTERNAL_ERROR,
+                                symbol = self._current_ast_node, severity='fatal')
+                    else:
+                        raise err
+                self._current_ast_node = current_ast
                 return obj
         return self._print_not_supported(expr)
 

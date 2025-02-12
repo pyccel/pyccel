@@ -32,10 +32,10 @@ from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName
 
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
-from pyccel.ast.c_concepts import CStackArray
+from pyccel.ast.c_concepts import CStackArray, CStrStr
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
-from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
+from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
@@ -55,6 +55,7 @@ from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
+from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
@@ -292,6 +293,7 @@ class CCodePrinter(CodePrinter):
 
     dtype_registry = {CNativeInt()    : 'int',
                       VoidType() : 'void',
+                      CharType() : 'char',
                       (PrimitiveComplexType(),8) : 'double complex',
                       (PrimitiveComplexType(),4) : 'float complex',
                       (PrimitiveFloatingPointType(),8)   : 'double',
@@ -378,10 +380,14 @@ class CCodePrinter(CodePrinter):
         bool
             True if a C pointer, False otherwise.
         """
-        if isinstance(a, (Nil, ObjectAddress, PointerCast)):
+        if isinstance(a, (Nil, ObjectAddress, PointerCast, CStrStr)):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results.var
+        # STC _at and _at_mut functions return pointers
+        if isinstance(a, IndexedElement) and not isinstance(a.base.class_type, CStackArray) and \
+                len(a.indices) == a.base.class_type.container_rank:
+            return True
         if not isinstance(a, Variable):
             return False
         if isinstance(a.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
@@ -477,7 +483,7 @@ class CCodePrinter(CodePrinter):
             for li, ri in zip(lhs, arg):
                 if li.rank:
                     li_slice_var = self.scope.get_temporary_variable(li.class_type,
-                            shape = ri.shape, memory_handling='alias')
+                            shape = get_shape_of_multi_level_container(ri), memory_handling='alias')
                     body += self._print(AliasAssign(li_slice_var, li))
                     body += self.copy_NumpyArray_Data(li_slice_var, ri)
                 else:
@@ -495,7 +501,8 @@ class CCodePrinter(CodePrinter):
             return result
 
         flattened_args = self._flatten_list(arg)
-        flattened_lhs = [get_indexed(lhs, elems) for elems in product(*[range(s) for s in arg.shape])]
+
+        flattened_lhs = [get_indexed(lhs, elems) for elems in product(*[range(s) for s in get_shape_of_multi_level_container(arg)])]
 
         operations = ''
         for li, ri in zip(flattened_lhs, flattened_args):
@@ -1215,7 +1222,7 @@ class CCodePrinter(CodePrinter):
                                .replace('\v', '\\v')\
                                .replace('"', '\\"')\
                                .replace("'", "\\'")
-        return '"{}"'.format(format_str)
+        return f'cstr_lit("{format_str}")'
 
     def get_print_format_and_arg(self, var):
         """
@@ -1245,7 +1252,9 @@ class CCodePrinter(CodePrinter):
                 float_format, imag_part = self.get_print_format_and_arg(NumpyImag(var))
                 return f'({float_format} + {float_format}j)', f'{real_part}, {imag_part}'
             elif isinstance(primitive_type, PrimitiveBooleanType):
-                return self.get_print_format_and_arg(IfTernaryOperator(var, LiteralString("True"), LiteralString("False")))
+                return self.get_print_format_and_arg(IfTernaryOperator(var,
+                                CStrStr(LiteralString("True")),
+                                CStrStr(LiteralString("False"))))
             else:
                 try:
                     arg_format = self.type_to_format[(primitive_type, var.dtype.precision)]
@@ -1253,11 +1262,10 @@ class CCodePrinter(CodePrinter):
                     errors.report(f"Printing {var.dtype} type is not supported currently", severity='fatal')
                 arg = self._print(var)
         elif isinstance(var.dtype, StringType):
-            if isinstance(var, Variable):
-                var_obj = self._print(ObjectAddress(var))
-                arg = f'cstr_str({var_obj})'
-            else:
-                arg = self._print(var)
+            arg = self._print(CStrStr(var))
+            arg_format = '%s'
+        elif isinstance(var.dtype, CharType):
+            arg = self._print(var)
             arg_format = '%s'
         else:
             try:
@@ -1270,7 +1278,7 @@ class CCodePrinter(CodePrinter):
         return arg_format, arg
 
     def _print_CStringExpression(self, expr):
-        return "".join(self._print(e) for e in expr.get_flat_expression_list())
+        return "".join(self._print(CStrStr(e)) for e in expr.get_flat_expression_list())
 
     def _print_CMacro(self, expr):
         return str(expr.macro)
@@ -2407,8 +2415,6 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
             return self.init_stc_container(rhs, expr.lhs)
         rhs_code = self._print(rhs)
-        if isinstance(rhs, LiteralString):
-            rhs_code = f'cstr_lit({rhs_code})'
         return f'{lhs_code} = {rhs_code};\n'
 
     def _print_AliasAssign(self, expr):
@@ -2905,6 +2911,14 @@ class CCodePrinter(CodePrinter):
                 return f"(*{container_type}_at_mut({dict_obj_code}, {key}))"
 
         return f"(*{container_type}_at({dict_obj_code}, {key}))"
+
+    def _print_CStrStr(self, expr):
+        arg = expr.args[0]
+        code = self._print(ObjectAddress(arg))
+        if code.startswith('&cstr_lit('):
+            return code[10:-1]
+        else:
+            return f'cstr_str({code})'
 
     #=================== MACROS ==================
 
