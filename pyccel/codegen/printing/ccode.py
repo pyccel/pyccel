@@ -1045,14 +1045,26 @@ class CCodePrinter(CodePrinter):
         return ' || '.join(a for a in args)
 
     def _print_PyccelEq(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
-        return '{0} == {1}'.format(lhs, rhs)
+        lhs, rhs = expr.args
+        if isinstance(lhs.class_type, StringType) and isinstance(rhs.class_type, StringType):
+            lhs_code = self._print(CStrStr(lhs))
+            rhs_code = self._print(CStrStr(rhs))
+            return f'!strcmp({lhs_code}, {rhs_code})'
+        else:
+            lhs_code = self._print(lhs)
+            rhs_code = self._print(rhs)
+            return f'{lhs_code} == {rhs_code}'
 
     def _print_PyccelNe(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
-        return '{0} != {1}'.format(lhs, rhs)
+        lhs, rhs = expr.args
+        if isinstance(lhs.class_type, StringType) and isinstance(rhs.class_type, StringType):
+            lhs_code = self._print(CStrStr(lhs))
+            rhs_code = self._print(CStrStr(rhs))
+            return f'strcmp({lhs_code}, {rhs_code})'
+        else:
+            lhs_code = self._print(lhs)
+            rhs_code = self._print(rhs)
+            return f'{lhs_code} != {rhs_code}'
 
     def _print_PyccelLt(self, expr):
         lhs = self._print(expr.args[0])

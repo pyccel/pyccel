@@ -2287,7 +2287,7 @@ class FCodePrinter(CodePrinter):
                 return f'call {var_code} % reserve({size_code})\n'
             else:
                 return ''
-        elif isinstance(class_type, (HomogeneousContainerType, DictType)):
+        elif isinstance(class_type, (HomogeneousContainerType, DictType, StringType)):
             return ''
 
         else:

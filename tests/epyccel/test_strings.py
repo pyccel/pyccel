@@ -26,3 +26,19 @@ def test_strings(test_func, language):
     print(python_out)
     print(pyccel_out)
     assert python_out == pyccel_out
+
+def test_string_compare(language):
+    def str_comp():
+        a = 'hello'
+        if a == 'world':
+            return 1
+        elif a != 'boo':
+            return 2
+        elif a == 'hello':
+            return 3
+        else:
+            return 4
+
+    f = epyccel( str_comp, language=language )
+
+    assert str_comp() == f()
