@@ -14,8 +14,8 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCModuleVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
 from pyccel.ast.bind_c import BindCClassProperty, c_malloc, BindCSizeOf
-from pyccel.ast.bind_c import BindCVariable, BindCArrayType
-from pyccel.ast.builtins import VariableIterator
+from pyccel.ast.bind_c import BindCVariable, BindCArrayType, C_NULL_CHAR
+from pyccel.ast.builtins import VariableIterator, PythonRange
 from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
@@ -23,7 +23,7 @@ from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
 from pyccel.ast.core import For
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
-from pyccel.ast.datatypes import PythonNativeInt
+from pyccel.ast.datatypes import PythonNativeInt, CharType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type
@@ -531,7 +531,7 @@ class FortranToCWrapper(Wrapper):
         result = BindCVariable(bind_var, local_var)
 
         # Define the additional steps necessary to define and fill ptr_var
-        alloc = Allocate(local_var, shape=(), status='unallocated')
+        alloc = Allocate(local_var, shape=None, status='unallocated')
         c_loc = CLocFunc(local_var, bind_var)
         body = [alloc, c_loc]
 
@@ -663,7 +663,7 @@ class FortranToCWrapper(Wrapper):
             # Create an array variable which can be passed to CLocFunc
             ptr_var = Variable(orig_var.class_type, scope.get_new_name(name+'_ptr'), memory_handling='alias')
             scope.insert_variable(ptr_var)
-            alloc = Allocate(ptr_var, shape=(), status='unallocated')
+            alloc = Allocate(ptr_var, shape=None, status='unallocated')
             copy = Assign(ptr_var, local_var)
             cloc = CLocFunc(ptr_var, bind_var)
             body = [alloc, copy, cloc]
@@ -754,6 +754,53 @@ class FortranToCWrapper(Wrapper):
         for_body = [Assign(IndexedElement(f_array, PyccelAdd(idx, LiteralInteger(1))), elem)]
         body.append(For((elem,), iterator, for_body, scope = for_scope))
         return result
+
+    def _extract_StringType_FunctionDefResult(self, orig_var):
+        name = orig_var.name
+        scope = self.scope
+        scope.insert_symbol(name)
+        memory_handling = 'alias' if isinstance(orig_var, DottedVariable) else orig_var.memory_handling
+
+        # Allocatable is not returned so it must appear in local scope
+        local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
+                            memory_handling = memory_handling)
+        scope.insert_variable(local_var, name)
+
+        # Create the C-compatible data pointer
+        bind_var = Variable(BindCPointer(),
+                            scope.get_new_name('bound_'+name),
+                            is_const=False, memory_handling='alias')
+
+        shape_var = Variable(NumpyInt32Type(), scope.get_new_name(f'{name}_len'))
+        scope.insert_variable(shape_var)
+
+        # Create an array variable which can be passed to CLocFunc
+        ptr_var = Variable(NumpyNDArrayType(CharType(), 1, None), scope.get_new_name(name+'_ptr'),
+                            memory_handling='alias')
+        elem_var = Variable(CharType(), scope.get_new_name(name+'_elem'))
+        scope.insert_variable(ptr_var)
+        scope.insert_variable(elem_var)
+
+        for_scope = scope.create_new_loop_scope()
+        iterator = PythonRange(LiteralInteger(1), shape_var)
+        idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+        iterator.set_loop_counter(idx)
+        self.scope.insert_variable(idx)
+
+        # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
+        # Lists are 1-indexed but Pyccel adds the shift during printing so they are
+        # treated as 0-indexed here
+        for_body = [Assign(IndexedElement(ptr_var, idx), IndexedElement(local_var, idx))]
+
+        # Define the additional steps necessary to define and fill ptr_var
+        # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
+        body = [Assign(shape_var, PyccelAdd(local_var.shape[0], LiteralInteger(1))),
+                Assign(bind_var, c_malloc(PyccelMul(BindCSizeOf(elem_var), shape_var))),
+                C_F_Pointer(bind_var, ptr_var, [shape_var]),
+                For((idx,), iterator, for_body, scope = for_scope),
+                Assign(IndexedElement(ptr_var, shape_var), C_NULL_CHAR())]
+
+        return {'c_result': BindCVariable(bind_var, orig_var), 'body': body, 'f_array': ptr_var}
 
     def _get_bind_c_array(self, name, orig_var, shape, pointer_target = False):
         """
