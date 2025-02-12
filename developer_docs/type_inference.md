@@ -56,6 +56,8 @@ Subclasses of `PyccelType` generally fall into one of two categories:
 
 The types can be compared using either the `is` operator or the `==` operator. These operators have slightly different behaviour. All instances of `PyccelType` are singletons so the `is` operator tests if the types are identical. However the `==` operator tests if the types are compatible. For example `PythonNativeFloat() == NumpyFloat64Type()` will return true. This operator should therefore be used when permissive behaviour is required (e.g. when adding elements to a list of `PythonNativeFloat()` we are capable of adding an instance with the type `NumpyFloat64Type()` even if this would not be strictly homogeneous in Python).
 
+These classes also have a method `shape_is_compatible` which allows us to check if the calculated shape of an object is compatible with the data type (see [AST Nodes](./ast_nodes.md) for more details).
+
 #### Fixed Size Type
 A `FixedSizeType` is an object whose size in memory is known and cannot change from one instance to another (e.g. `float64`, `int32`, `void`). In most cases the developer will need the sub-class `FixedSizeNumericType` which refers to the subset of fixed size types which contain numeric values. These objects are characterised by a `primitive_type` describing the category of datatype (integer/floating point/etc) and a `precision`. They additionally implement two magic methods:
 -   `__add__` (+)
