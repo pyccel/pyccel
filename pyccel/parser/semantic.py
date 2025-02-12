@@ -124,8 +124,7 @@ from pyccel.ast.variable import Variable
 from pyccel.ast.variable import IndexedElement, AnnotatedPyccelSymbol
 from pyccel.ast.variable import DottedName, DottedVariable
 
-from pyccel.errors.errors import Errors
-from pyccel.errors.errors import PyccelSemanticError
+from pyccel.errors.errors import Errors, ErrorsMode, PyccelError, PyccelSemanticError
 
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_THROWAWAY,
         UNDEFINED_VARIABLE, IMPORTING_EXISTING_IDENTIFIED, INDEXED_TUPLE, LIST_OF_TUPLES,
@@ -141,7 +140,8 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
         UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
-        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC)
+        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,
+        PYCCEL_INTERNAL_ERROR)
 
 from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
@@ -2316,12 +2316,21 @@ class SemanticParser(BasicParser):
         classes = type(expr).__mro__
         for cls in classes:
             annotation_method = '_visit_' + cls.__name__
-            if hasattr(self, annotation_method):
-                obj = getattr(self, annotation_method)(expr)
-                if isinstance(obj, PyccelAstNode) and self.current_ast_node:
-                    obj.set_current_ast(self.current_ast_node)
-                self._current_ast_node = current_ast
-                return obj
+            try:
+                if hasattr(self, annotation_method):
+                    obj = getattr(self, annotation_method)(expr)
+                    if isinstance(obj, PyccelAstNode) and self.current_ast_node:
+                        obj.set_current_ast(self.current_ast_node)
+                    self._current_ast_node = current_ast
+                    return obj
+            except (PyccelError, NotImplementedError) as err:
+                raise err
+            except Exception as err: #pylint: disable=broad-exception-caught
+                if ErrorsMode().value == 'user':
+                    errors.report(PYCCEL_INTERNAL_ERROR,
+                            symbol = self._current_ast_node, severity='fatal')
+                else:
+                    raise err
 
         # Unknown object, we raise an error.
         return errors.report(PYCCEL_RESTRICTION_TODO, symbol=type(expr),
