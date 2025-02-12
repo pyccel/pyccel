@@ -4058,12 +4058,14 @@ class SemanticParser(BasicParser):
     def _visit_If(self, expr):
         args = []
 
-        for b in expr.blocks:
+        for i,b in enumerate(expr.blocks):
             new_b = self._visit(b)
             cond = new_b.condition
             if not isinstance(cond, LiteralFalse):
                 args.append(new_b)
             if isinstance(cond, LiteralTrue):
+                if len(args) == 1:
+                    return new_b.body
                 break
 
         allocations = [arg.get_attribute_nodes(Allocate) for arg in args]
