@@ -697,7 +697,11 @@ class CCodePrinter(CodePrinter):
                 keys = [self._print(k) for k in expr.keys]
             keyraw = '{' + ', '.join(f'{{{k}, {v}}}' for k,v in zip(keys, values)) + '}'
         else:
-            keyraw = '{' + ', '.join(self._print(a) for a in expr.args) + '}'
+            if isinstance(class_type.element_type, StringType):
+                args = [self._print(CStrStr(a)) for a in expr.args]
+            else:
+                args = [self._print(a) for a in expr.args]
+            keyraw = '{' + ', '.join(args) + '}'
         container_name = self._print(assignment_var)
         init = f'{container_name} = c_init({dtype}, {keyraw});\n'
         return init
