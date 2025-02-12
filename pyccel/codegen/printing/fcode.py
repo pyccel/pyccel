@@ -72,6 +72,7 @@ from pyccel.ast.numpyext import NumpyNewArray, NumpyArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
+from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt64Type
 
@@ -736,13 +737,12 @@ class FCodePrinter(CodePrinter):
             The code for the element.
         """
         if isinstance(expr, (PythonList, PythonTuple)):
-            shape = tuple(reversed(expr.shape))
+            shape = tuple(reversed(get_shape_of_multi_level_container(expr)))
+            elements = ', '.join(self._get_node_without_gFTL(i) for i in expr)
             if len(shape)>1:
-                elements = ', '.join(self._get_node_without_gFTL(i) for i in expr)
                 shape    = ', '.join(self._print(i) for i in shape)
                 return 'reshape(['+ elements + '], [' + shape + '])'
-            args = ', '.join(self._print(f) for f in expr)
-            return f'[{args}]'
+            return f'[{elements}]'
         else:
             return self._print(expr)
 
@@ -1235,13 +1235,12 @@ class FCodePrinter(CodePrinter):
             return code
 
     def _print_PythonTuple(self, expr):
-        shape = tuple(reversed(expr.shape))
+        shape = tuple(reversed(get_shape_of_multi_level_container(expr)))
+        elements = ', '.join(self._print(e) for e in expr)
         if len(shape)>1:
-            elements = ', '.join(self._print(i) for i in expr)
             shape    = ', '.join(self._print(i) for i in shape)
             return 'reshape(['+ elements + '], [' + shape + '])'
-        args = ', '.join(self._print(f) for f in expr)
-        return f'[{args}]'
+        return f'[{elements}]'
 
     def _print_PythonList(self, expr):
         if len(expr.args) == 0:
@@ -1672,7 +1671,8 @@ class FCodePrinter(CodePrinter):
 
                 # Reshape array element if out of order
                 if a.order == inv_order:
-                    shape = a.shape[::-1] if a.order == 'F' else a.shape
+                    a_shape = get_shape_of_multi_level_container(a)
+                    shape = a_shape[::-1] if a.order == 'F' else a_shape
                     shape_code = ', '.join(self._print(i) for i in shape)
                     order_code = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
                     ac = f'reshape({ac}, [{shape_code}], order=[{order_code}])'
@@ -2224,7 +2224,10 @@ class FCodePrinter(CodePrinter):
         class_type = expr.variable.class_type
         if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
             # Transpose indices because of Fortran column-major ordering
-            shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
+            if expr.variable.rank == 0:
+                shape = ()
+            else:
+                shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
 
             var_code = self._print(expr.variable)
             size_code = ', '.join(self._print(i) for i in shape)
@@ -3441,14 +3444,13 @@ class FCodePrinter(CodePrinter):
             inds = [Slice(None,None)]*expr.rank
 
         # Condense all indices on homogeneous objects into one IndexedElement for printing
-        # This should be removed when support for lists is added
-        if isinstance(base, IndexedElement):
-            while isinstance(base, IndexedElement) and isinstance(base.class_type, HomogeneousContainerType):
-                inds = list(base.indices) + inds
-                base = base.base
+        while isinstance(base, IndexedElement) and isinstance(base.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
+            inds = list(base.indices) + inds
+            base = base.base
 
         rank = base.rank
-        if len(inds)<rank:
+
+        if len(inds)<rank and isinstance(base.class_type, HomogeneousTupleType):
             inds += [Slice(None,None)]*(rank-base.class_type.container_rank)
 
         base_code = self._print(base)
@@ -3694,7 +3696,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_C_F_Pointer(self, expr):
         self._constantImports.setdefault('ISO_C_Binding', set()).add('C_F_Pointer')
-        shape = ', '.join(self._print(s) for s in expr.shape)
+        shape_tuple = expr.shape or ()
+        shape = ', '.join(self._print(s) for s in shape_tuple)
         if shape:
             return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)}, [{shape}])\n'
         else:
