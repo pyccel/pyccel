@@ -69,6 +69,7 @@ All notable changes to this project will be documented in this file.
 -   #983 : Add support for built-in function `round`.
 -   Add support for `type` as a type annotation.
 -   #2182 : Add support for `isinstance`.
+-   #2183 : Add compile time analysis of if block conditions.
 -   #337 : Add support for returning tuples from functions.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
@@ -176,6 +177,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 -   \[INTERNALS\] Remove unused classes `SymbolicAssign` and `SymbolicPrint`.
 -   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefResult` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
+-   \[INTERNALS\] Remove unused class `ast.core.FuncAddressDeclare`.
 
 ## \[1.12.1\] - 2024-10-01
 

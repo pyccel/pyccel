@@ -64,7 +64,6 @@ __all__ = (
     'ErrorExit',
     'Exit',
     'For',
-    'FuncAddressDeclare',
     'FunctionAddress',
     'FunctionCall',
     'FunctionCallArgument',
@@ -3011,13 +3010,11 @@ class FunctionAddress(FunctionDef):
 
     Examples
     --------
-    >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
+    >>> from pyccel.ast.core import Variable, FunctionAddress, FunctionDef
     >>> x = Variable(PythonNativeFloat(), 'x')
     >>> y = Variable(PythonNativeFloat(), 'y')
     >>> # a function definition can have a FunctionAddress as an argument
     >>> FunctionDef('g', [FunctionAddress('f', [x], [y])], [], [])
-    >>> # we can also Declare a FunctionAddress
-    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
     """
     __slots__ = ('_is_optional','_is_kwonly','_is_argument', '_memory_handling')
 
@@ -3761,85 +3758,6 @@ class Import(PyccelAstNode):
 
 
 # TODO: Should Declare have an optional init value for each var?
-
-class FuncAddressDeclare(PyccelAstNode):
-    """
-    Represents a FunctionAddress declaration in the code.
-
-    Represents a FunctionAddress declaration in the code.
-
-    Parameters
-    ----------
-    variable : FunctionAddress
-        An instance of FunctionAddress.
-    intent : str, optional
-        One among {'in', 'out', 'inout'}.
-    value : TypedAstNode
-        Variable value.
-    static : bool
-        True for a static declaration of an array.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
-    >>> x = Variable(PythonNativeFloat(), 'x')
-    >>> y = Variable(PythonNativeFloat(), 'y')
-    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
-    """
-    __slots__ = ('_variable','_intent','_value','_static')
-    _attribute_nodes = ('_variable', '_value')
-
-    def __init__(
-        self,
-        variable,
-        intent=None,
-        value=None,
-        static=False,
-        ):
-
-        if not isinstance(variable, FunctionAddress):
-            raise TypeError(f'variable must be of type FunctionAddress, given {variable}')
-
-        if intent:
-            if not intent in ['in', 'out', 'inout']:
-                raise ValueError("intent must be one among {'in', 'out', 'inout'}")
-
-        if not isinstance(static, bool):
-            raise TypeError('Expecting a boolean for static attribute')
-
-        self._variable  = variable
-        self._intent    = intent
-        self._value     = value
-        self._static    = static
-        super().__init__()
-
-    @property
-    def results(self):
-        return self._variable.results
-
-    @property
-    def arguments(self):
-        return self._variable.arguments
-
-    @property
-    def name(self):
-        return self._variable.name
-
-    @property
-    def variable(self):
-        return self._variable
-
-    @property
-    def intent(self):
-        return self._intent
-
-    @property
-    def value(self):
-        return self._value
-
-    @property
-    def static(self):
-        return self._static
 
 # ARA : issue-999 add is_external for external function exported through header files
 class Declare(PyccelAstNode):
