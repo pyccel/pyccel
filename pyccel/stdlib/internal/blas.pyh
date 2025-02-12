@@ -3,7 +3,7 @@
 #$ header metavar module_version='3.8'
 #$ header metavar ignore_at_import=True
 #$ header metavar save=True
-##$ header metavar libraries='blas'
+#$ header metavar libraries='blas'
 #$ header metavar external=True
 
 # .......................................
