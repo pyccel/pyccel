@@ -17,9 +17,12 @@ from .builtins  import PythonRange, PythonTuple
 from .datatypes import PrimitiveIntegerType
 from .internals import PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
+from .literals  import LiteralTrue, LiteralFalse
 from .mathext   import MathCeil
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
+from .operators import PyccelEq, PyccelNe, PyccelLt, PyccelLe, PyccelGt, PyccelGe
+from .operators import PyccelAnd, PyccelOr, PyccelNot
 from .variable  import Variable
 
 __all__ = ('pyccel_to_sympy',
@@ -168,6 +171,42 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
         return args[0] + args[1]
 
+    elif isinstance(expr, PyccelEq):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return sp.Eq(args[0], args[1])
+
+    elif isinstance(expr, PyccelNe):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return sp.Ne(args[0], args[1])
+
+    elif isinstance(expr, PyccelLe):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return args[0] <= args[1]
+
+    elif isinstance(expr, PyccelLt):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return args[0] < args[1]
+
+    elif isinstance(expr, PyccelGe):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return args[0] >= args[1]
+
+    elif isinstance(expr, PyccelGt):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return args[0] > args[1]
+
+    elif isinstance(expr, PyccelAnd):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return sp.And(*args)
+
+    elif isinstance(expr, PyccelOr):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return sp.Or(*args)
+
+    elif isinstance(expr, PyccelNot):
+        arg = pyccel_to_sympy(expr.args[0], symbol_map, used_names)
+        return sp.Not(arg)
+
     elif isinstance(expr, PyccelPow):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
         return args[0] ** args[1]
@@ -202,6 +241,12 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     elif isinstance(expr, PythonTuple):
         args = [pyccel_to_sympy(a, symbol_map, used_names) for a in expr]
         return sp.Tuple(*args)
+
+    elif isinstance(expr, LiteralTrue):
+        return sp.logic.boolalg.BooleanTrue()
+
+    elif isinstance(expr, LiteralFalse):
+        return sp.logic.boolalg.BooleanFalse()
 
     elif isinstance(expr, (sp.core.basic.Atom, sp.core.operations.AssocOp, sp.Set)):
         # Already translated
