@@ -3707,6 +3707,11 @@ class SemanticParser(BasicParser):
                     new_rhs.append(r)
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
+                elif isinstance(l, Variable) and isinstance(r.class_type, InhomogeneousTupleType):
+                    new_lhs.extend(l[i] for i in range(len(r.class_type)))
+                    new_rhs.extend(self.scope.collect_tuple_element(ri) for ri in r)
+                    # Repeat step to handle tuples of tuples of etc.
+                    unravelling = True
                 elif l is not r:
                     # Manage a non-tuple assignment
 
