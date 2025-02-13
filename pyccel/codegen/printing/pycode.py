@@ -12,13 +12,13 @@ from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
-from pyccel.ast.datatypes  import VoidType, DictType
+from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
-from pyccel.ast.variable   import DottedName, Variable
+from pyccel.ast.variable   import DottedName, Variable, IndexedElement
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
 
@@ -82,6 +82,7 @@ class PythonCodePrinter(CodePrinter):
         super().__init__()
         self._aliases = {}
         self._ignore_funcs = []
+        self._tuple_assigns = []
 
     def _indent_codestring(self, lines):
         tab = " "*self._default_settings['tabwidth']
@@ -375,7 +376,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             expr_return_vars = [assigns.get(v, v) for v in self.scope.collect_all_tuple_elements(expr.expr)]
 
-        return_expr = ','.join(self._print(i) for i in expr_return_vars)
+        return_expr = ', '.join(self._print(i) for i in expr_return_vars)
         return prelude + f'return {return_expr}\n'
 
     def _print_Program(self, expr):
@@ -700,9 +701,26 @@ class PythonCodePrinter(CodePrinter):
         lhs_code = self._print(lhs)
         rhs_code = self._print(rhs)
         if isinstance(rhs, Variable) and rhs.rank>1 and rhs.order != lhs.order:
-            return'{0} = {1}.T\n'.format(lhs_code,rhs_code)
+            code = f'{lhs_code} = {rhs_code}.T\n'
         else:
-            return'{0} = {1}\n'.format(lhs_code,rhs_code)
+            code = f'{lhs_code} = {rhs_code}\n'
+
+        if isinstance(lhs, IndexedElement) and isinstance(lhs.base.class_type, HomogeneousTupleType):
+            assert len(lhs.indices) == 1
+            idx = lhs.indices[0]
+            self._tuple_assigns.append(code)
+            if int(idx) < int(lhs.base.shape[0])-1:
+                return ''
+            else:
+                exprs = self._tuple_assigns
+                rhs_elems = ', '.join(e.split(' = ')[1].strip('\n') for e in exprs)
+                self._tuple_assigns = []
+                if len(exprs) < 2:
+                    rhs_elems += ','
+                lhs_code = self._print(lhs.base)
+                return f'{lhs_code} = ({rhs_elems})\n'
+        else:
+            return code
 
     def _print_AliasAssign(self, expr):
         lhs = expr.lhs
