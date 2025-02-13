@@ -1741,6 +1741,7 @@ class SemanticParser(BasicParser):
                 bounding_box=(self.current_ast_node.lineno,
                     self.current_ast_node.col_offset),
                         severity='error', symbol=var.name)
+            return
 
         elif not is_augassign and not var.is_alias and var.rank > 0 and \
                 isinstance(rhs, (Variable, IndexedElement)) and \
@@ -1749,12 +1750,14 @@ class SemanticParser(BasicParser):
                 bounding_box=(self.current_ast_node.lineno,
                     self.current_ast_node.col_offset),
                         severity='error', symbol=var)
+            return
 
         elif var.rank > 0 and var.is_alias and isinstance(rhs, (NumpyNewArray, PythonList, PythonSet, PythonDict)):
             errors.report(INVALID_POINTER_REASSIGN,
                 bounding_box=(self.current_ast_node.lineno,
                     self.current_ast_node.col_offset),
                         severity='error', symbol=var.name)
+            return
 
         elif var.is_ndarray and var.is_alias and not is_augassign:
             # we allow pointers to be reassigned multiple times
@@ -1803,6 +1806,7 @@ class SemanticParser(BasicParser):
                     symbol=f'{name}={rhs_str}',
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
+                return
 
         if not is_augassign:
 
