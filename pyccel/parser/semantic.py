@@ -4462,11 +4462,6 @@ class SemanticParser(BasicParser):
 
             results = expr.results
             result_var = self.check_for_variable(results.var)
-            if result_var and result_var.is_argument:
-                if isinstance(result_var.class_type, (FixedSizeNumericType, StringType)):
-                    pyccel_stage.set_stage('syntactic')
-                    results = FunctionDefResult(self.scope.get_new_name(), annotation = results.annotation)
-                    pyccel_stage.set_stage('semantic')
             if results.annotation:
                 results = self._visit(expr.results)
 
