@@ -3083,7 +3083,7 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PyccelFloorDiv(self, expr):
-        new_args =[self._apply_cast(expr.dtype, arg) for arg in expr.args]
+        new_args = [self._apply_cast(expr.dtype, arg) for arg in expr.args]
         args = [self._print(arg) for arg in new_args]
         if all(isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) for arg in expr.args):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
