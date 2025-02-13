@@ -3647,6 +3647,10 @@ class SemanticParser(BasicParser):
                     d = self._infer_type(r)
                     new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions,
                                                     arr_in_multirets=r.rank>0 ) )
+                if not isinstance(rhs.class_type, InhomogeneousTupleType):
+                    rhs_var = self.scope.get_temporary_variable(rhs.funcdef.results.var)
+                    new_expressions.append(Assign(rhs_var, rhs))
+                    rhs = rhs_var
                 lhs = PythonTuple(*new_lhs)
             else:
                 if isinstance(rhs.class_type, InhomogeneousTupleType):
@@ -3695,11 +3699,11 @@ class SemanticParser(BasicParser):
             new_rhs = []
             for l,r in zip(lhs, rhs):
                 # Split assign (e.g. for a,b = 1,c)
-                if isinstance(l.class_type, InhomogeneousTupleType) \
+                if (isinstance(l.class_type, InhomogeneousTupleType) or isinstance(l, PythonTuple)) \
                         and not isinstance(r, (FunctionCall, PyccelFunction)):
                     new_lhs.extend(self.scope.collect_tuple_element(v) for v in l)
                     new_rhs.extend(self.scope.collect_tuple_element(r[i]) \
-                            for i in range(len(l.class_type)))
+                            for i in range(l.shape[0]))
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
                 elif isinstance(l, Variable) and isinstance(l.class_type, InhomogeneousTupleType):
