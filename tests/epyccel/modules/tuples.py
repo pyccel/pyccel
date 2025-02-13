@@ -80,6 +80,7 @@ __all__ = [
         'annotated_tuple_inhomog_return',
         'annotated_tuple_homog_return',
         'tuple_return_unknown_length',
+        'tuple_assignment',
         ]
 
 def homogeneous_tuple_int():
@@ -527,3 +528,7 @@ def tuple_return_unknown_length():
         c = 2
         return (a, c)
 
+def tuple_assignment():
+    a : 'tuple[int,int]' = (1,2)
+    b : 'tuple[int,...]' = a
+    return b[0], b[1]
