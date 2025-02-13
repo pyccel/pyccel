@@ -112,7 +112,13 @@ int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits)
     }
 }
 
-extern int8_t py_floor_div_int8_t(int8_t x, int8_t y);
-extern int16_t py_floor_div_int16_t(int16_t x, int16_t y);
-extern int32_t py_floor_div_int32_t(int32_t x, int32_t y);
-extern int64_t py_floor_div_int64_t(int64_t x, int64_t y);
+extern inline double       pyc_radians(double degrees);
+extern inline double       pyc_degrees(double radians);
+extern inline int64_t      pyc_modulo(int64_t a, int64_t b);
+extern inline double        pyc_fmodulo(double a, double b);
+extern inline double complex complex_min(double complex a, double complex b);
+extern inline double complex complex_max(double complex a, double complex b);
+extern inline int8_t py_floor_div_int8_t(int8_t x, int8_t y);
+extern inline int16_t py_floor_div_int16_t(int16_t x, int16_t y);
+extern inline int32_t py_floor_div_int32_t(int32_t x, int32_t y);
+extern inline int64_t py_floor_div_int64_t(int64_t x, int64_t y);

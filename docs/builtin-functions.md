@@ -38,7 +38,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `id` | No |
 | `input` | No |
 | **`int`** | **Yes** |
-| `isinstance` | No |
+| **`isinstance`** | **Yes** |
 | `issubclass` | No |
 | `iter` | No |
 | **`len`** | **Yes** |
@@ -60,7 +60,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `repr` | No |
 | `reversed` | No |
 | **`round`** | **Yes** |
-| *`set`* | Python-only |
+| **`set`** | **Yes** |
 | `setattr` | No  |
 | `slice` | No |
 | `sorted` | No |
@@ -120,12 +120,12 @@ Python contains a limited number of builtin functions defined [here](https://doc
 
 | Method | Supported |
 |----------|-----------|
-| `clear` | Python-only |
+| **`clear`** | **Yes** |
 | `copy` | Python-only |
-| `get` | Python-only |
-| `items` | **Yes** |
-| `keys` | No |
-| `pop` | Python-only |
+| `get` | Python and C |
+| **`items`** | **Yes** |
+| **`keys`** | **Yes** |
+| `pop` | Python and C |
 | `popitem` | Python-only |
 | `reversed` | No |
 | `setdefault` | Python-only |

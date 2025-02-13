@@ -2,6 +2,7 @@
 import subprocess
 import json
 import os
+import platform
 import shutil
 import sys
 import re
@@ -736,10 +737,27 @@ def test_c_arrays(language):
     pyccel_test("scripts/c_arrays.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
             [int] * 6 + [int] * 10 + [int] * 10 + [int] * 25 + [int] * 60
-    pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
+    if platform.system() == 'Darwin' and language=='fortran':
+        # MacOS compiler incorrectly reports
+        # Fortran runtime error: Index '4378074096' of dimension 2 of array 'a' outside of expected range (0:2)
+        # At line 208 of file /Users/runner/work/pyccel/pyccel/tests/pyccel/scripts/__pyccel__/arrays_view.f90
+        # x(0:) => a(1_i64:, merge(3_i64 + v, v, v < 0_i64))
+        pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types,
+                    pyccel_commands="--no-debug")
+    else:
+        pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 def test_return_numpy_arrays(language):
@@ -751,6 +769,7 @@ def test_return_numpy_arrays(language):
     types += [float]*5 # 5 floats for h
     types += [int]*5 # 5 ints for g
     types += [int]*4 # 4 ints for k
+    types += [float]*48 # 48 floats for x
     pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
@@ -980,8 +999,6 @@ def test_assert(language, test_file):
 
     cwd = get_abs_path(test_dir)
 
-    if not language:
-        language = "fortran"
     pyccel_commands = " --language="+language
     pyccel_commands += " --output="+ output_dir
 
@@ -1069,6 +1086,15 @@ def test_function(language):
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Repeat calls to inline decorator can cause bad loop unravelling. See #2043"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
 

@@ -1620,31 +1620,30 @@ def copy_to_slice_4(a : 'float[:]', b : 'float[:]'):
 
 def arrs_similar_shapes_0():
     import numpy as np
-    a = np.zeros(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[2:4]+a[4:6]
-    return np.shape(b)[0]
+    return b
 
 def arrs_similar_shapes_1():
     import numpy as np
     i = 4
-    a = np.zeros(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[2:i]+a[4:i + 2]
-    return np.shape(b)[0]
+    return b
 
 def arrs_different_shapes_0():
     import numpy as np
-    i = 5
-    a = np.zeros(10)
-    b = a[2:4]+a[4:i]
-    return np.shape(b)[0]
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    b = a[2:4]+a[4:5]
+    return b
 
 def arrs_uncertain_shape_1():
     import numpy as np
     i = 4
     j = 6
-    a = np.zeros(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[2:i]+a[4:j]
-    return np.shape(b)[0]
+    return b
 
 def arrs_2d_similar_shapes_0():
     import numpy as np
@@ -1654,58 +1653,67 @@ def arrs_2d_similar_shapes_0():
     pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
     x = ((dy**2 * (pn[1:shape(pn)[0]-1, 2:] + pn[1:shape(pn)[0]-1, 0:shape(pn)[1]-2]) +
         dx**2 *(pn[2:, 1:shape(pn)[1]-1] + pn[0:shape(pn)[0]-2, 1:shape(pn)[1]-1])) / (2 * (dx**2 + dy**2)))
-    return np.shape(x)[0], np.shape(x)[1]
+    return x
 
 def arrs_2d_different_shapes_0():
     import numpy as np
     pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
     pm = np.array([[1, 1, 1]])
     x = pn + pm
-    return np.shape(x)[0], np.shape(x)[1]
+    return x
 
 def arrs_1d_negative_index_1():
     import numpy as np
-    a = np.zeros(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[:-1]+a[-9:]
-    return np.shape(b)[0], np.sum(b)
+    return b
 
 def arrs_1d_negative_index_2():
     import numpy as np
-    a = np.ones(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[1:-1] + a[2:]
-    return np.shape(b)[0], np.sum(b)
+    return b
 
 def arrs_1d_int32_index():
     import numpy as np
     i = np.int32(1)
-    a = np.ones(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[i] + a[i + 2]
     return b
 
 def arrs_1d_int64_index():
     import numpy as np
     i = np.int64(1)
-    a = np.ones(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[i] + a[i + 2]
     return b
 
 def arrs_1d_negative_index_negative_step():
     import numpy as np
-    a = np.ones(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[-1:1:-2] + a[:2:-2]
-    return np.shape(b)[0], np.sum(b)
+    return b
 
 def arrs_1d_negative_step_positive_step():
     import numpy as np
-    a = np.ones(10)
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[1:-1: 3] + a[2::3]
-    return np.shape(b)[0], np.sum(b)
+    return b
 
 def arrs_2d_negative_index():
     import numpy as np
-    a = np.ones((10, 10))
+    a = np.array([[ 1,  2,  3,  4,  5,  6,  7,  8,  9,  10],
+                  [11, 12, 13, 14, 15, 16, 17, 18, 19,  20],
+                  [21, 22, 23, 24, 25, 26, 27, 28, 29,  30],
+                  [31, 32, 33, 34, 35, 36, 37, 38, 39,  40],
+                  [41, 42, 43, 44, 45, 46, 47, 48, 49,  50],
+                  [51, 52, 53, 54, 55, 56, 57, 58, 59,  60],
+                  [61, 62, 63, 64, 65, 66, 67, 68, 69,  70],
+                  [71, 72, 73, 74, 75, 76, 77, 78, 79,  80],
+                  [81, 82, 83, 84, 85, 86, 87, 88, 89,  90],
+                  [91, 92, 93, 94, 95, 96, 97, 98, 99, 100]])
     b = a[1:-1, :-1] + a[2:, -9:]
-    return np.shape(b)[0], np.shape(b)[1], np.sum(b)
+    return b
 
 def arr_tuple_slice_index(a : 'int[:,:]'):
     r = a[(0,1,3),1:]

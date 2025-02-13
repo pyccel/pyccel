@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import sys
 import pytest
 from numpy.random import randint, uniform
 from numpy import iinfo, finfo
@@ -121,6 +122,32 @@ def test_min_3_args(language):
 
     assert epyc_f(*int_args) == f(*int_args)
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
+
+def test_min_if(language):
+    def f(x : 'int', y : 'int'):
+        if min(x+x+y, x+y+y) < (x+y):
+            return x+y
+        else:
+            return x-y
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int//3, max_int//3) for _ in range(2)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+
+def test_min_in_min(language):
+    def f(x : 'int', y : 'int'):
+        if min(min(x+x,+y), min(x+y,y)) < (x+y): #pylint: disable=nested-min-max
+            return x+y
+        else:
+            return x-y
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int//3, max_int//3) for _ in range(2)]
+
+    assert epyc_f(*int_args) == f(*int_args)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -479,6 +506,16 @@ def test_len_literal_string(language):
 
     assert epyc_f() == f()
 
+def test_len_multi_layer(stc_language):
+    def f():
+        x = [1,2,3]
+        y = [x]
+        return len(y), len(y[0])
+
+    epyc_f = epyccel(f, language = stc_language)
+
+    assert epyc_f() == f()
+
 def test_round_int(language):
     def round_int(x : float):
         return round(x)
@@ -660,3 +697,115 @@ def test_round_ndigits_bool(language):
     round_ndigits_output = round_ndigits()
     assert all(o == r for o, r in zip(f_output, round_ndigits_output))
     assert all(isinstance(o, type(r)) for o, r in zip(f_output, round_ndigits_output))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [pytest.mark.c]),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
+                "gives wrong results. See #802")),
+            pytest.mark.python]
+        )
+    )
+)
+def test_isinstance_native(language):
+    def isinstance_test(a : 'bool | int | float | complex'):
+        return isinstance(a, bool), isinstance(a, int), isinstance(a, float), isinstance(a, complex)
+
+    f = epyccel(isinstance_test, language=language)
+    assert f(True) == isinstance_test(True)
+    assert f(False) == isinstance_test(False)
+    assert f(4) == isinstance_test(6)
+    assert f(3.9) == isinstance_test(6.7)
+    assert f(1+2j) == isinstance_test(6.5+8.3j)
+
+def test_isinstance_containers(language):
+    def isinstance_tup(a : int, b : int):
+        container = (a, b)
+        return (isinstance(container, tuple), isinstance(container, list),
+                isinstance(container, set), isinstance(container, dict))
+    def isinstance_lst(a : int, b : int):
+        container = [a, b]
+        return (isinstance(container, tuple), isinstance(container, list),
+                isinstance(container, set), isinstance(container, dict))
+    def isinstance_set(a : int, b : int):
+        container = {a, b}
+        return (isinstance(container, tuple), isinstance(container, list),
+                isinstance(container, set), isinstance(container, dict))
+    def isinstance_dict(a : int, b : int):
+        container = {a: False, b: True}
+        return (isinstance(container, tuple), isinstance(container, list),
+                isinstance(container, set), isinstance(container, dict))
+
+    test_funcs = (isinstance_tup, isinstance_lst, isinstance_set, isinstance_dict)
+
+    for f in test_funcs:
+        f_epyc = epyccel(f, language=language)
+
+        assert f(2, 5) == f_epyc(2, 5)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [pytest.mark.c]),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
+                "gives wrong results. See #802")),
+            pytest.mark.python]
+        )
+    )
+)
+def test_isinstance_numpy(language):
+    def isinstance_test(a : 'int32 | int64 | int | float32'):
+        import numpy as np #pylint:disable=reimported
+        return isinstance(a, np.int32), isinstance(a, np.int64), isinstance(a, int), isinstance(a, np.float32)
+
+    f = epyccel(isinstance_test, language=language)
+    assert f(np.int32(4)) == isinstance_test(np.int32(4))
+    assert f(np.int64(4)) == isinstance_test(np.int64(4))
+    assert f(4) == isinstance_test(4)
+    assert f(np.float32(4)) == isinstance_test(np.float32(4))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [pytest.mark.c]),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
+                "gives wrong results. See #802")),
+            pytest.mark.python]
+        )
+    )
+)
+def test_isinstance_tuple(language):
+    def isinstance_test(a : 'bool | int | float | complex'):
+        return (isinstance(a, (bool, int)), isinstance(a, (bool, float)), isinstance(a, (int, complex)),
+                isinstance(a, (tuple, list)))
+
+    f = epyccel(isinstance_test, language=language)
+    assert f(True) == isinstance_test(True)
+    assert f(False) == isinstance_test(False)
+    assert f(4) == isinstance_test(6)
+    assert f(3.9) == isinstance_test(6.7)
+    assert f(1+2j) == isinstance_test(6.5+8.3j)
+
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="Union of types implemented in Python 3.10")
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [pytest.mark.c]),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
+                "gives wrong results. See #802")),
+            pytest.mark.python]
+        )
+    )
+)
+def test_isinstance_union(language):
+    def isinstance_test(a : bool | int | float | complex): #pylint: disable=unsupported-binary-operation
+        return (isinstance(a, bool | int), isinstance(a, bool | float), isinstance(a, int | complex), #pylint: disable=unsupported-binary-operation
+                isinstance(a, tuple | list)) #pylint: disable=unsupported-binary-operation
+
+    f = epyccel(isinstance_test, language=language)
+    assert f(True) == isinstance_test(True)
+    assert f(False) == isinstance_test(False)
+    assert f(4) == isinstance_test(6)
+    assert f(3.9) == isinstance_test(6.7)
+    assert f(1+2j) == isinstance_test(6.5+8.3j)

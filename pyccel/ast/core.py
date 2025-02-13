@@ -17,12 +17,10 @@ from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRS
 
 from .builtins  import PythonBool, PythonTuple
 
-from .c_concepts import PointerCast
+from .datatypes import (PyccelType, HomogeneousTupleType, VoidType, CustomDataType,
+                        PythonNativeBool, InhomogeneousTupleType, SymbolicType)
 
-from .datatypes import (PyccelType, HomogeneousTupleType, VoidType,
-                        PythonNativeBool, InhomogeneousTupleType)
-
-from .internals import PyccelSymbol, PyccelFunction, apply_pickle, Iterable
+from .internals import PyccelSymbol, PyccelFunction, Iterable
 
 from .literals  import Nil, LiteralFalse, LiteralInteger, LiteralString
 from .literals  import NilArgument, LiteralTrue
@@ -66,7 +64,6 @@ __all__ = (
     'ErrorExit',
     'Exit',
     'For',
-    'FuncAddressDeclare',
     'FunctionAddress',
     'FunctionCall',
     'FunctionCallArgument',
@@ -389,7 +386,7 @@ class Allocate(PyccelAstNode):
     # ...
     def __init__(self, variable, *, shape, status, like = None, alloc_type = None):
 
-        if not isinstance(variable, (Variable, PointerCast)):
+        if pyccel_stage == 'semantic' and not isinstance(variable, Variable):
             raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
 
         if variable.on_stack:
@@ -399,9 +396,7 @@ class Allocate(PyccelAstNode):
         if shape and not isinstance(shape, (int, tuple, list)):
             raise TypeError(f"Cannot understand 'shape' parameter of type '{type(shape)}'")
 
-        class_type = variable.class_type
-        if class_type.rank != len(shape):
-            raise ValueError("Incompatible rank in variable allocation")
+        assert variable.class_type.shape_is_compatible(shape)
 
         if not isinstance(status, str):
             raise TypeError(f"Cannot understand 'status' parameter of type '{type(status)}'")
@@ -605,27 +600,6 @@ class CodeBlock(PyccelAstNode):
 
     def __repr__(self):
         return f'CodeBlock({self.body})'
-
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments.
-        """
-        kwargs = dict(body = self.body)
-        return (apply_pickle, (self.__class__, (), kwargs))
 
     def set_current_ast(self, ast_node):
         """
@@ -1572,7 +1546,12 @@ class FunctionDefArgument(TypedAstNode):
             name.declare_as_argument()
 
         if pyccel_stage != "syntactic":
-            self._inout = self.var.rank>0 and not self.var.is_const if isinstance(self.var, Variable) else False
+            if isinstance(self.var, Variable):
+                self._inout = (self.var.rank > 0 or isinstance(self.var.class_type, CustomDataType)) \
+                        and not self.var.is_const
+            else:
+                # If var is not a Variable it is a FunctionAddress
+                self._inout = False
 
         super().__init__()
 
@@ -2018,12 +1997,6 @@ class Return(PyccelAstNode):
     @property
     def stmt(self):
         return self._stmt
-
-    def __getnewargs__(self):
-        """used for Pickling self."""
-
-        args = (self.expr, self.stmt)
-        return args
 
     def __repr__(self):
         if self.stmt:
@@ -2498,7 +2471,7 @@ class FunctionDef(ScopedAstNode):
         FunctionDef
             The clone of the function definition.
         """
-        args, kwargs = self.__getnewargs__()
+        args, kwargs = self.__getnewargs_ex__()
         kwargs.update(new_kwargs)
         cls = type(self)
         new_func = cls(*args, **kwargs)
@@ -2518,10 +2491,11 @@ class FunctionDef(ScopedAstNode):
 
         self._name = newname
 
-    def __getnewargs__(self):
+    def __getnewargs_ex__(self):
         """
-          This method returns the positional and keyword arguments
-            used to create an instance of this class.
+        This method returns the positional and keyword arguments used to create
+        an instance of this class. This is used by clone and can be used for pickling.
+        See https://docs.python.org/3/library/pickle.html#object.__getnewargs_ex__
         """
         args = (
         self._name,
@@ -2549,29 +2523,6 @@ class FunctionDef(ScopedAstNode):
             'docstring':self._docstring,
             'scope':self._scope}
         return args, kwargs
-
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments.
-        """
-        args, kwargs = self.__getnewargs__()
-        out = (apply_pickle, (self.__class__, args, kwargs))
-        return out
-
 
     def __str__(self):
         result = 'None' if len(self.results) == 0 else \
@@ -2716,14 +2667,17 @@ class InlineFunctionDef(FunctionDef):
         """ List of global functions used in the function """
         return self._global_funcs
 
-    def __getnewargs__(self):
+    def __getnewargs_ex__(self):
         """
-        This method returns the positional and keyword arguments
-        used to create an instance of this class.
+        This method returns the positional and keyword arguments used to create
+        an instance of this class. This is used by clone and can be used for pickling.
+        See https://docs.python.org/3/library/pickle.html#object.__getnewargs_ex__
         """
-        args, kwargs = super().__getnewargs__()
-        kwargs.update({'namespace_imports':self._namespace_imports, 'global_funcs':self._global_funcs})
+        args, kwargs = super().__getnewargs_ex__()
+        kwargs['namespace_imports'] = self._namespace_imports
+        kwargs['global_funcs'] = self._global_funcs
         return args, kwargs
+
 
 class PyccelFunctionDef(FunctionDef):
     """
@@ -2753,6 +2707,8 @@ class PyccelFunctionDef(FunctionDef):
         different default values.
     """
     __slots__ = ('_argument_description',)
+    class_type = SymbolicType()
+
     def __init__(self, name, func_class, *, decorators = {}, argument_description = {}):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelFunction, TypedAstNode, Iterable))
@@ -2774,20 +2730,6 @@ class PyccelFunctionDef(FunctionDef):
         the `PyccelFunctionDef`
         """
         return self._argument_description
-
-    def __getnewargs__(self):
-        """
-          This method returns the positional and keyword arguments
-            used to create an instance of this class.
-        """
-        args = (
-        self._name,
-        self._cls_name)
-
-        kwargs = {
-            'decorators':self._decorators,
-            'argument_description':self._argument_description}
-        return args, kwargs
 
     def __call__(self, *args, **kwargs):
         return self._cls_name(*args, **kwargs)
@@ -2944,17 +2886,18 @@ class Interface(PyccelAstNode):
             The clone of the interface.
         """
 
-        args, kwargs = self.__getnewargs__()
+        args, kwargs = self.__getnewargs_ex__()
         kwargs.update(new_kwargs)
         cls = type(self)
         new_func = cls(*args, **kwargs)
         new_func.rename(newname)
         return new_func
 
-    def __getnewargs__(self):
+    def __getnewargs_ex__(self):
         """
-          This method returns the positional and keyword arguments
-            used to create an instance of this class.
+        This method returns the positional and keyword arguments used to create
+        an instance of this class. This is used by clone and can be used for pickling.
+        See https://docs.python.org/3/library/pickle.html#object.__getnewargs_ex__
         """
         args = (
         self._name,
@@ -3054,13 +2997,11 @@ class FunctionAddress(FunctionDef):
 
     Examples
     --------
-    >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
+    >>> from pyccel.ast.core import Variable, FunctionAddress, FunctionDef
     >>> x = Variable(PythonNativeFloat(), 'x')
     >>> y = Variable(PythonNativeFloat(), 'y')
     >>> # a function definition can have a FunctionAddress as an argument
     >>> FunctionDef('g', [FunctionAddress('f', [x], [y])], [], [])
-    >>> # we can also Declare a FunctionAddress
-    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
     """
     __slots__ = ('_is_optional','_is_kwonly','_is_argument', '_memory_handling')
 
@@ -3121,26 +3062,19 @@ class FunctionAddress(FunctionDef):
     def is_optional(self):
         return self._is_optional
 
-    def __getnewargs__(self):
+    def __getnewargs_ex__(self):
         """
-        Function called during unpickling.
-
-        For more details see : https://docs.python.org/3/library/pickle.html#object.__getnewargs__.
-
-        Returns
-        -------
-        args
-            A tuple containing any arguments to be passed to the constructor.
-        kwargs
-            A dict containing any keyword arguments to be passed to the constructor.
+        This method returns the positional and keyword arguments used to create
+        an instance of this class. This is used by clone and can be used for pickling.
+        See https://docs.python.org/3/library/pickle.html#object.__getnewargs_ex__
         """
-        args, kwargs = super().__getnewargs__()
-        args = args[:-1] # Remove body argument
+        args, kwargs = super().__getnewargs_ex__()
+        args = args[:2] + (kwargs.pop('results'),)
         kwargs.pop('scope')
-        kwargs['is_argument'] = self.is_argument
-        kwargs['is_kwonly'] = self.is_kwonly
-        kwargs['is_optional'] = self.is_optional
-        kwargs['memory_handling'] = self.memory_handling
+        kwargs['is_optional'] = self._is_optional
+        kwargs['is_kwonly'] = self._is_kwonly
+        kwargs['is_argument'] = self._is_argument
+        kwargs['memory_handling'] = self._memory_handling
         return args, kwargs
 
 class SympyFunction(FunctionDef):
@@ -3489,7 +3423,7 @@ class ClassDef(ScopedAstNode):
         self._methods = tuple(m for m in self._methods if m is not syntactic_interface)
         self._interfaces = tuple(m for m in self._interfaces if m is not syntactic_interface) + (semantic_interface,)
 
-    def get_method(self, name, raise_error = True):
+    def get_method(self, name, raise_error_from = None):
         """
         Get the method `name` of the current class.
 
@@ -3503,10 +3437,10 @@ class ClassDef(ScopedAstNode):
         name : str
             The name of the attribute we are looking for.
 
-        raise_error : bool, default=True
-            True if an error should be raised, False if None should be returned if
-            the method is not found.
-            False if None can be returned instead.
+        raise_error_from : PyccelAstNode, optional
+            If an error should be raised then this variable should contain
+            the node that the error should be raised from. This allows the
+            correct, line/column error information to be reported.
 
         Returns
         -------
@@ -3528,9 +3462,9 @@ class ClassDef(ScopedAstNode):
             try:
                 name = self.scope.get_expected_name(name)
             except RuntimeError:
-                if raise_error:
+                if raise_error_from:
                     errors.report(f"Can't find method {name} in class {self.name}",
-                            severity='fatal', symbol=self)
+                            severity='fatal', symbol=raise_error_from)
                 else:
                     return None
 
@@ -3542,14 +3476,14 @@ class ClassDef(ScopedAstNode):
             n_classes = len(self.superclasses)
             while method is None and i<n_classes:
                 try:
-                    method = self.superclasses[i].get_method(name, raise_error)
+                    method = self.superclasses[i].get_method(name, raise_error_from)
                 except StopIteration:
                     method = None
                 i += 1
 
-        if method is None and raise_error:
+        if method is None and raise_error_from:
             errors.report(f"Can't find method {name} in class {self.name}",
-                    severity='fatal', symbol=self)
+                    severity='fatal', symbol=raise_error_from)
 
         return method
 
@@ -3813,85 +3747,6 @@ class Import(PyccelAstNode):
 
 # TODO: Should Declare have an optional init value for each var?
 
-class FuncAddressDeclare(PyccelAstNode):
-    """
-    Represents a FunctionAddress declaration in the code.
-
-    Represents a FunctionAddress declaration in the code.
-
-    Parameters
-    ----------
-    variable : FunctionAddress
-        An instance of FunctionAddress.
-    intent : str, optional
-        One among {'in', 'out', 'inout'}.
-    value : TypedAstNode
-        Variable value.
-    static : bool
-        True for a static declaration of an array.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
-    >>> x = Variable(PythonNativeFloat(), 'x')
-    >>> y = Variable(PythonNativeFloat(), 'y')
-    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
-    """
-    __slots__ = ('_variable','_intent','_value','_static')
-    _attribute_nodes = ('_variable', '_value')
-
-    def __init__(
-        self,
-        variable,
-        intent=None,
-        value=None,
-        static=False,
-        ):
-
-        if not isinstance(variable, FunctionAddress):
-            raise TypeError(f'variable must be of type FunctionAddress, given {variable}')
-
-        if intent:
-            if not intent in ['in', 'out', 'inout']:
-                raise ValueError("intent must be one among {'in', 'out', 'inout'}")
-
-        if not isinstance(static, bool):
-            raise TypeError('Expecting a boolean for static attribute')
-
-        self._variable  = variable
-        self._intent    = intent
-        self._value     = value
-        self._static    = static
-        super().__init__()
-
-    @property
-    def results(self):
-        return self._variable.results
-
-    @property
-    def arguments(self):
-        return self._variable.arguments
-
-    @property
-    def name(self):
-        return self._variable.name
-
-    @property
-    def variable(self):
-        return self._variable
-
-    @property
-    def intent(self):
-        return self._intent
-
-    @property
-    def value(self):
-        return self._value
-
-    @property
-    def static(self):
-        return self._static
-
 # ARA : issue-999 add is_external for external function exported through header files
 class Declare(PyccelAstNode):
     """
@@ -4105,27 +3960,6 @@ class Comment(PyccelAstNode):
     def __str__(self):
         return f'# {self.text}'
 
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments.
-        """
-        kwargs = dict(text = self.text)
-        return (apply_pickle, (self.__class__, (), kwargs))
-
 
 class SeparatorComment(Comment):
 
@@ -4181,12 +4015,6 @@ class AnnotatedComment(PyccelAstNode):
     @property
     def txt(self):
         return self._txt
-
-    def __getnewargs__(self):
-        """used for Pickling self."""
-
-        args = (self.accel, self.txt)
-        return args
 
 class CommentBlock(PyccelAstNode):
 

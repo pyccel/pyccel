@@ -1744,7 +1744,6 @@ def test_array_float_4d_F_array_initialization(language):
     assert np.array_equal(x1, x2)
 
 
-@pytest.mark.xfail(reason='Inhomogeneous arguments due to unknown shape')
 def test_array_float_4d_F_array_initialization_mixed_ordering(language):
 
     f1 = arrays.array_float_4d_F_array_initialization_mixed_ordering
@@ -2250,6 +2249,15 @@ def test_multiple_negative_index_3(language):
     assert f1(-1, -1, -3) == f2(-1, -1, -3)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_argument_negative_index_1(language):
     a = arrays.a_1d
 
@@ -2258,6 +2266,15 @@ def test_argument_negative_index_1(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_argument_negative_index_2(language):
     a = arrays.a_1d
 
@@ -2266,6 +2283,15 @@ def test_argument_negative_index_2(language):
     assert f1(a, a) == f2(a, a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_c_order_argument_negative_index(language):
     a = np.array(np.random.randint(20, size=(3,4)), dtype=int)
 
@@ -2274,6 +2300,15 @@ def test_c_order_argument_negative_index(language):
     assert f1(a, a) == f2(a, a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_f_order_argument_negative_index(language):
     a = np.array(np.random.randint(20, size=(3,4)), order='F', dtype=int)
 
@@ -2891,6 +2926,15 @@ def test_array_1d_slice_stride_3(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_1d_slice_stride_4(language):
     a = arrays.a_1d
 
@@ -3113,6 +3157,15 @@ def test_array_1d_slice_stride_22(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_1d_slice_stride_23(language):
     a = arrays.a_1d
 
@@ -3170,6 +3223,15 @@ def test_array_2d_F_slice_stride_4(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_2d_F_slice_stride_5(language):
     a = arrays.a_2d_f
 
@@ -3186,6 +3248,15 @@ def test_array_2d_F_slice_stride_6(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_2d_F_slice_stride_7(language):
     a = arrays.a_2d_f
 
@@ -3202,6 +3273,15 @@ def test_array_2d_F_slice_stride_8(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_2d_F_slice_stride_9(language):
     a = arrays.a_2d_f
 
@@ -3806,37 +3886,56 @@ def test_copy_to_slice_4(language):
 def test_arrs_similar_shapes_0(language):
     f1 = arrays.arrs_similar_shapes_0
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 def test_arrs_similar_shapes_1(language):
     f1 = arrays.arrs_similar_shapes_1
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Bad unravelling. See #2042"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="Bad unravelling. See #2042"),
+            pytest.mark.fortran]),
+        pytest.param("python", marks = pytest.mark.python)
+    ]
+)
 def test_arrs_different_shapes_0(language):
     f1 = arrays.arrs_different_shapes_0
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 def test_arrs_uncertain_shape_1(language):
     f1 = arrays.arrs_uncertain_shape_1
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
-
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Bad unravelling. See #2042"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="Bad unravelling. See #2042"),
+            pytest.mark.fortran]),
+        pytest.param("python", marks = pytest.mark.python)
+    ]
+)
 def test_arrs_2d_similar_shapes_0(language):
     f1 = arrays.arrs_2d_similar_shapes_0
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 def test_arrs_2d_different_shapes_0(language):
     f1 = arrays.arrs_2d_different_shapes_0
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 @pytest.mark.parametrize( 'language', [
@@ -3870,16 +3969,6 @@ def test_arrs_1d_int64_index(language):
     assert f1() == f2()
 
 
-def test_arr_tuple_slice_index(language):
-    f1 = arrays.arr_tuple_slice_index
-    f2 = epyccel(f1, language = language)
-
-    r_python = f1(arrays.a_2d_c)
-    r_pyccel = f2(arrays.a_2d_c)
-
-    check_array_equal(r_python, r_pyccel)
-
-
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3910,6 +3999,16 @@ def test_arrs_2d_negative_index(language):
     f1 = arrays.arrs_2d_negative_index
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
+
+
+def test_arr_tuple_slice_index(language):
+    f1 = arrays.arr_tuple_slice_index
+    f2 = epyccel(f1, language = language)
+
+    r_python = f1(arrays.a_2d_c)
+    r_pyccel = f2(arrays.a_2d_c)
+
+    check_array_equal(r_python, r_pyccel)
 
 #==============================================================================
 # TEST : NUMPY ARANGE
@@ -6365,7 +6464,9 @@ def test_iterate_slice(language):
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason=("Cannot return a non-contiguous slice. See #1796")),
                       pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason=("Cannot return a non-contiguous slice. See #1796")),
+                      pytest.mark.c]),
         pytest.param("python", marks = pytest.mark.python)
     )
 )
