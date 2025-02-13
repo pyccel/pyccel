@@ -161,7 +161,7 @@ class PyccelArrayShapeElement(PyccelFunction):
         """
         return self._args[1]
 
-    def __str__(self):
+    def __repr__(self):
         return f'Shape({self.arg}, {self.index})'
 
     def __eq__(self, other):
@@ -268,7 +268,7 @@ class Slice(PyccelAstNode):
             stop = ''
         else:
             stop = str(self.stop)
-        return f'{start} : {stop}'
+        return f'{start} : {stop} : {self.step}'
 
 
 class PyccelSymbol(str, Immutable):

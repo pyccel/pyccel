@@ -11,7 +11,9 @@ from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, 
 from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.datatypes  import HomogeneousTupleType, VoidType, PrimitiveBooleanType
+from pyccel.ast.datatypes  import HomogeneousTupleType, PrimitiveBooleanType
+from pyccel.ast.datatypes  import HomogeneousListType, HomogeneousSetType
+from pyccel.ast.datatypes  import VoidType, DictType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpyext   import numpy_target_swap
@@ -718,6 +720,16 @@ class PythonCodePrinter(CodePrinter):
         return f'range({start}, {stop}, {step})'
 
     def _print_Allocate(self, expr):
+        class_type = expr.variable.class_type
+        if expr.alloc_type == 'reserve':
+            var = self._print(expr.variable)
+            if isinstance(class_type, HomogeneousSetType):
+                return f'{var} = set()\n'
+            elif isinstance(class_type, HomogeneousListType):
+                return f'{var} = list()\n'
+            elif isinstance(class_type, DictType):
+                return f'{var} = dict()\n'
+
         return ''
 
     def _print_Deallocate(self, expr):
@@ -883,14 +895,24 @@ class PythonCodePrinter(CodePrinter):
         key = self._print(expr.key)
         if expr.default_value:
             val = self._print(expr.default_value)
-            return f"{dict_obj}.get({key}, {val})\n"
+            return f"{dict_obj}.get({key}, {val})"
         else:
-            return f"{dict_obj}.get({key})\n"
+            return f"{dict_obj}.get({key})"
 
     def _print_DictItems(self, expr):
         dict_obj = self._print(expr.variable)
 
         return f"{dict_obj}.items()"
+
+    def _print_DictKeys(self, expr):
+        dict_obj = self._print(expr.variable)
+
+        return f"{dict_obj}.keys()"
+
+    def _print_DictGetItem(self, expr):
+        dict_obj = self._print(expr.dict_obj)
+        key = self._print(expr.key)
+        return f"{dict_obj}[{key}]"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''

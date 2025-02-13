@@ -148,6 +148,51 @@ dtype_registry.update({
     })
 
 #=======================================================================================
+def get_shape_of_multi_level_container(expr, shape_prefix = ()):
+    """
+    Get the shape of a multi-level container.
+
+    Get the shape of a multi-level container such as a list of list
+    of tuple of tuple. These objects only store the shape of the top
+    layer as the elements may have different sizes but in NumPy
+    functions we can assume that the shape is homogeneous as otherwise
+    the original Python code would raise errors.
+
+    Parameters
+    ----------
+    expr : TypedAstNode
+        The expression whose shape we want to know.
+    shape_prefix : tuple[TypedAstNode, ...], optional
+        A tuple of objects describing the shape of the containers where
+        the expression is found. This is used internally to call this
+        function recursively. In most cases it is not necessary to
+        provide this value when calling this function.
+
+    Returns
+    -------
+    tuple[TypedAstNode, ...]
+        A tuple of objects describing the shape of the mult-level container.
+    """
+    class_type = expr.class_type
+    assert isinstance(class_type, ContainerType)
+
+    shape = expr.shape
+    new_shape = shape_prefix + expr.shape
+
+    assert len(shape) <= class_type.rank
+
+    if class_type.rank == len(shape):
+        return new_shape
+    elif isinstance(expr, (PythonTuple, PythonList)):
+        return get_shape_of_multi_level_container(expr.args[0], new_shape)
+    elif isinstance(expr, (Variable, IndexedElement)):
+        return get_shape_of_multi_level_container(expr[LiteralInteger(0)], new_shape)
+    else:
+        errors.report(f"Can't calculate shape of object of type {type(expr)}",
+                severity = 'error', symbol=expr)
+        return (None,)*expr.rank
+
+#=======================================================================================
 def process_shape(is_scalar, shape):
     """ Modify the input shape to the expected type
 
@@ -711,17 +756,16 @@ class NumpyArray(NumpyNewArray):
             if dtype is None:
                 dtype = arg[0].class_type.datatype
             dtype = process_dtype(dtype)
-
-            shape = (LiteralInteger(len(arg)), *process_shape(False, arg[0].shape))
         else:
             # Verify dtype and get precision
             if dtype is None:
                 dtype = arg.dtype
             dtype = process_dtype(dtype)
 
-            shape = process_shape(False, arg.shape)
+        shape = process_shape(False, get_shape_of_multi_level_container(arg))
 
-        rank  = len(shape)
+        rank  = arg.rank
+        assert len(shape) == rank
 
         if ndmin and ndmin>rank:
             shape = (LiteralInteger(1),)*(ndmin-rank) + shape
@@ -971,10 +1015,7 @@ class NumpyShape(PyccelFunction):
     name = 'shape'
 
     def __new__(cls, arg):
-        if isinstance(arg.shape, PythonTuple):
-            return arg.shape
-        else:
-            return PythonTuple(*arg.shape)
+        return PythonTuple(*get_shape_of_multi_level_container(arg))
 
 #==============================================================================
 class NumpyLinspace(NumpyNewArray):
@@ -2480,16 +2521,18 @@ class NumpyCountNonZero(PyccelFunction):
             rank  = a.rank
             order = a.order
             if axis is not None:
-                self._shape = list(a.shape)
-                self._shape[axis.python_value] = LiteralInteger(1)
+                shape = list(a.shape)
+                shape[axis.python_value] = LiteralInteger(1)
+                self._shape = tuple(shape)
             else:
                 self._shape = (LiteralInteger(1),)*rank
             self._class_type = NumpyNDArrayType(dtype, rank, order)
         else:
             if axis is not None:
                 dtype = NumpyInt64Type()
-                self._shape = list(a.shape)
-                self._shape.pop(axis.python_value)
+                shape = list(a.shape)
+                shape.pop(axis.python_value)
+                self._shape = tuple(shape)
                 rank  = a.rank-1
                 order = a.order
                 self._class_type = NumpyNDArrayType(dtype, rank, order)

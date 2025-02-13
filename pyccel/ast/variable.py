@@ -14,6 +14,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PyccelType, InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType, DictType
+from .datatypes import ContainerType, HomogeneousTupleType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .internals import apply_pickle
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
@@ -172,7 +173,10 @@ class Variable(TypedAstNode):
             assert shape is None
 
         elif shape is None:
-            shape = tuple(None for i in range(rank))
+            shape = tuple(None for i in range(class_type.container_rank))
+
+        # Ignore codegen stage due to #861
+        assert pyccel_stage == 'codegen' or class_type.shape_is_compatible(shape)
 
         self._alloc_shape = shape
         self._class_type = class_type
@@ -246,6 +250,7 @@ class Variable(TypedAstNode):
         an If block.
         """
         self._shape = tuple(PyccelArrayShapeElement(self, LiteralInteger(i)) for i in range(self.rank))
+        self._alloc_shape = tuple(PyccelArrayShapeElement(self, LiteralInteger(i)) for i in range(self.rank))
 
     def set_init_shape(self, shape):
         """
@@ -481,36 +486,6 @@ class Variable(TypedAstNode):
         # The name is part of the hash so it must never change
         raise RuntimeError('Cannot modify hash definition')
 
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments.
-        """
-        args = (
-            self.class_type,
-            self.name)
-        kwargs = {
-            'memory_handling': self.memory_handling,
-            'is_optional':self.is_optional,
-            'cls_base':self.cls_base,
-            }
-
-        out =  (apply_pickle, (self.__class__, args, kwargs))
-        return out
-
     def __getitem__(self, *args):
 
         if self.rank < len(args):
@@ -710,10 +685,6 @@ class IndexedElement(TypedAstNode):
             assert len(self._indices) == 1 and isinstance(self._indices[0], LiteralInteger)
             self._class_type = base.class_type[self._indices[0]]
             self._is_slice = False
-            if self.rank:
-                self._shape = (None,)*self.rank
-            else:
-                self._shape = None
 
         else:
             # Calculate new shape
@@ -738,25 +709,36 @@ class IndexedElement(TypedAstNode):
 
                         _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                     new_shape.append(_shape)
+            if isinstance(base.class_type, HomogeneousTupleType):
+                new_shape.extend(shape[1:])
             new_rank = len(new_shape)
 
             if new_rank == 0:
                 self._class_type = base.class_type.element_type
                 self._is_slice = False
-                if self._class_type.rank:
-                    self._shape = base.shape[rank:]
-                else:
-                    self._shape = None
-            elif new_rank != rank:
-                self._class_type = base.class_type.switch_rank(new_rank)
-                self._is_slice = True
-                self._shape = tuple(new_shape) + base.shape[rank:]
+            elif isinstance(base.class_type, HomogeneousTupleType):
+                class_type = base.class_type
+                rank = base.rank
+                while new_rank != rank:
+                    class_type = class_type.element_type
+                    rank -= 1
+                self._class_type = class_type
+                self._shape = tuple(new_shape)
+                self._is_slice = False
             else:
-                self._class_type = base.class_type
+                self._class_type = base.class_type.switch_rank(new_rank) if new_rank != rank \
+                                    else base.class_type
                 self._is_slice = True
-                self._shape = tuple(new_shape) + base.shape[rank:]
+                self._shape = tuple(new_shape)
 
         super().__init__()
+
+        if isinstance(self._class_type, ContainerType) and self._shape is None:
+            self._shape = tuple(PyccelArrayShapeElement(self, i) \
+                                for i in range(self._class_type.container_rank))
+
+        # Ignore codegen stage due to #861
+        assert pyccel_stage == 'codegen' or self._class_type.shape_is_compatible(self._shape)
 
     @property
     def base(self):
@@ -952,7 +934,4 @@ class AnnotatedPyccelSymbol(PyccelAstNode):
 
     def __str__(self):
         return f'{self.name} : {self.annotation}'
-
-    def __reduce_ex__(self, i):
-        return (self.__class__, (self.name, self.annotation))
 
