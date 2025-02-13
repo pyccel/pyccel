@@ -178,6 +178,25 @@ class PyccelType:
         """
         raise NotImplementedError(f"switch_basic_type not implemented for {type(self)}")
 
+    def shape_is_compatible(self, shape):
+        """
+        Check if the provided shape is compatible with the datatype.
+
+        Check if the provided shape is compatible with the format expected for
+        this datatype.
+
+        Parameters
+        ----------
+        shape : Any
+            The proposed shape.
+
+        Returns
+        -------
+        bool
+            True if the shape is acceptable, False otherwise.
+        """
+        return shape is None
+
 #==============================================================================
 
 class FixedSizeType(PyccelType, metaclass=Singleton):
@@ -442,7 +461,7 @@ class CharType(FixedSizeType):
     """
     __slots__ = ()
     _name = 'char'
-    _primitive_type = PrimitiveCharacterType
+    _primitive_type = PrimitiveCharacterType()
 
 #==============================================================================
 class TypeAlias(SymbolicType):
@@ -469,6 +488,25 @@ class ContainerType(PyccelType):
     E.g. classes, arrays, etc.
     """
     __slots__ = ()
+
+    def shape_is_compatible(self, shape):
+        """
+        Check if the provided shape is compatible with the datatype.
+
+        Check if the provided shape is compatible with the format expected for
+        this datatype.
+
+        Parameters
+        ----------
+        shape : Any
+            The proposed shape.
+
+        Returns
+        -------
+        bool
+            True if the shape is acceptable, False otherwise.
+        """
+        return isinstance(shape, tuple) and len(shape) == self.container_rank # pylint: disable=no-member
 
 #==============================================================================
 
@@ -633,7 +671,7 @@ class HomogeneousContainerType(ContainerType):
     def __hash__(self):
         return hash((self.__class__, self.element_type))
 
-class StringType(HomogeneousContainerType, metaclass = Singleton):
+class StringType(ContainerType, metaclass = Singleton):
     """
     Class representing Python's native string type.
 
@@ -641,9 +679,6 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
     __slots__ = ()
     _name = 'str'
-    _element_type = PrimitiveCharacterType()
-    _container_rank = 1
-    _order = None
 
     @property
     def datatype(self):
@@ -676,6 +711,36 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
         """
         return 1
 
+    @property
+    def container_rank(self):
+        """
+        Number of dimensions of the container.
+
+        Number of dimensions of the object described by the container. This is
+        equal to the number of values required to index an element of this container.
+        """
+        return 1
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return None
+
+    @property
+    def element_type(self):
+        """
+        The type of elements of the object.
+
+        The PyccelType describing an element of the container.
+        """
+        return CharType()
+
     def __eq__(self, other):
         return isinstance(other, self.__class__)
 
@@ -705,6 +770,26 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
 
     def __str__(self):
         return f'tuple[{self._element_type}, ...]'
+
+    def shape_is_compatible(self, shape):
+        """
+        Check if the provided shape is compatible with the datatype.
+
+        Check if the provided shape is compatible with the format expected for
+        this datatype.
+
+        Parameters
+        ----------
+        shape : Any
+            The proposed shape.
+
+        Returns
+        -------
+        bool
+            True if the shape is acceptable, False otherwise.
+        """
+        # TODO: Remove this specialisation if tuples are saved in lists instead of ndarrays
+        return isinstance(shape, tuple) and len(shape) == self.rank
 
 class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     """
@@ -771,7 +856,7 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
 
 #==============================================================================
 
-class CustomDataType(ContainerType, metaclass=Singleton):
+class CustomDataType(PyccelType, metaclass=Singleton):
     """
     Class from which user-defined types inherit.
 
