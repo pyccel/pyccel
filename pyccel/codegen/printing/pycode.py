@@ -363,8 +363,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_Return(self, expr):
 
         if expr.stmt:
-            assigns = {i.lhs: i.rhs for i in expr.stmt.body if isinstance(i, Assign)}
-            prelude = ''.join([self._print(i) for i in expr.stmt.body if not isinstance(i, Assign)])
+            to_print = [l for l in expr.stmt.body if not (isinstance(l, Assign) and isinstance(l.lhs, Variable))]
+            assigns = {a.lhs: a.rhs for a in expr.stmt.body if a not in to_print}
+            prelude = ''.join(self._print(l) for l in to_print)
         else:
             assigns = {}
             prelude = ''
@@ -374,7 +375,8 @@ class PythonCodePrinter(CodePrinter):
         else:
             expr_return_vars = [assigns.get(v, v) for v in self.scope.collect_all_tuple_elements(expr.expr)]
 
-        return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars))
+        return_expr = ','.join(self._print(i) for i in expr_return_vars)
+        return prelude + f'return {return_expr}\n'
 
     def _print_Program(self, expr):
         mod_scope = self.scope
