@@ -213,7 +213,13 @@ class PythonCodePrinter(CodePrinter):
         return str(expr)
 
     def _print_Variable(self, expr):
-        return expr.name
+        if isinstance(expr.class_type, InhomogeneousTupleType):
+            elems = ', '.join(self._print(self.scope.collect_tuple_element(v)) for v in expr)
+            if len(expr.class_type) < 2:
+                elems += ','
+            return f'({elems})'
+        else:
+            return expr.name
 
     def _print_DottedVariable(self, expr):
         rhs_code = self._print_Variable(expr)
@@ -374,9 +380,10 @@ class PythonCodePrinter(CodePrinter):
         if expr.expr is None:
             expr_return_vars = []
         else:
-            expr_return_vars = [assigns.get(v, v) for v in self.scope.collect_all_tuple_elements(expr.expr)]
+            expr_return_vars = [assigns.get(self.scope.collect_tuple_element(v), v) for v in expr.expr]
 
         return_expr = ', '.join(self._print(i) for i in expr_return_vars)
+
         return prelude + f'return {return_expr}\n'
 
     def _print_Program(self, expr):
