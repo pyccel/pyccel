@@ -147,6 +147,54 @@ def test_nested_inline_call(language):
 
     assert f() == g()
 
+def test_inline_multiple_results(language):
+    def f():
+        @inline
+        def get_2_vals(a : int):
+            return a*2, a-5
+
+        get_2_vals(5)
+        x = get_2_vals(7)
+        y0,y1 = get_2_vals(3)
+        return x, y0, y1
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_homogeneous_tuple_result(language):
+    def f():
+        @inline
+        def get_2_vals(a : int):
+            b = (a*2, a-5)
+            return b
+
+        get_2_vals(5)
+        x = get_2_vals(7)
+        y0,y1 = get_2_vals(3)
+        return x, y0, y1
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_inhomogeneous_tuple_result(language):
+    def f():
+        @inline
+        def get_2_vals(a : int):
+            b : tuple[int,int] = (a*2, a-5)
+            return b
+
+        get_2_vals(5)
+        x = get_2_vals(7)
+        y0,y1 = get_2_vals(3)
+        return x, y0, y1
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+
 def test_indexed_template(language):
     @template(name='T', types=[float, complex])
     def my_sum(v: 'T[:]'):
