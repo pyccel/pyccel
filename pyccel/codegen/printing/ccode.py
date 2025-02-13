@@ -2346,17 +2346,19 @@ class CCodePrinter(CodePrinter):
         return  ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelFloorDiv(self, expr):
-        self.add_import(c_imports['math'])
         # the result type of the floor division is dependent on the arguments
-        # type, if all arguments are integers the result is integer otherwise
-        # the result type is float
-        need_to_cast = all(a.dtype.primitive_type is PrimitiveIntegerType() for a in expr.args)
+        # type, if all arguments are integers or booleans the result is integer
+        # otherwise the result type is float
+        need_to_cast = all(a.dtype.primitive_type in (PrimitiveIntegerType(), PrimitiveBooleanType()) for a in expr.args)
+        if need_to_cast:
+            self.add_import(c_imports['pyc_math_c'])
+            cast_type = self.get_c_type(expr.dtype)
+            return f'py_floor_div_{cast_type}({self._print(expr.args[0])}, {self._print(expr.args[1])})'
+
+        self.add_import(c_imports['math'])
         code = ' / '.join(self._print(a if a.dtype.primitive_type is PrimitiveFloatingPointType()
                                         else NumpyFloat(a)) for a in expr.args)
-        if (need_to_cast):
-            cast_type = self.get_c_type(expr.dtype)
-            return "({})floor({})".format(cast_type, code)
-        return "floor({})".format(code)
+        return f"floor({code})"
 
     def _print_PyccelRShift(self, expr):
         return ' >> '.join(self._print(a) for a in expr.args)
