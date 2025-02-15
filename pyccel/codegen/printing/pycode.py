@@ -1242,6 +1242,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_SyntacticTypeAnnotation(self, expr):
         dtype = self._print(expr.dtype)
+        dtype = dtype.replace('::',':')
         order = f"(order={expr.order})" if expr.order else ''
         return f'{dtype}{order}'
 
