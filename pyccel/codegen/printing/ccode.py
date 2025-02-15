@@ -2418,7 +2418,9 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, TupleType):
             assert isinstance(lhs.class_type, InhomogeneousTupleType) or isinstance(lhs, (PythonTuple, PythonList))
             self._temporary_args = [ObjectAddress(a) for a in lhs]
-            return self._print(rhs)
+            code = self._print(rhs)
+            self._temporary_args = []
+            return code
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
