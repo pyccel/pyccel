@@ -10,7 +10,9 @@ Module containing aspects of a parser which are in common over all stages.
 
 import importlib
 import os
+from pathlib import Path
 import re
+import sys
 
 #==============================================================================
 from pyccel.version import __version__
@@ -50,6 +52,7 @@ def get_filename_from_import(module, input_folder=''):
     definition of module.
     The priority order is:
         - header files (extension == pyh)
+        - header files (extension == pyi)
         - python files (extension == py)
 
     Parameters
@@ -70,54 +73,37 @@ def get_filename_from_import(module, input_folder=''):
     PyccelError
         Error raised when the module cannot be found.
     """
+    input_folder = Path(input_folder)
+    n_rel = 0
+    pkg = []
+    while module[n_rel] == '.':
+        n_rel += 1
+        pkg.append(input_folder.stem)
+        input_folder = input_folder.parent
 
-    if (isinstance(module, AsName)):
-        module = str(module.name)
-
-    # Remove first '.' as it doesn't represent a folder change
-    if module[0] == '.':
-        module = module[1:]
-    filename = module.replace('.','/')
-
-    # relative imports
-    folder_above = '../'
-    while filename.startswith('/'):
-        filename = folder_above + filename[1:]
-
-    filename_pyh = f'{filename}.pyh'
-    filename_py  = f'{filename}.py'
-
-    poss_filename_pyh = os.path.join( input_folder, filename_pyh )
-    poss_filename_py  = os.path.join( input_folder, filename_py  )
-    if is_valid_filename_pyh(poss_filename_pyh):
-        return os.path.abspath(poss_filename_pyh)
-    if is_valid_filename_py(poss_filename_py):
-        return os.path.abspath(poss_filename_py)
-
-    source = module
-    if len(module.split(""".""")) > 1:
-
-        # we remove the last entry, since it can be a pyh file
-
-        source = """.""".join(i for i in module.split(""".""")[:-1])
-        _module = module.split(""".""")[-1]
-        filename_pyh = f'{_module}.pyh'
-        filename_py  = f'{_module}.py'
-
+    sys.path.append(str(input_folder))
     try:
-        package = importlib.import_module(source)
-        package_dir = str(package.__path__[0])
-    except ImportError:
+        package = importlib.import_module(module, '.'.join(pkg[::-1]))
+    except ImportError as e:
         errors = Errors()
-        errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=source,
+        errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                       severity='fatal')
+    finally:
+        sys.path.pop()
 
-    filename_pyh = os.path.join(package_dir, filename_pyh)
-    filename_py = os.path.join(package_dir, filename_py)
-    if os.path.isfile(filename_pyh):
-        return filename_pyh
-    elif os.path.isfile(filename_py):
-        return filename_py
+    package_dir = Path(package.__file__).parent
+
+    filename = module.rsplit('.', 1)[1]
+
+    filename_pyh = package_dir / f'{filename}.pyh'
+    filename_pyi = package_dir / f'{filename}.pyi'
+    filename_py = package_dir / f'{filename}.py'
+    if filename_pyi.is_file():
+        return str(filename_pyh)
+    if filename_pyh.is_file():
+        return str(filename_pyh)
+    elif filename_py.is_file():
+        return str(filename_py)
 
     errors = Errors()
     raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
@@ -250,7 +236,7 @@ class BasicParser(object):
         """Returns True if we are treating a header file."""
 
         if self.filename:
-            return self.filename.split(""".""")[-1] == 'pyh'
+            return self.filename.split(""".""")[-1] in ('pyh', 'pyi')
         else:
             return False
 
