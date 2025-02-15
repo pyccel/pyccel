@@ -182,14 +182,14 @@ class PythonCodePrinter(CodePrinter):
         args = ', '.join(self._print(a) for a in func.arguments)
         results = func.results
         if results:
-            res_types = [self._get_type_annotation(r) for r in results]
+            res_types = [self._get_type_annotation(r.var) for r in results]
             if len(res_types) == 1:
                 res = f' -> {res_types[0]}'
             else:
                 res = ''
         else:
             res = ' -> None'
-        return f"def {func.name}({args}){res}:\n"+self._indent_codestring('pass')
+        return f"def {func.name}({args}){res}:\n"+self._indent_codestring('...')
 
     #----------------------------------------------------------------------
 
