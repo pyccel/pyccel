@@ -182,7 +182,7 @@ def test_inline_literal_return(language):
 
 def test_inline_array_return(language):
     def f():
-        import numpy as np
+        import numpy as np #pylint: disable=reimported
         @inline
         def tmp():
             return np.ones(2, dtype=int)
