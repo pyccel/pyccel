@@ -2276,7 +2276,7 @@ class CCodePrinter(CodePrinter):
         args = ', '.join(['{}'.format(self._print(a)) for a in args])
 
         call_code = f'{func.name}({args})'
-        if len(func.results) == 1:
+        if len(func.results) == 1 and not isinstance(func.results[0].var.class_type, InhomogeneousTupleType):
             return call_code
         else:
             return f'{call_code};\n'
