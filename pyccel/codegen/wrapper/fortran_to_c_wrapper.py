@@ -617,7 +617,7 @@ class FortranToCWrapper(Wrapper):
     def _extract_InhomogeneousTupleType_FunctionDefResult(self, orig_var, orig_func_scope):
         name = orig_var.name
         self.scope.insert_symbol(name)
-        elements = orig_func_scope.collect_all_tuple_elements(orig_var)
+        elements = [orig_func_scope.collect_tuple_element(e) for e in orig_var]
         func_def_results = [self._extract_FunctionDefResult(e, orig_func_scope) for e in elements]
         body = [l for r in func_def_results for l in r['body']]
 
