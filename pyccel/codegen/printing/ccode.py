@@ -616,12 +616,15 @@ class CCodePrinter(CodePrinter):
         func_result_vars = [r.var for r in func.results]
         generated_result_vars = any(not v.is_temp for v in func_result_vars)
         if generated_result_vars:
-            non_temp_func_result_vars = [v for v in func_result_vars if not v.is_temp]
-            result_vars = [r.clone(name = self.scope.get_new_name(r.name)) \
-                        for r in func_result_vars if not r.is_temp]
-            for v in result_vars:
-                self.scope.insert_variable(v)
-            results = {r : l for r,l in zip(non_temp_func_result_vars, result_vars)}
+            if self._temporary_args:
+                results = {r : l for r,l in zip(func_result_vars, self._temporary_args)}
+            else:
+                non_temp_func_result_vars = [v for v in func_result_vars if not v.is_temp]
+                result_vars = [r.clone(name = self.scope.get_new_name(r.name)) \
+                            for r in func_result_vars if not r.is_temp]
+                for v in result_vars:
+                    self.scope.insert_variable(v)
+                results = {r : l for r,l in zip(non_temp_func_result_vars, result_vars)}
             orig_res_vars = list(results.keys())
             new_res_vars  = list(results.values())
             new_res_vars = [a.obj if isinstance(a, ObjectAddress) else a for a in new_res_vars]
@@ -2277,10 +2280,10 @@ class CCodePrinter(CodePrinter):
         args = ', '.join(['{}'.format(self._print(a)) for a in args])
 
         call_code = f'{func.name}({args})'
-        if not func.results:
-            return f'{call_code};\n'
-        else:
+        if len(func.results) == 1:
             return call_code
+        else:
+            return f'{call_code};\n'
 
     def _print_Return(self, expr):
         code = ''
@@ -2419,7 +2422,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, TupleType):
             assert isinstance(lhs.class_type, InhomogeneousTupleType) or isinstance(lhs, (PythonTuple, PythonList))
             self._temporary_args = [ObjectAddress(a) for a in lhs]
-            return f'{self._print(rhs)};\n'
+            return self._print(rhs)
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
