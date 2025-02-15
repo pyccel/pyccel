@@ -1145,10 +1145,15 @@ class FCodePrinter(CodePrinter):
         var_type = var.dtype
         if isinstance(var.class_type, StringType):
             arg_format = 'A'
-        elif isinstance(var, FunctionCall) and len(var.funcdef.results)>1 or \
+        elif (isinstance(var, FunctionCall) and len(var.funcdef.results)>1) or \
                 isinstance(var.class_type, InhomogeneousTupleType):
             var_elem_code = var_code[1:-1].split(', ')
             args_and_formats = [self._get_print_format_and_arg(v.var, c) for v,c in zip(var.funcdef.results, var_elem_code)]
+            formats = ',", ",'.join(af[0] for af in args_and_formats)
+            arg_format = f'"(",{formats},")"'
+            arg = ', '.join(af[1] for af in args_and_formats)
+        elif isinstance(var, FunctionCall) and var.funcdef.is_inline:
+            args_and_formats = [self._get_print_format_and_arg(var.funcdef.results[0].var, var_code)]
             formats = ',", ",'.join(af[0] for af in args_and_formats)
             arg_format = f'"(",{formats},")"'
             arg = ', '.join(af[1] for af in args_and_formats)
@@ -3640,7 +3645,7 @@ class FCodePrinter(CodePrinter):
             results = None
 
         if func.is_inline:
-            return self._handle_inline_func_call(expr, assign_lhs = results)
+            code = self._handle_inline_func_call(expr, assign_lhs = results)
         else:
             args_strs = [self._print(a) for a in args if not isinstance(a.value, Nil)]
             args_code = ', '.join(args_strs+results_strs)
