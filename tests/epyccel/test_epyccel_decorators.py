@@ -180,6 +180,22 @@ def test_inline_literal_return(language):
 
     assert f() == g()
 
+def test_inline_multiple_return(language):
+    def f():
+        @inline
+        def tmp():
+            a = 1
+            b = 4
+            return a, b
+
+        b,c = tmp()
+        d,e = tmp()
+        return b,c,d,e
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
 def test_indexed_template(language):
     @template(name='T', types=[float, complex])
     def my_sum(v: 'T[:]'):
