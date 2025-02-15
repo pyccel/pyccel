@@ -613,12 +613,18 @@ class CCodePrinter(CodePrinter):
                             for v in func.local_vars]
 
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
-        if parent_assign:
-            results = {r.var : l for r,l in zip(func.results, parent_assign[0].lhs)}
+        func_result_vars = [r.var for r in func.results]
+        generated_result_vars = any(not v.is_temp for v in func_result_vars)
+        if generated_result_vars:
+            non_temp_func_result_vars = [v for v in func_result_vars if not v.is_temp]
+            result_vars = [r.clone(name = self.scope.get_new_name(r.name)) \
+                        for r in func_result_vars if not r.is_temp]
+            for v in result_vars:
+                self.scope.insert_variable(v)
+            results = {r : l for r,l in zip(non_temp_func_result_vars, result_vars)}
             orig_res_vars = list(results.keys())
-            new_res_vars  = self._temporary_args
+            new_res_vars  = list(results.values())
             new_res_vars = [a.obj if isinstance(a, ObjectAddress) else a for a in new_res_vars]
-            self._temporary_args = []
             body.substitute(orig_res_vars, new_res_vars)
 
         # Replace the arguments in the code
@@ -650,7 +656,7 @@ class CCodePrinter(CodePrinter):
         # Put back original arguments
         func.reinstate_presence_checks()
         func.swap_out_args()
-        if parent_assign:
+        if generated_result_vars:
             body.substitute(new_res_vars, orig_res_vars)
 
         if func.global_vars or func.global_funcs and \
