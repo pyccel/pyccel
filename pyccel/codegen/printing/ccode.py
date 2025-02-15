@@ -614,15 +614,15 @@ class CCodePrinter(CodePrinter):
 
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
         func_result_vars = [r.var for r in func.results]
-        generated_result_vars = any(not v.is_temp for v in func_result_vars)
+        generated_result_vars = any(not v.is_temp or v.is_ndarray for v in func_result_vars)
         if generated_result_vars:
             if self._temporary_args:
                 orig_res_vars = func_result_vars
                 new_res_vars = self._temporary_args
             else:
-                orig_res_vars = [v for v in func_result_vars if not v.is_temp]
+                orig_res_vars = [v for v in func_result_vars if not v.is_temp or v.is_ndarray]
                 new_res_vars = [self.scope.get_temporary_variable(r) \
-                            for r in func_result_vars if not r.is_temp]
+                            for r in orig_res_vars]
             new_res_vars = [a.obj if isinstance(a, ObjectAddress) else a for a in new_res_vars]
             body.substitute(orig_res_vars, new_res_vars)
 
@@ -2310,7 +2310,8 @@ class CCodePrinter(CodePrinter):
                 # make sure that stmt contains one assign node.
                 last_assign = last_assign[-1]
                 variables = last_assign.rhs.get_attribute_nodes(Variable)
-                unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables)
+                unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables) and \
+                        not (isinstance(last_assign.lhs, Variable) and last_assign.lhs.is_ndarray)
                 if unneeded_var:
                     code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
                     return code + 'return {};\n'.format(self._print(last_assign.rhs))
