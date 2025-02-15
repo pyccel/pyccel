@@ -613,12 +613,17 @@ class CCodePrinter(CodePrinter):
                             for v in func.local_vars]
 
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
-        if parent_assign:
-            results = dict(zip(func.scope.collect_all_tuple_elements(func.results.var), parent_assign[0].lhs))
-            orig_res_vars = list(results.keys())
-            new_res_vars  = self._temporary_args
+        func_result_vars = func.scope.collect_all_tuple_elements(func.results.var)
+        generated_result_vars = any(v is not Nil() and (not v.is_temp or v.is_ndarray) for v in func_result_vars)
+        if generated_result_vars or self._temporary_args:
+            if self._temporary_args:
+                orig_res_vars = func_result_vars
+                new_res_vars = self._temporary_args
+            else:
+                orig_res_vars = [v for v in func_result_vars if not v.is_temp or v.is_ndarray]
+                new_res_vars = [self.scope.get_temporary_variable(r) \
+                            for r in orig_res_vars]
             new_res_vars = [a.obj if isinstance(a, ObjectAddress) else a for a in new_res_vars]
-            self._temporary_args = []
             body.substitute(orig_res_vars, new_res_vars)
 
         # Replace the arguments in the code
@@ -650,7 +655,7 @@ class CCodePrinter(CodePrinter):
         # Put back original arguments
         func.reinstate_presence_checks()
         func.swap_out_args()
-        if parent_assign:
+        if generated_result_vars or self._temporary_args:
             body.substitute(new_res_vars, orig_res_vars)
 
         if func.global_vars or func.global_funcs and \
@@ -2274,10 +2279,11 @@ class CCodePrinter(CodePrinter):
         args = ', '.join(['{}'.format(self._print(a)) for a in args])
 
         call_code = f'{func.name}({args})'
-        if not func.results.var:
-            return f'{call_code};\n'
-        else:
+        if func.results.var is not Nil() and \
+                not isinstance(func.results.var.class_type, InhomogeneousTupleType):
             return call_code
+        else:
+            return f'{call_code};\n'
 
     def _print_Return(self, expr):
         code = ''
@@ -2318,7 +2324,8 @@ class CCodePrinter(CodePrinter):
                 # make sure that stmt contains one assign node.
                 last_assign = last_assign[-1]
                 variables = last_assign.rhs.get_attribute_nodes(Variable)
-                unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables)
+                unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables) and \
+                        not (isinstance(last_assign.lhs, Variable) and last_assign.lhs.is_ndarray)
                 if unneeded_var:
                     code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
                     return code + 'return {};\n'.format(self._print(last_assign.rhs))
@@ -2359,17 +2366,19 @@ class CCodePrinter(CodePrinter):
         return  ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelFloorDiv(self, expr):
-        self.add_import(c_imports['math'])
         # the result type of the floor division is dependent on the arguments
-        # type, if all arguments are integers the result is integer otherwise
-        # the result type is float
-        need_to_cast = all(a.dtype.primitive_type is PrimitiveIntegerType() for a in expr.args)
+        # type, if all arguments are integers or booleans the result is integer
+        # otherwise the result type is float
+        need_to_cast = all(a.dtype.primitive_type in (PrimitiveIntegerType(), PrimitiveBooleanType()) for a in expr.args)
+        if need_to_cast:
+            self.add_import(c_imports['pyc_math_c'])
+            cast_type = self.get_c_type(expr.dtype)
+            return f'py_floor_div_{cast_type}({self._print(expr.args[0])}, {self._print(expr.args[1])})'
+
+        self.add_import(c_imports['math'])
         code = ' / '.join(self._print(a if a.dtype.primitive_type is PrimitiveFloatingPointType()
                                         else NumpyFloat(a)) for a in expr.args)
-        if (need_to_cast):
-            cast_type = self.get_c_type(expr.dtype)
-            return "({})floor({})".format(cast_type, code)
-        return "floor({})".format(code)
+        return f"floor({code})"
 
     def _print_PyccelRShift(self, expr):
         return ' >> '.join(self._print(a) for a in expr.args)
@@ -2423,7 +2432,9 @@ class CCodePrinter(CodePrinter):
         rhs = expr.rhs
         if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, InhomogeneousTupleType):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
-            return f'{self._print(rhs)};\n'
+            code = self._print(rhs)
+            self._temporary_args = []
+            return code
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)

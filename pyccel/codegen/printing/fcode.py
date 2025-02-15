@@ -443,42 +443,46 @@ class FCodePrinter(CodePrinter):
             # If there is no return then the code is already ok
             code = self._print(body)
         else:
-            # Search for the return and replace it with an empty node
+            func_result_vars = func.scope.collect_all_tuple_elements(func.results.var)
             result = body.get_attribute_nodes(Return)[0]
+
+            if assign_lhs:
+                body.substitute(func_result_vars, assign_lhs)
+            elif result.stmt:
+                # Collect statements from results to return object
+                assigns = {i.lhs: i.rhs for i in result.stmt.body if isinstance(i, Assign)}
+                self._additional_code += ''.join(self._print(i) for i in result.stmt.body if not isinstance(i, Assign))
+                result_vars = list(assigns.values())
+            else:
+                result_vars = [r.clone(name = self.scope.get_new_name(r.name)) \
+                            for r in func_result_vars]
+                for r in result_vars:
+                    self.scope.insert_variable(r)
+                body.substitute(func_result_vars, result_vars)
+
+            # Search for the return and replace it with an empty node
             empty_return = EmptyNode()
             body.substitute(result, empty_return, invalidate = False)
 
             # Everything before the return node needs handling before the line
             # which calls the inline function is executed
             code = self._print(body)
-            self._additional_code += code
-
-            # Collect statements from results to return object
-            if result.stmt:
-                assigns = {i.lhs: i.rhs for i in result.stmt.body if isinstance(i, Assign)}
-                self._additional_code += ''.join([self._print(i) for i in result.stmt.body if not isinstance(i, Assign)])
-            else:
-                assigns = {}
 
             # Put return statement back into function
             body.substitute(empty_return, result)
 
             if assign_lhs:
-                assigns = [Assign(l, r) for l,r in zip(assign_lhs, assigns.values())]
-                code = ''.join([self._print(a) for a in assigns])
+                if result.stmt:
+                    code += self._print(result.stmt)
+                body.substitute(assign_lhs, func_result_vars)
+            elif result.stmt:
+                self._additional_code = code
+                code = self._print(result_vars[0])
             else:
-                res_return_vars = [assigns.get(v,v) for v in scope.collect_all_tuple_elements(result.expr)]
-                if len(res_return_vars) == 1:
-                    return_val = res_return_vars[0]
-                    parent_assign = return_val.get_direct_user_nodes(lambda x: isinstance(x, Assign))
-                    if parent_assign:
-                        return_val.remove_user_node(parent_assign[0], invalidate = False)
-                        code = self._print(return_val)
-                        return_val.set_current_user_node(parent_assign[0])
-                    else:
-                        code = self._print(return_val)
-                else:
-                    code = ''.join(self._print(a) for a in res_return_vars)
+                self._additional_code = code
+                assert not isinstance(result.expr.class_type, InhomogeneousTupleType)
+                code = self._print(result.expr)
+                body.substitute(result_vars, func_result_vars)
 
         # Put back original arguments
         func.reinstate_presence_checks()
@@ -1154,10 +1158,15 @@ class FCodePrinter(CodePrinter):
         var_type = var.dtype
         if isinstance(var.class_type, StringType):
             arg_format = 'A'
-        elif isinstance(var, FunctionCall) and len(var.funcdef.results)>1 or \
+        elif (isinstance(var, FunctionCall) and len(var.funcdef.results)>1) or \
                 isinstance(var.class_type, InhomogeneousTupleType):
             var_elem_code = var_code[1:-1].split(', ')
             args_and_formats = [self._get_print_format_and_arg(v.var, c) for v,c in zip(var.funcdef.results, var_elem_code)]
+            formats = ',", ",'.join(af[0] for af in args_and_formats)
+            arg_format = f'"(",{formats},")"'
+            arg = ', '.join(af[1] for af in args_and_formats)
+        elif isinstance(var, FunctionCall) and var.funcdef.is_inline:
+            args_and_formats = [self._get_print_format_and_arg(var.funcdef.results[0].var, var_code)]
             formats = ',", ",'.join(af[0] for af in args_and_formats)
             arg_format = f'"(",{formats},")"'
             arg = ', '.join(af[1] for af in args_and_formats)
@@ -3143,19 +3152,12 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PyccelFloorDiv(self, expr):
-
-        code     = self._print(expr.args[0])
-        adtype   = expr.args[0].dtype.primitive_type
-        is_float = isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType)
-        for b in expr.args[1:]:
-            bdtype    = b.dtype.primitive_type
-            if all(isinstance(dtype, PrimitiveIntegerType) for dtype in (adtype, bdtype)):
-                b = NumpyFloat(b)
-            c = self._print(b)
-            adtype = bdtype
-            code = 'FLOOR({}/{},{})'.format(code, c, self.print_kind(expr))
-            if is_float:
-                code = 'real({}, {})'.format(code, self.print_kind(expr))
+        new_args = [self._apply_cast(expr.dtype, arg) for arg in expr.args]
+        args = [self._print(arg) for arg in new_args]
+        if all(isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) for arg in expr.args):
+            self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            return f'pyc_floor_div({args[0]}, {args[1]})'
+        code = f'real(FLOOR({args[0]} / {args[1]}, {self.print_kind(expr)}), {self.print_kind(expr)})'
         return code
 
     def _print_PyccelRShift(self, expr):
@@ -3656,12 +3658,10 @@ class FCodePrinter(CodePrinter):
 
         else:
             results_strs = []
+            results = None
 
         if func.is_inline:
-            if len(func_results)>1:
-                code = self._handle_inline_func_call(expr, assign_lhs = results)
-            else:
-                code = self._handle_inline_func_call(expr)
+            code = self._handle_inline_func_call(expr, assign_lhs = results)
         else:
             args_strs = [self._print(a) for a in args if not isinstance(a.value, Nil)]
             args_code = ', '.join(args_strs+results_strs)
@@ -3678,7 +3678,7 @@ class FCodePrinter(CodePrinter):
                     return self._print(results[0])
                 else:
                     return self._print(tuple(results))
-        elif is_function:
+        elif is_function and not func.is_inline:
             result_code = self._print(results[0])
             if isinstance(parent_assign[0], AliasAssign):
                 return f'{result_code} => {code}\n'
