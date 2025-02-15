@@ -3662,7 +3662,7 @@ class FCodePrinter(CodePrinter):
                     return self._print(results[0])
                 else:
                     return self._print(tuple(results))
-        elif is_function:
+        elif is_function and not func.is_inline:
             result_code = self._print(results[0])
             if isinstance(parent_assign[0], AliasAssign):
                 return f'{result_code} => {code}\n'
