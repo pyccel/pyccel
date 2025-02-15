@@ -617,16 +617,12 @@ class CCodePrinter(CodePrinter):
         generated_result_vars = any(not v.is_temp for v in func_result_vars)
         if generated_result_vars:
             if self._temporary_args:
-                results = {r : l for r,l in zip(func_result_vars, self._temporary_args)}
+                orig_res_vars = func_result_vars
+                new_res_vars = self._temporary_args
             else:
-                non_temp_func_result_vars = [v for v in func_result_vars if not v.is_temp]
-                result_vars = [r.clone(name = self.scope.get_new_name(r.name)) \
+                orig_res_vars = [v for v in func_result_vars if not v.is_temp]
+                new_res_vars = [self.scope.get_temporary_variable(r) \
                             for r in func_result_vars if not r.is_temp]
-                for v in result_vars:
-                    self.scope.insert_variable(v)
-                results = {r : l for r,l in zip(non_temp_func_result_vars, result_vars)}
-            orig_res_vars = list(results.keys())
-            new_res_vars  = list(results.values())
             new_res_vars = [a.obj if isinstance(a, ObjectAddress) else a for a in new_res_vars]
             body.substitute(orig_res_vars, new_res_vars)
 
