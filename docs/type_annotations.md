@@ -94,14 +94,14 @@ def g(b : Final[set[bool]]):
 
 ## Dictionaries
 
-Dictionaries are in the process of being added to Pyccel. They cannot yet be used effectively however the type annotations are already supported.
+Dictionaries are in the process of being added to Pyccel.
 Homogeneous dictionaries can be declared in Pyccel using the following syntax:
 ```python
 a : dict[int,float] = {1: 1.0, 2: 2.0}
 b : dict[int,bool] = {1: False, 4: True}
 c : dict[int,complex] = {}
 ```
-So far strings are supported as keys however as Pyccel is still missing support for non-literal strings it remains to be seen how such cases will be handled in low-level languages.
+Strings are not yet supported as keys in Fortran.
 
 ## Strings
 

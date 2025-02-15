@@ -23,6 +23,8 @@ from .literals              import Literal, LiteralInteger, LiteralFloat, Litera
 from .literals              import Nil, NilArgument, LiteralTrue, LiteralFalse
 from .literals              import convert_to_literal
 
+from .numpytypes            import NumpyNDArrayType
+
 errors = Errors()
 pyccel_stage = PyccelStage()
 

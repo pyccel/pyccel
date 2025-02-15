@@ -25,6 +25,10 @@ def three_quote():
 def return_literal():
     return "hello world"
 
+def empty_string():
+    s = ''
+    return s
+
 def concatenate():
     s = "hello"
     t = " world"

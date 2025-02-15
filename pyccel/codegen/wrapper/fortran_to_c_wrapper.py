@@ -531,7 +531,7 @@ class FortranToCWrapper(Wrapper):
         result = BindCVariable(bind_var, local_var)
 
         # Define the additional steps necessary to define and fill ptr_var
-        alloc = Allocate(local_var, shape=(), status='unallocated')
+        alloc = Allocate(local_var, shape=None, status='unallocated')
         c_loc = CLocFunc(local_var, bind_var)
         body = [alloc, c_loc]
 
@@ -663,7 +663,7 @@ class FortranToCWrapper(Wrapper):
             # Create an array variable which can be passed to CLocFunc
             ptr_var = Variable(orig_var.class_type, scope.get_new_name(name+'_ptr'), memory_handling='alias')
             scope.insert_variable(ptr_var)
-            alloc = Allocate(ptr_var, shape=(), status='unallocated')
+            alloc = Allocate(ptr_var, shape=None, status='unallocated')
             copy = Assign(ptr_var, local_var)
             cloc = CLocFunc(ptr_var, bind_var)
             body = [alloc, copy, cloc]
