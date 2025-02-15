@@ -26,7 +26,6 @@ from pyccel.ast.utilities import recognised_source
 from pyccel.ast.variable import DottedName
 
 from pyccel.parser.scope     import Scope
-from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
 from pyccel.errors.errors   import Errors, ErrorsMode
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
@@ -100,9 +99,9 @@ def get_filename_from_import(module, input_folder=''):
     filename_pyi = package_dir / f'{filename}.pyi'
     filename_py = package_dir / f'{filename}.py'
     if filename_pyccel_generated_pyi.is_file():
-        return str(filename_pyh)
+        return str(filename_pyccel_generated_pyi)
     if filename_pyi.is_file():
-        return str(filename_pyh)
+        return str(filename_pyi)
     if filename_pyh.is_file():
         return str(filename_pyh)
     if filename_py.is_file():
