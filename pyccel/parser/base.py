@@ -96,13 +96,16 @@ def get_filename_from_import(module, input_folder=''):
     filename = module.rsplit('.', 1)[1]
 
     filename_pyh = package_dir / f'{filename}.pyh'
+    filename_pyccel_generated_pyi = package_dir / '__pyccel__' / f'{filename}.pyi'
     filename_pyi = package_dir / f'{filename}.pyi'
     filename_py = package_dir / f'{filename}.py'
+    if filename_pyccel_generated_pyi.is_file():
+        return str(filename_pyh)
     if filename_pyi.is_file():
         return str(filename_pyh)
     if filename_pyh.is_file():
         return str(filename_pyh)
-    elif filename_py.is_file():
+    if filename_py.is_file():
         return str(filename_py)
 
     errors = Errors()
