@@ -1011,6 +1011,9 @@ class SyntaxParser(BasicParser):
             results.append(FunctionDefResult(result_name, annotation = result_annotation))
             results[-1].set_current_ast(stmt)
 
+        if len(returns) == 0 and result_annotation:
+            results = [FunctionDefResult(AnnotatedPyccelSymbol(self.scope.get_new_name('Out'), annotation = result_annotation[0]), annotation = result_annotation[0])]
+
         self.exit_function_scope()
 
         cls = InlineFunctionDef if is_inline else FunctionDef
