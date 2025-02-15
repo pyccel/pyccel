@@ -180,6 +180,24 @@ def test_inline_literal_return(language):
 
     assert f() == g()
 
+def test_inline_array_return(language):
+    def f():
+        import numpy as np
+        @inline
+        def tmp():
+            return np.ones(2, dtype=int)
+
+        b = tmp()
+        c = np.sum(tmp())
+        return b,c
+
+    g = epyccel(f, language=language)
+
+    out_pyth = f()
+    out_pycc = g()
+    assert np.array_equal(out_pyth[0], out_pycc[0])
+    assert out_pyth[1] == out_pycc[1]
+
 def test_inline_multiple_return(language):
     def f():
         @inline
