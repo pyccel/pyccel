@@ -83,7 +83,7 @@ def get_filename_from_import(module, input_folder=''):
     sys.path.append(str(input_folder))
     try:
         package = importlib.import_module(module, '.'.join(pkg[::-1]))
-    except ImportError as e:
+    except ImportError:
         errors = Errors()
         errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                       severity='fatal')
