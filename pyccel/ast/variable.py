@@ -174,12 +174,12 @@ class Variable(TypedAstNode):
         elif shape is None:
             shape = tuple(None for i in range(class_type.container_rank))
 
-        # Ignore codegen stage due to #861
-        assert pyccel_stage == 'codegen' or class_type.shape_is_compatible(shape)
-
         self._alloc_shape = shape
         self._class_type = class_type
         self._shape = self.process_shape(shape)
+
+        # Ignore codegen stage due to #861
+        assert pyccel_stage == 'codegen' or class_type.shape_is_compatible(self._shape)
 
     def process_shape(self, shape):
         """
@@ -239,7 +239,8 @@ class Variable(TypedAstNode):
         bool
             Whether or not the variable shape can change in the i-th dimension.
         """
-        return self.is_alias or isinstance(self.class_type, (HomogeneousListType, HomogeneousSetType, DictType))
+        return (self.is_alias and not isinstance(self.class_type, InhomogeneousTupleType)) or \
+                isinstance(self.class_type, (HomogeneousListType, HomogeneousSetType, DictType))
 
     def set_changeable_shape(self):
         """
