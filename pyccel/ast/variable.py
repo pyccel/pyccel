@@ -733,7 +733,9 @@ class IndexedElement(TypedAstNode):
 
         super().__init__()
 
-        if isinstance(self._class_type, ContainerType) and self._shape is None:
+        if isinstance(self._class_type, InhomogeneousTupleType) and self._shape is None:
+            self._shape = (len(self._class_type),)
+        elif isinstance(self._class_type, ContainerType) and self._shape is None:
             self._shape = tuple(PyccelArrayShapeElement(self, i) \
                                 for i in range(self._class_type.container_rank))
 
