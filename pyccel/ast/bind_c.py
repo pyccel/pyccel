@@ -117,7 +117,7 @@ class BindCFunctionDef(FunctionDef):
         self._original_function = original_function
         super().__init__(*args, **kwargs)
         assert self.name == self.name.lower()
-        assert all(isinstance(a, BindCFunctionDefArgument) for a in self._arguments)
+        assert all(isinstance(a, FunctionDefArgument) for a in self._arguments)
         assert all(isinstance(a, FunctionDefResult) for a in self._results)
 
     @property
@@ -129,27 +129,6 @@ class BindCFunctionDef(FunctionDef):
         compatible with C.
         """
         return self._original_function
-
-    @property
-    def bind_c_arguments(self):
-        """
-        Get the BindCFunctionDefArguments of the function.
-
-        Return a list of all the arguments passed to the function.
-        These objects all have the type BindCFunctionDefArgument so
-        shapes and strides are hidden.
-        """
-        return self._arguments
-
-    @property
-    def arguments(self):
-        """
-        List of all arguments passed to the function.
-
-        List of all arguments passed to the function including variables
-        which contain array metadata.
-        """
-        return [ai for a in self._arguments for ai in a.get_all_function_def_arguments()]
 
     def rename(self, newname):
         """

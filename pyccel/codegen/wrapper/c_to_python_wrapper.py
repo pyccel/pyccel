@@ -1487,7 +1487,7 @@ class CToPythonWrapper(Wrapper):
         in_interface = len(expr.get_user_nodes(Interface)) > 0
 
         # Get variables describing the arguments and results that are seen from Python
-        python_args = expr.bind_c_arguments if is_bind_c_function_def else expr.arguments
+        python_args = expr.arguments
         python_results = expr.results
 
         # Get variables describing the arguments and results that must be passed to the function
