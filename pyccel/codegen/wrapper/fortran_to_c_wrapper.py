@@ -313,6 +313,7 @@ class FortranToCWrapper(Wrapper):
                             memory_handling = 'alias', allows_negative_indexes=False,
                             new_class = Variable)
         scope.insert_variable(arg_var)
+        scope.insert_variable(bind_var)
 
         shape   = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_shape_{i+1}')
                    for i in range(rank)]
