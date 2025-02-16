@@ -624,14 +624,16 @@ class FortranToCWrapper(Wrapper):
         # Pack C results into inhomogeneous tuple object
         element_vars = [r['c_result'] for r in func_def_results]
         class_types = [e.class_type for e in element_vars]
-        local_var = Variable(InhomogeneousTupleType(*class_types), self.scope.get_expected_name(name))
+        local_var = Variable(InhomogeneousTupleType(*class_types), self.scope.get_expected_name(name),
+                        shape = (len(class_types),))
         for i, v in enumerate(element_vars):
             self.scope.insert_symbolic_alias(IndexedElement(local_var, i), v)
 
         # Pack F results into inhomogeneous tuple object
         element_vars = [r['f_result'] for r in func_def_results]
         class_types = [e.class_type for e in element_vars]
-        result_var = Variable(InhomogeneousTupleType(*class_types), self.scope.get_new_name('Out_'+name))
+        result_var = Variable(InhomogeneousTupleType(*class_types), self.scope.get_new_name('Out_'+name),
+                            shape = (len(class_types),))
         for i, v in enumerate(element_vars):
             self.scope.insert_symbolic_alias(IndexedElement(result_var, i), v)
         return {'body': body, 'c_result': BindCVariable(local_var, result_var), 'f_result': result_var}
@@ -883,7 +885,7 @@ class FortranToCWrapper(Wrapper):
             f_array = ptr_var
 
         result_var = Variable(BindCArrayType(rank, has_strides = False),
-                        scope.get_new_name())
+                        scope.get_new_name(), shape = (rank+1,))
         scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(0)), bind_var)
         for i,s in enumerate(shape_vars):
             scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(i+1)), s)
