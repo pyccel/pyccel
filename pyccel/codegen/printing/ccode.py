@@ -2325,12 +2325,13 @@ class CCodePrinter(CodePrinter):
                 last_assign = last_assign[-1]
                 variables = last_assign.rhs.get_attribute_nodes(Variable)
                 unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables) and \
-                        not (isinstance(last_assign.lhs, Variable) and last_assign.lhs.is_ndarray)
+                        isinstance(last_assign.lhs, Variable) and not last_assign.lhs.is_ndarray
                 if unneeded_var:
                     code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
                     return code + 'return {};\n'.format(self._print(last_assign.rhs))
                 else:
-                    last_assign.lhs.is_temp = False
+                    if isinstance(last_assign.lhs, Variable):
+                        last_assign.lhs.is_temp = False
                     code = self._print(expr.stmt)
 
         return code + 'return {0};\n'.format(self._print(args[0]))
