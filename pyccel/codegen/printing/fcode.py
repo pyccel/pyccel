@@ -1166,7 +1166,7 @@ class FCodePrinter(CodePrinter):
             arg_format = f'"(",{formats},")"'
             arg = ', '.join(af[1] for af in args_and_formats)
         elif isinstance(var, FunctionCall) and var.funcdef.is_inline:
-            args_and_formats = [self._get_print_format_and_arg(var.funcdef.results[0].var, var_code)]
+            args_and_formats = [self._get_print_format_and_arg(var.funcdef.results.var, var_code)]
             formats = ',", ",'.join(af[0] for af in args_and_formats)
             arg_format = f'"(",{formats},")"'
             arg = ', '.join(af[1] for af in args_and_formats)
