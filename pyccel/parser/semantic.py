@@ -4303,6 +4303,8 @@ class SemanticParser(BasicParser):
         template_names = list(templates.keys())
         n_templates = len(template_combinations)
 
+        decorators['template'] = templates
+
         # this for the case of a function without arguments => no headers
         interface_name = name
         interface_counter = 0

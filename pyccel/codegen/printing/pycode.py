@@ -8,9 +8,10 @@ import warnings
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
-from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction
+from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
+from pyccel.ast.core       import Interface
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes  import VoidType, DictType
 from pyccel.ast.functionalexpr import FunctionalFor
@@ -18,9 +19,10 @@ from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
-from pyccel.ast.variable   import DottedName, Variable
+from pyccel.ast.type_annotations import UnionTypeAnnotation, VariableTypeAnnotation
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
+from pyccel.ast.variable   import DottedName, Variable
 
 from pyccel.parser.semantic import magic_method_map
 
@@ -179,17 +181,84 @@ class PythonCodePrinter(CodePrinter):
             return f'"({results})({arguments})"'
 
     def _function_signature(self, func):
-        args = ', '.join(self._print(a) for a in func.arguments)
-        results = func.results
-        if results:
-            res_types = [self._get_type_annotation(r.var) for r in results]
-            if len(res_types) == 1:
-                res = f' -> {res_types[0]}'
-            else:
-                res = ''
+        if isinstance(func, Interface):
+            args = set()
+            res = set()
+            for f in func.functions:
+                args.add(', '.join(self._print(a) for a in f.arguments))
+                dec = self._handle_decorators(f.decorators)
+                res.add(tuple(VariableTypeAnnotation(r.var.class_type) for r in f.results))
+            example_func = func.functions[0]
+            if 'template' in example_func.decorators:
+                print(example_func.decorators['template'])
+                print(next(iter(example_func.decorators['template'].values())))
+                print(res)
+                possible_res = [UnionTypeAnnotation(*class_types) for class_types in zip(*res)]
+                print(possible_res)
+                result = [None]*len(possible_res)
+                for i, res_elem in enumerate(possible_res):
+                    for name, types in example_func.decorators['template'].items():
+                        print(possible_res[i].type_list == types.type_list)
+                        if set(possible_res[i].type_list) == set(types.type_list):
+                            result[i] = name
+                print(result)
+                if len(result) == 0:
+                    result = 'None'
+                elif len(result) == 1:
+                    result = result[0]
+                else:
+                    result_elems = ', '.join(result)
+                    result = f'tuple[{result_elems}]'
+
+            args = args.pop()
+            return f"{dec}def {func.name}({args}) -> '{result}':\n"+self._indent_codestring('...')
+        elif func.is_inline:
+            return self._print(func)
         else:
-            res = ' -> None'
-        return f"def {func.name}({args}){res}:\n"+self._indent_codestring('...')
+            args = ', '.join(self._print(a) for a in func.arguments)
+            results = func.results
+            if results:
+                res_types = [self._get_type_annotation(r.var) for r in results]
+                if len(res_types) == 1:
+                    res = f' -> {res_types[0]}'
+                else:
+                    res = ''
+            else:
+                res = ' -> None'
+            return f"def {func.name}({args}){res}:\n"+self._indent_codestring('...')
+
+    def _handle_decorators(self, decorators):
+        if len(decorators) == 0:
+            return ''
+        dec = ''
+        for name,f in decorators.items():
+            if name in pyccel_decorators:
+                self.add_import(Import(DottedName('pyccel.decorators'), [AsName(decorators_mod[name], name)]))
+            # TODO - All decorators must be stored in a list
+            if name == 'template':
+                f = list(f.items())
+            elif not isinstance(f, list):
+                f = [f]
+            for func in f:
+                print(f)
+                if isinstance(func, FunctionCall):
+                    args = func.args
+                elif func == name:
+                    args = []
+                elif name == 'template':
+                    args = [LiteralString(func[0]), PythonTuple(*func[1].type_list)]
+                else:
+                    args = [LiteralString(a) for a in func]
+                if name == 'types':
+                    continue
+
+                if args:
+                    args = ', '.join(self._print(i) for i in args)
+                    dec += f'@{name}({args})\n'
+
+                else:
+                    dec += f'@{name}\n'
+        return dec
 
     #----------------------------------------------------------------------
 
@@ -332,37 +401,8 @@ class PythonCodePrinter(CodePrinter):
 
         code = (f'def {name}({args}):\n'
                 f'{body}\n')
-        decorators = expr.decorators.copy()
-        if decorators:
-            if decorators['template']:
-                # Eliminate template_dict because it is useless in the printing
-                decorators['template'] = decorators['template']['decorator_list']
-            else:
-                decorators.pop('template')
-            for n,f in decorators.items():
-                if n in pyccel_decorators:
-                    self.add_import(Import(DottedName('pyccel.decorators'), [AsName(decorators_mod[n], n)]))
-                # TODO - All decorators must be stored in a list
-                if not isinstance(f, list):
-                    f = [f]
-                dec = ''
-                for func in f:
-                    if isinstance(func, FunctionCall):
-                        args = func.args
-                    elif func == n:
-                        args = []
-                    else:
-                        args = [LiteralString(a) for a in func]
-                    if n == 'types':
-                        continue
-                    if args:
-                        args = ', '.join(self._print(i) for i in args)
-                        dec += '@{name}({args})\n'.format(name=n, args=args)
-
-                    else:
-                        dec += '@{name}\n'.format(name=n)
-
-                code = '{dec}{code}'.format(dec=dec, code=code)
+        dec = self._handle_decorators(expr.decorators)
+        code = f'{dec}{code}'
         headers = expr.headers
         if headers:
             headers = self._print(headers)
@@ -1071,6 +1111,7 @@ class PythonCodePrinter(CodePrinter):
         variables = mod.variables
         var_decl = '\n'.join(f"{v.name} : {self._get_type_annotation(v)}" for v in variables)
         funcs = '\n'.join(self._function_signature(f) for f in mod.funcs)
+        interfaces = '\n'.join(self._function_signature(f) for f in mod.interfaces)
         classes = ''
         for classDef in mod.classes:
             classes += f"class {classDef.name}:\n"
@@ -1082,7 +1123,7 @@ class PythonCodePrinter(CodePrinter):
 
             classes += self._indent_codestring(class_body)
 
-        return var_decl+'\n'+classes+'\n'+funcs
+        return '\n'.join((var_decl, classes, funcs, interfaces))
 
     def _print_AllDeclaration(self, expr):
         values = ',\n           '.join(self._print(v) for v in expr.values)
@@ -1250,6 +1291,12 @@ class PythonCodePrinter(CodePrinter):
         args = ', '.join(self._print(a.annotation) for a in expr.args)
         results = ', '.join(self._print(r.annotation) for r in expr.results)
         return f"({results})({args})"
+
+    def _print_VariableTypeAnnotation(self, expr):
+        dtype = self._print(expr.class_type)
+        if expr.is_const:
+            dtype = f'const {dtype}'
+        return dtype
 
     def _print_TypingFinal(self, expr):
         annotation = self._print(expr.arg)
