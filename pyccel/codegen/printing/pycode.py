@@ -382,10 +382,13 @@ class PythonCodePrinter(CodePrinter):
         elif isinstance(expr.expr.class_type, InhomogeneousTupleType):
             elems = [self.scope.collect_tuple_element(v) for v in expr.expr]
             expr_return_vars = [assigns.get(e, e) for e in elems]
+            return_expr = ', '.join(self._print(i) for i in expr_return_vars)
+            if len(expr_return_vars) < 2:
+                return_expr += ','
+            return_expr = f'({return_expr})'
         else:
             expr_return_vars = [assigns.get(expr.expr, expr.expr)]
-
-        return_expr = ', '.join(self._print(i) for i in expr_return_vars)
+            return_expr = ', '.join(self._print(i) for i in expr_return_vars)
 
         return prelude + f'return {return_expr}\n'
 
