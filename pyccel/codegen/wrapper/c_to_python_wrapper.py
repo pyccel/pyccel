@@ -2052,6 +2052,8 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class.add_new_method(self._get_class_initialiser(f, orig_cls_dtype))
             elif python_name in (*magic_binary_funcs, '__len__'):
                 wrapped_class.add_new_magic_method(self._wrap(f))
+            elif python_name == '__getitem__':
+                wrapped_class.add_new_magic_method(self._wrap(f))
             elif 'property' in f.decorators:
                 wrapped_class.add_property(self._wrap(f))
             else:
