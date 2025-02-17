@@ -438,7 +438,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                      for name, (wrapper_name, doc_string) in funcs.items())
 
         magic_methods = {self.get_python_name(original_scope, f.original_function): f for f in expr.magic_methods}
- 
+
         getitem_wrapper_def = ""
         if '__getitem__' in magic_methods:
             getitem_wrapper_def = (
