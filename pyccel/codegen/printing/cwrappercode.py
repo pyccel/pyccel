@@ -438,7 +438,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                      for name, (wrapper_name, doc_string) in funcs.items())
 
         magic_methods = {self.get_python_name(original_scope, f.original_function): f for f in expr.magic_methods}
-        
+ 
         getitem_wrapper_def = ""
         if '__getitem__' in magic_methods:
             getitem_wrapper_def = (
@@ -500,7 +500,7 @@ class CWrapperCodePrinter(CCodePrinter):
         if '__len__' in magic_methods:
             map_magic_methods_def += f"    .mp_length = (lenfunc){magic_methods['__len__'].name},\n"
         if '__getitem__' in magic_methods:
-            map_magic_methods_def += f"    .mp_subscript = (binaryfunc)__pyccel_getitem_wrapper,\n"
+            map_magic_methods_def += "    .mp_subscript = (binaryfunc)__pyccel_getitem_wrapper,\n"
         map_magic_methods_def += '};\n'
         method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
