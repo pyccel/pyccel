@@ -261,6 +261,20 @@ def test_inline_inhomogeneous_tuple_result(language):
 
     assert f() == g()
 
+def test_inhomogeneous_tuple_in_inline(language):
+    def f():
+        @inline
+        def tmp():
+            a = (1, False)
+            return a[0] + 2
+
+        b = tmp()
+        return b
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
 def test_indexed_template(language):
     @template(name='T', types=[float, complex])
     def my_sum(v: 'T[:]'):
