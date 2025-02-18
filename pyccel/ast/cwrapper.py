@@ -998,7 +998,7 @@ class PyTuple_Pack(PyccelFunction):
 
     Parameters
     ----------
-    args : PyccelAstNode
+    *args : PyccelAstNode
         The arguments that should be packed into the tuple.
     """
     __slots__ = ()
