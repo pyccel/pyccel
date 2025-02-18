@@ -2270,7 +2270,7 @@ class FCodePrinter(CodePrinter):
                 return f'call {var_code} % reserve({size_code})\n'
             else:
                 return ''
-        elif isinstance(class_type, (HomogeneousContainerType, DictType)):
+        elif isinstance(class_type, (HomogeneousContainerType, DictType, StringType)):
             return ''
 
         else:
@@ -2354,19 +2354,21 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_LiteralString(self, expr):
+        if expr.python_value == '':
+            return "''"
         sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
         sub_str = ''
         formatted_str = []
         for c in expr.python_value:
             if c in sp_chars:
                 if sub_str != '':
-                    formatted_str.append("'{}'".format(sub_str))
+                    formatted_str.append(f"'{sub_str}'")
                     sub_str = ''
-                formatted_str.append('ACHAR({})'.format(ord(c)))
+                formatted_str.append(f'ACHAR({ord(c)})')
             else:
                 sub_str += c
         if sub_str != '':
-            formatted_str.append("'{}'".format(sub_str))
+            formatted_str.append(f"'{sub_str}'")
         return ' // '.join(formatted_str)
 
     def _print_Interface(self, expr):
@@ -3124,19 +3126,12 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PyccelFloorDiv(self, expr):
-
-        code     = self._print(expr.args[0])
-        adtype   = expr.args[0].dtype.primitive_type
-        is_float = isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType)
-        for b in expr.args[1:]:
-            bdtype    = b.dtype.primitive_type
-            if all(isinstance(dtype, PrimitiveIntegerType) for dtype in (adtype, bdtype)):
-                b = NumpyFloat(b)
-            c = self._print(b)
-            adtype = bdtype
-            code = 'FLOOR({}/{},{})'.format(code, c, self.print_kind(expr))
-            if is_float:
-                code = 'real({}, {})'.format(code, self.print_kind(expr))
+        new_args = [self._apply_cast(expr.dtype, arg) for arg in expr.args]
+        args = [self._print(arg) for arg in new_args]
+        if all(isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) for arg in expr.args):
+            self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            return f'pyc_floor_div({args[0]}, {args[1]})'
+        code = f'real(FLOOR({args[0]} / {args[1]}, {self.print_kind(expr)}), {self.print_kind(expr)})'
         return code
 
     def _print_PyccelRShift(self, expr):

@@ -671,7 +671,7 @@ class HomogeneousContainerType(ContainerType):
     def __hash__(self):
         return hash((self.__class__, self.element_type))
 
-class StringType(HomogeneousContainerType, metaclass = Singleton):
+class StringType(ContainerType, metaclass = Singleton):
     """
     Class representing Python's native string type.
 
@@ -679,9 +679,6 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
     __slots__ = ()
     _name = 'str'
-    _element_type = CharType()
-    _container_rank = 1
-    _order = None
 
     @property
     def datatype(self):
@@ -713,6 +710,36 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
         this is equal to 0.
         """
         return 1
+
+    @property
+    def container_rank(self):
+        """
+        Number of dimensions of the container.
+
+        Number of dimensions of the object described by the container. This is
+        equal to the number of values required to index an element of this container.
+        """
+        return 1
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return None
+
+    @property
+    def element_type(self):
+        """
+        The type of elements of the object.
+
+        The PyccelType describing an element of the container.
+        """
+        return CharType()
 
     def __eq__(self, other):
         return isinstance(other, self.__class__)

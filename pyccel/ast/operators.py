@@ -23,6 +23,8 @@ from .literals              import Literal, LiteralInteger, LiteralFloat, Litera
 from .literals              import Nil, NilArgument, LiteralTrue, LiteralFalse
 from .literals              import convert_to_literal
 
+from .numpytypes            import NumpyNDArrayType
+
 errors = Errors()
 pyccel_stage = PyccelStage()
 
@@ -935,7 +937,7 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
         """
         dtype = PythonNativeBool()
         possible_class_types = set(a.class_type for a in (arg1, arg2) \
-                        if isinstance(a.class_type, ContainerType))
+                        if isinstance(a.class_type, NumpyNDArrayType))
         if len(possible_class_types) == 0:
             class_type = dtype
         elif len(possible_class_types) == 1:
