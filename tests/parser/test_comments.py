@@ -6,18 +6,18 @@
 
 import os
 import pytest
-import astunparse
+from ast import _Unparser
 
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.errors.errors    import Errors
 
-class Unparser(astunparse.Unparser):
+class Unparser(_Unparser):
     """Unparser the AST"""
 
-    def _CommentLine(self, node):
+    def visit_CommentLine(self, node):
         self.fill(node.s)
 
-    def _CommentMultiLine(self, node):
+    def visit_CommentMultiLine(self, node):
         self.fill(node.s)
 
 def get_indent(l):
@@ -51,11 +51,8 @@ def test_parse(f):
         orig = infile.read().strip()
 
     pyccel = SyntaxParser(f)
-    with open('out.py','w') as outfile:
-        Unparser(pyccel.fst, file=outfile)
-
-    with open('out.py') as infile:
-        copy = infile.read().strip()
+    unparser = Unparser()
+    copy = unparser.visit(pyccel.fst)
 
     # Get non-empty lines
     orig_lines = [l for l in orig.expandtabs(4).split('\n') if l!= '']
@@ -64,10 +61,6 @@ def test_parse(f):
     # Get indentation
     orig_indents = [get_indent(l) for l in orig_lines]
     copy_indents = [get_indent(l) for l in copy_lines]
-
-    # Remove spaces from lines
-    orig_lines = [l.replace(' ','') for l in orig_lines]
-    copy_lines = [l.replace(' ','') for l in copy_lines]
 
     on = len(orig_lines)
     cn = len(copy_lines)
@@ -81,7 +74,6 @@ def test_parse(f):
         # Handle change between elif and else
         if o.startswith('else') and c.startswith('elif'):
             oi += 1
-            o = orig_lines[oi].replace(' ','')
             c = c[2:]
             # Change indentation to match
             indent = orig_indents[oi]
@@ -92,7 +84,6 @@ def test_parse(f):
                 i+=1
         elif o.startswith('elif') and c.startswith('else'):
             ci += 1
-            c = copy_lines[ci].replace(' ','')
             o = o[2:]
             # Change indentation to match
             indent = copy_indents[ci]
