@@ -4465,7 +4465,6 @@ class SemanticParser(BasicParser):
                         cls_base.scope.insert_symbol(DottedName(*s.name[1:]))
 
             results = expr.results
-            result_var = self.check_for_variable(results.var)
             if results.annotation:
                 results = self._visit(expr.results)
 
