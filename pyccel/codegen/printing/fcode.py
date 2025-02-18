@@ -417,7 +417,7 @@ class FCodePrinter(CodePrinter):
         inhomog_vars = {v for v in func.local_vars if isinstance(v.class_type, InhomogeneousTupleType)}
         while inhomog_vars:
             v = inhomog_vars.pop()
-            elems = [scope.collect_tuple_element(vi) for vi in v]
+            elems = [func.scope.collect_tuple_element(vi) for vi in v]
             for i,vi in enumerate(elems):
                 if isinstance(vi, BindCVariable):
                     vi = vi.new_var
