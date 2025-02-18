@@ -584,3 +584,9 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Py_ssize_t_Cast(self, expr):
         var = self._print(expr.args[0])
         return f'(Py_ssize_t){var}'
+
+    def _print_PyTuple_Pack(self, expr):
+        args = expr.args
+        n = len(args)
+        args_code = ', '.join(self._print(a) for a in args)
+        return f'PyTuple_Pack( {n}, {args_code} )'

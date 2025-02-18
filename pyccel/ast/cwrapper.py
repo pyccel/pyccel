@@ -986,6 +986,23 @@ class Py_ssize_t_Cast(PythonInt):
     name = 'Py_ssize_t'
 
 
+class PyTuple_Pack(PyccelFunction):
+    """
+    A class representing a call to PyTuple_Pack.
+
+    A class representing a call to PyTuple_Pack. A class is used instead
+    of a FunctionDef as the number of arguments is variable.
+    A PyTuple_Pack is described here:
+    <https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Pack>
+
+    Parameters
+    ----------
+    args : PyccelAstNode
+        The arguments that should be packed into the tuple.
+    """
+    def __init__(self, *args):
+        super().__init__(*args)
+
 #-------------------------------------------------------------------
 #                      Python.h Constants
 #-------------------------------------------------------------------
