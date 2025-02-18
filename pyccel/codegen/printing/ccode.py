@@ -2334,7 +2334,9 @@ class CCodePrinter(CodePrinter):
                         last_assign.lhs.is_temp = False
                     code = self._print(expr.stmt)
 
-        return code + 'return {0};\n'.format(self._print(args[0]))
+        returned_value = self.scope.collect_tuple_element(args[0])
+
+        return code + f'return {self._print(returned_value)};\n'
 
     def _print_Pass(self, expr):
         return '// pass\n'
