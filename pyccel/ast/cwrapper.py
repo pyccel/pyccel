@@ -61,6 +61,7 @@ __all__ = (
     'PyModule_AddObject',
     'PyModInitFunc',
     'Py_ssize_t_Cast',
+    'PyTuple_Pack',
 #--------- CONSTANTS ----------
     'Py_True',
     'Py_False',
@@ -1000,6 +1001,10 @@ class PyTuple_Pack(PyccelFunction):
     args : PyccelAstNode
         The arguments that should be packed into the tuple.
     """
+    __slots__ = ()
+    _class_type = PyccelPyObject()
+    _shape = None
+
     def __init__(self, *args):
         super().__init__(*args)
 
