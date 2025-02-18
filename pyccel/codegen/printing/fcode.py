@@ -2504,7 +2504,7 @@ class FCodePrinter(CodePrinter):
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
-        if len(out_args) != 1 or out_args[0].rank > 0:
+        if len(out_args) != 1 or expr.results.var.rank > 0:
             func_type = 'subroutine'
             for result in out_args:
                 args_decs[result] = Declare(result, intent='out')
@@ -3602,7 +3602,7 @@ class FCodePrinter(CodePrinter):
         args   = expr.args
         func_results = [v for v in flatten_tuple_var(func.results.var, func.scope) if v and not v.is_argument]
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, (Assign, AliasAssign)))
-        is_function =  len(func_results) == 1 and func_results[0].rank == 0
+        is_function =  len(func_results) == 1 and func.results.var.rank == 0
 
         if func.arguments and func.arguments[0].bound_argument:
             class_variable = args[0].value

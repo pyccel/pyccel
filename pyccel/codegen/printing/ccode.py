@@ -1615,12 +1615,12 @@ class CCodePrinter(CodePrinter):
 
         n_results = len(result_vars)
 
-        if n_results == 1:
-            ret_type = self.get_declare_type(result_vars[0])
-        elif n_results > 1:
+        if n_results > 1 or isinstance(expr.results.var.class_type, InhomogeneousTupleType):
             ret_type = self.get_c_type(PythonNativeInt())
             arg_vars.extend(result_vars)
             self._additional_args.append(result_vars) # Ensure correct result for is_c_pointer
+        elif n_results == 1:
+            ret_type = self.get_declare_type(result_vars[0])
         else:
             ret_type = self.get_c_type(VoidType())
 
@@ -2215,14 +2215,15 @@ class CCodePrinter(CodePrinter):
         # Collect results filtering out Nil()
         results = [r for r in self.scope.collect_all_tuple_elements(expr.results.var) \
                 if isinstance(r, Variable)]
-        if len(results) > 1:
+        returning_tuple = isinstance(expr.results.var.class_type, InhomogeneousTupleType)
+        if len(results) > 1 or returning_tuple:
             self._additional_args.append(results)
 
         body  = self._print(expr.body)
         decs = [Declare(i, value=(Nil() if i.is_alias and isinstance(i.class_type, (VoidType, BindCPointer)) else None))
                 for i in expr.local_vars]
 
-        if len(results) == 1:
+        if len(results) == 1 and not returning_tuple:
             res = results[0]
             if isinstance(res, Variable) and not res.is_temp:
                 decs += [Declare(res)]
@@ -2291,8 +2292,9 @@ class CCodePrinter(CodePrinter):
         if return_obj is None:
             args = []
         elif isinstance(return_obj.class_type, InhomogeneousTupleType):
-            args = [ObjectAddress(a) if isinstance(a, Variable) and self.is_c_pointer(a) else a \
-                    for a in expr.expr]
+            if expr.stmt:
+                return self._print(expr.stmt)+'return 0;\n'
+            return 'return 0;\n'
         else:
             args = [ObjectAddress(return_obj) if self.is_c_pointer(return_obj) else return_obj]
 
