@@ -1174,6 +1174,8 @@ class CToPythonWrapper(Wrapper):
         n_results = len(results)
         if n_results == 0:
             return func(*args)
+        elif isinstance(results, PythonTuple):
+            return Assign(results, func(*args))
         elif n_results == 1:
             res = results[0]
             func_call = func(*args)
@@ -2821,7 +2823,7 @@ class CToPythonWrapper(Wrapper):
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         body.append(AliasAssign(py_res, PyTuple_Pack(*[ObjectAddress(r) for r in py_result_vars])))
         body.extend(Py_DECREF(r) for r in py_result_vars)
-        return {'c_results': c_result_vars, 'py_result': py_res, 'body': body, 'setup': setup}
+        return {'c_results': PythonTuple(*c_result_vars), 'py_result': py_res, 'body': body, 'setup': setup}
 
     def _extract_HomogeneousContainerType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
         """
