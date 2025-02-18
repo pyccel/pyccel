@@ -419,13 +419,19 @@ def combined_for_simd():
     x = np.array([1,2,1,2,1,2,1,2])
     y = np.array([2,1,2,1,2,1,2,1])
     z = np.zeros(8, dtype = int)
+    print(z)
     func_result = 0
     #$ omp parallel for simd
     for i in range(0, 8):
         z[i] = x[i] + y[i]
 
+    print(z)
+
     for i in range(0, 8):
         func_result = func_result + z[i]
+
+    print(func_result)
+
     return func_result
 
 def omp_sections():
