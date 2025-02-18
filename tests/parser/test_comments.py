@@ -4,9 +4,10 @@
 # Note that we need to change the directory for tests involving the import
 # statement
 
+from ast import _Unparser
+
 import os
 import pytest
-from ast import _Unparser
 
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.errors.errors    import Errors
