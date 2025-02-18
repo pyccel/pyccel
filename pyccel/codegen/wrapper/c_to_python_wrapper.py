@@ -26,7 +26,7 @@ from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, 
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
 from pyccel.ast.cwrapper      import PyAttributeError, Py_ssize_t, Py_ssize_t_Cast
-from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
+from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface, PyTuple_Pack
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
 from pyccel.ast.cwrapper      import PyList_New, PyList_Append, PyList_GetItem, PyList_SetItem
@@ -2819,7 +2819,7 @@ class CToPythonWrapper(Wrapper):
         c_result_vars = [r for e in extract_elems for r in e['c_results']]
         py_result_vars = [e['py_result'] for e in extract_elems]
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
-        body.append(AliasAssign(py_res, PyBuildValueNode([ObjectAddress(r) for r in py_result_vars])))
+        body.append(AliasAssign(py_res, PyTuple_Pack(*[ObjectAddress(r) for r in py_result_vars])))
         body.extend(Py_DECREF(r) for r in py_result_vars)
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body, 'setup': setup}
 
