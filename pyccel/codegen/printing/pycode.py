@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+import ast
 import warnings
 
 from pyccel.decorators import __all__ as pyccel_decorators
@@ -28,7 +29,6 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
-from pyccel.parser.extend_tree import unparse
 
 errors = Errors()
 
@@ -280,7 +280,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionDef(self, expr):
         if expr.is_inline and not expr.is_semantic:
-            code = unparse(expr.python_ast) + '\n'
+            code = ast.unparse(expr.python_ast) + '\n'
             return code
 
         self.set_scope(expr.scope)
