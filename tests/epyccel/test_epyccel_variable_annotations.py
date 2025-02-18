@@ -166,7 +166,7 @@ def test_homogeneous_tuple_2_annotation_str(language):
 
 def test_homogeneous_set_annotation_int(language):
     def homogeneous_set_annotation ():
-        a : 'set[int]'
+        a : set[int]
         a = {1, 2, 3, 4}
         return len(a)
     epyc_homogeneous_set_annotation =  epyccel(homogeneous_set_annotation, language=language)
@@ -192,7 +192,7 @@ def test_homogeneous_set_annotation_float(language):
 
 def test_homogeneous_set_annotation_bool(language):
     def homogeneous_set_annotation ():
-        a : 'set[bool]'
+        a : set[bool]
         a = {False, True, False, True} #pylint: disable=duplicate-value
         return len(a)
     epyc_homogeneous_set_annotation =  epyccel(homogeneous_set_annotation, language=language)
@@ -210,7 +210,7 @@ def test_homogeneous_set_annotation_complex(language):
 
 def test_empty_homogeneous_set_annotation_int(language):
     def homogeneous_set_annotation ():
-        a : 'set[int]'
+        a : set[int]
         a = set()
         return len(a)
     epyc_homogeneous_set_annotation =  epyccel(homogeneous_set_annotation, language=language)
@@ -219,7 +219,7 @@ def test_empty_homogeneous_set_annotation_int(language):
 
 def test_homogeneous_empty_list_annotation_int(language):
     def homogeneous_list_annotation():
-        a: 'list[int]'
+        a: list[int]
         a = []
         return len(a)
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
@@ -237,7 +237,7 @@ def test_homogeneous_empty_list_2_annotation_int(language):
 
 def test_homogeneous_list_annotation_int(language):
     def homogeneous_list_annotation():
-        a: 'list[int]'
+        a: list[int]
         a = [1, 2, 3, 4]
         return a[0], a[1], a[2], a[3]
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
@@ -254,7 +254,7 @@ def test_homogeneous_list_without_annotation(language):
 
 def test_homogeneous_list_annotation_float(language):
     def homogeneous_list_annotation():
-        a: 'list[float]'
+        a: list[float]
         a = [1.1, 2.2, 3.3, 4.4]
         return a[0], a[1], a[2], a[3]
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
@@ -274,7 +274,7 @@ def test_homogeneous_list_annotation_float64(language):
 
 def test_homogeneous_list_annotation_bool(language):
     def homogeneous_list_annotation():
-        a: 'list[bool]'
+        a: list[bool]
         a = [False, True, True, False]
         return a[0], a[1], a[2], a[3]
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=language)
@@ -292,7 +292,7 @@ def test_homogeneous_list_annotation_complex(language):
 
 def test_homogeneous_list_annotation_embedded_complex(stc_language):
     def homogeneous_list_annotation():
-        a : 'list[complex]' = [1j, 2j]
+        a : list[complex] = [1j, 2j]
         b = [a]
         return b[0][0]
     epyc_homogeneous_list_annotation = epyccel(homogeneous_list_annotation, language=stc_language)
