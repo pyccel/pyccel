@@ -1005,9 +1005,6 @@ class PyTuple_Pack(PyccelFunction):
     _class_type = PyccelPyObject()
     _shape = None
 
-    def __init__(self, *args):
-        super().__init__(*args)
-
 #-------------------------------------------------------------------
 #                      Python.h Constants
 #-------------------------------------------------------------------
