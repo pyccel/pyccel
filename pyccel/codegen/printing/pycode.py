@@ -378,7 +378,7 @@ class PythonCodePrinter(CodePrinter):
             prelude = ''
 
         if expr.expr is None:
-            return ''
+            return 'return\n'
         elif isinstance(expr.expr.class_type, InhomogeneousTupleType):
             elems = [self.scope.collect_tuple_element(v) for v in expr.expr]
             expr_return_vars = [assigns.get(e, e) for e in elems]
