@@ -475,7 +475,7 @@ def test_omp_barrier(language):
 
 @pytest.mark.external
 def test_combined_for_simd(language):
-    f1 = epyccel(openmp.combined_for_simd, fflags = '-Wall', accelerators=['openmp'], language=language)
+    f1 = epyccel(openmp.combined_for_simd, fflags = '-Wall', accelerators=['openmp'], language=language, verbose=True)
     f2 = openmp.combined_for_simd
     assert f1() == f2()
 
