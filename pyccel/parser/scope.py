@@ -714,8 +714,7 @@ class Scope(object):
             for orig_vi, vi_idx in zip(dtype_or_var, var):
                 vi = self.get_temporary_variable(clone_scope.collect_tuple_element(orig_vi), clone_scope = clone_scope)
                 self.insert_symbolic_alias(vi_idx, vi)
-                self.remove_variable(vi)
-        self.insert_variable(var)
+        self.insert_variable(var, tuple_recursive = False)
         return var
 
     def get_expected_name(self, start_name):

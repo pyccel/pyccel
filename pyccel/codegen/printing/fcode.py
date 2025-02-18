@@ -419,15 +419,13 @@ class FCodePrinter(CodePrinter):
             v = inhomog_vars.pop()
             elems = [func.scope.collect_tuple_element(vi) for vi in v]
             for i,vi in enumerate(elems):
-                if isinstance(vi, BindCVariable):
-                    vi = vi.new_var
                 new_vi = vi.clone(self.scope.get_new_name(vi.name))
                 new_local_vars[vi] = new_vi
                 self.scope.insert_symbolic_alias(new_local_vars[v][i], new_vi)
                 if isinstance(vi.class_type, InhomogeneousTupleType):
                     inhomog_vars.add(vi)
         for v in local_vars_to_insert:
-            self.scope.insert_variable(v)
+            self.scope.insert_variable(v, tuple_recursive = False)
 
         # Put functions into current scope
         for entry in ['variables', 'classes', 'functions']:
