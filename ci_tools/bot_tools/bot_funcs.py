@@ -12,18 +12,18 @@ from .github_api_interactions import GitHubAPIInteractions
 default_python_versions = {
         'anaconda_linux': '3.10',
         'anaconda_windows': '3.10',
-        'coverage': '3.8',
-        'docs': '3.8',
+        'coverage': '3.9',
+        'docs': '3.10',
         'intel': '3.10',
-        'linux': '3.8',
-        'macosx': '3.12',
-        'wheel': '3.8',
-        'installation': '3.8',
-        'editable_installation': '3.8',
-        'pyccel_lint': '3.8',
-        'pylint': '3.8',
-        'spelling': '3.8',
-        'windows': '3.8'
+        'linux': '3.9',
+        'macosx': '3.13',
+        'wheel': '3.9',
+        'installation': '3.9',
+        'editable_installation': '3.9',
+        'pyccel_lint': '3.11',
+        'pylint': '3.9',
+        'spelling': '3.12',
+        'windows': '3.11'
         }
 
 test_names = {
