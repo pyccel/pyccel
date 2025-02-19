@@ -6,12 +6,12 @@ authors:
   - given-names: Ahmed
     family-names: Ratnani
     orcid: 'https://orcid.org/0000-0001-9035-1231'
-    affiliation: 'UM6P, Morocco'
+    affiliation: University Mohammed VI Polytechnic (UM6P), Morocco
   - given-names: Yaman
     family-names: Güçlü
     orcid: 'https://orcid.org/0000-0003-2619-5152'
     affiliation: >-
-      NMPP division, Max-Planck-Institut für Plasmaphysik,
+      NMPP division, Max Planck Institute for Plasma Physics,
       Garching bei München, Germany
   - given-names: Emily
     family-names: Bourne
@@ -24,7 +24,7 @@ authors:
     orcid: 'https://orcid.org/0000-0003-3878-3146'
   - given-names: Mohamed Jalal
     family-names: Maaouni
-    affiliation: UM6P
+    affiliation: University Mohammed VI Polytechnic (UM6P), Morocco
   - name: Pyccel team
 repository-code: 'https://github.com/pyccel/pyccel'
 url: 'https://github.com/pyccel/pyccel'
