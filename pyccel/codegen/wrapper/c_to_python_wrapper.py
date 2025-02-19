@@ -1216,7 +1216,7 @@ class CToPythonWrapper(Wrapper):
         list
             Any nodes which must be printed to increase reference counts.
         """
-        python_args = funcdef.bind_c_arguments if is_bind_c else funcdef.arguments
+        python_args = funcdef.arguments
         arg_targets = funcdef.result_pointer_map.get(orig_var, ())
         n_targets = len(arg_targets)
         if n_targets == 1:
