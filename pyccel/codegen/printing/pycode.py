@@ -84,6 +84,7 @@ class PythonCodePrinter(CodePrinter):
         super().__init__()
         self._aliases = {}
         self._ignore_funcs = []
+        self._in_header = False
 
     def _indent_codestring(self, lines):
         tab = " "*self._default_settings['tabwidth']
@@ -181,39 +182,9 @@ class PythonCodePrinter(CodePrinter):
             return f'"({results})({arguments})"'
 
     def _function_signature(self, func):
-        if isinstance(func, Interface):
-            args = set()
-            res = set()
-            for f in func.functions:
-                args.add(', '.join(self._print(a) for a in f.arguments))
-                dec = self._handle_decorators(f.decorators)
-                res.add(tuple(VariableTypeAnnotation(r.var.class_type) for r in f.results))
-            example_func = func.functions[0]
-            if 'template' in example_func.decorators:
-                print(example_func.decorators['template'])
-                print(next(iter(example_func.decorators['template'].values())))
-                print(res)
-                possible_res = [UnionTypeAnnotation(*class_types) for class_types in zip(*res)]
-                print(possible_res)
-                result = [None]*len(possible_res)
-                for i, res_elem in enumerate(possible_res):
-                    for name, types in example_func.decorators['template'].items():
-                        print(possible_res[i].type_list == types.type_list)
-                        if set(possible_res[i].type_list) == set(types.type_list):
-                            result[i] = name
-                print(result)
-                if len(result) == 0:
-                    result = 'None'
-                elif len(result) == 1:
-                    result = result[0]
-                else:
-                    result_elems = ', '.join(result)
-                    result = f'tuple[{result_elems}]'
-
-            args = args.pop()
-            return f"{dec}def {func.name}({args}) -> '{result}':\n"+self._indent_codestring('...')
-        elif func.is_inline:
-            return self._print(func)
+        overload = '@overload\n' if func.get_direct_user_nodes(lambda x: isinstance(x, Interface)) else ''
+        if func.is_inline:
+            return overload + self._print(func)
         else:
             args = ', '.join(self._print(a) for a in func.arguments)
             results = func.results
@@ -225,7 +196,7 @@ class PythonCodePrinter(CodePrinter):
                     res = ''
             else:
                 res = ' -> None'
-            return f"def {func.name}({args}){res}:\n"+self._indent_codestring('...')
+            return overload + f"def {func.name}({args}){res}:\n"+self._indent_codestring('...')
 
     def _handle_decorators(self, decorators):
         if len(decorators) == 0:
@@ -316,7 +287,7 @@ class PythonCodePrinter(CodePrinter):
         name = self._print(expr.name)
         default = ''
 
-        if expr.annotation:
+        if expr.annotation and not self._in_header:
             type_annotation = f"'{self._print(expr.annotation)}'"
         else:
             var = expr.var
@@ -1107,23 +1078,22 @@ class PythonCodePrinter(CodePrinter):
                         prog    = prog)
 
     def _print_ModuleHeader(self, expr):
+        self._in_header = True
         mod = expr.module
         variables = mod.variables
         var_decl = '\n'.join(f"{v.name} : {self._get_type_annotation(v)}" for v in variables)
         funcs = '\n'.join(self._function_signature(f) for f in mod.funcs)
-        interfaces = '\n'.join(self._function_signature(f) for f in mod.interfaces)
         classes = ''
         for classDef in mod.classes:
             classes += f"class {classDef.name}:\n"
             class_body  = '\n'.join(f"{v.name} : {self._get_type_annotation(v)}" for v in classDef.attributes)
             for method in classDef.methods:
                 class_body += f"{self._function_signature(method)};\n"
-            for func in classDef.interfaces:
-                class_body += f"{self._function_signature(func)};\n"
 
             classes += self._indent_codestring(class_body)
 
-        return '\n'.join((var_decl, classes, funcs, interfaces))
+        self._in_header = False
+        return '\n'.join((var_decl, classes, funcs))
 
     def _print_AllDeclaration(self, expr):
         values = ',\n           '.join(self._print(v) for v in expr.values)
