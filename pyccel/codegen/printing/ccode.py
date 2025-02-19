@@ -257,6 +257,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
 
 import_header_guard_prefix = {
     'stc/common': '_TOOLS_COMMON',
+    'stc/cspan': '', # Included for import sorting
     'stc/hmap': '_TOOLS_DICT',
     'stc/hset': '_TOOLS_SET',
     'stc/vec': '_TOOLS_LIST'
@@ -644,8 +645,7 @@ class CCodePrinter(CodePrinter):
                 code = body_code
             else:
                 self._additional_code += body_code
-                # Strip return and ; from return statement
-                code = result_line[7:-1]
+                code = result_line.removeprefix('return ').removesuffix(';')
 
         # Put back original arguments
         func.reinstate_presence_checks()
@@ -942,7 +942,7 @@ class CCodePrinter(CodePrinter):
             classes += f"struct {classDef.name} {{\n"
             # Is external is required to avoid the default initialisation of containers
             attrib_decl = [self._print(Declare(var, external=True)) for var in classDef.attributes]
-            classes += ''.join(d[len('extern '):] if d.startswith('extern ') else d for d in attrib_decl)
+            classes += ''.join(d.removeprefix('extern ') for d in attrib_decl)
             for method in classDef.methods:
                 funcs += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
