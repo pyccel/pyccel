@@ -78,8 +78,10 @@ jobs:
         shell: bash
       - name: Test simd
         run: |
-          pytest -k simd test_epyccel_openmp.py
+          pytest -sxv -m c -k test_combined_for_simd test_epyccel_openmp.py
         shell: bash
+        env:
+          PYCCEL_DEBUG_MODE: 1
         working-directory: ./tests/epyccel
       - name: Coverage install
         uses: ./.github/actions/coverage_install
