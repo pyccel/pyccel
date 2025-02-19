@@ -24,7 +24,7 @@ It is also possible to change the default compiler family by setting the environ
 
 ## Using an unsupported compiler or custom compiler flags
 
-Pyccel's compiler settings are described internally by a dictionary. This makes it easy for a user to define their own compiler settings. This is done via a JSON file. The location of the JSON file is passed to the _compiler_ argument of pyccel/epyccel. The JSON file must define the following:
+Pyccel's compiler settings are described internally by a dictionary. This makes it easy for a user to define their own compiler settings. This is done via a JSON file. The location of the JSON file is passed to the _compiler_ argument of the Pyccel command line tool or `epyccel`. The JSON file must define the following:
 
 -   `exec` : The name of the executable
 -   `mpi_exec` : The name of the MPI executable
