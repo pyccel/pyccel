@@ -1724,6 +1724,17 @@ class PythonIsInstance(PyccelFunction):
 
 #==============================================================================
 class PythonString(PyccelFunction):
+    """
+    Represents a call to Python's `str` function.
+
+    Represents a call to Python's `str` function which describes a string
+    cast.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument that is cast to a string.
+    """
     _static_type = StringType()
     def __new__(cls, arg):
         if isinstance(arg, LiteralString):
