@@ -52,6 +52,11 @@ E.g.
 ```shell
 pyccel --compiler=intel --language=c --export-compile-info=icc.json
 ```
+once this file has been modified it can then be used with:
+```shell
+pyccel --compiler=icc.json --language=c <file_to_translate>
+```
+
 ## Utilising Pyccel within Anaconda Environment
 While Anaconda is a popular way to install Python as it simplifies package management, it can introduce challenges when working with compilers.
 
