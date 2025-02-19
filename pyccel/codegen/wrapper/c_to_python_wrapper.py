@@ -10,7 +10,7 @@ which creates an interface exposing C code to Python.
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
 from pyccel.ast.bind_c        import BindCModule, BindCModuleVariable, BindCVariable
-from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
+from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty, BindCArrayType
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
 from pyccel.ast.builtins      import VariableIterator, PythonString
 from pyccel.ast.builtin_methods.set_methods import SetAdd, SetPop
@@ -1625,9 +1625,9 @@ class CToPythonWrapper(Wrapper):
 
         collect_arg = self._python_object_map[expr]
         in_interface = len(expr.get_user_nodes(Interface)) > 0
-        is_bind_c_argument = isinstance(expr, BindCFunctionDefArgument)
+        is_bind_c_argument = isinstance(expr.var, BindCVariable)
 
-        orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
+        orig_var = getattr(expr.var, 'original_var', expr.var)
         bound_argument = getattr(expr, 'wrapping_bound_argument', expr.bound_argument)
 
         # Collect the function which casts from a Python object to a C object
@@ -2365,7 +2365,15 @@ class CToPythonWrapper(Wrapper):
                 [Assign(s, 1) for s in stride_elems]
 
         if is_bind_c_argument:
-            return {'body': body, 'args': args, 'default_init': default_body}
+            rank = orig_var.rank
+            arg_var = Variable(BindCArrayType(rank, True), self.scope.get_new_name(orig_var.name))
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), ObjectAddress(parts['data']))
+            for i,s in enumerate(shape):
+                self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+1)), s)
+            for i,s in enumerate(strides):
+                self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+rank+1)), s)
+
+            return {'body': body, 'args': [arg_var], 'default_init': default_body}
 
         arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False, is_optional=False,
                                 memory_handling='alias', new_class = Variable)

@@ -20,6 +20,7 @@ import numpy as np
 from pyccel.ast.basic import TypedAstNode
 
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule, BindCClassDef
+from pyccel.ast.bind_c import BindCVariable
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
@@ -1298,7 +1299,7 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_FunctionDefArgument(self, expr):
-        return self._print(expr.name)
+        return ', '.join(self._print(v) for v in flatten_tuple_var(expr.var, self.scope))
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
@@ -2474,7 +2475,6 @@ class FCodePrinter(CodePrinter):
         out_args = [v for r in expr.results if not r.is_argument for v in flatten_tuple_var(r.var, self.scope)]
         args_decs = OrderedDict()
         arguments = expr.arguments
-        argument_vars = [a.var for a in arguments]
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
@@ -2500,17 +2500,13 @@ class FCodePrinter(CodePrinter):
         for i, arg in enumerate(arguments):
             arg_var = arg.var
             if isinstance(arg_var, Variable):
-                if isinstance(arg, BindCFunctionDefArgument) and arg.original_function_argument_variable.rank!=0:
-                    for b_arg in arg.get_all_function_def_arguments():
-                        v = b_arg.var
-                        dec = Declare(v, intent='in')
-                        args_decs[v] = dec
-                else:
-                    if arg.inout:
-                        dec = Declare(arg_var, intent='inout')
+                inout = arg.inout and not isinstance(arg_var, BindCVariable)
+                for v in flatten_tuple_var(arg_var, self.scope):
+                    if inout:
+                        dec = Declare(v, intent='inout')
                     else:
-                        dec = Declare(arg_var, intent='in')
-                    args_decs[arg_var] = dec
+                        dec = Declare(v, intent='in')
+                    args_decs[v] = dec
 
         # treat case of pure function
         sig = '{0}{1} {2}'.format(rec, func_type, name)

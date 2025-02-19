@@ -90,7 +90,6 @@ class FortranToCWrapper(Wrapper):
                                     self._get_function_def_body(func, args, func_arg_to_call_arg, results, handled))
             return [If(true_section, false_section)]
         else:
-            print(wrapped_args)
             args = [a['f_arg'] for a in wrapped_args]
             body = [line for a in wrapped_args for line in a['body']]
             #args = [FunctionCallArgument(func_arg_to_call_arg[fa],
@@ -315,16 +314,16 @@ class FortranToCWrapper(Wrapper):
         scope.insert_variable(arg_var)
         scope.insert_variable(bind_var)
 
-        shape   = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_shape_{i+1}')
+        shape   = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_shape_{i+1}', is_argument = True)
                    for i in range(rank)]
-        stride  = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_stride_{i+1}')
+        stride  = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_stride_{i+1}', is_argument = True)
                    for i in range(rank)]
 
         orig_size = [PyccelMul(sh,st) for sh,st in zip(shape, stride)]
         body = [C_F_Pointer(bind_var, arg_var, orig_size[::-1] if order == 'C' else orig_size)]
 
         c_arg_var = Variable(BindCArrayType(rank, has_strides = True),
-                        scope.get_new_name())
+                        scope.get_new_name(), is_argument = True)
 
         scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(0)), bind_var)
         for i,s in enumerate(shape):

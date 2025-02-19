@@ -1604,7 +1604,7 @@ class CCodePrinter(CodePrinter):
         str
             Signature of the function.
         """
-        arg_vars = [a.var for a in expr.arguments]
+        arg_vars = [ai for a in expr.arguments for ai in flatten_tuple_var(a.var, expr.scope)]
         result_vars = [r.var for r in expr.results if not r.is_argument]
         result_vars = [v for r in result_vars for v in flatten_tuple_var(getattr(r, 'new_var', r), expr.scope)]
 
@@ -2268,7 +2268,7 @@ class CCodePrinter(CodePrinter):
 
         args += self._temporary_args
         self._temporary_args = []
-        args = ', '.join(['{}'.format(self._print(a)) for a in args])
+        args = ', '.join(self._print(ai) for a in args for ai in flatten_tuple_var(a, self.scope))
 
         call_code = f'{func.name}({args})'
         if not func.results:
