@@ -5279,8 +5279,10 @@ class SemanticParser(BasicParser):
         z = arg.value
         x = PythonReal(z)
         y = PythonImag(z)
-        x_var = self.scope.get_temporary_variable(z, class_type=PythonNativeFloat())
-        y_var = self.scope.get_temporary_variable(z, class_type=PythonNativeFloat())
+        x_var = self.scope.get_temporary_variable(z, class_type=PythonNativeFloat(),
+                    is_argument=False)
+        y_var = self.scope.get_temporary_variable(z, class_type=PythonNativeFloat(),
+                    is_argument=False)
         self._additional_exprs[-1].append(Assign(x_var, x))
         self._additional_exprs[-1].append(Assign(y_var, y))
         r = MathSqrt(PyccelAdd(PyccelMul(x_var,x_var), PyccelMul(y_var,y_var)))
