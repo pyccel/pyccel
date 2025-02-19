@@ -1,0 +1,51 @@
+cff-version: 1.2.0
+title: Pyccel
+message: 'If you use this software, please cite the JOSS article.'
+type: software
+authors:
+  - given-names: Ahmed
+    family-names: Ratnani
+    orcid: 'https://orcid.org/0000-0001-9035-1231'
+    affiliation: University Mohammed VI Polytechnic (UM6P), Morocco
+  - given-names: Yaman
+    family-names: Güçlü
+    orcid: 'https://orcid.org/0000-0003-2619-5152'
+    affiliation: >-
+      NMPP division, Max Planck Institute for Plasma Physics,
+      Garching bei München, Germany
+  - given-names: Emily
+    family-names: Bourne
+    orcid: 'https://orcid.org/0000-0002-3469-2338'
+    affiliation: >-
+      SCITAS, École polytechnique fédérale de Lausanne
+      (EPFL), Switzerland
+  - given-names: Said
+    family-names: Hadjout
+    orcid: 'https://orcid.org/0000-0003-3878-3146'
+  - given-names: Mohamed Jalal
+    family-names: Maaouni
+    affiliation: University Mohammed VI Polytechnic (UM6P), Morocco
+  - name: Pyccel team
+repository-code: 'https://github.com/pyccel/pyccel'
+url: 'https://github.com/pyccel/pyccel'
+license: MIT
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Bourne
+      given-names: Emily
+    - family-names: Güçlü
+      given-names: Yaman
+    - family-names: Hadjout
+      given-names: Said
+    - family-names: Ratnani
+      given-names: Ahmed
+  title: 'Pyccel: a Python-to-X transpiler for scientific high-performance computing'
+  doi: 10.21105/joss.04991
+  url: https://doi.org/10.21105/joss.04991
+  pages: '4991'
+  year: '2023'
+  journal: 'Journal of Open Source Software'
+  publisher:
+    name: The Open Journal
+
