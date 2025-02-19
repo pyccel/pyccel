@@ -78,7 +78,7 @@ jobs:
         shell: bash
       - name: Test simd
         run: |
-          pytest -sxv -k simd test_epyccel_openmp.py
+          pytest -k simd test_epyccel_openmp.py
         shell: bash
         working-directory: ./tests/epyccel
       - name: Coverage install
