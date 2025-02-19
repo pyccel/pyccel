@@ -473,6 +473,7 @@ def test_omp_barrier(language):
     assert f1() == f2()
 
 @pytest.mark.external
+@pytest.mark.xdist_incompatible # Seems to be incompatible with intel
 def test_combined_for_simd(language):
     f1 = epyccel(openmp.combined_for_simd, fflags = '-Wall', accelerators=['openmp'], language=language, verbose=True)
     f2 = openmp.combined_for_simd
