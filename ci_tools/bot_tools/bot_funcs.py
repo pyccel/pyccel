@@ -11,7 +11,7 @@ from .github_api_interactions import GitHubAPIInteractions
 
 default_python_versions = {
         'anaconda_linux': '3.10',
-        'anaconda_windows': '3.10',
+        'anaconda_windows': '3.12',
         'coverage': '3.9',
         'docs': '3.10',
         'intel': '3.10',
