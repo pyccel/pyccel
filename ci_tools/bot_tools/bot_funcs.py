@@ -11,19 +11,19 @@ from .github_api_interactions import GitHubAPIInteractions
 
 default_python_versions = {
         'anaconda_linux': '3.10',
-        'anaconda_windows': '3.10',
-        'coverage': '3.8',
-        'docs': '3.8',
+        'anaconda_windows': '3.12',
+        'coverage': '3.9',
+        'docs': '3.10',
         'intel': '3.10',
-        'linux': '3.8',
-        'macosx': '3.12',
-        'pickle_wheel': '3.8',
-        'pickle': '3.8',
-        'editable_pickle': '3.8',
-        'pyccel_lint': '3.8',
-        'pylint': '3.8',
-        'spelling': '3.8',
-        'windows': '3.8'
+        'linux': '3.9',
+        'macosx': '3.13',
+        'wheel': '3.9',
+        'installation': '3.9',
+        'editable_installation': '3.9',
+        'pyccel_lint': '3.11',
+        'pylint': '3.9',
+        'spelling': '3.12',
+        'windows': '3.11'
         }
 
 test_names = {
@@ -34,9 +34,9 @@ test_names = {
         'intel': "Unit tests on Linux with Intel compiler",
         'linux': "Unit tests on Linux",
         'macosx': "Unit tests on MacOSX",
-        'pickle_wheel': "Test pickling during wheel installation",
-        'pickle': "Test pickling during source installation",
-        'editable_pickle': "Test pickling during editable source installation",
+        'wheel': "Test file generation during wheel installation",
+        'installation': "Test file generation during source installation",
+        'editable_installation': "Test file generation during editable source installation",
         'pyccel_lint': "Pyccel best practices",
         'pylint': "Python linting",
         'spelling': "Spelling verification",
@@ -396,8 +396,8 @@ class Bot:
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
             inputs['pr_id'] = str(self._pr_id)
-        elif test == "editable_pickle":
-            test = "pickle"
+        elif test == "editable_installation":
+            test = "installation"
             inputs["editable_string"] = "-e"
         print("Post workflow")
         self._GAI.run_workflow(f'{test}.yml', inputs)
@@ -441,7 +441,7 @@ class Bot:
                                                     for f in diff)
         elif key in ('spelling',):
             has_relevant_change = lambda diff: any(f.endswith('.md') or f == '.dict_custom.txt' for f in diff) #pylint: disable=unnecessary-lambda-assignment
-        elif key in ('pickle', 'pickle_wheel', 'editable_pickle'):
+        elif key in ('installation', 'wheel', 'editable_installation'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') and f.endswith('.py') #pylint: disable=unnecessary-lambda-assignment
                                                     and f != 'pyccel/version.py') or f == 'pyproject.toml'
                                                     or f.startswith('install_scripts/')

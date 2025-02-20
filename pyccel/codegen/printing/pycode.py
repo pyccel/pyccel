@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+import ast
 import warnings
 
 from pyccel.decorators import __all__ as pyccel_decorators
@@ -11,7 +12,8 @@ from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, 
 from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.datatypes  import HomogeneousTupleType, VoidType
+from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
+from pyccel.ast.datatypes  import VoidType, DictType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpyext   import numpy_target_swap
@@ -27,7 +29,6 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
-from pyccel.parser.extend_tree import unparse
 
 errors = Errors()
 
@@ -279,7 +280,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionDef(self, expr):
         if expr.is_inline and not expr.is_semantic:
-            code = unparse(expr.python_ast) + '\n'
+            code = ast.unparse(expr.python_ast) + '\n'
             return code
 
         self.set_scope(expr.scope)
@@ -718,6 +719,16 @@ class PythonCodePrinter(CodePrinter):
         return f'range({start}, {stop}, {step})'
 
     def _print_Allocate(self, expr):
+        class_type = expr.variable.class_type
+        if expr.alloc_type == 'reserve':
+            var = self._print(expr.variable)
+            if isinstance(class_type, HomogeneousSetType):
+                return f'{var} = set()\n'
+            elif isinstance(class_type, HomogeneousListType):
+                return f'{var} = list()\n'
+            elif isinstance(class_type, DictType):
+                return f'{var} = dict()\n'
+
         return ''
 
     def _print_Deallocate(self, expr):
@@ -880,6 +891,11 @@ class PythonCodePrinter(CodePrinter):
         dict_obj = self._print(expr.variable)
 
         return f"{dict_obj}.items()"
+
+    def _print_DictKeys(self, expr):
+        dict_obj = self._print(expr.variable)
+
+        return f"{dict_obj}.keys()"
 
     def _print_DictGetItem(self, expr):
         dict_obj = self._print(expr.dict_obj)

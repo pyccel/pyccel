@@ -905,3 +905,17 @@ def test_annotated_return(language):
     assert pyth_out.dtype is pycc_out.dtype
     assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
     assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
+
+def test_unknown_size_array(language):
+    def unknown_size(b : bool):
+        from numpy import ones, zeros
+        if b:
+            a = ones(3)
+        else:
+            a = zeros(4)
+        return a
+
+    epyccel_func = epyccel(unknown_size, language=language)
+
+    assert np.array_equal(epyccel_func(True), unknown_size(True))
+    assert np.array_equal(epyccel_func(False), unknown_size(False))

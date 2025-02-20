@@ -123,4 +123,5 @@ gFTL
 STC's
 gFTL's
 CMake
+suboptimal
 pythonic

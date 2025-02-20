@@ -48,7 +48,7 @@ unsafe-load-any-extension=no
 
 # Minimum Python version to use for version dependent checks. Will default to
 # the version used to run pylint.
-py-version=3.8 # Set to last python which has not reached end-of-life
+py-version=3.9 # Set to last python which has not reached end-of-life
 
 [MESSAGES CONTROL]
 
@@ -104,7 +104,8 @@ disable=invalid-name,
         cyclic-import, # Output not consistent between pylint calls. This should be reactivated if cyclic dependencies can be fixed.
         unused-wildcard-import, # Raised by everything not used in pyccel.errors.messages when using 'from pyccel.errors.messages import *'
         isinstance-second-argument-not-valid-type, # prevents doing isinstance(a, acceptable_iterable_types)
-        syntax-error # Ignore syntax errors (usually from testing future Python versions). If the file doesn't run this will be obvious in the tests
+        syntax-error, # Ignore syntax errors (usually from testing future Python versions). If the file doesn't run this will be obvious in the tests
+        invalid-getnewargs-ex-returned # Raises false positive. See https://github.com/pylint-dev/pylint/issues/10208
         
 
 # Enable the message, report, category or checker with the given id(s). You can
