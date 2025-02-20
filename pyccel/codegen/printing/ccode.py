@@ -257,6 +257,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
 
 import_header_guard_prefix = {
     'stc/common': '_TOOLS_COMMON',
+    'stc/cspan': '', # Included for import sorting
     'stc/hmap': '_TOOLS_DICT',
     'stc/hset': '_TOOLS_SET',
     'stc/vec': '_TOOLS_LIST'
