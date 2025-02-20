@@ -127,6 +127,7 @@ All notable changes to this project will be documented in this file.
 -   #2206 : Fix returning an array of unknown literal size.
 -   #2112 : Improve floor division.
 -   #2220 : Fix premature `stc/cspan` import.
+-   #2214 : Fix returning a local variable from an inline function.
 
 ### Changed
 

@@ -614,12 +614,17 @@ class CCodePrinter(CodePrinter):
                             for v in func.local_vars]
 
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
-        if parent_assign:
-            results = {r.var : l for r,l in zip(func.results, parent_assign[0].lhs)}
-            orig_res_vars = list(results.keys())
-            new_res_vars  = self._temporary_args
+        func_result_vars = [r.var for r in func.results]
+        generated_result_vars = any(not v.is_temp or v.is_ndarray for v in func_result_vars)
+        if generated_result_vars:
+            if self._temporary_args:
+                orig_res_vars = func_result_vars
+                new_res_vars = self._temporary_args
+            else:
+                orig_res_vars = [v for v in func_result_vars if not v.is_temp or v.is_ndarray]
+                new_res_vars = [self.scope.get_temporary_variable(r) \
+                            for r in orig_res_vars]
             new_res_vars = [a.obj if isinstance(a, ObjectAddress) else a for a in new_res_vars]
-            self._temporary_args = []
             body.substitute(orig_res_vars, new_res_vars)
 
         # Replace the arguments in the code
@@ -650,7 +655,7 @@ class CCodePrinter(CodePrinter):
         # Put back original arguments
         func.reinstate_presence_checks()
         func.swap_out_args()
-        if parent_assign:
+        if generated_result_vars:
             body.substitute(new_res_vars, orig_res_vars)
 
         if func.global_vars or func.global_funcs and \
@@ -2271,10 +2276,10 @@ class CCodePrinter(CodePrinter):
         args = ', '.join(['{}'.format(self._print(a)) for a in args])
 
         call_code = f'{func.name}({args})'
-        if not func.results:
-            return f'{call_code};\n'
-        else:
+        if len(func.results) == 1 and not isinstance(func.results[0].var.class_type, InhomogeneousTupleType):
             return call_code
+        else:
+            return f'{call_code};\n'
 
     def _print_Return(self, expr):
         code = ''
@@ -2305,7 +2310,8 @@ class CCodePrinter(CodePrinter):
                 # make sure that stmt contains one assign node.
                 last_assign = last_assign[-1]
                 variables = last_assign.rhs.get_attribute_nodes(Variable)
-                unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables)
+                unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables) and \
+                        not (isinstance(last_assign.lhs, Variable) and last_assign.lhs.is_ndarray)
                 if unneeded_var:
                     code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
                     return code + 'return {};\n'.format(self._print(last_assign.rhs))
@@ -2413,7 +2419,9 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, TupleType):
             assert isinstance(lhs.class_type, InhomogeneousTupleType) or isinstance(lhs, (PythonTuple, PythonList))
             self._temporary_args = [ObjectAddress(a) for a in lhs]
-            return f'{self._print(rhs)};\n'
+            code = self._print(rhs)
+            self._temporary_args = []
+            return code
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
