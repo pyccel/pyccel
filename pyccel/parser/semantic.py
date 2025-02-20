@@ -3636,7 +3636,8 @@ class SemanticParser(BasicParser):
                         # memory space before assigning to the pointer value
                         # (may be NULL)
                         tmp_var = self.scope.get_temporary_variable(l,
-                                name = l.name+'_loc', is_optional = False)
+                                name = l.name+'_loc', is_optional = False,
+                                is_argument = False)
                         self._optional_params[l] = tmp_var
                         new_lhs.append(tmp_var)
                     new_rhs.append(r)
