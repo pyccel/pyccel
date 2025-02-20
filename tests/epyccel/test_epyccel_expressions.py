@@ -62,6 +62,32 @@ def test_swap_basic_4(language):
     z = randint(min_int, max_int)
     assert f(x,y,z) == swp(x,y,z)
 
+def test_swap_index_1(language):
+    def swp(a : int, b : int, c : int):
+        l = [a,b,c]
+        l[0], l[1] = l[1], l[0]
+        return l[0], l[1], l[2]
+
+    f = epyccel(swp, language=language)
+    assert f(2,4,8) == swp(2,4,8)
+    assert f(-2,4,-6) == swp(-2,4,-6)
+    assert f(4,100,234) == swp(4,100,234)
+    x = randint(min_int, max_int)
+    y = randint(min_int, max_int)
+    z = randint(min_int, max_int)
+    assert f(x,y,z) == swp(x,y,z)
+
+def test_swap_index_2(language):
+    def swp(i : int, j : int):
+        l = [1,2,3]
+        l[i], l[j] = l[j], l[i]
+        return l[0], l[1], l[2]
+
+    f = epyccel(swp, language=language)
+    assert f(0,1) == swp(0,1)
+    assert f(1,0) == swp(1,0)
+    assert f(2,1) == swp(2,1)
+
 def test_multi_level_swap(language):
     def swp(a : int, b : int, c : int):
         d, (b, c) = a, (c, b)
