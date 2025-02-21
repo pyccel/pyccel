@@ -70,6 +70,7 @@ All notable changes to this project will be documented in this file.
 -   Add support for `type` as a type annotation.
 -   #2182 : Add support for `isinstance`.
 -   #2183 : Add compile time analysis of if block conditions.
+-   Add Fortran and Python support for NumPy's `reshape` function.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.

@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
+from packaging.version import Version
 import sys
 import pytest
 from numpy.random import rand, randn, uniform
@@ -6259,3 +6260,80 @@ def test_copy(language):
         assert res_3d_pyt.dtype is res_3d_pyc.dtype
         assert res_3d_pyt.flags.c_contiguous == res_3d_pyc.flags.c_contiguous
         assert res_3d_pyt.flags.f_contiguous == res_3d_pyc.flags.f_contiguous
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip("Reshape not implemented for C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python),
+    )
+)
+def test_reshape(language):
+    # Copies are needed in these functions to ensure reshaped objects are
+    # contiguous and no pointers to temporaries are returned
+    def reshape_var(a : 'int[:,:,:]'):
+        from numpy import array
+        m, n, p = a.shape
+        tmp_a = array(a)
+        b = tmp_a.reshape((m*n, p))
+        b[0,0] = 123
+        a[:] = tmp_a
+        c = array(b)
+        return c
+
+    def reshape_var_order(a : 'int[:,:,:]'):
+        from numpy import reshape, array
+        m, n, p = a.shape
+        tmp_a = array(a)
+        b = reshape(tmp_a, (m*n, p), order='F')
+        b[0,0] = 123
+        a[:] = tmp_a
+        c = array(b, order='F')
+        return c
+
+    def reshape_expr(a : 'int[:,:,:]'):
+        from numpy import reshape, array
+        m, n, p = a.shape
+        tmp_a = array(a)
+        b = reshape(tmp_a*3, (m*n, p))
+        b[0,0] = 123
+        a[:] = tmp_a
+        c = array(b)
+        return c
+
+    def flatten(a : 'int[:,:,:]'):
+        from numpy import array
+        m, n, p = a.shape
+        tmp_a = array(a)
+        b = tmp_a.reshape((m*n*p))
+        b[0] = 123
+        a[:] = tmp_a
+        c = array(b)
+        return c
+
+    funcs_to_test = (reshape_var, reshape_var_order, reshape_expr, flatten)
+
+    if Version(np.__version__) >= Version("2.1.0"):
+        def reshape_var_copy(a : 'int[:,:,:]'):
+            from numpy import array
+            m, n, p = a.shape
+            tmp_a = array(a)
+            b = tmp_a.reshape((m*n, p), copy=True)
+            b[0,0] = 123
+            a[:] = tmp_a
+            c = array(b)
+            return c
+
+        funcs_to_test += (reshape_var_copy,)
+
+    for func in funcs_to_test:
+        print(func.__name__)
+        epyc_f = epyccel(func, language=language)
+        x = np.reshape(np.arange(60), (3,4,5))
+        x_epyc = x.copy()
+        y = func(x)
+        y_epyc = epyc_f(x_epyc)
+        np.array_equal(x, x_epyc)
+        np.array_equal(y, y_epyc)

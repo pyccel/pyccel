@@ -21,7 +21,7 @@ from .datatypes  import (PythonNativeBool, PythonNativeInt, PythonNativeFloat,
                          PythonNativeComplex, StringType, TupleType, CustomDataType,
                          HomogeneousListType, HomogeneousSetType, DictType, SymbolicType)
 from .numpyext   import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
-                         NumpyImag, NumpyReal, NumpyTranspose,
+                         NumpyImag, NumpyReal, NumpyTranspose, NumpyReshape,
                          NumpyConjugate, NumpySize, NumpyResultType, NumpyArray)
 from .numpytypes import NumpyNumericType, NumpyNDArrayType
 
@@ -228,6 +228,8 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
             PyccelFunctionDef('dtype', func_class = NumpyResultType,
                 decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
             PyccelFunctionDef('copy', func_class = NumpyArray, argument_description = {'self': None, 'order':'C'},
+                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('reshape', func_class = NumpyReshape, argument_description = {'order':'C'},
                 decorators = {'numpy_wrapper': 'numpy_wrapper'}),
         ]
 )

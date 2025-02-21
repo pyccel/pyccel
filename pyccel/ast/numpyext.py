@@ -114,6 +114,7 @@ __all__ = (
     'NumpyRand',
     'NumpyRandint',
     'NumpyReal',
+    'NumpyReshape',
     'NumpyResultType',
     'NumpyTranspose',
     'NumpyWhere',
@@ -2722,6 +2723,76 @@ class NumpyIsFinite(NumpyUfuncUnary):
         """
         return PythonNativeBool()
 
+class NumpyReshape(PyccelFunction):
+    """
+    A class representing a call to `np.reshape`.
+
+    A class representing a call to the NumPy function `reshape`.
+    This function returns a reshaped view on an existing array or
+    a copy of a reshaped view of a sub-array.
+
+    Parameters
+    ----------
+    a : Variable
+        The variable being reshaped.
+    newshape : TypedAstNode
+        The new shape (Replaced by shape in 2.1).
+    shape : TypedAstNode
+        The new shape (This argument is called newshape in NumPy<2.1).
+    order : LiteralString
+        The requested order.
+    copy : LiteralBoolean
+        A boolean enforcing whether or not the result should be a copy
+        of the variable being reshaped.
+    """
+    name = 'reshape'
+    __slots__ = ('_class_type', '_shape', '_is_alias', '_copy')
+    _attribute_nodes = PyccelFunction._attribute_nodes + ('_shape',)
+
+    def __init__(self, a, newshape = None, shape = None, order='C', copy=Nil()):
+        assert (newshape is None) != (shape is None)
+        shape = shape or newshape
+        if isinstance(shape, (PythonTuple, PythonList)):
+            self._shape = tuple(shape)
+        elif shape.rank == 0:
+            self._shape = (shape,)
+        else:
+            raise TypeError("Shape must be a tuple so the number of dimensions can be deduced.")
+        if not isinstance(copy, (LiteralTrue, LiteralFalse, Nil)):
+            raise TypeError("Copy must be a literal [True|False|None].")
+        rank = len(self._shape)
+        order = NumpyNewArray._process_order(rank, order)
+        self._class_type = NumpyNDArrayType(a.dtype, rank, order)
+        if copy == LiteralFalse():
+            self._is_alias = True
+        elif copy == LiteralTrue():
+            self._is_alias = False
+        else:
+            self._is_alias = not a.is_alias
+            if order and order != a.order:
+                self._is_alias = False
+        self._copy = copy
+        super().__init__(a)
+
+    @property
+    def copy(self):
+        """
+        The copy argument passed to the function.
+
+        A boolean enforcing whether or not the result should be a copy
+        of the variable being reshaped.
+        """
+        return self._copy
+
+    @property
+    def is_alias(self):
+        """
+        Indicates if the result of the function call is an alias.
+
+        Indicates if the result of the function call is an alias.
+        """
+        return self._is_alias
+
 #==============================================================================
 
 DtypePrecisionToCastFunction.update({
@@ -2764,6 +2835,7 @@ numpy_funcs = {
     'array'     : PyccelFunctionDef('array'     , NumpyArray),
     'arange'    : PyccelFunctionDef('arange'    , NumpyArange),
     'copy'      : PyccelFunctionDef('copy'      , NumpyArray),
+    'reshape'   : PyccelFunctionDef('reshape'   , NumpyReshape),
     # ...
     'shape'     : PyccelFunctionDef('shape'     , NumpyShape),
     'size'      : PyccelFunctionDef('size'      , NumpySize),

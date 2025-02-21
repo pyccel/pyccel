@@ -92,7 +92,7 @@ from pyccel.ast.literals import Literal, convert_to_literal, LiteralEllipsis
 
 from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
 
-from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
+from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs, NumpyReshape
 from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyResultType
@@ -698,6 +698,8 @@ class SemanticParser(BasicParser):
             self._indicate_pointer_target(pointer, target.lhs, expr)
         elif isinstance(target, IndexedElement):
             self._indicate_pointer_target(pointer, target.base, expr)
+        elif isinstance(target, NumpyReshape):
+            self._indicate_pointer_target(pointer, target.args[0], expr)
         elif isinstance(target, (DictGetItem, DictGet)):
             self._indicate_pointer_target(pointer, target.dict_obj, expr)
         elif isinstance(target, Variable):
@@ -773,6 +775,13 @@ class SemanticParser(BasicParser):
             var = expr.internal_var
 
             d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
+            return d_var
+
+        elif isinstance(expr, NumpyReshape):
+
+            var = expr.args[0]
+
+            d_var['memory_handling'] = 'alias' if expr.is_alias else 'heap'
             return d_var
 
         elif isinstance(expr, PythonTuple):
@@ -3012,6 +3021,7 @@ class SemanticParser(BasicParser):
                             func  = func.clone(new_name)
                     pyccel_stage.set_stage('syntactic')
                     syntactic_call = FunctionCall(func, args)
+                    syntactic_call.set_current_ast(expr.python_ast)
                     pyccel_stage.set_stage('semantic')
                     return self._handle_function(syntactic_call, func, args)
                 elif isinstance(rhs, Constant):

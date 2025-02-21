@@ -9,10 +9,11 @@ import warnings
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
-from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction
+from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
+from pyccel.ast.datatypes  import HomogeneousTupleType, PrimitiveBooleanType
+from pyccel.ast.datatypes  import HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes  import VoidType, DictType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
@@ -847,6 +848,17 @@ class PythonCodePrinter(CodePrinter):
         arg = '{}, {}{}'.format(arr, axis, keep_dims)
 
         return "{}({})".format(name, arg)
+
+    def _print_NumpyReshape(self, expr):
+        var = self._print(expr.args[0])
+        args = self._print(PythonTuple(*expr.shape))
+        if isinstance(expr.copy.dtype.primitive_type, PrimitiveBooleanType):
+            copy = self._print(expr.copy)
+            args += f', copy = {copy}'
+        order = expr.order
+        if order:
+            args += f", order = '{order}'"
+        return f'{var}.reshape({args})'
 
     def _print_ListMethod(self, expr):
         method_name = expr.name

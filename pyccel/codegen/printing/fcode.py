@@ -70,7 +70,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand, NumpyAbs
 from pyccel.ast.numpyext import NumpyNewArray, NumpyArray
 from pyccel.ast.numpyext import NumpyNonZero
-from pyccel.ast.numpyext import NumpySign
+from pyccel.ast.numpyext import NumpySign, NumpyReshape
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
@@ -2094,17 +2094,18 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, FunctionCall):
             return self._print(rhs)
 
-        # TODO improve
-        op = '=>'
         shape_code = ''
         if isinstance(lhs.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
-            shape_code = ', '.join('0:' for i in range(lhs.rank))
+            if isinstance(rhs, NumpyReshape):
+                ubounds = [self._print(PyccelMinus(s, LiteralInteger(1), simplify=True)) for s in lhs.alloc_shape]
+                shape_code = ', '.join(f'0:{u}' for u in ubounds)
+            else:
+                shape_code = ', '.join('0:' for i in range(lhs.rank))
             shape_code = '({s_c})'.format(s_c = shape_code)
 
-        code += '{lhs}{s_c} {op} {rhs}'.format(lhs=self._print(expr.lhs),
-                                          s_c = shape_code,
-                                          op=op,
-                                          rhs=self._print(expr.rhs))
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        code += f'{lhs_code}{shape_code} => {rhs_code}'
 
         return code + '\n'
 
@@ -2135,7 +2136,10 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (FunctionCall, SetUnion, ListPop)):
             return self._print(rhs)
 
-        lhs_code = self._print(expr.lhs)
+        lhs = expr.lhs
+        lhs_code = self._print(lhs)
+        if isinstance(lhs, Variable) and isinstance(lhs.class_type, NumpyNDArrayType):
+            lhs_code += '('+','.join(':'*lhs.rank)+')'
         # we don't print Range
         # TODO treat the case of iterable classes
         if isinstance(rhs, PyccelUnarySub) and rhs.args[0] == INF:
@@ -3332,6 +3336,14 @@ class FCodePrinter(CodePrinter):
             shape = ', '.join(self._print(i) for i in var_shape)
             order = ', '.join(self._print(LiteralInteger(i)) for i in range(var.rank, 0, -1))
             return 'reshape({}, shape=[{}], order=[{}])'.format(arg, shape, order)
+
+    def _print_NumpyReshape(self, expr):
+        var = self._print(expr.args[0])
+        if expr.is_alias:
+            return var
+        else:
+            shape = ', '.join(self._print(s) for s in expr.shape)
+            return f'reshape({var}, shape=[{shape}])'
 
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to Fortran
