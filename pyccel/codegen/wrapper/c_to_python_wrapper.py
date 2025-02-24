@@ -1499,7 +1499,7 @@ class CToPythonWrapper(Wrapper):
             func_args = [FunctionDefArgument(a) for a in func_args]
             body = []
         else:
-            if in_interface or original_func_name in magic_binary_funcs or original_func_name in ('__len__'):
+            if in_interface or original_func_name in magic_binary_funcs or original_func_name == '__len__':
                 func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
                 body = []
             else:
