@@ -439,18 +439,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         magic_methods = {self.get_python_name(original_scope, f.original_function): f for f in expr.magic_methods}
 
-        getitem_wrapper_def = ""
-        if '__getitem__' in magic_methods:
-            getitem_wrapper_def = (
-                "static PyObject* __pyccel_getitem_wrapper(PyObject* self, PyObject* key) {\n"
-                "    /* Pack the key into a tuple and call the original __getitem__ wrapper */\n"
-                "    PyObject* args = PyTuple_Pack(1, key);\n"
-                f"    PyObject* result = {magic_methods['__getitem__'].name}((struct PyAObject*)self, args, NULL);\n"
-                "    Py_DECREF(args);\n"
-                "    return result;\n"
-                "}\n"
-            )
-
         number_magic_method_name = self.scope.get_new_name(f'{expr.name}_number_methods')
 
         number_magic_methods_def = f"static PyNumberMethods {number_magic_method_name} = {{\n"
@@ -500,7 +488,7 @@ class CWrapperCodePrinter(CCodePrinter):
         if '__len__' in magic_methods:
             map_magic_methods_def += f"    .mp_length = (lenfunc){magic_methods['__len__'].name},\n"
         if '__getitem__' in magic_methods:
-            map_magic_methods_def += "    .mp_subscript = (binaryfunc)__pyccel_getitem_wrapper,\n"
+            map_magic_methods_def += f"     .mp_subscript = (binaryfunc){magic_methods['__getitem__'].name},\n"
         map_magic_methods_def += '};\n'
         method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
@@ -529,7 +517,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 f"    .tp_getset = {property_def_name},\n"
                 "};\n")
 
-        return '\n'.join((getitem_wrapper_def, method_def, number_magic_methods_def, seq_magic_methods_def,
+        return '\n'.join((method_def, number_magic_methods_def, seq_magic_methods_def,
                         map_magic_methods_def, property_def, type_code, functions))
 
     def _print_PyModInitFunc(self, expr):
