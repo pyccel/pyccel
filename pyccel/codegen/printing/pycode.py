@@ -9,7 +9,7 @@ import warnings
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
-from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction
+from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
@@ -711,6 +711,22 @@ class PythonCodePrinter(CodePrinter):
     def _print_Assign(self, expr):
         lhs = expr.lhs
         rhs = expr.rhs
+
+        if isinstance(rhs, FunctionCall) and (rhs.class_type, InhomogeneousTupleType) and isinstance(lhs, PythonTuple):
+            # lhs needs packing back into a tuple
+            def pack_lhs(lhs, rhs_type_template):
+                new_lhs = []
+                i = 0
+                for elem in rhs_type_template:
+                    if isinstance(elem, InhomogeneousTupleType):
+                        tuple_elem = pack_lhs(lhs[i:], rhs_type_template[i])
+                        new_lhs.append(tuple_elem)
+                        i += len(tuple_elem)
+                    else:
+                        new_lhs.append(lhs[i])
+                        i += 1
+                return PythonTuple(*new_lhs)
+            lhs = pack_lhs(lhs.args, rhs.class_type)
 
         lhs_code = self._print(lhs)
         rhs_code = self._print(rhs)
