@@ -80,14 +80,14 @@ class FortranToCWrapper(Wrapper):
         """
         next_optional_arg = next((a for a in wrapped_args if a['c_arg'].original_var.is_optional and a not in handled), None)
         if next_optional_arg:
-            args = func_def_args.copy()
-            optional_var = optional.var
-            handled += (optional, )
+            args = wrapped_args.copy()
+            optional_var = next_optional_arg['c_arg']
+            handled += (next_optional_arg, )
             true_section = IfSection(PyccelIsNot(optional_var, Nil()),
-                                    self._get_function_def_body(func, args, func_arg_to_call_arg, results, handled))
-            args.remove(optional)
+                                    self._get_function_def_body(func, args, results, handled))
+            args.remove(next_optional_arg)
             false_section = IfSection(LiteralTrue(),
-                                    self._get_function_def_body(func, args, func_arg_to_call_arg, results, handled))
+                                    self._get_function_def_body(func, args, results, handled))
             return [If(true_section, false_section)]
         else:
             args = [a['f_arg'] for a in wrapped_args]
@@ -106,10 +106,6 @@ class FortranToCWrapper(Wrapper):
             #body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa], [fa.shape[0]])
             #        for fa in func_def_args
             #        if isinstance(fa.original_function_argument_variable.class_type, HomogeneousTupleType)]
-            #body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa])
-            #         for fa in func_def_args
-            #         if not isinstance(func_arg_to_call_arg[fa], IndexedElement) \
-            #            and fa.original_function_argument_variable.is_optional]
             #body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa]) for fa in func_def_args
             #        if isinstance(func_arg_to_call_arg[fa].dtype, CustomDataType)]
 
@@ -295,9 +291,18 @@ class FortranToCWrapper(Wrapper):
         name = var.name
         self.scope.insert_symbol(name)
         collisionless_name = self.scope.get_expected_name(var.name)
-        new_var = var.clone(collisionless_name, new_class = Variable)
-        self.scope.insert_variable(new_var)
-        return {'c_arg': BindCVariable(new_var, var), 'f_arg': new_var, 'body': []}
+        if var.is_optional:
+            f_arg = var.clone(collisionless_name, new_class = Variable, is_argument = False,
+                    is_optional = False, memory_handling='alias')
+            new_var = Variable(BindCPointer(), self.scope.get_new_name(f'bound_{name}'),
+                                is_argument = True, is_optional = False, memory_handling='alias')
+            body = [C_F_Pointer(new_var, f_arg)]
+        else:
+            f_arg = var.clone(collisionless_name, new_class = Variable)
+            new_var = f_arg
+            body = []
+        self.scope.insert_variable(f_arg)
+        return {'c_arg': BindCVariable(new_var, var), 'f_arg': f_arg, 'body': body}
 
     def _extract_NumpyNDArrayType_FunctionDefArgument(self, var, func):
         name = var.name

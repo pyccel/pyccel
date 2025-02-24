@@ -2224,9 +2224,8 @@ class CToPythonWrapper(Wrapper):
         """
         assert not bound_argument
         if arg_var is None:
-            kwargs = {'is_argument': False}
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
-                                    **kwargs)
+                                    is_argument = False)
             self.scope.insert_variable(arg_var, orig_var.name)
 
         dtype = orig_var.dtype
