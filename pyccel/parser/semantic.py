@@ -576,7 +576,7 @@ class SemanticParser(BasicParser):
             An object containing only variables that can be printed in a low-level language.
         """
         if isinstance(tuple_var.class_type, InhomogeneousTupleType):
-            return PythonTuple(*self.scope.collect_all_tuple_elements(tuple_var))
+            return PythonTuple(*[self.create_tuple_of_inhomogeneous_elements(self.scope.collect_tuple_element(v)) for v in tuple_var])
         else:
             return tuple_var
 
@@ -3717,7 +3717,7 @@ class SemanticParser(BasicParser):
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
                 elif isinstance(l, Variable) and isinstance(l.class_type, InhomogeneousTupleType):
-                    new_lhs.append(self.create_tuple_of_inhomogeneous_elements(l))
+                    new_lhs.append(PythonTuple(*self.scope.collect_all_tuple_elements(l)))
                     new_rhs.append(r)
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
