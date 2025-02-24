@@ -1335,7 +1335,7 @@ class SemanticParser(BasicParser):
         return func
 
     def _create_variable(self, name, class_type, rhs, d_lhs, *, arr_in_multirets=False,
-                         insertion_scope = None):
+                         insertion_scope = None, rhs_scope = None):
         """
         Create a new variable.
 
@@ -1369,6 +1369,11 @@ class SemanticParser(BasicParser):
             The scope where the variable will be inserted. This is used to add any
             symbolic aliases for inhomogeneous tuples.
 
+        rhs_scope : Scope, optional
+            The scope where the definition of the right hand side is found. This
+            is used to locate any symbolic aliases for inhomogeneous tuples. It is
+            necessary for tuples of tuples as function results.
+
         Returns
         -------
         Variable
@@ -1383,12 +1388,17 @@ class SemanticParser(BasicParser):
             insertion_scope = self.scope
 
         if isinstance(class_type, InhomogeneousTupleType):
+            if rhs_scope is None:
+                rhs_scope = self.scope
+
             if isinstance(rhs, FunctionCall):
-                iterable = rhs.funcdef.scope.collect_all_tuple_elements(rhs.funcdef.results.var)
+                rhs_scope = rhs.funcdef.scope
+                iterable = [rhs_scope.collect_tuple_element(v) for v in rhs.funcdef.results.var]
             elif isinstance(rhs, PyccelFunction):
                 iterable = [IndexedElement(rhs, i)  for i in range(rhs.shape[0])]
             else:
-                iterable = [self.scope.collect_tuple_element(r) for r in rhs]
+                iterable = [rhs_scope.collect_tuple_element(r) for r in rhs]
+
             elem_vars = []
             for i,tuple_elem in enumerate(iterable):
                 # Check if lhs element was named in the syntactic stage (this can happen for
@@ -1412,7 +1422,7 @@ class SemanticParser(BasicParser):
                     elem_type = elem_d_lhs.pop('class_type')
 
                     var = self._create_variable(elem_name, elem_type, tuple_elem, elem_d_lhs,
-                            insertion_scope = insertion_scope)
+                            insertion_scope = insertion_scope, rhs_scope = rhs_scope)
 
                 elem_vars.append(var)
 
