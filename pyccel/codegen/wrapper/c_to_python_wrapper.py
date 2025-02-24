@@ -85,6 +85,7 @@ magic_binary_funcs = ('__add__',
                       '__irshift__',
                       '__iand__',
                       '__ior__',
+                      '__getitem__'
                       )
 
 class CToPythonWrapper(Wrapper):
