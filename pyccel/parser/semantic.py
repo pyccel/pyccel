@@ -872,6 +872,7 @@ class SemanticParser(BasicParser):
             assign.set_current_ast(expr.python_ast)
             pyccel_stage.set_stage('semantic')
             self._additional_exprs[-1].append(self._visit(assign))
+            var.remove_user_node(assign)
             var = self._visit(tmp_var)
 
         else:
