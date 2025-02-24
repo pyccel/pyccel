@@ -3602,7 +3602,7 @@ class SemanticParser(BasicParser):
                                      get_syntactic_object(a.stop),
                                      get_syntactic_object(a.step))
                     else:
-                        errors.report(f"Tuple assign statement is too complex for the current implementation due to {type(a)}.\n"
+                        raise errors.report(f"Tuple assign statement is too complex for the current implementation due to {type(a)}.\n"
                                       + PYCCEL_RESTRICTION_TODO, symbol=expr)
 
                 # Create variables to handle swap expressions
