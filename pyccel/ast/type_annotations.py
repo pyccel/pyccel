@@ -161,13 +161,13 @@ class FunctionTypeAnnotation(PyccelAstNode):
         return self._args
 
     @property
-    def results(self):
+    def result(self):
         """
-        Get the type annotations describing the results of the function address.
+        Get the type annotation describing the result of the function address.
 
-        Get the type annotations describing the results of the function address.
-        In the syntactic stage these objects are of type SyntacticTypeAnnotation.
-        In the semantic stage these objects are of type UnionTypeAnnotation.
+        Get the type annotation describing the result of the function address.
+        In the syntactic stage this object is of type SyntacticTypeAnnotation.
+        In the semantic stage this object is of type UnionTypeAnnotation.
         """
         return self._result
 
