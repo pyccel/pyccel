@@ -3595,10 +3595,15 @@ class SemanticParser(BasicParser):
                                               *[get_syntactic_object(i) for i in a.indices])
                     elif isinstance(a, Variable):
                         return a.name
-                    elif isinstance(a, Literal):
+                    elif isinstance(a, Literal) or a is None:
                         return a
+                    elif isinstance(a, Slice):
+                        return Slice(get_syntactic_object(a.start),
+                                     get_syntactic_object(a.stop),
+                                     get_syntactic_object(a.step))
                     else:
-                        errors.report("Complex assignment", symbol=expr)
+                        errors.report(f"Tuple assign statement is too complex for the current implementation due to {type(a)}.\n"
+                                      + PYCCEL_RESTRICTION_TODO, symbol=expr)
 
                 # Create variables to handle swap expressions
                 unsaved_vars = set()
