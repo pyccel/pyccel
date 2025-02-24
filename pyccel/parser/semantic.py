@@ -3442,12 +3442,12 @@ class SemanticParser(BasicParser):
                 errors.report(e, symbol=expr, severity='error')
 
         if isinstance(rhs, PythonTuple):
+            assign_elems = None
             if isinstance(lhs, PythonTuple):
                 pyccel_stage.set_stage('syntactic')
                 syntactic_assign_elems = [Assign(l, r, python_ast=expr.python_ast) for l, r in zip(lhs, rhs)]
                 pyccel_stage.set_stage('semantic')
                 assign_elems = [self._visit(a) for a in syntactic_assign_elems]
-                return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
             elif isinstance(lhs, (PyccelSymbol, DottedName)):
                 semantic_lhs = self.scope.find(lhs)
                 if semantic_lhs:
@@ -3466,6 +3466,9 @@ class SemanticParser(BasicParser):
                 syntactic_assign_elems = [Assign(IndexedElement(lhs,i), r, python_ast=expr.python_ast) for i, r in enumerate(rhs)]
                 pyccel_stage.set_stage('semantic')
                 assign_elems = [self._visit(a) for a in syntactic_assign_elems]
+                return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
+
+            if assign_elems is not None:
                 return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
 
         # Steps before visiting
