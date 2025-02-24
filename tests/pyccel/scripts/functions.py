@@ -77,3 +77,4 @@ if __name__ == '__main__':
     f(1,b=b)
     print(tuple_use())
     print(multi_level_tuple_return())
+    print(multi_level_tuple_return()[2])
