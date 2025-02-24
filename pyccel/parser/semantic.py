@@ -865,7 +865,7 @@ class SemanticParser(BasicParser):
             else:
                 return self._visit(var[indices[0]][indices[1:]])
 
-        elif isinstance(var, PyccelFunction):
+        elif isinstance(var, (PyccelFunction, FunctionCall)):
             pyccel_stage.set_stage('syntactic')
             tmp_var = PyccelSymbol(self.scope.get_new_name())
             assign = Assign(tmp_var, var)
