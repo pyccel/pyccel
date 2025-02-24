@@ -124,9 +124,12 @@ All notable changes to this project will be documented in this file.
 -   Catch all internal errors arising in the syntactic, semantic, printing or code generation stages.
 -   #2206 : Fix returning an array of unknown literal size.
 -   #2112 : Improve floor division.
+-   #2220 : Fix premature `stc/cspan` import.
+-   #2214 : Fix returning a local variable from an inline function.
 
 ### Changed
 
+-   #2008 : Remove dependency on `astunparse` package.
 -   #1920 : Add a maximum version for NumPy.
 -   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
@@ -167,6 +170,7 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   #2008 : Remove support for Python 3.8.
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
