@@ -1201,7 +1201,7 @@ class SemanticParser(BasicParser):
             parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign) and not isinstance(x, AugAssign))
 
             func_results = func.results if isinstance(func, FunctionDef) else func.functions[0].results
-            if not parent_assign and len(func_results) == 1 and func_results.var.rank > 0:
+            if not parent_assign and func_results.var.rank > 0:
                 pyccel_stage.set_stage('syntactic')
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, expr)
@@ -3459,12 +3459,14 @@ class SemanticParser(BasicParser):
                     syntactic_assign_elems = [Assign(IndexedElement(lhs,i), r, python_ast=expr.python_ast) for i, r in enumerate(rhs)]
                     pyccel_stage.set_stage('semantic')
                     assign_elems = [self._visit(a) for a in syntactic_assign_elems]
+                    return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
             elif isinstance(lhs, IndexedElement):
                 semantic_lhs = self._visit(lhs)
                 pyccel_stage.set_stage('syntactic')
                 syntactic_assign_elems = [Assign(IndexedElement(lhs,i), r, python_ast=expr.python_ast) for i, r in enumerate(rhs)]
                 pyccel_stage.set_stage('semantic')
                 assign_elems = [self._visit(a) for a in syntactic_assign_elems]
+                return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
 
         # Steps before visiting
         if isinstance(rhs, GeneratorComprehension):
@@ -3567,7 +3569,7 @@ class SemanticParser(BasicParser):
             else:
                 raise NotImplementedError("Cannot assign result of a function without a return")
 
-            if isinstance(results.class_type, NumpyNDArrayType) == 1 and isinstance(lhs, IndexedElement):
+            if isinstance(results.class_type, NumpyNDArrayType) and isinstance(lhs, IndexedElement):
                 temp = self.scope.get_new_name()
                 semantic_temp = self._assign_lhs_variable(temp, d_var, rhs, new_expressions)
                 new_expressions.append(Assign(semantic_temp, rhs))
