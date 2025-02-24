@@ -3450,23 +3450,18 @@ class SemanticParser(BasicParser):
                 assign_elems = [self._visit(a) for a in syntactic_assign_elems]
             elif isinstance(lhs, (PyccelSymbol, DottedName)):
                 semantic_lhs = self.scope.find(lhs)
-                if semantic_lhs:
-                    if not isinstance(semantic_lhs.class_type, TupleType):
-                        errors.report(f"Type of {lhs} has changed from {semantic_lhs.class_type} to a tuple type.",
-                                severity="error", symbol=expr)
-
+                if semantic_lhs and isinstance(semantic_lhs.class_type, InhomogeneousTupleType):
                     pyccel_stage.set_stage('syntactic')
                     syntactic_assign_elems = [Assign(IndexedElement(lhs,i), r, python_ast=expr.python_ast) for i, r in enumerate(rhs)]
                     pyccel_stage.set_stage('semantic')
                     assign_elems = [self._visit(a) for a in syntactic_assign_elems]
-                    return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
             elif isinstance(lhs, IndexedElement):
                 semantic_lhs = self._visit(lhs)
-                pyccel_stage.set_stage('syntactic')
-                syntactic_assign_elems = [Assign(IndexedElement(lhs,i), r, python_ast=expr.python_ast) for i, r in enumerate(rhs)]
-                pyccel_stage.set_stage('semantic')
-                assign_elems = [self._visit(a) for a in syntactic_assign_elems]
-                return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
+                if isinstance(semantic_lhs.class_type, InhomogeneousTupleType):
+                    pyccel_stage.set_stage('syntactic')
+                    syntactic_assign_elems = [Assign(IndexedElement(lhs,i), r, python_ast=expr.python_ast) for i, r in enumerate(rhs)]
+                    pyccel_stage.set_stage('semantic')
+                    assign_elems = [self._visit(a) for a in syntactic_assign_elems]
 
             if assign_elems is not None:
                 return CodeBlock([l for a in assign_elems for l in (a.body if isinstance(a, CodeBlock) else [a])])
