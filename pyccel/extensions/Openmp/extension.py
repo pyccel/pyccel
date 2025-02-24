@@ -3,6 +3,7 @@ from pyccel.errors.errors import Errors
 from pyccel.utilities.extensions import Extension
 from . import openmp_4_5
 from . import openmp_5_0
+from .ast import OmpDirective
 
 errors = Errors()
 
@@ -29,6 +30,24 @@ class Openmp(Extension):
                 mixin.__init__(self)
                 sp.__init__(self, *args, **kwargs)
 
+            def _visit(self, stmt):
+
+                cls = type(stmt)
+                syntax_method = '_visit_' + cls.__name__
+                if syntax_method in Extended.__dict__:
+                    result = getattr(self, syntax_method)(stmt)
+                elif hasattr(sp, syntax_method):
+                    result = sp._visit(self, stmt)
+                else:
+                    result = mixin._visit(self, stmt)
+
+                if len(self._pending_constructs) and isinstance(self._context[-1], OmpDirective):
+                    if not isinstance(result, OmpDirective):
+                        self._bodies[-1].append(result)
+                    return EmptyNode()
+                else:
+                    return result
+
             def _visit_CommentLine(self, stmt):
                 line = stmt.s
                 if line.startswith('#$'):
@@ -53,11 +72,6 @@ class Openmp(Extension):
             def __init__(self, *args, **kwargs):
                 mixin.__init__(self)
                 sp.__init__(self, *args, **kwargs)
-            def _visit(self, expr):
-                if expr in self.omp_reserved_nodes:
-                    return EmptyNode()
-                else:
-                    return sp._visit(self, expr)
         return Extended
 
     def extend_printer(self, printer):

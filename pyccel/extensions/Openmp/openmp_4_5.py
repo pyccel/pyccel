@@ -11,7 +11,7 @@ from textx import metamodel_for_language
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.variable import Variable
 from pyccel.parser.extend_tree import extend_tree
-from pyccel.ast.datatypes import NativeInteger, NativeVoid
+from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.core import CodeBlock, For
 from pyccel.ast.core import EmptyNode
 from pyccel.errors.errors import Errors
@@ -51,6 +51,8 @@ class SyntaxParser:
         })
         self._omp_metamodel.register_obj_processors(obj_processors)
         self._pending_directives = []
+        self._pending_constructs = []
+        self._bodies = []
 
     @property
     def pending_directives(self):
@@ -66,18 +68,24 @@ class SyntaxParser:
                 severity="fatal",
             )
 
-
     def _visit(self, stmt):
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
+            self._context.append(stmt)
             result = getattr(self, syntax_method)(stmt)
             if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
                 result.set_current_ast(stmt)
+            #If Directive is a Construct the wen still  need it in the context to gather its body
+            if not isinstance(result, OmpDirective) or not result.require_end_directive:
+                self._context.pop()
+            #Pop the construct's directive
+            if isinstance(result, OmpConstruct):
+                self._context.pop()
             return result
         # Unknown object, we ignore syntactic, this is useful to isolate the omp parser for testing.
         return stmt
-
+    
     def _visit_CommentLine(self, expr):
         from textx.exceptions import TextXError
         try:
@@ -95,6 +103,9 @@ class SyntaxParser:
         clauses = [self._visit(clause) for clause in expr.clauses]
         directive = OmpDirective.from_directive(expr, clauses=clauses)
         self._pending_directives.append(directive)
+        if expr.require_end_directive:
+            self._pending_constructs.append(directive)
+            self._bodies.append([])
         return directive
 
     def _visit_OmpClause(self, expr):
@@ -125,10 +136,18 @@ class SyntaxParser:
         return cor_directive
 
     def _visit_OmpEndDirective(self, expr):
-        cor_directive = self._find_coresponding_directive(expr)
+        directive = self._find_coresponding_directive(expr)
         clauses = [self._visit(clause) for clause in expr._clauses]
-        return OmpEndDirective(name=expr.name, clauses=clauses, coresponding_directive=cor_directive,
+        res = OmpEndDirective(name=expr.name, clauses=clauses, coresponding_directive=directive,
                                raw=expr.raw, parent=expr.parent)
+
+        if self._pending_constructs[-1] is directive:
+            self._pending_constructs.pop()
+            body = self._bodies.pop()
+            body = CodeBlock(body=body)
+            return OmpConstruct(start=directive, end=expr, body=body)
+
+        return res
 
     def _visit_OmpScalarExpr(self, expr):
         fst = extend_tree(expr.value)
@@ -259,6 +278,23 @@ class SemanticParser:
         self._omp_reserved_nodes = reserved_nodes
         return OmpConstruct(start=directive, end=end_dir, body=body)
 
+    def _visit_OmpConstruct(self, expr):
+        if hasattr(self, f"_visit_{expr.start.name.replace(' ', '_')}_construct"):
+            return getattr(self, f"_visit_{expr.start.name.replace(' ', '_')}_construct")(expr)
+
+        clauses = [self._visit(clause) for clause in expr.start.clauses]
+        start = OmpDirective.from_directive(expr.start, clauses=clauses)
+        expr.end.substitute(expr.start.coresponding_directive, EmptyNode())
+        if expr.end.get_all_user_nodes() != expr.start.get_all_user_nodes():
+            errors.report(
+                f"`end {expr.end.name}` directive misplaced",
+                symbol=expr.end,
+                severity="fatal",
+            )
+        end = self._visit(expr.end)
+        body = self._visit(expr.body)
+        return OmpConstruct(start=start, end=end, body=body)
+
     def _visit_for_directive(self, expr):
         clauses = [self._visit(clause) for clause in expr._clauses]
         directive = OmpDirective.from_directive(expr, clauses=clauses)
@@ -317,7 +353,7 @@ class SemanticParser:
         value = self._visit(expr.value)
         if (
             not hasattr(value, "dtype")
-            or isinstance(value.dtype, NativeVoid)
+            #or isinstance(value.dtype, NativeVoid)
             or (isinstance(value, FunctionCall) and not value.funcdef.results)
         ):
             errors.report(
@@ -331,7 +367,7 @@ class SemanticParser:
 
     def _visit_OmpIntegerExpr(self, expr):
         value = self._visit(expr.value)
-        if not hasattr(value, "dtype") or not isinstance(value.dtype, NativeInteger):
+        if not hasattr(value, "dtype") or not isinstance(value.dtype, PythonNativeInt):
             errors.report(
                 "expression must be an integer expression",
                 symbol=self,
