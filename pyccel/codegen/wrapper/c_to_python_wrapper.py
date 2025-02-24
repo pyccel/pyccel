@@ -85,6 +85,7 @@ magic_binary_funcs = ('__add__',
                       '__irshift__',
                       '__iand__',
                       '__ior__',
+                      '__getitem__'
                       )
 
 class CToPythonWrapper(Wrapper):
@@ -1498,7 +1499,7 @@ class CToPythonWrapper(Wrapper):
             func_args = [FunctionDefArgument(a) for a in func_args]
             body = []
         else:
-            if in_interface or original_func_name in magic_binary_funcs or original_func_name in ('__len__', '__getitem__'):
+            if in_interface or original_func_name in magic_binary_funcs or original_func_name in ('__len__'):
                 func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
                 body = []
             else:
