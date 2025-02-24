@@ -147,6 +147,73 @@ def test_nested_inline_call(language):
 
     assert f() == g()
 
+def test_inline_return(language):
+    def f():
+        @inline
+        def tmp():
+            a = 1
+            return a
+
+        b = tmp()
+        c = tmp()
+        d = tmp() + 3
+        e = tmp() * 4
+        return b,c,d,e
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_literal_return(language):
+    def f():
+        @inline
+        def tmp():
+            return 2
+
+        b = tmp()
+        c = tmp()
+        d = tmp() + 3
+        e = tmp() * 4
+        return b,c,d,e
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_array_return(language):
+    def f():
+        import numpy as np #pylint: disable=reimported
+        @inline
+        def tmp():
+            return np.ones(2, dtype=int)
+
+        b = tmp()
+        c = np.sum(tmp())
+        return b,c
+
+    g = epyccel(f, language=language)
+
+    out_pyth = f()
+    out_pycc = g()
+    assert np.array_equal(out_pyth[0], out_pycc[0])
+    assert out_pyth[1] == out_pycc[1]
+
+def test_inline_multiple_return(language):
+    def f():
+        @inline
+        def tmp():
+            a = 1
+            b = 4
+            return a, b
+
+        b,c = tmp()
+        d,e = tmp()
+        return b,c,d,e
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
 def test_indexed_template(language):
     @template(name='T', types=[float, complex])
     def my_sum(v: 'T[:]'):
