@@ -1480,9 +1480,8 @@ class CToPythonWrapper(Wrapper):
 
         # Add the variables to the expected symbols in the scope
         for a in expr.arguments:
-            func_scope.insert_symbol(getattr(a, 'original_function_argument_variable', a.var).name)
-        for a in getattr(expr, 'bind_c_arguments', ()):
-            func_scope.insert_symbol(a.original_function_argument_variable.name)
+            a_var = a.var
+            func_scope.insert_symbol(getattr(a_var, 'original_var', a_var).name)
 
         in_interface = len(expr.get_user_nodes(Interface)) > 0
 
