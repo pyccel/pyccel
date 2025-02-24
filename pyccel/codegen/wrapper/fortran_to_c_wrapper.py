@@ -298,9 +298,22 @@ class FortranToCWrapper(Wrapper):
                                 is_argument = True, is_optional = False, memory_handling='alias')
             body = [C_F_Pointer(new_var, f_arg)]
         else:
-            f_arg = var.clone(collisionless_name, new_class = Variable)
+            f_arg = var.clone(collisionless_name, new_class = Variable,
+                        is_argument = True)
             new_var = f_arg
             body = []
+        self.scope.insert_variable(f_arg)
+        return {'c_arg': BindCVariable(new_var, var), 'f_arg': f_arg, 'body': body}
+
+    def _extract_CustomDataType_FunctionDefArgument(self, var, func):
+        name = var.name
+        self.scope.insert_symbol(name)
+        collisionless_name = self.scope.get_expected_name(var.name)
+        f_arg = var.clone(collisionless_name, new_class = Variable, is_argument = False,
+                is_optional = False, memory_handling='alias')
+        new_var = Variable(BindCPointer(), self.scope.get_new_name(f'bound_{name}'),
+                            is_argument = True, is_optional = False, memory_handling='alias')
+        body = [C_F_Pointer(new_var, f_arg)]
         self.scope.insert_variable(f_arg)
         return {'c_arg': BindCVariable(new_var, var), 'f_arg': f_arg, 'body': body}
 
@@ -428,10 +441,11 @@ class FortranToCWrapper(Wrapper):
         self.scope.insert_symbol(expr.name)
         getter_result = self._wrap(FunctionDefResult(expr))
 
-        getter_arg = self._wrap(FunctionDefArgument(lhs, bound_argument = True))
-        self_obj = self._get_call_argument(getter_arg)
+        getter_arg_wrapper = self._extract_FunctionDefArgument(lhs, expr)
+        self_obj = getter_arg_wrapper['f_arg']
+        getter_arg = FunctionDefArgument(getter_arg_wrapper['c_arg'])
 
-        getter_body = [C_F_Pointer(getter_arg.var, self_obj)]
+        getter_body = getter_arg_wrapper['body']
 
         attrib = expr.clone(expr.name, lhs = self_obj)
         wrapped_obj = self.scope.find(expr.name)
@@ -455,15 +469,17 @@ class FortranToCWrapper(Wrapper):
         self.scope = setter_scope
         self.scope.insert_symbol(expr.name)
 
-        setter_args = (self._wrap(FunctionDefArgument(lhs, bound_argument = True)),
-                       self._wrap(FunctionDefArgument(expr)))
+        setter_arg_wrappers = (self._extract_FunctionDefArgument(lhs, expr),
+                               self._extract_FunctionDefArgument(expr, expr))
+        setter_args = (FunctionDefArgument(setter_arg_wrappers[0]['c_arg']),
+                       FunctionDefArgument(setter_arg_wrappers[1]['c_arg']))
         if expr.is_alias:
             setter_args[1].persistent_target = True
 
-        self_obj = self._get_call_argument(setter_args[0])
-        set_val = self._get_call_argument(setter_args[1])
+        self_obj = setter_arg_wrappers[0]['f_arg']
+        set_val = setter_arg_wrappers[1]['f_arg']
 
-        setter_body = [C_F_Pointer(setter_args[0].var, self_obj)]
+        setter_body = setter_arg_wrappers[0]['body'] + setter_arg_wrappers[1]['body']
 
         if isinstance(set_val.dtype, CustomDataType):
             setter_body.append(C_F_Pointer(setter_args[1].var, set_val))

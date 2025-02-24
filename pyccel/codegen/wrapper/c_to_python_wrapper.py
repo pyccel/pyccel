@@ -982,12 +982,13 @@ class CToPythonWrapper(Wrapper):
 
         # Add the variables to the expected symbols in the scope
         for a in init_function.arguments:
-            func_scope.insert_symbol(getattr(a, 'original_function_argument_variable', a.var).name)
+            a_var = a.var
+            func_scope.insert_symbol(getattr(a_var, 'original_var', a_var).name)
         for a in getattr(init_function, 'bind_c_arguments', ()):
             func_scope.insert_symbol(a.original_function_argument_variable.name)
 
         # Get variables describing the arguments and results that are seen from Python
-        python_args = init_function.bind_c_arguments if is_bind_c_function_def else init_function.arguments
+        python_args = init_function.arguments
 
         # Get variables describing the arguments and results that must be passed to the function
         original_c_args = init_function.arguments
@@ -1016,7 +1017,8 @@ class CToPythonWrapper(Wrapper):
         # In this case the function arguments are the data pointer and the shapes and strides, but the C equivalent
         # is an ndarray.
         for a in original_c_args:
-            orig_var = getattr(a, 'original_function_argument_variable', a.var)
+            a_var = a.var
+            orig_var = getattr(a_var, 'original_var', a_var)
             if not isinstance(a, BindCFunctionDefArgument) and orig_var.is_ndarray:
                 v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
                 if v.is_optional:
@@ -1913,7 +1915,7 @@ class CToPythonWrapper(Wrapper):
         self.scope = getter_scope
 
         get_val_arg = expr.getter.arguments[0]
-        self.scope.insert_symbol(get_val_arg.original_function_argument_variable.name)
+        self.scope.insert_symbol(get_val_arg.var.original_var.name)
         get_val_result = expr.getter.results[0]
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
@@ -1964,15 +1966,15 @@ class CToPythonWrapper(Wrapper):
             setter_scope = self.scope.new_child_scope(setter_name)
             self.scope = setter_scope
 
-            original_args = expr.setter.bind_c_arguments
+            original_args = expr.setter.arguments
             f_wrapped_args = expr.setter.arguments
 
             self_arg = original_args[0]
             set_val_arg = original_args[1]
             for a in f_wrapped_args:
                 self.scope.insert_symbol(a.var.name)
-            self.scope.insert_symbol(self_arg.original_function_argument_variable.name)
-            self.scope.insert_symbol(set_val_arg.original_function_argument_variable.name)
+            self.scope.insert_symbol(self_arg.var.original_var.name)
+            self.scope.insert_symbol(set_val_arg.var.original_var.name)
 
             setter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                            self.get_new_PyObject(f'{name}_obj'),
