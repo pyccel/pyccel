@@ -3590,6 +3590,24 @@ class SemanticParser(BasicParser):
                 r_iter = PythonTuple(*r_iter)
 
                 def get_syntactic_object(a):
+                    """
+                    Get the syntactic object that is represented by the rhs element.
+
+                    Get the syntactic object that is represented by the rhs element. This function
+                    is needed to analyse the variables/indexed elements that appear on both sides
+                    of the assignment. The syntactic object will not be equivalent to expr.rhs as
+                    it is only a part of the rhs.
+
+                    Parameters
+                    ----------
+                    a : PyccelAstNode
+                        The semantic object.
+
+                    Returns
+                    -------
+                    PyccelAstNode
+                        The syntactic object.
+                    """
                     if isinstance(a, IndexedElement):
                         return IndexedElement(get_syntactic_object(a.base),
                                               *[get_syntactic_object(i) for i in a.indices])
