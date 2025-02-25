@@ -3457,7 +3457,9 @@ class SemanticParser(BasicParser):
                 modified_vars = set(lhs.get_attribute_nodes((PyccelSymbol, DottedName, IndexedElement)))
                 used_vars = set(rhs.get_attribute_nodes((PyccelSymbol, DottedName, IndexedElement),
                                     excluded_nodes = (FunctionDef,)))
-                if used_vars.intersection(modified_vars).difference(unsaved_vars):
+                all_indexed_are_simple = all(all(isinstance(idx, (PyccelSymbol, DottedName, Literal)) for idx in elem.indices)
+                                             for elem in modified_vars if isinstance(elem, IndexedElement))
+                if used_vars.intersection(modified_vars).difference(unsaved_vars) or not all_indexed_are_simple:
                     errors.report("Assign statement is too complex. It seems that some of the variables used non-trivially on the right-hand side appear on the left-hand side.",
                             severity='error', symbol=expr)
 
