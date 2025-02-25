@@ -359,7 +359,7 @@ class FortranToCWrapper(Wrapper):
         stop = None
         indexes = [Slice(start, stop, step) for step in (stride[::-1] if order == 'C' else stride)]
 
-        if func.is_inline:
+        if getattr(func, 'is_inline', False):
             array_arg = self.scope.get_temporary_variable(arg_var, name, memory_handling = 'alias')
             body.append(AliasAssign(array_arg, IndexedElement(arg_var, *indexes)))
         else:
@@ -449,7 +449,7 @@ class FortranToCWrapper(Wrapper):
 
         getter_arg_wrapper = self._extract_FunctionDefArgument(FunctionDefArgument(lhs, bound_argument = True), expr)
         self_obj = getter_arg_wrapper['f_arg']
-        getter_arg = FunctionDefArgument(getter_arg_wrapper['c_arg'])
+        getter_arg = getter_arg_wrapper['c_arg']
 
         getter_body = getter_arg_wrapper['body']
 
@@ -486,15 +486,6 @@ class FortranToCWrapper(Wrapper):
         set_val = setter_arg_wrappers[1]['f_arg']
 
         setter_body = setter_arg_wrappers[0]['body'] + setter_arg_wrappers[1]['body']
-
-        if isinstance(set_val.dtype, CustomDataType):
-            setter_body.append(C_F_Pointer(setter_args[1].var, set_val))
-        elif isinstance(set_val, IndexedElement):
-            func_arg = setter_args[1]
-            size = func_arg.shape[::-1] if expr.order == 'C' else func_arg.shape
-            stride = func_arg.strides[::-1] if expr.order == 'C' else func_arg.strides
-            orig_size = [PyccelMul(sz,st) for sz,st in zip(size, stride)]
-            setter_body.append(C_F_Pointer(func_arg.var, set_val.base, orig_size))
 
         attrib = expr.clone(expr.name, lhs = self_obj)
         # Cast the C variable into a Python variable
