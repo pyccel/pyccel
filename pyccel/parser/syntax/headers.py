@@ -139,9 +139,9 @@ class FuncType(BasicStmt):
     ----------
     args : iterable of UnionTypeStmt, optional
         A list of UnionTypeStmts describing the types of the function arguments.
-    results : iterable of TypeHeader, optional
-        A list of TypeHeaders describing the types of the function results.
-        (These are not UnionTypeStmts as there cannot be multiple types for a
+    results : TypeHeader, optional
+        A TypeHeader describing the type of the function result.
+        (This is not a UnionTypeStmt as there cannot be multiple types for a
         given result).
     **kwargs : dict
         TextX keyword arguments.
