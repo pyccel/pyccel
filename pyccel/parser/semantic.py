@@ -3713,7 +3713,7 @@ class SemanticParser(BasicParser):
                     new_expressions.append(Assign(rhs_var, rhs))
                     rhs = rhs_var
                 lhs = PythonTuple(*new_lhs)
-            elif isinstance(rhs, Variable):
+            else:
                 if isinstance(rhs.class_type, InhomogeneousTupleType):
                     r_iter = [self.scope.collect_tuple_element(v) for v in rhs]
                 else:
