@@ -989,10 +989,10 @@ class Py_ssize_t_Cast(PythonInt):
 
 class PyTuple_Pack(PyccelFunction):
     """
-    A class representing a call to PyTuple_Pack.
+    A class representing a call to Python's PyTuple_Pack function.
 
-    A class representing a call to PyTuple_Pack. A class is used instead
-    of a FunctionDef as the number of arguments is variable.
+    A class representing a call to Python's PyTuple_Pack function. A class
+    is used instead of a FunctionDef as the number of arguments is variable.
     A PyTuple_Pack is described here:
     <https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Pack>
 
