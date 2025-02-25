@@ -13,7 +13,7 @@ from pyccel.ast.core       import FunctionAddress, SeparatorComment
 from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType, Py_ssize_t
-from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
+from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject, PyTuple_Pack
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
 from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
 from pyccel.ast.c_concepts import ObjectAddress
@@ -86,7 +86,8 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         CCodePrinter.is_c_pointer : The extended function.
         """
-        if isinstance(a.class_type, (WrapperCustomDataType, BindCPointer, CStackArray)):
+        if isinstance(a.class_type, (WrapperCustomDataType, BindCPointer,
+                                     CStackArray, PyTuple_Pack)):
             return True
         elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create)):
             return True
@@ -585,3 +586,9 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Py_ssize_t_Cast(self, expr):
         var = self._print(expr.args[0])
         return f'(Py_ssize_t){var}'
+
+    def _print_PyTuple_Pack(self, expr):
+        args = expr.args
+        n = len(args)
+        args_code = ', '.join(self._print(a) for a in args)
+        return f'(*PyTuple_Pack( {n}, {args_code} ))'

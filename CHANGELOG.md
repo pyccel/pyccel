@@ -71,6 +71,7 @@ All notable changes to this project will be documented in this file.
 -   #2182 : Add support for `isinstance`.
 -   #2183 : Add compile time analysis of if block conditions.
 -   #2139 : Add support for `__getitem__`
+-   #337 : Add support for returning tuples from functions.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
@@ -126,6 +127,7 @@ All notable changes to this project will be documented in this file.
 -   #2112 : Improve floor division.
 -   #2220 : Fix premature `stc/cspan` import.
 -   #2214 : Fix returning a local variable from an inline function.
+-   #1321 : Fix use of tuples returned from functions in a non-assign statement.
 
 ### Changed
 
@@ -167,6 +169,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Use `_extract_X_FunctionDefResult` methods in Fortran-to-C wrapper.
 -   \[INTERNALS\] Rename `BindCVariable`->`BindCModuleVariable`.
 -   \[INTERNALS\] Save a shape whose length is limited to the container length.
+-   \[INTERNALS\] Restrict use of `FunctionDefResult` to one instance per function.
 
 ### Deprecated
 
