@@ -933,8 +933,8 @@ class Scope(object):
         Returns
         -------
         list[Variable]
-            An object containing all variables that should be printed in a low-level language
-            to represent the Variable.
+            All variables that should be printed in a low-level language to represent
+            the Variable.
         """
         if isinstance(tuple_var, BindCVariable):
             tuple_var = tuple_var.new_var
