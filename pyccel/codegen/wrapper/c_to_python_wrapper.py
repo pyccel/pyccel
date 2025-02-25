@@ -1629,7 +1629,7 @@ class CToPythonWrapper(Wrapper):
         is_bind_c_argument = isinstance(expr.var, BindCVariable)
 
         orig_var = getattr(expr.var, 'original_var', expr.var)
-        bound_argument = getattr(expr, 'wrapping_bound_argument', expr.bound_argument)
+        bound_argument = expr.bound_argument
 
         # Collect the function which casts from a Python object to a C object
         arg_extraction = self._extract_FunctionDefArgument(orig_var, collect_arg, bound_argument, is_bind_c_argument)
