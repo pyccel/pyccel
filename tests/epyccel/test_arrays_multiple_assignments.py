@@ -145,9 +145,10 @@ def test_creation_in_loop_stack(language):
     error_info = error_info_list[0]
     assert error_info.symbol  == 'x'
     assert error_info.message == STACK_ARRAY_UNKNOWN_SHAPE
-    error_info = error_info_list[1]
-    assert error_info.symbol  == 'x'
-    assert error_info.message == STACK_ARRAY_DEFINITION_IN_LOOP
+    if errors.mode != 'developer':
+        error_info = error_info_list[1]
+        assert error_info.symbol  == 'x'
+        assert error_info.message == STACK_ARRAY_DEFINITION_IN_LOOP
 
 #==============================================================================
 def test_creation_in_if_heap(language):

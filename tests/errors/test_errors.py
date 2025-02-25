@@ -15,6 +15,8 @@ from pyccel.codegen.codegen import Codegen
 from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.errors.errors   import Errors, PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError, PyccelError
 from pyccel.errors.errors   import ErrorsMode
+from pyccel.naming                 import name_clash_checkers
+from pyccel.parser.scope           import Scope
 
 error_mode = ErrorsMode()
 
@@ -60,6 +62,7 @@ def test_semantic_blocking_errors(f):
     errors = Errors()
     errors.reset()
 
+    Scope.name_clash_checker = name_clash_checkers['fortran']
     pyccel = Parser(f)
     ast = pyccel.parse()
 

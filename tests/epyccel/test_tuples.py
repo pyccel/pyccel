@@ -22,8 +22,6 @@ tuple_funcs = [(f, getattr(tuples_module,f)) for f in tuples_module.__all__
 
 failing_tests = {
         'homogeneous_tuple_string':"Can't save a list of strings (#459)",
-        'tuple_homogeneous_return':"Can't return a tuple",
-        'tuple_inhomogeneous_return':"Can't return a tuple",
         'tuple_visitation_inhomogeneous':"Can't iterate over an inhomogeneous tuple",
         'tuple_homogeneous_string':"Can't save a list of strings (#459)",
         }

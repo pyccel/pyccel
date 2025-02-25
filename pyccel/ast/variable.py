@@ -126,15 +126,14 @@ class Variable(TypedAstNode):
         if isinstance(name, str):
             name = name.split(""".""")
             if len(name) == 1:
-                name = name[0]
+                name = PyccelSymbol(name[0])
             else:
                 name = DottedName(*name)
 
         if name == '':
             raise ValueError("Variable name can't be empty")
 
-        if not isinstance(name, (str, DottedName)):
-            raise TypeError(f'Expecting a string or DottedName, given {type(name)}')
+        assert isinstance(name, (PyccelSymbol, DottedName))
         self._name = name
 
         if memory_handling not in ('heap', 'stack', 'alias'):
@@ -175,12 +174,12 @@ class Variable(TypedAstNode):
         elif shape is None:
             shape = tuple(None for i in range(class_type.container_rank))
 
-        # Ignore codegen stage due to #861
-        assert pyccel_stage == 'codegen' or class_type.shape_is_compatible(shape)
-
         self._alloc_shape = shape
         self._class_type = class_type
         self._shape = self.process_shape(shape)
+
+        # Ignore codegen stage due to #861
+        assert pyccel_stage == 'codegen' or class_type.shape_is_compatible(self._shape)
 
     def process_shape(self, shape):
         """
@@ -240,7 +239,8 @@ class Variable(TypedAstNode):
         bool
             Whether or not the variable shape can change in the i-th dimension.
         """
-        return self.is_alias or isinstance(self.class_type, (HomogeneousListType, HomogeneousSetType, DictType))
+        return (self.is_alias and not isinstance(self.class_type, InhomogeneousTupleType)) or \
+                isinstance(self.class_type, (HomogeneousListType, HomogeneousSetType, DictType))
 
     def set_changeable_shape(self):
         """
@@ -733,7 +733,9 @@ class IndexedElement(TypedAstNode):
 
         super().__init__()
 
-        if isinstance(self._class_type, ContainerType) and self._shape is None:
+        if isinstance(self._class_type, InhomogeneousTupleType) and self._shape is None:
+            self._shape = (len(self._class_type),)
+        elif isinstance(self._class_type, ContainerType) and self._shape is None:
             self._shape = tuple(PyccelArrayShapeElement(self, i) \
                                 for i in range(self._class_type.container_rank))
 
@@ -892,8 +894,12 @@ class AnnotatedPyccelSymbol(PyccelAstNode):
     name : str
         Name of the symbol.
 
-    annotation : SyntacticTypeAnnotation
+    annotation : PyccelAstNode, optional
         The annotation describing the type that the object will have.
+        This should be an object from the type_annotations or typingext module
+        (e.g. SyntacticTypeAnnotation, FunctionTypeAnnotation, TypingFinal).
+        The annotation may be None if the argument is a bound class argument
+        whose type can be auto-deduced later.
 
     is_temp : bool
         Indicates if the symbol is a temporary object. This either means that the
@@ -905,6 +911,7 @@ class AnnotatedPyccelSymbol(PyccelAstNode):
     _attribute_nodes = ()
 
     def __init__(self, name, annotation, is_temp = False):
+        assert annotation is None or isinstance(annotation, PyccelAstNode)
         if isinstance(name, (PyccelSymbol, DottedName)):
             self._name = name
         elif isinstance(name, str):

@@ -510,7 +510,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                         "which return tuples or None",
                         symbol=line, severity='fatal')
 
-            func_results = [f.funcdef.results[0].var for f in funcs]
+            func_results = [f.funcdef.results.var for f in funcs]
             func_vars2 = [new_index(r.dtype, r.name) for r in func_results]
             assigns   += [Assign(v, f) for v,f in zip(func_vars2, funcs)]
 
@@ -863,6 +863,8 @@ def flatten_tuple_var(expr, scope):
         A list of all the variables that should be printed to describe the
         inhomogeneous tuple Variable.
     """
+    if expr is Nil():
+        return []
     if isinstance(expr, BindCVariable):
         return flatten_tuple_var(expr.new_var, scope)
     if isinstance(expr.class_type, InhomogeneousTupleType):
