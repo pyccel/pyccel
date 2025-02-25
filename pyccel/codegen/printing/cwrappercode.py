@@ -488,8 +488,9 @@ class CWrapperCodePrinter(CCodePrinter):
         map_magic_methods_def = f"static PyMappingMethods {map_magic_method_name} = {{\n"
         if '__len__' in magic_methods:
             map_magic_methods_def += f"    .mp_length = (lenfunc){magic_methods['__len__'].name},\n"
+        if '__getitem__' in magic_methods:
+            map_magic_methods_def += f"     .mp_subscript = (binaryfunc){magic_methods['__getitem__'].name},\n"
         map_magic_methods_def += '};\n'
-
         method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
                         f'{method_def_funcs}'
