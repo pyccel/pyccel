@@ -164,6 +164,21 @@ def test_inline_return(language):
 
     assert f() == g()
 
+def test_inline_multiple_results(language):
+    def f():
+        @inline
+        def get_2_vals(a : int):
+            return a*2, a-5
+
+        get_2_vals(5)
+        x = get_2_vals(7)
+        y0,y1 = get_2_vals(3)
+        return x, y0, y1
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
 def test_inline_literal_return(language):
     def f():
         @inline
@@ -209,6 +224,66 @@ def test_inline_multiple_return(language):
         b,c = tmp()
         d,e = tmp()
         return b,c,d,e
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_homogeneous_tuple_result(language):
+    def f():
+        @inline
+        def get_2_vals(a : int):
+            b = (a*2, a-5)
+            return b
+
+        get_2_vals(5)
+        x = get_2_vals(7)
+        y0,y1 = get_2_vals(3)
+        return x, y0, y1
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_inhomogeneous_tuple_result(language):
+    def f():
+        @inline
+        def get_2_vals(a : int):
+            b : tuple[int,int] = (a*2, a-5)
+            return b
+
+        get_2_vals(5)
+        x = get_2_vals(7)
+        y0,y1 = get_2_vals(3)
+        return x, y0, y1
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inhomogeneous_tuple_in_inline(language):
+    def f():
+        @inline
+        def tmp():
+            a = (1, False)
+            return a[0] + 2
+
+        b = tmp()
+        return b
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_multi_level_inhomogeneous_tuple_in_inline(language):
+    def f():
+        @inline
+        def tmp():
+            a = ((1, False), 3.0)
+            return a[0][0] + 2
+
+        b = tmp()
+        return b
 
     g = epyccel(f, language=language)
 

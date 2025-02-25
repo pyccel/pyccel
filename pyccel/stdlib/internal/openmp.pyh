@@ -29,7 +29,7 @@
 #$ header function omp_get_nested() results(bool)
 
 #$ header function omp_set_schedule(int32, int32)
-#$ header function omp_get_schedule() results(int32, int32)
+#$ header function omp_get_schedule() results(tuple[int32, int32])
 
 #$ header function omp_get_thread_limit() results(int32)
 #$ header function omp_set_max_active_levels(int32)
