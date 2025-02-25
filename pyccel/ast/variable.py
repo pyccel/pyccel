@@ -894,8 +894,12 @@ class AnnotatedPyccelSymbol(PyccelAstNode):
     name : str
         Name of the symbol.
 
-    annotation : SyntacticTypeAnnotation
+    annotation : PyccelAstNode, optional
         The annotation describing the type that the object will have.
+        This should be an object from the type_annotations or typingext module
+        (e.g. SyntacticTypeAnnotation, FunctionTypeAnnotation, TypingFinal).
+        The annotation may be None if the argument is a bound class argument
+        whose type can be auto-deduced later.
 
     is_temp : bool
         Indicates if the symbol is a temporary object. This either means that the
