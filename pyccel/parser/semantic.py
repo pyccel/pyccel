@@ -3958,7 +3958,9 @@ class SemanticParser(BasicParser):
     def _visit_FunctionalFor(self, expr):
         old_index   = expr.index
         new_index   = self.scope.get_new_name()
-        expr.substitute(old_index, new_index)
+        # Identity comparison is required to only find duplicates of the index caused
+        # by the construction of FunctionalFor.
+        expr.substitute(old_index, new_index, is_equivalent = lambda x,y: x is y)
 
         target  = expr.expr
         index   = new_index

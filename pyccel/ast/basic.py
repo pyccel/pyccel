@@ -256,7 +256,8 @@ class PyccelAstNode:
         node.toggle_recursion()
         return False
 
-    def substitute(self, original, replacement, excluded_nodes = (), invalidate = True):
+    def substitute(self, original, replacement, excluded_nodes = (), invalidate = True,
+            is_equivalent = None):
         """
         Substitute object 'original' for object 'replacement' in the code.
 
@@ -274,6 +275,12 @@ class PyccelAstNode:
         invalidate : bool
                     Indicates whether the removed object should
                     be invalidated.
+        is_equivalent : function, optional
+                    A function that compares the original object to the object
+                    in the PyccelAstNode to determine if it is the object that
+                    we are searching for. Usually this is an equality in the
+                    syntactic stage and an identity comparison in the semantic
+                    stage, but occasionally a different choice may be useful.
         """
         if self._recursion_in_progress:
             return
@@ -291,12 +298,13 @@ class PyccelAstNode:
             original = (original,)
             replacement = (replacement,)
 
-        if self.pyccel_staging == 'syntactic':
-            def is_equivalent(x, y):
-                return x == y
-        else:
-            def is_equivalent(x, y):
-                return x is y
+        if is_equivalent is None:
+            if self.pyccel_staging == 'syntactic':
+                def is_equivalent(x, y):
+                    return x == y
+            else:
+                def is_equivalent(x, y):
+                    return x is y
 
         def prepare_sub(found_node):
             idx = original.index(found_node)
@@ -329,14 +337,14 @@ class PyccelAstNode:
                         if any(is_equivalent(vi, oi) for oi in original):
                             new_vi = prepare_sub(vi)
                         elif not self._ignore(vi):
-                            vi.substitute(original, replacement, excluded_nodes, invalidate)
+                            vi.substitute(original, replacement, excluded_nodes, invalidate, is_equivalent)
                     if iterable(new_vi):
                         new_v.extend(new_vi)
                     else:
                         new_v.append(new_vi)
                 setattr(self, n, tuple(new_v))
             elif not self._ignore(v):
-                v.substitute(original, replacement, excluded_nodes, invalidate)
+                v.substitute(original, replacement, excluded_nodes, invalidate, is_equivalent)
         self._recursion_in_progress = False
 
     @property
