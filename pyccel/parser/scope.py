@@ -691,7 +691,7 @@ class Scope(object):
             In the case of a Variable: a Variable which will be cloned to set all the Variable properties.
         name : str, optional
             The requested name for the new variable.
-        clone_scope : Scope
+        clone_scope : Scope, optional
             A scope which can be used to look for tuple elements when cloning a
             Variable.
         **kwargs : dict
