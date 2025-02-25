@@ -3441,13 +3441,61 @@ class SemanticParser(BasicParser):
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
 
-        if isinstance(rhs, PythonTuple):
+        if isinstance(rhs, (PythonTuple, PythonList)):
             assign_elems = None
             if isinstance(lhs, PythonTuple):
+                # Create variables to handle swap expressions
+                unsaved_vars = set()
                 pyccel_stage.set_stage('syntactic')
-                syntactic_assign_elems = [Assign(l, r, python_ast=expr.python_ast) for l, r in zip(lhs, rhs)]
+                unsaved_vars = set(rhs.get_attribute_nodes((PyccelSymbol, DottedName, IndexedElement),
+                                                            excluded_nodes = (FunctionDef,)))
                 pyccel_stage.set_stage('semantic')
-                assign_elems = [self._visit(a) for a in syntactic_assign_elems]
+
+                # Test if the expression describes a basic swap or if the rhs contains expressions
+                # (e.g. arithmetic expressions or further tuples)
+                # using variables from the left-hand side.
+                modified_vars = set(lhs.get_attribute_nodes((PyccelSymbol, DottedName, IndexedElement)))
+                used_vars = set(rhs.get_attribute_nodes((PyccelSymbol, DottedName, IndexedElement),
+                                    excluded_nodes = (FunctionDef,)))
+                if used_vars.intersection(modified_vars).difference(unsaved_vars):
+                    errors.report("Assign statement is too complex. It seems that some of the variables used non-trivially on the right-hand side appear on the left-hand side.",
+                            severity='error', symbol=expr)
+
+                assign_elems = []
+                for i, l in enumerate(lhs):
+                    r = rhs[i]
+                    # Get unsaved variables that are still needed
+                    pyccel_stage.set_stage('syntactic')
+                    tmp_rhs_tuple = PythonTuple(*rhs.args[i+1:])
+                    unsaved_vars = set(tmp_rhs_tuple.get_attribute_nodes((PyccelSymbol, DottedName, IndexedElement),
+                                                                         excluded_nodes = (FunctionDef,)))
+                    pyccel_stage.set_stage('semantic')
+
+                    # If the lhs element has not yet been saved to a variable create a new
+                    # variable to hold this value
+                    if l in unsaved_vars:
+                        temp = self.scope.get_new_name()
+                        pyccel_stage.set_stage('syntactic')
+                        local_assign = Assign(temp, l, python_ast = expr.python_ast)
+                        pyccel_stage.set_stage('semantic')
+                        assign_elems.append(self._visit(local_assign))
+                        # Save the variable containing the value to rhs so it can be
+                        # used when it appears in the assignment
+                        if isinstance(l, IndexedElement):
+                            # A list is required for IndexedElements as they are not singletons
+                            l_list = [r for r in rhs.get_attribute_nodes(IndexedElement) if r == l]
+                        else:
+                            l_list = [l]
+                        for l_elem in l_list:
+                            rhs.substitute(l_elem, temp)
+                        if r == l:
+                            r = temp
+
+                    # Check for a replacement right-hand side if the rhs is found among the lhs variables
+                    pyccel_stage.set_stage('syntactic')
+                    local_assign = Assign(l, r, python_ast = expr.python_ast)
+                    pyccel_stage.set_stage('semantic')
+                    assign_elems.append(self._visit(local_assign))
             elif isinstance(lhs, (PyccelSymbol, DottedName)):
                 semantic_lhs = self.scope.find(lhs)
                 if semantic_lhs and isinstance(semantic_lhs.class_type, InhomogeneousTupleType):
@@ -3675,110 +3723,6 @@ class SemanticParser(BasicParser):
                     local_assign = Assign(l, r, python_ast = expr.python_ast)
                     pyccel_stage.set_stage('semantic')
                     body.append(self._visit(local_assign))
-                return CodeBlock(body)
-            else:
-                if isinstance(rhs.class_type, InhomogeneousTupleType):
-                    r_iter = [self.scope.collect_tuple_element(v) for v in rhs]
-                else:
-                    r_iter = [rhs[i] for i, li in enumerate(lhs)]
-
-                # Keep r_iter in a PythonTuple to allow calling substitute
-                r_iter = PythonTuple(*r_iter)
-
-                def get_syntactic_object(a):
-                    """
-                    Get the syntactic object that is represented by the rhs element.
-
-                    Get the syntactic object that is represented by the rhs element. This function
-                    is needed to analyse the variables/indexed elements that appear on both sides
-                    of the assignment. The syntactic object will not be equivalent to expr.rhs as
-                    it is only a part of the rhs.
-
-                    Parameters
-                    ----------
-                    a : PyccelAstNode
-                        The semantic object.
-
-                    Returns
-                    -------
-                    PyccelAstNode
-                        The syntactic object.
-                    """
-                    if isinstance(a, IndexedElement):
-                        return IndexedElement(get_syntactic_object(a.base),
-                                              *[get_syntactic_object(i) for i in a.indices])
-                    elif isinstance(a, Variable):
-                        return a.name
-                    elif isinstance(a, Literal) or a is None:
-                        return a
-                    elif isinstance(a, Slice):
-                        return Slice(get_syntactic_object(a.start),
-                                     get_syntactic_object(a.stop),
-                                     get_syntactic_object(a.step))
-                    else:
-                        pyccel_stage.set_stage('semantic')
-                        raise errors.report(f"Tuple assign statement is too complex for the current implementation due to {type(a)}.\n"
-                                      + PYCCEL_RESTRICTION_TODO, symbol=expr, severity='fatal')
-
-                # Create variables to handle swap expressions
-                unsaved_vars = set()
-                if isinstance(rhs, (PythonTuple, PythonList)):
-                    pyccel_stage.set_stage('syntactic')
-                    unsaved_vars = set(get_syntactic_object(a) for a in rhs.get_attribute_nodes(
-                                                                                (Variable, IndexedElement),
-                                                                                excluded_nodes = (FunctionDef,)))
-                    pyccel_stage.set_stage('semantic')
-
-                # Test if the expression describes a basic swap or if the rhs contains expressions
-                # (e.g. arithmetic expressions or further tuples)
-                # using variables from the left-hand side.
-                modified_vars = set(lhs.get_attribute_nodes((PyccelSymbol, DottedName, IndexedElement)))
-                used_vars = set(expr.rhs.get_attribute_nodes((PyccelSymbol, DottedName, IndexedElement),
-                                    excluded_nodes = (FunctionDef,)))
-                if used_vars.intersection(modified_vars).difference(unsaved_vars):
-                    errors.report("Assign statement is too complex. It seems that some of the variables used non-trivially on the right-hand side appear on the left-hand side.",
-                            severity='error', symbol=expr)
-
-                body = []
-                for i, l in enumerate(lhs):
-                    r = r_iter[i]
-                    # Get unsaved variables that are still needed
-                    tmp_rhs_tuple = PythonTuple(*r_iter.args[i+1:])
-                    pyccel_stage.set_stage('syntactic')
-                    unsaved_vars = set(get_syntactic_object(a) for a in tmp_rhs_tuple.get_attribute_nodes(
-                                                                                (Variable, IndexedElement),
-                                                                                excluded_nodes = (FunctionDef,)))
-                    pyccel_stage.set_stage('semantic')
-
-                    # If the lhs element has not yet been saved to a variable create a new
-                    # variable to hold this value
-                    if l in unsaved_vars:
-                        temp = self.scope.get_new_name()
-                        pyccel_stage.set_stage('syntactic')
-                        local_assign = Assign(temp, l, python_ast = expr.python_ast)
-                        pyccel_stage.set_stage('semantic')
-                        body.append(self._visit(local_assign))
-                        # Save the variable containing the value to rhs so it can be
-                        # used when it appears in the assignment
-                        semantic_l = self._visit(l)
-                        semantic_temp = self._visit(temp)
-                        if isinstance(semantic_l, IndexedElement):
-                            # A list is required for IndexedElements as they are not singletons
-                            semantic_l_list = [r for r in r_iter.get_attribute_nodes(IndexedElement) if r == semantic_l]
-                        else:
-                            semantic_l_list = [semantic_l]
-                        for s_l in semantic_l_list:
-                            r_iter.substitute(s_l, semantic_temp)
-                        if r == semantic_l:
-                            r = semantic_temp
-
-                    # Check for a replacement right-hand side if the rhs is found among the lhs variables
-                    pyccel_stage.set_stage('syntactic')
-                    local_assign = Assign(l, r, python_ast = expr.python_ast)
-                    pyccel_stage.set_stage('semantic')
-                    r.remove_user_node(local_assign)
-                    body.append(self._visit(local_assign))
-
                 return CodeBlock(body)
         else:
             lhs = self._visit(lhs)
