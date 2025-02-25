@@ -291,6 +291,13 @@ class PyccelAstNode:
             original = (original,)
             replacement = (replacement,)
 
+        if self.pyccel_staging == 'syntactic':
+            def is_equivalent(x, y):
+                return x == y
+        else:
+            def is_equivalent(x, y):
+                return x is y
+
         def prepare_sub(found_node):
             idx = original.index(found_node)
             rep = replacement[idx]
@@ -311,7 +318,7 @@ class PyccelAstNode:
             if isinstance(v, excluded_nodes):
                 continue
 
-            elif any(v is oi for oi in original):
+            elif any(is_equivalent(v, oi) for oi in original):
                 setattr(self, n, prepare_sub(v))
 
             elif isinstance(v, tuple):
@@ -319,7 +326,7 @@ class PyccelAstNode:
                 for vi in v:
                     new_vi = vi
                     if not isinstance(vi, excluded_nodes):
-                        if any(vi is oi for oi in original):
+                        if any(is_equivalent(vi, oi) for oi in original):
                             new_vi = prepare_sub(vi)
                         elif not self._ignore(vi):
                             vi.substitute(original, replacement, excluded_nodes, invalidate)
