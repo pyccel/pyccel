@@ -68,7 +68,7 @@ class Scope(object):
             '_dummy_counter','_original_symbol', '_dotted_symbols')
 
     categories = ('functions','variables','classes',
-            'imports','symbolic_functions', 'symbolic_alias',
+            'imports','symbolic_functions', 'symbolic_aliases',
             'macros','templates','headers','decorators',
             'cls_constructs')
 
@@ -93,7 +93,7 @@ class Scope(object):
 
         self._locals['decorators'].update(decorators)
         if symbolic_aliases:
-            self._locals['symbolic_alias'].update(symbolic_aliases)
+            self._locals['symbolic_aliases'].update(symbolic_aliases)
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
@@ -216,14 +216,14 @@ class Scope(object):
         return self._sons_scopes
 
     @property
-    def symbolic_alias(self):
+    def symbolic_aliases(self):
         """
         A dictionary of symbolic alias defined in this scope.
 
         A symbolic alias is a symbol declared in the scope which is mapped
         to a constant object. E.g. a symbol which represents a type.
         """
-        return self._locals['symbolic_alias']
+        return self._locals['symbolic_aliases']
 
     @property
     def symbolic_functions(self):
@@ -346,7 +346,7 @@ class Scope(object):
             self.parent_scope.insert_variable(var, name)
         else:
             if name in self._locals['variables']:
-                if name in self.symbolic_alias.values():
+                if name in self.symbolic_aliases.values():
                     # If the syntactic name is in the symbolic aliases then the link was created
                     # at the syntactic stage. In this case the element will be created before the
                     # tuple
@@ -557,7 +557,7 @@ class Scope(object):
         if not self.allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_symbolic_alias(symbol, alias)
         else:
-            symbolic_aliases = self._locals['symbolic_alias']
+            symbolic_aliases = self._locals['symbolic_aliases']
             if symbol in symbolic_aliases:
                 errors.report(f"{symbol} cannot represent multiple static concepts",
                         symbol=symbol, severity='error')
@@ -897,7 +897,7 @@ class Scope(object):
                 class_var = None
                 tuple_elem_search = tuple_elem
 
-            result = self.find(tuple_elem_search, 'symbolic_alias')
+            result = self.find(tuple_elem_search, 'symbolic_aliases')
 
             if result is None:
                 msg = f'Internal error. Tuple element {tuple_elem} could not be found.'

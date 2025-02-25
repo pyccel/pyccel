@@ -1407,8 +1407,8 @@ class SemanticParser(BasicParser):
                 pyccel_stage.set_stage('syntactic')
                 idx_name = IndexedElement(name, i)
                 var = None
-                if idx_name in self.scope.symbolic_alias:
-                    elem_name = self.scope.symbolic_alias[idx_name]
+                if idx_name in self.scope.symbolic_aliases:
+                    elem_name = self.scope.symbolic_aliases[idx_name]
                     var = self.check_for_variable(elem_name)
                 else:
                     elem_name = self.scope.get_new_name( f'{name}_{i}' )
@@ -1535,7 +1535,7 @@ class SemanticParser(BasicParser):
                 else:
                     var = None
             else:
-                symbolic_var = self.scope.find(lhs, 'symbolic_alias')
+                symbolic_var = self.scope.find(lhs, 'symbolic_aliases')
                 if symbolic_var:
                     errors.report(f"{lhs} variable represents a symbolic concept. Its value cannot be changed.",
                             severity='fatal')
@@ -4430,7 +4430,7 @@ class SemanticParser(BasicParser):
             scope = self.create_new_function_scope(name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
                     original_symbols = expr.scope.python_names.copy(),
-                    symbolic_aliases = expr.scope.symbolic_alias)
+                    symbolic_aliases = expr.scope.symbolic_aliases)
 
             for n, v in zip(template_names, template_combinations[tmpl_idx]):
                 self.scope.insert_symbolic_alias(n, v)
@@ -4443,7 +4443,7 @@ class SemanticParser(BasicParser):
             arg_dict  = {a.name:a.var for a in arguments}
             annotated_args.append(arguments)
             for n in template_names:
-                self.scope.symbolic_alias.pop(n)
+                self.scope.symbolic_aliases.pop(n)
 
             if function_call_args is not None:
                 is_compatible = self._check_argument_compatibility(function_call_args, arguments, expr, is_elemental, raise_error=False)
