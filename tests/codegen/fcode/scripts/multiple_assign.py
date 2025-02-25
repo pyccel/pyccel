@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-#$ header g(double, double) results(tuple[float, float])
-def g(x,v):
+def g(x : float, v : float) -> tuple[float, float]:
     m = x - v
     t =  2.0 * m
     z =  2.0 * t
