@@ -928,8 +928,9 @@ class Scope(object):
 
         Returns
         -------
-        Variable | PythonTuple
-            An object containing only variables that can be printed in a low-level language.
+        list[Variable]
+            An object containing all variables that should be printed in a low-level language
+            to represent the Variable.
         """
         if isinstance(tuple_var, BindCVariable):
             tuple_var = tuple_var.new_var
