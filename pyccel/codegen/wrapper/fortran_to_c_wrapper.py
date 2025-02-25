@@ -78,10 +78,10 @@ class FortranToCWrapper(Wrapper):
         list
             A list of Basic nodes describing the body of the function.
         """
-        next_optional_arg = next((a for a in wrapped_args if a['c_arg'].original_var.is_optional and a not in handled), None)
+        next_optional_arg = next((a for a in wrapped_args if a['c_arg'].var.original_var.is_optional and a not in handled), None)
         if next_optional_arg:
             args = wrapped_args.copy()
-            optional_var = next_optional_arg['c_arg']
+            optional_var = next_optional_arg['c_arg'].var
             handled += (next_optional_arg, )
             true_section = IfSection(PyccelIsNot(optional_var, Nil()),
                                     self._get_function_def_body(func, args, results, handled))
@@ -221,9 +221,9 @@ class FortranToCWrapper(Wrapper):
             return EmptyNode()
 
         # Wrap the arguments and collect the expressions passed as the call argument.
-        wrapped_args = [self._extract_FunctionDefArgument(a.var, expr) for a in expr.arguments]
+        wrapped_args = [self._extract_FunctionDefArgument(a, expr) for a in expr.arguments]
         #func_arguments = [self._wrap(a) for a in expr.arguments]
-        func_arguments = [FunctionDefArgument(a['c_arg']) for a in wrapped_args]
+        func_arguments = [a['c_arg'] for a in wrapped_args]
         call_arguments = [a['f_arg'] for a in wrapped_args]
         func_to_call = {fa : ca for ca, fa in zip(call_arguments, func_arguments)}
 
@@ -274,14 +274,20 @@ class FortranToCWrapper(Wrapper):
         functions = [f for f in functions if not isinstance(f, EmptyNode)]
         return Interface(expr.name, functions, expr.is_argument)
 
-    def _extract_FunctionDefArgument(self, var, func):
+    def _extract_FunctionDefArgument(self, expr, func):
+        var = expr.var
         class_type = var.class_type
 
         classes = type(class_type).__mro__
         for cls in classes:
             annotation_method = f'_extract_{cls.__name__}_FunctionDefArgument'
             if hasattr(self, annotation_method):
-                return getattr(self, annotation_method)(var, func)
+                func_def_argument_dict = getattr(self, annotation_method)(var, func)
+                new_var = func_def_argument_dict['c_arg']
+                func_def_argument_dict['c_arg'] = FunctionDefArgument(new_var, value = expr.value,
+                    kwonly = expr.is_kwonly, annotation = expr.annotation,
+                    bound_argument = expr.bound_argument, persistent_target = expr.persistent_target)
+                return func_def_argument_dict
 
         # Unknown object, we raise an error.
         return errors.report(f"Wrapping function arguments is not implemented for type {class_type}. "
@@ -441,7 +447,7 @@ class FortranToCWrapper(Wrapper):
         self.scope.insert_symbol(expr.name)
         getter_result = self._wrap(FunctionDefResult(expr))
 
-        getter_arg_wrapper = self._extract_FunctionDefArgument(lhs, expr)
+        getter_arg_wrapper = self._extract_FunctionDefArgument(FunctionDefArgument(lhs, bound_argument = True), expr)
         self_obj = getter_arg_wrapper['f_arg']
         getter_arg = FunctionDefArgument(getter_arg_wrapper['c_arg'])
 
@@ -469,10 +475,10 @@ class FortranToCWrapper(Wrapper):
         self.scope = setter_scope
         self.scope.insert_symbol(expr.name)
 
-        setter_arg_wrappers = (self._extract_FunctionDefArgument(lhs, expr),
-                               self._extract_FunctionDefArgument(expr, expr))
-        setter_args = (FunctionDefArgument(setter_arg_wrappers[0]['c_arg']),
-                       FunctionDefArgument(setter_arg_wrappers[1]['c_arg']))
+        setter_arg_wrappers = (self._extract_FunctionDefArgument(FunctionDefArgument(lhs, bound_argument = True), expr),
+                               self._extract_FunctionDefArgument(FunctionDefArgument(expr), expr))
+        setter_args = (setter_arg_wrappers[0]['c_arg'],
+                       setter_arg_wrappers[1]['c_arg'])
         if expr.is_alias:
             setter_args[1].persistent_target = True
 

@@ -234,7 +234,7 @@ class CToPythonWrapper(Wrapper):
             self._python_object_map[bound_arg] = func_args[0]
 
         # Create the list of argument names
-        arg_names = [getattr(a, 'original_function_argument_variable', a.var).name for a in args]
+        arg_names = [getattr(a.var, 'original_var', a.var).name for a in args]
         keyword_list = PyArgKeywords(keyword_list_name, arg_names)
 
         # Parse arguments
