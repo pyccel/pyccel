@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy.random import randint
+from numpy.random import randint, rand
 import numpy as np
 from numpy import iinfo
 from pyccel import epyccel
@@ -101,6 +101,20 @@ def test_multi_level_swap(language):
     y = randint(min_int, max_int)
     z = randint(min_int, max_int)
     assert f(x,y,z) == swp(x,y,z)
+
+def test_multi_type_swap(language):
+    def swp(a : float, b : int, c : float, d : int):
+        a, b, c, d = c, d, a, b
+        return a, b, c, d
+
+    b = randint(min_int, max_int)
+    d = randint(min_int, max_int)
+    a = rand()*100
+    c = rand()*100
+
+    f = epyccel(swp, language=language)
+    assert f(a,b,c,d) == swp(a,b,c,d)
+    assert f(-2.,4,-6.,10) == swp(-2.,4,-6.,10)
 
 def test_tuple_assign(language):
     def tup_assign(a : int, b : int):
