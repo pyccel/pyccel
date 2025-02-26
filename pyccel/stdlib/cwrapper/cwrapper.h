@@ -25,6 +25,10 @@
 # define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API
 # include "numpy/arrayobject.h"
 
+
+extern const int NO_TYPE_CHECK;
+extern const int NO_ORDER_CHECK;
+
 /*
  * A function which can be passed to a PyCapsule in order to free data that was created by Pyccel.
  */
@@ -48,11 +52,7 @@ void capsule_cleanup(PyObject *capsule);
  * c_order : True if the data is in C order, False otherwise.
  * release_memory : If true a Capsule is created to automatically free the data when the created PyArrayObject goes out of scope.
  */
-#if defined(_WIN32) && (PyArray_RUNTIME_VERSION >= NPY_2_0_API_VERSION)
 PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int32_t shape[], bool c_order, bool release_memory);
-#else
-PyObject* to_pyarray(int nd, enum NPY_TYPES typenum, void* data, int64_t shape[], bool c_order, bool release_memory);
-#endif
 
 /*
  * Functions : Cast functions
@@ -222,6 +222,11 @@ static inline bool    PyIs_Complex64(PyObject *o)
 {
     return PyArray_IsScalar(o, Complex64);
 }
+
+
+/* arrays checkers and helpers */
+bool	pyarray_check(const char* name, PyObject *o, int dtype, int rank, int flag);
+bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag);
 
 /*
  * Functions : Numpy array handling functions

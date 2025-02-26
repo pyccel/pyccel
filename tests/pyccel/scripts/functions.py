@@ -58,6 +58,15 @@ helloworld()
 def pass_fun():
     pass
 
+def tuple_ret():
+    return 1,2
+
+def tuple_use():
+    return tuple_ret()
+
+def multi_level_tuple_return():
+    return 2,(4,5),5
+
 if __name__ == '__main__':
     print(y_)
     print(y)
@@ -66,3 +75,6 @@ if __name__ == '__main__':
     print(z2)
     my_print(np.array([1,2,3]))
     f(1,b=b)
+    print(tuple_use())
+    print(multi_level_tuple_return())
+    print(multi_level_tuple_return()[2])

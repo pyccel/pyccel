@@ -76,7 +76,7 @@ from pyccel.parser.syntax.openacc import parse as acc_parse
 
 from pyccel.utilities.stage import PyccelStage
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
 
 # TODO - remove import * and only import what we need
 from pyccel.errors.messages import *
@@ -142,14 +142,11 @@ class SyntaxParser(BasicParser):
         self._code    = code
         self._context = []
 
-        self.load()
-
         tree                = extend_tree(code)
         self._fst           = tree
         self._in_lhs_assign = False
 
         self.parse()
-        self.dump()
 
     def parse(self):
         """
@@ -205,6 +202,7 @@ class SyntaxParser(BasicParser):
         if line.startswith('#$'):
             env = line[2:].lstrip()
             if env.startswith('omp'):
+                expr = omp_parse(stmts=line)
                 try:
                     expr = omp_parse(stmts=line)
                 except TextXSyntaxError as e:
@@ -296,6 +294,53 @@ class SyntaxParser(BasicParser):
                         symbol = stmt, severity='error')
             return EmptyNode()
 
+    def _get_unique_name(self, possible_names, valid_names, forbidden_names, suggestion):
+        """
+        Get a name for a variable amongst multiple possibilities.
+
+        Get a name for a variable. If the name is the only possibility it is
+        chosen. Otherwise a new name is constructed from the suggestions.
+        This function is usually used to find the name(s) of the result of a
+        FunctionDef.
+
+        Parameters
+        ----------
+        possible_names : iterable[PyccelSymbol | TypedAstNode]
+            The possible names found for the variable.
+        valid_names : iterable[PyccelSymbol]
+            The names found in the scope that can be used for this variable (this is
+            important to avoid accidentally using an imported variable).
+        forbidden_names : iterable[PyccelSymbol]
+            The names that should not be used.
+        suggestion : PyccelSymbol
+            The name that may be used instead.
+
+        Returns
+        -------
+        str
+            The new name of the variable.
+        """
+        if all(isinstance(n, (PythonTuple, PythonList)) for n in possible_names) and \
+                len(set(len(n) for n in possible_names)) == 1:
+            # If all possible names are iterables of the same length then find a name
+            # for each element and link them to an element describing this variable
+            # via IndexedElement (these are tuple elements).
+            possible_names = list(zip(*[n.args for n in possible_names]))
+            unique_names = [self._get_unique_name(n, valid_names, forbidden_names, f'{suggestion}_{i}') \
+                            for i,n in enumerate(possible_names)]
+            temp_name = self.scope.get_new_name(suggestion, is_temp = True)
+            for i, n in enumerate(unique_names):
+                self.scope.insert_symbolic_alias(IndexedElement(temp_name, i), n)
+            return temp_name
+        else:
+            suggested_names = set(n for n in possible_names if isinstance(n, PyccelSymbol))
+            if len(suggested_names) == 1:
+                # If one name is suggested then return it unless it is forbidden
+                new_name = suggested_names.pop()
+                if new_name not in forbidden_names and new_name in valid_names:
+                    return new_name
+            return self.scope.get_new_name(suggestion, is_temp = True)
+
     #====================================================
     #                 _visit functions
     #====================================================
@@ -329,9 +374,18 @@ class SyntaxParser(BasicParser):
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
             self._context.append(stmt)
-            result = getattr(self, syntax_method)(stmt)
-            if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
-                result.set_current_ast(stmt)
+            try:
+                result = getattr(self, syntax_method)(stmt)
+                if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
+                    result.set_current_ast(stmt)
+            except (PyccelError, NotImplementedError) as err:
+                raise err
+            except Exception as err: #pylint: disable=broad-exception-caught
+                if ErrorsMode().value == 'user':
+                    errors.report(PYCCEL_INTERNAL_ERROR,
+                            symbol = self._context[-1], severity='fatal')
+                else:
+                    raise err
             self._context.pop()
             return result
 
@@ -731,10 +785,6 @@ class SyntaxParser(BasicParser):
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
-        if results is Nil():
-            results = []
-        elif not isinstance(results, (list, PythonTuple, PythonList)):
-            results = [results]
         return Return(results)
 
     def _visit_Pass(self, stmt):
@@ -938,6 +988,7 @@ class SyntaxParser(BasicParser):
         #                   End of : To remove when headers are deprecated
         #---------------------------------------------------------------------------------------------------------
 
+        argument_names = {a.var.name for a in arguments}
         # Repack AnnotatedPyccelSymbols to insert argument_annotations from headers or types decorators
         arguments = [FunctionDefArgument(AnnotatedPyccelSymbol(a.var.name, annot), annotation=annot, value=a.value, kwonly=a.is_kwonly)
                            for a, annot in zip(arguments, argument_annotations)]
@@ -972,38 +1023,22 @@ class SyntaxParser(BasicParser):
 
         body = CodeBlock(body)
 
-        returns = [i.expr for i in body.get_attribute_nodes(Return,
-                    excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))]
-        assert all(len(i) == len(returns[0]) for i in returns)
-        if is_inline and len(returns)>1:
-            errors.report("Inline functions cannot have multiple return statements",
-                    symbol = stmt,
-                    severity = 'error')
-        results = []
-        result_counter = 1
-
-        local_symbols = self.scope.local_used_symbols
-
-        if result_annotation and not isinstance(result_annotation, (tuple, list)):
-            result_annotation = [result_annotation]
-
-        for i,r in enumerate(zip(*returns)):
-            r0 = r[0]
-
-            pyccel_symbol  = isinstance(r0, PyccelSymbol)
-            same_results   = all(r0 == ri for ri in r)
-            name_available = all(r0 != a.name for a in arguments) and r0 in local_symbols
-
-            if pyccel_symbol and same_results and name_available:
-                result_name = r0
-            else:
-                result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
+        returns = body.get_attribute_nodes(Return,
+                    excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
+        if len(returns) == 0 or all(r.expr is Nil() for r in returns):
+            results = FunctionDefResult(Nil())
+        else:
+            results = self._get_unique_name([r.expr for r in returns],
+                                        valid_names = self.scope.local_used_symbols.keys(),
+                                        forbidden_names = argument_names,
+                                        suggestion = 'result')
 
             if result_annotation:
-                result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation[i])
+                results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
 
-            results.append(FunctionDefResult(result_name, annotation = result_annotation))
-            results[-1].set_current_ast(stmt)
+            results = FunctionDefResult(results, annotation = result_annotation)
+
+        results.set_current_ast(stmt)
 
         self.exit_function_scope()
 

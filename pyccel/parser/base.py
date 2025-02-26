@@ -11,13 +11,9 @@ Module containing aspects of a parser which are in common over all stages.
 import importlib
 import os
 import re
-import warnings
-from filelock import FileLock
 
 #==============================================================================
 from pyccel.version import __version__
-
-from pyccel.ast.builtins import Lambda
 
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
 from pyccel.ast.core import SympyFunction
@@ -156,8 +152,7 @@ class BasicParser(object):
 
         # represent the scope of a function
         self._scope = Scope()
-        self._current_function_name = None
-        self._current_function = []
+        self._current_function = None
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
@@ -172,24 +167,6 @@ class BasicParser(object):
         # TODO ERROR must be passed to the Parser __init__ as argument
 
         self._blocking = error_mode.value == 'developer'
-
-        self._created_from_pickle = False
-
-    def __setstate__(self, state):
-        copy_slots = ('_code', '_fst', '_ast', '_metavars', '_scope', '_filename',
-                '_metavars', '_scope', '_current_function',
-                '_syntax_done', '_semantic_done', '_current_ast_node')
-
-        self.__dict__.update({s : state[s] for s in copy_slots})
-
-        if not isinstance(self.scope, Scope):
-            # self.scope as set, deprecated in PR 1089
-            raise AttributeError("Scope should be a Scope (Type was previously set in syntactic parser)")
-
-        # Error related flags. Should not be influenced by pickled file
-        self._blocking = ErrorsMode().value == 'developer'
-
-        self._created_from_pickle = True
 
     @property
     def scope(self):
@@ -444,115 +421,6 @@ class BasicParser(object):
         """ Exit the class scope and return to the encasing scope
         """
         self._scope = self._scope.parent_scope
-
-    def dump(self, filename=None):
-        """
-        Dump the current ast using Pickle.
-
-        Dump the current ast using Pickle.
-
-        Parameters
-        ----------
-        filename : str
-            Output file name. if not given `name.pyccel` will be used and placed
-            in the Pyccel directory ($HOME/.pyccel).
-        """
-        if self._created_from_pickle:
-            return
-
-        if not filename:
-            if not self.filename:
-                raise ValueError('Expecting a filename to load the ast')
-
-            path , name  = os.path.split(self.filename)
-
-            name, ext = os.path.splitext(name)
-            if ext != '.pyh':
-                return
-
-            name     = f'{name}.pyccel'
-            filename = os.path.join(path, name)
-        # check extension
-
-        if os.path.splitext(filename)[1] != '.pyccel':
-            raise ValueError('Expecting a .pyccel extension')
-
-        import pickle
-        import hashlib
-
-        # ...
-
-        # we are only exporting the AST.
-        try:
-            with FileLock(filename+'.lock'):
-                try:
-                    code = self.code.encode('utf-8')
-                    hs   = hashlib.md5(code)
-                    with open(filename, 'wb') as f:
-                        pickle.dump((hs.hexdigest(), __version__, self), f)
-                    print("Created pickle file : ", filename)
-                except (FileNotFoundError, pickle.PickleError):
-                    pass
-        except PermissionError:
-            warnings.warn("Can't pickle files on a read-only system. Please run `sudo pyccel-init`")
-
-    def load(self, filename=None):
-        """
-        Load the current ast using Pickle.
-
-        Load the current ast using Pickle.
-
-        Parameters
-        ----------
-        filename : str, optional
-            The name of the pickled file. if not given `name.pyccel` will be used.
-        """
-
-        # ...
-
-        if not filename:
-            if not self.filename:
-                raise ValueError('Expecting a filename to load the ast')
-
-            path , name = os.path.split(self.filename)
-
-            name, ext = os.path.splitext(name)
-
-            if ext != '.pyh':
-                return
-
-            name     = f'{name}.pyccel'
-            filename = os.path.join(path, name)
-
-        if not filename.split(""".""")[-1] == 'pyccel':
-            raise ValueError('Expecting a .pyccel extension')
-
-        import pickle
-
-        possible_pickle_errors = (FileNotFoundError, PermissionError,
-                pickle.PickleError, AttributeError)
-
-        try:
-            with FileLock(filename+'.lock'):
-                try:
-                    with open(filename, 'rb') as f:
-                        hs, version, parser = pickle.load(f)
-                    self._created_from_pickle = True
-                except possible_pickle_errors:
-                    return
-        except PermissionError:
-            # read/write problems don't need to be avoided on a read-only system
-            try:
-                with open(filename, 'rb') as f:
-                    hs, version, parser = pickle.load(f)
-                self._created_from_pickle = True
-            except possible_pickle_errors:
-                return
-
-        import hashlib
-        code = self.code.encode('utf-8')
-        if hashlib.md5(code).hexdigest() == hs and __version__ == version:
-            self.copy(parser)
 
     def copy(self, parser):
         """

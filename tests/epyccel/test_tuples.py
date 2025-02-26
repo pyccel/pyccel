@@ -22,8 +22,6 @@ tuple_funcs = [(f, getattr(tuples_module,f)) for f in tuples_module.__all__
 
 failing_tests = {
         'homogeneous_tuple_string':"Can't save a list of strings (#459)",
-        'tuple_homogeneous_return':"Can't return a tuple",
-        'tuple_inhomogeneous_return':"Can't return a tuple",
         'tuple_visitation_inhomogeneous':"Can't iterate over an inhomogeneous tuple",
         'tuple_homogeneous_string':"Can't save a list of strings (#459)",
         }
@@ -187,12 +185,20 @@ def test_multi_level_tuple_arg(language):
 
         assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
 
-@pytest.mark.xfail(reason="Returning tuples from functions requires a reorganisation of the return system. See #337")
-def test_homogeneous_tuples_result(stc_language):
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Returning tuples from functions requires a reorganisation of the return system. See #337"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_homogeneous_tuples_result(language):
     def my_tuple() -> 'tuple[int, ...]':
         a = (1,2,3,4,5)
         return a
 
-    epyc_func = epyccel(my_tuple, language=stc_language)
+    epyc_func = epyccel(my_tuple, language=language)
 
     assert my_tuple() == epyc_func()

@@ -337,7 +337,7 @@ def epyccel( python_function_or_module, **kwargs ):
     if kwargs.pop('developer_mode', None):
         err_mode.set_mode('developer')
     else:
-        err_mode.set_mode('user')
+        err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
 
     # Parallel version
     if comm is not None:

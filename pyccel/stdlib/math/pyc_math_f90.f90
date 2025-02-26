@@ -11,8 +11,9 @@ module pyc_math_f90
          f64 => C_DOUBLE, &
          c64 => C_DOUBLE_COMPLEX, &
          c32 => C_FLOAT_COMPLEX
-
 implicit none
+
+private
 
 real(f64), parameter, private :: pi = 4.0_f64 * DATAN(1.0_f64)
 
@@ -56,6 +57,13 @@ interface pyc_bankers_round
     module procedure pyc_bankers_round_int
 end interface pyc_bankers_round
 
+interface pyc_floor_div
+    module procedure pyc_floor_div_i8
+    module procedure pyc_floor_div_i16
+    module procedure pyc_floor_div_i32
+    module procedure pyc_floor_div_i64
+end interface pyc_floor_div
+
 public :: pyc_gcd, &
           pyc_factorial, &
           pyc_lcm, &
@@ -65,8 +73,8 @@ public :: pyc_gcd, &
           amin, &
           csgn, &
           csign, &
-          pyc_bankers_round
-
+          pyc_bankers_round, &
+          pyc_floor_div
 contains
 
 ! Implementation of math factorial function
@@ -420,5 +428,30 @@ pure function pyc_bankers_round_int(arg, ndigits) result(rnd)
     endif
 
 end function pyc_bankers_round_int
+
+elemental pure integer(kind=1) function pyc_floor_div_i8(x, y) result(res)
+  implicit none
+  integer(kind=1), intent(in) :: x, y
+  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+end function pyc_floor_div_i8
+
+elemental pure integer(kind=2) function pyc_floor_div_i16(x, y) result(res)
+  implicit none
+  integer(kind=2), intent(in) :: x, y
+  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+end function pyc_floor_div_i16
+
+elemental pure integer(kind=4) function pyc_floor_div_i32(x, y) result(res)
+  implicit none
+  integer(kind=4), intent(in) :: x, y
+  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+end function pyc_floor_div_i32
+
+elemental pure integer(kind=8) function pyc_floor_div_i64(x, y) result(res)
+  implicit none
+  integer(kind=8), intent(in) :: x, y
+  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+end function pyc_floor_div_i64
+
 
 end module pyc_math_f90
