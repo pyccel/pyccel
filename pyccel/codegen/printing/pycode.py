@@ -173,14 +173,16 @@ class PythonCodePrinter(CodePrinter):
 
     def _get_type_annotation(self, var):
         if isinstance(var, Variable):
-            type_annotation = str(var.dtype)
-            if var.rank:
+            type_annotation = str(var.class_type)
+            if isinstance(var.class_type, NumpyNDArrayType):
                 type_annotation += '[' + ','.join(':' for _ in range(var.rank)) + ']'
             return f"'{type_annotation}'"
         elif isinstance(var, FunctionAddress):
             results = ', '.join(self._get_type_annotation(r.var) for r in var.results)
             arguments = ', '.join(self._get_type_annotation(a.var) for a in var.arguments)
             return f'"({results})({arguments})"'
+        else:
+            raise NotImplementedError("Unexpected object")
 
     def _function_signature(self, func):
         overload = '@overload\n' if func.get_direct_user_nodes(lambda x: isinstance(x, Interface)) else ''
@@ -188,13 +190,9 @@ class PythonCodePrinter(CodePrinter):
             return overload + self._print(func)
         else:
             args = ', '.join(self._print(a) for a in func.arguments)
-            results = func.results
-            if results:
-                res_types = [self._get_type_annotation(r.var) for r in results]
-                if len(res_types) == 1:
-                    res = f' -> {res_types[0]}'
-                else:
-                    res = ''
+            result = func.results
+            if result:
+                res = f' -> {self._get_type_annotation(result.var)}'
             else:
                 res = ' -> None'
             return overload + f"def {func.name}({args}){res}:\n"+self._indent_codestring('...')
