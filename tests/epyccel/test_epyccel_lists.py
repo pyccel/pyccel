@@ -384,7 +384,7 @@ def test_clear_1(limited_language):
 def test_clear_2(limited_language):
 
     def clear_2():
-        a = []
+        a : list[float] = []
         a.clear()
         return a
 
