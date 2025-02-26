@@ -9,8 +9,6 @@
 """
 from io import StringIO
 
-import astunparse
-
 from numpy import array, logical_and, where
 from ast   import AST, If as IfNode, parse
 from pyccel.errors.errors import Errors
@@ -27,62 +25,8 @@ class CommentLine(AST):
         self.lineno     = lineno
         self.col_offset = col_offset
 
-    def __reduce_ex__(self, i):
-        return (self.__class__, (self.s, self.lineno, self.col_offset))
-
 class CommentMultiLine(CommentLine):
     """"New AST node representing a multi-line comment"""
-
-# ast.unparse only available in python>3.8
-class Unparser(astunparse.Unparser):
-    """
-    Class which extends `astunparse.Unparser` to handle CommentLine nodes.
-
-    Class which extends `astunparse.Unparser` to handle CommentLine nodes.
-
-    Parameters
-    ----------
-    tree : ast.AST
-       The AST to be unparsed.
-
-    file : StringIO
-       The in-memory stream for unparsed code.
-    """
-    def __init__(self, tree, file):
-        super().__init__(tree, file=file)
-
-    def _CommentLine(self, node):
-        """
-        Method to unparse the CommentLine node.
-
-        Method to unparse the CommentLine node.
-
-        Parameters
-        ----------
-        node : CommentLine
-            The AST node that represents a comment.
-        """
-        self.write('\n'+' '*4*self._indent+node.s)
-
-def unparse(tree):
-    """
-    Unparse the AST.
-
-    Unparse the AST and return the code.
-
-    Parameters
-    ----------
-    tree : ast.AST
-       The AST to be unparsed.
-
-    Returns
-    -------
-    str
-       The code of the unparsed tree.
-    """
-    v = StringIO()
-    Unparser(tree, v)
-    return v.getvalue()
 
 def get_comments(code):
     lines = code.split("\n")

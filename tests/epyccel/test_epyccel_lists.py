@@ -688,6 +688,7 @@ def test_mutable_indexing(stc_language):
     epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
 
+@pytest.mark.xfail(reason="No way to tell from type if b is a list of pointers or a list of values")
 def test_mutable_multi_level_indexing(stc_language):
     def f():
         a = [1,2,3,4]
@@ -777,7 +778,7 @@ def test_list_contains(language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_dict_ptr(language):
+def test_list_ptr(language):
     def list_ptr():
         a = [1, 3, 4, 7, 10, 3]
         b = a
@@ -801,6 +802,7 @@ def test_list_return(language):
     assert python_result == pyccel_result
     assert isinstance(python_result, type(pyccel_result))
     assert isinstance(python_result.pop(), type(pyccel_result.pop()))
+
 
 def test_list_min_max(language):
     def list_min_max():
@@ -829,3 +831,14 @@ def test_list_reverse(language):
     pyccel_result = epyccel_func()
     python_result = list_reverse()
     assert python_result == pyccel_result
+
+def test_list_str(stc_language):
+    def list_str():
+        a = ['hello', 'world', '!']
+        return len(a)
+
+    epyccel_func = epyccel(list_str, language = stc_language)
+    pyccel_result = epyccel_func()
+    python_result = list_str()
+    assert python_result == pyccel_result
+

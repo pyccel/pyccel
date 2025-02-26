@@ -1,10 +1,11 @@
+#include <stc/priv/template.h>
 #include <stdarg.h>
 
 // This function represents a call to the .pop() method.
-// i_type: Class type (e.g., hset_int64_t).
+// Self: Class type (e.g., hset_int64_t).
 // i_key: Data type of the elements in the set (e.g., int64_t).
 
-static inline i_key _c_MEMB(_pop)(i_type* self) {
+static inline i_key _c_MEMB(_pop)(Self* self) {
     _c_MEMB(_iter) itr = _c_MEMB(_begin)(self); // Get iterator of the first element in the set using (_begin).
     if (itr.ref) 
     {
@@ -21,15 +22,15 @@ static inline i_key _c_MEMB(_pop)(i_type* self) {
  * @param n : The number of variadic arguments passed to the method.
  * @param ... : The variadic arguments. These are the other sets in which elements may be found
  */
-static inline i_type _c_MEMB(_union)(i_type* self, int n, ...) {
-    i_type union_result = _c_MEMB(_clone)(*self);
+static inline Self _c_MEMB(_union)(Self* self, int n, ...) {
+    Self union_result = _c_MEMB(_clone)(*self);
 
     va_list args;
     va_start(args, n);
 
     for (int i=0; i<n; ++i) {
-        i_type* other = va_arg(args, i_type*);
-        c_foreach (elem, i_type, *other)
+        Self* other = va_arg(args, Self*);
+        c_foreach (elem, Self, *other)
             _c_MEMB(_insert)(&union_result, (*elem.ref));
     }
 
@@ -43,7 +44,7 @@ static inline i_type _c_MEMB(_union)(i_type* self, int n, ...) {
  * @param self : The set instance to modify.
  * @param other : The other set in which elements must be found.
  */
-static inline void _c_MEMB(_intersection_update)(i_type* self, i_type* other) {
+static inline void _c_MEMB(_intersection_update)(Self* self, Self* other) {
     _c_MEMB(_iter) itr = _c_MEMB(_begin)(self);
     while (itr.ref)
     {
@@ -69,6 +70,7 @@ static inline i_key _c_MEMB(_min)(const i_type* self) {
     return min_val;
 }
 
+
 // Function to get the maximum element from the set
 static inline i_key _c_MEMB(_max)(const i_type* self) {
     _c_MEMB(_iter) itr = _c_MEMB(_begin)(self);
@@ -84,4 +86,5 @@ static inline i_key _c_MEMB(_max)(const i_type* self) {
 #endif
 #undef i_type
 #undef i_key
+
 #include <stc/priv/template2.h>

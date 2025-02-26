@@ -33,7 +33,6 @@ UNRECOGNISED_FUNCTION_CALL = 'Function call cannot be processed. Please ensure t
 
 UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS = "Empty classes are not supported"
 UNSUPPORTED_POINTER_RETURN_VALUE = "A pointer can only be returned from a function if it points at one of the arguments."
-UNSUPPORTED_ARRAY_RANK = 'Arrays of dimensions > 15 are currently not supported'
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
 MUST_HAVE_NONE_RETURN_TYPE = 'The return type of "{}" must be None'
@@ -112,6 +111,8 @@ PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS = 'Pyccel cannot handle this list c
 PYCCEL_RESTRICTION_INHOMOG_LIST = 'Inhomogeneous lists are not supported by Pyccel. Please use a tuple'
 PYCCEL_RESTRICTION_INHOMOG_SET = 'Inhomogeneous Sets are not supported by Pyccel'
 
+PYCCEL_INTERNAL_ERROR = '[INTERNAL ERROR] Pyccel has raised an internal error. Please check that your code executes correctly without raising any errors in Python. If this is the case then please create an issue at https://github.com/pyccel/pyccel/issues and include the traceback generated when running pyccel with the --developer-mode flag (or epyccel with developer_mode=True). If possible please provide a small example of your problem.'
+
 # Fortran limitation
 FORTRAN_ALLOCATABLE_IN_EXPRESSION = 'An allocatable function cannot be used in an expression'
 FORTRAN_RANDINT_ALLOCATABLE_IN_EXPRESSION = "Numpy's randint function does not have a fortran equivalent. It can be expressed as '(high-low)*rand(size)+low' using numpy's rand, however allocatable function cannot be used in an expression"
@@ -143,7 +144,7 @@ INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` or `pyh`, but fou
 INVALID_PYTHON_SYNTAX = 'Python syntax error'
 
 # ARRAY ERRORS
-ASSIGN_ARRAYS_ONE_ANOTHER = 'Arrays which own their data cannot become views on other arrays'
+ASSIGN_ARRAYS_ONE_ANOTHER = 'Containers (arrays, lists, etc) which own their data cannot become views on other containers'
 ARRAY_ALREADY_IN_USE = 'Attempt to reallocate an array which is being used by another variable'
 ARRAY_IS_ARG = 'Attempt to reallocate an array which is an argument. Array arguments cannot be used as local variables'
 INVALID_POINTER_REASSIGN = 'Attempt to give data ownership to a pointer'

@@ -93,8 +93,8 @@ jobs:
           touch report.txt
           export PYTHONPATH=ci_tools
           while read line; do
-            echo "python -m numpydoc --validate $line"
-            python -m numpydoc --validate $line 2>&1 | tee -a report.txt || true 
+            echo "python -m numpydoc validate $line"
+            python -m numpydoc validate $line 2>&1 | tee -a report.txt || true
           done < objects.txt
           cd ..
           export PYTHONPATH=compare

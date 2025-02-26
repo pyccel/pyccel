@@ -1,8 +1,10 @@
 # pylint: disable=missing-class-docstring,  missing-function-docstring, missing-module-docstring
+import numpy as np
 
 class A:
     def __init__(self, x : int):
         self.x = x
+        self._my_vals = np.array([i-3 for i in range(5)])
 
     def __add__(self, other : int):
         return A(self.x+other)
@@ -62,3 +64,6 @@ class A:
 
     def __len__(self):
         return 1
+
+    def __getitem__(self, i : int):
+        return self._my_vals[i]
