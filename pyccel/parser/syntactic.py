@@ -1041,7 +1041,8 @@ class SyntaxParser(BasicParser):
         results.set_current_ast(stmt)
 
         if len(returns) == 0 and result_annotation:
-            results = [FunctionDefResult(AnnotatedPyccelSymbol(self.scope.get_new_name('Out'), annotation = result_annotation[0]), annotation = result_annotation[0])]
+            results = FunctionDefResult(AnnotatedPyccelSymbol(self.scope.get_new_name('Out'), annotation = result_annotation),
+                                    annotation = result_annotation)
 
         self.exit_function_scope()
 
