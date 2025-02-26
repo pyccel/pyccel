@@ -95,7 +95,7 @@ def get_filename_from_import(module, input_folder=''):
 
     package_dir = Path(package.__file__).parent
 
-    filename = module.rsplit('.', 1)[1]
+    filename = module.rsplit('.', 1)[-1]
 
     filename_pyh = package_dir / f'{filename}.pyh'
     filename_pyccel_generated_pyi = package_dir / '__pyccel__' / f'{filename}.pyi'
