@@ -22,7 +22,7 @@ static inline i_key _c_MEMB(_pull_elem)(Self* self, intptr_t pop_idx) {
 #if defined(i_use_cmp)
 // Function to get the minimum element from the vector
 static inline i_key _c_MEMB(_min)(const Self* self) {
-    i_key min_val = self->data[0];
+    i_key min_val = _c_MEMB(_size)(self);
     _c_MEMB(_iter) it;
     c_foreach(it, Self, *self) {
         if (*(it.ref) < min_val) {
@@ -34,7 +34,7 @@ static inline i_key _c_MEMB(_min)(const Self* self) {
 
 // Function to get the maximum element from the vector
 static inline i_key _c_MEMB(_max)(const Self* self) {
-    i_key max_val = self->data[0];
+    i_key max_val = _c_MEMB(_size)(self);
     _c_MEMB(_iter) it;
     c_foreach(it, Self, *self) {
         if (*(it.ref) > max_val) {
