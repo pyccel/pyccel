@@ -63,7 +63,7 @@ def high_float_4(function : '(float)()'):
     x = function()
     return x
 
-def high_float_5(function : '(float,float)()'):
+def high_float_5(function : '(tuple[float,float])()'):
     x,y = function()
     return x+y
 

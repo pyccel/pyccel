@@ -118,7 +118,6 @@ class BindCFunctionDef(FunctionDef):
         super().__init__(*args, **kwargs)
         assert self.name == self.name.lower()
         assert all(isinstance(a, BindCFunctionDefArgument) for a in self._arguments)
-        assert all(isinstance(a, FunctionDefResult) for a in self._results)
 
     @property
     def original_function(self):
@@ -819,4 +818,4 @@ class C_NULL_CHAR(TypedAstNode):
     _attribute_nodes = ()
 
 c_malloc = FunctionDef('c_malloc', (FunctionDefArgument(Variable(PythonNativeInt(), 'size')),),
-                        (), (FunctionDefResult(Variable(BindCPointer(), 'ptr')),))
+                        (), FunctionDefResult(Variable(BindCPointer(), 'ptr')))

@@ -994,6 +994,25 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         """
         return self._order
 
+    def shape_is_compatible(self, shape):
+        """
+        Check if the provided shape is compatible with the datatype.
+
+        Check if the provided shape is compatible with the format expected for
+        this datatype.
+
+        Parameters
+        ----------
+        shape : Any
+            The proposed shape.
+
+        Returns
+        -------
+        bool
+            True if the shape is acceptable, False otherwise.
+        """
+        return super().shape_is_compatible(shape) and shape[0] == len(self._element_types)
+
 class DictType(ContainerType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous dictionary type.
