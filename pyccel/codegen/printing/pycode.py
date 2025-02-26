@@ -16,7 +16,7 @@ from pyccel.ast.core       import Interface
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType
 from pyccel.ast.functionalexpr import FunctionalFor
-from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
+from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger, Nil
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
@@ -173,16 +173,16 @@ class PythonCodePrinter(CodePrinter):
 
     def _get_type_annotation(self, var):
         if isinstance(var, Variable):
-            type_annotation = str(var.class_type)
-            if isinstance(var.class_type, NumpyNDArrayType):
-                type_annotation += '[' + ','.join(':' for _ in range(var.rank)) + ']'
+            type_annotation = self._print(var.class_type)
             return f"'{type_annotation}'"
         elif isinstance(var, FunctionAddress):
-            results = ', '.join(self._get_type_annotation(r.var) for r in var.results)
+            results = self._get_type_annotation(var.results.var)
             arguments = ', '.join(self._get_type_annotation(a.var) for a in var.arguments)
             return f'"({results})({arguments})"'
+        elif isinstance(var, Nil):
+            return None
         else:
-            raise NotImplementedError("Unexpected object")
+            raise NotImplementedError(f"Unexpected object of type {type(var)}")
 
     def _function_signature(self, func):
         overload = '@overload\n' if func.get_direct_user_nodes(lambda x: isinstance(x, Interface)) else ''
@@ -210,20 +210,18 @@ class PythonCodePrinter(CodePrinter):
             elif not isinstance(f, list):
                 f = [f]
             for func in f:
-                print(f)
                 if isinstance(func, FunctionCall):
-                    args = func.args
+                    args = ', '.join(self._print(a) for a in func.args)
                 elif func == name:
-                    args = []
+                    args = ''
                 elif name == 'template':
-                    args = [LiteralString(func[0]), PythonTuple(*func[1].type_list)]
+                    args = f"'{func[0]}', (" + ', '.join(f"'{self._print(t)}'" for t in func[1].type_list) + ')'
                 else:
-                    args = [LiteralString(a) for a in func]
+                    args = ', '.join(self._print(LiteralString(a)) for a in func)
                 if name == 'types':
                     continue
 
                 if args:
-                    args = ', '.join(self._print(i) for i in args)
                     dec += f'@{name}({args})\n'
 
                 else:
@@ -270,9 +268,6 @@ class PythonCodePrinter(CodePrinter):
     def _print_tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
         return '({0})'.format(fs)
-
-    def _print_FixedSizeType(self, expr):
-        return str(expr)
 
     def _print_Variable(self, expr):
         if isinstance(expr.class_type, InhomogeneousTupleType):
@@ -447,8 +442,11 @@ class PythonCodePrinter(CodePrinter):
 
 
     def _print_AsName(self, expr):
-        name = self._print(expr.name)
         target = self._print(expr.local_alias)
+        if isinstance(expr.object, VariableTypeAnnotation):
+            return target
+
+        name = self._print(expr.name)
         if name == target:
             return name
         else:
@@ -623,15 +621,11 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Import(self, expr):
         mod = expr.source_module
-        init_func_name = ''
-        free_func_name = ''
+        init_func = None
+        free_func = None
         if mod:
             init_func = mod.init_func
-            if init_func:
-                init_func_name = init_func.name
             free_func = mod.free_func
-            if free_func:
-                free_func_name = free_func.name
 
         if isinstance(expr.source, AsName):
             source = self._print(expr.source.name)
@@ -657,14 +651,15 @@ class PythonCodePrinter(CodePrinter):
             target = list(set(target))
             if source in pyccel_builtin_import_registry:
                 self._aliases.update((pyccel_builtin_import_registry[source][t.name].cls_name, t.local_alias) \
-                                        for t in target if t.name != t.local_alias)
+                                        for t in target if not isinstance(t.object, VariableTypeAnnotation) and \
+                                                           t.name != t.local_alias)
 
             if expr.source_module:
                 if expr.source_module.init_func:
                     self._ignore_funcs.append(expr.source_module.init_func)
                 if expr.source_module.free_func:
                     self._ignore_funcs.append(expr.source_module.free_func)
-            target = [self._print(t) for t in target if t.name not in (init_func_name, free_func_name)]
+            target = [self._print(t) for t in target if t.object not in (init_func, free_func)]
             target = ', '.join(target)
             return 'from {source} import {target}\n'.format(source=source, target=target)
 
@@ -1329,3 +1324,48 @@ class PythonCodePrinter(CodePrinter):
     def _print_TypingFinal(self, expr):
         annotation = self._print(expr.arg)
         return f'const {annotation}'
+
+    def _print_NumpyNDArrayType(self, expr):
+        dims = ','.join(':'*expr.container_rank)
+        order_str = f'(order={expr.order})' if expr.order else ''
+        return f'{self._print(expr.element_type)}[{dims}]{order_str}'
+
+    def _print_InhomogeneousTupleType(self, expr):
+        args = ', '.join(self._print(t) for t in expr)
+        return f'tuple[{args}]'
+
+    def _print_HomogeneousTupleType(self, expr):
+        return f'tuple[{self._print(expr.element_type)}, ...]'
+
+    def _print_HomogeneousListType(self, expr):
+        return f'list[{self._print(expr.element_type)}]'
+
+    def _print_HomogeneousSetType(self, expr):
+        return f'set[{self._print(expr.element_type)}]'
+
+    def _print_DictType(self, expr):
+        return f'dict[{self._print(expr.key_type)}, {self._print(expr.value_type)}]'
+
+    def _print_PythonNativeBool(self, expr):
+        return 'bool'
+
+    def _print_PythonNativeInt(self, expr):
+        return 'int'
+
+    def _print_PythonNativeFloat(self, expr):
+        return 'float'
+
+    def _print_PythonNativeComplex(self, expr):
+        return 'complex'
+
+    def _print_StringType(self, expr):
+        return 'str'
+
+    def _print_CustomDataType(self, expr):
+        # TODO: Check if CustomDataType is imported from another file
+        return expr.name
+
+    def _print_NumpyNumericType(self, expr):
+        name = str(expr).removeprefix('numpy.')
+        self.add_import(Import('numpy', [AsName(VariableTypeAnnotation(expr), name)]))
+        return name
