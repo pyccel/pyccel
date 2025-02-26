@@ -1887,6 +1887,7 @@ class FCodePrinter(CodePrinter):
             if isinstance(args[0], Variable):
                 arg = args[0]
                 if isinstance(arg.class_type, HomogeneousListType):
+                    print(arg.class_type)
                     self.add_import(self._build_gFTL_extension_module(arg.class_type))
                     target = self._print(arg)
                     type_name = self._print(arg.class_type)
