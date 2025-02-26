@@ -3441,13 +3441,64 @@ class SemanticParser(BasicParser):
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
 
-        if isinstance(rhs, PythonTuple):
+        if isinstance(rhs, (PythonTuple, PythonList)):
             assign_elems = None
             if isinstance(lhs, PythonTuple):
+                # Create variables to handle swap expressions
+                unsaved_vars = set()
                 pyccel_stage.set_stage('syntactic')
-                syntactic_assign_elems = [Assign(l, r, python_ast=expr.python_ast) for l, r in zip(lhs, rhs)]
+                unsaved_vars = set(rhs.get_attribute_nodes((PyccelSymbol, DottedName, IndexedElement),
+                                                            excluded_nodes = (FunctionDef,)))
                 pyccel_stage.set_stage('semantic')
-                assign_elems = [self._visit(a) for a in syntactic_assign_elems]
+
+                # Test if the expression describes a basic swap or if the rhs contains expressions
+                # (e.g. arithmetic expressions or further tuples)
+                # using variables from the left-hand side.
+                modified_vars = set(lhs.get_attribute_nodes((PyccelSymbol, DottedName, IndexedElement)))
+                used_vars = set(rhs.get_attribute_nodes((PyccelSymbol, DottedName, IndexedElement),
+                                    excluded_nodes = (FunctionDef,)))
+                trivial_assign = len(modified_vars.intersection(unsaved_vars)) == 0
+                all_indexed_are_simple = all(all(isinstance(idx, (PyccelSymbol, DottedName, Literal)) for idx in elem.indices)
+                                             for elem in modified_vars if isinstance(elem, IndexedElement))
+                if not trivial_assign and (used_vars.intersection(modified_vars).difference(unsaved_vars) or not all_indexed_are_simple):
+                    errors.report("Assign statement is too complex. It seems that some of the variables used non-trivially on the right-hand side appear on the left-hand side.",
+                            severity='error', symbol=expr)
+
+                assign_elems = []
+                for i, l in enumerate(lhs):
+                    r = rhs[i]
+                    # Get unsaved variables that are still needed
+                    pyccel_stage.set_stage('syntactic')
+                    tmp_rhs_tuple = PythonTuple(*rhs.args[i+1:])
+                    unsaved_vars = set(tmp_rhs_tuple.get_attribute_nodes((PyccelSymbol, DottedName, IndexedElement),
+                                                                         excluded_nodes = (FunctionDef,)))
+                    pyccel_stage.set_stage('semantic')
+
+                    # If the lhs element has not yet been saved to a variable create a new
+                    # variable to hold this value
+                    if l in unsaved_vars:
+                        temp = self.scope.get_new_name()
+                        pyccel_stage.set_stage('syntactic')
+                        local_assign = Assign(temp, l, python_ast = expr.python_ast)
+                        pyccel_stage.set_stage('semantic')
+                        assign_elems.append(self._visit(local_assign))
+                        # Save the variable containing the value to rhs so it can be
+                        # used when it appears in the assignment
+                        if isinstance(l, IndexedElement):
+                            # A list is required for IndexedElements as they are not singletons
+                            l_list = [r for r in rhs.get_attribute_nodes(IndexedElement) if r == l]
+                        else:
+                            l_list = [l]
+                        for l_elem in l_list:
+                            rhs.substitute(l_elem, temp)
+                        if r == l:
+                            r = temp
+
+                    # Check for a replacement right-hand side if the rhs is found among the lhs variables
+                    pyccel_stage.set_stage('syntactic')
+                    local_assign = Assign(l, r, python_ast = expr.python_ast)
+                    pyccel_stage.set_stage('semantic')
+                    assign_elems.append(self._visit(local_assign))
             elif isinstance(lhs, (PyccelSymbol, DottedName)):
                 semantic_lhs = self.scope.find(lhs)
                 if semantic_lhs and isinstance(semantic_lhs.class_type, InhomogeneousTupleType):
@@ -3672,7 +3723,7 @@ class SemanticParser(BasicParser):
                 body = []
                 for i,(l,r) in enumerate(zip(lhs,r_iter)):
                     pyccel_stage.set_stage('syntactic')
-                    local_assign = Assign(l,r, python_ast = expr.python_ast)
+                    local_assign = Assign(l, r, python_ast = expr.python_ast)
                     pyccel_stage.set_stage('semantic')
                     body.append(self._visit(local_assign))
                 return CodeBlock(body)
@@ -3907,7 +3958,9 @@ class SemanticParser(BasicParser):
     def _visit_FunctionalFor(self, expr):
         old_index   = expr.index
         new_index   = self.scope.get_new_name()
-        expr.substitute(old_index, new_index)
+        # Identity comparison is required to only find duplicates of the index caused
+        # by the construction of FunctionalFor.
+        expr.substitute(old_index, new_index, is_equivalent = lambda x,y: x is y)
 
         target  = expr.expr
         index   = new_index

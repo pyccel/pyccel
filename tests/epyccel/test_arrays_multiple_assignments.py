@@ -59,7 +59,7 @@ def test_reallocation_heap(language):
 
     # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
-    assert warning_info.symbol  == 'x'
+    assert warning_info.symbol in ('x', "'x'")
     expected_msg = ARRAY_REALLOCATION.split()[1:]
     assert warning_info.message.split()[-len(expected_msg):] == expected_msg
 
@@ -86,7 +86,7 @@ def test_reallocation_stack(language):
 
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol  == 'x'
+    assert error_info.symbol in ('x', "'x'")
     assert error_info.message == INCOMPATIBLE_REDEFINITION_STACK_ARRAY
 
 #==============================================================================
@@ -113,7 +113,7 @@ def test_creation_in_loop_heap(language):
 
     # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
-    assert warning_info.symbol  == 'x'
+    assert warning_info.symbol in ('x', "'x'")
     assert warning_info.message == ARRAY_DEFINITION_IN_LOOP
 
 #==============================================================================
@@ -143,7 +143,7 @@ def test_creation_in_loop_stack(language):
     # Check that the errors are correct
     error_info_list = [*errors.error_info_map.values()][0]
     error_info = error_info_list[0]
-    assert error_info.symbol  == 'x'
+    assert error_info.symbol in ('x', "'x'")
     assert error_info.message == STACK_ARRAY_UNKNOWN_SHAPE
     if errors.mode != 'developer':
         error_info = error_info_list[1]
@@ -212,7 +212,7 @@ def test_Reassign_to_Target():
 
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol  == 'x'
+    assert error_info.symbol in ('x', "'x'")
     assert error_info.message == ARRAY_ALREADY_IN_USE
 
 #==============================================================================
@@ -240,7 +240,7 @@ def test_Assign_Between_Allocatables():
 
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
-    assert str(error_info.symbol)  == 'x'
+    assert str(error_info.symbol) in ('x', "Variable(x, type=numpy.int64[:,:](order=C))")
     assert error_info.message == ASSIGN_ARRAYS_ONE_ANOTHER
 
 #==============================================================================
@@ -270,7 +270,7 @@ def test_Assign_after_If():
 
     # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
-    assert warning_info.symbol  == 'x'
+    assert warning_info.symbol in ('x', "'x'")
     expected_msg = ARRAY_REALLOCATION.split()[1:]
     assert warning_info.message.split()[-len(expected_msg):] == expected_msg
 
