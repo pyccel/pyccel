@@ -300,11 +300,9 @@ class PyccelAstNode:
 
         if is_equivalent is None:
             if self.pyccel_staging == 'syntactic':
-                def is_equivalent(x, y):
-                    return x == y
+                is_equivalent = lambda x, y: x == y #pylint:disable=unnecessary-lambda-assignment
             else:
-                def is_equivalent(x, y):
-                    return x is y
+                is_equivalent = lambda x, y: x is y #pylint:disable=unnecessary-lambda-assignment
 
         def prepare_sub(found_node):
             idx = original.index(found_node)
