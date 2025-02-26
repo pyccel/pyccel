@@ -72,6 +72,9 @@ def get_filename_from_import(module, input_folder=''):
     PyccelError
         Error raised when the module cannot be found.
     """
+    if isinstance(module, AsName):
+        module = str(module.name)
+
     input_folder = Path(input_folder)
     n_rel = 0
     pkg = []
