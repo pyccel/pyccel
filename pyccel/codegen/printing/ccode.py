@@ -1258,7 +1258,7 @@ class CCodePrinter(CodePrinter):
                         decl_line = ''
                         errors.report(f"The declaration of type {class_type} is not yet implemented.",
                                 symbol=expr, severity='error')
-                if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
+                if isinstance(class_type, (HomogeneousListType, HomogeneousSetType)) and isinstance(class_type.element_type, FixedSizeNumericType) \
                         and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
                     decl_line += '#define i_use_cmp\n'
                 header_guard_prefix = import_header_guard_prefix.get(source, '')

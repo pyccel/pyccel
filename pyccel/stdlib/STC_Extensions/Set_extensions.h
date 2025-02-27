@@ -56,9 +56,9 @@ static inline void _c_MEMB(_intersection_update)(Self* self, Self* other) {
         }
     }
 }
-#if defined(i_use_cmp) 
+#if defined (i_use_cmp) 
 // Function to get the minimum element from the set
-static inline i_key _c_MEMB(_min)(const i_type* self) {
+static inline i_key _c_MEMB(_min)(const Self* self) {
     _c_MEMB(_iter) itr = _c_MEMB(_begin)(self);
     i_key min_val = *(itr.ref);
     while (itr.ref)
@@ -71,7 +71,7 @@ static inline i_key _c_MEMB(_min)(const i_type* self) {
 }
 
 // Function to get the maximum element from the set
-static inline i_key _c_MEMB(_max)(const i_type* self) {
+static inline i_key _c_MEMB(_max)(const Self* self) {
     _c_MEMB(_iter) itr = _c_MEMB(_begin)(self);
     i_key max_val = *(itr.ref);
     while (itr.ref)
