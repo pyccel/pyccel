@@ -847,12 +847,15 @@ class CCodePrinter(CodePrinter):
             else:
                 return errors.report(f"{expr.name} in C does not support arguments of type {arg.dtype}", symbol=expr,
                     severity='fatal')
+        if len(arg) != 2:
+            return errors.report(f"{expr.name} in C does not support {len(arg)} arguments of type {arg.dtype}", symbol=expr,
+                                 severity='fatal')
         if arg.dtype.primitive_type is PrimitiveFloatingPointType():
             self.add_import(c_imports['math'])
             arg1 = self._print(arg[0])
             arg2 = self._print(arg[1])
             return f"f{expr.name}({arg1}, {arg2})"
-        elif isinstance(primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and len(arg) == 2:
+        elif isinstance(primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)):
             if isinstance(arg[0], (Variable, Literal)):
                 arg1 = self._print(arg[0])
             else:
