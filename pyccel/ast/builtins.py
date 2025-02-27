@@ -1485,7 +1485,7 @@ class PythonMax(PyccelFunction):
 
         if isinstance(x, (list, tuple)):
             x = PythonTuple(*x)
-        elif isinstance(x, Variable) and isinstance(x.class_type, (HomogeneousListType, HomogeneousSetType)):
+        elif isinstance(x, Variable) and isinstance(x.class_type, (HomogeneousListType, HomogeneousSetType, HomogeneousTupleType)):
             pass
         elif not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError(f'Unknown type of {type(x)}.' )
