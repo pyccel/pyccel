@@ -806,8 +806,8 @@ def test_list_return(language):
 
 def test_list_min_max(language):
     def list_min_max():
-        a_int = [1, 2, 3]
-        a_float = [1.1, 2.2, 3.3]
+        a_int = [1, 2, 3, 4]
+        a_float = [1.1, 2.2, 3.3, 4.4]
         return min(a_int), max(a_int), min(a_float), max(a_float)
     epyccel_func = epyccel(list_min_max, language = language)
     pyccel_result = epyccel_func()
