@@ -814,7 +814,6 @@ def test_list_min_max(language):
     python_result = list_min_max()
     assert python_result == pyccel_result
     assert isinstance(python_result, type(pyccel_result))
-    
 
 def test_list_str(stc_language):
     def list_str():

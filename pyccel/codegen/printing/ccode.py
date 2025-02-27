@@ -832,12 +832,12 @@ class CCodePrinter(CodePrinter):
             can_compare = False
 
         if isinstance(arg, Variable) and isinstance(arg.class_type , HomogeneousTupleType):
-            arg = PythonTuple(*[a for a in arg])
+            arg = PythonTuple(*arg)
 
         if isinstance(arg, (PythonTuple, PythonList)) and variadic_args:
             key = self.get_c_type(arg.class_type.element_type)
             self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
-            return  f'{key}_{expr.name}({len(arg.args)}, {", ".join(self._print(a) for a in arg.args)})' 
+            return  f'{key}_{expr.name}({len(arg.args)}, {", ".join(self._print(a) for a in arg.args)})'
         elif isinstance(arg, Variable):
             if isinstance(arg.class_type, HomogeneousListType) and can_compare:
                 class_type = arg.class_type
