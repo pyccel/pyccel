@@ -78,24 +78,27 @@ def get_filename_from_import(module, input_folder=''):
     input_folder = Path(input_folder)
     n_rel = 0
     pkg = []
-    while module[n_rel] == '.':
-        n_rel += 1
-        pkg.append(input_folder.stem)
-        input_folder = input_folder.parent
+    if '.' in module:
+        module, filename = module.rsplit('.', 1)
+        while module[n_rel] == '.':
+            n_rel += 1
+            pkg.append(input_folder.stem)
+            input_folder = input_folder.parent
+    else:
+        filename = module
 
     sys.path.append(str(input_folder))
+    package_location_in_project = '.'.join(pkg[::-1]) if pkg else None
     try:
-        package = importlib.import_module(module, '.'.join(pkg[::-1]))
+        package = importlib.import_module(module, package_location_in_project)
     except ImportError:
-        errors = Errors()
         errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                       severity='fatal')
     finally:
         sys.path.pop()
 
-    package_dir = Path(package.__file__).parent
 
-    filename = module.rsplit('.', 1)[-1]
+    package_dir = Path(package.__file__).parent
 
     filename_pyh = package_dir / f'{filename}.pyh'
     filename_pyccel_generated_pyi = package_dir / '__pyccel__' / f'{filename}.pyi'
@@ -108,9 +111,11 @@ def get_filename_from_import(module, input_folder=''):
     if filename_pyh.is_file():
         return str(filename_pyh)
     if filename_py.is_file():
+        errors.report("The imported module has been found, but it has not been Pyccelised. "
+                "Pyccelising dependencies is necessary for the compilation of the generated files.",
+                symbol=module, severity='error')
         return str(filename_py)
 
-    errors = Errors()
     raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                   severity='fatal')
 
