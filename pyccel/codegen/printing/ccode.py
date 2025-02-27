@@ -823,32 +823,39 @@ class CCodePrinter(CodePrinter):
         arg = expr.args[0]
         primitive_type = arg.dtype.primitive_type
         variadic_args = False
+        can_compare = True
+
         if isinstance(primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
             variadic_args = True
+
+        if primitive_type is PrimitiveComplexType():
+            can_compare = False
+
+        if isinstance(arg, Variable) and isinstance(arg.class_type , HomogeneousTupleType):
+            arg = PythonTuple(*[a for a in arg])
+
         if isinstance(arg, (PythonTuple, PythonList)) and variadic_args:
             key = self.get_c_type(arg.class_type.element_type)
             self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
             return  f'{key}_{expr.name}({len(arg.args)}, {", ".join(self._print(a) for a in arg.args)})' 
         elif isinstance(arg, Variable):
-            if isinstance(arg.class_type, HomogeneousListType):
+            if isinstance(arg.class_type, HomogeneousListType) and can_compare:
                 class_type = arg.class_type
                 c_type = self.get_c_type(class_type)
                 arg_obj = self._print(ObjectAddress(arg))
                 self.add_import(Import('stc/vec', AsName(VariableTypeAnnotation(class_type), c_type)))
                 return f'{c_type}_{expr.name}({arg_obj})'
-            elif isinstance(arg.class_type, HomogeneousSetType):
+            elif isinstance(arg.class_type, HomogeneousSetType) and can_compare:
                 class_type = arg.class_type
                 c_type = self.get_c_type(class_type)
                 arg_obj = self._print(ObjectAddress(arg))
                 self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), c_type)))
                 return f'{c_type}_{expr.name}({arg_obj})'
-            elif isinstance(arg.class_type, HomogeneousTupleType):
-                arg = PythonTuple(*[a for a in arg])
             else:
-                return errors.report(f"{expr.name} in C does not support arguments of type {arg.dtype}", symbol=expr,
+                return errors.report(f"{expr.name} in C does not support arguments of type {arg.class_type}", symbol=expr,
                     severity='fatal')
         if len(arg) != 2:
-            return errors.report(f"{expr.name} in C does not support {len(arg)} arguments of type {arg.dtype}", symbol=expr,
+            return errors.report(f"{expr.name} in C does not support {len(arg)} arguments of type {arg.class_type}", symbol=expr,
                                  severity='fatal')
         if arg.dtype.primitive_type is PrimitiveFloatingPointType():
             self.add_import(c_imports['math'])
