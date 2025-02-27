@@ -77,28 +77,33 @@ def get_filename_from_import(module, input_folder=''):
 
     input_folder = Path(input_folder)
     n_rel = 0
-    pkg = []
+
+    filename = module
+    package_dir = input_folder
+
     if '.' in module:
         module, filename = module.rsplit('.', 1)
-        while module[n_rel] == '.':
+        pkg = [input_folder.stem]
+        while n_rel < len(module) and module[n_rel] == '.':
+            input_folder = input_folder.parent
             n_rel += 1
             pkg.append(input_folder.stem)
-            input_folder = input_folder.parent
-    else:
-        filename = module
 
-    sys.path.append(str(input_folder))
-    package_location_in_project = '.'.join(pkg[::-1]) if pkg else None
-    try:
-        package = importlib.import_module(module, package_location_in_project)
-    except ImportError:
-        errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
-                      severity='fatal')
-    finally:
-        sys.path.pop()
+        if module != '':
+            sys.path.append(str(input_folder))
+            package_location_in_project = '.'.join(pkg[::-1]) if pkg else None
+            try:
+                package = importlib.import_module(module, package_location_in_project)
+            except ImportError:
+                print("WAAA", module, package_location_in_project)
+                errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
+                              severity='fatal')
+            finally:
+                sys.path.pop()
 
+            package_dir = Path(package.__file__).parent
 
-    package_dir = Path(package.__file__).parent
+    print(module, package_dir)
 
     filename_pyh = package_dir / f'{filename}.pyh'
     filename_pyccel_generated_pyi = package_dir / '__pyccel__' / f'{filename}.pyi'
