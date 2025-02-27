@@ -1136,9 +1136,9 @@ class PythonCodePrinter(CodePrinter):
         classes = ''
         for classDef in mod.classes:
             classes += f"class {classDef.name}:\n"
-            class_body  = '\n'.join(f"{v.name} : {self._get_type_annotation(v)}" for v in classDef.attributes)
+            class_body  = '\n'.join(f"{v.name} : {self._get_type_annotation(v)}" for v in classDef.attributes) + '\n\n'
             for method in classDef.methods:
-                class_body += f"{self._function_signature(method)};\n"
+                class_body += f"{self._function_signature(method)}\n"
 
             classes += self._indent_codestring(class_body)
 
