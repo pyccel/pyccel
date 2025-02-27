@@ -195,7 +195,8 @@ class PythonCodePrinter(CodePrinter):
                 res = f' -> {self._get_type_annotation(result.var)}'
             else:
                 res = ' -> None'
-            return overload + f"def {func.name}({args}){res}:\n"+self._indent_codestring('...')
+            name = func.scope.get_python_name(func.name)
+            return overload + f"def {name}({args}){res}:\n"+self._indent_codestring('...')
 
     def _handle_decorators(self, decorators):
         if len(decorators) == 0:
