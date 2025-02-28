@@ -41,7 +41,7 @@ In general string type hints must be used to provide Pyccel with information abo
 
 ## Tuples
 
-Currently Pyccel supports tuples used locally in functions and in certain cases as arguments, but not as returned objects or module variables. The implementation of the type annotations (including adding the missing support) is in progress.
+Currently Pyccel supports tuples used locally in functions, as returned objects and in certain cases as arguments, however module variables are not yet handled. The implementation of the type annotations (including adding the missing support) is in progress.
 
 Tuples can be homogeneous or inhomogeneous. A homogeneous tuple is a tuple whose elements all have the same type and shape. Pyccel translates homogeneous tuples in a similar way to NumPy arrays. When creating multiple dimensional tuples it is therefore important to ensure that all objects have compatible sizes otherwise they will be handled as inhomogeneous tuples. An inhomogeneous tuple describes all other types, but comes with extra restrictions. An inhomogeneous tuple is translated to multiple objects in the target language so it can only be used if the element can be identified during the translation. This means that expressions such as `a[i]` are not possible for inhomogeneous tuples while `a[0]` is valid.
 
@@ -94,18 +94,20 @@ def g(b : Final[set[bool]]):
 
 ## Dictionaries
 
-Dictionaries are in the process of being added to Pyccel. They cannot yet be used effectively however the type annotations are already supported.
+Dictionaries are in the process of being added to Pyccel.
 Homogeneous dictionaries can be declared in Pyccel using the following syntax:
 ```python
 a : dict[int,float] = {1: 1.0, 2: 2.0}
 b : dict[int,bool] = {1: False, 4: True}
 c : dict[int,complex] = {}
 ```
-So far strings are supported as keys however as Pyccel is still missing support for non-literal strings it remains to be seen how such cases will be handled in low-level languages.
+Strings are not yet supported as keys in Fortran.
 
 ## Strings
 
 Pyccel contains very minimal support for strings. This is mostly provided to allow the use of strings as keys of dictionaries.
+
+Currently strings can be used as local variables and can be returned from functions.
 
 ## Handling multiple types
 

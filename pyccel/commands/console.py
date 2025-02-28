@@ -82,7 +82,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
 
     group.add_argument('--language', choices=('fortran', 'c', 'python'), help='Generated language')
 
-    group.add_argument('--compiler', help='Compiler family or json file containing a compiler description {GNU,intel,PGI}')
+    group.add_argument('--compiler', help='Compiler family or json file containing a compiler description {GNU,intel,PGI,nvidia}')
 
     group.add_argument('--flags', type=str, \
                        help='Compiler flags.')
@@ -258,7 +258,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     if args.developer_mode:
         err_mode.set_mode('developer')
     else:
-        err_mode.set_mode('user')
+        err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
     # ...
 
     base_dirpath = os.getcwd()

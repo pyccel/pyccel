@@ -62,6 +62,10 @@ runs:
         path: |
           /opt/intel/oneapi/
         key: ${{ steps.cache-intel-restore.outputs.cache-primary-key }}
+    - name: Install LaPack
+      run:
+        sudo apt-get install libblas-dev liblapack-dev
+      shell: bash
     - name: Install Valgrind
       run:
         sudo apt-get install valgrind

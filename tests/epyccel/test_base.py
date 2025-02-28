@@ -131,13 +131,6 @@ def test_same_float(language):
     test = epyccel_test(base.isnot_same_float, lang=language)
     test.compare_epyccel( 22.2 )
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Strings are not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_same_string(language):
     test = epyccel_test(base.is_same_string, lang=language)
     test.compare_epyccel()
