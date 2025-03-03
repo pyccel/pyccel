@@ -1882,9 +1882,8 @@ class FCodePrinter(CodePrinter):
             return f'minval({arg_code})'
         
     def _print_PythonMinMax(self, expr):
-        args = expr.args
-        if isinstance(args[0], Variable):
-            arg = args[0]
+        arg, = expr.args
+        if isinstance(arg, Variable):
             if isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType)):
                 self.add_import(self._build_gFTL_extension_module(arg.class_type))
                 target = self._print(arg)
@@ -1895,7 +1894,6 @@ class FCodePrinter(CodePrinter):
             else:
                 raise TypeError(f'Expecting a variable of type list or set, given {arg.class_type}')
         else:
-            arg = args[0]
             arg_code = self._get_node_without_gFTL(arg)
             code = f'{expr.name}val({arg_code})'
         return code

@@ -7,10 +7,6 @@ contains
 #include "parameters/T/copy_vector_T_to_internal_T.inc"
 #include "parameters/T/define_derived_macros.inc"
 
-#ifdef __T_IS_COMPLEX
-  #error "Complex types are not supported for min/max operations"
-#else
-
   function __IDENTITY(Vector)_min(my_vector) result(result)
     class(Vector), intent(in) :: my_vector
     __T_declare_dummy__ :: result
@@ -28,7 +24,7 @@ contains
 
     result = iter%of()
     do while (iter /= last)
-      if (iter%of() < result) then
+      if (T_LT(iter%of(), result)) then
         result = iter%of()
       end if
       call iter%next()
@@ -53,12 +49,11 @@ contains
 
     result = iter%of()
     do while (iter /= last)
-      if (iter%of() > result) then
+      if (T_LT(result, iter%of())) then
         result = iter%of()
       end if
       call iter%next()
     end do
 
   end function __IDENTITY(Vector)_max
-#endif
 #include <vector/tail.inc>

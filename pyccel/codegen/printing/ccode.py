@@ -822,14 +822,8 @@ class CCodePrinter(CodePrinter):
     def _print_PythonMinMax(self, expr):
         arg = expr.args[0]
         primitive_type = arg.dtype.primitive_type
-        variadic_args = False
-        can_compare = True
-
-        if isinstance(primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
-            variadic_args = True
-
-        if primitive_type is PrimitiveComplexType():
-            can_compare = False
+        variadic_args = isinstance(primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType))
+        can_compare = primitive_type is not PrimitiveComplexType()
 
         if isinstance(arg, Variable) and isinstance(arg.class_type , HomogeneousTupleType):
             arg = PythonTuple(*arg)
@@ -837,7 +831,8 @@ class CCodePrinter(CodePrinter):
         if isinstance(arg, (PythonTuple, PythonList)) and variadic_args:
             key = self.get_c_type(arg.class_type.element_type)
             self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
-            return  f'{key}_{expr.name}({len(arg.args)}, {", ".join(self._print(a) for a in arg.args)})'
+            args_code = ", ".join(self._print(a) for a in arg.args)
+            return  f'{key}_{expr.name}({len(arg.args)}, {args_code})'
         elif isinstance(arg, Variable):
             if isinstance(arg.class_type, HomogeneousListType) and can_compare:
                 class_type = arg.class_type
