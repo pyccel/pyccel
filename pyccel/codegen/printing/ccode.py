@@ -834,17 +834,12 @@ class CCodePrinter(CodePrinter):
             args_code = ", ".join(self._print(a) for a in arg.args)
             return  f'{key}_{expr.name}({len(arg.args)}, {args_code})'
         elif isinstance(arg, Variable):
-            if isinstance(arg.class_type, HomogeneousListType) and can_compare:
+            if isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType)) and can_compare:
                 class_type = arg.class_type
                 c_type = self.get_c_type(class_type)
                 arg_obj = self._print(ObjectAddress(arg))
-                self.add_import(Import('stc/vec', AsName(VariableTypeAnnotation(class_type), c_type)))
-                return f'{c_type}_{expr.name}({arg_obj})'
-            elif isinstance(arg.class_type, HomogeneousSetType) and can_compare:
-                class_type = arg.class_type
-                c_type = self.get_c_type(class_type)
-                arg_obj = self._print(ObjectAddress(arg))
-                self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), c_type)))
+                import_loc = 'stc/vec' if isinstance(arg.class_type, HomogeneousListType) else 'stc/hset'
+                self.add_import(Import(import_loc, AsName(VariableTypeAnnotation(class_type), c_type)))
                 return f'{c_type}_{expr.name}({arg_obj})'
             else:
                 return errors.report(f"{expr.name} in C does not support arguments of type {arg.class_type}", symbol=expr,
@@ -852,7 +847,7 @@ class CCodePrinter(CodePrinter):
         if len(arg) != 2:
             return errors.report(f"{expr.name} in C does not support {len(arg)} arguments of type {arg.class_type}", symbol=expr,
                                  severity='fatal')
-        if arg.dtype.primitive_type is PrimitiveFloatingPointType():
+        if primitive_type is PrimitiveFloatingPointType():
             self.add_import(c_imports['math'])
             arg1 = self._print(arg[0])
             arg2 = self._print(arg[1])
@@ -876,11 +871,7 @@ class CCodePrinter(CodePrinter):
                 arg2 = self._print(arg2_temp)
             op = '<' if isinstance(expr, PythonMin) else '>'
             return f"({arg1} {op} {arg2} ? {arg1} : {arg2})"
-        elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
-            key = self.get_c_type(arg[0].class_type)
-            self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
-            return  f'{key}_{expr.name}({len(arg)}, {", ".join(self._print(a) for a in arg)})'
-        elif isinstance(primitive_type, PrimitiveComplexType) and len(arg) == 2:
+        elif isinstance(primitive_type, PrimitiveComplexType):
             self.add_import(c_imports['pyc_math_c'])
             arg1 = self._print(arg[0])
             arg2 = self._print(arg[1])
