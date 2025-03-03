@@ -3,7 +3,7 @@ from .openmp_4_5 import SemanticParser as PSemanticParser
 from .openmp_4_5 import CCodePrinter as PCCodePrinter
 from .openmp_4_5 import FCodePrinter as PFCodePrinter
 from .openmp_4_5 import PythonCodePrinter as PPythonCodePrinter
-from .ast import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger, OmpList
+from .omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger, OmpList
 from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 from textx import metamodel_for_language
@@ -36,6 +36,7 @@ class SyntaxParser(PSyntaxParser):
         })
         self._omp_metamodel.register_obj_processors(obj_processors)
         self._pending_directives = []
+        self._skip_stmts_count = 0
 
 
 class SemanticParser(PSemanticParser):

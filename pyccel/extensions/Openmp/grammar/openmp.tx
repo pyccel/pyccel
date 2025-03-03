@@ -6,9 +6,9 @@ OmpDirective:
     name=/parallel\s+for\s+simd/ _tx_clauses*=ParallelForSimdClauses
     | name=/parallel\s+for/ _tx_clauses*=ParallelForClauses
     | name=/parallel\s+sections/ _tx_clauses*=ParallelSectionsClauses require_end_directive=TRUE
-    | name=/for\s+simd/ _tx_clauses*=ForSimdClauses
+    | name=/for\s+simd/ _tx_clauses*=ForSimdClauses require_end_directive=TRUE
     | name='parallel' _tx_clauses*=ParallelClauses _invalid_clauses*=AllOmpClauses require_end_directive=TRUE
-    | name='for' _tx_clauses*=ForClauses
+    | name='for' _tx_clauses*=ForClauses require_end_directive=TRUE
     | name='sections' _tx_clauses*=SectionsClauses require_end_directive=TRUE
     | name='section' require_end_directive=TRUE
     | name='single' _tx_clauses*=SingleClauses require_end_directive=TRUE

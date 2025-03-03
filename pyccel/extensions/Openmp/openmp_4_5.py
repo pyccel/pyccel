@@ -12,12 +12,10 @@ from pyccel.ast.core import FunctionCall
 from pyccel.ast.variable import Variable
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.ast.datatypes import PythonNativeInt
-from pyccel.ast.core import CodeBlock, For
-from pyccel.ast.core import EmptyNode
+from pyccel.ast.core import CodeBlock
 from pyccel.errors.errors import Errors
-from pyccel.extensions.Openmp.ast import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpExpr, OmpList
-from pyccel.extensions.Openmp.ast import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger, OmpAnnotatedComment
-from pyccel.ast.basic import PyccelAstNode
+from pyccel.extensions.Openmp.omp import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpExpr, OmpList
+from pyccel.extensions.Openmp.omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger
 
 errors = Errors()
 
@@ -50,42 +48,25 @@ class SyntaxParser:
             'OMP_VERSION': lambda _: 4.5,
         })
         self._omp_metamodel.register_obj_processors(obj_processors)
-        self._pending_directives = []
-        self._pending_constructs = []
-        self._bodies = []
+        self._directives_stack = []
+        self._structured_blocks_stack = []
+        self._skip_stmts_count = 0
 
     @property
-    def pending_directives(self):
+    def directives_stack(self):
         """Returns a list of directives that waits for an end directive"""
-        return self._pending_directives
+        return self._directives_stack
+
 
     def post_parse_checks(self):
         """Performs every post syntactic parsing checks"""
-        if any(pd.require_end_directive for pd in self.pending_directives):
+        if any(pd.require_end_directive for pd in self._directives_stack):
             errors.report(
                 "directives need closing",
-                symbol=self._pending_directives,
+                symbol=self._directives_stack,
                 severity="fatal",
             )
 
-    def _visit(self, stmt):
-        cls = type(stmt)
-        syntax_method = '_visit_' + cls.__name__
-        if hasattr(self, syntax_method):
-            self._context.append(stmt)
-            result = getattr(self, syntax_method)(stmt)
-            if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
-                result.set_current_ast(stmt)
-            #If Directive is a Construct the wen still  need it in the context to gather its body
-            if not isinstance(result, OmpDirective) or not result.require_end_directive:
-                self._context.pop()
-            #Pop the construct's directive
-            if isinstance(result, OmpConstruct):
-                self._context.pop()
-            return result
-        # Unknown object, we ignore syntactic, this is useful to isolate the omp parser for testing.
-        return stmt
-    
     def _visit_CommentLine(self, expr):
         from textx.exceptions import TextXError
         try:
@@ -99,55 +80,70 @@ class SyntaxParser:
             errors.report(e.message, severity="fatal", symbol=expr)
             return None
 
-    def _visit_OmpDirective(self, expr):
-        clauses = [self._visit(clause) for clause in expr.clauses]
-        directive = OmpDirective.from_directive(expr, clauses=clauses)
-        self._pending_directives.append(directive)
-        if expr.require_end_directive:
-            self._pending_constructs.append(directive)
-            self._bodies.append([])
+    def _visit_OmpDirective(self, stmt):
+        if hasattr(self, f"_visit_{stmt.name.replace(' ', '_')}_directive"):
+            return getattr(self, f"_visit_{stmt.name.replace(' ', '_')}_directive")(stmt)
+        clauses = [self._visit(clause) for clause in stmt.clauses]
+        directive = OmpDirective.from_directive(stmt, clauses=clauses)
+        if stmt.require_end_directive:
+            body = []
+            end = None
+            container = None
+            for el in self._context[::-1]:
+                if isinstance(el, list):
+                    container = el[el.index(self._context[-2]) + 1:].copy()
+                    break
+            for line in container:
+                expr =  self._visit(line)
+                if isinstance(expr, OmpEndDirective) and stmt.name == expr.name:
+                    end = expr
+                    break
+                body.append(expr)
+            if end is None:
+                errors.report(
+                    f"missing `end {expr.name}` directive",
+                    symbol=stmt,
+                    severity="fatal",
+                )
+            self._skip_stmts_count = len(body) + 1
+            body = CodeBlock(body=body)
+            return OmpConstruct(start=directive, end=end, body=body)
+
         return directive
+
+    def _visit_for_directive(self, stmt):
+        loop = None
+        for el in self._context[::-1]:
+            if isinstance(el, list):
+                loop_pos = el.index(self._context[-2]) + 1
+                if len(el) < loop_pos + 1 or not isinstance(el[loop_pos], ast.For):
+                    errors.report(
+                        f"{stmt.name} directive should be followed by a for loop",
+                        symbol=stmt,
+                        severity="fatal",
+                    )
+                loop = self._visit(el[loop_pos])
+                break
+        clauses = [self._visit(clause) for clause in stmt.clauses]
+        directive = OmpDirective.from_directive(stmt, clauses=clauses)
+        self._skip_stmts_count = 1
+        body = CodeBlock(body=[loop])
+        return OmpConstruct(start=directive, end=None, body=body)
+
+    def _visit_simd_directive(self, expr):
+        return self._visit_for_directive(expr)
+
+    def _visit_parallel_for_directive(self, expr):
+        return self._visit_for_directive(expr)
 
     def _visit_OmpClause(self, expr):
         omp_exprs = [self._visit(e) for e in expr.omp_exprs]
         return OmpClause.from_clause(expr, omp_exprs=omp_exprs)
 
-    def _find_coresponding_directive(self, end_directive):
-        """Takes an end directive and checks in the pending directives for the one that matches it"""
-        cor_directive = None
-        if len(self._pending_directives) == 0:
-            errors.report(
-                f"`end {end_directive.name}` misplaced",
-                symbol=end_directive,
-                severity="fatal",
-            )
-        if end_directive.name != self._pending_directives[-1].name:
-            if not self._pending_directives[-1].require_end_directive:
-                self._pending_directives.pop()
-                cor_directive = self._find_coresponding_directive(end_directive)
-            else:
-                errors.report(
-                    f"`end {end_directive.name}` misplaced",
-                    symbol=end_directive,
-                    severity="fatal",
-                )
-        else:
-            cor_directive = self._pending_directives.pop()
-        return cor_directive
-
     def _visit_OmpEndDirective(self, expr):
-        directive = self._find_coresponding_directive(expr)
-        clauses = [self._visit(clause) for clause in expr._clauses]
-        res = OmpEndDirective(name=expr.name, clauses=clauses, coresponding_directive=directive,
-                               raw=expr.raw, parent=expr.parent)
-
-        if self._pending_constructs[-1] is directive:
-            self._pending_constructs.pop()
-            body = self._bodies.pop()
-            body = CodeBlock(body=body)
-            return OmpConstruct(start=directive, end=expr, body=body)
-
-        return res
+        clauses = [self._visit(clause) for clause in expr.clauses]
+        end = OmpEndDirective.from_directive(expr, clauses=clauses)
+        return end
 
     def _visit_OmpScalarExpr(self, expr):
         fst = extend_tree(expr.value)
@@ -259,93 +255,29 @@ class SemanticParser:
             return getattr(self, f"_visit_{expr.name.replace(' ', '_')}_directive")(expr)
         clauses = [self._visit(clause) for clause in expr.clauses]
         directive = OmpDirective.from_directive(expr, clauses=clauses)
-        end_directives = [dirve for dirve in expr.get_all_user_nodes() if isinstance(dirve, OmpEndDirective)]
-        if len(end_directives) == 0:
-           return directive
-        assert len(end_directives) == 1
-        end_dir = end_directives[0]
-        end_dir.substitute(end_dir.coresponding_directive, EmptyNode())
-        if end_dir.get_all_user_nodes() != expr.get_all_user_nodes():
-            errors.report(
-                f"`end {end_dir.name}` directive misplaced",
-                symbol=end_dir,
-                severity="fatal",
-            )
-        container = expr.get_all_user_nodes()[-1]
-        reserved_nodes = container.body[container.body.index(expr) + 1:container.body.index(end_dir) + 1]
-        end_dir = self._visit(reserved_nodes[-1])
-        body = self._visit(CodeBlock(reserved_nodes[:-1]))
-        self._omp_reserved_nodes = reserved_nodes
-        return OmpConstruct(start=directive, end=end_dir, body=body)
+        return directive
 
     def _visit_OmpConstruct(self, expr):
         if hasattr(self, f"_visit_{expr.start.name.replace(' ', '_')}_construct"):
             return getattr(self, f"_visit_{expr.start.name.replace(' ', '_')}_construct")(expr)
 
-        clauses = [self._visit(clause) for clause in expr.start.clauses]
-        start = OmpDirective.from_directive(expr.start, clauses=clauses)
-        expr.end.substitute(expr.start.coresponding_directive, EmptyNode())
-        if expr.end.get_all_user_nodes() != expr.start.get_all_user_nodes():
-            errors.report(
-                f"`end {expr.end.name}` directive misplaced",
-                symbol=expr.end,
-                severity="fatal",
-            )
-        end = self._visit(expr.end)
         body = self._visit(expr.body)
+        start = self._visit(expr.start)
+        end = self._visit(expr.end) if expr.end else None
         return OmpConstruct(start=start, end=end, body=body)
 
-    def _visit_for_directive(self, expr):
-        clauses = [self._visit(clause) for clause in expr._clauses]
-        directive = OmpDirective.from_directive(expr, clauses=clauses)
-        end_directives = [dirve for dirve in expr.get_all_user_nodes() if isinstance(dirve, OmpEndDirective)]
-        container = expr.get_user_nodes(CodeBlock)[0]
-        if not isinstance(container.body[container.body.index(expr) + 1], For):
-            errors.report(
-                f"{expr.name} directive should be followed by a for loop",
-                symbol=expr,
-                severity="fatal",
-            )
-        if len(end_directives) == 1:
-            end_dir = end_directives[0]
-            end_dir.substitute(end_dir.coresponding_directive, EmptyNode())
-            if end_dir.get_all_user_nodes() != expr.get_all_user_nodes():
-                errors.report(
-                    f"`end {end_dir.name}` directive misplaced",
-                    symbol=end_dir,
-                    severity="fatal",
-                )
-            if not isinstance(container.body[container.body.index(expr) + 2], OmpEndDirective):
-                errors.report(
-                    f"`end {end_dir.name}` directive misplaced",
-                    symbol=end_dir,
-                    severity="fatal",
-                )
-            reserved_nodes = container.body[container.body.index(expr) + 1:container.body.index(end_dir) + 1]
-            end_dir = self._visit(reserved_nodes[-1])
-            body = self._visit(CodeBlock(reserved_nodes[:-1]))
-            self._omp_reserved_nodes = reserved_nodes
-        else:
-            end_dir = None
-            reserved_nodes = container.body[container.body.index(expr) + 1:container.body.index(expr) + 2]
-            body = self._visit(CodeBlock(reserved_nodes))
-            self._omp_reserved_nodes = reserved_nodes
+    def _visit_for_construct(self, expr):
+        body = self._visit(expr.body)
+        start = self._visit(expr.start)
+        return OmpConstruct(start=start, end=None, body=body)
 
-        return OmpConstruct(start=directive, end=end_dir, body=body)
+    def _visit_simd_construct(self, expr):
+        return self._visit_for_construct(expr)
 
-    def _visit_simd_directive(self, expr):
-        return self._visit_for_directive(expr)
-
-    def _visit_parallel_for_directive(self, expr):
-        return self._visit_for_directive(expr)
+    def _visit_parallel_for_construct(self, expr):
+        return self._visit_for_construct(expr)
 
     def _visit_OmpEndDirective(self, expr):
-        if expr.coresponding_directive is None:
-            errors.report(
-                f"{expr.name} does not match any directive",
-                symbol=expr,
-                severity="fatal",
-            )
         clauses = [self._visit(clause) for clause in expr.clauses]
         return OmpEndDirective(name=expr.name, clauses=clauses, raw=expr.raw, parent=expr.parent)
 
@@ -403,10 +335,8 @@ class CCodePrinter:
 
     def _print_OmpConstruct(self, expr):
         body = self._print(expr.body)
-        if expr.end and expr.start.require_end_directive:
+        if expr.end:
             return f"{self._print(expr.start)}\n{{\n{body}\n}}\n{self._print(expr.end)}\n"
-        elif expr.end:
-            return f"{self._print(expr.start)}\n{body}\n{self._print(expr.end)}\n"
         else:
             return f"{self._print(expr.start)}\n{body}\n"
 
@@ -432,6 +362,8 @@ class FCodePrinter:
         return f"!$omp {start}\n"
 
     def _print_OmpConstruct(self, expr):
+        if hasattr(self, f"_print_{expr.start.name.replace(' ', '_')}_construct"):
+            return getattr(self, f"_print_{expr.start.name.replace(' ', '_')}_construct")(expr)
         body = self._print(expr.body)
         start = self._print(expr.start)
         if expr.end:
@@ -439,6 +371,24 @@ class FCodePrinter:
             return f"{start}\n{body}\n{end}\n"
         else:
             return f"{start}\n{body}\n"
+
+    def _print_for_construct(self, expr):
+        delayed = ['nowait']
+        delayed = [c for c in expr.start.clauses if c.name in delayed]
+        if len(delayed):
+            end = f"!$omp end do {' '.join(c.raw for c in delayed)}"
+        else:
+            end = None
+
+        start = re.sub(r'\bfor\b', 'do', expr.start.raw)
+        for c in delayed:
+            start = start.replace(c.raw, '')
+        body = self._print(expr.body)
+        if end:
+            return f"!$omp {start}\n{body}\n{end}\n"
+        else:
+            return f"!$omp {start}\n{body}\n"
+
 
     def _print_OmpDirective(self, expr):
         if hasattr(self, f"_print_{expr.name.replace(' ', '_')}_directive"):

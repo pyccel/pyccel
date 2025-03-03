@@ -3,8 +3,6 @@ from pyccel.errors.errors import Errors
 from pyccel.utilities.extensions import Extension
 from . import openmp_4_5
 from . import openmp_5_0
-from .ast import OmpDirective
-
 errors = Errors()
 
 
@@ -31,22 +29,10 @@ class Openmp(Extension):
                 sp.__init__(self, *args, **kwargs)
 
             def _visit(self, stmt):
-
-                cls = type(stmt)
-                syntax_method = '_visit_' + cls.__name__
-                if syntax_method in Extended.__dict__:
-                    result = getattr(self, syntax_method)(stmt)
-                elif hasattr(sp, syntax_method):
-                    result = sp._visit(self, stmt)
-                else:
-                    result = mixin._visit(self, stmt)
-
-                if len(self._pending_constructs) and isinstance(self._context[-1], OmpDirective):
-                    if not isinstance(result, OmpDirective):
-                        self._bodies[-1].append(result)
+                if self._skip_stmts_count:
+                    self._skip_stmts_count -= 1
                     return EmptyNode()
-                else:
-                    return result
+                return(sp._visit(self, stmt))
 
             def _visit_CommentLine(self, stmt):
                 line = stmt.s
@@ -55,10 +41,6 @@ class Openmp(Extension):
                     if line.startswith('omp'):
                         return mixin._visit_CommentLine(self, stmt)
                 return sp._visit_CommentLine(self, stmt)
-            def parse(self):
-                ast = sp.parse(self)
-                mixin.post_parse_checks(self)
-                return ast
         return Extended
 
     def extend_semantic_parser(self, sp):

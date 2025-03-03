@@ -332,7 +332,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
-        body = [self._visit(v) for v in stmt.body]
+        body = self._visit(stmt.body)
 
         functions = [f for f in body if isinstance(f, FunctionDef)]
         classes   = [c for c in body if isinstance(c, ClassDef)]
@@ -1272,7 +1272,7 @@ class SyntaxParser(BasicParser):
                         severity = 'error')
 
             scope = self.create_new_function_scope('__main__')
-            body = [self._visit(v) for v in stmt.body]
+            body = self._visit(stmt.body)
             self.exit_function_scope()
 
             imports = [i for i in body if isinstance(i, Import)]

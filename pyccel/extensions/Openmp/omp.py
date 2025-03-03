@@ -29,6 +29,7 @@ class OmpAnnotatedComment(PyccelAstNode):
                 )
         self._raw = kwargs.pop("raw", None)
         self._position = kwargs.pop('position', None)
+        self._line = kwargs.pop('line', None)
         if self._position is None and hasattr(self, '_tx_position') and hasattr(self, '_tx_position_end'):
             self._position = (self._tx_position, self._tx_position_end)
         assert self._raw or self._position
@@ -66,6 +67,8 @@ class OmpAnnotatedComment(PyccelAstNode):
         """
         returns the line of an omp object from the root parent OmpDirective.
         """
+        if self._line:
+            return self._line
         p = self
         while not isinstance(p, OmpDirective):
             p = p.parent
@@ -96,7 +99,7 @@ class OmpAnnotatedComment(PyccelAstNode):
 
     @property
     def omp_version(self):
-        """Returns the openmp version used"""
+        """returns the openmp version used"""
         return self._omp_version
 
     def get_fixed_state(self):
@@ -111,13 +114,14 @@ class OmpAnnotatedComment(PyccelAstNode):
         }
 
 class OmpConstruct(PyccelAstNode):
-    __slots__ = ("_start", "_end", "_body")
+    __slots__ = ("_start", "_end", "_body", "_omp_version")
     _attribute_nodes = ("_start", "_end", "_body")
 
     def __init__(self, start, body, end=None):
         self._start = start
         self._end = end
         self._body = body
+        self._omp_version = start.omp_version
         super().__init__()
 
     @property
@@ -140,6 +144,14 @@ class OmpConstruct(PyccelAstNode):
         """Used by the printers to tweak the expression of the construct"""
         self._end = end
 
+    @property
+    def name(self):
+        return self._start.name
+
+    @property
+    def omp_version(self):
+        """returns the openmp version used"""
+        return self._omp_version
 
 class OmpDirective(OmpAnnotatedComment):
     """
@@ -204,11 +216,13 @@ class OmpDirective(OmpAnnotatedComment):
         """Takes a directive and returns a directive that keeps its unchangeable state"""
         clauses = kwargs.pop('clauses', directive.clauses)
         parent = kwargs.pop('parent', directive.parent)
+        coresponding_directive = kwargs.pop('coresponding_directive', None)
         d_attrs = directive.get_fixed_state()
         return cls(clauses=clauses,
                    require_end_directive=directive.require_end_directive,
                    name=directive.name,
                    parent=parent,
+                   coresponding_directive=coresponding_directive,
                    **d_attrs, )
 
     @classmethod
