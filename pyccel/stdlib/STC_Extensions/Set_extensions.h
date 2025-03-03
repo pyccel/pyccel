@@ -63,7 +63,7 @@ static inline i_key _c_MEMB(_min)(const Self* self) {
     i_key min_val = *(itr.ref);
     while (itr.ref)
     {
-        if (*(itr.ref) < min_val)
+        if (i_less(itr.ref, &min_val))
             min_val = *(itr.ref);
         _c_MEMB(_next)(&itr);
     }
@@ -76,7 +76,7 @@ static inline i_key _c_MEMB(_max)(const Self* self) {
     i_key max_val = *(itr.ref);
     while (itr.ref)
     {
-        if (*(itr.ref) > max_val)
+        if (i_less(&max_val, itr.ref))
             max_val = *(itr.ref);
         _c_MEMB(_next)(&itr);
     }
@@ -85,5 +85,6 @@ static inline i_key _c_MEMB(_max)(const Self* self) {
 #endif
 #undef i_type
 #undef i_key
+#undef i_use_cmp
 
 #include <stc/priv/template2.h>

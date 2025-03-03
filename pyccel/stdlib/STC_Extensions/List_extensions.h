@@ -6,6 +6,7 @@
 // i_type: Class type (e.g., hset_int64_t).
 // i_key: Data type of the elements in the set (e.g., int64_t).
 
+#if defined (i_use_cmp) 
 static inline i_key _c_MEMB(_pull_elem)(Self* self, intptr_t pop_idx) {
     // Get the iterator for the specified element using (_advance) and (_begin)
     _c_MEMB(_iter) itr = _c_MEMB(_advance)(_c_MEMB(_begin)(self), pop_idx);
@@ -40,5 +41,9 @@ static inline i_key _c_MEMB(_max)(const Self* self) {
     }
     return max_val;
 }
+#endif
+#undef i_type
+#undef i_key
+#undef i_use_cmp
 
 #include <stc/priv/template2.h>
