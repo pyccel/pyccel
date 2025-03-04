@@ -2896,7 +2896,7 @@ class SemanticParser(BasicParser):
 
     def _visit_AnnotatedPyccelSymbol(self, expr):
         # Check if the variable already exists
-        var = self.scope.find(expr, 'variables', local_only = True)
+        var = self.scope.find(expr.name, 'variables', local_only = True)
         if var is not None:
             errors.report("Variable has been declared multiple times",
                     symbol=expr, severity='error')
