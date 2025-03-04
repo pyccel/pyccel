@@ -2897,7 +2897,7 @@ class SemanticParser(BasicParser):
     def _visit_AnnotatedPyccelSymbol(self, expr):
         # Check if the variable already exists
         var = self.scope.find(expr.name, 'variables', local_only = True)
-        if var is not None:
+        if var is not None and not any(isinstance(n, FunctionDefResult) for n in var.get_all_user_nodes()):
             errors.report("Variable has been declared multiple times",
                     symbol=expr, severity='error')
 
@@ -2986,6 +2986,16 @@ class SemanticParser(BasicParser):
 
         # An annotated variable must have a type
         assert len(possible_args) != 0
+
+        # If var was declared in results
+        if var is not None:
+            new_var = possible_args[0]
+            if len(possible_args) != 1 or new_var.class_type != var.class_type:
+                errors.report(f"Variable was declared as the result of the function {self.current_function} but is now declared with a different type",
+                        symbol=expr, severity='error')
+            # Remove variable from scope as AnnotatedPyccelSymbol is always inserted into scope
+            self.scope.remove_variable(var)
+            return [var]
 
         return possible_args
 
