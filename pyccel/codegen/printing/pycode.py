@@ -189,14 +189,21 @@ class PythonCodePrinter(CodePrinter):
         if func.is_inline:
             return overload + self._print(func)
         else:
+            self.set_scope(func.scope)
             args = ', '.join(self._print(a) for a in func.arguments)
             result = func.results
+            body = '...'
             if result:
                 res = f' -> {self._get_type_annotation(result.var)}'
+                # A return is printed explicitly to preserve the names of the result variables for Fortran
+                res_vars = self.scope.collect_all_tuple_elements(result.var)
+                body = ''.join(f"{v.name} : {self._get_type_annotation(v)}\n" for v in res_vars)
+                body += f'return {self._print(result.var)}\n'
             else:
                 res = ' -> None'
-            name = func.scope.get_python_name(func.name)
-            return overload + f"def {name}({args}){res}:\n"+self._indent_codestring('...')
+            name = self.scope.get_python_name(func.name)
+            self.exit_scope()
+            return overload + f"def {name}({args}){res}:\n"+self._indent_codestring(body)
 
     def _handle_decorators(self, decorators):
         if len(decorators) == 0:
@@ -1132,7 +1139,7 @@ class PythonCodePrinter(CodePrinter):
         self._in_header = True
         mod = expr.module
         variables = mod.variables
-        var_decl = '\n'.join(f"{v.name} : {self._get_type_annotation(v)}" for v in variables)
+        var_decl = '\n'.join(f"{v.name} : {self._get_type_annotation(v)}" for v in variables if not v.is_temp)
         funcs = '\n'.join(self._function_signature(f) for f in mod.funcs)
         classes = ''
         for classDef in mod.classes:
