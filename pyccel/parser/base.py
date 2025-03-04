@@ -90,7 +90,7 @@ def get_filename_from_import(module, input_folder=''):
             pkg.append(input_folder.stem)
 
         if module != '':
-            sys.path.append(str(input_folder))
+            sys.path.append(str(input_folder.parent))
             package_location_in_project = '.'.join(pkg[::-1]) if pkg else None
             try:
                 package = importlib.import_module(module, package_location_in_project)
