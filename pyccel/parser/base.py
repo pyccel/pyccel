@@ -95,15 +95,12 @@ def get_filename_from_import(module, input_folder=''):
             try:
                 package = importlib.import_module(module, package_location_in_project)
             except ImportError:
-                print("WAAA", module, package_location_in_project)
                 errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                               severity='fatal')
             finally:
                 sys.path.pop()
 
             package_dir = Path(package.__file__).parent
-
-    print(module, package_dir)
 
     filename_pyh = package_dir / f'{filename}.pyh'
     filename_pyccel_generated_pyi = package_dir / '__pyccel__' / f'{filename}.pyi'
