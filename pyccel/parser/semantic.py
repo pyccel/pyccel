@@ -2445,7 +2445,7 @@ class SemanticParser(BasicParser):
         if not all(isinstance(l, comment_types) for l in init_func_body):
             # If there are any initialisation statements then create an initialisation function
             init_var = Variable(PythonNativeBool(), self.scope.get_new_name('initialised'),
-                                is_private=True)
+                                is_private=True, is_temp = True)
             init_func_name = self.scope.get_new_name(name_suffix+'__init')
             # Ensure that the function is correctly defined within the namespaces
             init_scope = self.create_new_function_scope(init_func_name)
