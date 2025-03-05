@@ -76,6 +76,8 @@ def get_filename_from_import(module, input_folder=''):
         module = str(module.name)
 
     input_folder = Path(input_folder)
+    if input_folder.stem == '__pyccel__':
+        input_folder = input_folder.parent
     n_rel = 0
 
     filename = module
