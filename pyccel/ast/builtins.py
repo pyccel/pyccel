@@ -1523,7 +1523,7 @@ class PythonMin(PyccelFunction):
         if isinstance(x, (list, tuple)):
             x = PythonTuple(*x)
         elif not (isinstance(x, (PythonTuple, PythonList))
-                  or isinstance(x, Variable) and isinstance(x.class_type, HomogeneousContainerType)):
+                  or (isinstance(x, Variable) and isinstance(x.class_type, HomogeneousContainerType))):
             raise TypeError(f'Unknown type of {type(x)}.' )
 
         if isinstance(x, (PythonTuple, PythonList)) and not x.is_homogeneous:
