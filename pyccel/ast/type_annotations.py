@@ -313,6 +313,10 @@ class SyntacticTypeAnnotation(PyccelAstNode):
         else:
             return False
 
+    def __str__(self):
+        order_str = f'(order={self.order})' if self.order else ''
+        return f'{self.dtype}{order_str}'
+
 #==============================================================================
 
 typenames_to_dtypes = { 'float'   : PythonNativeFloat(),
