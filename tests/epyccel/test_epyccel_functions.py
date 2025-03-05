@@ -358,6 +358,14 @@ def test_union_type(language):
     assert np.isclose(f(y), square(y), rtol=RTOL, atol=ATOL)
     assert isinstance(f(y), type(square(y)))
 
+def test_return_annotation(language):
+    def get_2() -> int:
+        my_var : int = 2
+        return my_var
+
+    f = epyccel(get_2, language=language)
+    assert f() == get_2()
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================

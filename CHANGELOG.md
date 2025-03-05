@@ -120,6 +120,7 @@ All notable changes to this project will be documented in this file.
 -   #2195 : Fix string comparisons.
 -   Fixed returning strings from functions.
 -   #2197 : Allow strings as dictionary keys in C.
+-   #2104 : Add support for Pythonic swapping and raise errors for expressions which are too complex.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
 -   #2175 : Fix the shape of multi-level containers.
 -   Catch all internal errors arising in the syntactic, semantic, printing or code generation stages.
@@ -128,6 +129,7 @@ All notable changes to this project will be documented in this file.
 -   #2220 : Fix premature `stc/cspan` import.
 -   #2214 : Fix returning a local variable from an inline function.
 -   #1321 : Fix use of tuples returned from functions in a non-assign statement.
+-   #2229 : Fix annotation of variables that are returned in a function whose result type is annotated.
 
 ### Changed
 
