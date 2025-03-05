@@ -1147,11 +1147,17 @@ class PythonCodePrinter(CodePrinter):
             class_body  = '\n'.join(f"{v.name} : {self._get_type_annotation(v)}" for v in classDef.attributes) + '\n\n'
             for method in classDef.methods:
                 class_body += f"{self._function_signature(method)}\n"
+            for interface in classDef.interfaces:
+                for method in interface.functions:
+                    class_body += f"{self._function_signature(method)}\n"
 
             classes += self._indent_codestring(class_body)
 
+        imports  = ''.join(self._print(i) for i in mod.imports)
+        imports += ''.join(self._print(i) for i in self._additional_imports.values())
+
         self._in_header = False
-        return '\n'.join((var_decl, classes, funcs))
+        return '\n'.join((imports, var_decl, classes, funcs))
 
     def _print_AllDeclaration(self, expr):
         values = ',\n           '.join(self._print(v) for v in expr.values)
