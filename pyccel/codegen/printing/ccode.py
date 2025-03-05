@@ -826,8 +826,11 @@ class CCodePrinter(CodePrinter):
         can_compare = primitive_type is not PrimitiveComplexType()
 
         if isinstance(arg, Variable) and isinstance(arg.class_type , HomogeneousTupleType):
-            arg = PythonTuple(*arg)
-
+            if isinstance(arg.shape[0], LiteralInteger):
+                arg = PythonTuple(*arg)
+            else:
+                return errors.report(f"{expr.name} in C does not support tuples of unknown length", symbol=expr,
+                    severity='fatal')
         if isinstance(arg, (PythonTuple, PythonList)) and variadic_args:
             key = self.get_c_type(arg.class_type.element_type)
             self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
