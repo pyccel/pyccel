@@ -129,6 +129,7 @@ All notable changes to this project will be documented in this file.
 -   #2220 : Fix premature `stc/cspan` import.
 -   #2214 : Fix returning a local variable from an inline function.
 -   #1321 : Fix use of tuples returned from functions in a non-assign statement.
+-   #2229 : Fix annotation of variables that are returned in a function whose result type is annotated.
 
 ### Changed
 
