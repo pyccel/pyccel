@@ -105,8 +105,9 @@ class ErrorInfo:
     severity : str, optional
         The severity of the error. This is one of : [warning/error/fatal].
 
-    symbol : pyccel.ast.basic.PyccelAstNode, optional
-        The PyccelAstNode object which caused the error to need to be raised.
+    symbol : str, optional
+        A string representation of the PyccelAstNode object which caused
+        the error to need to be raised.
         This object is printed in the error message.
 
     traceback : str, optional
@@ -163,10 +164,7 @@ class ErrorInfo:
                 info['location'] = ' [{line}]'.format(line=self.line)
 
         if self.symbol:
-            if self.traceback:
-                info['symbol'] = ' ({})'.format(repr(self.symbol))
-            else:
-                info['symbol'] = ' ({})'.format(self.symbol)
+            info['symbol'] = f' ({self.symbol})'
 
         return pattern.format(**info)
 
@@ -328,6 +326,11 @@ class Errors(metaclass = Singleton):
                 symbol = ast.unparse(ast_node)
             elif isinstance(symbol, PyccelAstNode):
                 ast_node = symbol.python_ast
+
+            if self.mode == 'developer':
+                symbol = repr(symbol)
+            else:
+                symbol = str(symbol)
 
         if ast_node:
             if line is None:

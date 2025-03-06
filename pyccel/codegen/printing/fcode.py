@@ -1894,29 +1894,20 @@ class FCodePrinter(CodePrinter):
             return f'minval({arg_code})'
         
     def _print_PythonMinMax(self, expr):
-        args = expr.args
-        if len(args) == 1:
-            if isinstance(args[0], Variable):
-                arg = args[0]
-                if isinstance(arg.class_type, HomogeneousListType):
-                    self.add_import(self._build_gFTL_extension_module(arg.class_type))
-                    target = self._print(arg)
-                    type_name = self._print(arg.class_type)
-                    code = f'{type_name}_{expr.name}({target})'
-                elif isinstance(arg.class_type, HomogeneousSetType):
-                    self.add_import(self._build_gFTL_extension_module(arg.class_type))
-                    target = self._print(arg)
-                    type_name = self._print(arg.class_type)
-                    code = f'{type_name}_{expr.name}({target})'
-                else:
-                    raise TypeError(f'Expecting a variable of type list or set, given {arg.class_type}')
-            else:        
-                arg = args[0]
-                arg_code = self._get_node_without_gFTL(arg)
-                code = f'{expr.name}val({arg_code})'
+        arg, = expr.args
+        if isinstance(arg, Variable):
+            if isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType)):
+                self.add_import(self._build_gFTL_extension_module(arg.class_type))
+                target = self._print(arg)
+                type_name = self._print(arg.class_type)
+                code = f'{type_name}_{expr.name}({target})'
+            elif isinstance(arg.class_type, HomogeneousTupleType):
+                code = f'{expr.name}val({self._print(arg)})'
+            else:
+                raise TypeError(f'Expecting a variable of type list or set, given {arg.class_type}')
         else:
-            code = ','.join(self._print(arg) for arg in args)
-            code = f'{expr.name}('+code+')'
+            arg_code = self._get_node_without_gFTL(arg)
+            code = f'{expr.name}val({arg_code})'
         return code
 
     def _print_PythonMin(self, expr):
