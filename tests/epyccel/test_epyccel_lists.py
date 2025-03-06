@@ -803,6 +803,18 @@ def test_list_return(language):
     assert isinstance(python_result, type(pyccel_result))
     assert isinstance(python_result.pop(), type(pyccel_result.pop()))
 
+
+def test_list_min_max(language):
+    def list_min_max():
+        a_int = [1, 2, 3, 4]
+        a_float = [1.1, 2.2, 3.3, 4.4]
+        return min(a_int), max(a_int), min(a_float), max(a_float)
+    epyccel_func = epyccel(list_min_max, language = language)
+    pyccel_result = epyccel_func()
+    python_result = list_min_max()
+    assert python_result == pyccel_result
+    assert isinstance(python_result, type(pyccel_result))
+
 def test_list_str(stc_language):
     def list_str():
         a = ['hello', 'world', '!']
@@ -812,3 +824,4 @@ def test_list_str(stc_language):
     pyccel_result = epyccel_func()
     python_result = list_str()
     assert python_result == pyccel_result
+

@@ -149,15 +149,6 @@ def test_min_in_min(language):
 
     assert epyc_f(*int_args) == f(*int_args)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="min not implemented in C for more than 2 args"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_list(language):
     @template('T', [int, float])
     def f(x : 'T', y : 'T', z : 'T'):
@@ -171,19 +162,38 @@ def test_min_list(language):
     assert epyc_f(*int_args) == f(*int_args)
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="min not implemented in C for more than 2 args"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_tuple(language):
     @template('T', [int, float])
     def f(x : 'T', y : 'T', z : 'T'):
         return min((x, y, z))
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int, max_int) for _ in range(3)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
+
+def test_min_list_var(language):
+    @template('T', [int, float])
+    def f(x : 'T', y : 'T', z : 'T'):
+        w = [x, y, z]
+        return min(w)
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int, max_int) for _ in range(3)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
+
+def test_min_tuple_var(language):
+    @template('T', [int, float])
+    def f(x : 'T', y : 'T', z : 'T'):
+        w = (x, y, z)
+        return min(w)
 
     epyc_f = epyccel(f, language=language)
 
@@ -259,15 +269,6 @@ def test_max_3_args(language):
     assert epyc_f(*int_args) == f(*int_args)
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="max not implemented in C for more than 2 args"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_max_list(language):
     @template('T', [int, float])
     def f(x : 'T', y : 'T', z : 'T'):
@@ -281,19 +282,38 @@ def test_max_list(language):
     assert epyc_f(*int_args) == f(*int_args)
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="max not implemented in C for more than 2 args"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_max_tuple(language):
     @template('T', [int, float])
     def f(x : 'T', y : 'T', z : 'T'):
         return max((x, y, z))
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int, max_int) for _ in range(3)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
+
+def test_max_list_var(language):
+    @template('T', [int, float])
+    def f(x : 'T', y : 'T', z : 'T'):
+        w = [x, y, z]
+        return max(w)
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int, max_int) for _ in range(3)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
+
+def test_max_tuple_var(language):
+    @template('T', [int, float])
+    def f(x : 'T', y : 'T', z : 'T'):
+        w = (x, y, z)
+        return max(w)
 
     epyc_f = epyccel(f, language=language)
 
