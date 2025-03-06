@@ -744,3 +744,15 @@ def test_set_return(language):
     assert python_result == pyccel_result
     assert isinstance(python_result, type(pyccel_result))
     assert isinstance(python_result.pop(), type(pyccel_result.pop()))
+
+def test_set_min_max(language):
+    def set_min_max():
+        a_int = {1,2,3,4,5}
+        a_float = {1.1,2.2,3.3,4.4,5.5}
+        return min(a_int), min(a_float), max(a_int), max(a_float)
+
+    epyccel_func = epyccel(set_min_max, language = language)
+    pyccel_result = epyccel_func()
+    python_result = set_min_max()
+    assert python_result == pyccel_result
+    assert isinstance(python_result, type(pyccel_result))

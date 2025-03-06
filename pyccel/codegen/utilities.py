@@ -68,8 +68,13 @@ internal_libs["gFTL_functions/Set_extensions"] = (stdlib_path / "gFTL_functions"
                                                                      folder="gFTL_functions",
                                                                      has_target_file = False,
                                                                      dependencies = (internal_libs['gFTL'][2],)))
+internal_libs["gFTL_functions/Vector_extensions"] = (stdlib_path / "gFTL_functions", "gFTL_functions", CompileObj("Vector_Extensions.inc",
+                                                                     folder="gFTL_functions",
+                                                                     has_target_file = False,
+                                                                     dependencies = (internal_libs['gFTL'][2],)))
 internal_libs["stc/cstr"] = (ext_path / "STC/src", "STC/src", CompileObj("cstr_core.c", folder="STC/include", dependencies = (internal_libs['stc'][2],)))
 internal_libs["stc/cspan"] = (ext_path / "STC/src", "STC/src", CompileObj("cspan.c", folder="STC/include", dependencies = (internal_libs['stc'][2],)))
+
 
 #==============================================================================
 
