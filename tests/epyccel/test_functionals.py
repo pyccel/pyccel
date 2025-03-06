@@ -17,7 +17,6 @@ def compare_epyccel(f, language, *args):
 def test_functional_for_1d_range(language):
     compare_epyccel(functionals.functional_for_1d_range, language)
 
-@pytest.mark.skipif(lambda lang: lang == 'c', reason="Skipping for C due to array redefinition issue. See #1979")
 def test_functional_for_overwrite_1d_range(language):
     compare_epyccel(functionals.functional_for_overwrite_1d_range, language)
 
