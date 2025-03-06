@@ -822,13 +822,40 @@ class CCodePrinter(CodePrinter):
     def _print_PythonMinMax(self, expr):
         arg = expr.args[0]
         primitive_type = arg.dtype.primitive_type
+        variadic_args = isinstance(primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType))
+        can_compare = primitive_type is not PrimitiveComplexType()
 
-        if primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:
+        if isinstance(arg, Variable) and isinstance(arg.class_type , HomogeneousTupleType):
+            if isinstance(arg.shape[0], LiteralInteger):
+                arg = PythonTuple(*arg)
+            else:
+                return errors.report(f"{expr.name} in C does not support tuples of unknown length\n"
+                                     + PYCCEL_RESTRICTION_TODO, symbol=expr, severity='fatal')
+        if isinstance(arg, (PythonTuple, PythonList)) and variadic_args:
+            key = self.get_c_type(arg.class_type.element_type)
+            self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
+            args_code = ", ".join(self._print(a) for a in arg.args)
+            return  f'{key}_{expr.name}({len(arg.args)}, {args_code})'
+        elif isinstance(arg, Variable):
+            if isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType)) and can_compare:
+                class_type = arg.class_type
+                c_type = self.get_c_type(class_type)
+                arg_obj = self._print(ObjectAddress(arg))
+                import_loc = 'stc/vec' if isinstance(arg.class_type, HomogeneousListType) else 'stc/hset'
+                self.add_import(Import(import_loc, AsName(VariableTypeAnnotation(class_type), c_type)))
+                return f'{c_type}_{expr.name}({arg_obj})'
+            else:
+                return errors.report(f"{expr.name} in C does not support arguments of type {arg.class_type}", symbol=expr,
+                    severity='fatal')
+        if len(arg) != 2:
+            return errors.report(f"{expr.name} in C does not support {len(arg)} arguments of type {arg.dtype}\n"
+                                 + PYCCEL_RESTRICTION_TODO, symbol=expr, severity='fatal')
+        if primitive_type is PrimitiveFloatingPointType():
             self.add_import(c_imports['math'])
             arg1 = self._print(arg[0])
             arg2 = self._print(arg[1])
             return f"f{expr.name}({arg1}, {arg2})"
-        elif isinstance(primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and len(arg) == 2:
+        elif isinstance(primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)):
             if isinstance(arg[0], (Variable, Literal)):
                 arg1 = self._print(arg[0])
             else:
@@ -837,7 +864,6 @@ class CCodePrinter(CodePrinter):
                 code = self._print(assign1)
                 self._additional_code += code
                 arg1 = self._print(arg1_temp)
-
             if isinstance(arg[1], (Variable, Literal)):
                 arg2 = self._print(arg[1])
             else:
@@ -846,21 +872,16 @@ class CCodePrinter(CodePrinter):
                 code = self._print(assign2)
                 self._additional_code += code
                 arg2 = self._print(arg2_temp)
-
             op = '<' if isinstance(expr, PythonMin) else '>'
             return f"({arg1} {op} {arg2} ? {arg1} : {arg2})"
-        elif len(arg) > 2 and isinstance(arg.dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveIntegerType)):
-            key = self.get_c_type(arg[0].class_type)
-            self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
-            return  f'{key}_{expr.name}({len(arg)}, {", ".join(self._print(a) for a in arg)})'
         elif isinstance(primitive_type, PrimitiveComplexType):
             self.add_import(c_imports['pyc_math_c'])
             arg1 = self._print(arg[0])
             arg2 = self._print(arg[1])
             return f"complex_{expr.name}({arg1}, {arg2})"
         else:
-            return errors.report(f"{expr.name} in C does not support arguments of type {arg.dtype}", symbol=expr,
-                    severity='fatal')
+            return errors.report(f"{expr.name} in C does not support {len(arg)} arguments of type {arg.dtype}\n"
+                                 + PYCCEL_RESTRICTION_TODO, symbol=expr, severity='fatal')
 
     def _print_PythonMin(self, expr):
         return self._print_PythonMinMax(expr)
@@ -1226,7 +1247,7 @@ class CCodePrinter(CodePrinter):
                         decl_line = ''
                         errors.report(f"The declaration of type {class_type} is not yet implemented.",
                                 symbol=expr, severity='error')
-                if isinstance(class_type, HomogeneousListType) and isinstance(class_type.element_type, FixedSizeNumericType) \
+                if isinstance(class_type, (HomogeneousListType, HomogeneousSetType)) and isinstance(class_type.element_type, FixedSizeNumericType) \
                         and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
                     decl_line += '#define i_use_cmp\n'
                 header_guard_prefix = import_header_guard_prefix.get(source, '')
