@@ -829,8 +829,8 @@ class CCodePrinter(CodePrinter):
             if isinstance(arg.shape[0], LiteralInteger):
                 arg = PythonTuple(*arg)
             else:
-                return errors.report('\n'.join([f"{expr.name} in C does not support tuples of unknown length",PYCCEL_RESTRICTION_TODO]), symbol=expr,
-                    severity='fatal')
+                return errors.report(f"{expr.name} in C does not support tuples of unknown length\n"
+                                     + PYCCEL_RESTRICTION_TODO, symbol=expr, severity='fatal')
         if isinstance(arg, (PythonTuple, PythonList)) and variadic_args:
             key = self.get_c_type(arg.class_type.element_type)
             self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(arg.dtype), key)))
@@ -848,8 +848,8 @@ class CCodePrinter(CodePrinter):
                 return errors.report(f"{expr.name} in C does not support arguments of type {arg.class_type}", symbol=expr,
                     severity='fatal')
         if len(arg) != 2:
-            return errors.report('\n'.join([f"{expr.name} in C does not support {len(arg)} arguments of type {arg.dtype}",
-                                            PYCCEL_RESTRICTION_TODO]), symbol=expr, severity='fatal')
+            return errors.report(f"{expr.name} in C does not support {len(arg)} arguments of type {arg.dtype}\n"
+                                 + PYCCEL_RESTRICTION_TODO, symbol=expr, severity='fatal')
         if primitive_type is PrimitiveFloatingPointType():
             self.add_import(c_imports['math'])
             arg1 = self._print(arg[0])
@@ -880,8 +880,8 @@ class CCodePrinter(CodePrinter):
             arg2 = self._print(arg[1])
             return f"complex_{expr.name}({arg1}, {arg2})"
         else:
-            return errors.report('\n'.join([f"{expr.name} in C does not support {len(arg)} arguments of type {arg.dtype}",
-                                            PYCCEL_RESTRICTION_TODO]), symbol=expr, severity='fatal')
+            return errors.report(f"{expr.name} in C does not support {len(arg)} arguments of type {arg.dtype}\n"
+                                 + PYCCEL_RESTRICTION_TODO, symbol=expr, severity='fatal')
 
     def _print_PythonMin(self, expr):
         return self._print_PythonMinMax(expr)
