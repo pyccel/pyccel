@@ -185,7 +185,8 @@ class PythonCodePrinter(CodePrinter):
             raise NotImplementedError(f"Unexpected object of type {type(var)}")
 
     def _function_signature(self, func):
-        overload = '@overload\n' if func.get_direct_user_nodes(lambda x: isinstance(x, Interface)) else ''
+        interface = func.get_direct_user_nodes(lambda x: isinstance(x, Interface))
+        overload = '@overload\n' if interface else ''
         if func.is_inline:
             return overload + self._print(func)
         else:
@@ -201,7 +202,7 @@ class PythonCodePrinter(CodePrinter):
                 body += f'return {self._print(result.var)}\n'
             else:
                 res = ' -> None'
-            name = self.scope.get_python_name(func.name)
+            name = self.scope.get_python_name(interface[0].name if interface else func.name)
             self.exit_scope()
             return overload + f"def {name}({args}){res}:\n"+self._indent_codestring(body)
 
