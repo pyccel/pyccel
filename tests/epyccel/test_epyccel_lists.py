@@ -826,7 +826,7 @@ def test_list_reverse(language):
         a_float.reverse()
         a_complex.reverse()
         a_single.reverse()
-        return (a_int[0], a_int[-1], a_float[0], a_float[-1], 
+        return (a_int[0], a_int[-1], a_float[0], a_float[-1],
                 a_single[0], a_single[-1], a_complex[0], a_complex[-1])
     epyccel_func = epyccel(list_reverse, language = language)
     pyccel_result = epyccel_func()
