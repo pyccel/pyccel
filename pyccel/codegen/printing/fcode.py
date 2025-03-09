@@ -1481,6 +1481,15 @@ class FCodePrinter(CodePrinter):
         success = self.scope.get_temporary_variable(PythonNativeInt())
         return f'{success} = {var} % erase_value({val})\n'
 
+    def _print_SetIsDisjoint(self, expr):
+        var = expr.set_variable
+        expr_type = var.class_type
+        var_code = self._print(expr.set_variable)
+        arg_code = self._print(expr.args[0])
+        type_name = self._print(expr_type)
+        self.add_import(self._build_gFTL_extension_module(expr_type))
+        return f'{type_name}_is_disjoint({var_code}, {arg_code})'
+
    #========================== Dict Methods ================================#
 
     def _print_DictClear(self, expr):
