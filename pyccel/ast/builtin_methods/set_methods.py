@@ -9,7 +9,7 @@ always available.
 
 This module contains objects which describe these methods within Pyccel's AST.
 """
-from pyccel.ast.datatypes import VoidType
+from pyccel.ast.datatypes import VoidType, PythonNativeBool
 from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.basic import TypedAstNode
 
@@ -282,3 +282,29 @@ class SetIntersectionUpdate(SetMethod):
             if class_type != o.class_type:
                 raise TypeError(f"Only arguments of type {class_type} are supported for the functions intersection and .intersection_update")
         super().__init__(set_obj, *others)
+
+#==============================================================================
+
+class SetIsDisjoint(SetMethod):
+    """
+    Represents a call to the .isdisjoint() method.
+
+    Represents a call to the .isdisjoint() method. This method checks if two
+    sets have a null intersection.
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    other_set_obj : TypedAstNode
+        The set object which is passed as an argument to the method.
+    """
+    __slots__ = ()
+    name = 'isdisjoint'
+    _class_type = PythonNativeBool()
+    _shape = None
+
+    def __init__(self, set_obj, other_set_obj):
+        if set_obj.class_type != other_set_obj.class_type:
+            raise TypeError("Is disjoint can only be used to compare sets of the same type.")
+        super().__init__(set_obj, other_set_obj)
