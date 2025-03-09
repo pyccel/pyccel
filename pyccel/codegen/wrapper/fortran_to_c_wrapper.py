@@ -353,7 +353,8 @@ class FortranToCWrapper(Wrapper):
         body = [C_F_Pointer(bind_var, arg_var, orig_size[::-1] if order == 'C' else orig_size)]
 
         c_arg_var = Variable(BindCArrayType(rank, has_strides = True),
-                        scope.get_new_name(), is_argument = True)
+                        scope.get_new_name(), is_argument = True,
+                        shape = (LiteralInteger(rank*2+1),))
 
         scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(0)), bind_var)
         for i,s in enumerate(shape):
