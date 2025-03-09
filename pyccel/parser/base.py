@@ -10,9 +10,7 @@ Module containing aspects of a parser which are in common over all stages.
 
 import importlib
 import os
-from pathlib import Path
 import re
-import sys
 
 #==============================================================================
 from pyccel.version import __version__
@@ -26,6 +24,7 @@ from pyccel.ast.utilities import recognised_source
 from pyccel.ast.variable import DottedName
 
 from pyccel.parser.scope     import Scope
+from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
 from pyccel.errors.errors   import Errors, ErrorsMode
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
@@ -51,7 +50,6 @@ def get_filename_from_import(module, input_folder=''):
     definition of module.
     The priority order is:
         - header files (extension == pyh)
-        - header files (extension == pyi)
         - python files (extension == py)
 
     Parameters
@@ -72,54 +70,56 @@ def get_filename_from_import(module, input_folder=''):
     PyccelError
         Error raised when the module cannot be found.
     """
-    if isinstance(module, AsName):
+
+    if (isinstance(module, AsName)):
         module = str(module.name)
 
-    input_folder = Path(input_folder)
-    if input_folder.stem == '__pyccel__':
-        input_folder = input_folder.parent
-    n_rel = 0
+    # Remove first '.' as it doesn't represent a folder change
+    if module[0] == '.':
+        module = module[1:]
+    filename = module.replace('.','/')
 
-    filename = module
-    package_dir = input_folder
+    # relative imports
+    folder_above = '../'
+    while filename.startswith('/'):
+        filename = folder_above + filename[1:]
 
-    if '.' in module:
-        module, filename = module.rsplit('.', 1)
-        pkg = [input_folder.stem]
-        while n_rel < len(module) and module[n_rel] == '.':
-            input_folder = input_folder.parent
-            n_rel += 1
-            pkg.append(input_folder.stem)
+    filename_pyh = f'{filename}.pyh'
+    filename_py  = f'{filename}.py'
 
-        if module != '':
-            sys.path.append(str(input_folder.parent))
-            package_location_in_project = '.'.join(pkg[::-1]) if pkg else None
-            try:
-                package = importlib.import_module(module, package_location_in_project)
-            except ImportError:
-                errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
-                              severity='fatal')
-            finally:
-                sys.path.pop()
+    poss_filename_pyh = os.path.join( input_folder, filename_pyh )
+    poss_filename_py  = os.path.join( input_folder, filename_py  )
+    if is_valid_filename_pyh(poss_filename_pyh):
+        return os.path.abspath(poss_filename_pyh)
+    if is_valid_filename_py(poss_filename_py):
+        return os.path.abspath(poss_filename_py)
 
-            package_dir = Path(package.__file__).parent
+    source = module
+    if len(module.split(""".""")) > 1:
 
-    filename_pyh = package_dir / f'{filename}.pyh'
-    filename_pyccel_generated_pyi = package_dir / '__pyccel__' / f'{filename}.pyi'
-    filename_pyi = package_dir / f'{filename}.pyi'
-    filename_py = package_dir / f'{filename}.py'
-    if filename_pyccel_generated_pyi.is_file():
-        return str(filename_pyccel_generated_pyi)
-    if filename_pyi.is_file():
-        return str(filename_pyi)
-    if filename_pyh.is_file():
-        return str(filename_pyh)
-    if filename_py.is_file():
-        errors.report("The imported module has been found, but it has not been Pyccelised. "
-                "Pyccelising dependencies is necessary for the compilation of the generated files.",
-                symbol=module, severity='error')
-        return str(filename_py)
+        # we remove the last entry, since it can be a pyh file
 
+        source = """.""".join(i for i in module.split(""".""")[:-1])
+        _module = module.split(""".""")[-1]
+        filename_pyh = f'{_module}.pyh'
+        filename_py  = f'{_module}.py'
+
+    try:
+        package = importlib.import_module(source)
+        package_dir = str(package.__path__[0])
+    except ImportError:
+        errors = Errors()
+        errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=source,
+                      severity='fatal')
+
+    filename_pyh = os.path.join(package_dir, filename_pyh)
+    filename_py = os.path.join(package_dir, filename_py)
+    if os.path.isfile(filename_pyh):
+        return filename_pyh
+    elif os.path.isfile(filename_py):
+        return filename_py
+
+    errors = Errors()
     raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                   severity='fatal')
 
@@ -249,7 +249,7 @@ class BasicParser(object):
         """Returns True if we are treating a header file."""
 
         if self.filename:
-            return self.filename.split(""".""")[-1] in ('pyh', 'pyi')
+            return self.filename.split(""".""")[-1] == 'pyh'
         else:
             return False
 

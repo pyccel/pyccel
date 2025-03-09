@@ -421,7 +421,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
-        if not isinstance(val, (CommentBlock, PythonPrint, LiteralEllipsis)):
+        if not isinstance(val, (CommentBlock, PythonPrint)):
             # Collect any results of standalone expressions
             # into a variable to avoid errors in C/Fortran
             val = Assign(PyccelSymbol('_', is_temp=True), val)
@@ -1039,10 +1039,6 @@ class SyntaxParser(BasicParser):
             results = FunctionDefResult(results, annotation = result_annotation)
 
         results.set_current_ast(stmt)
-
-        if len(returns) == 0 and result_annotation:
-            results = FunctionDefResult(AnnotatedPyccelSymbol(self.scope.get_new_name('Out'), annotation = result_annotation),
-                                    annotation = result_annotation)
 
         self.exit_function_scope()
 

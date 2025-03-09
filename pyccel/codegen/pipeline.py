@@ -340,9 +340,7 @@ def execute_pyccel(fname, *,
     # ...
     # Determine all .o files and all folders needed by executable
     def get_module_dependencies(parser, deps):
-        mod_folder = os.path.dirname(parser.filename)
-        if not mod_folder.endswith('__pyccel__'):
-            mod_folder = os.path.join(mod_folder, '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', ''))
+        mod_folder = os.path.join(os.path.dirname(parser.filename), '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', ''))
         mod_base = os.path.basename(parser.filename)
 
         # Stop conditions
