@@ -1485,10 +1485,11 @@ class PythonMax(PyccelFunction):
 
         if isinstance(x, (list, tuple)):
             x = PythonTuple(*x)
-        elif not isinstance(x, (PythonTuple, PythonList)):
+        elif not (isinstance(x, (PythonTuple, PythonList))
+                  or (isinstance(x, Variable) and isinstance(x.class_type, HomogeneousContainerType))):
             raise TypeError(f'Unknown type of {type(x)}.' )
 
-        if not x.is_homogeneous:
+        if isinstance(x, (PythonTuple, PythonList)) and not x.is_homogeneous:
             types = ', '.join(str(xi.dtype) for xi in x)
             raise TypeError("Cannot determine final dtype of 'max' call with arguments of different "
                              f"types ({types}). Please cast arguments to the desired dtype")
@@ -1521,10 +1522,11 @@ class PythonMin(PyccelFunction):
 
         if isinstance(x, (list, tuple)):
             x = PythonTuple(*x)
-        elif not isinstance(x, (PythonTuple, PythonList)):
+        elif not (isinstance(x, (PythonTuple, PythonList))
+                  or (isinstance(x, Variable) and isinstance(x.class_type, HomogeneousContainerType))):
             raise TypeError(f'Unknown type of {type(x)}.' )
 
-        if not x.is_homogeneous:
+        if isinstance(x, (PythonTuple, PythonList)) and not x.is_homogeneous:
             types = ', '.join(str(xi.dtype) for xi in x)
             raise TypeError("Cannot determine final dtype of 'min' call with arguments of different "
                               f"types ({types}). Please cast arguments to the desired dtype")

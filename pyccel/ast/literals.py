@@ -7,7 +7,7 @@
 from pyccel.utilities.metaclasses import Singleton
 
 from .basic     import TypedAstNode, PyccelAstNode
-from .datatypes import GenericType, PythonNativeInt, PythonNativeBool
+from .datatypes import VoidType, PythonNativeInt, PythonNativeBool
 from .datatypes import PythonNativeFloat, StringType, PythonNativeComplex
 from .datatypes import PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveBooleanType
 from .datatypes import PrimitiveComplexType, FixedSizeNumericType
@@ -369,7 +369,7 @@ class Nil(Literal, metaclass=Singleton):
     """
     __slots__ = ()
     _attribute_nodes = ()
-    _class_type = GenericType()
+    _class_type = VoidType()
 
     def __str__(self):
         return 'None'

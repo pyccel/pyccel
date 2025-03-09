@@ -9,7 +9,7 @@ IndexType: Slice | Ellipsis | Type;
 Type: dtype=DataType (trailer=TrailerSubscriptList)?;
 TrailerSubscriptList: '[' args*=IndexType [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
 
-FuncType: '('(results*=TypeHeader[','])?')' '('args*=UnionTypeStmt[',']')';
+FuncType: '('(results=UnionTypeStmt)?')' '('args*=UnionTypeStmt[',']')';
 
 DataType: ID|STAR|Ellipsis;
 STAR: '*';

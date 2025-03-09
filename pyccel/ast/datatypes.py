@@ -809,14 +809,14 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
 
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
+        self._element_type = element_type
+        self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
         if element_type.rank > 0:
             # When this error is removed the pop() of the warning must also be removed
             # in parser/semantic.py before the creation of the AllDeclaration node
             errors.report("Lists of non-scalar objects are not yet fully supported. " +
                     "Using containers in lists may lead to bugs such as memory leaks",
                     symbol=self, severity="warning")
-        self._element_type = element_type
-        self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
         super().__init__()
 
     def __eq__(self, other):
@@ -993,6 +993,25 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         this function returns None.
         """
         return self._order
+
+    def shape_is_compatible(self, shape):
+        """
+        Check if the provided shape is compatible with the datatype.
+
+        Check if the provided shape is compatible with the format expected for
+        this datatype.
+
+        Parameters
+        ----------
+        shape : Any
+            The proposed shape.
+
+        Returns
+        -------
+        bool
+            True if the shape is acceptable, False otherwise.
+        """
+        return super().shape_is_compatible(shape) and shape[0] == len(self._element_types)
 
 class DictType(ContainerType, metaclass = ArgumentSingleton):
     """
