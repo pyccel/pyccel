@@ -2301,7 +2301,7 @@ class CCodePrinter(CodePrinter):
         args += self._temporary_args
         self._temporary_args = []
         args = ', '.join(self._print(ai) for a in args for ai in \
-                        ([a] if isinstance(a, FunctionAddress) else flatten_tuple_var(a, self.scope)))
+                        ([a] if isinstance(a, (FunctionAddress, Nil)) else flatten_tuple_var(a, self.scope)))
 
         call_code = f'{func.name}({args})'
         if func.results.var is not Nil() and \
