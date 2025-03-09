@@ -20,6 +20,7 @@ __all__ = (
     'SetDiscard',
     'SetIntersection',
     'SetIntersectionUpdate',
+    'SetIsDisjoint',
     'SetMethod',
     'SetPop',
     'SetUnion',
