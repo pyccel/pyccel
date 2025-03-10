@@ -70,6 +70,8 @@ All notable changes to this project will be documented in this file.
 -   Add support for `type` as a type annotation.
 -   #2182 : Add support for `isinstance`.
 -   #2183 : Add compile time analysis of if block conditions.
+-   #2139 : Add support for `__getitem__`
+-   #337 : Add support for returning tuples from functions.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
@@ -118,14 +120,20 @@ All notable changes to this project will be documented in this file.
 -   #2195 : Fix string comparisons.
 -   Fixed returning strings from functions.
 -   #2197 : Allow strings as dictionary keys in C.
+-   #2104 : Add support for Pythonic swapping and raise errors for expressions which are too complex.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
 -   #2175 : Fix the shape of multi-level containers.
 -   Catch all internal errors arising in the syntactic, semantic, printing or code generation stages.
 -   #2206 : Fix returning an array of unknown literal size.
 -   #2112 : Improve floor division.
+-   #2220 : Fix premature `stc/cspan` import.
+-   #2214 : Fix returning a local variable from an inline function.
+-   #1321 : Fix use of tuples returned from functions in a non-assign statement.
+-   #2229 : Fix annotation of variables that are returned in a function whose result type is annotated.
 
 ### Changed
 
+-   #2008 : Remove dependency on `astunparse` package.
 -   #1920 : Add a maximum version for NumPy.
 -   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
@@ -163,9 +171,11 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Use `_extract_X_FunctionDefResult` methods in Fortran-to-C wrapper.
 -   \[INTERNALS\] Rename `BindCVariable`->`BindCModuleVariable`.
 -   \[INTERNALS\] Save a shape whose length is limited to the container length.
+-   \[INTERNALS\] Restrict use of `FunctionDefResult` to one instance per function.
 
 ### Deprecated
 
+-   #2008 : Remove support for Python 3.8.
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
