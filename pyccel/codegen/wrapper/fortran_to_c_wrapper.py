@@ -365,8 +365,8 @@ class FortranToCWrapper(Wrapper):
 
         return {'c_arg': BindCVariable(c_arg_var, var), 'f_arg': f_arg, 'body': body}
 
-    def _extract_HomogeneousTupleType_FunctionDefArgument(self, var):
-        return self._extract_NumpyNDArrayType_FunctionDefArgument(var)
+    def _extract_HomogeneousTupleType_FunctionDefArgument(self, var, func):
+        return self._extract_NumpyNDArrayType_FunctionDefArgument(var, func)
 
     def _wrap_Variable(self, expr):
         """
