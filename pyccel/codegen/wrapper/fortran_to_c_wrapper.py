@@ -474,7 +474,7 @@ class FortranToCWrapper(Wrapper):
         getter_result = getter_result_info['c_result']
 
         getter_arg_wrapper = self._extract_FunctionDefArgument(FunctionDefArgument(lhs, bound_argument = True), expr)
-        self_obj = getter_arg_wrapper['f_arg']
+        self_obj = getter_arg_wrapper['f_arg'].value
         getter_arg = getter_arg_wrapper['c_arg']
 
         getter_body = getter_arg_wrapper['body']
@@ -508,8 +508,8 @@ class FortranToCWrapper(Wrapper):
         if expr.is_alias:
             setter_args[1].persistent_target = True
 
-        self_obj = setter_arg_wrappers[0]['f_arg']
-        set_val = setter_arg_wrappers[1]['f_arg']
+        self_obj = setter_arg_wrappers[0]['f_arg'].value
+        set_val = setter_arg_wrappers[1]['f_arg'].value
 
         setter_body = setter_arg_wrappers[0]['body'] + setter_arg_wrappers[1]['body']
 
