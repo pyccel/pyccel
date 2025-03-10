@@ -2438,7 +2438,10 @@ class CToPythonWrapper(Wrapper):
             data_var = Variable(CStackArray(orig_var.class_type.element_type), self.scope.get_new_name(orig_var.name + '_data'),
                                 memory_handling='alias')
             self.scope.insert_variable(data_var)
-            arg_vars = [data_var, size_var]
+            arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+                        shape = (LiteralInteger(2),))
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), ObjectAddress(data_var))
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(1)), size_var)
             fill_var = data_var
             like = Variable(orig_var.class_type.element_type, '_')
         else:
@@ -2446,9 +2449,10 @@ class CToPythonWrapper(Wrapper):
                                     memory_handling='heap', new_class = Variable)
             self._wrapping_arrays = True
             self.scope.insert_variable(arg_var, orig_var.name)
-            arg_vars = [arg_var]
             fill_var = arg_var
             like = None
+
+        arg_vars = [arg_var]
 
         assert not bound_argument
         idx = self.scope.get_temporary_variable(CNativeInt())

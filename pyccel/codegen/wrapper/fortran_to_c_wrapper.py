@@ -366,7 +366,31 @@ class FortranToCWrapper(Wrapper):
         return {'c_arg': BindCVariable(c_arg_var, var), 'f_arg': f_arg, 'body': body}
 
     def _extract_HomogeneousTupleType_FunctionDefArgument(self, var, func):
-        return self._extract_NumpyNDArrayType_FunctionDefArgument(var, func)
+        name = var.name
+        scope = self.scope
+        scope.insert_symbol(name)
+        collisionless_name = scope.get_expected_name(var.name)
+        rank = var.rank
+        bind_var = Variable(BindCPointer(), scope.get_new_name(f'bound_{name}'),
+                            is_argument = True, is_optional = False, memory_handling='alias')
+        arg_var = var.clone(collisionless_name, is_argument = False, is_optional = False,
+                            memory_handling = 'alias', allows_negative_indexes=False,
+                            new_class = Variable)
+        scope.insert_variable(arg_var)
+        scope.insert_variable(bind_var)
+
+        shape_var = scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_size', is_argument = True)
+
+        body = [C_F_Pointer(bind_var, arg_var, (shape_var,))]
+
+        c_arg_var = Variable(BindCArrayType(rank, has_strides = False),
+                        scope.get_new_name(), is_argument = True,
+                        shape = (LiteralInteger(2),))
+
+        scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(0)), bind_var)
+        scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(1)), shape_var)
+
+        return {'c_arg': BindCVariable(c_arg_var, var), 'f_arg': arg_var, 'body': body}
 
     def _wrap_Variable(self, expr):
         """
