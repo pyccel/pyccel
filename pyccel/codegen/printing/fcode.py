@@ -1325,7 +1325,9 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_FunctionDefArgument(self, expr):
-        return ', '.join(self._print(v) for v in flatten_tuple_var(expr.var, self.scope))
+        var = expr.var
+        return ', '.join(self._print(v) for v in \
+                ([var] if isinstance(var, FunctionAddress) else  flatten_tuple_var(var, self.scope)))
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
