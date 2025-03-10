@@ -2870,6 +2870,7 @@ class CCodePrinter(CodePrinter):
         var_type = self.get_c_type(dtype)
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(dtype), var_type)))
         set_var = self._print(ObjectAddress(expr.set_variable))
+        # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{var_type}_pop({set_var})'
 
     def _print_SetClear(self, expr):
@@ -2898,6 +2899,7 @@ class CCodePrinter(CodePrinter):
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), var_type)))
         set_var = self._print(ObjectAddress(expr.set_variable))
         args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
+        # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{var_type}_union({set_var}, {args})'
 
     def _print_SetIntersectionUpdate(self, expr):
@@ -2905,6 +2907,7 @@ class CCodePrinter(CodePrinter):
         var_type = self.get_c_type(class_type)
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), var_type)))
         set_var = self._print(ObjectAddress(expr.set_variable))
+        # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return ''.join(f'{var_type}_intersection_update({set_var}, {self._print(ObjectAddress(a))});\n' \
                 for a in expr.args)
 
@@ -2913,6 +2916,13 @@ class CCodePrinter(CodePrinter):
         set_var = self._print(ObjectAddress(expr.set_variable))
         arg_val = self._print(expr.args[0])
         return f'{var_type}_erase({set_var}, {arg_val});\n'
+
+    def _print_SetIsDisjoint(self, expr):
+        var_type = self.get_c_type(expr.set_variable.class_type)
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        arg_val = self._print(ObjectAddress(expr.args[0]))
+        # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
+        return f'{var_type}_is_disjoint({set_var}, {arg_val});\n'
 
     def _print_PythonSet(self, expr):
         tmp_var = self.scope.get_temporary_variable(expr.class_type, shape = expr.shape,
