@@ -355,7 +355,7 @@ class FortranToCWrapper(Wrapper):
 
         start = LiteralInteger(1) # C_F_Pointer leads to default Fortran lbound
         stop = None
-        indexes = [Slice(start, stop, step) for step in (stride[::-1] if order == 'C' else stride)]
+        indexes = [Slice(start, stop, step) for step in stride]
 
         if getattr(func, 'is_inline', False):
             array_arg = self.scope.get_temporary_variable(arg_var, name, memory_handling = 'alias')
