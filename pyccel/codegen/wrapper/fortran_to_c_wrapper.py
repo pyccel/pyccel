@@ -83,6 +83,13 @@ class FortranToCWrapper(Wrapper):
         if next_optional_arg:
             args = wrapped_args.copy()
             optional_var = next_optional_arg['c_arg'].var
+            optional_var = getattr(optional_var, 'new_var', optional_var)
+            class_type = optional_var.class_type
+            if isinstance(class_type, BindCArrayType):
+                optional_var = self.scope.collect_tuple_element(optional_var[0])
+            elif isinstance(class_type, InhomogeneousTupleType):
+                errors.report("Wrapping of optional inhomogeneous tuples is not yet implemented.\n"+PYCCEL_RESTRICTION_TODO,
+                        symbol = func, severity='error')
             handled += (next_optional_arg, )
             true_section = IfSection(PyccelIsNot(optional_var, Nil()),
                                     self._get_function_def_body(func, args, results, handled))
@@ -93,22 +100,6 @@ class FortranToCWrapper(Wrapper):
         else:
             args = [a['f_arg'] for a in wrapped_args]
             body = [line for a in wrapped_args for line in a['body']]
-            #args = [FunctionCallArgument(func_arg_to_call_arg[fa],
-            #                             keyword = fa.original_function_argument_variable.name)
-            #        for fa in func_def_args]
-            #size = [fa.shape[::-1] if fa.original_function_argument_variable.order == 'C' else
-            #        fa.shape for fa in func_def_args]
-            #stride = [fa.strides[::-1] if fa.original_function_argument_variable.order == 'C' else
-            #          fa.strides for fa in func_def_args]
-            #orig_size = [[PyccelMul(l,s) for l,s in zip(sz, st)] for sz,st in zip(size,stride)]
-            #body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa].base, s)
-            #        for fa,s in zip(func_def_args, orig_size)
-            #        if isinstance(func_arg_to_call_arg[fa], IndexedElement)]
-            #body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa], [fa.shape[0]])
-            #        for fa in func_def_args
-            #        if isinstance(fa.original_function_argument_variable.class_type, HomogeneousTupleType)]
-            #body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa]) for fa in func_def_args
-            #        if isinstance(func_arg_to_call_arg[fa].dtype, CustomDataType)]
 
             # If the function is inlined and takes an array argument create a pointer to ensure that the bounds
             # are respected
