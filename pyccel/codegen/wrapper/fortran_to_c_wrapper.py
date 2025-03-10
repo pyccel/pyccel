@@ -273,6 +273,31 @@ class FortranToCWrapper(Wrapper):
         return Interface(expr.name, functions, expr.is_argument)
 
     def _extract_FunctionDefArgument(self, expr, func):
+        """
+        Extract the C-compatible FunctionDefArgument from the Fortran FunctionDefArgument.
+
+        Extract the C-compatible FunctionDefArgument from the Fortran FunctionDefArgument.
+
+        The extraction is done by finding the appropriate function
+        _extract_X_FunctionDefArgument for the object expr. X is the class type of the
+        variable stored in the object expr. If this function does not exist then the
+        method resolution order is used to search for other compatible
+        _extract_X_FunctionDefArgument functions. If none are found then an error is raised.
+
+        Parameters
+        ----------
+        expr : FunctionDefArgument
+            An object representing the FunctionDefArgument in the Fortran code which should
+            be exposed to the C code.
+
+        func : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to access the argument.
+        """
         var = expr.var
         class_type = var.class_type
 
