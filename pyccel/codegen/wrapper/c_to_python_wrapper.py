@@ -985,8 +985,6 @@ class CToPythonWrapper(Wrapper):
         for a in init_function.arguments:
             a_var = a.var
             func_scope.insert_symbol(getattr(a_var, 'original_var', a_var).name)
-        for a in getattr(init_function, 'bind_c_arguments', ()):
-            func_scope.insert_symbol(a.original_function_argument_variable.name)
 
         # Get variables describing the arguments and results that are seen from Python
         python_args = init_function.arguments
@@ -1012,20 +1010,6 @@ class CToPythonWrapper(Wrapper):
 
         # Call the C-compatible function
         body.append(init_function(*func_call_args))
-
-        # Deallocate the C equivalent of any array arguments
-        # The C equivalent is the same variable that is passed to the function unless the target language is Fortran.
-        # In this case the function arguments are the data pointer and the shapes and strides, but the C equivalent
-        # is an ndarray.
-        for a in original_c_args:
-            a_var = a.var
-            orig_var = getattr(a_var, 'original_var', a_var)
-            if not isinstance(a, BindCFunctionDefArgument) and orig_var.is_ndarray:
-                v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
-                if v.is_optional:
-                    body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
-                else:
-                    body.append(Deallocate(v))
 
         # Pack the Python compatible results of the function into one argument.
         func_results = FunctionDefResult(python_result_variable)
