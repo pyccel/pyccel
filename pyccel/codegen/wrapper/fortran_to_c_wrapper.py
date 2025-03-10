@@ -23,7 +23,7 @@ from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
 from pyccel.ast.core import For
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
-from pyccel.ast.datatypes import PythonNativeInt, CharType, StringType
+from pyccel.ast.datatypes import PythonNativeInt, CharType
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
@@ -358,8 +358,8 @@ class FortranToCWrapper(Wrapper):
         indexes = [Slice(start, stop, step) for step in stride]
 
         if getattr(func, 'is_inline', False):
-            array_arg = self.scope.get_temporary_variable(arg_var, name, memory_handling = 'alias')
-            body.append(AliasAssign(array_arg, IndexedElement(arg_var, *indexes)))
+            f_arg = self.scope.get_temporary_variable(arg_var, name, memory_handling = 'alias')
+            body.append(AliasAssign(f_arg, IndexedElement(arg_var, *indexes)))
         else:
             f_arg = IndexedElement(arg_var, *indexes)
 
