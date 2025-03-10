@@ -103,8 +103,9 @@ class FortranToCWrapper(Wrapper):
 
             # If the function is inlined and takes an array argument create a pointer to ensure that the bounds
             # are respected
-            if getattr(func, 'is_inline', False) and any(isinstance(a, IndexedElement) for a in args):
-                array_args = {a: self.scope.get_temporary_variable(a.value.base, a.keyword, memory_handling = 'alias') for a in args if isinstance(a, IndexedElement)}
+            if getattr(func, 'is_inline', False) and any(isinstance(a.value, IndexedElement) for a in args):
+                array_args = {a: self.scope.get_temporary_variable(a.value.base, a.keyword, memory_handling = 'alias') \
+                                        for a in args if isinstance(a.value, IndexedElement)}
                 body += [AliasAssign(v, k.value) for k,v in array_args.items()]
                 args = [FunctionCallArgument(array_args[a], keyword=a.keyword) if a in array_args else a for a in args]
 
@@ -239,7 +240,7 @@ class FortranToCWrapper(Wrapper):
         self._additional_exprs.clear()
 
         if expr.scope.get_python_name(expr.name) == '__del__':
-            body.append(DeallocatePointer(call_arguments[0]))
+            body.append(DeallocatePointer(call_arguments[0].value))
 
         self.exit_scope()
 
