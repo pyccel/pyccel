@@ -1427,6 +1427,7 @@ class FCodePrinter(CodePrinter):
         var_code = self._print(expr.set_variable)
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
+        # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{type_name}_pop({var_code})\n'
 
     def _print_SetCopy(self, expr):
@@ -1472,6 +1473,7 @@ class FCodePrinter(CodePrinter):
         var_code = self._print(expr.set_variable)
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
+        # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return ''.join(f'call {type_name}_intersection_update({var_code}, {self._print(arg)})\n' \
                 for arg in expr.args)
 
@@ -1488,6 +1490,7 @@ class FCodePrinter(CodePrinter):
         arg_code = self._print(expr.args[0])
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
+        # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{type_name}_is_disjoint({var_code}, {arg_code})'
 
    #========================== Dict Methods ================================#
