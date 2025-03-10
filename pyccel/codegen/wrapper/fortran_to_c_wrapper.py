@@ -284,6 +284,8 @@ class FortranToCWrapper(Wrapper):
                 func_def_argument_dict['c_arg'] = FunctionDefArgument(new_var, value = expr.value,
                     kwonly = expr.is_kwonly, annotation = expr.annotation,
                     bound_argument = expr.bound_argument, persistent_target = expr.persistent_target)
+                func_def_argument_dict['f_arg'] = FunctionCallArgument(func_def_argument_dict['f_arg'],
+                                                                        keyword = expr.name)
                 return func_def_argument_dict
 
         # Unknown object, we raise an error.
