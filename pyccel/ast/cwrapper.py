@@ -1281,19 +1281,6 @@ PyDict_SetItem = FunctionDef(name = 'PyDict_SetItem',
                     body = [])
 
 
-#-------------------------------------------------------------------
-#                         String functions
-#-------------------------------------------------------------------
-PyUnicode_AsUTF8 = FunctionDef(name = 'PyUnicode_AsUTF8',
-                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'unicode', memory_handling='alias'))],
-                    results = FunctionDefResult(Variable(CharType(), 'str', memory_handling='alias')),
-                    body = [])
-
-PyUnicode_Check = FunctionDef(name = 'PyUnicode_Check',
-                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'str', memory_handling='alias'))],
-                    results = FunctionDefResult(Variable(CharType(), 'out', memory_handling='alias')),
-                    body = [])
-
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
     PythonNativeBool()    : 'PyIs_Bool',

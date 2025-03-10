@@ -42,16 +42,3 @@ def test_string_compare(language):
     f = epyccel( str_comp, language=language )
 
     assert str_comp() == f()
-
-def test_string_argument(language):
-    def str_option_test(option : str):
-        if option == 'do this':
-            return 1.0
-        else:
-            return 2.0
-
-    f = epyccel( str_option_test, language=language )
-
-    assert str_option_test('do this') == f('do this')
-    assert str_option_test('do that') == f('do that')
-

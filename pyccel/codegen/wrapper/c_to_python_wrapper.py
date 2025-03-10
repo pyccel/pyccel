@@ -12,7 +12,7 @@ from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFuncti
 from pyccel.ast.bind_c        import BindCModule, BindCModuleVariable, BindCVariable
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty, BindCArrayType
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
-from pyccel.ast.builtins      import VariableIterator, PythonString
+from pyccel.ast.builtins      import VariableIterator
 from pyccel.ast.builtin_methods.set_methods import SetAdd, SetPop
 from pyccel.ast.builtin_methods.dict_methods import DictItems
 from pyccel.ast.class_defs    import StackArrayClass
@@ -2569,60 +2569,6 @@ class CToPythonWrapper(Wrapper):
                     For((element_extraction['c_results'][0],), loop_iterator, for_body, for_scope)]
 
         return {'body': body, 'args': arg_vars, 'clean_up': clean_up}
-
-    def _extract_StringType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
-            is_bind_c_argument, *, arg_var = None):
-        """
-        Extract the C-compatible string FunctionDefArgument from the PythonObject.
-
-        Extract the C-compatible string FunctionDefArgument from the PythonObject.
-        The C-compatible argument is extracted from collect_arg which holds a Python
-        object into arg_var.
-
-        The extraction is done by allocating an array and filling the elements with values
-        extracted from the indexed Python tuple in collect_arg.
-
-        Parameters
-        ----------
-        orig_var : Variable | IndexedElement
-            An object representing the variable or an element of the variable from the
-            FunctionDefArgument being wrapped.
-
-        collect_arg : Variable
-            A variable with type PythonObject* holding the Python argument from which the
-            C-compatible argument should be collected.
-
-        bound_argument : bool
-            True if the argument is the self argument of a class method. False otherwise.
-            This should always be False for this function.
-
-        is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
-
-        arg_var : Variable | IndexedElement, optional
-            A variable or an element of the variable representing the argument that
-            will be passed to the low-level function call.
-
-        Returns
-        -------
-        list[PyccelAstNode]
-            A list of expressions which extract the argument from collect_arg into arg_var.
-        """
-        assert not bound_argument
-        if arg_var is None:
-            kwargs = {'is_argument': False}
-            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
-                                    **kwargs)
-            self.scope.insert_variable(arg_var, orig_var.name)
-
-        body = [Assign(orig_var, PythonString(PyUnicode_AsUTF8(collect_arg)))]
-
-        if getattr(orig_var, 'is_optional', False):
-            memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
-            body.insert(0, AliasAssign(arg_var, memory_var))
-
-        return {'body': body,
-                'args': [arg_var]}
 
     def _extract_FunctionDefResult(self, orig_var, is_bind_c, funcdef = None):
         """

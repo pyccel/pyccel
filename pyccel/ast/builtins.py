@@ -16,7 +16,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
-from .datatypes import GenericType, PythonNativeComplex, CharType
+from .datatypes import GenericType, PythonNativeComplex
 from .datatypes import PrimitiveBooleanType, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType, TupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
@@ -1725,31 +1725,6 @@ class PythonIsInstance(PyccelFunction):
         super().__init__(obj, class_or_tuple)
 
 #==============================================================================
-class PythonString(PyccelFunction):
-    """
-    Represents a call to Python's `str` function.
-
-    Represents a call to Python's `str` function which describes a string
-    cast.
-
-    Parameters
-    ----------
-    arg : TypedAstNode
-        The argument that is cast to a string.
-    """
-    _static_type = StringType()
-    def __new__(cls, arg):
-        if isinstance(arg, LiteralString):
-            return arg
-        else:
-            return super().__new__(cls)
-
-    def __init__(self, arg):
-        if not isinstance(arg.dtype, CharType):
-            raise TypeError("Non-character type cannot be cast to a string")
-        super().__init__(arg)
-
-#==============================================================================
 
 DtypePrecisionToCastFunction = {
         PythonNativeBool()    : PythonBool,
@@ -1778,7 +1753,7 @@ builtin_functions_dict = {
     'range'      : PythonRange,
     'round'      : PythonRound,
     'set'        : PythonSetFunction,
-    'str'        : PythonString,
+    'str'        : LiteralString,
     'sum'        : PythonSum,
     'tuple'      : PythonTupleFunction,
     'type'       : PythonType,
