@@ -170,7 +170,7 @@ class CToPythonWrapper(Wrapper):
         list of Variable
             Variables which will hold the arguments in Python.
         """
-        orig_args = [getattr(a, 'original_function_argument_variable', a.var) for a in args]
+        orig_args = [getattr(a.var, 'original_var', a.var) for a in args]
         is_bound = [getattr(a, 'wrapping_bound_argument', a.bound_argument) for a in args]
         collect_args = [self.get_new_PyObject(o_a.name+'_obj',
                                               dtype = o_a.dtype if b else None)
