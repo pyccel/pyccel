@@ -1273,6 +1273,8 @@ class CCodePrinter(CodePrinter):
                                  decl_line,
                                  f'#include <{source}.h>\n'))
                 if source in stc_extension_mapping:
+                    if prefix:
+                        code += '#define _i_is_arc\n'
                     code += decl_line + f'#include <{stc_extension_mapping[source]}.h>\n'
                 code += f'#endif // {header_guard}\n\n'
             return code
@@ -2874,7 +2876,11 @@ class CCodePrinter(CodePrinter):
                 idx_code = self._print(expr.index_element)
             return f'{c_type}_pull_elem({list_obj}, {idx_code})'
         else:
-            return f'{c_type}_pull({list_obj})'
+            code = f'{c_type}_pull({list_obj})'
+
+            if not isinstance(class_type.element_type, FixedSizeNumericType):
+                code = f'*({code}.get)'
+            return code
 
     #================== Set methods ==================
 
