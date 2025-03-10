@@ -38,7 +38,6 @@ from pyccel.ast.cwrapper      import PySet_New, PySet_Add
 from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PySet_GetIter, PySet_Clear
 from pyccel.ast.cwrapper      import PyIter_Next
 from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
-from pyccel.ast.cwrapper      import PyUnicode_AsUTF8, PyUnicode_Check
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.c_concepts    import CStrStr
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
@@ -311,8 +310,6 @@ class CToPythonWrapper(Wrapper):
         if isinstance(dtype, CustomDataType):
             python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
             type_check_condition = PyObject_TypeCheck(py_obj, python_cls_base.type_object)
-        elif isinstance(dtype, StringType):
-            type_check_condition = PyUnicode_Check(py_obj)
         elif rank == 0:
             try :
                 cast_function = check_type_registry[dtype]
