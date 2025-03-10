@@ -809,7 +809,7 @@ class CCodePrinter(CodePrinter):
             prefix = (f'#define i_type {container_element_type}\n'
                       f'#define i_keyclass {type_decl}\n'
                        '#include <stc/arc.h>\n')
-            decl_line = f'#define i_{tag}class {container_element_type}\n'
+            decl_line = f'#define i_{tag}pro {container_element_type}\n'
         else:
             decl_line = ''
             errors.report(f"The declaration of type {class_type} is not yet implemented.",

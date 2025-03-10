@@ -1,6 +1,10 @@
 #include <stc/priv/template.h>
 
-
+#if defined _i_is_arc
+#define UNPACK_ITR(itr) (itr.ref)->get
+#else
+#define UNPACK_ITR(itr) *(itr.ref)
+#endif
 
 // This function represents a call to the .pop() method.
 // i_type: Class type (e.g., hset_int64_t).
@@ -13,11 +17,11 @@ static inline i_key _c_MEMB(_pull_elem)(Self* self, intptr_t pop_idx) {
     // If the element is found then remove it from the list
     if (itr.ref) 
     {
-        i_key value = *(itr.ref);
+        i_key value = UNPACK_ITR(itr);
         _c_MEMB(_erase_at)(self, itr); // Remove the element by value using "_erase_at".
         return value;
     }
-    return *(itr.ref); // Return the element that is being popped.
+    return UNPACK_ITR(itr); // Return the element that is being popped.
 }
 
 
@@ -27,7 +31,7 @@ static inline i_key _c_MEMB(_min)(const Self* self) {
     i_key min_val = *_c_MEMB(_front)(self);
     c_foreach(it, Self, *self) {
         if (i_less(it.ref, &min_val)) {
-            min_val = *(it.ref);
+            min_val = UNPACK_ITR(it);
         }
     }
     return min_val;
@@ -38,7 +42,7 @@ static inline i_key _c_MEMB(_max)(const Self* self) {
     i_key max_val = *_c_MEMB(_front)(self);
     c_foreach(it, Self, *self) {
         if (i_less(&max_val, it.ref)) {
-            max_val = *(it.ref);
+            max_val = UNPACK_ITR(it);
         }
     }
     return max_val;
@@ -47,5 +51,6 @@ static inline i_key _c_MEMB(_max)(const Self* self) {
 #undef i_type
 #undef i_key
 #undef i_use_cmp
+#undef UNPACK_ITR
 
 #include <stc/priv/template2.h>
