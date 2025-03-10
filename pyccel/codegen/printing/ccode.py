@@ -1730,14 +1730,18 @@ class CCodePrinter(CodePrinter):
             index = self._print(inds[0])
             list_var = self._print(ObjectAddress(base))
             container_type = self.get_c_type(base.class_type)
+            code = f"{container_type}_at({list_var}, {index})"
             if assign:
                 is_mut = False
                 for a in assign:
                     lhs = a.lhs
                     is_mut = is_mut or lhs == expr or lhs.is_user_of(expr)
                 if is_mut:
-                    return f"(*{container_type}_at_mut({list_var},{index}))"
-            return f"(*{container_type}_at({list_var},{index}))"
+                    code = f"{container_type}_at_mut({list_var}, {index})"
+            if base.class_type.rank > 1:
+                return f'(*{code}->get)'
+            else:
+                return f'(*{code})'
 
         indices = ", ".join(self._print(i) for i in inds)
         if isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
