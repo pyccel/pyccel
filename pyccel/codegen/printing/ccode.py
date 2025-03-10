@@ -797,6 +797,25 @@ class CCodePrinter(CodePrinter):
                             ElementExpression, start_val)
             return self._print(tmp_var)
 
+    def _get_stc_type_decl(self, element_type, container_type, tag = 'key'):
+        prefix = ''
+        if isinstance(element_type, FixedSizeType):
+            decl_line = self.get_c_type(element_type)
+        elif isinstance(element_type, StringType):
+            decl_line = f'#define i_{tag}pro cstr\n'
+        elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            type_decl = self.get_c_type(element_type)
+            container_element_type = f'element_{container_type}'
+            prefix = (f'#define i_type {container_element_type}\n'
+                      f'#define i_keyclass {type_decl}\n'
+                       '#include <stc/arc.h>\n')
+            decl_line = f'#define i_{tag}class {container_element_type}\n'
+        else:
+            decl_line = ''
+            errors.report(f"The declaration of type {class_type} is not yet implemented.",
+                    symbol=expr, severity='error')
+        return prefix, decl_line
+
     # ============ Elements ============ #
 
     def _print_PythonAbs(self, expr):
@@ -1223,30 +1242,26 @@ class CCodePrinter(CodePrinter):
                     key_type = class_type.key_type
                     container_key_key = self.get_c_type(class_type.key_type)
                     container_val_key = self.get_c_type(class_type.value_type)
-                    container_key = f'{container_key_key}_{container_val_key}'
-                    type_decl = f'{container_key_key},{container_val_key}'
-                    if isinstance(key_type, FixedSizeType):
-                        decl_line = f'#define i_type {container_type},{type_decl}\n'
-                    elif isinstance(key_type, StringType):
-                        decl_line = (f'#define i_type {container_type}\n'
-                                     f'#define i_keypro cstr\n'
-                                     f'#define i_val {container_val_key}\n')
-                else:
-                    element_type = class_type.element_type
-                    if isinstance(element_type, FixedSizeType):
-                        type_decl = self.get_c_type(element_type)
-                        decl_line = f'#define i_type {container_type},{type_decl}\n'
-                    elif isinstance(element_type, StringType):
-                        decl_line = (f'#define i_type {container_type}\n'
-                                     f'#define i_keypro cstr\n')
-                    elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-                        type_decl = self.get_c_type(element_type)
-                        decl_line = (f'#define i_type {container_type}\n'
-                                     f'#define i_keyclass {type_decl}\n')
+                    key_prefix, key_decl_line = self._get_stc_type_decl(class_type.key_type, container_key_key)
+                    val_prefix, val_decl_line = self._get_stc_type_decl(class_type.value_type, container_val_key, 'val')
+                    if key_decl_line.startswith('#') or val_decl_line.startswith('#'):
+                        if not key_decl_line.startswith('#'):
+                            key_decl_line = f'#define i_key {key_decl_line}\n'
+                        if not val_decl_line.startswith('#'):
+                            val_decl_line = f'#define i_val {val_decl_line}\n'
+                        decl_line = f'#define i_type {container_type}\n' + \
+                                        key_decl_line + val_decl_line
                     else:
-                        decl_line = ''
-                        errors.report(f"The declaration of type {class_type} is not yet implemented.",
-                                symbol=expr, severity='error')
+                        decl_line = f'#define i_type {container_type},{container_key_key},{container_val_key}\n'
+                    prefix = key_prefix + val_prefix
+                else:
+                    prefix, decl_line = self._get_stc_type_decl(class_type.element_type, container_type)
+                    if decl_line.startswith('#'):
+                        decl_line += f'#define i_type {container_type}\n'
+                    else:
+                        decl_line = f'#define i_type {container_type},{decl_line}\n'
+                    decl_line = self._additional_code + decl_line
+                    self._additional_code = ''
                 if isinstance(class_type, (HomogeneousListType, HomogeneousSetType)) and isinstance(class_type.element_type, FixedSizeNumericType) \
                         and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
                     decl_line += '#define i_use_cmp\n'
@@ -1254,6 +1269,7 @@ class CCodePrinter(CodePrinter):
                 header_guard = f'{header_guard_prefix}_{container_type.upper()}'
                 code += ''.join((f'#ifndef {header_guard}\n',
                                  f'#define {header_guard}\n',
+                                 prefix,
                                  decl_line,
                                  f'#include <{source}.h>\n'))
                 if source in stc_extension_mapping:
