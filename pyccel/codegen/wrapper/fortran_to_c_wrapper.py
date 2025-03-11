@@ -101,14 +101,6 @@ class FortranToCWrapper(Wrapper):
             args = [a['f_arg'] for a in wrapped_args]
             body = [line for a in wrapped_args for line in a['body']]
 
-            # If the function is inlined and takes an array argument create a pointer to ensure that the bounds
-            # are respected
-            if getattr(func, 'is_inline', False) and any(isinstance(a.value, IndexedElement) for a in args):
-                array_args = {a: self.scope.get_temporary_variable(a.value.base, a.keyword, memory_handling = 'alias') \
-                                        for a in args if isinstance(a.value, IndexedElement)}
-                body += [AliasAssign(v, k.value) for k,v in array_args.items()]
-                args = [FunctionCallArgument(array_args[a], keyword=a.keyword) if a in array_args else a for a in args]
-
             if len(results) == 1:
                 res = results[0]
                 func_call = AliasAssign(res, func(*args)) if res.is_alias else \
@@ -385,11 +377,7 @@ class FortranToCWrapper(Wrapper):
         stop = None
         indexes = [Slice(start, stop, step) for step in stride]
 
-        if getattr(func, 'is_inline', False):
-            f_arg = self.scope.get_temporary_variable(arg_var, name, memory_handling = 'alias')
-            body.append(AliasAssign(f_arg, IndexedElement(arg_var, *indexes)))
-        else:
-            f_arg = IndexedElement(arg_var, *indexes)
+        f_arg = IndexedElement(arg_var, *indexes)
 
         return {'c_arg': BindCVariable(c_arg_var, var), 'f_arg': f_arg, 'body': body}
 
