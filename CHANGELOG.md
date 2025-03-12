@@ -192,6 +192,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefResult` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
 -   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefArgument` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
 -   \[INTERNALS\] Remove unused class `ast.core.FuncAddressDeclare`.
+-   \[INTERNALS\] Remove unnecessary function `ast.utilities.flatten_tuple_var` (replaced by calls to `Scope.collect_all_tuple_elements`).
 
 ## \[1.12.1\] - 2024-10-01
 
