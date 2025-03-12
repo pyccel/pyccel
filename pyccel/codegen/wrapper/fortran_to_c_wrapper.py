@@ -206,7 +206,6 @@ class FortranToCWrapper(Wrapper):
 
         # Wrap the arguments and collect the expressions passed as the call argument.
         wrapped_args = [self._extract_FunctionDefArgument(a, expr) for a in expr.arguments]
-        #func_arguments = [self._wrap(a) for a in expr.arguments]
         func_arguments = [a['c_arg'] for a in wrapped_args]
         call_arguments = [a['f_arg'] for a in wrapped_args]
         func_to_call = {fa : ca for ca, fa in zip(call_arguments, func_arguments)}
