@@ -756,3 +756,36 @@ def test_set_min_max(language):
     python_result = set_min_max()
     assert python_result == pyccel_result
     assert isinstance(python_result, type(pyccel_result))
+
+def test_set_is_disjoint(stc_language):
+    def set_is_disjoint(a : set[int], b : set[int]):
+        return a.isdisjoint(b)
+
+    epyccel_func = epyccel(set_is_disjoint, language = stc_language)
+    example_set1 = {1,2,3,4}
+    example_set2 = {5,6,7,8}
+    example_set3 = {7,8,2}
+    assert set_is_disjoint(example_set1, example_set2) == epyccel_func(example_set1, example_set2)
+    assert set_is_disjoint(example_set1, example_set3) == epyccel_func(example_set1, example_set3)
+    assert set_is_disjoint(example_set3, example_set2) == epyccel_func(example_set3, example_set2)
+
+def test_set_is_disjoint_fortran():
+    def set_is_disjoint1():
+        a = {1,2,3,4}
+        b = {5,6,7,8}
+        return a.isdisjoint(b)
+    def set_is_disjoint2():
+        a = {1,2,3,4}
+        b = {7,8,2}
+        return a.isdisjoint(b)
+    def set_is_disjoint3():
+        a = {7,8,2}
+        b = {5,6,7,8}
+        return a.isdisjoint(b)
+
+    epyccel_func1 = epyccel(set_is_disjoint1, language = 'fortran')
+    epyccel_func2 = epyccel(set_is_disjoint2, language = 'fortran')
+    epyccel_func3 = epyccel(set_is_disjoint3, language = 'fortran')
+    assert set_is_disjoint1() == epyccel_func1()
+    assert set_is_disjoint2() == epyccel_func2()
+    assert set_is_disjoint3() == epyccel_func3()
