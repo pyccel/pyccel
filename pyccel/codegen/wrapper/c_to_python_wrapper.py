@@ -1366,11 +1366,11 @@ class CToPythonWrapper(Wrapper):
 
 
         # Add the variables to the expected symbols in the scope
-        for a in getattr(example_func, 'bind_c_arguments', example_func.arguments):
+        for a in example_func.arguments:
             func_scope.insert_symbol(a.var.name)
 
         # Create necessary arguments
-        python_args = getattr(example_func, 'bind_c_arguments', example_func.arguments)
+        python_args = example_func.arguments
         func_args, body = self._unpack_python_args(python_args, class_dtype)
 
         # Get python arguments which will be passed to FunctionDefs
