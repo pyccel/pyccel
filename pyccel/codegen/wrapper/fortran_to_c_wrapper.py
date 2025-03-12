@@ -311,7 +311,7 @@ class FortranToCWrapper(Wrapper):
     def _extract_FixedSizeNumericType_FunctionDefArgument(self, var, func):
         name = var.name
         self.scope.insert_symbol(name)
-        collisionless_name = self.scope.get_expected_name(var.name)
+        collisionless_name = self.scope.get_expected_name(name)
         if var.is_optional:
             f_arg = var.clone(collisionless_name, new_class = Variable, is_argument = False,
                     is_optional = False, memory_handling='alias')
@@ -329,7 +329,7 @@ class FortranToCWrapper(Wrapper):
     def _extract_CustomDataType_FunctionDefArgument(self, var, func):
         name = var.name
         self.scope.insert_symbol(name)
-        collisionless_name = self.scope.get_expected_name(var.name)
+        collisionless_name = self.scope.get_expected_name(name)
         f_arg = var.clone(collisionless_name, new_class = Variable, is_argument = False,
                 is_optional = False, memory_handling='alias')
         new_var = Variable(BindCPointer(), self.scope.get_new_name(f'bound_{name}'),
@@ -342,7 +342,7 @@ class FortranToCWrapper(Wrapper):
         name = var.name
         scope = self.scope
         scope.insert_symbol(name)
-        collisionless_name = scope.get_expected_name(var.name)
+        collisionless_name = scope.get_expected_name(name)
         rank = var.rank
         order = var.order
         bind_var = Variable(BindCPointer(), scope.get_new_name(f'bound_{name}'),
@@ -383,7 +383,7 @@ class FortranToCWrapper(Wrapper):
         name = var.name
         scope = self.scope
         scope.insert_symbol(name)
-        collisionless_name = scope.get_expected_name(var.name)
+        collisionless_name = scope.get_expected_name(name)
         rank = var.rank
         bind_var = Variable(BindCPointer(), scope.get_new_name(f'bound_{name}'),
                             is_argument = True, is_optional = False, memory_handling='alias')
