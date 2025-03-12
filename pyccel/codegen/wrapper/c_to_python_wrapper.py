@@ -8,7 +8,7 @@ Module describing the code-wrapping class : CToPythonWrapper
 which creates an interface exposing C code to Python.
 """
 import warnings
-from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
+from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer
 from pyccel.ast.bind_c        import BindCModule, BindCModuleVariable, BindCVariable
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty, BindCArrayType
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
@@ -460,6 +460,7 @@ class CToPythonWrapper(Wrapper):
             A dictionary whose keys are the functions and whose values are the integer keys
             which indicate that the function should be chosen.
         """
+        args = [a.clone(a.name, is_argument = True) for a in args]
         func_scope = self.scope.new_child_scope(name)
         self.scope = func_scope
         orig_funcs = [getattr(func, 'original_function', func) for func in funcs]
@@ -474,7 +475,7 @@ class CToPythonWrapper(Wrapper):
         step = 1
         for i, py_arg in enumerate(args):
             # Get the relevant typed arguments from the original functions
-            interface_args = [getattr(func.arguments[i], 'original_function_argument_variable', func.arguments[i].var) for func in orig_funcs]
+            interface_args = [func.arguments[i].var for func in orig_funcs]
             # Get the type key
             interface_types = [(str(a.dtype), a.rank, a.order) for a in interface_args]
             # Get a dictionary mapping each unique type key to an example argument
@@ -974,7 +975,7 @@ class CToPythonWrapper(Wrapper):
         is_bind_c_function_def = isinstance(init_function, BindCFunctionDef)
 
         # Handle un-wrappable functions
-        if any(isinstance(getattr(a, 'original_function_argument_variable', a.var), FunctionAddress) for a in init_function.arguments):
+        if any(isinstance(a.var, FunctionAddress) for a in init_function.arguments):
             self.exit_scope()
             warnings.warn("Functions with functions as arguments will not be callable from Python")
             return self._get_untranslatable_function(func_name,
@@ -988,9 +989,6 @@ class CToPythonWrapper(Wrapper):
 
         # Get variables describing the arguments and results that are seen from Python
         python_args = init_function.arguments
-
-        # Get variables describing the arguments and results that must be passed to the function
-        original_c_args = init_function.arguments
 
         # Get the arguments of the PyFunctionDef
         func_args, body = self._unpack_python_args(python_args, cls_dtype)
@@ -1372,11 +1370,11 @@ class CToPythonWrapper(Wrapper):
 
 
         # Add the variables to the expected symbols in the scope
-        for a in getattr(example_func, 'bind_c_arguments', example_func.arguments):
+        for a in example_func.arguments:
             func_scope.insert_symbol(a.var.name)
 
         # Create necessary arguments
-        python_args = getattr(example_func, 'bind_c_arguments', example_func.arguments)
+        python_args = example_func.arguments
         func_args, body = self._unpack_python_args(python_args, class_dtype)
 
         # Get python arguments which will be passed to FunctionDefs
@@ -1460,7 +1458,7 @@ class CToPythonWrapper(Wrapper):
                          "Private functions are not accessible from python")
 
         # Handle un-wrappable functions
-        if any(isinstance(getattr(a, 'original_function_argument_variable', a.var), FunctionAddress) for a in expr.arguments):
+        if any(isinstance(a.var, FunctionAddress) for a in expr.arguments):
             self.exit_scope()
             warnings.warn("Functions with functions as arguments will not be callable from Python")
             return self._get_untranslatable_function(func_name,
@@ -1477,9 +1475,6 @@ class CToPythonWrapper(Wrapper):
         # Get variables describing the arguments and results that are seen from Python
         python_args = expr.arguments
         python_results = expr.results
-
-        # Get variables describing the arguments and results that must be passed to the function
-        original_c_args = expr.arguments
 
         # Get the arguments of the PyFunctionDef
         if 'property' in original_func.decorators:
@@ -1527,9 +1522,9 @@ class CToPythonWrapper(Wrapper):
         # Deallocate the C equivalent of any array arguments
         # The C equivalent is the same variable that is passed to the function unless the target language is Fortran.
         # In this case known-size stack arrays are used which are automatically deallocated when they go out of scope.
-        for a in original_c_args:
-            orig_var = getattr(a, 'original_function_argument_variable', a.var)
-            if not isinstance(a, BindCFunctionDefArgument) and orig_var.is_ndarray:
+        for a in python_args:
+            orig_var = a.var
+            if orig_var.is_ndarray:
                 v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
                 if v.is_optional:
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
@@ -2143,7 +2138,7 @@ class CToPythonWrapper(Wrapper):
             This should always be False for this function.
 
         is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
 
         arg_var : Variable | IndexedElement, optional
             A variable or an element of the variable representing the argument that
@@ -2194,7 +2189,7 @@ class CToPythonWrapper(Wrapper):
             This should always be False for this function.
 
         is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
 
         arg_var : Variable | IndexedElement
             A variable or an element of the variable representing the argument that
@@ -2257,7 +2252,7 @@ class CToPythonWrapper(Wrapper):
             This should always be False for this function.
 
         is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
 
         arg_var : Variable | IndexedElement, optional
             A variable or an element of the variable representing the argument that
@@ -2323,7 +2318,7 @@ class CToPythonWrapper(Wrapper):
             This should always be False for this function.
 
         is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
 
         arg_var : Variable | IndexedElement, optional
             A variable or an element of the variable representing the argument that
@@ -2411,7 +2406,7 @@ class CToPythonWrapper(Wrapper):
             This should always be False for this function.
 
         is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
 
         arg_var : Variable | IndexedElement, optional
             A variable or an element of the variable representing the argument that
@@ -2502,7 +2497,7 @@ class CToPythonWrapper(Wrapper):
             This should always be False for this function.
 
         is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
 
         arg_var : Variable | IndexedElement, optional
             A variable or an element of the variable representing the argument that

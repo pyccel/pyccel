@@ -9,7 +9,6 @@ which creates an interface exposing Fortran code to C.
 """
 from functools import reduce
 import warnings
-from pyccel.ast.bind_c import BindCFunctionDefArgument
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCModuleVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
@@ -101,13 +100,6 @@ class FortranToCWrapper(Wrapper):
             args = [a['f_arg'] for a in wrapped_args]
             body = [line for a in wrapped_args for line in a['body']]
 
-            # If the function is inlined and takes an array argument create a pointer to ensure that the bounds
-            # are respected
-            if getattr(func, 'is_inline', False) and any(isinstance(a, IndexedElement) for a in args):
-                array_args = {a: self.scope.get_temporary_variable(a.value.base, a.keyword, memory_handling = 'alias') for a in args if isinstance(a, IndexedElement)}
-                body += [AliasAssign(v, k.value) for k,v in array_args.items()]
-                args = [FunctionCallArgument(array_args[a], keyword=a.keyword) if a in array_args else a for a in args]
-
             if len(results) == 1:
                 res = results[0]
                 func_call = AliasAssign(res, func(*args)) if res.is_alias else \
@@ -118,9 +110,9 @@ class FortranToCWrapper(Wrapper):
 
     def _wrap_Module(self, expr):
         """
-        Create a Module which is compatible with C.
+        Create a BindCModule which is compatible with C.
 
-        Create a Module which provides an interface between C and the
+        Create a BindCModule which provides an interface between C and the
         Module described by expr. This includes wrapping functions,
         interfaces, classes and module variables.
 
@@ -131,7 +123,7 @@ class FortranToCWrapper(Wrapper):
 
         Returns
         -------
-        pyccel.ast.core.Module
+        pyccel.ast.bind_c.BindCModule
             The C-compatible module.
         """
         # Define scope
@@ -214,7 +206,6 @@ class FortranToCWrapper(Wrapper):
 
         # Wrap the arguments and collect the expressions passed as the call argument.
         wrapped_args = [self._extract_FunctionDefArgument(a, expr) for a in expr.arguments]
-        #func_arguments = [self._wrap(a) for a in expr.arguments]
         func_arguments = [a['c_arg'] for a in wrapped_args]
         call_arguments = [a['f_arg'] for a in wrapped_args]
         func_to_call = {fa : ca for ca, fa in zip(call_arguments, func_arguments)}
@@ -239,7 +230,7 @@ class FortranToCWrapper(Wrapper):
         self._additional_exprs.clear()
 
         if expr.scope.get_python_name(expr.name) == '__del__':
-            body.append(DeallocatePointer(call_arguments[0]))
+            body.append(DeallocatePointer(call_arguments[0].value))
 
         self.exit_scope()
 
@@ -272,6 +263,31 @@ class FortranToCWrapper(Wrapper):
         return Interface(expr.name, functions, expr.is_argument)
 
     def _extract_FunctionDefArgument(self, expr, func):
+        """
+        Extract the C-compatible FunctionDefArgument from the Fortran FunctionDefArgument.
+
+        Extract the C-compatible FunctionDefArgument from the Fortran FunctionDefArgument.
+
+        The extraction is done by finding the appropriate function
+        _extract_X_FunctionDefArgument for the object expr. X is the class type of the
+        variable stored in the object expr. If this function does not exist then the
+        method resolution order is used to search for other compatible
+        _extract_X_FunctionDefArgument functions. If none are found then an error is raised.
+
+        Parameters
+        ----------
+        expr : FunctionDefArgument
+            An object representing the FunctionDefArgument in the Fortran code which should
+            be exposed to the C code.
+
+        func : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to access the argument.
+        """
         var = expr.var
         class_type = var.class_type
 
@@ -284,6 +300,8 @@ class FortranToCWrapper(Wrapper):
                 func_def_argument_dict['c_arg'] = FunctionDefArgument(new_var, value = expr.value,
                     kwonly = expr.is_kwonly, annotation = expr.annotation,
                     bound_argument = expr.bound_argument, persistent_target = expr.persistent_target)
+                func_def_argument_dict['f_arg'] = FunctionCallArgument(func_def_argument_dict['f_arg'],
+                                                                        keyword = expr.name)
                 return func_def_argument_dict
 
         # Unknown object, we raise an error.
@@ -293,7 +311,7 @@ class FortranToCWrapper(Wrapper):
     def _extract_FixedSizeNumericType_FunctionDefArgument(self, var, func):
         name = var.name
         self.scope.insert_symbol(name)
-        collisionless_name = self.scope.get_expected_name(var.name)
+        collisionless_name = self.scope.get_expected_name(name)
         if var.is_optional:
             f_arg = var.clone(collisionless_name, new_class = Variable, is_argument = False,
                     is_optional = False, memory_handling='alias')
@@ -311,7 +329,7 @@ class FortranToCWrapper(Wrapper):
     def _extract_CustomDataType_FunctionDefArgument(self, var, func):
         name = var.name
         self.scope.insert_symbol(name)
-        collisionless_name = self.scope.get_expected_name(var.name)
+        collisionless_name = self.scope.get_expected_name(name)
         f_arg = var.clone(collisionless_name, new_class = Variable, is_argument = False,
                 is_optional = False, memory_handling='alias')
         new_var = Variable(BindCPointer(), self.scope.get_new_name(f'bound_{name}'),
@@ -324,7 +342,7 @@ class FortranToCWrapper(Wrapper):
         name = var.name
         scope = self.scope
         scope.insert_symbol(name)
-        collisionless_name = scope.get_expected_name(var.name)
+        collisionless_name = scope.get_expected_name(name)
         rank = var.rank
         order = var.order
         bind_var = Variable(BindCPointer(), scope.get_new_name(f'bound_{name}'),
@@ -357,11 +375,7 @@ class FortranToCWrapper(Wrapper):
         stop = None
         indexes = [Slice(start, stop, step) for step in stride]
 
-        if getattr(func, 'is_inline', False):
-            array_arg = self.scope.get_temporary_variable(arg_var, name, memory_handling = 'alias')
-            body.append(AliasAssign(array_arg, IndexedElement(arg_var, *indexes)))
-        else:
-            f_arg = IndexedElement(arg_var, *indexes)
+        f_arg = IndexedElement(arg_var, *indexes)
 
         return {'c_arg': BindCVariable(c_arg_var, var), 'f_arg': f_arg, 'body': body}
 
@@ -369,7 +383,7 @@ class FortranToCWrapper(Wrapper):
         name = var.name
         scope = self.scope
         scope.insert_symbol(name)
-        collisionless_name = scope.get_expected_name(var.name)
+        collisionless_name = scope.get_expected_name(name)
         rank = var.rank
         bind_var = Variable(BindCPointer(), scope.get_new_name(f'bound_{name}'),
                             is_argument = True, is_optional = False, memory_handling='alias')
@@ -471,7 +485,7 @@ class FortranToCWrapper(Wrapper):
         getter_result = getter_result_info['c_result']
 
         getter_arg_wrapper = self._extract_FunctionDefArgument(FunctionDefArgument(lhs, bound_argument = True), expr)
-        self_obj = getter_arg_wrapper['f_arg']
+        self_obj = getter_arg_wrapper['f_arg'].value
         getter_arg = getter_arg_wrapper['c_arg']
 
         getter_body = getter_arg_wrapper['body']
@@ -505,8 +519,8 @@ class FortranToCWrapper(Wrapper):
         if expr.is_alias:
             setter_args[1].persistent_target = True
 
-        self_obj = setter_arg_wrappers[0]['f_arg']
-        set_val = setter_arg_wrappers[1]['f_arg']
+        self_obj = setter_arg_wrappers[0]['f_arg'].value
+        set_val = setter_arg_wrappers[1]['f_arg'].value
 
         setter_body = setter_arg_wrappers[0]['body'] + setter_arg_wrappers[1]['body']
 

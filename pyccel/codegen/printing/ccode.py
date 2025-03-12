@@ -67,7 +67,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
-from pyccel.ast.utilities import expand_to_loops, is_literal_integer, flatten_tuple_var
+from pyccel.ast.utilities import expand_to_loops, is_literal_integer
 
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
@@ -1631,9 +1631,8 @@ class CCodePrinter(CodePrinter):
             Signature of the function.
         """
         arg_vars = [a.var for a in expr.arguments]
-        arg_vars = [ai for a in arg_vars for ai in \
-                        (flatten_tuple_var(a, expr.scope) if isinstance(a, Variable) else [a])]
-        result_vars = [v for v in flatten_tuple_var(expr.results.var, expr.scope) \
+        arg_vars = [ai for a in arg_vars for ai in expr.scope.collect_all_tuple_elements(a)]
+        result_vars = [v for v in expr.scope.collect_all_tuple_elements(expr.results.var) \
                             if v and not v.is_argument]
 
         n_results = len(result_vars)
@@ -2252,8 +2251,6 @@ class CCodePrinter(CodePrinter):
                 decs += [Declare(res)]
             elif not isinstance(res, Variable):
                 raise NotImplementedError(f"Can't return {type(res)} from a function")
-        decs += [Declare(v) for v in self.scope.variables.values() \
-                if v not in chain(expr.local_vars, results, arguments)]
         decs  = ''.join(self._print(i) for i in decs)
 
         sep = self._print(SeparatorComment(40))
@@ -2300,8 +2297,7 @@ class CCodePrinter(CodePrinter):
 
         args += self._temporary_args
         self._temporary_args = []
-        args = ', '.join(self._print(ai) for a in args for ai in \
-                        ([a] if isinstance(a, (FunctionAddress, Nil)) else flatten_tuple_var(a, self.scope)))
+        args = ', '.join(self._print(ai) for a in args for ai in self.scope.collect_all_tuple_elements(a))
 
         call_code = f'{func.name}({args})'
         if func.results.var is not Nil() and \
@@ -2870,6 +2866,7 @@ class CCodePrinter(CodePrinter):
         var_type = self.get_c_type(dtype)
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(dtype), var_type)))
         set_var = self._print(ObjectAddress(expr.set_variable))
+        # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{var_type}_pop({set_var})'
 
     def _print_SetClear(self, expr):
@@ -2898,6 +2895,7 @@ class CCodePrinter(CodePrinter):
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), var_type)))
         set_var = self._print(ObjectAddress(expr.set_variable))
         args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
+        # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{var_type}_union({set_var}, {args})'
 
     def _print_SetIntersectionUpdate(self, expr):
@@ -2905,6 +2903,7 @@ class CCodePrinter(CodePrinter):
         var_type = self.get_c_type(class_type)
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), var_type)))
         set_var = self._print(ObjectAddress(expr.set_variable))
+        # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return ''.join(f'{var_type}_intersection_update({set_var}, {self._print(ObjectAddress(a))});\n' \
                 for a in expr.args)
 
@@ -2913,6 +2912,13 @@ class CCodePrinter(CodePrinter):
         set_var = self._print(ObjectAddress(expr.set_variable))
         arg_val = self._print(expr.args[0])
         return f'{var_type}_erase({set_var}, {arg_val});\n'
+
+    def _print_SetIsDisjoint(self, expr):
+        var_type = self.get_c_type(expr.set_variable.class_type)
+        set_var = self._print(ObjectAddress(expr.set_variable))
+        arg_val = self._print(ObjectAddress(expr.args[0]))
+        # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
+        return f'{var_type}_is_disjoint({set_var}, {arg_val});\n'
 
     def _print_PythonSet(self, expr):
         tmp_var = self.scope.get_temporary_variable(expr.class_type, shape = expr.shape,
