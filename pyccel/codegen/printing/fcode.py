@@ -82,7 +82,7 @@ from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthe
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
-from pyccel.ast.utilities import expand_to_loops, flatten_tuple_var
+from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.ast.variable import Variable, IndexedElement, DottedName
 
@@ -1326,8 +1326,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionDefArgument(self, expr):
         var = expr.var
-        return ', '.join(self._print(v) for v in \
-                ([var] if isinstance(var, FunctionAddress) else  flatten_tuple_var(var, self.scope)))
+        return ', '.join(self._print(v) for v in self.scope.collect_all_tuple_elements(var))
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
@@ -2516,7 +2515,7 @@ class FCodePrinter(CodePrinter):
         """
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        out_args = [v for v in flatten_tuple_var(expr.results.var, self.scope) if v and not v.is_argument]
+        out_args = [v for v in self.scope.collect_all_tuple_elements(expr.results.var) if v and not v.is_argument]
         args_decs = OrderedDict()
         arguments = expr.arguments
 
@@ -2545,7 +2544,7 @@ class FCodePrinter(CodePrinter):
             arg_var = arg.var
             if isinstance(arg_var, Variable):
                 inout = arg.inout and not isinstance(arg_var, BindCVariable)
-                for v in flatten_tuple_var(arg_var, self.scope):
+                for v in self.scope.collect_all_tuple_elements(arg_var):
                     if inout:
                         dec = Declare(v, intent='inout')
                     else:
@@ -3614,7 +3613,7 @@ class FCodePrinter(CodePrinter):
         for k, m in _default_methods.items():
             f_name = f_name.replace(k, m)
         args   = expr.args
-        func_results = [v for v in flatten_tuple_var(func.results.var, func.scope) if v and not v.is_argument]
+        func_results = [v for v in func.scope.collect_all_tuple_elements(func.results.var) if v and not v.is_argument]
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, (Assign, AliasAssign)))
         is_function =  len(func_results) == 1 and func.results.var.rank == 0
 
