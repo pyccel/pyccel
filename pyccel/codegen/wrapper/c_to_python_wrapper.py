@@ -457,6 +457,7 @@ class CToPythonWrapper(Wrapper):
             A dictionary whose keys are the functions and whose values are the integer keys
             which indicate that the function should be chosen.
         """
+        args = [a.clone(a.name, is_argument = True) for a in args]
         func_scope = self.scope.new_child_scope(name)
         self.scope = func_scope
         orig_funcs = [getattr(func, 'original_function', func) for func in funcs]
