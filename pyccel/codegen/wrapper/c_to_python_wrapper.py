@@ -471,7 +471,7 @@ class CToPythonWrapper(Wrapper):
         step = 1
         for i, py_arg in enumerate(args):
             # Get the relevant typed arguments from the original functions
-            interface_args = [getattr(func.arguments[i], 'original_function_argument_variable', func.arguments[i].var) for func in orig_funcs]
+            interface_args = [func.arguments[i].var for func in orig_funcs]
             # Get the type key
             interface_types = [(str(a.dtype), a.rank, a.order) for a in interface_args]
             # Get a dictionary mapping each unique type key to an example argument
@@ -971,7 +971,7 @@ class CToPythonWrapper(Wrapper):
         is_bind_c_function_def = isinstance(init_function, BindCFunctionDef)
 
         # Handle un-wrappable functions
-        if any(isinstance(getattr(a, 'original_function_argument_variable', a.var), FunctionAddress) for a in init_function.arguments):
+        if any(isinstance(a.var, FunctionAddress) for a in init_function.arguments):
             self.exit_scope()
             warnings.warn("Functions with functions as arguments will not be callable from Python")
             return self._get_untranslatable_function(func_name,
@@ -1454,7 +1454,7 @@ class CToPythonWrapper(Wrapper):
                          "Private functions are not accessible from python")
 
         # Handle un-wrappable functions
-        if any(isinstance(getattr(a, 'original_function_argument_variable', a.var), FunctionAddress) for a in expr.arguments):
+        if any(isinstance(a.var, FunctionAddress) for a in expr.arguments):
             self.exit_scope()
             warnings.warn("Functions with functions as arguments will not be callable from Python")
             return self._get_untranslatable_function(func_name,
