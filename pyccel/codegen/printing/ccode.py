@@ -2252,8 +2252,6 @@ class CCodePrinter(CodePrinter):
                 decs += [Declare(res)]
             elif not isinstance(res, Variable):
                 raise NotImplementedError(f"Can't return {type(res)} from a function")
-        decs += [Declare(v) for v in self.scope.variables.values() \
-                if v not in chain(expr.local_vars, results, arguments)]
         decs  = ''.join(self._print(i) for i in decs)
 
         sep = self._print(SeparatorComment(40))
