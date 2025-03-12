@@ -986,9 +986,6 @@ class CToPythonWrapper(Wrapper):
         # Get variables describing the arguments and results that are seen from Python
         python_args = init_function.arguments
 
-        # Get variables describing the arguments and results that must be passed to the function
-        original_c_args = init_function.arguments
-
         # Get the arguments of the PyFunctionDef
         func_args, body = self._unpack_python_args(python_args, cls_dtype)
         func_args = [FunctionDefArgument(a) for a in func_args]
@@ -1475,9 +1472,6 @@ class CToPythonWrapper(Wrapper):
         python_args = expr.arguments
         python_results = expr.results
 
-        # Get variables describing the arguments and results that must be passed to the function
-        original_c_args = expr.arguments
-
         # Get the arguments of the PyFunctionDef
         if 'property' in original_func.decorators:
             func_args = [self.get_new_PyObject('self_obj', dtype = class_dtype),
@@ -1524,7 +1518,7 @@ class CToPythonWrapper(Wrapper):
         # Deallocate the C equivalent of any array arguments
         # The C equivalent is the same variable that is passed to the function unless the target language is Fortran.
         # In this case known-size stack arrays are used which are automatically deallocated when they go out of scope.
-        for a in original_c_args:
+        for a in python_args:
             orig_var = getattr(a, 'original_function_argument_variable', a.var)
             if not isinstance(a, BindCFunctionDefArgument) and orig_var.is_ndarray:
                 v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
