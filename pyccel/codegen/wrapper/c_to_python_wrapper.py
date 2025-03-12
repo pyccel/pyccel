@@ -8,7 +8,7 @@ Module describing the code-wrapping class : CToPythonWrapper
 which creates an interface exposing C code to Python.
 """
 import warnings
-from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
+from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer
 from pyccel.ast.bind_c        import BindCModule, BindCModuleVariable, BindCVariable
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty, BindCArrayType
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
@@ -1519,8 +1519,8 @@ class CToPythonWrapper(Wrapper):
         # The C equivalent is the same variable that is passed to the function unless the target language is Fortran.
         # In this case known-size stack arrays are used which are automatically deallocated when they go out of scope.
         for a in python_args:
-            orig_var = getattr(a, 'original_function_argument_variable', a.var)
-            if not isinstance(a, BindCFunctionDefArgument) and orig_var.is_ndarray:
+            orig_var = a.var
+            if orig_var.is_ndarray:
                 v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
                 if v.is_optional:
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
@@ -2134,7 +2134,7 @@ class CToPythonWrapper(Wrapper):
             This should always be False for this function.
 
         is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
 
         arg_var : Variable | IndexedElement, optional
             A variable or an element of the variable representing the argument that
@@ -2185,7 +2185,7 @@ class CToPythonWrapper(Wrapper):
             This should always be False for this function.
 
         is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
 
         arg_var : Variable | IndexedElement
             A variable or an element of the variable representing the argument that
@@ -2248,7 +2248,7 @@ class CToPythonWrapper(Wrapper):
             This should always be False for this function.
 
         is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
 
         arg_var : Variable | IndexedElement, optional
             A variable or an element of the variable representing the argument that
@@ -2314,7 +2314,7 @@ class CToPythonWrapper(Wrapper):
             This should always be False for this function.
 
         is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
 
         arg_var : Variable | IndexedElement, optional
             A variable or an element of the variable representing the argument that
@@ -2402,7 +2402,7 @@ class CToPythonWrapper(Wrapper):
             This should always be False for this function.
 
         is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
 
         arg_var : Variable | IndexedElement, optional
             A variable or an element of the variable representing the argument that
@@ -2493,7 +2493,7 @@ class CToPythonWrapper(Wrapper):
             This should always be False for this function.
 
         is_bind_c_argument : bool
-            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
 
         arg_var : Variable | IndexedElement, optional
             A variable or an element of the variable representing the argument that
