@@ -110,9 +110,9 @@ class FortranToCWrapper(Wrapper):
 
     def _wrap_Module(self, expr):
         """
-        Create a Module which is compatible with C.
+        Create a BindCModule which is compatible with C.
 
-        Create a Module which provides an interface between C and the
+        Create a BindCModule which provides an interface between C and the
         Module described by expr. This includes wrapping functions,
         interfaces, classes and module variables.
 
@@ -123,7 +123,7 @@ class FortranToCWrapper(Wrapper):
 
         Returns
         -------
-        pyccel.ast.core.Module
+        pyccel.ast.bind_c.BindCModule
             The C-compatible module.
         """
         # Define scope
