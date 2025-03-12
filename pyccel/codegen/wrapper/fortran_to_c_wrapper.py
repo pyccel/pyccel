@@ -9,7 +9,6 @@ which creates an interface exposing Fortran code to C.
 """
 from functools import reduce
 import warnings
-from pyccel.ast.bind_c import BindCFunctionDefArgument
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCModuleVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
