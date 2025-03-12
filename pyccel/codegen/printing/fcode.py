@@ -2590,7 +2590,7 @@ class FCodePrinter(CodePrinter):
         body_code = self._print(expr.body)
         docstring = self._print(expr.docstring) if expr.docstring else ''
 
-        decs = [Declare(v) for v in expr.local_vars if not v.is_argument]
+        decs = [Declare(v) for v in expr.local_vars]
         self._get_external_declarations(decs)
 
         prelude += ''.join(self._print(i) for i in decs)
