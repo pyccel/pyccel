@@ -47,3 +47,8 @@ def concatenate_expr():
     t = "world"
     v = s + "_" + t
     return v
+
+def string_function_call():
+    s = 'hello'
+    t = str(s)
+    return t
