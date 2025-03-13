@@ -22,7 +22,7 @@ from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
 from pyccel.ast.core import For
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
-from pyccel.ast.datatypes import PythonNativeInt, CharType, StringType
+from pyccel.ast.datatypes import PythonNativeInt, CharType
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue, LiteralString
