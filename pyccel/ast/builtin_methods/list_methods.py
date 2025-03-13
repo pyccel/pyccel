@@ -294,6 +294,10 @@ class ListCopy(ListMethod) :
         self._class_type = list_obj.class_type
         super().__init__(list_obj)
 
+    @property
+    def modified_args(self):
+        return ()
+
 #==============================================================================
 class ListSort(ListMethod) :
     """

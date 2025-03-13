@@ -325,3 +325,7 @@ class SetIsDisjoint(SetMethod):
         if set_obj.class_type != other_set_obj.class_type:
             raise TypeError("Is disjoint can only be used to compare sets of the same type.")
         super().__init__(set_obj, other_set_obj)
+
+    @property
+    def modified_args(self):
+        return ()
