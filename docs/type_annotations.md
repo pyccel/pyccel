@@ -105,9 +105,11 @@ Strings are not yet supported as keys in Fortran.
 
 ## Strings
 
-Pyccel contains very minimal support for strings. This is mostly provided to allow the use of strings as keys of dictionaries.
-
-Currently strings can be used as local variables and can be returned from functions.
+Pyccel contains very minimal support for strings. This is mostly provided to allow us to implement strings as keys of dictionaries.
+Strings can be declared in Pyccel using the following syntax:
+```python
+a : str = 'hello'
+```
 
 ## Handling multiple types
 
