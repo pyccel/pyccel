@@ -3125,7 +3125,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelAdd(self, expr):
         if isinstance(expr.dtype, StringType):
-            return '//'.join('trim('+self._print(a)+')' for a in expr.args)
+            return ' // '.join(self._print(a) for a in expr.args)
         else:
             args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
             return ' + '.join(self._print(a) for a in args)
