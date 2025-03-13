@@ -1748,7 +1748,7 @@ class PythonString(PyccelFunction):
 
     def __init__(self, arg):
         if not isinstance(arg.class_type, StringType):
-            raise TypeError("Non-character type cannot be cast to a string")
+            raise NotImplementedError("Support for casting non-character types to strings is not yet available")
         self._shape = (None,)
         super().__init__(arg)
 
