@@ -14,7 +14,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PyccelType, InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType, DictType
-from .datatypes import ContainerType, HomogeneousTupleType
+from .datatypes import ContainerType, HomogeneousTupleType, CharType, StringType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .internals import apply_pickle
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
@@ -730,6 +730,10 @@ class IndexedElement(TypedAstNode):
                                     else base.class_type
                 self._is_slice = True
                 self._shape = tuple(new_shape)
+
+            if isinstance(self._class_type, CharType):
+                self._class_type = StringType()
+                self._shape = (1,)
 
         super().__init__()
 
