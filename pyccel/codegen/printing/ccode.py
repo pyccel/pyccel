@@ -1656,8 +1656,7 @@ class CCodePrinter(CodePrinter):
             def get_arg_declaration(var):
                 """ Get the code which declares the argument variable.
                 """
-                code = "const " * var.is_const
-                code += self.get_declare_type(var)
+                code = self.get_declare_type(var)
                 if print_arg_names:
                     code += ' ' + var.name
                 return code
