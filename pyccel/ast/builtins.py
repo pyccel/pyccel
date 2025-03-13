@@ -16,7 +16,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
-from .datatypes import GenericType, PythonNativeComplex, CharType
+from .datatypes import GenericType, PythonNativeComplex
 from .datatypes import PrimitiveBooleanType, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType, TupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
@@ -1738,6 +1738,8 @@ class PythonString(PyccelFunction):
         The argument that is cast to a string.
     """
     _static_type = StringType()
+    _class_type = StringType()
+
     def __new__(cls, arg):
         if isinstance(arg, LiteralString):
             return arg
@@ -1745,8 +1747,9 @@ class PythonString(PyccelFunction):
             return super().__new__(cls)
 
     def __init__(self, arg):
-        if not isinstance(arg.dtype, CharType):
+        if not isinstance(arg.class_type, StringType):
             raise TypeError("Non-character type cannot be cast to a string")
+        self._shape = (None,)
         super().__init__(arg)
 
 #==============================================================================
