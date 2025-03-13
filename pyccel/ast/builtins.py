@@ -16,7 +16,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
-from .datatypes import GenericType, PythonNativeComplex
+from .datatypes import GenericType, PythonNativeComplex, CharType
 from .datatypes import PrimitiveBooleanType, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType, TupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
@@ -1747,7 +1747,7 @@ class PythonString(PyccelFunction):
             return super().__new__(cls)
 
     def __init__(self, arg):
-        if not isinstance(arg.class_type, StringType):
+        if not isinstance(arg.class_type, (StringType, CharType)):
             raise NotImplementedError("Support for casting non-character types to strings is not yet available")
         self._shape = (None,)
         super().__init__(arg)
