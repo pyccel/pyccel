@@ -1284,14 +1284,22 @@ PyDict_SetItem = FunctionDef(name = 'PyDict_SetItem',
 #-------------------------------------------------------------------
 #                         String functions
 #-------------------------------------------------------------------
+# https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_AsUTF8
 PyUnicode_AsUTF8 = FunctionDef(name = 'PyUnicode_AsUTF8',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'unicode', memory_handling='alias'))],
                     results = FunctionDefResult(Variable(CharType(), 'str', memory_handling='alias')),
                     body = [])
 
+# https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_Check
 PyUnicode_Check = FunctionDef(name = 'PyUnicode_Check',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'str', memory_handling='alias'))],
                     results = FunctionDefResult(Variable(CharType(), 'out', memory_handling='alias')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_GetLength
+PyUnicode_GetLength = FunctionDef(name = 'PyUnicode_GetLength',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'str', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(PythonNativeInt(), 'len')),
                     body = [])
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
