@@ -59,6 +59,12 @@ class SetMethod(PyccelFunction):
 
     @property
     def modified_args(self):
+        """
+        Return an iterable of all the arguments which may be modified by this function.
+
+        Return an iterable of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
         return (self._set_variable,)
 
 #==============================================================================
@@ -132,6 +138,12 @@ class SetCopy(SetMethod):
 
     @property
     def modified_args(self):
+        """
+        Return an iterable of all the arguments which may be modified by this function.
+
+        Return an iterable of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
         return ()
 
 #==============================================================================
@@ -246,6 +258,12 @@ class SetUnion(SetMethod):
 
     @property
     def modified_args(self):
+        """
+        Return an iterable of all the arguments which may be modified by this function.
+
+        Return an iterable of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
         return ()
 
 #==============================================================================
@@ -270,6 +288,12 @@ class SetIntersection(SetMethod):
 
     @property
     def modified_args(self):
+        """
+        Return an iterable of all the arguments which may be modified by this function.
+
+        Return an iterable of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
         return ()
 
 #==============================================================================
@@ -328,4 +352,10 @@ class SetIsDisjoint(SetMethod):
 
     @property
     def modified_args(self):
+        """
+        Return an iterable of all the arguments which may be modified by this function.
+
+        Return an iterable of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
         return ()

@@ -62,6 +62,12 @@ class DictMethod(PyccelFunction):
 
     @property
     def modified_args(self):
+        """
+        Return an iterable of all the arguments which may be modified by this function.
+
+        Return an iterable of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
         return (self._dict_obj,)
 
 #==============================================================================
@@ -195,6 +201,12 @@ class DictGet(DictMethod):
 
     @property
     def modified_args(self):
+        """
+        Return an iterable of all the arguments which may be modified by this function.
+
+        Return an iterable of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
         return ()
 
 #==============================================================================
@@ -299,6 +311,12 @@ class DictCopy(DictMethod):
 
     @property
     def modified_args(self):
+        """
+        Return an iterable of all the arguments which may be modified by this function.
+
+        Return an iterable of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
         return ()
 
 #==============================================================================
@@ -349,6 +367,12 @@ class DictItems(Iterable):
 
     @property
     def modified_args(self):
+        """
+        Return an iterable of all the arguments which may be modified by this function.
+
+        Return an iterable of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
         return ()
 
 #==============================================================================
@@ -400,6 +424,12 @@ class DictKeys(Iterable):
 
     @property
     def modified_args(self):
+        """
+        Return an iterable of all the arguments which may be modified by this function.
+
+        Return an iterable of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
         return ()
 
 #==============================================================================
