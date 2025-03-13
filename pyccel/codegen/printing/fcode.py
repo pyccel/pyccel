@@ -1495,7 +1495,7 @@ class FCodePrinter(CodePrinter):
         # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
         return f'{type_name}_is_disjoint({var_code}, {arg_code})'
 
-   #========================== Dict Methods ================================#
+    #========================== Dict Methods ================================#
 
     def _print_DictClear(self, expr):
         var = self._print(expr.dict_obj)
@@ -1505,6 +1505,11 @@ class FCodePrinter(CodePrinter):
         dict_obj = self._print(expr.dict_obj)
         key = self._print(expr.key)
         return f'{dict_obj} % of( {key} )'
+
+    #========================== String Methods ===============================#
+
+    def _print_PythonString(self, expr):
+        return self._print(expr.args[0])
 
     #========================== Numpy Elements ===============================#
 
