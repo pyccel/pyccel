@@ -125,13 +125,15 @@ In the simplest case a wrapper around a function takes the same arguments, calls
 
 More complex cases include functions with array arguments or results, optional variables and functions as arguments.
 
-Array arguments and results are handled similarly to array module variables, by adding additional variables for the shape and stride information. Strides are not used for results as pointers cannot be returned from functions.
+In order to create all the nodes necessary to describe the unpacking of the arguments we use functions named `_extract_X_FunctionDefArgument` where `X` is the type of the object being extracted from the `FunctionDefArgument`. This allows such functions to call each other recursively. This is notably useful for container types (tuples, lists, etc) whose elements may themselves be container types. The types of scalars are checked in the same way regardless of whether they are arguments or elements of a container so this also reduces code duplication.
 
-In order to create all the nodes necessary to describe the unpacking of the results we use functions named `_extract_X_FunctionDefResult` where `X` is the type of the object being extracted from the `FunctionDefResult`. This helps with the readability of the code.
+Array arguments and results are handled similarly to array module variables, by adding additional variables for the shape and stride information. Strides are not used for results as pointers cannot be returned from functions.
 
 Optional arguments are passed as C pointers. An if/else block then determines whether the pointer is assigned or not. This can be quite lengthy, however it is unavoidable for compilation with Intel, or NVIDIA. It is also unavoidable for arrays as it is important not to index an array (to access the strides) which is not present.
 
 Finally the most complex cases such as functions as arguments are simply not printed. Instead these cases raise warnings or errors to alert the user that support is missing.
+
+In order to create all the nodes necessary to describe the unpacking of the results we use functions named `_extract_X_FunctionDefResult` where `X` is the type of the object being extracted from the `FunctionDefResult`. This helps with the readability of the code.
 
 #### Example 1 : function with scalar arguments
 
