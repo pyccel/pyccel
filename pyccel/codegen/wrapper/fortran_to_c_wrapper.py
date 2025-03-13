@@ -413,7 +413,8 @@ class FortranToCWrapper(Wrapper):
         collisionless_name = scope.get_expected_name(name)
         rank = var.rank
         bind_var = Variable(BindCPointer(), scope.get_new_name(f'bound_{name}'),
-                            is_argument = True, is_optional = False, memory_handling='alias')
+                            is_argument = True, is_optional = False, memory_handling='alias',
+                            is_const = True)
         arg_var = var.clone(collisionless_name, is_argument = False, is_optional = False,
                             allows_negative_indexes=False, new_class = Variable)
         array_var = Variable(NumpyNDArrayType(CharType(), 1, None), scope.get_new_name(name),
@@ -425,7 +426,7 @@ class FortranToCWrapper(Wrapper):
         shape_var = scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_size', is_argument = True)
 
         for_scope = scope.create_new_loop_scope()
-        iterator = PythonRange(LiteralInteger(1), shape_var)
+        iterator = PythonRange(LiteralInteger(1), PyccelAdd(shape_var, LiteralInteger(1)))
         idx = Variable(PythonNativeInt(), self.scope.get_new_name())
         iterator.set_loop_counter(idx)
         self.scope.insert_variable(idx)

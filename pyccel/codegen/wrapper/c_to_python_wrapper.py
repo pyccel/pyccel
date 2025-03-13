@@ -38,7 +38,7 @@ from pyccel.ast.cwrapper      import PySet_New, PySet_Add
 from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PySet_GetIter, PySet_Clear
 from pyccel.ast.cwrapper      import PyIter_Next
 from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
-from pyccel.ast.cwrapper      import PyUnicode_AsUTF8, PyUnicode_Check
+from pyccel.ast.cwrapper      import PyUnicode_AsUTF8, PyUnicode_Check, PyUnicode_GetLength
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.c_concepts    import CStrStr
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
@@ -2604,13 +2604,31 @@ class CToPythonWrapper(Wrapper):
             A list of expressions which extract the argument from collect_arg into arg_var.
         """
         assert not bound_argument
-        if arg_var is None:
-            kwargs = {'is_argument': False}
-            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
-                                    **kwargs)
-            self.scope.insert_variable(arg_var, orig_var.name)
 
-        body = [Assign(orig_var, PythonString(PyUnicode_AsUTF8(collect_arg)))]
+        if is_bind_c_argument:
+            if arg_var is None:
+                data_var = Variable(CStackArray(CharType()), self.scope.get_expected_name(orig_var.name),
+                                    shape = (None,), memory_handling='alias', is_const = True)
+                size_var = Variable(PythonNativeInt(), self.scope.get_new_name(f'{data_var.name}_size'))
+                arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+                                    shape = (LiteralInteger(2),))
+                self.scope.insert_variable(data_var, orig_var.name)
+                self.scope.insert_variable(size_var)
+                self.scope.insert_variable(arg_var, tuple_recursive = False)
+                self.scope.insert_symbolic_alias(arg_var[0], ObjectAddress(data_var))
+                self.scope.insert_symbolic_alias(arg_var[1], size_var)
+
+            body = [Assign(orig_var, PyUnicode_AsUTF8(collect_arg)),
+                    Assign(self.scope.collect_tuple_element(arg_var[1]), PyUnicode_GetLength(collect_arg))]
+
+        else:
+
+            if arg_var is None:
+                arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
+                                        is_argument = False)
+                self.scope.insert_variable(arg_var, orig_var.name)
+
+            body = [Assign(orig_var, PythonString(PyUnicode_AsUTF8(collect_arg)))]
 
         if getattr(orig_var, 'is_optional', False):
             memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
