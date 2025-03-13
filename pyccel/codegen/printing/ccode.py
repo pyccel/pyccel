@@ -1563,7 +1563,7 @@ class CCodePrinter(CodePrinter):
         class_type = expr.class_type
 
         if isinstance(expr.class_type, CStackArray):
-            return self.get_c_type(expr.class_type.element_type)
+            dtype = self.get_c_type(expr.class_type.element_type)
         elif isinstance(expr.class_type, (HomogeneousContainerType, DictType)):
             dtype = self.get_c_type(expr.class_type)
         elif not isinstance(class_type, CustomDataType):
@@ -1571,7 +1571,10 @@ class CCodePrinter(CodePrinter):
         else:
             dtype = self._print(expr.class_type)
 
-        if self.is_c_pointer(expr):
+        if getattr(expr, 'is_const', False):
+            dtype = f'const {dtype}'
+
+        if self.is_c_pointer(expr) and not isinstance(expr.class_type, CStackArray):
             return f'{dtype}*'
         else:
             return dtype
