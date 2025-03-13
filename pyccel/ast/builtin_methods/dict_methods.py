@@ -365,16 +365,6 @@ class DictItems(Iterable):
         item = DictPopitem(self._dict_obj)
         return [IndexedElement(item, 0), IndexedElement(item, 1)]
 
-    @property
-    def modified_args(self):
-        """
-        Return an iterable of all the arguments which may be modified by this function.
-
-        Return an iterable of all the arguments which may be modified by this function.
-        This is notably useful in order to determine the constness of arguments.
-        """
-        return ()
-
 #==============================================================================
 class DictKeys(Iterable):
     """
@@ -421,16 +411,6 @@ class DictKeys(Iterable):
         """
         item = DictPopitem(self._dict_obj)
         return [IndexedElement(item, 0)]
-
-    @property
-    def modified_args(self):
-        """
-        Return an iterable of all the arguments which may be modified by this function.
-
-        Return an iterable of all the arguments which may be modified by this function.
-        This is notably useful in order to determine the constness of arguments.
-        """
-        return ()
 
 #==============================================================================
 class DictGetItem(DictMethod):

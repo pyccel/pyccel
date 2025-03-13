@@ -4621,7 +4621,7 @@ class SemanticParser(BasicParser):
             # Find all nodes which can modify variables
             assigns = body.get_attribute_nodes((Assign, AliasAssign), excluded_nodes = (FunctionCall,))
             calls   = body.get_attribute_nodes(FunctionCall)
-            builtin_func_calls = body.get_attribute_nodes(PyccelFunction)
+            builtin_func_calls = body.get_attribute_nodes((PyccelFunction, Iterable))
             builtin_calls = body.get_attribute_nodes((Allocate, Deallocate))
 
             # Collect the modified objects

@@ -286,16 +286,6 @@ class SetIntersection(SetMethod):
     __slots__ = ('_other','_class_type', '_shape')
     name = 'intersection'
 
-    @property
-    def modified_args(self):
-        """
-        Return an iterable of all the arguments which may be modified by this function.
-
-        Return an iterable of all the arguments which may be modified by this function.
-        This is notably useful in order to determine the constness of arguments.
-        """
-        return ()
-
 #==============================================================================
 
 class SetIntersectionUpdate(SetMethod):

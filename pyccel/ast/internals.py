@@ -440,6 +440,16 @@ class Iterable(TypedAstNode):
         """
         return self._indices
 
+    @property
+    def modified_args(self):
+        """
+        Return an iterable of all the arguments which may be modified by this function.
+
+        Return an iterable of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
+
 def symbols(names):
     """
     Transform strings into instances of PyccelSymbol class.
