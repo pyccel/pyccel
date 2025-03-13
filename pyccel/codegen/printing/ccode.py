@@ -761,10 +761,17 @@ class CCodePrinter(CodePrinter):
             arg_var = expr.arg
             class_type = expr.arg.class_type
 
+            prefix = ''
+
             lhs = self._print(lhs_var)
             if not isinstance(arg_var, Variable):
-                tmp = self.scope.get_temporary_variable(arg_var.class_type, shape = arg_var.shape)
-                self._additional_code += self._print(Assign(tmp, arg_var))
+                if arg_var.rank:
+                    tmp = self.scope.get_temporary_variable(arg_var.class_type, shape = arg_var.shape,
+                            memory_handling='alias')
+                    prefix += self._print(AliasAssign(tmp, arg_var))
+                else:
+                    tmp = self.scope.get_temporary_variable(arg_var.class_type, shape = arg_var.shape)
+                    prefix += self._print(Assign(tmp, arg_var))
                 arg_var = tmp
             arg = self._print(arg_var)
             c_type = self.get_c_type(class_type)
@@ -786,7 +793,7 @@ class CCodePrinter(CodePrinter):
             body = self._additional_code + f'{lhs} = {node};\n'
             self._additional_code = tmp_additional_code
 
-            return (f'{lhs} = {start};\n'
+            return prefix + (f'{lhs} = {start};\n'
                     f'c_foreach({iter_var_name}, {c_type}, {arg}) {{\n'
                     f'{body}'
                      '}\n')
