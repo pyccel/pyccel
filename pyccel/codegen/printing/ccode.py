@@ -765,13 +765,11 @@ class CCodePrinter(CodePrinter):
 
             lhs = self._print(lhs_var)
             if not isinstance(arg_var, Variable):
-                if arg_var.rank:
-                    tmp = self.scope.get_temporary_variable(arg_var.class_type, shape = arg_var.shape,
-                            memory_handling='alias')
-                    prefix += self._print(AliasAssign(tmp, arg_var))
-                else:
-                    tmp = self.scope.get_temporary_variable(arg_var.class_type, shape = arg_var.shape)
-                    prefix += self._print(Assign(tmp, arg_var))
+                # This handles slice arguments
+                assert arg_var.rank
+                tmp = self.scope.get_temporary_variable(arg_var.class_type, shape = arg_var.shape,
+                        memory_handling='alias')
+                prefix += self._print(AliasAssign(tmp, arg_var))
                 arg_var = tmp
             arg = self._print(arg_var)
             c_type = self.get_c_type(class_type)
