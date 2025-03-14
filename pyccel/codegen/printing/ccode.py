@@ -672,6 +672,26 @@ class CCodePrinter(CodePrinter):
 
         return code
 
+    def get_stc_init_elements(self, class_type, elements, current_type):
+        if isinstance(class_type, StringType):
+            return [self._print(CStrStr(e)) for e in elements]
+        elif class_type.rank > 0:
+            arc_type = f'element_{current_type}'
+            element_type = self.get_c_type(class_type)
+            stc_init_elements = []
+            for e in elements:
+                if isinstance(e, Variable):
+                    stc_init_elements.append(f'{arc_type}_share({self._print(ObjectAddress(e))})')
+                else:
+                    tmp = self.scope.get_temporary_variable(class_type, shape = (None,),
+                                memory_handling='alias')
+                    self._additional_code += f'{tmp.name} = malloc(sizeof({element_type}));\n'
+                    self._additional_code += self._print(Assign(tmp, e))
+                    stc_init_elements.append(f'{arc_type}_from({self._print(ObjectAddress(tmp))})')
+            return stc_init_elements
+        else:
+            return [self._print(e) for e in elements]
+
     def init_stc_container(self, expr, assignment_var):
         """
         Generate the initialization of an STC container in C.
@@ -695,17 +715,11 @@ class CCodePrinter(CodePrinter):
         class_type = assignment_var.class_type
         dtype = self.get_c_type(class_type)
         if isinstance(expr, PythonDict):
-            values = [self._print(k) for k in expr.values]
-            if isinstance(class_type.key_type, StringType):
-                keys = [self._print(CStrStr(k)) for k in expr.keys]
-            else:
-                keys = [self._print(k) for k in expr.keys]
+            values = self.get_stc_init_elements(class_type.value_type, expr.values, dtype)
+            keys = self.get_stc_init_elements(class_type.key_type, expr.keys, dtype)
             keyraw = '{' + ', '.join(f'{{{k}, {v}}}' for k,v in zip(keys, values)) + '}'
         else:
-            if isinstance(class_type.element_type, StringType):
-                args = [self._print(CStrStr(a)) for a in expr.args]
-            else:
-                args = [self._print(a) for a in expr.args]
+            args = self.get_stc_init_elements(class_type.element_type, expr.args, dtype)
             keyraw = '{' + ', '.join(args) + '}'
         container_name = self._print(assignment_var)
         init = f'{container_name} = c_init({dtype}, {keyraw});\n'
@@ -809,9 +823,14 @@ class CCodePrinter(CodePrinter):
             prefix = (f'#define i_type {container_element_type}\n'
                       f'#define i_key {type_decl}*\n'
                        '#define i_keyclone(x) x\n'
+                       '#define i_keydrop(x) free(*x)\n'
+                       '#include <stc/arc.h>\n'
+                      f'#define i_type {container_element_type}\n'
+                      f'#define i_key {type_decl}*\n'
+                       '#define i_keyclone(x) x\n'
                        '#define i_keydrop(x) free(x)\n'
-                       '#include <stc/arc.h>\n')
-            decl_line = f'#define i_{tag}pro {container_element_type}\n'
+                       '#include <STC_Extensions/Arc_extensions.h>\n')
+            decl_line = f'#define i_{tag}class {container_element_type}\n'
         else:
             decl_line = ''
             errors.report(f"The declaration of type {class_type} is not yet implemented.",
@@ -1617,7 +1636,8 @@ class CCodePrinter(CodePrinter):
             preface, init = self._init_stack_array(var)
         else:
             preface = ''
-            if isinstance(var.class_type, (HomogeneousContainerType, DictType)) and not expr.external:
+            if isinstance(var.class_type, (HomogeneousContainerType, DictType)) and not expr.external \
+                    and not var.is_alias:
                 init = ' = {0}'
 
         external = 'extern ' if expr.external else ''
