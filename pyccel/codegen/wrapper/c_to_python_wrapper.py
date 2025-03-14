@@ -2570,7 +2570,7 @@ class CToPythonWrapper(Wrapper):
 
         return {'body': body, 'args': arg_vars, 'clean_up': clean_up}
 
-    def _extract_FunctionDefResult(self, orig_var, is_bind_c, funcdef = None):
+    def _extract_FunctionDefResult(self, orig_var, is_bind_c, funcdef = None, name_hint = None):
         """
         Get the code which translates a C-compatible `Variable` to a Python `FunctionDefResult`.
 
@@ -2612,13 +2612,13 @@ class CToPythonWrapper(Wrapper):
         for cls in classes:
             annotation_method = f'_extract_{cls.__name__}_FunctionDefResult'
             if hasattr(self, annotation_method):
-                return getattr(self, annotation_method)(orig_var, is_bind_c, funcdef)
+                return getattr(self, annotation_method)(orig_var, is_bind_c, funcdef, name_hint)
 
         # Unknown object, we raise an error.
         return errors.report(f"Wrapping function results is not implemented for type {class_type}. " + PYCCEL_RESTRICTION_TODO, symbol=orig_var,
             severity='fatal')
 
-    def _extract_CustomDataType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
+    def _extract_CustomDataType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef, name_hint = None):
         """
         Get the code which translates a `Variable` containing a class instance to a PyObject.
 
@@ -2665,7 +2665,7 @@ class CToPythonWrapper(Wrapper):
 
         return {'c_results': [result], 'py_result': python_res, 'body': body, 'setup': setup}
 
-    def _extract_FixedSizeType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+    def _extract_FixedSizeType_FunctionDefResult(self, orig_var, is_bind_c, funcdef, name_hint = None):
         """
         Get the code which translates a `Variable` containing a scalar to a PyObject.
 
@@ -2686,7 +2686,7 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to collect the result.
         """
-        name = getattr(orig_var, 'name', 'tmp')
+        name = getattr(orig_var, 'name', name_hint or 'tmp')
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         c_res = Variable(orig_var.class_type, self.scope.get_new_name(name))
         self.scope.insert_variable(c_res)
@@ -2694,7 +2694,7 @@ class CToPythonWrapper(Wrapper):
         body = [AliasAssign(py_res, FunctionCall(C_to_Python(c_res), [c_res]))]
         return {'c_results': [c_res], 'py_result': py_res, 'body': body}
 
-    def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+    def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var, is_bind_c, funcdef, name_hint = None):
         """
         Get the code which translates a `Variable` containing an array to a PyObject.
 
@@ -2741,7 +2741,7 @@ class CToPythonWrapper(Wrapper):
 
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
-    def _extract_BindCArrayType_FunctionDefResult(self, wrapped_var, funcdef):
+    def _extract_BindCArrayType_FunctionDefResult(self, wrapped_var, funcdef, name_hint = None):
         """
         Get the code which translates a `Variable` containing an array to a PyObject.
 
@@ -2791,7 +2791,7 @@ class CToPythonWrapper(Wrapper):
 
         return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
 
-    def _extract_InhomogeneousTupleType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
+    def _extract_InhomogeneousTupleType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef, name_hint = None):
         """
         Get the code which translates a `Variable` containing an inhomogeneous tuple to a PyObject.
 
@@ -2826,7 +2826,7 @@ class CToPythonWrapper(Wrapper):
         body.extend(Py_DECREF(r) for r in py_result_vars)
         return {'c_results': PythonTuple(*c_result_vars), 'py_result': py_res, 'body': body, 'setup': setup}
 
-    def _extract_HomogeneousContainerType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
+    def _extract_HomogeneousContainerType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef, name_hint = None):
         """
         Get the code which translates a `Variable` containing a homogeneous container to a PyObject.
 
@@ -2854,8 +2854,10 @@ class CToPythonWrapper(Wrapper):
             return self._extract_InhomogeneousTupleType_FunctionDefResult(wrapped_var, is_bind_c, funcdef)
 
         orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
-        name = getattr(orig_var, 'name', 'tmp')
+        name = getattr(orig_var, 'name', name_hint or 'tmp')
+        print(name, name_hint)
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        idx = Variable(PythonNativeInt(), self.scope.get_new_name())
         if is_bind_c:
             result = wrapped_var.new_var
             ptr_var = funcdef.scope.collect_tuple_element(result[0])
@@ -2864,18 +2866,20 @@ class CToPythonWrapper(Wrapper):
                              self.scope.get_new_name(ptr_var.name))
             loop_size = shape_var.clone(self.scope.get_new_name(shape_var.name), is_argument = False)
             c_results = [ObjectAddress(c_res), loop_size]
+            element_obj = IndexedElement(orig_var, idx)
         else:
-            c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)
+            c_res = Variable(orig_var.class_type, self.scope.get_new_name(name),
+                            memory_handling = 'heap' if isinstance(orig_var, Variable) else 'alias')
             c_results = [c_res]
             loop_size = Variable(PythonNativeInt(), self.scope.get_new_name(f'{name}_size'))
-        idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+            element_obj = IndexedElement(c_res, idx)
         self.scope.insert_variable(c_res)
         self.scope.insert_variable(loop_size)
         self.scope.insert_variable(idx)
 
         for_scope = self.scope.create_new_loop_scope()
         self.scope = for_scope
-        element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx), is_bind_c, funcdef)
+        element_extraction = self._extract_FunctionDefResult(element_obj, is_bind_c, funcdef, name_hint = f'{name}_elem')
         self.exit_scope()
 
         class_type = orig_var.class_type
@@ -2897,7 +2901,10 @@ class CToPythonWrapper(Wrapper):
         else:
             raise NotImplementedError(f"Don't know how to return an object of type {class_type}")
 
-        for_body = [Assign(element_extraction['c_results'][0], element),
+        element_assign = AliasAssign(element_extraction['c_results'][0], element) if element.rank \
+                        else Assign(element_extraction['c_results'][0], element)
+
+        for_body = [element_assign,
                 *element_extraction['body'],
                 If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
                                          [Return(self._error_exit_code)]))]
@@ -2909,7 +2916,7 @@ class CToPythonWrapper(Wrapper):
 
         return {'c_results': c_results, 'py_result': py_res, 'body': body}
 
-    def _extract_DictType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+    def _extract_DictType_FunctionDefResult(self, orig_var, is_bind_c, funcdef, name_hint = None):
         """
         Get the code which translates a `Variable` containing a dictionary to a PyObject.
 
@@ -2930,7 +2937,7 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to collect the result.
         """
-        name = getattr(orig_var, 'name', 'tmp')
+        name = getattr(orig_var, 'name', name_hint or 'tmp')
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         if is_bind_c:
             raise NotImplementedError("Can't return a dict from Fortran")
@@ -2960,9 +2967,9 @@ class CToPythonWrapper(Wrapper):
 
         return {'c_results': c_results, 'py_result': py_res, 'body': body}
 
-    def _extract_StringType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
+    def _extract_StringType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef, name_hint = None):
         orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
-        name = getattr(orig_var, 'name', 'tmp')
+        name = getattr(orig_var, 'name', name_hint or 'tmp')
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         if is_bind_c:
             c_res = Variable(CharType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
