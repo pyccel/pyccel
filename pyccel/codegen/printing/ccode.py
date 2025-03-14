@@ -1761,7 +1761,7 @@ class CCodePrinter(CodePrinter):
                 if is_mut:
                     code = f"{container_type}_at_mut({list_var}, {index})"
             if base.class_type.rank > 1:
-                return f'(*{code}->get)'
+                return f'(*(*{code}->get))'
             else:
                 return f'(*{code})'
 
