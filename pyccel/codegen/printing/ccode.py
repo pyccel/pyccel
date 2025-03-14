@@ -807,7 +807,9 @@ class CCodePrinter(CodePrinter):
             type_decl = self.get_c_type(element_type)
             container_element_type = f'element_{container_type}'
             prefix = (f'#define i_type {container_element_type}\n'
-                      f'#define i_keyclass {type_decl}\n'
+                      f'#define i_key {type_decl}*\n'
+                       '#define i_keyclone(x) x\n'
+                       '#define i_keydrop(x) free(x)\n'
                        '#include <stc/arc.h>\n')
             decl_line = f'#define i_{tag}pro {container_element_type}\n'
         else:
