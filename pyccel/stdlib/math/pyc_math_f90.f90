@@ -13,6 +13,18 @@ module pyc_math_f90
          c32 => C_FLOAT_COMPLEX
 implicit none
 
+public :: pyc_gcd, &
+          pyc_factorial, &
+          pyc_lcm, &
+          pyc_radians, &
+          pyc_degrees, &
+          amax, &
+          amin, &
+          csgn, &
+          csign, &
+          pyc_bankers_round, &
+          pyc_floor_div
+
 private
 
 real(f64), parameter, private :: pi = 4.0_f64 * DATAN(1.0_f64)
@@ -64,17 +76,6 @@ interface pyc_floor_div
     module procedure pyc_floor_div_i64
 end interface pyc_floor_div
 
-public :: pyc_gcd, &
-          pyc_factorial, &
-          pyc_lcm, &
-          pyc_radians, &
-          pyc_degrees, &
-          amax, &
-          amin, &
-          csgn, &
-          csign, &
-          pyc_bankers_round, &
-          pyc_floor_div
 contains
 
 ! Implementation of math factorial function
