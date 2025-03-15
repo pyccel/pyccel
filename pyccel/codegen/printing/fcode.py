@@ -877,6 +877,7 @@ class FCodePrinter(CodePrinter):
                  imports,
                  implicit_none,
                  public_decs,
+                 'private',
                  decs,
                  interfaces,
                  contains,
