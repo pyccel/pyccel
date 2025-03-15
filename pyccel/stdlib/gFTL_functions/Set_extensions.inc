@@ -2,10 +2,16 @@
 use, intrinsic :: ISO_C_Binding, only : b1 => C_BOOL
 
 #include <set/header.inc>
+#define __IDENTITY(x) x
+
+public :: __IDENTITY(Set)_pop
+public :: __IDENTITY(Set)_intersection_update
+public :: __IDENTITY(Set)_is_disjoint
+public :: __IDENTITY(Set)_min
+public :: __IDENTITY(Set)_max
 
 contains
 
-#define __IDENTITY(x) x
 #define __guard __set_guard
 #include "parameters/T/copy_set_T_to_internal_T.inc"
 #include "parameters/T/define_derived_macros.inc"
