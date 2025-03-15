@@ -35,7 +35,7 @@ from pyccel.ast.builtin_methods.set_methods import SetUnion
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall, ClassDef
-from pyccel.ast.core import FunctionCallArgument
+from pyccel.ast.core import FunctionCallArgument, Interface
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Return, Module, For
 from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
@@ -836,15 +836,14 @@ class FCodePrinter(CodePrinter):
         self._get_external_declarations(declarations)
         decs += ''.join(self._print(d) for d in declarations)
 
-        # ... TODO add other elements
-        private_funcs = [f.name for f in expr.funcs if f.is_private]
-        private = private_funcs
-        if private:
-            private = ','.join(self._print(i) for i in private)
-            private = 'private :: {}\n'.format(private)
-        else:
-            private = ''
         # ...
+        public_objs = ', '.join(chain((c.name for c in expr.classes),
+                                      (i.name for i in expr.interfaces),
+                                      (f.name for f in expr.funcs \
+                                        if not f.is_private and \
+                                           len(f.get_direct_user_nodes(lambda i: isinstance(i, Interface))) == 0),
+                                      (v.name for v in expr.variables if not v.is_private)))
+        public_decs = f'public :: {public_objs}\n' if public_objs else ''
 
         # ...
         sep = self._print(SeparatorComment(40))
@@ -877,7 +876,7 @@ class FCodePrinter(CodePrinter):
         parts = ['module {}\n'.format(name),
                  imports,
                  implicit_none,
-                 private,
+                 public_decs,
                  decs,
                  interfaces,
                  contains,
