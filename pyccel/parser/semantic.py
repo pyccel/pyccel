@@ -3862,6 +3862,15 @@ class SemanticParser(BasicParser):
                     for v in r.get_attribute_nodes((Variable, IndexedElement)):
                         if not isinstance(v.class_type, (TupleType, StringType, FixedSizeNumericType)):
                             self._indicate_pointer_target(l, v, expr)
+                elif isinstance(r, (ListPop, DictPop, DictPopitem)):
+                    class_obj = getattr(r, 'dict_obj', getattr(r, 'list_obj', None))
+                    class_obj = r.list_obj if isinstance(r, ListPop) else r.dict_obj
+                    for target, target_expr in self._pointer_targets[-1][class_obj]:
+                        # Create an expr describing 2 lines to show where the dependency comes from
+                        indicated_expr = CodeBlock([target_expr, expr])
+                        # Show the line number of the assignment for the returned object
+                        indicated_expr.set_current_ast(expr.python_ast)
+                        self._indicate_pointer_target(l, target, indicated_expr)
 
             new_expressions.append(new_expr)
 
@@ -5980,7 +5989,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : DottedName
-            The syntactic DottedName node that represent the call to `.extend()`.
+            The syntactic DottedName node that represent the call to `.append()`.
 
         args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
@@ -6006,7 +6015,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : DottedName
-            The syntactic DottedName node that represent the call to `.extend()`.
+            The syntactic DottedName node that represent the call to `.insert()`.
 
         args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
