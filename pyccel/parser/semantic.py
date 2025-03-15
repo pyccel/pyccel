@@ -3871,7 +3871,7 @@ class SemanticParser(BasicParser):
                 elif isinstance(r, (ListPop, DictPop, DictPopitem)):
                     class_obj = getattr(r, 'dict_obj', getattr(r, 'list_obj', None))
                     class_obj = r.list_obj if isinstance(r, ListPop) else r.dict_obj
-                    for target, target_expr in self._pointer_targets[-1][class_obj]:
+                    for target, target_expr in self._pointer_targets[-1].get(class_obj, ()):
                         # Create an expr describing 2 lines to show where the dependency comes from
                         indicated_expr = CodeBlock([target_expr, expr])
                         # Show the line number of the assignment for the returned object
