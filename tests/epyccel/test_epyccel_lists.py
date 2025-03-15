@@ -236,7 +236,7 @@ def test_append_ndarrays(limited_language):
     assert np.array_equal(f(), epyc_f())
 
 def test_append_user_defined_objects(limited_language):
-    import modules.list_user_defined_objs2 as mod
+    import modules.list_user_defined_objs1 as mod
 
     modnew = epyccel(mod, language=limited_language)
     python_list = mod.fn()

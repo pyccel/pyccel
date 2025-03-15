@@ -12,5 +12,5 @@ def fn():
     e = A(5)
     lst = [a, b, c]
     lst.append(d)
-    lst.append(e, e)
+    lst.append(e)
     return lst
