@@ -722,6 +722,10 @@ class SemanticParser(BasicParser):
             if isinstance(target.funcdef, FunctionDef):
                 if target.funcdef.result_pointer_map:
                     raise NotImplementedError("TODO results point at args")
+        elif isinstance(target, (PythonList, PythonSet, PythonTuple, PythonDict)):
+            if not isinstance(target.class_type.element_type, (TupleType, StringType, FixedSizeNumericType)):
+                for v in target:
+                    self._indicate_pointer_target(pointer, v, expr)
         else:
             errors.report("Pointer cannot point at a temporary object",
                 severity='error', symbol=expr)
@@ -3890,9 +3894,7 @@ class SemanticParser(BasicParser):
                                   symbol=expr,
                                   severity='fatal')
                 elif isinstance(r, (PythonList, PythonSet, PythonTuple, PythonDict)):
-                    for v in r.get_attribute_nodes((Variable, IndexedElement)):
-                        if not isinstance(v.class_type, (TupleType, StringType, FixedSizeNumericType)):
-                            self._indicate_pointer_target(l, v, expr)
+                    self._indicate_pointer_target(l, r, expr)
                 elif isinstance(r, (ListPop, DictPop, DictPopitem)):
                     class_obj = getattr(r, 'dict_obj', getattr(r, 'list_obj', None))
                     class_obj = r.list_obj if isinstance(r, ListPop) else r.dict_obj
