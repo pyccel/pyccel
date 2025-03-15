@@ -858,6 +858,9 @@ class CCodePrinter(CodePrinter):
             A string describing the type being declared.
         expr : TypedAstNode
             A node describing the include. This is used for error handling.
+        tag : str, optional, default='key'
+            The name under which the element is identified in STC (usually key
+            or value).
 
         Returns
         -------
