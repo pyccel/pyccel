@@ -710,7 +710,7 @@ class SemanticParser(BasicParser):
                 sub_targets = None
                 try:
                     sub_targets = self._pointer_targets[-1][target]
-                except KeyError as e:
+                except KeyError:
                     errors.report("Pointer cannot point at a non-local pointer\n"+PYCCEL_RESTRICTION_TODO,
                         severity='error', symbol=expr)
                 if sub_targets:
