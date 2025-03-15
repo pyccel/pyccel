@@ -1456,6 +1456,11 @@ class SemanticParser(BasicParser):
             Dictionary of properties for the new Variable.
         """
 
+        if isinstance(rhs, FunctionalFor):
+            return
+
+        assert rhs.pyccel_staging != 'syntactic'
+
         if isinstance(rhs, NumpyTranspose) and rhs.internal_var.on_heap:
             d_lhs['memory_handling'] = 'alias'
             rhs.internal_var.is_target = True
