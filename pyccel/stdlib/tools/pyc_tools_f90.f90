@@ -11,6 +11,8 @@ module pyc_tools_f90
          c64 => C_DOUBLE_COMPLEX, &
          c32 => C_FLOAT_COMPLEX
 
+  public :: complex_comparison
+
   implicit none
 
   interface complex_comparison
