@@ -837,13 +837,13 @@ class FCodePrinter(CodePrinter):
         decs += ''.join(self._print(d) for d in declarations)
 
         # ...
-        public_objs = ', '.join(chain((c.name for c in expr.classes),
+        public_decs = ''.join(f'public :: {n}\n' for n in chain(
+                                      (c.name for c in expr.classes),
                                       (i.name for i in expr.interfaces),
                                       (f.name for f in expr.funcs \
                                         if not f.is_private and \
                                            len(f.get_direct_user_nodes(lambda i: isinstance(i, Interface))) == 0),
                                       (v.name for v in expr.variables if not v.is_private)))
-        public_decs = f'public :: {public_objs}\n' if public_objs else ''
 
         # ...
         sep = self._print(SeparatorComment(40))
@@ -873,7 +873,7 @@ class FCodePrinter(CodePrinter):
         imports = self.print_constant_imports() + imports
         implicit_none = '' if expr.is_external else 'implicit none\n'
 
-        parts = ['module {}\n'.format(name),
+        parts = [f'module {name}\n',
                  imports,
                  implicit_none,
                  public_decs,
@@ -881,7 +881,7 @@ class FCodePrinter(CodePrinter):
                  interfaces,
                  contains,
                  body,
-                 'end module {}\n'.format(name)]
+                 f'end module {name}\n']
 
         self.exit_scope()
 
