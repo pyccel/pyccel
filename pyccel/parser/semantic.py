@@ -722,9 +722,13 @@ class SemanticParser(BasicParser):
             if isinstance(target.funcdef, FunctionDef):
                 if target.funcdef.result_pointer_map:
                     raise NotImplementedError("TODO results point at args")
-        elif isinstance(target, (PythonList, PythonSet, PythonTuple, PythonDict)):
+        elif isinstance(target, (PythonList, PythonSet, PythonTuple)):
             if not isinstance(target.class_type.element_type, (TupleType, StringType, FixedSizeNumericType)):
                 for v in target:
+                    self._indicate_pointer_target(pointer, v, expr)
+        elif isinstance(target, PythonDict):
+            if not isinstance(target.class_type.value_type, (TupleType, StringType, FixedSizeNumericType)):
+                for v in target.values:
                     self._indicate_pointer_target(pointer, v, expr)
         else:
             errors.report("Pointer cannot point at a temporary object",
