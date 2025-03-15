@@ -1462,7 +1462,8 @@ class SemanticParser(BasicParser):
             Dictionary of properties for the new Variable.
         """
 
-        if isinstance(rhs, FunctionalFor):
+        # rhs is None in an AugAssign
+        if rhs is None or isinstance(rhs, FunctionalFor):
             return
 
         assert rhs.pyccel_staging != 'syntactic'
