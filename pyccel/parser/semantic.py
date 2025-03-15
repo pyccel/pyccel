@@ -3370,7 +3370,10 @@ class SemanticParser(BasicParser):
                             symbol=annotation, severity='error')
                 lhs = lhs.name
 
-            cls_variable = self._assign_lhs_variable(lhs, d_var, expr, new_expression, False)
+            cls_variable = self._assign_lhs_variable(lhs, d_var,
+                                    rhs = method.results.var,
+                                    new_expressions = new_expression,
+                                    is_augassign = False)
             self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
             self._check_argument_compatibility(args, method.arguments,
