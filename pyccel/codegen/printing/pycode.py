@@ -1226,7 +1226,10 @@ class PythonCodePrinter(CodePrinter):
         cls_variable = expr.cls_variable
         cls_name = cls_variable.cls_base.name
         args = ', '.join(self._print(arg) for arg in expr.args[1:])
-        return f"{cls_variable} = {cls_name}({args})\n"
+        if cls_variable.is_temp:
+            return f"{cls_name}({args})"
+        else:
+            return f"{cls_variable} = {cls_name}({args})\n"
 
     def _print_Del(self, expr):
         return ''.join(f'del {var.variable}\n' for var in expr.variables)
