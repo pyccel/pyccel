@@ -5321,6 +5321,9 @@ class SemanticParser(BasicParser):
             except TypeError as e:
                 msg = str(e)
                 errors.report(msg, symbol=expr, severity='fatal')
+            if not isinstance(list_variable.class_type.element_type, (StringType, FixedSizeNumericType)):
+                for a in added_list:
+                    self._indicate_pointer_target(list_variable, a, expr)
             return CodeBlock(store)
         else:
             pyccel_stage.set_stage('syntactic')
@@ -5963,3 +5966,29 @@ class SemanticParser(BasicParser):
                 errors.report(f"Type {class_or_tuple} is not handled in isinstance call.",
                         severity='error', symbol=expr)
                 return LiteralTrue()
+
+    def _build_ListAppend(self, expr, args):
+        """
+        Method to create the semantic ListAppend node.
+
+        Method to create the semantic ListAppend node ensuring that pointers are
+        correctly handled.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represent the call to `.extend()`.
+
+        args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        Returns
+        -------
+        PyccelAstNode
+            CodeBlock or For containing ListAppend objects.
+        """
+        list_obj, append_arg = [a.value for a in args]
+        semantic_node = ListAppend(list_obj, append_arg)
+        if not isinstance(list_obj.class_type.element_type, (StringType, FixedSizeNumericType)):
+            self._indicate_pointer_target(list_obj, append_arg, expr)
+        return semantic_node
