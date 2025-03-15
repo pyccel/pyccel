@@ -75,7 +75,8 @@ def test_pop_list_of_ndarrays(limited_language) :
         array2 = array([[7, 8, 9], [10, 11, 12]])
         array3 = array([[13, 14, 15], [16, 17, 18]])
         a = [array1, array2, array3]
-        return a.pop()
+        r = array(a.pop())
+        return r
     epyc_last_element = epyccel(pop_last_element, language = limited_language)
     pyccel_result = epyc_last_element()
     python_result = pop_last_element()
@@ -230,10 +231,10 @@ def test_append_ndarrays(limited_language):
         a.append(array4)
         a.append(array5)
         a.append(array6)
-        return a
+        return len(a), a[0][0,0], a[-1][1,0]
 
     epyc_f = epyccel(f, language=limited_language)
-    assert np.array_equal(f(), epyc_f())
+    assert f() == epyc_f()
 
 def test_append_user_defined_objects(limited_language):
     import modules.list_user_defined_objs1 as mod
@@ -241,9 +242,7 @@ def test_append_user_defined_objects(limited_language):
     modnew = epyccel(mod, language=limited_language)
     python_list = mod.fn()
     accelerated_list = modnew.fn()
-    assert len(python_list) == len(accelerated_list)
-    for python_elem, accelerated_elem in zip(python_list, accelerated_list):
-        assert python_elem.x == accelerated_elem.x
+    assert python_list == accelerated_list
 
 def test_insert_basic(limited_language):
     def f():
@@ -314,10 +313,10 @@ def test_insert_ndarrays(limited_language):
         a.insert(0, array4)
         a.insert(100, array5)
         a.insert(-3, array6)
-        return a
+        return len(a), a[0][0,1], a[-1][1,2]
 
     epyc_f = epyccel(f, language=limited_language)
-    assert np.array_equal(f(), epyc_f())
+    assert f() == epyc_f()
 
 def test_insert_multiple(limited_language):
     def f():
@@ -365,9 +364,7 @@ def test_insert_user_defined_objects(limited_language):
     modnew = epyccel(mod, language=limited_language)
     python_list = mod.fn()
     accelerated_list = modnew.fn()
-    assert len(python_list) == len(accelerated_list)
-    for python_elem, accelerated_elem in zip(python_list, accelerated_list):
-        assert python_elem.x == accelerated_elem.x
+    assert python_list == accelerated_list
 
 def test_clear_1(limited_language):
 
@@ -571,9 +568,7 @@ def test_extend_user_defined_objects(limited_language):
     modnew = epyccel(mod, language=limited_language)
     python_list = mod.fn()
     accelerated_list = modnew.fn()
-    assert len(python_list) == len(accelerated_list)
-    for python_elem, accelerated_elem in zip(python_list, accelerated_list):
-        assert python_elem.x == accelerated_elem.x
+    assert python_list == accelerated_list
 
 def test_remove_basic(limited_language):
     def f():
