@@ -707,12 +707,14 @@ class SemanticParser(BasicParser):
             self._indicate_pointer_target(pointer, target.dict_obj, expr)
         elif isinstance(target, Variable):
             if target.is_alias:
+                sub_targets = None
                 try:
                     sub_targets = self._pointer_targets[-1][target]
-                except KeyError:
+                except KeyError as e:
                     errors.report("Pointer cannot point at a non-local pointer\n"+PYCCEL_RESTRICTION_TODO,
                         severity='error', symbol=expr)
-                self._pointer_targets[-1].setdefault(pointer, []).extend((t[0], expr) for t in sub_targets)
+                if sub_targets:
+                    self._pointer_targets[-1].setdefault(pointer, []).extend((t[0], expr) for t in sub_targets)
             else:
                 target.is_target = True
                 self._pointer_targets[-1].setdefault(pointer, []).append((target, expr))
@@ -2309,6 +2311,10 @@ class SemanticParser(BasicParser):
 
             target = self._assign_lhs_variable(iterator, iterator_d_var,
                             rhs=iterator_rhs, new_expressions=new_expr)
+
+            if target.is_alias:
+                self._indicate_pointer_target(target, iterator_rhs, syntactic_iterable.python_ast)
+
             if isinstance(target.class_type, InhomogeneousTupleType):
                 target = [self.scope.collect_tuple_element(v) for v in target]
             else:
@@ -2318,6 +2324,10 @@ class SemanticParser(BasicParser):
             target = [self._assign_lhs_variable(it, self._infer_type(rhs),
                                 rhs=rhs, new_expressions=new_expr)
                         for it, rhs in zip(iterator, iterator_rhs)]
+
+            for t, rhs in zip(target, iterator_rhs):
+                if t.is_alias:
+                    self._indicate_pointer_target(t, rhs, syntactic_iterable.python_ast)
         else:
             raise errors.report(INVALID_FOR_ITERABLE, symbol=iterator,
                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
