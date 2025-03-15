@@ -5349,7 +5349,8 @@ class SemanticParser(BasicParser):
                 errors.report(msg, symbol=expr, severity='fatal')
             if not isinstance(list_variable.class_type.element_type, (StringType, FixedSizeNumericType)):
                 for a in added_list:
-                    self._indicate_pointer_target(list_variable, a, expr)
+                    if not isinstance(a, (PythonList, PythonSet, PythonTuple, NumpyNewArray)):
+                        self._indicate_pointer_target(list_variable, a, expr)
             return CodeBlock(store)
         else:
             pyccel_stage.set_stage('syntactic')
@@ -5357,6 +5358,7 @@ class SemanticParser(BasicParser):
             arg = FunctionCallArgument(for_target)
             func_call = FunctionCall('append', [arg])
             dotted = DottedName(expr.name[0], func_call)
+            dotted.set_current_ast(expr.python_ast)
             lhs = PyccelSymbol('_', is_temp=True)
             assign = Assign(lhs, dotted)
             assign.set_current_ast(expr.python_ast)
@@ -6017,7 +6019,8 @@ class SemanticParser(BasicParser):
         """
         list_obj, append_arg = [a.value for a in args]
         semantic_node = ListAppend(list_obj, append_arg)
-        if not isinstance(append_arg.class_type, (StringType, FixedSizeNumericType)):
+        if not isinstance(append_arg.class_type, (StringType, FixedSizeNumericType)) \
+                and not isinstance(append_arg, (PythonList, PythonSet, PythonTuple, NumpyNewArray)):
             self._indicate_pointer_target(list_obj, append_arg, expr)
         return semantic_node
 
@@ -6043,6 +6046,7 @@ class SemanticParser(BasicParser):
         """
         list_obj, index, new_elem = [a.value for a in args]
         semantic_node = ListInsert(list_obj, index, new_elem)
-        if not isinstance(new_elem.class_type, (StringType, FixedSizeNumericType)):
+        if not isinstance(new_elem.class_type, (StringType, FixedSizeNumericType)) \
+                and not isinstance(new_elem, (PythonList, PythonSet, PythonTuple, NumpyNewArray)):
             self._indicate_pointer_target(list_obj, new_elem, expr)
         return semantic_node
