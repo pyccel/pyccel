@@ -716,6 +716,10 @@ class SemanticParser(BasicParser):
             else:
                 target.is_target = True
                 self._pointer_targets[-1].setdefault(pointer, []).append((target, expr))
+        elif isinstance(target, FunctionCall):
+            if isinstance(target.funcdef, FunctionDef):
+                if target.funcdef.result_pointer_map:
+                    raise NotImplementedError("TODO results point at args")
         else:
             errors.report("Pointer cannot point at a temporary object",
                 severity='error', symbol=expr)
@@ -2658,7 +2662,7 @@ class SemanticParser(BasicParser):
         if isinstance(value, (PyccelArithmeticOperator, PyccelFunction)) and value.rank:
             a = generate_and_assign_temp_var()
         elif isinstance(value, FunctionCall) and isinstance(value.class_type, CustomDataType):
-            if not value.funcdef.results.var.is_alias:
+            if value.funcdef.results.var and not value.funcdef.results.var.is_alias:
                 a = generate_and_assign_temp_var()
         return a
 
