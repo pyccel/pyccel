@@ -36,7 +36,7 @@ from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonT
 from pyccel.ast.builtins import Lambda, PythonMap
 
 from pyccel.ast.builtin_methods.dict_methods import DictKeys
-from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop
+from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop, ListInsert
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
 from pyccel.ast.builtin_methods.set_methods  import SetPop
 from pyccel.ast.builtin_methods.dict_methods  import DictGetItem, DictGet, DictPop, DictPopitem
@@ -5987,11 +5987,37 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        PyccelAstNode
-            CodeBlock or For containing ListAppend objects.
+        ListAppend
+            The semantic ListAppend object.
         """
         list_obj, append_arg = [a.value for a in args]
         semantic_node = ListAppend(list_obj, append_arg)
-        if not isinstance(list_obj.class_type.element_type, (StringType, FixedSizeNumericType)):
+        if not isinstance(append_arg.class_type, (StringType, FixedSizeNumericType)):
             self._indicate_pointer_target(list_obj, append_arg, expr)
+        return semantic_node
+
+    def _build_ListInsert(self, expr, args):
+        """
+        Method to create the semantic ListInsert node.
+
+        Method to create the semantic ListInsert node ensuring that pointers are
+        correctly handled.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represent the call to `.extend()`.
+
+        args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        Returns
+        -------
+        ListInsert
+            The semantic ListInsert object.
+        """
+        list_obj, index, new_elem = [a.value for a in args]
+        semantic_node = ListInsert(list_obj, index, new_elem)
+        if not isinstance(new_elem.class_type, (StringType, FixedSizeNumericType)):
+            self._indicate_pointer_target(list_obj, new_elem, expr)
         return semantic_node
