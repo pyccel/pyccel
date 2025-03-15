@@ -1934,7 +1934,7 @@ class SemanticParser(BasicParser):
         new_expr = []
         while isinstance(loop, For):
             nlevels+=1
-            self._get_for_iterators(loop.iterable, loop.target, new_expr)
+            self._get_for_iterators(loop.iterable, loop.target, new_expr, expr)
 
             loop_elem = loop.body.body[0]
 
@@ -2243,7 +2243,7 @@ class SemanticParser(BasicParser):
 
         return iterable
 
-    def _get_for_iterators(self, syntactic_iterable, iterator, new_expr):
+    def _get_for_iterators(self, syntactic_iterable, iterator, new_expr, expr):
         """
         Get the semantic target and iterable of a for loop.
 
@@ -2259,6 +2259,8 @@ class SemanticParser(BasicParser):
         new_expr : list[PyccelAstNode]
             A list which allows collection of any additional expressions
             resulting from this operation (e.g. Allocation).
+        expr : PyccelAstNode
+            The expression being visited. This is used for error handling.
 
         Returns
         -------
@@ -2313,7 +2315,7 @@ class SemanticParser(BasicParser):
                             rhs=iterator_rhs, new_expressions=new_expr)
 
             if target.is_alias:
-                self._indicate_pointer_target(target, iterator_rhs, syntactic_iterable.python_ast)
+                self._indicate_pointer_target(target, iterator_rhs, expr.python_ast)
 
             if isinstance(target.class_type, InhomogeneousTupleType):
                 target = [self.scope.collect_tuple_element(v) for v in target]
@@ -2327,7 +2329,7 @@ class SemanticParser(BasicParser):
 
             for t, rhs in zip(target, iterator_rhs):
                 if t.is_alias:
-                    self._indicate_pointer_target(t, rhs, syntactic_iterable.python_ast)
+                    self._indicate_pointer_target(t, rhs, expr.python_ast)
         else:
             raise errors.report(INVALID_FOR_ITERABLE, symbol=iterator,
                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
@@ -3979,7 +3981,7 @@ class SemanticParser(BasicParser):
         new_expr = []
 
         # treatment of the index/indices
-        target, iterable = self._get_for_iterators(expr.iterable, expr.target, new_expr)
+        target, iterable = self._get_for_iterators(expr.iterable, expr.target, new_expr, expr)
 
         body = self._visit(expr.body)
 
@@ -5938,7 +5940,7 @@ class SemanticParser(BasicParser):
             body = []
             lhs_semantic_var = self._assign_lhs_variable(lhs, d_var, PythonSetFunction(arg), body)
             scope = self.create_new_loop_scope()
-            targets, iterable = self._get_for_iterators(arg, self.scope.get_new_name(), body)
+            targets, iterable = self._get_for_iterators(arg, self.scope.get_new_name(), body, expr)
             self.exit_loop_scope()
             body.append(For(targets, iterable, [SetAdd(lhs_semantic_var, targets[0])], scope=scope))
             if assigns:
