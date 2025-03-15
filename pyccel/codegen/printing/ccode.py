@@ -673,6 +673,33 @@ class CCodePrinter(CodePrinter):
         return code
 
     def get_stc_init_elements(self, class_type, elements, current_type):
+        """
+        Get the elements that can be passed to a `c_init` call.
+
+        Get the elements that can be passed to a `c_init` call. For some
+        types this calculation is non-trivial. For example for elements
+        that may be pointers an arc type must be created in order to
+        ensure correct memory deallocation.
+
+        From a STC point of view this method constructs types that are
+        saved in the container (e.g. i_key) from the equivalent raw type
+        (e.g. i_keyraw).
+
+        Parameters
+        ----------
+        class_type : PyccelType
+            The type of the elements in the `c_init` call.
+        elements : list[TypedAstNode]
+            The elements that should be printed in the `c_init` call.
+        current_type : str
+            A string describing the type being created by the `c_init` call.
+
+        Returns
+        -------
+        list[str]
+            A list whose elements describe the c code which gets an element
+            of the container from a raw object.
+        """
         if isinstance(class_type, StringType):
             return [self._print(CStrStr(e)) for e in elements]
         elif class_type.rank > 0:
@@ -817,6 +844,30 @@ class CCodePrinter(CodePrinter):
             return self._print(tmp_var)
 
     def _get_stc_type_decl(self, element_type, container_type, expr, tag = 'key'):
+        """
+        Get the declaration of an STC type in an include header.
+
+        Get the declaration of an STC type in an include header. This method is
+        provided to reduce duplication.
+
+        Parameters
+        ----------
+        element_type : PyccelType
+            The type of an element of the container being declared.
+        container_type : str
+            A string describing the type being declared.
+        expr : TypedAstNode
+            A node describing the include. This is used for error handling.
+
+        Returns
+        -------
+        prefix : str
+            Code that should be printed before the include command.
+        decl_line : str
+            Code that describes the declaration of the element type. This code
+            is printed both when including the STC file and when including the
+            STC extension.
+        """
         prefix = ''
         if isinstance(element_type, FixedSizeType):
             decl_line = self.get_c_type(element_type)
