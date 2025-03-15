@@ -816,7 +816,7 @@ class CCodePrinter(CodePrinter):
                             ElementExpression, start_val)
             return self._print(tmp_var)
 
-    def _get_stc_type_decl(self, element_type, container_type, tag = 'key'):
+    def _get_stc_type_decl(self, element_type, container_type, expr, tag = 'key'):
         prefix = ''
         if isinstance(element_type, FixedSizeType):
             decl_line = self.get_c_type(element_type)
@@ -838,7 +838,7 @@ class CCodePrinter(CodePrinter):
             decl_line = f'#define i_{tag}class {container_element_type}\n'
         else:
             decl_line = ''
-            errors.report(f"The declaration of type {class_type} is not yet implemented.",
+            errors.report(f"The declaration of type {element_type} is not yet implemented.",
                     symbol=expr, severity='error')
         return prefix, decl_line
 
@@ -1268,8 +1268,8 @@ class CCodePrinter(CodePrinter):
                     key_type = class_type.key_type
                     container_key_key = self.get_c_type(class_type.key_type)
                     container_val_key = self.get_c_type(class_type.value_type)
-                    key_prefix, key_decl_line = self._get_stc_type_decl(class_type.key_type, container_key_key)
-                    val_prefix, val_decl_line = self._get_stc_type_decl(class_type.value_type, container_val_key, 'val')
+                    key_prefix, key_decl_line = self._get_stc_type_decl(class_type.key_type, container_key_key, expr)
+                    val_prefix, val_decl_line = self._get_stc_type_decl(class_type.value_type, container_val_key, expr, 'val')
                     if key_decl_line.startswith('#') or val_decl_line.startswith('#'):
                         if not key_decl_line.startswith('#'):
                             key_decl_line = f'#define i_key {key_decl_line}\n'
@@ -1281,7 +1281,7 @@ class CCodePrinter(CodePrinter):
                         decl_line = f'#define i_type {container_type},{container_key_key},{container_val_key}\n'
                     prefix = key_prefix + val_prefix
                 else:
-                    prefix, decl_line = self._get_stc_type_decl(class_type.element_type, container_type)
+                    prefix, decl_line = self._get_stc_type_decl(class_type.element_type, container_type, expr)
                     if decl_line.startswith('#'):
                         decl_line += f'#define i_type {container_type}\n'
                     else:
