@@ -1460,15 +1460,14 @@ class SemanticParser(BasicParser):
             d_lhs['memory_handling'] = 'alias'
             rhs.internal_var.is_target = True
 
-        if isinstance(rhs, Variable) and (rhs.rank > 0 or isinstance(rhs.class_type, CustomDataType)) \
-                and not isinstance(rhs.class_type, (TupleType, StringType)):
-            d_lhs['memory_handling'] = 'alias'
-            rhs.is_target = not rhs.is_alias
+        if not isinstance(rhs.class_type, (TupleType, StringType, FixedSizeNumericType)):
+            if isinstance(rhs, Variable):
+                d_lhs['memory_handling'] = 'alias'
+                rhs.is_target = not rhs.is_alias
 
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and \
-                (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'is_alias', False)):
-            d_lhs['memory_handling'] = 'alias'
-            rhs.base.is_target = not rhs.base.is_alias
+            elif isinstance(rhs, IndexedElement):
+                d_lhs['memory_handling'] = 'alias'
+                rhs.base.is_target = not rhs.base.is_alias
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign = False,
             arr_in_multirets=False):
@@ -3857,8 +3856,12 @@ class SemanticParser(BasicParser):
 
                 elif isinstance(l.class_type, SymbolicType):
                     errors.report(PYCCEL_RESTRICTION_TODO,
-                                  bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                                  symbol=expr,
                                   severity='fatal')
+                elif isinstance(r, (PythonList, PythonSet, PythonTuple, PythonDict)):
+                    for v in r.get_attribute_nodes((Variable, IndexedElement)):
+                        if not isinstance(v.class_type, (TupleType, StringType, FixedSizeNumericType)):
+                            self._indicate_pointer_target(l, v, expr)
 
             new_expressions.append(new_expr)
 
