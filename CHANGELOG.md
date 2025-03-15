@@ -131,6 +131,8 @@ All notable changes to this project will be documented in this file.
 -   #2214 : Fix returning a local variable from an inline function.
 -   #1321 : Fix use of tuples returned from functions in a non-assign statement.
 -   #2229 : Fix annotation of variables that are returned in a function whose result type is annotated.
+-   #2238 : Fix incorrect memory handling for temporary variable.
+-   #2239 : Fix missing library directory for Python shared library.
 
 ### Changed
 
@@ -173,6 +175,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Rename `BindCVariable`->`BindCModuleVariable`.
 -   \[INTERNALS\] Save a shape whose length is limited to the container length.
 -   \[INTERNALS\] Restrict use of `FunctionDefResult` to one instance per function.
+-   \[INTERNALS\] Use `_extract_X_FunctionDefArgument` methods in Fortran-to-C wrapper.
 
 ### Deprecated
 
@@ -189,7 +192,9 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 -   \[INTERNALS\] Remove unused classes `SymbolicAssign` and `SymbolicPrint`.
 -   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefResult` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
+-   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefArgument` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
 -   \[INTERNALS\] Remove unused class `ast.core.FuncAddressDeclare`.
+-   \[INTERNALS\] Remove unnecessary function `ast.utilities.flatten_tuple_var` (replaced by calls to `Scope.collect_all_tuple_elements`).
 
 ## \[1.12.1\] - 2024-10-01
 

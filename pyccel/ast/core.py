@@ -2307,14 +2307,13 @@ class FunctionDef(ScopedAstNode):
         """
         scope = self.scope
         local_vars = scope.variables.values()
-        argument_vars = [a.var for a in self.arguments]
         result_vars = [self.results.var]
         tuple_result_vars = [self.results.var]
         while any(isinstance(r.class_type, InhomogeneousTupleType) for r in tuple_result_vars):
             tuple_result_vars = [ri for r in result_vars for ri in scope.collect_all_tuple_elements(r)]
             result_vars += tuple_result_vars
 
-        return tuple(l for l in local_vars if l not in chain(argument_vars, result_vars))
+        return tuple(l for l in local_vars if l not in result_vars and not l.is_argument)
 
     @property
     def global_vars(self):

@@ -927,7 +927,7 @@ class Scope(object):
 
         Parameters
         ----------
-        tuple_var : Variable
+        tuple_var : Variable | FunctionAddress
             A variable which may or may not be an inhomogeneous tuple.
 
         Returns
@@ -938,7 +938,10 @@ class Scope(object):
         """
         if isinstance(tuple_var, BindCVariable):
             tuple_var = tuple_var.new_var
-        if isinstance(tuple_var.class_type, InhomogeneousTupleType):
+
+        # A tuple_var may not be a Variable if we are collecting arguments.
+        # In this case it may be something else, e.g. a FunctionAddress.
+        if isinstance(tuple_var, Variable) and isinstance(tuple_var.class_type, InhomogeneousTupleType):
             return [vi for v in tuple_var for vi in self.collect_all_tuple_elements(self.collect_tuple_element(v))]
         else:
             return [tuple_var]

@@ -67,7 +67,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
-from pyccel.ast.utilities import expand_to_loops, is_literal_integer, flatten_tuple_var
+from pyccel.ast.utilities import expand_to_loops, is_literal_integer
 
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
@@ -775,10 +775,15 @@ class CCodePrinter(CodePrinter):
             arg_var = expr.arg
             class_type = expr.arg.class_type
 
+            prefix = ''
+
             lhs = self._print(lhs_var)
             if not isinstance(arg_var, Variable):
-                tmp = self.scope.get_temporary_variable(arg_var.class_type, shape = arg_var.shape)
-                self._additional_code += self._print(Assign(tmp, arg_var))
+                # This handles slice arguments
+                assert arg_var.rank
+                tmp = self.scope.get_temporary_variable(arg_var.class_type, shape = arg_var.shape,
+                        memory_handling='alias')
+                prefix += self._print(AliasAssign(tmp, arg_var))
                 arg_var = tmp
             arg = self._print(arg_var)
             c_type = self.get_c_type(class_type)
@@ -800,7 +805,7 @@ class CCodePrinter(CodePrinter):
             body = self._additional_code + f'{lhs} = {node};\n'
             self._additional_code = tmp_additional_code
 
-            return (f'{lhs} = {start};\n'
+            return prefix + (f'{lhs} = {start};\n'
                     f'c_foreach({iter_var_name}, {c_type}, {arg}) {{\n'
                     f'{body}'
                      '}\n')
@@ -1671,7 +1676,8 @@ class CCodePrinter(CodePrinter):
             Signature of the function.
         """
         arg_vars = [a.var for a in expr.arguments]
-        result_vars = [v for v in flatten_tuple_var(expr.results.var, expr.scope) \
+        arg_vars = [ai for a in arg_vars for ai in expr.scope.collect_all_tuple_elements(a)]
+        result_vars = [v for v in expr.scope.collect_all_tuple_elements(expr.results.var) \
                             if v and not v.is_argument]
 
         n_results = len(result_vars)
@@ -2294,8 +2300,6 @@ class CCodePrinter(CodePrinter):
                 decs += [Declare(res)]
             elif not isinstance(res, Variable):
                 raise NotImplementedError(f"Can't return {type(res)} from a function")
-        decs += [Declare(v) for v in self.scope.variables.values() \
-                if v not in chain(expr.local_vars, results, arguments)]
         decs  = ''.join(self._print(i) for i in decs)
 
         sep = self._print(SeparatorComment(40))
@@ -2342,7 +2346,7 @@ class CCodePrinter(CodePrinter):
 
         args += self._temporary_args
         self._temporary_args = []
-        args = ', '.join(['{}'.format(self._print(a)) for a in args])
+        args = ', '.join(self._print(ai) for a in args for ai in self.scope.collect_all_tuple_elements(a))
 
         call_code = f'{func.name}({args})'
         if func.results.var is not Nil() and \
