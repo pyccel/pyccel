@@ -137,6 +137,7 @@ All notable changes to this project will be documented in this file.
 -   #1297 : Fix iteration over an `enumerate`, `map` or `zip` in a list comprehension.
 -   #2098 : Fix using multiple list comprehensions.
 -   #1948 : Fix list comprehension does not work in C.
+-   #2245 : Fix internal error when an inhomogeneous tuple appears as an indexed element.
 
 ### Changed
 
