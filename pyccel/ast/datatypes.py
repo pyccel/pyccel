@@ -1076,7 +1076,7 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
         Number of dimensions of the object. If the object is a scalar then
         this is equal to 0.
         """
-        return self._container_rank
+        return self._container_rank + self._value_type.rank
 
     @property
     def order(self):
