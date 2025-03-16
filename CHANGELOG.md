@@ -132,6 +132,8 @@ All notable changes to this project will be documented in this file.
 -   #2214 : Fix returning a local variable from an inline function.
 -   #1321 : Fix use of tuples returned from functions in a non-assign statement.
 -   #2229 : Fix annotation of variables that are returned in a function whose result type is annotated.
+-   #2238 : Fix incorrect memory handling for temporary variable.
+-   #2239 : Fix missing library directory for Python shared library.
 -   #1410 : Fix conditional statement not working inside of a list comprehension.
 
 ### Changed
