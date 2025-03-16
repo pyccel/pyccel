@@ -4001,7 +4001,7 @@ class SemanticParser(BasicParser):
         # Inner function to handle PythonNativeInt variables
         def handle_int_loop_variable(var_name, var_scope):
             indices.append(var_name)
-            var = self._create_variable(var_name, PythonNativeInt(), None, {},insertion_scope=var_scope)
+            var = self._create_variable(var_name, PythonNativeInt(), None, {}, insertion_scope=var_scope)
             dvar = self._infer_type(var)
             variables.append((var, dvar))
 
