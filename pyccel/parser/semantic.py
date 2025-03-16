@@ -2690,6 +2690,11 @@ class SemanticParser(BasicParser):
                 dtype = v.class_type
                 if isinstance(value, Literal) and value is not Nil():
                     value = convert_to_literal(value.python_value, dtype)
+                if isinstance(dtype, InhomogeneousTupleType):
+                    # Raise an error as elements are not yet correctly marked with is_argument.
+                    # This leads to printing errors
+                    errors.report("Inhomogeneous tuples are not yet supported as arguments",
+                            severity='error', symbol=expr)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
                 args.append(FunctionDefArgument(clone_var, bound_argument = bound_argument,
                                         value = value, kwonly = kwonly, annotation = expr.annotation))
@@ -3805,7 +3810,8 @@ class SemanticParser(BasicParser):
                             # memory space before assigning to the pointer value
                             # (may be NULL)
                             tmp_var = self.scope.get_temporary_variable(l,
-                                    name = l.name+'_loc', is_optional = False)
+                                    name = l.name+'_loc', is_optional = False,
+                                    is_argument = False)
                             self._optional_params[l] = tmp_var
                             l = tmp_var
 
@@ -5552,8 +5558,10 @@ class SemanticParser(BasicParser):
         z = arg.value
         x = PythonReal(z)
         y = PythonImag(z)
-        x_var = self.scope.get_temporary_variable(z, class_type=PythonNativeFloat())
-        y_var = self.scope.get_temporary_variable(z, class_type=PythonNativeFloat())
+        x_var = self.scope.get_temporary_variable(z, class_type=PythonNativeFloat(),
+                    is_argument=False)
+        y_var = self.scope.get_temporary_variable(z, class_type=PythonNativeFloat(),
+                    is_argument=False)
         self._additional_exprs[-1].append(Assign(x_var, x))
         self._additional_exprs[-1].append(Assign(y_var, y))
         r = MathSqrt(PyccelAdd(PyccelMul(x_var,x_var), PyccelMul(y_var,y_var)))
