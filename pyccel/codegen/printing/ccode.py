@@ -347,12 +347,22 @@ class CCodePrinter(CodePrinter):
         list[Import]
             A sorted list of the imports.
         """
-        import_src = [str(i.source) for i in imports]
-        dependent_imports = [i for i in import_src if i in import_header_guard_prefix]
-        non_stc_imports = [i for i in import_src if i not in dependent_imports]
-        dependent_imports.sort()
-        non_stc_imports.sort()
-        sorted_imports = [imports[import_src.index(name)] for name in chain(non_stc_imports, dependent_imports)]
+        stc_imports = [i for i in imports if str(i.source) in import_header_guard_prefix]
+        split_stc_imports = [Import(i.source, t) for i in stc_imports for t in i.target]
+        split_stc_imports.sort(key = lambda i:
+                # Sort by rank to avoid elements printed after classes
+                (next(iter(i.target)).object.class_type.rank
+                    # Add 0.5 to arc ranks to ensure they are printed after the elements
+                    # they contain but before they are used
+                    + 0.5*(i.source == 'stc/arc'),
+                 # Additionally sort by the source file
+                 i.source,
+                 # Finally sort by type name for reproducability
+                 next(iter(i.target)).local_alias))
+
+        non_stc_imports = [i for i in imports if i not in stc_imports]
+        non_stc_imports.sort(key = lambda i: i.source)
+        sorted_imports = [i for i in chain(non_stc_imports, split_stc_imports)]
         return sorted_imports
 
     def _format_code(self, lines):
