@@ -4080,13 +4080,13 @@ class SemanticParser(BasicParser):
                               bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                               severity='fatal')
 
-            for var, dvar in variables:
+            for var, _ in variables:
                 existing_var = self.scope.find(var.name, 'variables')
                 if var.name == expr.lhs:
                     errors.report(f"Variable {var} has the same name as the left hand side",
                             symbol = expr, severity='fatal')
                 if existing_var or var.name ==  expr.lhs:
-                    if self._infer_type(existing_var)['class_type'] != dvar['class_type']:
+                    if self._infer_type(existing_var)['class_type'] != var.class_type:
                         return errors.report(f"Variable {var} already exists with different type",
                                 symbol = expr, severity='error')
                 else:
