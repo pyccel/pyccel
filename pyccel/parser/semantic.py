@@ -4705,7 +4705,7 @@ class SemanticParser(BasicParser):
                 t = pointer_targets.get(r, ())
                 if r.is_alias:
                     arg_vars = [a.var for a in arguments]
-                    temp_targets = [target for target, _ in t if t not in arg_vars]
+                    temp_targets = [target for target, _ in t if target not in arg_vars]
                     if temp_targets:
                         errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
                             symbol=r, severity='error')
