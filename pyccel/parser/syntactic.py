@@ -1239,8 +1239,8 @@ class SyntaxParser(BasicParser):
         result = self._visit(stmt.elt)
         output_type = None
         comprehensions = list(self._visit(stmt.generators))
-        generators, conditions = zip(*comprehensions)
-        generators, conditions = map(list, [generators, conditions])
+        generators = [c[0] for c in comprehensions]
+        conditions = [c[1] for c in comprehensions]
 
         parent = self._context[-2]
         if isinstance(parent, ast.Call):
@@ -1280,8 +1280,8 @@ class SyntaxParser(BasicParser):
         result = self._visit(stmt.elt)
 
         comprehensions = list(self._visit(stmt.generators))
-        generators, conditions = zip(*comprehensions)
-        generators, conditions = map(list, [generators, conditions])
+        generators = [c[0] for c in comprehensions]
+        conditions = [c[1] for c in comprehensions]
 
         parent = self._context[-2]
         if not isinstance(parent, ast.Call):

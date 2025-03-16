@@ -4217,7 +4217,9 @@ class SemanticParser(BasicParser):
         target.invalidate_node()
         operations = []
         assign = None
-        if target_type_name != 'list':
+        target_conversion_func = self._visit(target_type_name)
+        if (isinstance(target_conversion_func, PyccelFunctionDef)
+            and target_conversion_func.cls_name is NumpyArray):
             old_index   = expr.index
             new_index   = self.scope.get_new_name()
             expr.substitute(old_index, new_index)
@@ -4231,9 +4233,13 @@ class SemanticParser(BasicParser):
                 operations.append(operation)
             index = new_index
             index = self._visit(index)
-        else:
+        elif target_conversion_func == "'list'":
             index = None
             operations.extend(expr.operations['list'])
+        else:
+            errors.report("Unrecognised target for functional for.\n"+PYCCEL_RESTRICTION_TODO,
+                          symbol=expr,
+                          severity='fatal')
 
         if expr.loops[-1].body.body:
             for operation in operations:

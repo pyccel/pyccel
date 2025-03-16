@@ -677,7 +677,7 @@ class PythonCodePrinter(CodePrinter):
                              for idx, iters, condition in zip(expr.indices, iterators, expr.conditions))
 
         name = self._aliases.get(type(expr))
-        if name == 'array':
+        if isinstance(expr.class_type, NumpyNDArrayType):
             self.add_import(Import('numpy', [AsName(NumpyArray, 'array')]))
             return f'{lhs} = {name}([{body} {for_loops} {condition}])\n'
         return f'{lhs} = [{body} {for_loops} {condition}]\n'

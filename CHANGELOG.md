@@ -96,7 +96,6 @@ All notable changes to this project will be documented in this file.
 -   #1913 : Fix function calls to renamed functions.
 -   #1930 : Preserve ordering of import targets.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
--   #1297 : Fix iteration over an `enumerate`, `map` or `zip` in a list comprehension.
 -   #1979 : Fix memory leaks in C due to homogeneous container redefinition.
 -   #1972 : Simplified `printf` statement for Literal String.
 -   #2026 : Fix missing loop in slice assignment.
@@ -133,6 +132,9 @@ All notable changes to this project will be documented in this file.
 -   #1321 : Fix use of tuples returned from functions in a non-assign statement.
 -   #2229 : Fix annotation of variables that are returned in a function whose result type is annotated.
 -   #1410 : Fix conditional statement not working inside of a list comprehension.
+-   #1297 : Fix iteration over an `enumerate`, `map` or `zip` in a list comprehension.
+-   #2098 : Fix using multiple list comprehensions.
+-   #1948 : Fix list comprehension does not work in C.
 
 ### Changed
 

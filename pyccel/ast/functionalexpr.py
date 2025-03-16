@@ -79,6 +79,7 @@ class FunctionalFor(TypedAstNode):
         conditions=None,
         operations=None
         ):
+
         self._loops   = loops
         self._expr    = expr
         self._lhs     = lhs
