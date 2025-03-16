@@ -362,8 +362,7 @@ class CCodePrinter(CodePrinter):
 
         non_stc_imports = [i for i in imports if i not in stc_imports]
         non_stc_imports.sort(key = lambda i: i.source)
-        sorted_imports = [i for i in chain(non_stc_imports, split_stc_imports)]
-        return sorted_imports
+        return non_stc_imports + split_stc_imports
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -1616,7 +1615,7 @@ class CCodePrinter(CodePrinter):
         elif isinstance(dtype, MemoryHandlerType):
             element_type = self.get_c_type(dtype.element_type).replace(' ', '_')
             i_type = f'{element_type}_mem_t'
-            self.add_import(Import(f'stc/arc', AsName(VariableTypeAnnotation(dtype), i_type)))
+            self.add_import(Import('stc/arc', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
 
         else:
