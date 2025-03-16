@@ -673,8 +673,8 @@ class PythonCodePrinter(CodePrinter):
             assert isinstance(body, ListAppend)
             body = self._print(body.args[0])
 
-        for_loops = ' '.join([f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
-                             for idx, iters, condition in zip(expr.indices, iterators, expr.conditions)])
+        for_loops = ' '.join(f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
+                             for idx, iters, condition in zip(expr.indices, iterators, expr.conditions))
 
         name = expr.target_type
         if 'array' in str(name):
