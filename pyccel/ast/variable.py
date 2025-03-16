@@ -731,11 +731,14 @@ class IndexedElement(TypedAstNode):
                 self._is_slice = True
                 self._shape = tuple(new_shape)
 
+        if isinstance(self._class_type, InhomogeneousTupleType) and self._shape is None:
+            self._shape = (LiteralInteger(len(self._class_type)),)
+
         super().__init__()
 
-        if isinstance(self._class_type, InhomogeneousTupleType) and self._shape is None:
-            self._shape = (len(self._class_type),)
-        elif isinstance(self._class_type, ContainerType) and self._shape is None:
+        # This must appear after the call to super().__init__ to avoid setting "self"  as a
+        # user of itself
+        if isinstance(self._class_type, ContainerType) and self._shape is None:
             self._shape = tuple(PyccelArrayShapeElement(self, i) \
                                 for i in range(self._class_type.container_rank))
 
