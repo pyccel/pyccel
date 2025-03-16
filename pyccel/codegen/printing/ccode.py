@@ -48,7 +48,7 @@ from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil, convert_to_literal
 
-from pyccel.ast.low_level_tools import IteratorType
+from pyccel.ast.low_level_tools import IteratorType, MemoryHandlerType
 
 from pyccel.ast.mathext  import math_constants
 
@@ -256,6 +256,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'CSpan_extensions']}
 
 import_header_guard_prefix = {
+    'stc/arc': '_TOOLS_ARC',
     'stc/common': '_TOOLS_COMMON',
     'stc/cspan': '', # Included for import sorting
     'stc/hmap': '_TOOLS_DICT',
@@ -264,6 +265,7 @@ import_header_guard_prefix = {
 }
 
 stc_extension_mapping = {
+    'stc/arc': 'STC_Extensions/Arc_extensions',
     'stc/common': 'STC_Extensions/Common_extensions',
     'stc/hmap': 'STC_Extensions/Dict_extensions',
     'stc/hset': 'STC_Extensions/Set_extensions',
@@ -703,8 +705,8 @@ class CCodePrinter(CodePrinter):
         if isinstance(class_type, StringType):
             return [self._print(CStrStr(e)) for e in elements]
         elif class_type.rank > 0:
-            arc_type = f'element_{current_type}'
             element_type = self.get_c_type(class_type)
+            arc_type = f'{element_type}_mem_t'
             stc_init_elements = []
             for e in elements:
                 if isinstance(e, Variable):
@@ -843,7 +845,7 @@ class CCodePrinter(CodePrinter):
                             ElementExpression, start_val)
             return self._print(tmp_var)
 
-    def _get_stc_type_decl(self, element_type, container_type, expr, tag = 'key'):
+    def _get_stc_element_type_decl(self, element_type, expr, tag = 'key', in_arc = False):
         """
         Get the declaration of an STC type in an include header.
 
@@ -854,13 +856,14 @@ class CCodePrinter(CodePrinter):
         ----------
         element_type : PyccelType
             The type of an element of the container being declared.
-        container_type : str
-            A string describing the type being declared.
         expr : TypedAstNode
             A node describing the include. This is used for error handling.
         tag : str, optional, default='key'
             The name under which the element is identified in STC (usually key
             or value).
+        in_arc : bool, default = True
+            Indicates whether the STC element should print the type that is stored
+            in a container (i.e. the memory handler) or in an arc type.
 
         Returns
         -------
@@ -871,30 +874,21 @@ class CCodePrinter(CodePrinter):
             is printed both when including the STC file and when including the
             STC extension.
         """
-        prefix = ''
         if isinstance(element_type, FixedSizeType):
-            decl_line = self.get_c_type(element_type)
+            decl_line = f'#define i_{tag} {self.get_c_type(element_type)}\n'
         elif isinstance(element_type, StringType):
             decl_line = f'#define i_{tag}pro cstr\n'
         elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-            type_decl = self.get_c_type(element_type)
-            container_element_type = f'element_{container_type}'
-            prefix = (f'#define i_type {container_element_type}\n'
-                      f'#define i_key {type_decl}*\n'
-                       '#define i_keyclone(x) x\n'
-                       '#define i_keydrop(x) free(*x)\n'
-                       '#include <stc/arc.h>\n'
-                      f'#define i_type {container_element_type}\n'
-                      f'#define i_key {type_decl}*\n'
-                       '#define i_keyclone(x) x\n'
-                       '#define i_keydrop(x) free(x)\n'
-                       '#include <STC_Extensions/Arc_extensions.h>\n')
-            decl_line = f'#define i_{tag}class {container_element_type}\n'
+            type_decl = self.get_c_type(element_type, not in_arc)
+            if in_arc:
+                decl_line = f'#define i_{tag}class {type_decl}*\n'
+            else:
+                decl_line = f'#define i_{tag}class {type_decl}\n'
         else:
             decl_line = ''
             errors.report(f"The declaration of type {element_type} is not yet implemented.",
                     symbol=expr, severity='error')
-        return prefix, decl_line
+        return decl_line
 
     # ============ Elements ============ #
 
@@ -1318,30 +1312,22 @@ class CCodePrinter(CodePrinter):
                 self.add_import(Import(stc_extension_mapping[source],
                        AsName(VariableTypeAnnotation(class_type), container_type),
                        ignore_at_print=True))
+                decl_line = f'#define i_type {container_type}\n'
                 if isinstance(class_type, DictType):
-                    key_type = class_type.key_type
-                    container_key_key = self.get_c_type(class_type.key_type)
-                    container_val_key = self.get_c_type(class_type.value_type)
-                    key_prefix, key_decl_line = self._get_stc_type_decl(class_type.key_type, container_key_key, expr)
-                    val_prefix, val_decl_line = self._get_stc_type_decl(class_type.value_type, container_val_key, expr, 'val')
-                    if key_decl_line.startswith('#') or val_decl_line.startswith('#'):
-                        if not key_decl_line.startswith('#'):
-                            key_decl_line = f'#define i_key {key_decl_line}\n'
-                        if not val_decl_line.startswith('#'):
-                            val_decl_line = f'#define i_val {val_decl_line}\n'
-                        decl_line = f'#define i_type {container_type}\n' + \
-                                        key_decl_line + val_decl_line
-                    else:
-                        decl_line = f'#define i_type {container_type},{container_key_key},{container_val_key}\n'
-                    prefix = key_prefix + val_prefix
+                    key_decl_line = self._get_stc_element_type_decl(class_type.key_type, expr)
+                    val_decl_line = self._get_stc_element_type_decl(class_type.value_type, expr, 'val')
+                    decl_line += (key_decl_line + val_decl_line)
+                elif isinstance(class_type, (HomogeneousListType, HomogeneousSetType)):
+                    key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr)
+                    decl_line += key_decl_line
+                elif isinstance(class_type, MemoryHandlerType):
+                    key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr, in_arc = True)
+                    decl_line += (key_decl_line +
+                            '#define i_keyclone(x) x\n' +
+                            '#define i_keydrop(x) free(*x)\n')
+
                 else:
-                    prefix, decl_line = self._get_stc_type_decl(class_type.element_type, container_type, expr)
-                    if decl_line.startswith('#'):
-                        decl_line += f'#define i_type {container_type}\n'
-                    else:
-                        decl_line = f'#define i_type {container_type},{decl_line}\n'
-                    decl_line = self._additional_code + decl_line
-                    self._additional_code = ''
+                    raise NotImplementedError(f"Import not implemented for {container_type}")
                 if isinstance(class_type, (HomogeneousListType, HomogeneousSetType)) and isinstance(class_type.element_type, FixedSizeNumericType) \
                         and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
                     decl_line += '#define i_use_cmp\n'
@@ -1349,12 +1335,9 @@ class CCodePrinter(CodePrinter):
                 header_guard = f'{header_guard_prefix}_{container_type.upper()}'
                 code += ''.join((f'#ifndef {header_guard}\n',
                                  f'#define {header_guard}\n',
-                                 prefix,
                                  decl_line,
                                  f'#include <{source}.h>\n'))
                 if source in stc_extension_mapping:
-                    if prefix:
-                        code += '#define _i_is_arc\n'
                     code += decl_line + f'#include <{stc_extension_mapping[source]}.h>\n'
                 code += f'#endif // {header_guard}\n\n'
             return code
@@ -1547,7 +1530,7 @@ class CCodePrinter(CodePrinter):
             code += formatted_args_to_printf(args_format, args, end)
         return code
 
-    def get_c_type(self, dtype):
+    def get_c_type(self, dtype, in_container = False):
         """
         Find the corresponding C type of the PyccelType.
 
@@ -1563,6 +1546,10 @@ class CCodePrinter(CodePrinter):
         dtype : PyccelType
             The data type of the expression. This can be a fixed-size numeric type,
             a primitive type, or a container type.
+
+        in_container : bool, default = False
+            A boolean indicating whether the type will be stored in a container.
+            If this is the case then an additional arc type may be created.
 
         Returns
         -------
@@ -1588,15 +1575,22 @@ class CCodePrinter(CodePrinter):
 
             key = (primitive_type, dtype.precision)
 
+        elif isinstance(dtype, StringType):
+            self.add_import(c_imports['stc/cstr'])
+            return 'cstr'
+
+        elif in_container:
+            return self.get_c_type(MemoryHandlerType(dtype))
+
         elif isinstance(dtype, (NumpyNDArrayType, HomogeneousTupleType)):
-            element_type = self.get_c_type(dtype.datatype).replace(' ', '_').rstrip('_t')
+            element_type = self.get_c_type(dtype.datatype, in_container = True).replace(' ', '_').rstrip('_t')
             i_type = f'array_{element_type}_{dtype.rank}d'
             self.add_import(Import('stc/cspan', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
 
         elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
             container_type = 'hset' if dtype.name == 'set' else 'vec'
-            element_type = self.get_c_type(dtype.element_type).replace(' ', '_')
+            element_type = self.get_c_type(dtype.element_type, in_container = True).replace(' ', '_')
             i_type = f'{container_type}_{element_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
@@ -1604,14 +1598,17 @@ class CCodePrinter(CodePrinter):
         elif isinstance(dtype, DictType):
             container_type = 'hmap'
             key_type = self.get_c_type(dtype.key_type).replace(' ', '_')
-            val_type = self.get_c_type(dtype.value_type).replace(' ', '_')
+            val_type = self.get_c_type(dtype.value_type, in_container = True).replace(' ', '_')
             i_type = f'{container_type}_{key_type}_{val_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
 
-        elif isinstance(dtype, StringType):
-            self.add_import(c_imports['stc/cstr'])
-            return 'cstr'
+        elif isinstance(dtype, MemoryHandlerType):
+            element_type = self.get_c_type(dtype.element_type).replace(' ', '_')
+            i_type = f'{element_type}_mem_t'
+            self.add_import(Import(f'stc/arc', AsName(VariableTypeAnnotation(dtype), i_type)))
+            return i_type
+
         else:
             key = dtype
 
