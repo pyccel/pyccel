@@ -331,6 +331,14 @@ class PythonNativeBool(PythonNativeNumericType):
         else:
             return NotImplemented
 
+    @property
+    def min_value(self):
+        return False
+
+    @property
+    def max_value(self):
+        return True
+
 class PythonNativeInt(PythonNativeNumericType):
     """
     Class representing Python's native integer type.
@@ -358,6 +366,15 @@ class PythonNativeInt(PythonNativeNumericType):
         else:
             return NotImplemented
 
+    @property
+    def min_value(self):
+        return numpy.iinfo(int).min
+
+    @property
+    def max_value(self):
+        return numpy.iinfo(int).max
+
+
 class PythonNativeFloat(PythonNativeNumericType):
     """
     Class representing Python's native floating point type.
@@ -377,6 +394,15 @@ class PythonNativeFloat(PythonNativeNumericType):
             return self
         else:
             return NotImplemented
+
+    @property
+    def min_value(self):
+        return numpy.finfo(float).min
+
+    @property
+    def max_value(self):
+        return numpy.finfo(float).max
+
 
 class PythonNativeComplex(PythonNativeNumericType):
     """

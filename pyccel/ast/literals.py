@@ -447,7 +447,7 @@ def convert_to_literal(value, dtype = None):
         The Python value 'value' expressed as a literal
         with the specified dtype.
     """
-    from .operators import PyccelUnarySub # Imported here to avoid circular import
+    from .operators import PyccelUnarySub, PyccelMinus # Imported here to avoid circular import
 
     # Calculate the default datatype
     if dtype is None:
@@ -474,6 +474,8 @@ def convert_to_literal(value, dtype = None):
     if isinstance(primitive_type, PrimitiveIntegerType):
         if value >= 0:
             literal_val = LiteralInteger(value, dtype)
+        elif value == -9223372036854775808:
+            literal_val =  PyccelMinus(PyccelUnarySub(LiteralInteger(-value-1, dtype)), LiteralInteger(1))
         else:
             literal_val = PyccelUnarySub(LiteralInteger(-value, dtype))
     elif isinstance(primitive_type, PrimitiveFloatingPointType):

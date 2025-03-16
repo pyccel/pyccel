@@ -1967,15 +1967,11 @@ class SemanticParser(BasicParser):
                 val = convert_to_literal(0, dtype)
             d_var = self._infer_type(PyccelAdd(result, val))
         elif isinstance(expr, FunctionalMin):
-            val = math_constants['inf']
             d_var = self._infer_type(result)
-            if d_var['class_type'] is PythonNativeInt():
-                val = LiteralInteger(2**63-1)
+            val = convert_to_literal(d_var['class_type'].min_value)
         elif isinstance(expr, FunctionalMax):
-            val = PyccelUnarySub(math_constants['inf'])
             d_var = self._infer_type(result)
-            if d_var['class_type'] is PythonNativeInt():
-                val = PyccelUnarySub(LiteralInteger(2**63-1))
+            val = convert_to_literal(d_var['class_type'].max_value)
 
         # Infer the final dtype of the expression
         class_type = d_var.pop('class_type')
