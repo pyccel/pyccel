@@ -736,9 +736,6 @@ class IndexedElement(TypedAstNode):
         elif isinstance(self._class_type, ContainerType) and self._shape is None:
             self._shape = tuple(PyccelArrayShapeElement(self, i) \
                                 for i in range(self._class_type.container_rank))
-        elif self._shape:
-            assert all(isinstance(s, (TypedAstNode, int)) for s in self._shape)
-            self._shape = tuple(s if isinstance(s, TypedAstNode) else LiteralInteger(s) for s in self._shape)
 
         super().__init__()
 
