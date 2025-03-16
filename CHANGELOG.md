@@ -136,6 +136,7 @@ All notable changes to this project will be documented in this file.
 -   #2229 : Fix annotation of variables that are returned in a function whose result type is annotated.
 -   #2238 : Fix incorrect memory handling for temporary variable.
 -   #2239 : Fix missing library directory for Python shared library.
+-   #2245 : Fix internal error when an inhomogeneous tuple appears as an indexed element.
 
 ### Changed
 
