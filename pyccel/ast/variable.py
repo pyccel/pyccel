@@ -733,11 +733,14 @@ class IndexedElement(TypedAstNode):
 
         if isinstance(self._class_type, InhomogeneousTupleType) and self._shape is None:
             self._shape = (LiteralInteger(len(self._class_type)),)
-        elif isinstance(self._class_type, ContainerType) and self._shape is None:
-            self._shape = tuple(PyccelArrayShapeElement(self, i) \
-                                for i in range(self._class_type.container_rank))
 
         super().__init__()
+
+        # This must appear after the call to super().__init__ to avoid setting "self"  as a
+        # user of itself
+        if isinstance(self._class_type, ContainerType) and self._shape is None:
+            self._shape = tuple(PyccelArrayShapeElement(self, i) \
+                                for i in range(self._class_type.container_rank))
 
         # Ignore codegen stage due to #861
         assert pyccel_stage == 'codegen' or self._class_type.shape_is_compatible(self._shape)
