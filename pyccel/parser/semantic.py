@@ -697,6 +697,7 @@ class SemanticParser(BasicParser):
             return
 
         assert pointer != target
+        assert not isinstance(pointer.class_type, (StringType, FixedSizeNumericType))
         if isinstance(pointer, DottedVariable):
             self._indicate_pointer_target(pointer.lhs, target, expr)
         elif isinstance(target, DottedVariable):
@@ -3902,7 +3903,8 @@ class SemanticParser(BasicParser):
                                   severity='fatal')
                 elif isinstance(r, (PythonList, PythonSet, PythonTuple, PythonDict)):
                     self._indicate_pointer_target(l, r, expr)
-                elif isinstance(r, (ListPop, DictPop, DictPopitem)):
+                elif isinstance(r, (ListPop, DictPop, DictPopitem)) and \
+                        not isinstance(l.class_type, (TupleType, StringType, FixedSizeNumericType)):
                     class_obj = getattr(r, 'dict_obj', getattr(r, 'list_obj', None))
                     class_obj = r.list_obj if isinstance(r, ListPop) else r.dict_obj
                     for target, target_expr in self._pointer_targets[-1].get(class_obj, ()):
