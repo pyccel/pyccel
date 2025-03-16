@@ -673,15 +673,14 @@ class PythonCodePrinter(CodePrinter):
             assert isinstance(body, ListAppend)
             body = self._print(body.args[0])
 
-        for_loops = ' '.join([f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
-                             for idx, iters, condition in zip(expr.indices, iterators, expr.conditions)])
+        for_loops = ' '.join(f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
+                             for idx, iters, condition in zip(expr.indices, iterators, expr.conditions))
 
-        name = expr.target_type
-        if 'array' in str(name):
+        name = self._aliases.get(type(expr))
+        if name == 'array':
             self.add_import(Import('numpy', [AsName(NumpyArray, 'array')]))
-            name = 'array'
-
-        return f'{lhs} = {name}([{body} {for_loops} {condition}])\n'
+            return f'{lhs} = {name}([{body} {for_loops} {condition}])\n'
+        return f'{lhs} = [{body} {for_loops} {condition}]\n'
 
     def _print_GeneratorComprehension(self, expr):
         body, iterators = self._find_functional_expr_and_iterables(expr)

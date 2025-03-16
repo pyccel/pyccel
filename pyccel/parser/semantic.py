@@ -4020,22 +4020,17 @@ class SemanticParser(BasicParser):
             dvar['class_type'] = class_type
             variables.append((var, dvar))
 
-        def create_target_operations(target):
-            # this can be used to add opertations for set/dict comprehension
-            assert target in expr.operations
-            return expr.operations[target]
-
         for loop, condition in zip(loops, expr.conditions):
             if condition:
                 loop.insert2body(condition)
 
         while len(loops) > 1:
-            outter_loop = loops.pop()
+            outer_loop = loops.pop()
             inserted_into = loops[-1]
             if inserted_into.body.body:
-                inserted_into.body.body[0].blocks[0].body.insert2body(outter_loop)
+                inserted_into.body.body[0].blocks[0].body.insert2body(outer_loop)
             else:
-                inserted_into.insert2body(outter_loop)
+                inserted_into.insert2body(outer_loop)
 
         body = loops[0]
 
@@ -4092,14 +4087,8 @@ class SemanticParser(BasicParser):
                 else:
                     self.scope.insert_variable(var)
 
-            if isinstance(step, LiteralInteger):
-                step.invalidate_node()
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
-            if isinstance(start, LiteralInteger):
-                start.invalidate_node()
             start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
-            if isinstance(stop, LiteralInteger):
-                stop.invalidate_node()
             stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
             size = (stop - start) / step
             if (step != 1):
@@ -4232,7 +4221,7 @@ class SemanticParser(BasicParser):
             old_index   = expr.index
             new_index   = self.scope.get_new_name()
             expr.substitute(old_index, new_index)
-            array_ops = create_target_operations('numpy_array')
+            array_ops = expr.operations['numpy_array']
             assign = array_ops[0]
             assign.substitute(old_index, new_index)
             assign = self._visit(array_ops[0])
@@ -4244,7 +4233,7 @@ class SemanticParser(BasicParser):
             index = self._visit(index)
         else:
             index = None
-            operations.extend(create_target_operations('list'))
+            operations.extend(expr.operations['list'])
 
         if expr.loops[-1].body.body:
             for operation in operations:

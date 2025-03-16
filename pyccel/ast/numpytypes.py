@@ -118,6 +118,13 @@ class NumpyInt8Type(NumpyIntType):
     _name = 'numpy.int8'
     _precision = 1
 
+    @property
+    def min_value(self):
+        return np.iinfo(np.int8).min
+
+    @property
+    def max_value(self):
+        return np.iinfo(np.int8).max
 
 class NumpyInt16Type(NumpyIntType):
     """
@@ -129,6 +136,13 @@ class NumpyInt16Type(NumpyIntType):
     _name = 'numpy.int16'
     _precision = 2
 
+    @property
+    def min_value(self):
+        return np.iinfo(np.int16).min
+
+    @property
+    def max_value(self):
+        return np.iinfo(np.int16).max
 
 class NumpyInt32Type(NumpyIntType):
     """
@@ -140,6 +154,13 @@ class NumpyInt32Type(NumpyIntType):
     _name = 'numpy.int32'
     _precision = 4
 
+    @property
+    def min_value(self):
+        return np.iinfo(np.int32).min
+
+    @property
+    def max_value(self):
+        return np.iinfo(np.int32).max
 
 class NumpyInt64Type(NumpyIntType):
     """
@@ -150,6 +171,14 @@ class NumpyInt64Type(NumpyIntType):
     __slots__ = ()
     _name = 'numpy.int64'
     _precision = 8
+
+    @property
+    def min_value(self):
+        return np.iinfo(np.int64).min
+
+    @property
+    def max_value(self):
+        return np.iinfo(np.int64).max
 
 #==============================================================================
 
@@ -164,6 +193,13 @@ class NumpyFloat32Type(NumpyNumericType):
     _primitive_type = PrimitiveFloatingPointType()
     _precision = 4
 
+    @property
+    def min_value(self):
+        return np.finfo(np.float32).min
+
+    @property
+    def max_value(self):
+        return np.finfo(np.float32).max
 
 class NumpyFloat64Type(NumpyNumericType):
     """
@@ -176,6 +212,13 @@ class NumpyFloat64Type(NumpyNumericType):
     _primitive_type = PrimitiveFloatingPointType()
     _precision = 8
 
+    @property
+    def min_value(self):
+        return np.finfo(np.float64).min
+
+    @property
+    def max_value(self):
+        return np.finfo(np.float64).max
 
 class NumpyFloat128Type(NumpyNumericType):
     """
