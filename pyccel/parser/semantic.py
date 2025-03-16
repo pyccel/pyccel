@@ -1968,10 +1968,10 @@ class SemanticParser(BasicParser):
             d_var = self._infer_type(PyccelAdd(result, val))
         elif isinstance(expr, FunctionalMin):
             d_var = self._infer_type(result)
-            val = convert_to_literal(d_var['class_type'].min_value)
+            val = convert_to_literal(d_var['class_type'].max_value)
         elif isinstance(expr, FunctionalMax):
             d_var = self._infer_type(result)
-            val = convert_to_literal(d_var['class_type'].max_value)
+            val = convert_to_literal(d_var['class_type'].min_value)
 
         # Infer the final dtype of the expression
         class_type = d_var.pop('class_type')
