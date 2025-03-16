@@ -121,6 +121,46 @@ class PairType(PyccelType, metaclass=ArgumentSingleton):
         return f'pair[{self._key_type}, {self._value_type}]'
 
 #------------------------------------------------------------------------------
+class MemoryHandlerType(PyccelType, metaclass=ArgumentSingleton):
+    """
+    The type of an object which can hold a pointer and manage its memory.
+
+    The type of an object which can hold a pointer and manage its memory by
+    choosing whether or not to deallocate. This class may be used notably
+    for list elements and dictionary values.
+
+    Parameters
+    ----------
+    element_type : PyccelType
+        The type of the element whose memory is being managed.
+    """
+    __slots__ = ('_element_type',)
+
+    def __init__(self, element_type):
+        self._element_type = element_type
+        super().__init__()
+
+    @property
+    def element_type(self):
+        """
+        The type of the element whose memory is being managed.
+
+        The type of the element whose memory is being managed.
+        """
+        return self._element_type
+
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. This is equal to the
+        number of dimensions of the element whose memory is being
+        managed.
+        """
+        return self._element_type.rank
+
+#------------------------------------------------------------------------------
 class MacroDefinition(PyccelAstNode):
     """
     A class for defining a macro in a file.
