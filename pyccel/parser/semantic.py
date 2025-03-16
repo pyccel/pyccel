@@ -4704,17 +4704,13 @@ class SemanticParser(BasicParser):
             for r in results_vars:
                 t = pointer_targets.get(r, ())
                 if r.is_alias:
-                    persistent_targets = []
-                    for target, _ in t:
-                        target_argument_index = next((i for i,a in enumerate(arguments) if a.var == target), -1)
-                        if target_argument_index != -1:
-                            persistent_targets.append(target_argument_index)
-                    if not persistent_targets:
+                    arg_vars = [a.var for a in arguments]
+                    temp_targets = [target for target, _ in t if t not in arg_vars]
+                    if temp_targets:
                         errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
-                            symbol=r, severity='error',
-                            bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
+                            symbol=r, severity='error')
                     else:
-                        result_pointer_map[r] = persistent_targets
+                        result_pointer_map[r] = [next(i for i,a in enumerate(arguments) if a.var == target) for target, _ in t]
 
             optional_inits = []
             for a in arguments:
