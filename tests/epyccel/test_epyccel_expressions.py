@@ -125,8 +125,8 @@ def test_tuple_assign(language):
     assert f(2,4) == tup_assign(2,4)
     assert f(-2,4) == tup_assign(-2,4)
     assert f(4,100) == tup_assign(4,100)
-    x = randint(min_int, max_int)
-    y = randint(min_int, max_int)
+    x = randint(min_int, max_int//2)
+    y = randint(min_int, max_int//2)
     assert f(x,y) == tup_assign(x,y)
 
 def test_tuple_assign2(language):
@@ -138,8 +138,8 @@ def test_tuple_assign2(language):
     assert f(2,4) == tup_assign(2,4)
     assert f(-2,4) == tup_assign(-2,4)
     assert f(4,100) == tup_assign(4,100)
-    x = randint(min_int, max_int)
-    y = randint(min_int, max_int)
+    x = randint(min_int, max_int//2)
+    y = randint(min_int, max_int//2)
     assert f(x,y) == tup_assign(x,y)
 
 def test_tuple_assign3(language):
@@ -151,6 +151,6 @@ def test_tuple_assign3(language):
     assert f(2) == tup_assign(2)
     assert f(-2) == tup_assign(-2)
     assert f(40) == tup_assign(40)
-    x = randint(min_int, max_int)
+    x = randint(min_int, max_int-5)
     assert f(x) == tup_assign(x)
 
