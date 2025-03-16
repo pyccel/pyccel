@@ -13,7 +13,8 @@ from .datatypes import PyccelType
 __all__ = ('IteratorType',
            'PairType',
            'MacroDefinition',
-           'MacroUndef')
+           'MacroUndef',
+           'MemoryHandlerType')
 
 #------------------------------------------------------------------------------
 class IteratorType(PyccelType, metaclass=ArgumentSingleton):
