@@ -158,9 +158,16 @@ class CWrapperCodePrinter(CCodePrinter):
         CCodePrinter.get_declare_type : The extended function.
         """
         if expr.dtype is BindCPointer():
-            return 'void*'
+            if expr.is_const:
+                return 'const void*'
+            else:
+                return 'void*'
         if expr.dtype is Py_ssize_t():
-            return 'Py_ssize_t*' if self.is_c_pointer(expr) else 'Py_ssize_t'
+            dtype =  'Py_ssize_t*' if self.is_c_pointer(expr) else 'Py_ssize_t'
+            if expr.is_const:
+                return f'const {dtype}'
+            else:
+                return dtype
         return CCodePrinter.get_declare_type(self, expr)
 
     def _handle_is_operator(self, Op, expr):
