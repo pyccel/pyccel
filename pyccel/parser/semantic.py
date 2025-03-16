@@ -724,7 +724,7 @@ class SemanticParser(BasicParser):
                 if target.funcdef.result_pointer_map:
                     raise NotImplementedError("TODO results point at args")
         elif isinstance(target, (PythonList, PythonSet, PythonTuple)):
-            if not isinstance(target.class_type.element_type, (TupleType, StringType, FixedSizeNumericType)):
+            if not isinstance(target.class_type.element_type, (StringType, FixedSizeNumericType)):
                 for v in target:
                     self._indicate_pointer_target(pointer, v, expr)
         elif isinstance(target, (ListPop, DictPop)):
@@ -735,10 +735,10 @@ class SemanticParser(BasicParser):
             elif isinstance(pointer, Variable):
                 self._allocs[-1].add(pointer)
         elif isinstance(target, PythonDict):
-            if not isinstance(target.class_type.value_type, (TupleType, StringType, FixedSizeNumericType)):
+            if not isinstance(target.class_type.value_type, (StringType, FixedSizeNumericType)):
                 for v in target.values:
                     self._indicate_pointer_target(pointer, v, expr)
-        else:
+        elif isinstance(pointer, Variable) and pointer.is_alias:
             errors.report("Pointer cannot point at a temporary object",
                 severity='error', symbol=expr)
 
@@ -3911,7 +3911,7 @@ class SemanticParser(BasicParser):
                 elif isinstance(r, (PythonList, PythonSet, PythonTuple, PythonDict)):
                     self._indicate_pointer_target(l, r, expr)
                 elif isinstance(r, (ListPop, DictPop, DictPopitem)) and \
-                        not isinstance(l.class_type, (TupleType, StringType, FixedSizeNumericType)):
+                        not isinstance(l.class_type, (StringType, FixedSizeNumericType)):
                     class_obj = getattr(r, 'dict_obj', getattr(r, 'list_obj', None))
                     class_obj = r.list_obj if isinstance(r, ListPop) else r.dict_obj
                     for target, target_expr in self._pointer_targets[-1].get(class_obj, ()):
