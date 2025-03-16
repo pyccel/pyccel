@@ -676,10 +676,10 @@ class PythonCodePrinter(CodePrinter):
         for_loops = ' '.join(f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
                              for idx, iters, condition in zip(expr.indices, iterators, expr.conditions))
 
-        name = self._aliases.get(type(expr))
+        target = self._print(expr.target_type)
         if isinstance(expr.class_type, NumpyNDArrayType):
             self.add_import(Import('numpy', [AsName(NumpyArray, 'array')]))
-            return f'{lhs} = {name}([{body} {for_loops} {condition}])\n'
+            return f'{lhs} = {target}([{body} {for_loops} {condition}])\n'
         return f'{lhs} = [{body} {for_loops} {condition}]\n'
 
     def _print_GeneratorComprehension(self, expr):
