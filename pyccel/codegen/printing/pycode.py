@@ -697,8 +697,8 @@ class PythonCodePrinter(CodePrinter):
                     rhs = type(body.rhs)(*args)
 
         body = self._print(rhs)
-        for_loops = ' '.join([f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
-                             for idx, iters, condition in zip(expr.indices, iterators, expr.conditions)])
+        for_loops = ' '.join(f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
+                             for idx, iters, condition in zip(expr.indices, iterators, expr.conditions))
 
         if expr.get_user_nodes(FunctionalFor):
             return '{}({} {})'.format(expr.name, body, for_loops)
