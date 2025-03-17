@@ -698,9 +698,12 @@ class SemanticParser(BasicParser):
 
         assert pointer != target
         assert not isinstance(pointer.class_type, (StringType, FixedSizeNumericType))
+
+        # The class itself should also be aware of the target for freeing
         if isinstance(pointer, DottedVariable):
             self._indicate_pointer_target(pointer.lhs, target, expr)
-        elif isinstance(target, DottedVariable):
+
+        if isinstance(target, DottedVariable):
             self._indicate_pointer_target(pointer, target.lhs, expr)
         elif isinstance(target, IndexedElement):
             self._indicate_pointer_target(pointer, target.base, expr)
