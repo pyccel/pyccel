@@ -724,7 +724,8 @@ class CCodePrinter(CodePrinter):
                     tmp = self.scope.get_temporary_variable(class_type, shape = (None,),
                                 memory_handling='alias')
                     self._additional_code += f'{tmp.name} = malloc(sizeof({element_type}));\n'
-                    self._additional_code += self._print(Assign(tmp, e))
+                    assign_code = self._print(Assign(tmp, e))
+                    self._additional_code = self._additional_code + assign_code
                     stc_init_elements.append(f'{arc_type}_from({self._print(ObjectAddress(tmp))})')
             return stc_init_elements
         else:
@@ -1330,10 +1331,11 @@ class CCodePrinter(CodePrinter):
                     key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr)
                     decl_line += key_decl_line
                 elif isinstance(class_type, MemoryHandlerType):
+                    element_type = self.get_c_type(class_type.element_type)
                     key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr, in_arc = True)
                     decl_line += (key_decl_line +
-                            '#define i_keyclone(x) x\n' +
-                            '#define i_keydrop(x) free(*x)\n')
+                             '#define i_keyclone(x) x\n' +
+                            f'#define i_keydrop(x) {element_type}_drop(*x); free(*x)\n')
 
                 else:
                     raise NotImplementedError(f"Import not implemented for {container_type}")
