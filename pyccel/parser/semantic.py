@@ -4003,7 +4003,7 @@ class SemanticParser(BasicParser):
             indices.append(var_name)
             var = self._create_variable(var_name, PythonNativeInt(), None, {}, insertion_scope=var_scope)
             dvar = self._infer_type(var)
-            variables.append((var, dvar))
+            return var, dvar
 
         # Inner function to handle iterable variables
         def handle_iterable_variable(var_name, element, var_scope):
@@ -4018,7 +4018,7 @@ class SemanticParser(BasicParser):
                 dvar['memory_handling'] = 'stack'
             var = self._create_variable(var_name, class_type, None, dvar, insertion_scope=var_scope)
             dvar['class_type'] = class_type
-            variables.append((var, dvar))
+            return var, dvar
 
         for loop, condition in zip(loops, expr.conditions):
             if condition:
@@ -4047,7 +4047,7 @@ class SemanticParser(BasicParser):
             a = self._get_iterable(self._visit(body.iterable))
             if isinstance(a, PythonRange):
                 var_name = self.scope.get_expected_name(expr.indices[i])
-                handle_int_loop_variable(var_name, body.scope)
+                variables.append(handle_int_loop_variable(var_name, body.scope))
                 start = a.start
                 stop  = a.stop
                 step  = a.step
@@ -4055,19 +4055,19 @@ class SemanticParser(BasicParser):
             elif isinstance(a, PythonEnumerate):
                 var_name1 = self.scope.get_expected_name(expr.indices[i][0])
                 var_name2 = self.scope.get_expected_name(expr.indices[i][1])
-                handle_int_loop_variable(var_name1, body.scope)
-                handle_iterable_variable(var_name2, a.element, body.scope)
+                variables.append(handle_int_loop_variable(var_name1, body.scope))
+                variables.append(handle_iterable_variable(var_name2, a.element, body.scope))
                 stop = a.element.shape[0]
 
             elif isinstance(a, PythonZip):
                 for idx, arg in enumerate(a.args):
                     var = self.scope.get_expected_name(expr.indices[i][idx])
-                    handle_iterable_variable(var, arg, body.scope)
+                    variables.append(handle_iterable_variable(var, arg, body.scope))
                 stop = a.get_range().stop
 
             elif isinstance(a, VariableIterator):
                 var = self.scope.get_expected_name(expr.indices[i])
-                handle_iterable_variable(var, a.variable, body.scope)
+                variables.append(handle_iterable_variable(var, a.variable, body.scope))
                 stop = a.variable.shape[0]
 
             else:
