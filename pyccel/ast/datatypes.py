@@ -331,38 +331,6 @@ class PythonNativeBool(PythonNativeNumericType):
         else:
             return NotImplemented
 
-    @property
-    def min_value(self):
-        """
-        Get the minimum representable value for this datatype.
-
-        This property returns the smallest value that can be represented by
-        this numeric datatype. It is useful for validation, boundary checks,
-        and ensuring that generated code respects the limits of the type.
-
-        Returns
-        -------
-        bool
-            The minimum value that can be represented.
-        """
-        return False
-
-    @property
-    def max_value(self):
-        """
-        Get the maximum representable value for this datatype.
-
-        This property returns the smallest value that can be represented by
-        this numeric datatype. It is useful for validation, boundary checks,
-        and ensuring that generated code respects the limits of the type.
-
-        Returns
-        -------
-        bool
-            The maximum value that can be represented.
-        """
-        return True
-
 class PythonNativeInt(PythonNativeNumericType):
     """
     Class representing Python's native integer type.

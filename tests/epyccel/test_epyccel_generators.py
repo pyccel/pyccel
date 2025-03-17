@@ -1,8 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import sys
 import pytest
 import numpy as np
-from numpy.random import randint, rand
+from numpy.random import randint
 
 from pyccel import epyccel
 
@@ -113,10 +112,82 @@ def test_min(language):
 def test_expression1(language):
     def f(b : 'float[:]'):
         n = b.shape[0]
-        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9
+        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9*max(j+1. for j in b)**4
 
     n = randint(1,10)
     x = np.array(randint(100, size=n), dtype=float)
+
+    f_epyc = epyccel(f, language = language)
+
+    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
+
+def test_expression2(language):
+    def f(b : 'int8[:]'):
+        n = b.shape[0]
+        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)+9*max(j+1. for j in b)
+
+    n = randint(1,10)
+    x = np.array(randint(10, size=n), dtype=np.int8)
+
+    f_epyc = epyccel(f, language = language)
+
+    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
+
+def test_expression3(language):
+    def f(b : 'int16[:]'):
+        n = b.shape[0]
+        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)+9*max(j+1. for j in b)
+
+    n = randint(1,10)
+    x = np.array(randint(10, size=n), dtype=np.int16)
+
+    f_epyc = epyccel(f, language = language)
+
+    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
+
+def test_expression4(language):
+    def f(b : 'int32[:]'):
+        n = b.shape[0]
+        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9*max(j+1. for j in b)**4
+
+    n = randint(1,10)
+    x = np.array(randint(100, size=n), dtype=np.int32)
+
+    f_epyc = epyccel(f, language = language)
+
+    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
+
+def test_expression5(language):
+    def f(b : 'int64[:]'):
+        n = b.shape[0]
+        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9*max(j+1. for j in b)**4
+
+    n = randint(1,10)
+    x = np.array(randint(100, size=n), dtype=np.int64)
+
+    f_epyc = epyccel(f, language = language)
+
+    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
+
+def test_expression6(language):
+    def f(b : 'float32[:]'):
+        n = b.shape[0]
+        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)+9*max(j+1. for j in b)
+
+    n = randint(1,10)
+    x = np.array(randint(10, size=n), dtype=np.float32)
+
+    f_epyc = epyccel(f, language = language)
+
+    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
+
+def test_expression7(language):
+    def f(b : 'float64[:]'):
+        n = b.shape[0]
+        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9*max(j+1. for j in b)**4
+
+    n = randint(1,10)
+    x = np.array(randint(100, size=n), dtype=np.float64)
 
     f_epyc = epyccel(f, language = language)
 
@@ -131,7 +202,7 @@ def test_expression1(language):
         pytest.param("python", marks = pytest.mark.python)
     )
 )
-def test_expression2(language):
+def test_expression8(language):
     def f(b : 'int64[:]'):
         def incr(x : 'int64'):
             y = x + 1
@@ -223,6 +294,14 @@ def test_max_with_condition(language):
     f_epyc = epyccel(f, language = language)
     assert f() == f_epyc()
 
+def test_max_with_condition_float(language):
+    def f():
+        v = max(i/2 for i in range(20) if i % 2 == 1)
+        return v
+
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
 def test_max_with_multiple_conditions(language):
     def f():
         v = max(i - j for i in range(20) if i % 2 == 1 for j in range(30) if j % 3 == 1)
@@ -234,6 +313,14 @@ def test_max_with_multiple_conditions(language):
 def test_min_with_condition(language):
     def f():
         v = min(i for i in range(20) if i % 2 == 1)
+        return v
+
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_min_with_condition_float(language):
+    def f():
+        v = min(i/2 for i in range(20) if i % 2 == 1)
         return v
 
     f_epyc = epyccel(f, language = language)
