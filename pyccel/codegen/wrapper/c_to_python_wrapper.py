@@ -2618,9 +2618,15 @@ class CToPythonWrapper(Wrapper):
                 self.scope.insert_symbolic_alias(arg_var[0], ObjectAddress(data_var))
                 self.scope.insert_symbolic_alias(arg_var[1], size_var)
 
-            body = [Assign(orig_var, PyUnicode_AsUTF8(collect_arg)),
-                    Assign(self.scope.collect_tuple_element(arg_var[1]), PyUnicode_GetLength(collect_arg))]
+            if getattr(orig_var, 'is_optional', False):
+                body = [AliasAssign(orig_var, PyUnicode_AsUTF8(collect_arg)),
+                        Assign(self.scope.collect_tuple_element(arg_var[1]), PyUnicode_GetLength(collect_arg))]
+            else:
+                body = [Assign(orig_var, PyUnicode_AsUTF8(collect_arg)),
+                        Assign(self.scope.collect_tuple_element(arg_var[1]), PyUnicode_GetLength(collect_arg))]
 
+            default_init = [AliasAssign(data_var, Nil()),
+                            Assign(size_var, 0)]
         else:
 
             if arg_var is None:
@@ -2630,12 +2636,15 @@ class CToPythonWrapper(Wrapper):
 
             body = [Assign(orig_var, PythonString(PyUnicode_AsUTF8(collect_arg)))]
 
-        if getattr(orig_var, 'is_optional', False):
-            memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
-            body.insert(0, AliasAssign(arg_var, memory_var))
+            default_init = [AliasAssign(arg_var, Nil())]
+            if getattr(orig_var, 'is_optional', False):
+                memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False,
+                                                clone_scope = self.scope)
+                body.insert(0, AliasAssign(arg_var, memory_var))
 
         return {'body': body,
-                'args': [arg_var]}
+                'args': [arg_var],
+                'default_init': default_init}
 
     def _extract_FunctionDefResult(self, orig_var, is_bind_c, funcdef = None):
         """
