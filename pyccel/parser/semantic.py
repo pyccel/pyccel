@@ -4224,13 +4224,11 @@ class SemanticParser(BasicParser):
             new_index   = self.scope.get_new_name()
             expr.substitute(old_index, new_index, is_equivalent = lambda x,y: x is y)
             array_ops = expr.operations['numpy_array']
-            assign = array_ops[0]
-            assign.substitute(old_index, new_index)
-            assign = self._visit(array_ops[0])
-            array_ops = array_ops[1:]
             for operation in array_ops:
-                operation.substitute(old_index, new_index)
-                operations.append(operation)
+                operation.substitute(old_index, new_index, is_equivalent = lambda x,y: x is y)
+            assign = array_ops[0]
+            assign = self._visit(array_ops[0])
+            operations.extend(array_ops[1:])
             index = new_index
             index = self._visit(index)
         elif target_conversion_func == "'list'":
