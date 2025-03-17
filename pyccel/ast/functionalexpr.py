@@ -121,17 +121,16 @@ class FunctionalFor(TypedAstNode):
         A dictionary mapping each type of comprehension to the operation used for populating it.
 
         For example, for list comprehensions we might use 
-        ``{'list': 'append'}``, and for cspans (the equivalent of NumPy arrays, 
-        which require a fixed size at compile time), we might use 
-        ``{'cspans': 'indexed_element_assignment'}``. 
+        ``{'list': 'append'}``, and for NumPy arrays, (which require a fixed size
+        at compile time), we might use  ``{'numpy_array': [Assign_node]}``. 
         This mapping allows the code generator to select the appropriate operation 
         when building the final data structure from the comprehension.
 
         Returns
         -------
         dict
-            A dictionary that maps comprehension types (e.g. 'list', 'cspans') to 
-            the corresponding operation ('append', 'indexed_element_assignment', etc.).
+            A dictionary that maps comprehension types (e.g. 'list', 'numpy_array') to 
+            the corresponding operation (append call, assign, etc.).
         """
         return self._operations
 
