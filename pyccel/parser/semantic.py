@@ -4222,7 +4222,7 @@ class SemanticParser(BasicParser):
             and target_conversion_func.cls_name is NumpyArray):
             old_index   = expr.index
             new_index   = self.scope.get_new_name()
-            expr.substitute(old_index, new_index)
+            expr.substitute(old_index, new_index, is_equivalent = lambda x,y: x is y)
             array_ops = expr.operations['numpy_array']
             assign = array_ops[0]
             assign.substitute(old_index, new_index)

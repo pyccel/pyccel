@@ -333,10 +333,34 @@ class PythonNativeBool(PythonNativeNumericType):
 
     @property
     def min_value(self):
+        """
+        Get the minimum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        bool
+            The minimum value that can be represented.
+        """
         return False
 
     @property
     def max_value(self):
+        """
+        Get the maximum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        bool
+            The maximum value that can be represented.
+        """
         return True
 
 class PythonNativeInt(PythonNativeNumericType):
@@ -368,10 +392,34 @@ class PythonNativeInt(PythonNativeNumericType):
 
     @property
     def min_value(self):
+        """
+        Get the minimum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        int
+            The minimum value that can be represented.
+        """
         return numpy.iinfo(int).min
 
     @property
     def max_value(self):
+        """
+        Get the maximum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        int
+            The maximum value that can be represented.
+        """
         return numpy.iinfo(int).max
 
 
@@ -397,10 +445,34 @@ class PythonNativeFloat(PythonNativeNumericType):
 
     @property
     def min_value(self):
+        """
+        Get the minimum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        float
+            The minimum value that can be represented.
+        """
         return numpy.finfo(float).min
 
     @property
     def max_value(self):
+        """
+        Get the maximum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        float
+            The maximum value that can be represented.
+        """
         return numpy.finfo(float).max
 
 

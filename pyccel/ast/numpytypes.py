@@ -120,10 +120,34 @@ class NumpyInt8Type(NumpyIntType):
 
     @property
     def min_value(self):
+        """
+        Get the minimum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        int8
+            The minimum value that can be represented.
+        """
         return np.iinfo(np.int8).min
 
     @property
     def max_value(self):
+        """
+        Get the maximum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        int8
+            The maximum value that can be represented.
+        """
         return np.iinfo(np.int8).max
 
 class NumpyInt16Type(NumpyIntType):
@@ -138,10 +162,34 @@ class NumpyInt16Type(NumpyIntType):
 
     @property
     def min_value(self):
+        """
+        Get the minimum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        int16
+            The minimum value that can be represented.
+        """
         return np.iinfo(np.int16).min
 
     @property
     def max_value(self):
+        """
+        Get the maximum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        int16
+            The maximum value that can be represented.
+        """
         return np.iinfo(np.int16).max
 
 class NumpyInt32Type(NumpyIntType):
@@ -156,10 +204,34 @@ class NumpyInt32Type(NumpyIntType):
 
     @property
     def min_value(self):
+        """
+        Get the minimum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        int32
+            The minimum value that can be represented.
+        """
         return np.iinfo(np.int32).min
 
     @property
     def max_value(self):
+        """
+        Get the maximum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        int32
+            The maximum value that can be represented.
+        """
         return np.iinfo(np.int32).max
 
 class NumpyInt64Type(NumpyIntType):
@@ -174,10 +246,34 @@ class NumpyInt64Type(NumpyIntType):
 
     @property
     def min_value(self):
+        """
+        Get the minimum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        int64
+            The minimum value that can be represented.
+        """
         return np.iinfo(np.int64).min
 
     @property
     def max_value(self):
+        """
+        Get the maximum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        int64
+            The maximum value that can be represented.
+        """
         return np.iinfo(np.int64).max
 
 #==============================================================================
@@ -195,10 +291,34 @@ class NumpyFloat32Type(NumpyNumericType):
 
     @property
     def min_value(self):
+        """
+        Get the minimum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        float32
+            The minimum value that can be represented.
+        """
         return np.finfo(np.float32).min
 
     @property
     def max_value(self):
+        """
+        Get the maximum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        float32
+            The maximum value that can be represented.
+        """
         return np.finfo(np.float32).max
 
 class NumpyFloat64Type(NumpyNumericType):
@@ -214,10 +334,34 @@ class NumpyFloat64Type(NumpyNumericType):
 
     @property
     def min_value(self):
+        """
+        Get the minimum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        float64
+            The minimum value that can be represented.
+        """
         return np.finfo(np.float64).min
 
     @property
     def max_value(self):
+        """
+        Get the maximum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        float64
+            The maximum value that can be represented.
+        """
         return np.finfo(np.float64).max
 
 class NumpyFloat128Type(NumpyNumericType):
