@@ -58,6 +58,7 @@ __all__ = (
     'PythonRound',
     'PythonSet',
     'PythonSetFunction',
+    'PythonString',
     'PythonSum',
     'PythonTuple',
     'PythonTupleFunction',
@@ -1737,8 +1738,10 @@ class PythonString(PyccelFunction):
     arg : TypedAstNode
         The argument that is cast to a string.
     """
+    __slots__ = ('_shape',)
     _static_type = StringType()
     _class_type = StringType()
+    name = 'str'
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralString):
