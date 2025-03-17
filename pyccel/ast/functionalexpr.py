@@ -56,7 +56,7 @@ class FunctionalFor(TypedAstNode):
     target_type : PyccelSymbol, optional
         The type of the result of the functional for. This is useful at
         the syntactic stage to pass along the final type of the lhs (list/set/array/etc).
-    conditions : list[If|None], optional
+    conditions : list[If|None]
         A list of filter conditions corresponding to each for-loop in the comprehension.
         Each element of this list is either an `If` instance that describes the filtering
         condition for that loop, or `None` if no condition is applied in that loop.

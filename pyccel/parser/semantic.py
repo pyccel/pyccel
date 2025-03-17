@@ -4082,8 +4082,8 @@ class SemanticParser(BasicParser):
                             symbol = expr, severity='fatal')
                 if existing_var or var.name ==  expr.lhs:
                     if self._infer_type(existing_var)['class_type'] != var.class_type:
-                        return errors.report(f"Variable {var} already exists with different type",
-                                symbol = expr, severity='error')
+                        errors.report(f"Variable {var} already exists with different type",
+                                symbol = expr, severity='fatal')
                 else:
                     self.scope.insert_variable(var)
 

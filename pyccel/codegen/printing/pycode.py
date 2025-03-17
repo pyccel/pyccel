@@ -677,8 +677,8 @@ class PythonCodePrinter(CodePrinter):
                              for idx, iters, condition in zip(expr.indices, iterators, expr.conditions))
 
         if isinstance(expr.class_type, NumpyNDArrayType):
-            self.add_import(Import('numpy', [AsName(NumpyArray, 'array')]))
-            return f'{lhs} = array([{body} {for_loops} {condition}])\n'
+            array = self._get_numpy_name(NumpyArray)
+            return f'{lhs} = {array}([{body} {for_loops} {condition}])\n'
         return f'{lhs} = [{body} {for_loops} {condition}]\n'
 
     def _print_GeneratorComprehension(self, expr):

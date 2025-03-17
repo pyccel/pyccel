@@ -118,6 +118,7 @@ class NumpyInt8Type(NumpyIntType):
     _name = 'numpy.int8'
     _precision = 1
 
+
 class NumpyInt16Type(NumpyIntType):
     """
     Class representing NumPy's int16 type.
@@ -127,6 +128,7 @@ class NumpyInt16Type(NumpyIntType):
     __slots__ = ()
     _name = 'numpy.int16'
     _precision = 2
+
 
 class NumpyInt32Type(NumpyIntType):
     """
@@ -161,6 +163,7 @@ class NumpyFloat32Type(NumpyNumericType):
     _name = 'numpy.float32'
     _primitive_type = PrimitiveFloatingPointType()
     _precision = 4
+
 
 class NumpyFloat64Type(NumpyNumericType):
     """
@@ -204,6 +207,7 @@ class NumpyFloat64Type(NumpyNumericType):
             The maximum value that can be represented.
         """
         return np.finfo(np.float64).max
+
 
 class NumpyFloat128Type(NumpyNumericType):
     """
