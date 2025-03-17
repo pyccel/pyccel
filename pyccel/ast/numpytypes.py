@@ -176,6 +176,38 @@ class NumpyFloat64Type(NumpyNumericType):
     _primitive_type = PrimitiveFloatingPointType()
     _precision = 8
 
+    @property
+    def min_value(self):
+        """
+        Get the minimum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        float64
+            The minimum value that can be represented.
+        """
+        return np.finfo(np.float64).min
+
+    @property
+    def max_value(self):
+        """
+        Get the maximum representable value for this datatype.
+
+        This property returns the smallest value that can be represented by
+        this numeric datatype. It is useful for validation, boundary checks,
+        and ensuring that generated code respects the limits of the type.
+
+        Returns
+        -------
+        float64
+            The maximum value that can be represented.
+        """
+        return np.finfo(np.float64).max
+
 
 class NumpyFloat128Type(NumpyNumericType):
     """
