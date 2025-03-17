@@ -4219,7 +4219,7 @@ class SemanticParser(BasicParser):
         assign = None
         target_conversion_func = self._visit(target_type_name)
         if (isinstance(target_conversion_func, PyccelFunctionDef)
-            and target_conversion_func.cls_name is NumpyArray):
+                and target_conversion_func.cls_name is NumpyArray):
             old_index   = expr.index
             new_index   = self.scope.get_new_name()
             expr.substitute(old_index, new_index, is_equivalent = lambda x,y: x is y)
