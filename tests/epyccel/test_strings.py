@@ -55,3 +55,16 @@ def test_string_argument(language):
     assert str_option_test('do this') == f('do this')
     assert str_option_test('do that') == f('do that')
 
+def test_string_argument_optional(language):
+    def str_option_test(option : str = None):
+        if option is not None and option == 'do this':
+            return 1.0
+        else:
+            return 2.0
+
+    f = epyccel( str_option_test, language=language )
+
+    assert str_option_test('do this') == f('do this')
+    assert str_option_test('do that') == f('do that')
+    assert str_option_test() == f()
+
