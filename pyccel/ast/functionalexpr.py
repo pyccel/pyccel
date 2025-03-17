@@ -56,9 +56,16 @@ class FunctionalFor(TypedAstNode):
     target_type : PyccelSymbol, optional
         The type of the result of the functional for. This is useful at
         the syntactic stage to pass along the final type of the lhs (list/set/array/etc).
+    operations : dict
+        A dictionary mapping each type of comprehension (e.g. list, array, etc.)
+        to the operation used for populating it.
+    conditions : list[If|None]
+        A list of filter conditions corresponding to each for-loop in the comprehension.
+        Each element of this list is either an `If` instance that describes the filtering
+        condition for that loop, or `None` if no condition is applied in that loop.
     """
-    __slots__ = ('_loops','_expr', '_lhs', '_indices','_index',
-            '_shape','_class_type', '_target_type')
+    __slots__ = ('_loops','_expr', '_lhs', '_indices','_index', '_operations',
+            '_shape','_class_type', '_target_type', '_conditions')
     _attribute_nodes = ('_loops','_expr', '_lhs', '_indices','_index')
 
     def __init__(
@@ -68,14 +75,20 @@ class FunctionalFor(TypedAstNode):
         lhs=None,
         indices=None,
         index=None,
-        target_type=None
+        *,
+        target_type=None,
+        operations=None,
+        conditions
         ):
+
         self._loops   = loops
         self._expr    = expr
         self._lhs     = lhs
         self._indices = indices
         self._index   = index
+        self._operations = operations
         self._target_type = target_type
+        self._conditions = conditions
         super().__init__()
 
         if pyccel_stage != 'syntactic':
@@ -103,6 +116,25 @@ class FunctionalFor(TypedAstNode):
         return self._index
 
     @property
+    def operations(self):
+        """
+        A dictionary mapping each type of comprehension to the operation used for populating it.
+
+        For example, for list comprehensions we might use 
+        ``{'list': 'append'}``, and for NumPy arrays, (which require a fixed size
+        at compile time), we might use  ``{'numpy_array': [Assign_node]}``. 
+        This mapping allows the code generator to select the appropriate operation 
+        when building the final data structure from the comprehension.
+
+        Returns
+        -------
+        dict
+            A dictionary that maps comprehension types (e.g. 'list', 'numpy_array') to 
+            the corresponding operation (append call, assign, etc.).
+        """
+        return self._operations
+
+    @property
     def target_type(self):
         """
         The type of the result of the functional for.
@@ -111,6 +143,24 @@ class FunctionalFor(TypedAstNode):
         the syntactic stage to pass along the final type of the lhs (list/set/array/etc).
         """
         return self._target_type
+
+    @property
+    def conditions(self):
+        """
+        A list of filter conditions for each loop in the comprehension.
+
+        If not `None`, each element of this list is either an `If` instance 
+        that describes the filtering condition for that loop, or `None` if 
+        no condition is applied. These conditions collectively determine
+        whether each item produced by the loops is included in the final result.
+
+        Returns
+        -------
+        list[If|None], or None
+            The list of filter conditions for each for-loop in 
+            the comprehension, or `None` if not specified.
+        """
+        return self._conditions
 
 #==============================================================================
 class GeneratorComprehension(FunctionalFor):
