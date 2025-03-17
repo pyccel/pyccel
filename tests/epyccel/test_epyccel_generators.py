@@ -121,78 +121,6 @@ def test_expression1(language):
 
     assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
 
-def test_expression2(language):
-    def f(b : 'int8[:]'):
-        n = b.shape[0]
-        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)+9*max(j+1. for j in b)
-
-    n = randint(1,10)
-    x = np.array(randint(10, size=n), dtype=np.int8)
-
-    f_epyc = epyccel(f, language = language)
-
-    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
-
-def test_expression3(language):
-    def f(b : 'int16[:]'):
-        n = b.shape[0]
-        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)+9*max(j+1. for j in b)
-
-    n = randint(1,10)
-    x = np.array(randint(10, size=n), dtype=np.int16)
-
-    f_epyc = epyccel(f, language = language)
-
-    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
-
-def test_expression4(language):
-    def f(b : 'int32[:]'):
-        n = b.shape[0]
-        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9*max(j+1. for j in b)**4
-
-    n = randint(1,10)
-    x = np.array(randint(100, size=n), dtype=np.int32)
-
-    f_epyc = epyccel(f, language = language)
-
-    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
-
-def test_expression5(language):
-    def f(b : 'int64[:]'):
-        n = b.shape[0]
-        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9*max(j+1. for j in b)**4
-
-    n = randint(1,10)
-    x = np.array(randint(100, size=n), dtype=np.int64)
-
-    f_epyc = epyccel(f, language = language)
-
-    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
-
-def test_expression6(language):
-    def f(b : 'float32[:]'):
-        n = b.shape[0]
-        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)+9*max(j+1. for j in b)
-
-    n = randint(1,10)
-    x = np.array(randint(10, size=n), dtype=np.float32)
-
-    f_epyc = epyccel(f, language = language)
-
-    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
-
-def test_expression7(language):
-    def f(b : 'float64[:]'):
-        n = b.shape[0]
-        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9*max(j+1. for j in b)**4
-
-    n = randint(1,10)
-    x = np.array(randint(100, size=n), dtype=np.float64)
-
-    f_epyc = epyccel(f, language = language)
-
-    assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
-
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
@@ -202,7 +130,7 @@ def test_expression7(language):
         pytest.param("python", marks = pytest.mark.python)
     )
 )
-def test_expression8(language):
+def test_expression2(language):
     def f(b : 'int64[:]'):
         def incr(x : 'int64'):
             y = x + 1
