@@ -4002,8 +4002,7 @@ class SemanticParser(BasicParser):
         def handle_int_loop_variable(var_name, var_scope):
             indices.append(var_name)
             var = self._create_variable(var_name, PythonNativeInt(), None, {}, insertion_scope=var_scope)
-            dvar = self._infer_type(var)
-            return var, dvar
+            return var
 
         # Inner function to handle iterable variables
         def handle_iterable_variable(var_name, element, var_scope):
@@ -4017,8 +4016,7 @@ class SemanticParser(BasicParser):
                 dvar['shape'] = None
                 dvar['memory_handling'] = 'stack'
             var = self._create_variable(var_name, class_type, None, dvar, insertion_scope=var_scope)
-            dvar['class_type'] = class_type
-            return var, dvar
+            return var
 
         for loop, condition in zip(loops, expr.conditions):
             if condition:
@@ -4075,7 +4073,7 @@ class SemanticParser(BasicParser):
                               bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                               severity='fatal')
 
-            for var, _ in variables:
+            for var in variables:
                 existing_var = self.scope.find(var.name, 'variables')
                 if var.name == expr.lhs:
                     errors.report(f"Variable {var} has the same name as the left hand side",
