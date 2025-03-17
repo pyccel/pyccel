@@ -356,12 +356,12 @@ class CCodePrinter(CodePrinter):
                     # they contain but before they are used
                     + 0.5*(i.source == 'stc/arc'),
                  # Additionally sort by the source file
-                 i.source,
+                 str(i.source),
                  # Finally sort by type name for reproducability
                  next(iter(i.target)).local_alias))
 
         non_stc_imports = [i for i in imports if i not in stc_imports]
-        non_stc_imports.sort(key = lambda i: i.source)
+        non_stc_imports.sort(key = lambda i: str(i.source))
         return non_stc_imports + split_stc_imports
 
     def _format_code(self, lines):
