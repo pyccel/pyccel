@@ -1876,7 +1876,7 @@ class CCodePrinter(CodePrinter):
             variable_address = self._print(ObjectAddress(expr.variable))
             container_type = self.get_c_type(expr.variable.class_type)
             if expr.alloc_type == 'reserve':
-                if expr.status == 'allocated':
+                if expr.status != 'unallocated':
                     return (f'{container_type}_clear({variable_address});\n'
                             f'{container_type}_reserve({variable_address}, {size});\n')
                 return f'{container_type}_reserve({variable_address}, {size});\n'
