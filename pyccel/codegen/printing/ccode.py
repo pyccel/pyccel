@@ -21,7 +21,8 @@ from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
-from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys
+from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys, DictPop
+from pyccel.ast.builtin_methods.list_methods  import ListPop
 
 from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
 from pyccel.ast.core      import FunctionCall, FunctionCallArgument
@@ -394,6 +395,10 @@ class CCodePrinter(CodePrinter):
         """
         if isinstance(a, (Nil, ObjectAddress, PointerCast, CStrStr)):
             return True
+
+        if isinstance(a, (ListPop, DictPop)) and not isinstance(a.class_type, (StringType, FixedSizeNumericType)):
+            return True
+
         if isinstance(a, FunctionCall):
             a = a.funcdef.results.var
         # STC _at and _at_mut functions return pointers
@@ -2973,7 +2978,7 @@ class CCodePrinter(CodePrinter):
             code = f'{c_type}_pull({list_obj})'
 
             if not isinstance(class_type.element_type, FixedSizeNumericType):
-                code = f'*({code}.get)'
+                code = f'(*(*{code}.get))'
             return code
 
     #================== Set methods ==================
