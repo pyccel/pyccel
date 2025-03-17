@@ -75,9 +75,10 @@ class FunctionalFor(TypedAstNode):
         lhs=None,
         indices=None,
         index=None,
+        *,
         target_type=None,
         conditions=None,
-        operations=None
+        operations
         ):
 
         self._loops   = loops
