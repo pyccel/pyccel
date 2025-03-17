@@ -1496,7 +1496,8 @@ class SemanticParser(BasicParser):
                 d_lhs['memory_handling'] = 'alias'
                 rhs.is_target = not rhs.is_alias
 
-            elif isinstance(rhs, IndexedElement):
+            elif isinstance(rhs, IndexedElement) and \
+                    isinstance(rhs.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
                 d_lhs['memory_handling'] = 'alias'
                 rhs.base.is_target = not rhs.base.is_alias
 
