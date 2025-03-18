@@ -275,6 +275,7 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
 #==============================================================================
 def recompile_object(compile_obj,
                    compiler,
+                   language,
                    verbose = False):
     """
     Compile the provided file if necessary.
@@ -289,6 +290,9 @@ def recompile_object(compile_obj,
 
     compiler : str
         The compiler used.
+
+    language : str
+        The language in which code is being printed.
 
     verbose : bool
         Indicates whether additional information should be printed.
@@ -306,6 +310,7 @@ def recompile_object(compile_obj,
     if outdated:
         compiler.compile_module(compile_obj=compile_obj,
                 output_folder=compile_obj.source_folder,
+                language=language,
                 verbose=verbose)
 
 def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, language, verbose, convert_only = False):
@@ -355,6 +360,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
             # get the include folder path and library files
             recompile_object(stdlib,
                              compiler = compiler,
+                             language = language,
                              verbose  = verbose)
 
             mod_obj.add_dependencies(stdlib)
@@ -375,6 +381,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
         for d in deps:
             recompile_object(d,
                              compiler = compiler,
+                             language = language,
                              verbose  = verbose)
             mod_obj.add_dependencies(d)
 
