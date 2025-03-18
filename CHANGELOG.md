@@ -151,6 +151,7 @@ All notable changes to this project will be documented in this file.
 -   #1961 : Use STC's `cspan` to describe `np.ndarray` in C. This results in a large speed-up for pathological cases.
 -   #2187 : Removed use of pickle.
 -   #2234 : Print all constant C variables with `const` specifier.
+-   #2249 : Improve installation docs and recommend virtual environment.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
