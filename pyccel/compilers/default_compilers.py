@@ -17,7 +17,6 @@ from pyccel import __version__ as pyccel_version
 
 gfort_info = {'exec' : 'gfortran',
               'mpi_exec' : 'mpif90',
-              'language': 'fortran',
               'module_output_flag': '-J',
               'debug_flags': ("-fcheck=bounds","-g","-O0"),
               'release_flags': ("-O3","-funroll-loops",),
@@ -45,7 +44,6 @@ if sys.platform == "win32":
 #------------------------------------------------------------
 ifort_info = {'exec' : 'ifx',
               'mpi_exec' : 'mpiifx',
-              'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-check", "bounds","-g","-O0"),
               'release_flags': ("-O3","-funroll-loops",),
@@ -64,7 +62,6 @@ ifort_info = {'exec' : 'ifx',
 #------------------------------------------------------------
 pgfortran_info = {'exec' : 'pgfortran',
               'mpi_exec' : 'pgfortran',
-              'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-Mbounds","-g","-O0"),
               'release_flags': ("-O3","-Munroll",),
@@ -82,7 +79,6 @@ pgfortran_info = {'exec' : 'pgfortran',
 #------------------------------------------------------------
 nvfort_info = {'exec' : 'nvfort',
               'mpi_exec' : 'mpifort',
-              'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-Mbounds","-g","-O0"),
               'release_flags': ("-O3","-Munroll",),
@@ -100,7 +96,6 @@ nvfort_info = {'exec' : 'nvfort',
 #------------------------------------------------------------
 gcc_info = {'exec' : 'gcc',
             'mpi_exec' : 'mpicc',
-            'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-funroll-loops",),
             'general_flags' : ('-fPIC',),
@@ -138,7 +133,6 @@ elif sys.platform == "win32":
 #------------------------------------------------------------
 icc_info = {'exec' : 'icx',
             'mpi_exec' : 'mpiicx',
-            'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-funroll-loops",),
             'general_flags' : ('-fPIC',),
@@ -155,7 +149,6 @@ icc_info = {'exec' : 'icx',
 #------------------------------------------------------------
 pgcc_info = {'exec' : 'pgcc',
             'mpi_exec' : 'pgcc',
-            'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-Munroll",),
             'general_flags' : ('-fPIC',),
@@ -172,7 +165,6 @@ pgcc_info = {'exec' : 'pgcc',
 #------------------------------------------------------------
 nvc_info = {'exec' : 'nvc',
             'mpi_exec' : 'mpicc',
-            'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-Munroll",),
             'general_flags' : ('-fPIC',),
@@ -290,13 +282,13 @@ pgfortran_info.update(python_info)
 nvc_info.update(python_info)
 nvfort_info.update(python_info)
 
-available_compilers = {('GNU', 'c') : gcc_info,
-                       ('GNU', 'fortran') : gfort_info,
-                       ('intel', 'c') : icc_info,
-                       ('intel', 'fortran') : ifort_info,
-                       ('PGI', 'c') : pgcc_info,
-                       ('PGI', 'fortran') : pgfortran_info,
-                       ('nvidia', 'c') : nvc_info,
-                       ('nvidia', 'fortran') : nvfort_info}
+available_compilers = {'GNU': {'c' : gcc_info,
+                               'fortran' : gfort_info},
+                       'intel': {'c' : icc_info,
+                                 'fortran' : ifort_info},
+                       'PGI': {'c' : pgcc_info,
+                               'fortran' : pgfortran_info},
+                       'nvidia': {'c' : nvc_info,
+                                  'fortran' : nvfort_info}}
 
 vendors = ('GNU','intel','PGI','nvidia')
