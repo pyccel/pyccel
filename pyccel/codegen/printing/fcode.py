@@ -52,8 +52,6 @@ from pyccel.ast.datatypes import pyccel_type_to_original_type, PyccelType
 
 from pyccel.ast.fortran_concepts import KindSpecification
 
-from pyccel.ast.functionalexpr import MaxLimit, MinLimit
-
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 
 from pyccel.ast.itertoolsext import Product
