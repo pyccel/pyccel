@@ -52,13 +52,15 @@ from pyccel.ast.datatypes import pyccel_type_to_original_type, PyccelType
 
 from pyccel.ast.fortran_concepts import KindSpecification
 
+from pyccel.ast.functionalexpr import MaxLimit, MinLimit
+
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal, LiteralEllipsis
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
-from pyccel.ast.literals  import Nil
+from pyccel.ast.literals  import Nil, convert_to_literal
 
 from pyccel.ast.low_level_tools  import MacroDefinition, IteratorType, PairType
 from pyccel.ast.low_level_tools  import MacroUndef
@@ -3921,3 +3923,15 @@ class FCodePrinter(CodePrinter):
 
     def _print_KindSpecification(self, expr):
         return f'(kind = {self.print_kind(expr.type_specifier)})'
+
+    def _print_MinLimit(self, expr):
+        # TypeError: '<' not supported between instances of 'complex' and 'complex'
+        assert not isinstance(expr.class_type.primitive_type, PrimitiveComplexType)
+        example_of_type = convert_to_literal(0, dtype = expr.class_type)
+        return f'-Huge({self._print(example_of_type)})'
+
+    def _print_MaxLimit(self, expr):
+        # TypeError: '>' not supported between instances of 'complex' and 'complex'
+        assert not isinstance(expr.class_type.primitive_type, PrimitiveComplexType)
+        example_of_type = convert_to_literal(0, dtype = expr.class_type)
+        return f'Huge({self._print(example_of_type)})'
