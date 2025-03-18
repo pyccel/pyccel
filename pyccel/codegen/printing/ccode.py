@@ -58,7 +58,7 @@ from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
-from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
+from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
@@ -78,7 +78,7 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
-                                    PYCCEL_RESTRICTION_IS_ISNOT)
+                                    PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_INTERNAL_ERROR)
 
 numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
@@ -227,6 +227,7 @@ c_library_headers = (
     "complex",
     "ctype",
     "float",
+    "inttypes",
     "math",
     "stdarg",
     "stdbool",
@@ -235,23 +236,22 @@ c_library_headers = (
     "stdio",
     "stdlib",
     "string",
-    "tgmath",
-    "inttypes",
 )
 
 import_dict = {'omp_lib' : 'omp' }
 
 c_imports = {n : Import(n, Module(n, (), ())) for n in
-                ['stdlib',
-                 'math',
-                 'string',
+                ['assert',
                  'complex',
-                 'stdint',
+                 'float',
+                 'inttypes',
+                 'math',
                  'pyc_math_c',
-                 'stdio',
-                 "inttypes",
                  'stdbool',
-                 'assert',
+                 'stdint',
+                 'stdio',
+                 'stdlib',
+                 'string',
                  'stc/cstr',
                  'CSpan_extensions']}
 
@@ -2784,6 +2784,40 @@ class CCodePrinter(CodePrinter):
 
     def _print_EmptyNode(self, expr):
         return ''
+
+    def _print_MaxLimit(self, expr):
+        class_type = expr.class_type
+        if isinstance(class_type.primitive_type, PrimitiveIntegerType):
+            self.add_import(c_imports['stdint'])
+            return f'INT{class_type.precision*8}_MAX'
+        elif isinstance(class_type.primitive_type, PrimitiveFloatingPointType):
+            self.add_import(c_imports['float'])
+            numpy_type = numpy_precision_map[(class_type.primitive_type, class_type.precision)]
+            if numpy_type is NumpyFloat32Type():
+                return 'FLT_MAX'
+            elif numpy_type is NumpyFloat64Type():
+                return 'DBL_MAX'
+            elif numpy_type is NumpyFloat128Type():
+                return 'LDBL_MAX'
+        raise errors.report(PYCCEL_INTERNAL_ERROR,
+                symbol = expr, severity='fatal')
+
+    def _print_MinLimit(self, expr):
+        class_type = expr.class_type
+        if isinstance(class_type.primitive_type, PrimitiveIntegerType):
+            self.add_import(c_imports['stdint'])
+            return f'INT{class_type.precision*8}_MIN'
+        elif isinstance(class_type.primitive_type, PrimitiveFloatingPointType):
+            self.add_import(c_imports['float'])
+            numpy_type = numpy_precision_map[(class_type.primitive_type, class_type.precision)]
+            if numpy_type is NumpyFloat32Type():
+                return '-FLT_MAX'
+            elif numpy_type is NumpyFloat64Type():
+                return '-DBL_MAX'
+            elif numpy_type is NumpyFloat128Type():
+                return '-LDBL_MAX'
+        raise errors.report(PYCCEL_INTERNAL_ERROR,
+                symbol = expr, severity='fatal')
 
     #=================== OMP ==================
 

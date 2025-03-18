@@ -8,6 +8,7 @@
 from pyccel.utilities.stage import PyccelStage
 
 from .basic import TypedAstNode
+from .datatypes import FixedSizeNumericType
 
 pyccel_stage = PyccelStage()
 
@@ -16,7 +17,9 @@ __all__ = (
     'FunctionalMax',
     'FunctionalMin',
     'FunctionalSum',
-    'GeneratorComprehension'
+    'GeneratorComprehension',
+    'MaxLimit',
+    'MinLimit',
 )
 
 #==============================================================================
@@ -191,3 +194,47 @@ class FunctionalMin(GeneratorComprehension):
     """
     __slots__ = ()
     name = 'min'
+#==============================================================================
+
+class MaxLimit(TypedAstNode):
+    """
+    A class representing the largest usable value for a given type.
+
+    A class representing the largest usable value for a given type.
+    This is particularly useful with FunctionalMin.
+
+    Parameters
+    ----------
+    class_type : FixedSizeNumericType
+        The type whose maximum limit is represented by an instance
+        of this class.
+    """
+    __slots__ = ('_class_type',)
+    _attribute_nodes = ()
+
+    def __init__(self, class_type):
+        assert class_type.rank == 0
+        self._class_type = class_type
+        super().__init__()
+#==============================================================================
+
+class MinLimit(TypedAstNode):
+    """
+    A class representing the smallest usable value for a given type.
+
+    A class representing the smallest usable value for a given type.
+    This is particularly useful with FunctionalMax.
+
+    Parameters
+    ----------
+    class_type : FixedSizeNumericType
+        The type whose minimum limit is represented by an instance
+        of this class.
+    """
+    __slots__ = ('_class_type',)
+    _attribute_nodes = ()
+
+    def __init__(self, class_type):
+        assert isinstance(class_type, FixedSizeNumericType)
+        self._class_type = class_type
+        super().__init__()
