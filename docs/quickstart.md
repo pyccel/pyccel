@@ -123,9 +123,9 @@ Such type annotations are compatible with mypy and as such are recommended for u
 
 ### Installation
 
-Pyccel's official releases can be downloaded from PyPI (the Python Package Index) using `pip`.
+Pyccel's official releases can be downloaded and installed from PyPI (the Python Package Index) using `pip`.
 To get the latest (trunk) version of Pyccel, one can clone the `git` repository from GitHub and checkout the `devel` branch.
-Detailed installation instructions are found in the [README](https://github.com/pyccel/pyccel/blob/devel/README.md) file.
+Detailed installation instructions are found [here](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
 
 ### Command Line Usage
 
