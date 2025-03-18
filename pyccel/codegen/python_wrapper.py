@@ -183,6 +183,7 @@ def create_shared_library(codegen,
     sharedlib_filepath = compiler.compile_shared_library(wrapper_compile_obj,
                                                     output_folder = pyccel_dirpath,
                                                     sharedlib_modname = sharedlib_modname,
+                                                    language = language,
                                                     verbose = verbose)
     timings['Wrapper compilation'] = time.time() - start_compile_wrapper
 

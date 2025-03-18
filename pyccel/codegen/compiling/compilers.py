@@ -412,7 +412,7 @@ class Compiler:
 
         return compile_obj.program_target
 
-    def compile_shared_library(self, compile_obj, output_folder, verbose = False, sharedlib_modname=None):
+    def compile_shared_library(self, compile_obj, output_folder, language, verbose = False, sharedlib_modname=None):
         """
         Compile a module to a shared library.
 
@@ -427,6 +427,9 @@ class Compiler:
         output_folder : str
             The folder where the result should be saved.
 
+        language : str
+            Language that we are compiling.
+
         verbose : bool
             Indicates whether additional output should be shown.
 
@@ -439,7 +442,7 @@ class Compiler:
         str
             Generated library name.
         """
-        self._language_info = self._compiler_info['c']
+        self._language_info = self._compiler_info[language]
 
         # Ensure python options are collected
         accelerators = set(compile_obj.accelerators)
