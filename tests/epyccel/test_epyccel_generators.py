@@ -4,6 +4,7 @@ import numpy as np
 from numpy.random import randint
 
 from pyccel import epyccel
+from pyccel.decorators import template
 
 def test_sum_range(language):
     def f(a0 : 'int[:]'):
@@ -270,3 +271,27 @@ def test_sum_with_two_variables(language):
     f_epyc = epyccel(f, language=language)
 
     assert f() == f_epyc()
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Var arg causes type promotion. See #2251."),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_min_max_values(language):
+    @template('T', ['int16', 'int32', 'int64', 'float32', 'float64'])
+    def f(a : 'T[:]'):
+        min_val = min(ai for ai in a)
+        max_val = max(ai for ai in a)
+        return min_val, max_val
+
+    f_epyc = epyccel(f, language=language)
+
+    for dtype in (np.int16, np.int32, np.int64, np.float32, np.float64):
+        x = randint(0, 100, size=(5,)).astype(dtype)
+        print(f(x))
+        print(f_epyc(x))
+        assert f(x) == f_epyc(x)
