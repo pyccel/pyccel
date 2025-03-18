@@ -1,0 +1,17 @@
+name: Missing Coverage
+description: Report untested code that needs investigation
+title: 'COVERAGE:'
+labels: [ 'internals' ]
+assignees: []
+
+body:
+- type: markdown
+  attributes:
+    value: |
+      **Untested Code**  
+      Please investigate the following untested code:  
+      [Code Link](https://github.com/pyccel/pyccel/blob/{COMMIT_SHA}/{file_location}#{line_numbers})  
+
+      **PR:** X  
+
+      Add a test or remove the unused code.

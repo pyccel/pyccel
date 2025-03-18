@@ -1,0 +1,41 @@
+name: Other
+description: Use this for any other issues. Please do NOT create blank issues
+title: '[OTHER] write a small description here'
+body:
+- type: textarea
+  id: issuedescription
+  attributes:
+    label: What would you like to share?
+    description: Provide a clear and concise explanation of your issue.
+  validations:
+    required: true
+
+- type: dropdown
+  id: browser
+  attributes:
+    label: '✨ Browser'
+    description: 'What browser are you using ?'
+    options:
+    - Google Chrome
+    - Brave
+    - Arc
+    - Safari
+    - Microsoft Edge
+    - Mozilla Firefox
+    - Other
+  validations:
+    required: true
+
+- type: checkboxes
+  id: no-duplicate-issues
+  attributes:
+    label: 'Checklist 🚀'
+    options:
+    - label: "I checked and didn't find similar issue"
+      required: true
+
+    - label: 'I have read the Contributing Guidelines'
+      required: true
+
+    - label: 'I am willing to work on this issue (blank for no).'
+      required: false
