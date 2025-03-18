@@ -191,12 +191,11 @@ def execute_pyccel(fname, *,
 
     # Get compiler object
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
-    src_compiler = Compiler(compiler, language, debug)
-    wrapper_compiler = Compiler(compiler, 'c', debug)
+    compiler = Compiler(compiler, debug)
 
     # Export the compiler information if requested
     if compiler_export_file:
-        src_compiler.export_compiler_info(compiler_export_file)
+        compiler.export_compiler_info(compiler_export_file)
         if not fname:
             return
 
@@ -316,7 +315,7 @@ def execute_pyccel(fname, *,
     #         pass
     #------------------------------------------------------
     try:
-        manage_dependencies(codegen.printer.get_additional_imports(), src_compiler, pyccel_dirpath, mod_obj,
+        manage_dependencies(codegen.printer.get_additional_imports(), compiler, pyccel_dirpath, mod_obj,
                 language, verbose, convert_only)
     except NotImplementedError as error:
         errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
@@ -369,8 +368,9 @@ def execute_pyccel(fname, *,
     start_compile_target_language = time.time()
     # Compile code to modules
     try:
-        src_compiler.compile_module(compile_obj=mod_obj,
+        compiler.compile_module(compile_obj=mod_obj,
                 output_folder=pyccel_dirpath,
+                language=language,
                 verbose=verbose)
     except Exception:
         handle_error('compilation')
@@ -383,8 +383,9 @@ def execute_pyccel(fname, *,
                     folder       = pyccel_dirpath,
                     dependencies = (mod_obj,),
                     prog_target  = module_name)
-            generated_program_filepath = src_compiler.compile_program(compile_obj=prog_obj,
+            generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
                     output_folder=pyccel_dirpath,
+                    language=language,
                     verbose=verbose)
 
         timers["Compilation without wrapper"] = time.time() - start_compile_target_language
@@ -395,8 +396,7 @@ def execute_pyccel(fname, *,
                                                language,
                                                wrapper_flags,
                                                pyccel_dirpath,
-                                               src_compiler,
-                                               wrapper_compiler,
+                                               compiler,
                                                output_name,
                                                verbose)
     except NotImplementedError as error:

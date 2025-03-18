@@ -31,8 +31,7 @@ def create_shared_library(codegen,
                           language,
                           wrapper_flags,
                           pyccel_dirpath,
-                          src_compiler,
-                          wrapper_compiler,
+                          compiler,
                           sharedlib_modname=None,
                           verbose = False):
     """
@@ -65,14 +64,8 @@ def create_shared_library(codegen,
     pyccel_dirpath : str
         The path to the directory where the files are created and compiled.
 
-    src_compiler : pyccel.codegen.compiling.compilers.Compiler
+    compiler : pyccel.codegen.compiling.compilers.Compiler
         The compiler which should be used to compile the library.
-
-    wrapper_compiler : pyccel.codegen.compiling.compilers.Compiler
-        The compiler which should be used to compile the wrapper.
-        Often this is the same as src_compiler but it may be different
-        when the language is not C to ensure that src_compiler can link
-        the appropriate language-specific libraries.
 
     sharedlib_modname : str, default: None
         The name of the shared library. The default is the name of the
@@ -135,8 +128,9 @@ def create_shared_library(codegen,
                 flags  = main_obj.flags,
                 dependencies = (main_obj,))
         wrapper_compile_obj.add_dependencies(bind_c_obj)
-        src_compiler.compile_module(compile_obj=bind_c_obj,
+        compiler.compile_module(compile_obj=bind_c_obj,
                 output_folder=pyccel_dirpath,
+                language=language,
                 verbose=verbose)
         timings['Bind C wrapping'] = time.time() - start_bind_c_compiling
         c_ast = bind_c_mod
@@ -173,7 +167,7 @@ def create_shared_library(codegen,
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
     #--------------------------------------------------------
     start_compile_libs = time.time()
-    manage_dependencies(wrapper_codegen.get_additional_imports(), wrapper_compiler, pyccel_dirpath, wrapper_compile_obj,
+    manage_dependencies(wrapper_codegen.get_additional_imports(), compiler, pyccel_dirpath, wrapper_compile_obj,
             language, verbose)
     timings['Dependency compilation'] = (time.time() - start_compile_libs)
 
@@ -181,11 +175,12 @@ def create_shared_library(codegen,
     #         Compile code
     #---------------------------------------
     start_compile_wrapper = time.time()
-    wrapper_compiler.compile_module(wrapper_compile_obj,
-                                output_folder = pyccel_dirpath,
-                                verbose = verbose)
+    compiler.compile_module(wrapper_compile_obj,
+                            output_folder = pyccel_dirpath,
+                            language='c',
+                            verbose = verbose)
 
-    sharedlib_filepath = src_compiler.compile_shared_library(wrapper_compile_obj,
+    sharedlib_filepath = compiler.compile_shared_library(wrapper_compile_obj,
                                                     output_folder = pyccel_dirpath,
                                                     sharedlib_modname = sharedlib_modname,
                                                     verbose = verbose)
