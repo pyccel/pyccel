@@ -77,6 +77,7 @@ from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType, H
 from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType, DictType, TypeAlias
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
+from pyccel.ast.functionalexpr import MaxLimit, MinLimit
 
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
@@ -1968,10 +1969,10 @@ class SemanticParser(BasicParser):
             d_var = self._infer_type(PyccelAdd(result, val))
         elif isinstance(expr, FunctionalMin):
             d_var = self._infer_type(result)
-            val = convert_to_literal(d_var['class_type'].max_value)
+            val = MaxLimit(d_var['class_type'])
         elif isinstance(expr, FunctionalMax):
             d_var = self._infer_type(result)
-            val = convert_to_literal(d_var['class_type'].min_value)
+            val = MinLimit(d_var['class_type'])
 
         # Infer the final dtype of the expression
         class_type = d_var.pop('class_type')

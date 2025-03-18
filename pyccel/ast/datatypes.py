@@ -358,38 +358,6 @@ class PythonNativeInt(PythonNativeNumericType):
         else:
             return NotImplemented
 
-    @property
-    def min_value(self):
-        """
-        Get the minimum representable value for this datatype.
-
-        This property returns the smallest value that can be represented by
-        this numeric datatype. It is useful for validation, boundary checks,
-        and ensuring that generated code respects the limits of the type.
-
-        Returns
-        -------
-        int
-            The minimum value that can be represented.
-        """
-        return numpy.iinfo(int).min
-
-    @property
-    def max_value(self):
-        """
-        Get the maximum representable value for this datatype.
-
-        This property returns the smallest value that can be represented by
-        this numeric datatype. It is useful for validation, boundary checks,
-        and ensuring that generated code respects the limits of the type.
-
-        Returns
-        -------
-        int
-            The maximum value that can be represented.
-        """
-        return numpy.iinfo(int).max
-
 
 class PythonNativeFloat(PythonNativeNumericType):
     """
@@ -410,38 +378,6 @@ class PythonNativeFloat(PythonNativeNumericType):
             return self
         else:
             return NotImplemented
-
-    @property
-    def min_value(self):
-        """
-        Get the minimum representable value for this datatype.
-
-        This property returns the smallest value that can be represented by
-        this numeric datatype. It is useful for validation, boundary checks,
-        and ensuring that generated code respects the limits of the type.
-
-        Returns
-        -------
-        float
-            The minimum value that can be represented.
-        """
-        return numpy.finfo(float).min
-
-    @property
-    def max_value(self):
-        """
-        Get the maximum representable value for this datatype.
-
-        This property returns the smallest value that can be represented by
-        this numeric datatype. It is useful for validation, boundary checks,
-        and ensuring that generated code respects the limits of the type.
-
-        Returns
-        -------
-        float
-            The maximum value that can be represented.
-        """
-        return numpy.finfo(float).max
 
 
 class PythonNativeComplex(PythonNativeNumericType):
