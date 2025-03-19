@@ -11,6 +11,14 @@ body:
     options:
     - label: I have searched the existing issues
       required: true
+- type: checkboxes
+  id: changelog-check
+  attributes:
+    label: Is this issue mentioned in the CHANGELOG?
+    description: Please search to see if the bug you encountered is already addressed in the upcoming release.
+    options:
+    - label: I have searched the CHANGELOG and expect the bug to be reproducible on the devel branch
+      required: true
 - type: textarea
   id: what-happened
   attributes:
@@ -31,21 +39,12 @@ body:
   attributes:
     label: Add Screenshots
     description: Add sufficient Screenshots to explain your issue.
-- type: dropdown
-  id: devices
-  attributes:
-    label: On which device are you experiencing this bug?
-    multiple: true
-    options:
-    - Linux
-    - Chrome
-    - Windows
 - type: checkboxes
   id: terms
   attributes:
     label: Record
     options:
-    - label: 'I have read the [Contributing Guidelines](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)'
+    - label: "I have read the [Contributing Guidelines](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)."
       required: true
     - label: "I have starred the repository"
       required: false

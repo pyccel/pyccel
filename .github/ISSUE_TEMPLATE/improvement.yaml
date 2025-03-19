@@ -7,15 +7,17 @@ body:
 - type: textarea
   attributes:
     label: What would you like to be improved?
+    description: Please describe the problem you see and why it needs improvement.
     placeholder: >
-      Please describe the problem you see and how it is needed to be improved.
+      Clearly explain the issue with performance, code quality, or user experience.
   validations:
     required: true
 
 - type: textarea
   attributes:
-    label: How should we improve?
+    label: Do you have any suggestions for improvement? (Optional)
+    description: If you have ideas on how to improve this issue, share them here.
     placeholder: >
-      Please provide the solution if you have thoughts.
+      Provide possible solutions or thoughts on fixing this issue.
   validations:
     required: false

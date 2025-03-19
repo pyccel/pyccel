@@ -5,13 +5,29 @@ labels: [ 'internals' ]
 assignees: []
 
 body:
-- type: markdown
+- type: textarea
+  id: code-location
   attributes:
-    value: |
-      **Untested Code**  
-      Please investigate the following untested code:  
-      [Code Link](https://github.com/pyccel/pyccel/blob/{COMMIT_SHA}/{file_location}#{line_numbers})  
+    label: Untested Code
+    description: Provide the link to the untested code.
+    placeholder: "https://github.com/pyccel/pyccel/blob/{COMMIT_SHA}/{file_location}#{line_numbers}"
+  validations:
+    required: true
 
-      **PR:** X  
+- type: input
+  id: pr-number
+  attributes:
+    label: PR Number
+    description: Mention the PR where the issue was found.
+    placeholder: "PR #X"
+  validations:
+    required: false
 
-      Add a test or remove the unused code.
+- type: textarea
+  id: suggested-action
+  attributes:
+    label: Suggested Action
+    description: Should a test be added, or should the code be removed?
+    placeholder: "Explain your reasoning..."
+  validations:
+    required: true

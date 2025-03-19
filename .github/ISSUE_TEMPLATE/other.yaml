@@ -1,39 +1,26 @@
 name: Other
-description: Use this for any other issues. Please do NOT create blank issues
-title: '[OTHER] write a small description here'
+description: Use this for any other issues. Please do NOT create blank issues.
+title: '[OTHER] Write a small description here'
+labels: [ 'other' ]
+
 body:
 - type: textarea
   id: issuedescription
   attributes:
     label: What would you like to share?
     description: Provide a clear and concise explanation of your issue.
-  validations:
-    required: true
-
-- type: dropdown
-  id: browser
-  attributes:
-    label: '✨ Browser'
-    description: 'What browser are you using?'
-    options:
-    - Google Chrome
-    - Brave
-    - Arc
-    - Safari
-    - Microsoft Edge
-    - Mozilla Firefox
-    - Other
+    placeholder: "Describe your issue here..."
   validations:
     required: true
 
 - type: checkboxes
-  id: no-duplicate-issues
+  id: checklist
   attributes:
     label: 'Checklist 🚀'
     options:
-    - label: "I checked and didn't find a similar issue"
+    - label: "I checked and didn't find a similar issue."
       required: true
-    - label: 'I have read the [Contributing Guidelines](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)'
+    - label: "I have read the [Contributing Guidelines](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)."
       required: true
-    - label: 'I am willing to work on this issue (blank for no).'
+    - label: "I am willing to work on this issue (optional)."
       required: false
