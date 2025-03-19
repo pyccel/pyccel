@@ -40,4 +40,4 @@ body:
   id: dependencies
   attributes:
     label: Dependency Versions
-    description: List versions of any relevant dependencies (e.g., NumPy, SciPy).
+    description: List versions of any relevant dependencies (e.g., NumPy, SciPy). You can paste the output of `pip freeze` here.

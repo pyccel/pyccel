@@ -1,53 +1,51 @@
-name: Bug Report 🐛
-description: Report a problem that you encountered when using pyccel.
-labels: [ Bug ]
+name: Bug report 🐞
+description: File a bug report
+title: "[Bug] "
+labels: bug
 body:
-
-- type: markdown
+- type: checkboxes
+  id: existing-issue
   attributes:
-    value: >
-      Thank you for submitting a bug report — we really appreciate it!
-
+    label: Is there an existing issue for this?
+    description: Please search to see if an issue already exists for the bug you encountered.
+    options:
+    - label: I have searched the existing issues
+      required: true
 - type: textarea
-  id: description
+  id: what-happened
   attributes:
-    label: Bug description
-    description: >
-      Please describe what you were doing and what went wrong.
+    label: Describe the bug
+    description: A concise description of what you are experiencing.
+    placeholder: Tell us what you see!
   validations:
     required: true
-
 - type: textarea
-  id: expected-outcome
+  id: expected-behaviour
   attributes:
-    label: Expected outcome
-    description: >
-      What did you expect to happen instead? (optional)
+    label: Expected behavior
+    description: A clear and concise description of what you expected to happen.
   validations:
-    required: false
-
+    required: true
 - type: textarea
-  id: minimal-example
+  id: screenshots
   attributes:
-    label: Minimal complete verifiable example
-    description: >
-      Provide a minimal self-contained example to help us reproduce the bug, along with any relevant output. This will be automatically formatted into code, so no need for Markdown backticks. (optional, but incredibly helpful!)
-    render: Python
-  validations:
-    required: false
-
-- type: textarea
-  id: package-versions
+    label: Add Screenshots
+    description: Add sufficient Screenshots to explain your issue.
+- type: dropdown
+  id: devices
   attributes:
-    label: Package versions
-    description: >
-      What version of pyccel (`pyccel.__version__`) were you using when the problem occurred? (optional)
-
-- type: textarea
-  id: context
+    label: On which device are you experiencing this bug?
+    multiple: true
+    options:
+    - Linux
+    - Chrome
+    - Windows
+- type: checkboxes
+  id: terms
   attributes:
-    label: Additional context
-    description: >
-      Please provide any additional context that would help us understand and fix the bug. (optional)
-  validations:
-    required: false
+    label: Record
+    options:
+    - label: 'I have read the [Contributing Guidelines](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)'
+      required: true
+    - label: "I have starred the repository"
+      required: false

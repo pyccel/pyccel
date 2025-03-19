@@ -14,7 +14,7 @@ body:
   id: browser
   attributes:
     label: '✨ Browser'
-    description: 'What browser are you using ?'
+    description: 'What browser are you using?'
     options:
     - Google Chrome
     - Brave
@@ -31,11 +31,9 @@ body:
   attributes:
     label: 'Checklist 🚀'
     options:
-    - label: "I checked and didn't find similar issue"
+    - label: "I checked and didn't find a similar issue"
       required: true
-
-    - label: 'I have read the Contributing Guidelines'
+    - label: 'I have read the [Contributing Guidelines](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)'
       required: true
-
     - label: 'I am willing to work on this issue (blank for no).'
       required: false
