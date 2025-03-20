@@ -758,7 +758,10 @@ class CCodePrinter(CodePrinter):
         else:
             args = self.get_stc_init_elements(class_type.element_type, expr.args, dtype)
             keyraw = '{' + ', '.join(args) + '}'
-        return f'c_init({dtype}, {keyraw})'
+        if not isinstance(class_type.element_type, (StringType, FixedSizeNumericType)):
+            return f'c_init_shared({dtype}, {keyraw})'
+        else:
+            return f'c_init({dtype}, {keyraw})'
 
     def rename_imported_methods(self, expr):
         """

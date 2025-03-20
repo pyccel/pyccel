@@ -1,5 +1,12 @@
 #include <stc/priv/template.h>
 
+STC_INLINE void _c_MEMB(_put_n_ptr)(Self* self, const _m_value* raw, isize n)
+    { while (n--) _c_MEMB(_push)(self, (*raw)), ++raw; }
+
+STC_INLINE Self _c_MEMB(_with_n_ptr)(const _m_value* raw, isize n)
+    { Self cx = {0}; _c_MEMB(_put_n_ptr)(&cx, raw, n); return cx; }
+
+
 // This function represents a call to the .pop() method.
 // i_type: Class type (e.g., hset_int64_t).
 // i_keyraw: Data type of the elements in the set (e.g., int64_t).

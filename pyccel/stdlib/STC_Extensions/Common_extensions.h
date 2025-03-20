@@ -1,5 +1,8 @@
 #include <stdarg.h>
 
+#define c_init_shared(C, ...) \
+    C##_with_n_ptr(c_make_array(C##_value, __VA_ARGS__), c_sizeof((C##_value[])__VA_ARGS__)/c_sizeof(C##_value))
+
 static inline i_key c_JOIN(i_key,_min)(size_t count, ...) {
     va_list args;
     va_start(args, count);
