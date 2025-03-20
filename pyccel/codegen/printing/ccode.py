@@ -329,7 +329,7 @@ class CCodePrinter(CodePrinter):
         self._temporary_args = []
         self._current_module = None
         self._in_header = False
-        self._var_mem = {}
+        self._var_mem = []
 
     def sort_imports(self, imports):
         """
@@ -725,14 +725,14 @@ class CCodePrinter(CodePrinter):
             stc_init_elements = []
             for e in elements:
                 if isinstance(e, Variable):
-                    if e in self._var_mem:
-                        mem_var = self._var_mem[e]
+                    if e in self._var_mem[-1]:
+                        mem_var = self._var_mem[-1][e]
                     else:
                         mem_var = Variable(MemoryHandlerType(e.class_type),
                                            self.scope.get_new_name(f'{e.name}_mem'),
                                            shape=(), memory_handling='heap')
                         self.scope.insert_variable(mem_var)
-                        self._var_mem[e] = mem_var
+                        self._var_mem[-1][e] = mem_var
                     e_ptr = self._print(ObjectAddress(e))
                     mem_var_ptr = self._print(ObjectAddress(mem_var))
                     self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(class_type), element_type)))
@@ -771,14 +771,11 @@ class CCodePrinter(CodePrinter):
         else:
             args = self.get_stc_init_elements(class_type.element_type, expr.args, dtype)
             keyraw = '{' + ', '.join(args) + '}'
-        if not isinstance(class_type.element_type, (StringType, FixedSizeNumericType)):
-            assert all(isinstance(a, Variable) for a in expr.args) or all(not isinstance(a, Variable) for a in expr.args)
-            if all(isinstance(a, Variable) for a in expr.args):
-                return f'c_init_shared({dtype}, {keyraw})'
-            else:
-                return f'c_init({dtype}, {keyraw})'
-        else:
-            return f'c_init({dtype}, {keyraw})'
+            if not isinstance(class_type.element_type, (StringType, FixedSizeNumericType)):
+                assert all(isinstance(a, Variable) for a in expr.args) or all(not isinstance(a, Variable) for a in expr.args)
+                if all(isinstance(a, Variable) for a in expr.args):
+                    return f'c_init_shared({dtype}, {keyraw})'
+        return f'c_init({dtype}, {keyraw})'
 
     def rename_imported_methods(self, expr):
         """
@@ -2061,8 +2058,8 @@ class CCodePrinter(CodePrinter):
             if expr.variable.is_alias:
                 return ''
             container_type = self.get_c_type(expr.variable.class_type)
-            if expr.variable in self._var_mem:
-                variable_code = self._print(self._var_mem[expr.variable])
+            if expr.variable in self._var_mem[-1]:
+                variable_code = self._print(self._var_mem[-1][expr.variable])
                 return f'{container_type}_drop({container_type}_ptr_release({variable_code}.get));\n'
             else:
                 variable_address = self._print(ObjectAddress(expr.variable))
@@ -2373,6 +2370,7 @@ class CCodePrinter(CodePrinter):
             return ''
 
         self.set_scope(expr.scope)
+        self._var_mem.append({})
 
         arguments = [a.var for a in expr.arguments]
         # Collect results filtering out Nil()
@@ -2410,6 +2408,7 @@ class CCodePrinter(CodePrinter):
                  sep]
 
         self.exit_scope()
+        self._var_mem.pop()
 
         return ''.join(p for p in parts if p)
 
