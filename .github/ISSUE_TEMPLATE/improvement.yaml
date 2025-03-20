@@ -8,7 +8,7 @@ body:
   attributes:
     label: What would you like to be improved?
     description: Please describe the problem you see and why it needs improvement.
-    placeholder: >
+    placeholder: |
       Clearly explain the issue with performance, code quality, or user experience.
   validations:
     required: true
