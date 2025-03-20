@@ -21,3 +21,13 @@ body:
       Provide possible solutions or thoughts on fixing this issue.
   validations:
     required: false
+
+- type: checkboxes
+  id: terms
+  attributes:
+    label: Record
+    options:
+    - label: "I have read the [Contributing Guidelines](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)."
+      required: true
+    - label: "I have starred the repository"
+      required: false

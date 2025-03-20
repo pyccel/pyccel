@@ -24,3 +24,5 @@ body:
       required: true
     - label: "I am willing to work on this issue (optional)."
       required: false
+    - label: "I have starred the repository"
+      required: false
