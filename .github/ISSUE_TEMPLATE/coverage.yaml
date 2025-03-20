@@ -27,7 +27,7 @@ body:
   id: suggested-action
   attributes:
     label: Suggested Action
-    description: Should a test be added, or should the code be removed?
-    placeholder: "Explain your reasoning..."
+    description: What should be investigated regarding this code? Note down any relevant thoughts or questions to explore later.
+    placeholder: "Describe any uncertainties or aspects that need further analysis..."
   validations:
     required: true

@@ -1,7 +1,13 @@
 name: Feature Request 💡
-description: Suggest a feature
+
+description: |
+  Non-trivial features require consideration to find the best implementation in the target languages.
+  This conversation should take place in the [discussion tab](https://github.com/pyccel/pyccel/discussions/categories/q-a).
+  Please only open issues for features if you can describe the code that should be generated.
+
 title: "[Feature Request] "
 labels: enhancement
+
 body:
 - type: checkboxes
   id: existing-issue
@@ -11,6 +17,14 @@ body:
     options:
     - label: I have searched the existing issues
       required: true
+
+- type: markdown
+  attributes:
+    value: |
+      Non-trivial features require consideration to find the best implementation in the target languages.
+      This conversation should take place in the [discussion tab](https://github.com/pyccel/pyccel/discussions/categories/q-a).
+      Please only open issues for features if you can describe the code that should be generated.
+
 - type: textarea
   id: feature-description
   attributes:
@@ -19,6 +33,7 @@ body:
     placeholder: Describe the new feature or enhancement you'd like to see.
   validations:
     required: true
+
 - type: textarea
   id: use-case
   attributes:
@@ -27,17 +42,20 @@ body:
     placeholder: Describe a specific use case or scenario where this feature would be beneficial.
   validations:
     required: true
+
 - type: textarea
   id: benefits
   attributes:
     label: Benefits
     description: What benefits would this feature bring to the project or community?
     placeholder: Explain the advantages of implementing this feature.
+
 - type: textarea
   id: screenshots
   attributes:
     label: Add Screenshots
     description: If any...
+
 - type: dropdown
   id: priority
   attributes:
@@ -50,6 +68,7 @@ body:
     default: 0
   validations:
     required: true
+
 - type: checkboxes
   id: terms
   attributes:

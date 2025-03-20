@@ -11,14 +11,16 @@ body:
     options:
     - label: I have searched the existing issues
       required: true
+
 - type: checkboxes
   id: changelog-check
   attributes:
     label: Is this issue mentioned in the CHANGELOG?
-    description: Please search to see if the bug you encountered is already addressed in the upcoming release.
+    description: Please search the [CHANGELOG](https://github.com/pyccel/pyccel/blob/devel/CHANGELOG.md) to see if the bug you encountered is already addressed in the upcoming release.
     options:
-    - label: I have searched the CHANGELOG and expect the bug to be reproducible on the devel branch
+    - label: I have searched the CHANGELOG and expect the bug to be reproducible on the `devel` branch
       required: true
+
 - type: textarea
   id: what-happened
   attributes:
@@ -27,6 +29,7 @@ body:
     placeholder: Tell us what you see!
   validations:
     required: true
+
 - type: textarea
   id: expected-behaviour
   attributes:
@@ -34,11 +37,13 @@ body:
     description: A clear and concise description of what you expected to happen.
   validations:
     required: true
+
 - type: textarea
   id: screenshots
   attributes:
     label: Add Screenshots
-    description: Add sufficient Screenshots to explain your issue.
+    description: Add sufficient screenshots to explain your issue.
+
 - type: checkboxes
   id: terms
   attributes:
