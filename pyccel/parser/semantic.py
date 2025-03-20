@@ -1915,7 +1915,7 @@ class SemanticParser(BasicParser):
 
                     if status == 'unallocated':
                         self._allocs[-1].add(var)
-                    else:
+                    elif isinstance(var.class_type, NumpyNDArrayType):
                         errors.report(ARRAY_REALLOCATION.format(class_type = var.class_type), symbol=var.name,
                             severity='warning',
                             bounding_box=(self.current_ast_node.lineno,
