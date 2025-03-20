@@ -2531,7 +2531,7 @@ class CToPythonWrapper(Wrapper):
             body.append(Allocate(arr_var, shape = (size_var,), status='unallocated'))
         else:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
-                                    memory_handling='heap', new_class = Variable)
+                                    memory_handling='heap', new_class = Variable, is_const = False)
             self._wrapping_arrays = True
             self.scope.insert_variable(arg_var, orig_var.name)
             arg_vars = [arg_var]

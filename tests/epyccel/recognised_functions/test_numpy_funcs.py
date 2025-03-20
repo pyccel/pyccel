@@ -2454,6 +2454,21 @@ def test_sum_property(language):
     x = randint(99, size=10)
     assert f1(x) == sum_call(x)
 
+def test_sum_slice_in_if(language):
+    def sum_call(x : 'int[:]'):
+        from numpy import sum as np_sum
+        s = x.shape[0]
+        if s < 3:
+            return 0
+        else:
+            n = 1
+            m = s -1
+            return np_sum(x[n:m])
+
+    f1 = epyccel(sum_call, language = language, fflags='-Werror=uninitialized')
+    x = randint(99, size=10)
+    assert f1(x) == sum_call(x)
+
 def test_min_int(language):
     def min_call(x : 'int[:]'):
         from numpy import amin

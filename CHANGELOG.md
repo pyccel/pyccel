@@ -131,6 +131,13 @@ All notable changes to this project will be documented in this file.
 -   #2214 : Fix returning a local variable from an inline function.
 -   #1321 : Fix use of tuples returned from functions in a non-assign statement.
 -   #2229 : Fix annotation of variables that are returned in a function whose result type is annotated.
+-   #2238 : Fix incorrect memory handling for temporary variable.
+-   #2239 : Fix missing library directory for Python shared library.
+-   #1410 : Fix conditional statement not working inside of a list comprehension.
+-   #1297 : Fix iteration over an `enumerate`, `map` or `zip` in a list comprehension.
+-   #2098 : Fix using multiple list comprehensions.
+-   #1948 : Fix list comprehension does not work in C.
+-   #2245 : Fix internal error when an inhomogeneous tuple appears as an indexed element.
 
 ### Changed
 
@@ -143,6 +150,8 @@ All notable changes to this project will be documented in this file.
 -   #1941 : Rename "target" in `AsName` to `local_alias` to better illustrate its use in the local context.
 -   #1961 : Use STC's `cspan` to describe `np.ndarray` in C. This results in a large speed-up for pathological cases.
 -   #2187 : Removed use of pickle.
+-   #2234 : Print all constant C variables with `const` specifier.
+-   #2249 : Improve installation docs and recommend virtual environment.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
