@@ -17,7 +17,7 @@ body:
   attributes:
     label: Do you have any suggestions for improvement? (Optional)
     description: If you have ideas on how to improve this issue, share them here.
-    placeholder: >
+    placeholder: |
       Provide possible solutions or thoughts on fixing this issue.
   validations:
     required: false
