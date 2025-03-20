@@ -138,15 +138,18 @@ class Compiler:
 
     def _get_flags(self, flags = (), accelerators = ()):
         """
-        Collect necessary compile flags
+        Collect necessary compile flags.
+
+        Collect necessary compile flags, e.g. those relevant to the
+        language or compilation mode (debug/release).
 
         Parameters
         ----------
-        flags        : iterable of str
-                       Any additional flags requested by the user
-                       / required by the file
+        flags : iterable of str
+            Any additional flags requested by the user / required by
+            the file.
         accelerators : iterable or str
-                       Accelerators used by the code
+            Accelerators used by the code.
         """
         flags = list(flags)
 
@@ -168,15 +171,18 @@ class Compiler:
 
     def _get_property(self, key, prop = (), accelerators = ()):
         """
-        Collect necessary compile property
+        Collect necessary compile property.
+
+        Collect necessary compile properties such as include folders
+        or library directories.
 
         Parameters
         ----------
-        property     : iterable of str
-                       Any additional values of the property
-                       requested by the user / required by the file
+        property : iterable of str
+            Any additional values of the property requested by the
+            user / required by the file.
         accelerators : iterable or str
-                       Accelerators used by the code
+            Accelerators used by the code.
         """
         # Use dict keys as an ordered set
         prop = dict.fromkeys(prop)
