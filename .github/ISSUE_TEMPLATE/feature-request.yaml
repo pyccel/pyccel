@@ -1,10 +1,5 @@
 name: Feature Request 💡
-
-description: |
-  Non-trivial features require consideration to find the best implementation in the target languages.
-  This conversation should take place in the [discussion tab](https://github.com/pyccel/pyccel/discussions/categories/q-a).
-  Please only open issues for features if you can describe the code that should be generated.
-
+description: Suggest a feature
 title: "[Feature Request] "
 labels: enhancement
 
