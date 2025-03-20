@@ -3001,7 +3001,7 @@ class CCodePrinter(CodePrinter):
             code = f'{c_type}_pull({list_obj})'
 
             if not isinstance(class_type.element_type, FixedSizeNumericType):
-                code = f'(*(*{code}.get))'
+                code = f'(*{code}.get->get)'
             return code
 
     #================== Set methods ==================
