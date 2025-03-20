@@ -104,7 +104,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **`discard`** | **Yes** |
 | **`intersection`** | **Yes** |
 | **`intersection_update`** | **Yes** |
-| `isdisjoint` | No |
+| **`isdisjoint`** | **Yes** |
 | `issubset` | No |
 | `issuperset` | No |
 | **`pop`** | **Yes** |

@@ -47,6 +47,7 @@ All notable changes to this project will be documented in this file.
 -   #1754 : Add support for set method `update()`.
 -   #1744 : Add support for set method `intersection()`.
 -   #1745 : Add support for set method `intersection_update()`.
+-   #1745 : Add support for set method `isdisjoint()`.
 -   #2059 : Add C support for returning dictionaries from functions.
 -   #2164 : Add support for dict indexing.
 -   #1880 : Add support for dict method `clear()`.
@@ -131,6 +132,13 @@ All notable changes to this project will be documented in this file.
 -   #2214 : Fix returning a local variable from an inline function.
 -   #1321 : Fix use of tuples returned from functions in a non-assign statement.
 -   #2229 : Fix annotation of variables that are returned in a function whose result type is annotated.
+-   #2238 : Fix incorrect memory handling for temporary variable.
+-   #2239 : Fix missing library directory for Python shared library.
+-   #1410 : Fix conditional statement not working inside of a list comprehension.
+-   #1297 : Fix iteration over an `enumerate`, `map` or `zip` in a list comprehension.
+-   #2098 : Fix using multiple list comprehensions.
+-   #1948 : Fix list comprehension does not work in C.
+-   #2245 : Fix internal error when an inhomogeneous tuple appears as an indexed element.
 
 ### Changed
 
@@ -143,6 +151,8 @@ All notable changes to this project will be documented in this file.
 -   #1941 : Rename "target" in `AsName` to `local_alias` to better illustrate its use in the local context.
 -   #1961 : Use STC's `cspan` to describe `np.ndarray` in C. This results in a large speed-up for pathological cases.
 -   #2187 : Removed use of pickle.
+-   #2234 : Print all constant C variables with `const` specifier.
+-   #2249 : Improve installation docs and recommend virtual environment.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -173,6 +183,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Rename `BindCVariable`->`BindCModuleVariable`.
 -   \[INTERNALS\] Save a shape whose length is limited to the container length.
 -   \[INTERNALS\] Restrict use of `FunctionDefResult` to one instance per function.
+-   \[INTERNALS\] Use `_extract_X_FunctionDefArgument` methods in Fortran-to-C wrapper.
 
 ### Deprecated
 
@@ -189,7 +200,9 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 -   \[INTERNALS\] Remove unused classes `SymbolicAssign` and `SymbolicPrint`.
 -   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefResult` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
+-   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefArgument` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
 -   \[INTERNALS\] Remove unused class `ast.core.FuncAddressDeclare`.
+-   \[INTERNALS\] Remove unnecessary function `ast.utilities.flatten_tuple_var` (replaced by calls to `Scope.collect_all_tuple_elements`).
 
 ## \[1.12.1\] - 2024-10-01
 
