@@ -266,6 +266,7 @@ import_header_guard_prefix = {
 }
 
 stc_extension_mapping = {
+    'stc/arc': 'STC_Extensions/Arc_extensions',
     'stc/common': 'STC_Extensions/Common_extensions',
     'stc/hmap': 'STC_Extensions/Dict_extensions',
     'stc/hset': 'STC_Extensions/Set_extensions',
@@ -328,6 +329,7 @@ class CCodePrinter(CodePrinter):
         self._temporary_args = []
         self._current_module = None
         self._in_header = False
+        self._var_mem = {}
 
     def sort_imports(self, imports):
         """
@@ -723,7 +725,19 @@ class CCodePrinter(CodePrinter):
             stc_init_elements = []
             for e in elements:
                 if isinstance(e, Variable):
-                    stc_init_elements.append(f'{arc_type}_share({self._print(ObjectAddress(e))})')
+                    if e in self._var_mem:
+                        mem_var = self._var_mem[e]
+                    else:
+                        mem_var = Variable(MemoryHandlerType(e.class_type),
+                                           self.scope.get_new_name(f'{e.name}_mem'),
+                                           shape=(), memory_handling='heap')
+                        self.scope.insert_variable(mem_var)
+                        self._var_mem[e] = mem_var
+                    e_ptr = self._print(ObjectAddress(e))
+                    mem_var_ptr = self._print(ObjectAddress(mem_var))
+                    self.add_import(Import('stc/common', AsName(VariableTypeAnnotation(class_type), element_type)))
+                    self._additional_code += f'{self._print(mem_var)} = {arc_type}_share({e_ptr});\n'
+                    stc_init_elements.append(self._print(mem_var))
                 else:
                     stc_init_elements.append(self.init_stc_container(e, class_type))
             return stc_init_elements
@@ -749,7 +763,6 @@ class CCodePrinter(CodePrinter):
         str
             The generated C code for the container initialization.
         """
-
         dtype = self.get_c_type(class_type)
         if isinstance(expr, PythonDict):
             values = self.get_stc_init_elements(class_type.value_type, expr.values, dtype)
@@ -759,7 +772,11 @@ class CCodePrinter(CodePrinter):
             args = self.get_stc_init_elements(class_type.element_type, expr.args, dtype)
             keyraw = '{' + ', '.join(args) + '}'
         if not isinstance(class_type.element_type, (StringType, FixedSizeNumericType)):
-            return f'c_init_shared({dtype}, {keyraw})'
+            assert all(isinstance(a, Variable) for a in expr.args) or all(not isinstance(a, Variable) for a in expr.args)
+            if all(isinstance(a, Variable) for a in expr.args):
+                return f'c_init_shared({dtype}, {keyraw})'
+            else:
+                return f'c_init({dtype}, {keyraw})'
         else:
             return f'c_init({dtype}, {keyraw})'
 
@@ -1677,6 +1694,8 @@ class CCodePrinter(CodePrinter):
             dtype = self.get_c_type(expr.class_type.element_type)
         elif isinstance(expr.class_type, (HomogeneousContainerType, DictType)):
             dtype = self.get_c_type(expr.class_type)
+        elif isinstance(class_type, MemoryHandlerType):
+            dtype = self.get_c_type(class_type.element_type) + '_mem'
         elif not isinstance(class_type, CustomDataType):
             dtype = self.get_c_type(expr.dtype)
         else:
@@ -2041,9 +2060,13 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType, StringType)):
             if expr.variable.is_alias:
                 return ''
-            variable_address = self._print(ObjectAddress(expr.variable))
             container_type = self.get_c_type(expr.variable.class_type)
-            return f'{container_type}_drop({variable_address});\n'
+            if expr.variable in self._var_mem:
+                variable_code = self._print(self._var_mem[expr.variable])
+                return f'{container_type}_drop({container_type}_ptr_release({variable_code}.get));\n'
+            else:
+                variable_address = self._print(ObjectAddress(expr.variable))
+                return f'{container_type}_drop({variable_address});\n'
         if isinstance(expr.variable.class_type, InhomogeneousTupleType):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
         if isinstance(expr.variable.dtype, CustomDataType):
