@@ -599,13 +599,13 @@ class FCodePrinter(CodePrinter):
                     MacroDefinition(f'{element_name}_LT(x,y)', lt_def),
                     MacroDefinition(f'{element_name}_EQ(x,y)', PyccelAssociativeParenthesis(PyccelEq(tmpVar_x, tmpVar_y)))]
             if i_use_cmp:
-                    defs.append(MacroDefinition('i_use_cmp ', '1'))
+                defs.append(MacroDefinition('i_use_cmp ', '1'))
             undefs = [MacroUndef(element_name),
                       MacroUndef(f'{element_name}_KINDLEN'),
                       MacroUndef(f'{element_name}_LT'),
                       MacroUndef(f'{element_name}_EQ')]
             if i_use_cmp:
-                    undefs.append(MacroUndef('i_use_cmp '))
+                undefs.append(MacroUndef('i_use_cmp '))
         else:
             defs = [MacroDefinition(element_name, element_type)]
             undefs = [MacroUndef(element_name)]
