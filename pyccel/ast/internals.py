@@ -70,9 +70,9 @@ class PyccelFunction(TypedAstNode):
     @property
     def modified_args(self):
         """
-        Return an iterable of all the arguments which may be modified by this function.
+        Return a tuple of all the arguments which may be modified by this function.
 
-        Return an iterable of all the arguments which may be modified by this function.
+        Return a tuple of all the arguments which may be modified by this function.
         This is notably useful in order to determine the constness of arguments.
         """
         return ()
@@ -443,9 +443,9 @@ class Iterable(TypedAstNode):
     @property
     def modified_args(self):
         """
-        Return an iterable of all the arguments which may be modified by this function.
+        Return a tuple of all the arguments which may be modified by this function.
 
-        Return an iterable of all the arguments which may be modified by this function.
+        Return a tuple of all the arguments which may be modified by this function.
         This is notably useful in order to determine the constness of arguments.
         """
         return ()

@@ -59,9 +59,9 @@ class ListMethod(PyccelFunction):
     @property
     def modified_args(self):
         """
-        Return an iterable of all the arguments which may be modified by this function.
+        Return a tuple of all the arguments which may be modified by this function.
 
-        Return an iterable of all the arguments which may be modified by this function.
+        Return a tuple of all the arguments which may be modified by this function.
         This is notably useful in order to determine the constness of arguments.
         """
         return (self._list_obj,)
@@ -303,9 +303,9 @@ class ListCopy(ListMethod) :
     @property
     def modified_args(self):
         """
-        Return an iterable of all the arguments which may be modified by this function.
+        Return a tuple of all the arguments which may be modified by this function.
 
-        Return an iterable of all the arguments which may be modified by this function.
+        Return a tuple of all the arguments which may be modified by this function.
         This is notably useful in order to determine the constness of arguments.
         """
         return ()
