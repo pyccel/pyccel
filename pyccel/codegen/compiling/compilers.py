@@ -150,6 +150,11 @@ class Compiler:
             the file.
         accelerators : iterable or str
             Accelerators used by the code.
+
+        Returns
+        -------
+        list[str]
+            A list containing the flags.
         """
         flags = list(flags)
 
@@ -169,7 +174,7 @@ class Compiler:
 
         return flags
 
-    def _get_property(self, key, prop = (), accelerators = ()):
+    def _get_property(self, key, properties = (), accelerators = ()):
         """
         Collect necessary compile property.
 
@@ -178,21 +183,29 @@ class Compiler:
 
         Parameters
         ----------
-        property : iterable of str
+        key : str
+            A key describing the property of interest.
+        properties : iterable of str
             Any additional values of the property requested by the
             user / required by the file.
         accelerators : iterable or str
             Accelerators used by the code.
+
+        Returns
+        -------
+        iterable[str]
+            An iterable containing the relevant information from the
+            requested property.
         """
         # Use dict keys as an ordered set
-        prop = dict.fromkeys(prop)
+        properties = dict.fromkeys(properties)
 
-        prop.update(dict.fromkeys(self._language_info.get(key,())))
+        properties.update(dict.fromkeys(self._language_info.get(key,())))
 
         for a in accelerators:
-            prop.update(dict.fromkeys(self._language_info.get(a,{}).get(key,())))
+            properties.update(dict.fromkeys(self._language_info.get(a,{}).get(key,())))
 
-        return prop.keys()
+        return properties.keys()
 
     def _get_includes(self, includes = (), accelerators = ()):
         """
