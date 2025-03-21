@@ -71,6 +71,15 @@ class PyccelFunction(TypedAstNode):
         """
         return False
 
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
 
 class PyccelArraySize(PyccelFunction):
     """
@@ -434,6 +443,16 @@ class Iterable(TypedAstNode):
         Returns the iterator(s) of the generated range.
         """
         return self._indices
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
 
 def symbols(names):
     """
