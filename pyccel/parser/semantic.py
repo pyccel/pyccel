@@ -4696,6 +4696,7 @@ class SemanticParser(BasicParser):
             # Find all nodes which can modify variables
             assigns = body.get_attribute_nodes((Assign, AliasAssign), excluded_nodes = (FunctionCall,))
             calls   = body.get_attribute_nodes(FunctionCall)
+            builtin_func_calls = body.get_attribute_nodes((PyccelFunction, Iterable))
             builtin_calls = body.get_attribute_nodes((Allocate, Deallocate))
 
             # Collect the modified objects
@@ -4703,6 +4704,7 @@ class SemanticParser(BasicParser):
             modified_args = [call_arg.value for f in calls
                                 for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
             modified_args += [f.variable for f in builtin_calls]
+            modified_args += [v for f in builtin_func_calls for v in f.modified_args]
             # Collect modified variables
             all_assigned = [v for a in (lhs_assigns + modified_args) for v in
                             (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
