@@ -56,7 +56,7 @@ once this file has been modified it can then be used with:
 pyccel --compiler=intel.json <file_to_translate>
 ```
 
-## Utilising Pyccel within Anaconda Environment
+## Utilising Pyccel within the Anaconda environment
 While Anaconda is a popular way to install Python as it simplifies package management, it can introduce challenges when working with compilers.
 
 Upon installation Anaconda modifies your shell's environment variables.
