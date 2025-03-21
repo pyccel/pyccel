@@ -2059,8 +2059,11 @@ class CCodePrinter(CodePrinter):
                 return ''
             container_type = self.get_c_type(expr.variable.class_type)
             if expr.variable in self._var_mem[-1]:
-                variable_code = self._print(self._var_mem[-1][expr.variable])
-                return f'{container_type}_drop({container_type}_ptr_release({variable_code}.get));\n'
+                mem_var = self._var_mem[-1][expr.variable]
+                variable_code = self._print(mem_var)
+                variable_code_obj = self._print(ObjectAddress(mem_var))
+                return (f'{container_type}_drop({container_type}_ptr_release({variable_code}.get));\n'
+                        f'{container_type}_mem_drop({variable_code_obj});\n')
             else:
                 variable_address = self._print(ObjectAddress(expr.variable))
                 return f'{container_type}_drop({variable_address});\n'
