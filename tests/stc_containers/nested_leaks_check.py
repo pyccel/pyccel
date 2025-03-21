@@ -32,6 +32,10 @@ def nested_list_ref_pop():
     c = [a,b]
     d = c.pop()
 
+def nested_list_ref_pop_temp():
+    a = [[1,2,3], [4,5,6]]
+    b = a.pop()
+
 if __name__ == '__main__':
     create_nested_list()
     create_nested_list2()
@@ -41,3 +45,4 @@ if __name__ == '__main__':
     nested_dict_reassign()
     nested_list_ref()
     nested_list_ref_pop()
+    nested_list_ref_pop_temp()
