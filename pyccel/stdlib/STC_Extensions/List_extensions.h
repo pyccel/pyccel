@@ -1,7 +1,7 @@
 #include <stc/priv/template.h>
 
 STC_INLINE void _c_MEMB(_put_n_ptr)(Self* self, const _m_value* raw, isize n)
-    { while (n--) _c_MEMB(_push)(self, (*raw)), ++raw; }
+    { while (n--) _c_MEMB(_push)(self, i_keyclone(*raw)), ++raw; }
 
 STC_INLINE Self _c_MEMB(_with_n_ptr)(const _m_value* raw, isize n)
     { Self cx = {0}; _c_MEMB(_put_n_ptr)(&cx, raw, n); return cx; }
