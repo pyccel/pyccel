@@ -2514,17 +2514,28 @@ class CToPythonWrapper(Wrapper):
         assert not bound_argument
 
         size_var = self.scope.get_temporary_variable(PythonNativeInt(), self.scope.get_new_name(f'{orig_var.name}_size'))
+        body = [Assign(size_var, PySet_Size(collect_arg))]
 
         if is_bind_c_argument:
-            raise errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
+            element_type = orig_var.class_type.element_type
+            #raise errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
+            arr_var = Variable(NumpyNDArrayType(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
+                                shape = (size_var,), memory_handling = 'heap')
+            self.scope.insert_variable(arr_var, orig_var.name)
+            arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+                        shape = (LiteralInteger(2),))
+            data = DottedVariable(VoidType(), 'data', lhs=arr_var)
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), data)
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(1)), size_var)
+            arg_vars = [arg_var]
+            body.append(Allocate(arr_var, shape = (size_var,), status='unallocated'))
         else:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     memory_handling='heap', new_class = Variable, is_const = False)
             self._wrapping_arrays = True
             self.scope.insert_variable(arg_var, orig_var.name)
             arg_vars = [arg_var]
-            body = [Assign(arg_var, PythonSet())]
-            insert_func = SetAdd
+            body.append(Assign(arg_var, PythonSet()))
 
         idx = self.scope.get_temporary_variable(CNativeInt())
         indexed_orig_var = self.scope.get_temporary_variable(orig_var.class_type.element_type)
@@ -2532,33 +2543,40 @@ class CToPythonWrapper(Wrapper):
 
         iter_obj = self.scope.get_temporary_variable(PyccelPyObject(), 'iter', memory_handling='alias')
 
-        body += [Assign(size_var, PySet_Size(collect_arg)),
-                 AliasAssign(iter_obj, PySet_GetIter(collect_arg))]
+        body.append(AliasAssign(iter_obj, PySet_GetIter(collect_arg)))
 
         for_scope = self.scope.create_new_loop_scope()
         self.scope = for_scope
         for_body = [AliasAssign(indexed_collect_arg, PyIter_Next(iter_obj))]
         for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_collect_arg,
                                     bound_argument, is_bind_c_argument, arg_var = indexed_orig_var)['body']
-        for_body.append(insert_func(arg_var, indexed_orig_var))
+        if is_bind_c_argument:
+            for_body.append(Assign(IndexedElement(arr_var, idx), indexed_orig_var))
+        else:
+            for_body.append(SetAdd(arg_var, indexed_orig_var))
         self.exit_scope()
 
         body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
 
         clean_up = []
         if not orig_var.is_const:
-            element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx),
-                                            is_bind_c_argument, None)
-            elem_set = PySet_Add(collect_arg, element_extraction['py_result'])
-            for_body = [*element_extraction['body'],
-                    If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
-                                             [Return(self._error_exit_code)]))]
+            if is_bind_c_argument:
+                errors.report("Sets should be passed as constant arguments when translating to languages other than c." +
+                              "Any changes to the set will not be reflected in the calling code.",
+                              severity='warning', symbol=orig_var)
+            else:
+                element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx),
+                                                is_bind_c_argument, None)
+                elem_set = PySet_Add(collect_arg, element_extraction['py_result'])
+                for_body = [*element_extraction['body'],
+                        If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
+                                                 [Return(self._error_exit_code)]))]
 
-            loop_iterator = VariableIterator(arg_var)
-            loop_iterator.set_loop_counter(idx)
-            clean_up = [If(IfSection(PyccelEq(PySet_Clear(collect_arg), PyccelUnarySub(LiteralInteger(1))),
-                                             [Return(self._error_exit_code)])),
-                    For((element_extraction['c_results'][0],), loop_iterator, for_body, for_scope)]
+                loop_iterator = VariableIterator(arg_var)
+                loop_iterator.set_loop_counter(idx)
+                clean_up = [If(IfSection(PyccelEq(PySet_Clear(collect_arg), PyccelUnarySub(LiteralInteger(1))),
+                                                 [Return(self._error_exit_code)])),
+                        For((element_extraction['c_results'][0],), loop_iterator, for_body, for_scope)]
 
         return {'body': body, 'args': arg_vars, 'clean_up': clean_up}
 

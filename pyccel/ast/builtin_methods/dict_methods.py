@@ -60,6 +60,16 @@ class DictMethod(PyccelFunction):
         """
         return self._dict_obj
 
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return (self._dict_obj,)
+
 #==============================================================================
 class DictPop(DictMethod):
     """
@@ -189,6 +199,16 @@ class DictGet(DictMethod):
         """
         return self._args[1]
 
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
+
 #==============================================================================
 class DictSetDefault(DictMethod):
     """
@@ -288,6 +308,16 @@ class DictCopy(DictMethod):
         self._class_type = dict_type
         self._shape = dict_obj.shape
         super().__init__(dict_obj)
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
 
 #==============================================================================
 class DictItems(Iterable):

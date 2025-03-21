@@ -57,6 +57,16 @@ class SetMethod(PyccelFunction):
         """
         return self._set_variable
 
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return (self._set_variable,)
+
 #==============================================================================
 class SetAdd(SetMethod) :
     """
@@ -125,6 +135,16 @@ class SetCopy(SetMethod):
         self._shape = set_variable._shape
         self._class_type = set_variable._class_type
         super().__init__(set_variable)
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
 
 #==============================================================================
 class SetPop(SetMethod):
@@ -236,6 +256,16 @@ class SetUnion(SetMethod):
         self._shape = (None,)*self._class_type.rank
         super().__init__(set_obj, *others)
 
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
+
 #==============================================================================
 
 class SetIntersection(SetMethod):
@@ -309,3 +339,13 @@ class SetIsDisjoint(SetMethod):
         if set_obj.class_type != other_set_obj.class_type:
             raise TypeError("Is disjoint can only be used to compare sets of the same type.")
         super().__init__(set_obj, other_set_obj)
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
