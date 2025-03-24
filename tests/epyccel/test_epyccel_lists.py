@@ -815,6 +815,25 @@ def test_list_min_max(language):
     assert python_result == pyccel_result
     assert isinstance(python_result, type(pyccel_result))
 
+
+def test_list_reverse(language):
+    def list_reverse():
+        a_int = [1, 2, 3]
+        a_float = [1.1, 2.2, 3.3]
+        a_complex = [1j, 2-3j]
+        a_single = [1]
+        a_int.reverse()
+        a_float.reverse()
+        a_complex.reverse()
+        a_single.reverse()
+        return (a_int[0], a_int[-1], a_float[0], a_float[-1],
+                a_single[0], a_single[-1], a_complex[0], a_complex[-1])
+    epyccel_func = epyccel(list_reverse, language = language)
+    pyccel_result = epyccel_func()
+    python_result = list_reverse()
+    assert python_result == pyccel_result
+
+
 def test_list_str(stc_language):
     def list_str():
         a = ['hello', 'world', '!']
