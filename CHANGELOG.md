@@ -80,7 +80,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 -   \[DEVELOPER\] Added an environment variable to globally activate developer-mode for errors.
--   \[INTERNALS\] 
+-   \[INTERNALS\] Check out the master branch of STC.
 
 ### Fixed
 
