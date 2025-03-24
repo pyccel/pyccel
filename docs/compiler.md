@@ -26,8 +26,7 @@ E.g.
 export PYCCEL_DEFAULT_COMPILER='intel'
 pyccel example.py
 ```
-Any flags provided to the `pyccel` command (or to the `epyccel` Python function) override the corresponding values defined in the default compiler.
-This holds true also for the `--compiler` flag itself: if this is provided, the environment variable is ignored.
+The `--compiler` flag overrides the default compiler: if this is provided, the environment variable is ignored.
 
 ## Using an unsupported compiler or custom compiler flags
 
@@ -72,8 +71,7 @@ pyccel mod2.py
 pyccel subdir/mod3.py
 ...
 ```
-It should be borne in mind that additional flags provided to Pyccel override the corresponding values specified in the JSON file.
-Moreover, passing the `--compiler` flag will cause Pyccel to ignore the environment variable completely.
+Passing the `--compiler` flag still allows the user to retrive the normal behaviour of Pyccel.
 
 ## Utilising Pyccel within the Anaconda environment
 While Anaconda is a popular way to install Python as it simplifies package management, it can introduce challenges when working with compilers.
