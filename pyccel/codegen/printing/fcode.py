@@ -1412,6 +1412,10 @@ class FCodePrinter(CodePrinter):
             self._additional_code += code
             return lhs_code
 
+    def _print_ListClear(self, expr):
+        target = self._print(expr.list_obj)
+        return f'call {target} % clear()\n'
+
     #========================== Set Methods ================================#
 
     def _print_SetAdd(self, expr):
