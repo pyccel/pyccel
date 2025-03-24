@@ -56,6 +56,16 @@ class ListMethod(PyccelFunction):
         """
         return self._list_obj
 
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return (self._list_obj,)
+
 #==============================================================================
 class ListAppend(ListMethod):
     """
@@ -289,6 +299,16 @@ class ListCopy(ListMethod) :
         self._shape = list_obj.shape
         self._class_type = list_obj.class_type
         super().__init__(list_obj)
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
 
 #==============================================================================
 class ListSort(ListMethod) :

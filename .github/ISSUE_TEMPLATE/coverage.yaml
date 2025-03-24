@@ -1,0 +1,33 @@
+name: Missing Coverage
+description: Report untested code that needs investigation
+title: 'COVERAGE:'
+labels: [ 'internals' ]
+assignees: []
+
+body:
+- type: textarea
+  id: code-location
+  attributes:
+    label: Untested Code
+    description: Provide the link to the untested code.
+    placeholder: "https://github.com/pyccel/pyccel/blob/{COMMIT_SHA}/{file_location}#{line_numbers}"
+  validations:
+    required: true
+
+- type: input
+  id: pr-number
+  attributes:
+    label: PR Number
+    description: Mention the PR where the issue was found.
+    placeholder: "PR #X"
+  validations:
+    required: false
+
+- type: textarea
+  id: suggested-action
+  attributes:
+    label: Suggested Action
+    description: What should be investigated regarding this code? Note down any relevant thoughts or questions to explore later.
+    placeholder: "Describe any uncertainties or aspects that need further analysis..."
+  validations:
+    required: true

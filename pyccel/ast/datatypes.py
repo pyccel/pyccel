@@ -355,6 +355,7 @@ class PythonNativeInt(PythonNativeNumericType):
         else:
             return NotImplemented
 
+
 class PythonNativeFloat(PythonNativeNumericType):
     """
     Class representing Python's native floating point type.
@@ -374,6 +375,7 @@ class PythonNativeFloat(PythonNativeNumericType):
             return self
         else:
             return NotImplemented
+
 
 class PythonNativeComplex(PythonNativeNumericType):
     """
