@@ -21,6 +21,11 @@ epyccel(my_func, compiler='intel')
 ```
 
 It is also possible to change the default compiler family by setting the environment variable `PYCCEL_DEFAULT_COMPILER`.
+E.g.
+```shell
+export PYCCEL_DEFAULT_COMPILER='intel'
+pyccel example.py
+```
 
 ## Using an unsupported compiler or custom compiler flags
 
