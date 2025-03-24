@@ -105,7 +105,8 @@ Strings are not yet supported as keys in Fortran.
 
 ## Strings
 
-Pyccel contains very minimal support for strings. This is mostly provided to allow us to implement strings as keys of dictionaries.
+Pyccel contains very minimal support for strings. For example strings can be used as keys of dictionaries (only in C currently) or to represent flags in the user code with if statements checking their value. More complex string handling is not currently supported. See the documentation on [builtin functions](./builtin-functions.md) for an overview of the available string methods.
+
 Strings can be declared in Pyccel using the following syntax:
 ```python
 a : str = 'hello'
