@@ -26,6 +26,8 @@ E.g.
 export PYCCEL_DEFAULT_COMPILER='intel'
 pyccel example.py
 ```
+Any flags provided to the `pyccel` command (or to the `epyccel` Python function) override the corresponding values defined in the default compiler.
+This holds true also for the `--compiler` flag itself: if this is provided, the environment variable is ignored.
 
 ## Using an unsupported compiler or custom compiler flags
 
@@ -60,6 +62,18 @@ once this file has been modified it can then be used with:
 ```shell
 pyccel --compiler=intel.json <file_to_translate>
 ```
+Instead of using the `--compiler` flag, the environment variable `PYCCEL_DEFAULT_COMPILER` can be used to specify the path to the JSON file.
+This is especially useful in large projects where the `pyccel` command (or the `epyccel` Python function) are used many times with the same flags.
+E.g.
+```shell
+export PYCCEL_DEFAULT_COMPILER='intel.json'
+pyccel mod1.py
+pyccel mod2.py
+pyccel subdir/mod3.py
+...
+```
+It should be borne in mind that additional flags provided to Pyccel override the corresponding values specified in the JSON file.
+Moreover, passing the `--compiler` flag will cause Pyccel to ignore the environment variable completely.
 
 ## Utilising Pyccel within the Anaconda environment
 While Anaconda is a popular way to install Python as it simplifies package management, it can introduce challenges when working with compilers.
