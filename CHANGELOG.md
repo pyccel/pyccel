@@ -33,7 +33,7 @@ All notable changes to this project will be documented in this file.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C and Fortran support for list method `pop()`.
 -   #1695 : Add C and Fortran support for list method `reverse()`.
--   #1663 : Add C support for sets as arguments.
+-   #1663 : Add C and Fortran support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
 -   #1893 : Add support for set initialisation with `set()`.
