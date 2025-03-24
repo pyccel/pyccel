@@ -56,4 +56,28 @@ contains
     end do
 
   end function __IDENTITY(Vector)_max
+
+  subroutine __IDENTITY(Vector)_insert(my_vector, idx, value)
+    class(Vector), intent(inout)              :: my_vector
+    integer(kind=GFTL_SIZE_KIND), intent(in)  :: idx
+    __T_declare_dummy__, intent(in)           :: value
+  
+    integer :: n, pos, i
+  
+    n = my_vector%size()
+    pos = idx
+  
+    if (pos < 0) pos = pos + n
+    if (pos < 0) pos = 0
+    if (pos > n) pos = n
+  
+    call my_vector%resize(n + 1)
+  
+    do i = n + 1, pos + 1, -1
+       call my_vector%set(i, my_vector%of(i - 1))
+    end do
+  
+    call my_vector%set(pos + 1, value)
+  end subroutine __IDENTITY(Vector)_insert
+
 #include <vector/tail.inc>

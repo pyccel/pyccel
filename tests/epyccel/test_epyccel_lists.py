@@ -254,7 +254,7 @@ def test_insert_basic(limited_language):
     epyc_f = epyccel(f, language=limited_language)
     assert f() == epyc_f()
 
-def test_insert_booleans(limited_language):
+def test_insert_booleans(language):
     def f():
         a = [True, False, True]
         a.insert(0, True)
@@ -266,10 +266,10 @@ def test_insert_booleans(limited_language):
         a.insert(-25, False)
         return a
 
-    epyc_f = epyccel(f, language=limited_language)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-def test_insert_complex(limited_language):
+def test_insert_complex(language):
     def f():
         a = [2j, 3 + 6j, 0 + 0j]
         a.insert(0, 9j)
@@ -281,10 +281,10 @@ def test_insert_complex(limited_language):
         a.insert(-25, 0 - 0j)
         return a
 
-    epyc_f = epyccel(f, language=limited_language)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-def test_insert_float(limited_language):
+def test_insert_float(language):
     def f():
         a = [0.0, 3.6 , 0.5]
         a.insert(0, 6.4)
@@ -296,7 +296,7 @@ def test_insert_float(limited_language):
         a.insert(-25, 2.5)
         return a
 
-    epyc_f = epyccel(f, language=limited_language)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_insert_ndarrays(limited_language):
@@ -319,7 +319,7 @@ def test_insert_ndarrays(limited_language):
     epyc_f = epyccel(f, language=limited_language)
     assert np.array_equal(f(), epyc_f())
 
-def test_insert_multiple(limited_language):
+def test_insert_multiple(language):
     def f():
         a = [1, 2, 3]
         a.insert(4, 4)
@@ -327,7 +327,7 @@ def test_insert_multiple(limited_language):
         a.insert(1, 6)
         return a
 
-    epyc_f = epyccel(f, language=limited_language)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_insert_list(limited_language):
@@ -339,14 +339,14 @@ def test_insert_list(limited_language):
     epyc_f = epyccel(f, language=limited_language)
     assert f() == epyc_f()
 
-def test_insert_range(limited_language):
+def test_insert_range(language):
     def f():
         a = [1, 2, 3]
         for i in range(4, 1000):
             a.insert(i - 1 ,i)
         return a
 
-    epyc_f = epyccel(f, language=limited_language)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_insert_range_list(limited_language):
