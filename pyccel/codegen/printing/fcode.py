@@ -1412,6 +1412,12 @@ class FCodePrinter(CodePrinter):
             self._additional_code += code
             return lhs_code
 
+    def _print_ListReverse(self, expr):
+        target = self._print(expr.list_obj)
+        type_name = self._print(expr.list_obj.class_type)
+        self.add_import(self._build_gFTL_extension_module(expr.list_obj.class_type))
+        return f'call {type_name}_reverse({target})\n'
+
     #========================== Set Methods ================================#
 
     def _print_SetAdd(self, expr):
