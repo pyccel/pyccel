@@ -2603,7 +2603,7 @@ class CToPythonWrapper(Wrapper):
         list[PyccelAstNode]
             A list of expressions which extract the argument from collect_arg into arg_var.
         """
-        assert not bound_argument
+        assert bound_argument is False
 
         if is_bind_c_argument:
             if arg_var is None:
