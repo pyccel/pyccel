@@ -76,7 +76,6 @@ contains
 
   end function __IDENTITY(Set)_is_disjoint
 
-
   ! Sets in gFTL are BSTs, therefore the min is the first element
    function __IDENTITY(Set)_min(my_set) result(result)
     class(Set), intent(in) :: my_set
