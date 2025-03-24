@@ -40,25 +40,25 @@ __all__ = ['execute_pyccel']
 # TODO: change name of variable 'module_name', as it could be a program
 # TODO [YG, 04.02.2020]: check if we should catch BaseException instead of Exception
 def execute_pyccel(fname, *,
-                   syntax_only   = False,
-                   semantic_only = False,
-                   convert_only  = False,
-                   verbose       = False,
-                   show_timings  = False,
-                   folder        = None,
-                   language      = None,
-                   compiler      = None,
-                   fflags        = None,
-                   wrapper_flags = None,
-                   includes      = (),
-                   libdirs       = (),
-                   modules       = (),
-                   libs          = (),
-                   debug         = None,
-                   accelerators  = (),
-                   output_name   = None,
+                   syntax_only     = False,
+                   semantic_only   = False,
+                   convert_only    = False,
+                   verbose         = False,
+                   show_timings    = False,
+                   folder          = None,
+                   language        = None,
+                   compiler_family = None,
+                   fflags          = None,
+                   wrapper_flags   = None,
+                   includes        = (),
+                   libdirs         = (),
+                   modules         = (),
+                   libs            = (),
+                   debug           = None,
+                   accelerators    = (),
+                   output_name     = None,
                    compiler_export_file = None,
-                   conda_warnings = 'basic'):
+                   conda_warnings  = 'basic'):
     """
     Run Pyccel on the provided code.
 
