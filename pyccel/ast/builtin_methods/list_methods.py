@@ -21,8 +21,8 @@ __all__ = ('ListAppend',
            'ListMethod',
            'ListPop',
            'ListRemove',
-           'ListSort',
-           'ListReverse'
+           'ListReverse',
+           'ListSort'
            )
 
 #==============================================================================
