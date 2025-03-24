@@ -10,6 +10,7 @@ __all__ = [
         'concatenate_expr',
         'string_function_call',
         'string_function_call_on_literal',
+        'string_function_return',
         ]
 
 def one_quote():
@@ -58,3 +59,6 @@ def string_function_call():
 def string_function_call_on_literal():
     t = str('hello')
     return t
+
+def string_function_return():
+    return str('hello')
