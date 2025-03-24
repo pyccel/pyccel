@@ -62,7 +62,7 @@ once this file has been modified it can then be used with:
 pyccel --compiler=intel.json <file_to_translate>
 ```
 Instead of using the `--compiler` flag, the environment variable `PYCCEL_DEFAULT_COMPILER` can be used to specify the path to the JSON file.
-This is especially useful in large projects where the `pyccel` command (or the `epyccel` Python function) are used many times with the same flags.
+This is especially useful in large projects where the `pyccel` command (or the `epyccel` Python function) is used many times with the same flags.
 E.g.
 ```shell
 export PYCCEL_DEFAULT_COMPILER='intel.json'
