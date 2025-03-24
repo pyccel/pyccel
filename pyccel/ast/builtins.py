@@ -58,7 +58,7 @@ __all__ = (
     'PythonRound',
     'PythonSet',
     'PythonSetFunction',
-    'PythonString',
+    'PythonStr',
     'PythonSum',
     'PythonTuple',
     'PythonTupleFunction',
@@ -1726,7 +1726,7 @@ class PythonIsInstance(PyccelFunction):
         super().__init__(obj, class_or_tuple)
 
 #==============================================================================
-class PythonString(PyccelFunction):
+class PythonStr(PyccelFunction):
     """
     Represents a call to Python's `str` function.
 
@@ -1784,7 +1784,7 @@ builtin_functions_dict = {
     'range'      : PythonRange,
     'round'      : PythonRound,
     'set'        : PythonSetFunction,
-    'str'        : PythonString,
+    'str'        : PythonStr,
     'sum'        : PythonSum,
     'tuple'      : PythonTupleFunction,
     'type'       : PythonType,

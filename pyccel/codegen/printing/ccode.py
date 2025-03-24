@@ -3005,7 +3005,7 @@ class CCodePrinter(CodePrinter):
         else:
             return f'cstr_str({code})'
 
-    def _print_PythonString(self, expr):
+    def _print_PythonStr(self, expr):
         arg = expr.args[0]
         arg_code = self._print(arg)
         if isinstance(arg.class_type, StringType):

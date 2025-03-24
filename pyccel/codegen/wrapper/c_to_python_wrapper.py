@@ -12,7 +12,7 @@ from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer
 from pyccel.ast.bind_c        import BindCModule, BindCModuleVariable, BindCVariable
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty, BindCArrayType
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
-from pyccel.ast.builtins      import VariableIterator, PythonString
+from pyccel.ast.builtins      import VariableIterator, PythonStr
 from pyccel.ast.builtin_methods.set_methods import SetAdd, SetPop
 from pyccel.ast.builtin_methods.dict_methods import DictItems
 from pyccel.ast.class_defs    import StackArrayClass
@@ -2634,7 +2634,7 @@ class CToPythonWrapper(Wrapper):
                                         is_argument = False)
                 self.scope.insert_variable(arg_var, orig_var.name)
 
-            body = [Assign(orig_var, PythonString(PyUnicode_AsUTF8(collect_arg)))]
+            body = [Assign(orig_var, PythonStr(PyUnicode_AsUTF8(collect_arg)))]
 
             default_init = [AliasAssign(arg_var, Nil())]
             if getattr(orig_var, 'is_optional', False):

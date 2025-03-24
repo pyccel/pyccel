@@ -1508,7 +1508,7 @@ class FCodePrinter(CodePrinter):
 
     #========================== String Methods ===============================#
 
-    def _print_PythonString(self, expr):
+    def _print_PythonStr(self, expr):
         return self._print(expr.args[0])
 
     #========================== Numpy Elements ===============================#
