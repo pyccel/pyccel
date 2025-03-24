@@ -1191,9 +1191,10 @@ class SemanticParser(BasicParser):
                             new_expr = DottedName(args[0].value, FunctionCall(func, args[1:]))
                         else:
                             new_expr = FunctionCall(func, args)
-                        new_expr.set_current_ast(expr.python_ast)
+                        new_expr.set_current_ast(expr.python_ast or self._current_ast_node)
                         pyccel_stage.set_stage('semantic')
-                        new_expr.set_current_user_node(expr.current_user_node)
+                        for u in expr.get_all_user_nodes():
+                            new_expr.set_current_user_node(u)
                         expr = new_expr
                     return getattr(self, annotation_method)(expr, args)
 
