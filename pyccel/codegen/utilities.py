@@ -67,7 +67,6 @@ internal_libs["STC_Extensions/Common_extensions"] = (stdlib_path / "STC_Extensio
 internal_libs["gFTL_functions/Set_extensions"] = (stdlib_path / "gFTL_functions", "gFTL_functions", CompileObj("Set_Extensions.inc",
                                                                      folder="gFTL_functions",
                                                                      has_target_file = False,
-
                                                                      dependencies = (internal_libs['gFTL'][2],)))
 internal_libs["gFTL_functions/Vector_extensions"] = (stdlib_path / "gFTL_functions", "gFTL_functions", CompileObj("Vector_Extensions.inc",
                                                                      folder="gFTL_functions",
