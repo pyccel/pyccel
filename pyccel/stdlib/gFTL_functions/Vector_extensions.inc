@@ -7,6 +7,26 @@ contains
 #include "parameters/T/copy_vector_T_to_internal_T.inc"
 #include "parameters/T/define_derived_macros.inc"
 
+  subroutine __IDENTITY(Vector)_reverse(my_vector)
+    class(Vector), intent(inout) :: my_vector
+
+    integer :: left, right
+    __T_declare_dummy__ :: temp
+
+    left = 1
+    right = my_vector%size()
+
+    do while (left < right)
+        temp = my_vector%at(left)
+        call my_vector%set(left, my_vector%at(right))
+        call my_vector%set(right, temp)
+
+        left = left + 1
+        right = right - 1
+    end do
+
+  end subroutine __IDENTITY(Vector)_reverse
+
   function __IDENTITY(Vector)_min(my_vector) result(result)
     class(Vector), intent(in) :: my_vector
     __T_declare_dummy__ :: result

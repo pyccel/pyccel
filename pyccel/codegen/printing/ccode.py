@@ -1216,7 +1216,7 @@ class CCodePrinter(CodePrinter):
                      f'#include <{stc_extension_mapping[source]}.h>\n',
                      f'#endif // {header_guard}\n\n'))
             return code
-        elif source != 'stc/cstr' and (source.startswith('stc/') or source in import_header_guard_prefix):
+        elif source in import_header_guard_prefix:
             code = ''
             for t in expr.target:
                 class_type = t.object.class_type
@@ -2911,6 +2911,20 @@ class CCodePrinter(CodePrinter):
         value = self._print(expr.args[1])
         list_obj = self._print(ObjectAddress(expr.list_obj))
         return f'{c_type}_insert({list_obj}, {idx}, {value});\n'
+
+    def _print_ListClear(self, expr):
+        target = expr.list_obj
+        class_type = target.class_type
+        c_type = self.get_c_type(class_type)
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        return f'{c_type}_clear({list_obj});\n'
+
+    def _print_ListReverse(self, expr):
+        class_type = expr.list_obj.class_type
+        c_type = self.get_c_type(class_type)
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        self.add_import(Import('stc/algorithm' ,AsName(VariableTypeAnnotation(class_type), c_type)))
+        return f'c_reverse({c_type}, {list_obj});\n'
 
     #================== Set methods ==================
 

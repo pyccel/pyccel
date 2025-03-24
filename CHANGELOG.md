@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
--   #1787 : Ensure STC v5.0 is installed with Pyccel.
+-   #1787 : Ensure STC v5.0 (`ef322ae`) is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
 -   #1694 : Add Python support for list method `extend()`.
 -   #1700 : Add Python support for list method `sort()`.
@@ -32,6 +32,8 @@ All notable changes to this project will be documented in this file.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C and Fortran support for list method `pop()`.
+-   #1695 : Add C and Fortran support for list method `reverse()`.
+-   #2256 : Add C and Fortran support for list method `clear()`.
 -   #1663 : Add C and Fortran support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
