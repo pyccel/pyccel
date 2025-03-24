@@ -82,7 +82,7 @@ a : set[int] = {1, 2}
 b : set[bool] = {False, True}
 c : set[float] = {}
 ```
-Sets can be declared as local variables, arguments or results of functions translated to C. An argument can be marked as constant using a string annotation or (in a module) using the `Final` qualifier:
+Sets can be declared as local variables, arguments or results of functions, but not yet as class variables. An argument can be marked as constant using a string annotation or (in a module) using the `Final` qualifier:
 ```python
 def f(a : 'const set[int]'):
     pass
@@ -105,9 +105,12 @@ Strings are not yet supported as keys in Fortran.
 
 ## Strings
 
-Pyccel contains very minimal support for strings. This is mostly provided to allow the use of strings as keys of dictionaries.
+Pyccel contains very minimal support for strings. For example strings can be used as keys of dictionaries (only in C currently) or to represent flags in the user code with if statements checking their value. More complex string handling is not currently supported. See the documentation on [builtin functions](./builtin-functions.md) for an overview of the available string methods.
 
-Currently strings can be used as local variables and can be returned from functions.
+Strings can be declared in Pyccel using the following syntax:
+```python
+a : str = 'hello'
+```
 
 ## Handling multiple types
 

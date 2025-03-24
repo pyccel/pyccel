@@ -65,7 +65,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `slice` | No |
 | `sorted` | No |
 | `staticmethod` | No |
-| `str` | No |
+| `str` | As a type annotation or with string arguments |
 | **`sum`** | **Yes** |
 | `super` | No |
 | **`tuple`** | **Yes** |

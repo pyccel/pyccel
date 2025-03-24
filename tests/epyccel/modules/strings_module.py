@@ -8,6 +8,9 @@ __all__ = [
         'concatenate',
         'concatenate_multiple',
         'concatenate_expr',
+        'string_function_call',
+        'string_function_call_on_literal',
+        'string_function_return',
         ]
 
 def one_quote():
@@ -47,3 +50,15 @@ def concatenate_expr():
     t = "world"
     v = s + "_" + t
     return v
+
+def string_function_call():
+    s = 'hello'
+    t = str(s)
+    return t
+
+def string_function_call_on_literal():
+    t = str('hello')
+    return t
+
+def string_function_return():
+    return str('hello')
