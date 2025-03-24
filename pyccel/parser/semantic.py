@@ -1503,7 +1503,7 @@ class SemanticParser(BasicParser):
                 d_lhs['memory_handling'] = 'alias'
                 rhs.base.is_target = not rhs.base.is_alias
 
-            elif isinstance(rhs, (ListPop, DictPop)):
+            elif isinstance(rhs, (IndexedElement, ListPop, DictPop)):
                 d_lhs['memory_handling'] = 'alias'
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign = False,
