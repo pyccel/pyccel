@@ -1,4 +1,3 @@
-
 #include <stc/priv/template.h>
 
 
@@ -20,6 +19,7 @@ static inline i_key _c_MEMB(_pull_elem)(Self* self, intptr_t pop_idx) {
     }
     return *(itr.ref); // Return the element that is being popped.
 }
+
 
 #if defined (i_use_cmp) 
 // Function to get the minimum element from the vector
@@ -44,7 +44,6 @@ static inline i_key _c_MEMB(_max)(const Self* self) {
     return max_val;
 }
 #endif
-
 #undef i_type
 #undef i_key
 #undef i_use_cmp

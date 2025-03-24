@@ -106,7 +106,6 @@ static inline i_key _c_MEMB(_max)(const Self* self) {
     return max_val;
 }
 #endif
-
 #undef i_type
 #undef i_key
 #undef i_use_cmp
