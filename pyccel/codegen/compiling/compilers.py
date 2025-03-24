@@ -196,8 +196,20 @@ class Compiler:
         iterable[str]
             An iterable containing the relevant information from the
             requested property.
+
+        Examples
+        --------
+        >>> self._get_property("libs", ("-lmy_lib",), ())
+        dict_keys(['-lmy_lib', '-lm'])
+
+        >>> self._get_property("libs", ("-lmy_lib",), ("openmp",))
+        dict_keys(['-lmy_lib', '-lm', 'gomp'])
+
+        >>> self._get_property("includes", ("/home/user/homemade-install-dir/",), ("mpi",))
+        dict_keys(['/home/user/homemade-install-dir/'])
         """
-        # Use dict keys as an ordered set
+        # Use a dictionary instead of a set to ensure properties are ordered by insertion
+        # The keys of the dictionary contain the values for the property of interest.
         properties = dict.fromkeys(properties)
 
         properties.update(dict.fromkeys(self._language_info.get(key,())))
