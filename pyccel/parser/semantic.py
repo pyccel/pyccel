@@ -36,7 +36,7 @@ from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonT
 from pyccel.ast.builtins import Lambda, PythonMap
 
 from pyccel.ast.builtin_methods.dict_methods import DictKeys
-from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop
+from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop, ListInsert
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
 from pyccel.ast.builtin_methods.set_methods  import SetPop
 from pyccel.ast.builtin_methods.dict_methods  import DictGetItem, DictGet, DictPop, DictPopitem
@@ -698,9 +698,13 @@ class SemanticParser(BasicParser):
             return
 
         assert pointer != target
+        assert not isinstance(pointer.class_type, (StringType, FixedSizeNumericType))
+
+        # The class itself should also be aware of the target for freeing
         if isinstance(pointer, DottedVariable):
             self._indicate_pointer_target(pointer.lhs, target, expr)
-        elif isinstance(target, DottedVariable):
+
+        if isinstance(target, DottedVariable):
             self._indicate_pointer_target(pointer, target.lhs, expr)
         elif isinstance(target, IndexedElement):
             self._indicate_pointer_target(pointer, target.base, expr)
@@ -708,16 +712,37 @@ class SemanticParser(BasicParser):
             self._indicate_pointer_target(pointer, target.dict_obj, expr)
         elif isinstance(target, Variable):
             if target.is_alias:
+                sub_targets = None
                 try:
                     sub_targets = self._pointer_targets[-1][target]
                 except KeyError:
                     errors.report("Pointer cannot point at a non-local pointer\n"+PYCCEL_RESTRICTION_TODO,
                         severity='error', symbol=expr)
-                self._pointer_targets[-1].setdefault(pointer, []).extend((t[0], expr) for t in sub_targets)
+                if sub_targets:
+                    self._pointer_targets[-1].setdefault(pointer, []).extend((t[0], expr) for t in sub_targets)
             else:
                 target.is_target = True
                 self._pointer_targets[-1].setdefault(pointer, []).append((target, expr))
-        else:
+        elif isinstance(target, FunctionCall):
+            if isinstance(target.funcdef, FunctionDef):
+                if target.funcdef.result_pointer_map:
+                    raise NotImplementedError("TODO results point at args")
+        elif isinstance(target, (PythonList, PythonSet, PythonTuple)):
+            if not isinstance(target.class_type.element_type, (StringType, FixedSizeNumericType)):
+                for v in target:
+                    self._indicate_pointer_target(pointer, v, expr)
+        elif isinstance(target, (ListPop, DictPop)):
+            target_var = target.list_obj if isinstance(target, ListPop) else target.dict_obj
+            if target_var in self._pointer_targets[-1]:
+                sub_targets = self._pointer_targets[-1][target_var]
+                self._pointer_targets[-1].setdefault(pointer, []).extend((t[0], expr) for t in sub_targets)
+            elif isinstance(pointer, Variable):
+                self._allocs[-1].add(pointer)
+        elif isinstance(target, PythonDict):
+            if not isinstance(target.class_type.value_type, (StringType, FixedSizeNumericType)):
+                for v in target.values:
+                    self._indicate_pointer_target(pointer, v, expr)
+        elif isinstance(pointer, Variable) and pointer.is_alias:
             errors.report("Pointer cannot point at a temporary object",
                 severity='error', symbol=expr)
 
@@ -1457,19 +1482,28 @@ class SemanticParser(BasicParser):
             Dictionary of properties for the new Variable.
         """
 
+        # rhs is None in an AugAssign
+        if rhs is None or isinstance(rhs, FunctionalFor):
+            return
+
+        assert rhs.pyccel_staging != 'syntactic'
+
         if isinstance(rhs, NumpyTranspose) and rhs.internal_var.on_heap:
             d_lhs['memory_handling'] = 'alias'
             rhs.internal_var.is_target = True
 
-        if isinstance(rhs, Variable) and (rhs.rank > 0 or isinstance(rhs.class_type, CustomDataType)) \
-                and not isinstance(rhs.class_type, (TupleType, StringType)):
-            d_lhs['memory_handling'] = 'alias'
-            rhs.is_target = not rhs.is_alias
+        if not isinstance(rhs.class_type, (TupleType, StringType, FixedSizeNumericType)):
+            if isinstance(rhs, Variable):
+                d_lhs['memory_handling'] = 'alias'
+                rhs.is_target = not rhs.is_alias
 
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and \
-                (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'is_alias', False)):
-            d_lhs['memory_handling'] = 'alias'
-            rhs.base.is_target = not rhs.base.is_alias
+            elif isinstance(rhs, IndexedElement) and \
+                    isinstance(rhs.class_type, (HomogeneousTupleType, NumpyNDArrayType)):
+                d_lhs['memory_handling'] = 'alias'
+                rhs.base.is_target = not rhs.base.is_alias
+
+            elif isinstance(rhs, (ListPop, DictPop)):
+                d_lhs['memory_handling'] = 'alias'
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign = False,
             arr_in_multirets=False):
@@ -1882,7 +1916,7 @@ class SemanticParser(BasicParser):
 
                     if status == 'unallocated':
                         self._allocs[-1].add(var)
-                    else:
+                    elif isinstance(var.class_type, NumpyNDArrayType):
                         errors.report(ARRAY_REALLOCATION.format(class_type = var.class_type), symbol=var.name,
                             severity='warning',
                             bounding_box=(self.current_ast_node.lineno,
@@ -1926,7 +1960,7 @@ class SemanticParser(BasicParser):
         while isinstance(loop, (For, If)):
 
             nlevels+=1
-            self._get_for_iterators(loop.iterable, loop.target, new_expr)
+            self._get_for_iterators(loop.iterable, loop.target, new_expr, expr)
 
             loop_elem = loop.body.body[0]
             if isinstance(loop_elem, If):
@@ -2237,7 +2271,7 @@ class SemanticParser(BasicParser):
 
         return iterable
 
-    def _get_for_iterators(self, syntactic_iterable, iterator, new_expr):
+    def _get_for_iterators(self, syntactic_iterable, iterator, new_expr, expr):
         """
         Get the semantic target and iterable of a for loop.
 
@@ -2253,6 +2287,8 @@ class SemanticParser(BasicParser):
         new_expr : list[PyccelAstNode]
             A list which allows collection of any additional expressions
             resulting from this operation (e.g. Allocation).
+        expr : PyccelAstNode
+            The expression being visited. This is used for error handling.
 
         Returns
         -------
@@ -2305,6 +2341,10 @@ class SemanticParser(BasicParser):
 
             target = self._assign_lhs_variable(iterator, iterator_d_var,
                             rhs=iterator_rhs, new_expressions=new_expr)
+
+            if target.is_alias:
+                self._indicate_pointer_target(target, iterator_rhs, expr.python_ast)
+
             if isinstance(target.class_type, InhomogeneousTupleType):
                 target = [self.scope.collect_tuple_element(v) for v in target]
             else:
@@ -2314,6 +2354,10 @@ class SemanticParser(BasicParser):
             target = [self._assign_lhs_variable(it, self._infer_type(rhs),
                                 rhs=rhs, new_expressions=new_expr)
                         for it, rhs in zip(iterator, iterator_rhs)]
+
+            for t, rhs in zip(target, iterator_rhs):
+                if t.is_alias:
+                    self._indicate_pointer_target(t, rhs, expr.python_ast)
         else:
             raise errors.report(INVALID_FOR_ITERABLE, symbol=iterator,
                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
@@ -2658,7 +2702,7 @@ class SemanticParser(BasicParser):
         if isinstance(value, (PyccelArithmeticOperator, PyccelFunction)) and value.rank:
             a = generate_and_assign_temp_var()
         elif isinstance(value, FunctionCall) and isinstance(value.class_type, CustomDataType):
-            if not value.funcdef.results.var.is_alias:
+            if value.funcdef.results.var and not value.funcdef.results.var.is_alias:
                 a = generate_and_assign_temp_var()
         return a
 
@@ -3375,7 +3419,10 @@ class SemanticParser(BasicParser):
                             symbol=annotation, severity='error')
                 lhs = lhs.name
 
-            cls_variable = self._assign_lhs_variable(lhs, d_var, expr, new_expression, False)
+            cls_variable = self._assign_lhs_variable(lhs, d_var,
+                                    rhs = method.results.var,
+                                    new_expressions = new_expression,
+                                    is_augassign = False)
             self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
             self._check_argument_compatibility(args, method.arguments,
@@ -3867,8 +3914,20 @@ class SemanticParser(BasicParser):
 
                 elif isinstance(l.class_type, SymbolicType):
                     errors.report(PYCCEL_RESTRICTION_TODO,
-                                  bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                                  symbol=expr,
                                   severity='fatal')
+                elif isinstance(r, (PythonList, PythonSet, PythonTuple, PythonDict)):
+                    self._indicate_pointer_target(l, r, expr)
+                elif isinstance(r, (ListPop, DictPop, DictPopitem)) and \
+                        not isinstance(l.class_type, (StringType, FixedSizeNumericType)):
+                    class_obj = getattr(r, 'dict_obj', getattr(r, 'list_obj', None))
+                    class_obj = r.list_obj if isinstance(r, ListPop) else r.dict_obj
+                    for target, target_expr in self._pointer_targets[-1].get(class_obj, ()):
+                        # Create an expr describing 2 lines to show where the dependency comes from
+                        indicated_expr = CodeBlock([target_expr, expr])
+                        # Show the line number of the assignment for the returned object
+                        indicated_expr.set_current_ast(expr.python_ast)
+                        self._indicate_pointer_target(l, target, indicated_expr)
 
             new_expressions.append(new_expr)
 
@@ -3949,7 +4008,7 @@ class SemanticParser(BasicParser):
         new_expr = []
 
         # treatment of the index/indices
-        target, iterable = self._get_for_iterators(expr.iterable, expr.target, new_expr)
+        target, iterable = self._get_for_iterators(expr.iterable, expr.target, new_expr, expr)
 
         body = self._visit(expr.body)
 
@@ -4726,17 +4785,13 @@ class SemanticParser(BasicParser):
             for r in results_vars:
                 t = pointer_targets.get(r, ())
                 if r.is_alias:
-                    persistent_targets = []
-                    for target, _ in t:
-                        target_argument_index = next((i for i,a in enumerate(arguments) if a.var == target), -1)
-                        if target_argument_index != -1:
-                            persistent_targets.append(target_argument_index)
-                    if not persistent_targets:
+                    arg_vars = [a.var for a in arguments]
+                    temp_targets = [target for target, _ in t if target not in arg_vars]
+                    if temp_targets:
                         errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
-                            symbol=r, severity='error',
-                            bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
+                            symbol=r, severity='error')
                     else:
-                        result_pointer_map[r] = persistent_targets
+                        result_pointer_map[r] = [next(i for i,a in enumerate(arguments) if a.var == target) for target, _ in t]
 
             optional_inits = []
             for a in arguments:
@@ -5404,6 +5459,10 @@ class SemanticParser(BasicParser):
             except TypeError as e:
                 msg = str(e)
                 errors.report(msg, symbol=expr, severity='fatal')
+            if not isinstance(list_variable.class_type.element_type, (StringType, FixedSizeNumericType)):
+                for a in added_list:
+                    if not isinstance(a, (PythonList, PythonSet, PythonTuple, NumpyNewArray)):
+                        self._indicate_pointer_target(list_variable, a, expr)
             return CodeBlock(store)
         else:
             pyccel_stage.set_stage('syntactic')
@@ -5411,6 +5470,7 @@ class SemanticParser(BasicParser):
             arg = FunctionCallArgument(for_target)
             func_call = FunctionCall('append', [arg])
             dotted = DottedName(expr.name[0], func_call)
+            dotted.set_current_ast(expr.python_ast)
             lhs = PyccelSymbol('_', is_temp=True)
             assign = Assign(lhs, dotted)
             assign.set_current_ast(expr.python_ast)
@@ -5976,7 +6036,7 @@ class SemanticParser(BasicParser):
             body = []
             lhs_semantic_var = self._assign_lhs_variable(lhs, d_var, PythonSetFunction(arg), body)
             scope = self.create_new_loop_scope()
-            targets, iterable = self._get_for_iterators(arg, self.scope.get_new_name(), body)
+            targets, iterable = self._get_for_iterators(arg, self.scope.get_new_name(), body, expr)
             self.exit_loop_scope()
             body.append(For(targets, iterable, [SetAdd(lhs_semantic_var, targets[0])], scope=scope))
             if assigns:
@@ -6048,3 +6108,57 @@ class SemanticParser(BasicParser):
                 errors.report(f"Type {class_or_tuple} is not handled in isinstance call.",
                         severity='error', symbol=expr)
                 return LiteralTrue()
+
+    def _build_ListAppend(self, expr, args):
+        """
+        Method to create the semantic ListAppend node.
+
+        Method to create the semantic ListAppend node ensuring that pointers are
+        correctly handled.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represent the call to `.append()`.
+
+        args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        Returns
+        -------
+        ListAppend
+            The semantic ListAppend object.
+        """
+        list_obj, append_arg = [a.value for a in args]
+        semantic_node = ListAppend(list_obj, append_arg)
+        if not isinstance(append_arg.class_type, (StringType, FixedSizeNumericType)) \
+                and not isinstance(append_arg, (PythonList, PythonSet, PythonTuple, NumpyNewArray)):
+            self._indicate_pointer_target(list_obj, append_arg, expr)
+        return semantic_node
+
+    def _build_ListInsert(self, expr, args):
+        """
+        Method to create the semantic ListInsert node.
+
+        Method to create the semantic ListInsert node ensuring that pointers are
+        correctly handled.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represent the call to `.insert()`.
+
+        args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        Returns
+        -------
+        ListInsert
+            The semantic ListInsert object.
+        """
+        list_obj, index, new_elem = [a.value for a in args]
+        semantic_node = ListInsert(list_obj, index, new_elem)
+        if not isinstance(new_elem.class_type, (StringType, FixedSizeNumericType)) \
+                and not isinstance(new_elem, (PythonList, PythonSet, PythonTuple, NumpyNewArray)):
+            self._indicate_pointer_target(list_obj, new_elem, expr)
+        return semantic_node
