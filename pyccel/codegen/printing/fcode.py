@@ -1412,6 +1412,12 @@ class FCodePrinter(CodePrinter):
             self._additional_code += code
             return lhs_code
 
+    def _print_ListReverse(self, expr):
+        target = self._print(expr.list_obj)
+        type_name = self._print(expr.list_obj.class_type)
+        self.add_import(self._build_gFTL_extension_module(expr.list_obj.class_type))
+        return f'call {type_name}_reverse({target})\n'
+
     #========================== Set Methods ================================#
 
     def _print_SetAdd(self, expr):
@@ -1495,7 +1501,7 @@ class FCodePrinter(CodePrinter):
         # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
         return f'{type_name}_is_disjoint({var_code}, {arg_code})'
 
-   #========================== Dict Methods ================================#
+    #========================== Dict Methods ================================#
 
     def _print_DictClear(self, expr):
         var = self._print(expr.dict_obj)
@@ -1505,6 +1511,11 @@ class FCodePrinter(CodePrinter):
         dict_obj = self._print(expr.dict_obj)
         key = self._print(expr.key)
         return f'{dict_obj} % of( {key} )'
+
+    #========================== String Methods ===============================#
+
+    def _print_PythonStr(self, expr):
+        return self._print(expr.args[0])
 
     #========================== Numpy Elements ===============================#
 
@@ -2592,7 +2603,7 @@ class FCodePrinter(CodePrinter):
         body_code = self._print(expr.body)
         docstring = self._print(expr.docstring) if expr.docstring else ''
 
-        decs = [Declare(v) for v in expr.local_vars]
+        decs = [Declare(v) for v in expr.local_vars if not v.is_argument]
         self._get_external_declarations(decs)
 
         prelude += ''.join(self._print(i) for i in decs)
@@ -3128,7 +3139,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelAdd(self, expr):
         if isinstance(expr.dtype, StringType):
-            return '//'.join('trim('+self._print(a)+')' for a in expr.args)
+            return ' // '.join(self._print(a) for a in expr.args)
         else:
             args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
             return ' + '.join(self._print(a) for a in args)
