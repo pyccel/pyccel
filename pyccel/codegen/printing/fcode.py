@@ -58,7 +58,7 @@ from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal, LiteralEllipsis
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
-from pyccel.ast.literals  import Nil
+from pyccel.ast.literals  import Nil, convert_to_literal
 
 from pyccel.ast.low_level_tools  import MacroDefinition, IteratorType, PairType
 from pyccel.ast.low_level_tools  import MacroUndef
@@ -2316,7 +2316,10 @@ class FCodePrinter(CodePrinter):
             elif expr.alloc_type == 'reserve':
                 var_code = self._print(expr.variable)
                 size_code = self._print(expr.shape[0])
-                return f'call {var_code} % reserve({size_code})\n'
+                if expr.status == 'unallocated':
+                    return f'call {var_code} % reserve({size_code})\n'
+                return (f'call {var_code} % clear()\n'
+                        f'call {var_code} % reserve({size_code})\n')
             else:
                 return ''
         elif isinstance(class_type, (HomogeneousContainerType, DictType, StringType)):
@@ -3923,3 +3926,15 @@ class FCodePrinter(CodePrinter):
 
     def _print_KindSpecification(self, expr):
         return f'(kind = {self.print_kind(expr.type_specifier)})'
+
+    def _print_MinLimit(self, expr):
+        # TypeError: '<' not supported between instances of 'complex' and 'complex'
+        assert not isinstance(expr.class_type.primitive_type, PrimitiveComplexType)
+        example_of_type = convert_to_literal(0, dtype = expr.class_type)
+        return f'-Huge({self._print(example_of_type)})'
+
+    def _print_MaxLimit(self, expr):
+        # TypeError: '>' not supported between instances of 'complex' and 'complex'
+        assert not isinstance(expr.class_type.primitive_type, PrimitiveComplexType)
+        example_of_type = convert_to_literal(0, dtype = expr.class_type)
+        return f'Huge({self._print(example_of_type)})'

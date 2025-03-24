@@ -32,7 +32,7 @@ All notable changes to this project will be documented in this file.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C and Fortran support for list method `pop()`.
--   #1663 : Add C support for sets as arguments.
+-   #1663 : Add C and Fortran support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
 -   #1893 : Add support for set initialisation with `set()`.
@@ -134,6 +134,10 @@ All notable changes to this project will be documented in this file.
 -   #2229 : Fix annotation of variables that are returned in a function whose result type is annotated.
 -   #2238 : Fix incorrect memory handling for temporary variable.
 -   #2239 : Fix missing library directory for Python shared library.
+-   #1410 : Fix conditional statement not working inside of a list comprehension.
+-   #1297 : Fix iteration over an `enumerate`, `map` or `zip` in a list comprehension.
+-   #2098 : Fix using multiple list comprehensions.
+-   #1948 : Fix list comprehension does not work in C.
 -   #2245 : Fix internal error when an inhomogeneous tuple appears as an indexed element.
 
 ### Changed
@@ -148,6 +152,7 @@ All notable changes to this project will be documented in this file.
 -   #1961 : Use STC's `cspan` to describe `np.ndarray` in C. This results in a large speed-up for pathological cases.
 -   #2187 : Removed use of pickle.
 -   #2234 : Print all constant C variables with `const` specifier.
+-   #2249 : Improve installation docs and recommend virtual environment.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.

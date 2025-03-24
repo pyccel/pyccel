@@ -15,6 +15,7 @@ from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePoint
 from pyccel.ast.bind_c import BindCClassProperty, c_malloc, BindCSizeOf
 from pyccel.ast.bind_c import BindCVariable, BindCArrayType, C_NULL_CHAR
 from pyccel.ast.builtins import VariableIterator, PythonRange
+from pyccel.ast.builtin_methods.set_methods import SetAdd
 from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
@@ -438,6 +439,50 @@ class FortranToCWrapper(Wrapper):
 
         body = [C_F_Pointer(bind_var, array_var, (shape_var,)),
                 Assign(arg_var, LiteralString('')),
+                For((idx,), iterator, for_body, scope = for_scope)]
+
+        c_arg_var = Variable(BindCArrayType(rank, has_strides = False),
+                        scope.get_new_name(), is_argument = True,
+                        shape = (LiteralInteger(2),))
+
+        scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(0)), bind_var)
+        scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(1)), shape_var)
+
+        return {'c_arg': BindCVariable(c_arg_var, var), 'f_arg': arg_var, 'body': body}
+
+    def _extract_HomogeneousSetType_FunctionDefArgument(self, var, func):
+        name = var.name
+        scope = self.scope
+        scope.insert_symbol(name)
+        collisionless_name = scope.get_expected_name(name)
+        rank = var.rank
+        element_type = var.class_type.element_type
+        bind_var = Variable(BindCPointer(), scope.get_new_name(f'bound_{name}'),
+                            is_argument = True, is_optional = False, memory_handling='alias')
+        arg_var = var.clone(collisionless_name, is_argument = False, is_optional = False,
+                            allows_negative_indexes=False, new_class = Variable)
+        scope.insert_variable(arg_var)
+        scope.insert_variable(bind_var)
+
+        shape_var = scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_size', is_argument = True)
+        local_var = Variable(NumpyNDArrayType(element_type, 1, None), scope.get_new_name(name),
+                            shape = (shape_var,), memory_handling='alias')
+        scope.insert_variable(local_var)
+
+        for_scope = scope.create_new_loop_scope()
+        iterator = PythonRange(LiteralInteger(1), PyccelAdd(shape_var, LiteralInteger(1)))
+        idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+        iterator.set_loop_counter(idx)
+        self.scope.insert_variable(idx)
+
+        # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
+        # Lists are 1-indexed but Pyccel adds the shift during printing so they are
+        # treated as 0-indexed here
+        for_body = [SetAdd(arg_var, IndexedElement(local_var, idx))]
+
+        body = [C_F_Pointer(bind_var, local_var, (shape_var,)),
+                Allocate(arg_var, shape = (shape_var,), status = 'unallocated',
+                    alloc_type = 'reserve'),
                 For((idx,), iterator, for_body, scope = for_scope)]
 
         c_arg_var = Variable(BindCArrayType(rank, has_strides = False),

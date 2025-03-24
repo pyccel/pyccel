@@ -61,6 +61,7 @@ def test_functional_for_2d_dependant_range(language):
         pytest.param("python", marks = pytest.mark.python)
     )
 )
+
 def test_functional_for_2d_array_range(language):
     idx = randint(28)
     compare_epyccel(functionals.functional_for_2d_array_range, language,idx)
@@ -74,3 +75,25 @@ def test_functional_for_3d_range(language):
 def test_unknown_length_functional(language):
     y = array(randint(100, size = 20), dtype = int)
     compare_epyccel(functionals.unknown_length_functional, language, y)
+
+def test_functional_with_enumerate(language):
+    compare_epyccel(functionals.functional_with_enumerate, language)
+
+def test_functional_with_enumerate_with_start(language):
+    compare_epyccel(functionals.functional_with_enumerate_with_start, language)
+
+def test_functional_with_condition(language):
+    compare_epyccel(functionals.functional_with_condition, language)
+
+def test_functional_with_zip(language):
+    compare_epyccel(functionals.functional_with_zip, language)
+
+def test_functional_with_multiple_zips(language):
+    compare_epyccel(functionals.functional_with_multiple_zips, language)
+
+def test_functional_filter_and_transform(language):
+    compare_epyccel(functionals.functional_with_condition, language)
+
+def test_functional_with_multiple_conditions(language):
+    compare_epyccel(functionals.functional_with_multiple_conditions, language)
+
