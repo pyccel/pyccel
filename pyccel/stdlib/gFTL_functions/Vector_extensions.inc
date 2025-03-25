@@ -84,7 +84,7 @@ contains
     integer(i64), intent(in)                  :: idx
     __T_declare_dummy__, intent(in)           :: value
   
-    integer :: n, pos, i
+    integer(i64) :: n, pos, i
   
     n = my_vector%size()
     pos = idx
