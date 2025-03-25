@@ -366,26 +366,26 @@ def test_insert_user_defined_objects(limited_language):
     accelerated_list = modnew.fn()
     assert python_list == accelerated_list
 
-def test_clear_1(limited_language):
+def test_clear_1(language):
 
     def clear_1():
         a = [1, 2, 3]
         a.clear()
         return a
 
-    epyc_clear_1 = epyccel(clear_1, language = limited_language)
+    epyc_clear_1 = epyccel(clear_1, language = language)
     pyccel_result = epyc_clear_1()
     python_result = clear_1()
     assert python_result == pyccel_result
 
-def test_clear_2(limited_language):
+def test_clear_2(language):
 
     def clear_2():
-        a = []
+        a : 'list[int]' = []
         a.clear()
         return a
 
-    epyc_clear_2 = epyccel(clear_2, language = limited_language)
+    epyc_clear_2 = epyccel(clear_2, language = language)
     pyccel_result = epyc_clear_2()
     python_result = clear_2()
     assert python_result == pyccel_result
