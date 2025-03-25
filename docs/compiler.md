@@ -71,7 +71,7 @@ pyccel mod2.py
 pyccel subdir/mod3.py
 ...
 ```
-Passing the `--compiler` flag still allows the user to retrive the normal behaviour of Pyccel.
+Passing the `--compiler` flag still allows the user to retrieve the normal behaviour of Pyccel.
 
 ## Utilising Pyccel within the Anaconda environment
 While Anaconda is a popular way to install Python as it simplifies package management, it can introduce challenges when working with compilers.
