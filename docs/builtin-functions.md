@@ -82,7 +82,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **`clear`** | **Yes** |
 | `copy` | Python-only |
 | `count` | No |
-| `extend` | Python-only |
+| **`extend`** | **Yes** |
 | `index` | No |
 | **`insert`** | **Yes** |
 | `max` | No |

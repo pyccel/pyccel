@@ -78,8 +78,10 @@ contains
   end function __IDENTITY(Vector)_max
 
   subroutine __IDENTITY(Vector)_insert(my_vector, idx, value)
+    use, intrinsic :: ISO_C_BINDING, only: i64 => C_INT64_T
+
     class(Vector), intent(inout)              :: my_vector
-    integer(kind=GFTL_SIZE_KIND), intent(in)  :: idx
+    integer(i64), intent(in)                  :: idx
     __T_declare_dummy__, intent(in)           :: value
   
     integer :: n, pos, i
