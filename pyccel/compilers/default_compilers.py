@@ -31,7 +31,6 @@ gfort_info = {'exec' : 'gfortran',
               'openacc': {
                   'flags' : ("-ta=multicore", "-Minfo=accel"),
                   },
-              'family': 'GNU',
               }
 
 if sys.platform == "win32":
@@ -56,7 +55,6 @@ ifort_info = {'exec' : 'ifx',
               'openacc': {
                   'flags' : ("-ta=multicore", "-Minfo=accel"),
                   },
-              'family': 'intel',
               }
 
 #------------------------------------------------------------
@@ -73,7 +71,6 @@ pgfortran_info = {'exec' : 'pgfortran',
               'openacc': {
                   'flags' : ("-acc"),
                   },
-              'family': 'PGI',
               }
 
 #------------------------------------------------------------
@@ -90,7 +87,6 @@ nvfort_info = {'exec' : 'nvfort',
               'openacc': {
                   'flags' : ("-acc"),
                   },
-              'family': 'nvidia',
               }
 
 #------------------------------------------------------------
@@ -109,7 +105,6 @@ gcc_info = {'exec' : 'gcc',
             'openacc': {
                 'flags' : ("-ta=multicore", "-Minfo=accel"),
                 },
-            'family': 'GNU',
             }
 
 if sys.platform == "darwin":
@@ -143,7 +138,6 @@ icc_info = {'exec' : 'icx',
             'openacc': {
                 'flags' : ("-ta=multicore", "-Minfo=accel"),
                 },
-            'family': 'intel',
             }
 
 #------------------------------------------------------------
@@ -159,7 +153,6 @@ pgcc_info = {'exec' : 'pgcc',
             'openacc': {
                 'flags' : ("-acc"),
                 },
-            'family': 'PGI',
             }
 
 #------------------------------------------------------------
@@ -175,7 +168,6 @@ nvc_info = {'exec' : 'nvc',
             'openacc': {
                 'flags' : ("-acc"),
                 },
-            'family': 'nvidia',
             }
 
 #------------------------------------------------------------
