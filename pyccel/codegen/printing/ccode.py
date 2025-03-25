@@ -1216,7 +1216,7 @@ class CCodePrinter(CodePrinter):
                      f'#include <{stc_extension_mapping[source]}.h>\n',
                      f'#endif // {header_guard}\n\n'))
             return code
-        elif source != 'stc/cstr' and (source.startswith('stc/') or source in import_header_guard_prefix):
+        elif source in import_header_guard_prefix:
             code = ''
             for t in expr.target:
                 class_type = t.object.class_type
@@ -2903,6 +2903,20 @@ class CCodePrinter(CodePrinter):
         else:
             return f'{c_type}_pull({list_obj})'
 
+    def _print_ListClear(self, expr):
+        target = expr.list_obj
+        class_type = target.class_type
+        c_type = self.get_c_type(class_type)
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        return f'{c_type}_clear({list_obj});\n'
+
+    def _print_ListReverse(self, expr):
+        class_type = expr.list_obj.class_type
+        c_type = self.get_c_type(class_type)
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        self.add_import(Import('stc/algorithm' ,AsName(VariableTypeAnnotation(class_type), c_type)))
+        return f'c_reverse({c_type}, {list_obj});\n'
+
     #================== Set methods ==================
 
     def _print_SetPop(self, expr):
@@ -3032,6 +3046,8 @@ class CCodePrinter(CodePrinter):
 
         return f"(*{container_type}_at({dict_obj_code}, {key}))"
 
+    #================== String methods ==================
+
     def _print_CStrStr(self, expr):
         arg = expr.args[0]
         code = self._print(ObjectAddress(arg))
@@ -3039,6 +3055,15 @@ class CCodePrinter(CodePrinter):
             return code[10:-1]
         else:
             return f'cstr_str({code})'
+
+    def _print_PythonStr(self, expr):
+        arg = expr.args[0]
+        arg_code = self._print(arg)
+        if isinstance(arg.class_type, StringType):
+            return f'cstr_clone({arg_code})'
+        else:
+            assert isinstance(arg.class_type, CharType) and getattr(arg, 'is_alias', True)
+            return f'cstr_from({arg_code})'
 
     #=================== MACROS ==================
 
