@@ -40,25 +40,25 @@ __all__ = ['execute_pyccel']
 # TODO: change name of variable 'module_name', as it could be a program
 # TODO [YG, 04.02.2020]: check if we should catch BaseException instead of Exception
 def execute_pyccel(fname, *,
-                   syntax_only   = False,
-                   semantic_only = False,
-                   convert_only  = False,
-                   verbose       = False,
-                   show_timings  = False,
-                   folder        = None,
-                   language      = None,
-                   compiler      = None,
-                   fflags        = None,
-                   wrapper_flags = None,
-                   includes      = (),
-                   libdirs       = (),
-                   modules       = (),
-                   libs          = (),
-                   debug         = None,
-                   accelerators  = (),
-                   output_name   = None,
+                   syntax_only     = False,
+                   semantic_only   = False,
+                   convert_only    = False,
+                   verbose         = False,
+                   show_timings    = False,
+                   folder          = None,
+                   language        = None,
+                   compiler_family = None,
+                   fflags          = None,
+                   wrapper_flags   = None,
+                   includes        = (),
+                   libdirs         = (),
+                   modules         = (),
+                   libs            = (),
+                   debug           = None,
+                   accelerators    = (),
+                   output_name     = None,
                    compiler_export_file = None,
-                   conda_warnings = 'basic'):
+                   conda_warnings  = 'basic'):
     """
     Run Pyccel on the provided code.
 
@@ -86,8 +86,9 @@ def execute_pyccel(fname, *,
         Path to the working directory. Default is the folder containing the file to be translated.
     language : str, optional
         The target language Pyccel is translating to. Default is 'fortran'.
-    compiler : str, optional
+    compiler_family : str, optional
         The compiler used to compile the generated files. Default is 'GNU'.
+        This can also contain the name of a json file describing a compiler.
     fflags : str, optional
         The flags passed to the compiler. Default is provided by the Compiler.
     wrapper_flags : str, optional
@@ -183,20 +184,19 @@ def execute_pyccel(fname, *,
         language = 'fortran'
 
     # Choose Fortran compiler
-    if compiler is None:
-        compiler = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
+    if compiler_family is None:
+        compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
 
     fflags = [] if fflags is None else fflags.split()
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
 
     # Get compiler object
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
-    src_compiler = Compiler(compiler, language, debug)
-    wrapper_compiler = Compiler(compiler, 'c', debug)
+    compiler = Compiler(compiler_family, debug)
 
     # Export the compiler information if requested
     if compiler_export_file:
-        src_compiler.export_compiler_info(compiler_export_file)
+        compiler.export_compiler_info(compiler_export_file)
         if not fname:
             return
 
@@ -316,7 +316,7 @@ def execute_pyccel(fname, *,
     #         pass
     #------------------------------------------------------
     try:
-        manage_dependencies(codegen.printer.get_additional_imports(), src_compiler, pyccel_dirpath, mod_obj,
+        manage_dependencies(codegen.printer.get_additional_imports(), compiler, pyccel_dirpath, mod_obj,
                 language, verbose, convert_only)
     except NotImplementedError as error:
         errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
@@ -369,8 +369,9 @@ def execute_pyccel(fname, *,
     start_compile_target_language = time.time()
     # Compile code to modules
     try:
-        src_compiler.compile_module(compile_obj=mod_obj,
+        compiler.compile_module(compile_obj=mod_obj,
                 output_folder=pyccel_dirpath,
+                language=language,
                 verbose=verbose)
     except Exception:
         handle_error('compilation')
@@ -383,8 +384,9 @@ def execute_pyccel(fname, *,
                     folder       = pyccel_dirpath,
                     dependencies = (mod_obj,),
                     prog_target  = module_name)
-            generated_program_filepath = src_compiler.compile_program(compile_obj=prog_obj,
+            generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
                     output_folder=pyccel_dirpath,
+                    language=language,
                     verbose=verbose)
 
         timers["Compilation without wrapper"] = time.time() - start_compile_target_language
@@ -395,8 +397,7 @@ def execute_pyccel(fname, *,
                                                language,
                                                wrapper_flags,
                                                pyccel_dirpath,
-                                               src_compiler,
-                                               wrapper_compiler,
+                                               compiler,
                                                output_name,
                                                verbose)
     except NotImplementedError as error:
