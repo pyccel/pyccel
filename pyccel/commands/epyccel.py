@@ -244,20 +244,20 @@ def epyccel_seq(function_or_module, *,
         try:
             # Generate shared library
             execute_pyccel(pymod_filename,
-                           verbose       = verbose,
-                           show_timings  = time_execution,
-                           language      = language,
-                           compiler      = compiler,
-                           fflags        = fflags,
-                           wrapper_flags = wrapper_flags,
-                           includes      = includes,
-                           libdirs       = libdirs,
-                           modules       = modules,
-                           libs          = libs,
-                           debug         = debug,
-                           accelerators  = accelerators,
-                           output_name   = module_name,
-                           conda_warnings= conda_warnings)
+                           verbose         = verbose,
+                           show_timings    = time_execution,
+                           language        = language,
+                           compiler_family = compiler,
+                           fflags          = fflags,
+                           wrapper_flags   = wrapper_flags,
+                           includes        = includes,
+                           libdirs         = libdirs,
+                           modules         = modules,
+                           libs            = libs,
+                           debug           = debug,
+                           accelerators    = accelerators,
+                           output_name     = module_name,
+                           conda_warnings  = conda_warnings)
         finally:
             # Change working directory back to starting point
             os.chdir(base_dirpath)
