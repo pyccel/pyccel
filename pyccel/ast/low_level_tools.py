@@ -8,6 +8,7 @@ Module to handle low-level language agnostic objects such as macros.
 from pyccel.utilities.metaclasses import ArgumentSingleton
 
 from .basic import PyccelAstNode
+from .core import Assign
 from .datatypes import PyccelType
 
 __all__ = ('IteratorType',
@@ -159,7 +160,7 @@ class MemoryHandlerType(PyccelType, metaclass=ArgumentSingleton):
         number of dimensions of the element whose memory is being
         managed.
         """
-        return self._element_type.rank
+        return 0
 
 #------------------------------------------------------------------------------
 class MacroDefinition(PyccelAstNode):
@@ -231,3 +232,24 @@ class MacroUndef(PyccelAstNode):
         """
         return self._macro_name
 
+#------------------------------------------------------------------------------
+class UnpackManagedMemory(PyccelAstNode):
+    _attribute_nodes = ('_managed_object','_mem_var')
+    __slots__ = ('_managed_object','_mem_var')
+
+    def __init__(self, managed_object, mem_var):
+        self._managed_object = managed_object
+        self._mem_var = mem_var
+        super().__init__()
+
+    @property
+    def managed_object(self):
+        return self._managed_object
+
+    @property
+    def memory_handler_assignment(self):
+        return AliasAssign(self._mem_var, self._managed_object)
+
+    @property
+    def memory_handler_var(self):
+        return self._mem_var

@@ -1221,6 +1221,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonType(self, expr):
         return 'type({})'.format(self._print(expr.arg))
 
+    def _print_UnpackManagedMemory(self, expr):
+        return self._print(expr.managed_object)
+
     #-----------------Class Printer---------------------------------
 
     def _print_ClassDef(self, expr):

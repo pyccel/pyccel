@@ -91,6 +91,8 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil, LiteralString, LiteralImaginaryUnit
 from pyccel.ast.literals import Literal, convert_to_literal, LiteralEllipsis
 
+from pyccel.ast.low_level_tools import MemoryHandlerType, UnpackManagedMemory
+
 from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
 
 from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
@@ -265,6 +267,8 @@ class SemanticParser(BasicParser):
         # used to link pointers to their targets. This is important for classes which may
         # contain persistent pointers
         self._pointer_targets = []
+
+        self._var_mem = []
 
         #
         self._code = parser._code
@@ -1882,6 +1886,9 @@ class SemanticParser(BasicParser):
                             severity='error',
                             bounding_box=(self.current_ast_node.lineno,
                                 self.current_ast_node.col_offset))
+
+                elif var.is_alias:
+                    pass
 
                 else:
                     alloc_type = None
@@ -3907,7 +3914,20 @@ class SemanticParser(BasicParser):
                 new_expr = Assign(l, r)
 
                 if is_pointer_i:
-                    new_expr = AliasAssign(l, r)
+                    if not isinstance(r.class_type, NumpyNDArrayType) and not isinstance(r, Variable):
+                        if l in self._var_mem[-1]:
+                            mem_var = self._var_mem[-1][l]
+                            new_expressions.append(Deallocate(mem_var))
+                        else:
+                            mem_var = Variable(MemoryHandlerType(l.class_type),
+                                               self.scope.get_new_name(f'{l.name}_mem'),
+                                               shape=None, memory_handling='alias')
+                            self.scope.insert_variable(mem_var)
+                            self._var_mem[-1][l] = mem_var
+                        new_expr = Assign(l, UnpackManagedMemory(r, mem_var))
+                    else:
+                        new_expr = AliasAssign(l, r)
+
                     if isinstance(r, FunctionCall):
                         funcdef = r.funcdef
                         target_r_idx = funcdef.result_pointer_map[funcdef.results.var]
@@ -4685,6 +4705,7 @@ class SemanticParser(BasicParser):
             # Create a new list that store local variables for each FunctionDef to handle nested functions
             self._allocs.append(set())
             self._pointer_targets.append({})
+            self._var_mem.append({})
 
             import_init_calls = [self._visit(i) for i in expr.imports]
 
@@ -4795,6 +4816,7 @@ class SemanticParser(BasicParser):
                                                        [Assign(var, a.var)])))
             body.insert2body(*optional_inits, back=False)
 
+            self._var_mem.pop()
             func_kwargs = {
                     'global_vars':global_vars,
                     'is_pure':is_pure,

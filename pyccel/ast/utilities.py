@@ -25,6 +25,7 @@ from .datatypes     import StringType
 from .internals     import PyccelFunction, Slice, PyccelArrayShapeElement
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
+from .low_level_tools import UnpackManagedMemory
 from .mathext       import math_mod
 from .numpyext      import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace
 from .numpyext      import get_shape_of_multi_level_container
@@ -420,7 +421,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
     if result is None:
         result = []
     current_level = 0
-    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet)
+    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet, UnpackManagedMemory)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
                                 or (isinstance(f, PyccelFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
                                     and not isinstance(f, (NumpyTranspose))))
