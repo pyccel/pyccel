@@ -3922,16 +3922,6 @@ class SemanticParser(BasicParser):
                                   severity='fatal')
                 elif isinstance(r, (PythonList, PythonSet, PythonTuple, PythonDict)):
                     self._indicate_pointer_target(l, r, expr)
-                elif isinstance(r, (ListPop, DictPop, DictPopitem)) and \
-                        not isinstance(l.class_type, (StringType, FixedSizeNumericType)):
-                    class_obj = getattr(r, 'dict_obj', getattr(r, 'list_obj', None))
-                    class_obj = r.list_obj if isinstance(r, ListPop) else r.dict_obj
-                    for target, target_expr in self._pointer_targets[-1].get(class_obj, ()):
-                        # Create an expr describing 2 lines to show where the dependency comes from
-                        indicated_expr = CodeBlock([target_expr, expr])
-                        # Show the line number of the assignment for the returned object
-                        indicated_expr.set_current_ast(expr.python_ast)
-                        self._indicate_pointer_target(l, target, indicated_expr)
 
             new_expressions.append(new_expr)
 
