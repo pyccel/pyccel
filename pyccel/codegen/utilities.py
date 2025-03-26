@@ -74,6 +74,10 @@ internal_libs["gFTL_functions/Vector_extensions"] = (stdlib_path / "gFTL_functio
                                                                      dependencies = (internal_libs['gFTL'][2],)))
 internal_libs["stc/cstr"] = (ext_path / "STC/src", "STC/src", CompileObj("cstr_core.c", folder="STC/include", dependencies = (internal_libs['stc'][2],)))
 internal_libs["stc/cspan"] = (ext_path / "STC/src", "STC/src", CompileObj("cspan.c", folder="STC/include", dependencies = (internal_libs['stc'][2],)))
+internal_libs["stc/algorithm"] = (ext_path / "STC/include/stc/", "STC/include/stc/", CompileObj("algorithm.h",
+                                    folder="STC/include",
+                                    has_target_file = False,
+                                    dependencies = (internal_libs['stc'][2],)))
 
 
 #==============================================================================
@@ -275,6 +279,7 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
 #==============================================================================
 def recompile_object(compile_obj,
                    compiler,
+                   language,
                    verbose = False):
     """
     Compile the provided file if necessary.
@@ -289,6 +294,9 @@ def recompile_object(compile_obj,
 
     compiler : str
         The compiler used.
+
+    language : str
+        The language in which code is being printed.
 
     verbose : bool
         Indicates whether additional information should be printed.
@@ -306,6 +314,7 @@ def recompile_object(compile_obj,
     if outdated:
         compiler.compile_module(compile_obj=compile_obj,
                 output_folder=compile_obj.source_folder,
+                language=language,
                 verbose=verbose)
 
 def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, language, verbose, convert_only = False):
@@ -355,6 +364,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
             # get the include folder path and library files
             recompile_object(stdlib,
                              compiler = compiler,
+                             language = language,
                              verbose  = verbose)
 
             mod_obj.add_dependencies(stdlib)
@@ -375,6 +385,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
         for d in deps:
             recompile_object(d,
                              compiler = compiler,
+                             language = language,
                              verbose  = verbose)
             mod_obj.add_dependencies(d)
 

@@ -366,26 +366,26 @@ def test_insert_user_defined_objects(limited_language):
     accelerated_list = modnew.fn()
     assert python_list == accelerated_list
 
-def test_clear_1(limited_language):
+def test_clear_1(language):
 
     def clear_1():
         a = [1, 2, 3]
         a.clear()
         return a
 
-    epyc_clear_1 = epyccel(clear_1, language = limited_language)
+    epyc_clear_1 = epyccel(clear_1, language = language)
     pyccel_result = epyc_clear_1()
     python_result = clear_1()
     assert python_result == pyccel_result
 
-def test_clear_2(limited_language):
+def test_clear_2(language):
 
     def clear_2():
-        a = []
+        a : 'list[int]' = []
         a.clear()
         return a
 
-    epyc_clear_2 = epyccel(clear_2, language = limited_language)
+    epyc_clear_2 = epyccel(clear_2, language = language)
     pyccel_result = epyc_clear_2()
     python_result = clear_2()
     assert python_result == pyccel_result
@@ -802,6 +802,25 @@ def test_list_min_max(language):
     python_result = list_min_max()
     assert python_result == pyccel_result
     assert isinstance(python_result, type(pyccel_result))
+
+
+def test_list_reverse(language):
+    def list_reverse():
+        a_int = [1, 2, 3]
+        a_float = [1.1, 2.2, 3.3]
+        a_complex = [1j, 2-3j]
+        a_single = [1]
+        a_int.reverse()
+        a_float.reverse()
+        a_complex.reverse()
+        a_single.reverse()
+        return (a_int[0], a_int[-1], a_float[0], a_float[-1],
+                a_single[0], a_single[-1], a_complex[0], a_complex[-1])
+    epyccel_func = epyccel(list_reverse, language = language)
+    pyccel_result = epyccel_func()
+    python_result = list_reverse()
+    assert python_result == pyccel_result
+
 
 def test_list_str(stc_language):
     def list_str():

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
--   #1787 : Ensure STC v5.0 is installed with Pyccel.
+-   #1787 : Ensure STC v5.0 (`ef322ae`) is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
 -   #1694 : Add Python support for list method `extend()`.
 -   #1700 : Add Python support for list method `sort()`.
@@ -32,6 +32,8 @@ All notable changes to this project will be documented in this file.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C and Fortran support for list method `pop()`.
+-   #1695 : Add C and Fortran support for list method `reverse()`.
+-   #2256 : Add C and Fortran support for list method `clear()`.
 -   #1663 : Add C and Fortran support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
@@ -73,6 +75,7 @@ All notable changes to this project will be documented in this file.
 -   #2183 : Add compile time analysis of if block conditions.
 -   #2139 : Add support for `__getitem__`
 -   #337 : Add support for returning tuples from functions.
+-   #2194 : Add support for strings as arguments.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
@@ -152,6 +155,7 @@ All notable changes to this project will be documented in this file.
 -   #2187 : Removed use of pickle.
 -   #2234 : Print all constant C variables with `const` specifier.
 -   #2249 : Improve installation docs and recommend virtual environment.
+-   #2242 : Change format of compiler info files.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.

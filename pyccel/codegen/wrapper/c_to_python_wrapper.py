@@ -12,7 +12,7 @@ from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer
 from pyccel.ast.bind_c        import BindCModule, BindCModuleVariable, BindCVariable
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty, BindCArrayType
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
-from pyccel.ast.builtins      import VariableIterator
+from pyccel.ast.builtins      import VariableIterator, PythonStr
 from pyccel.ast.builtin_methods.set_methods import SetAdd, SetPop
 from pyccel.ast.builtin_methods.dict_methods import DictItems
 from pyccel.ast.class_defs    import StackArrayClass
@@ -38,6 +38,7 @@ from pyccel.ast.cwrapper      import PySet_New, PySet_Add
 from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PySet_GetIter, PySet_Clear
 from pyccel.ast.cwrapper      import PyIter_Next
 from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
+from pyccel.ast.cwrapper      import PyUnicode_AsUTF8, PyUnicode_Check, PyUnicode_GetLength
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
 from pyccel.ast.c_concepts    import CStrStr
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
@@ -310,6 +311,8 @@ class CToPythonWrapper(Wrapper):
         if isinstance(dtype, CustomDataType):
             python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
             type_check_condition = PyObject_TypeCheck(py_obj, python_cls_base.type_object)
+        elif isinstance(dtype, StringType):
+            type_check_condition = PyUnicode_Check(py_obj)
         elif rank == 0:
             try :
                 cast_function = check_type_registry[dtype]
@@ -2580,6 +2583,87 @@ class CToPythonWrapper(Wrapper):
 
         return {'body': body, 'args': arg_vars, 'clean_up': clean_up}
 
+    def _extract_StringType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
+            is_bind_c_argument, *, arg_var = None):
+        """
+        Extract the C-compatible string FunctionDefArgument from the PythonObject.
+
+        Extract the C-compatible string FunctionDefArgument from the PythonObject.
+        The C-compatible argument is extracted from collect_arg which holds a Python
+        object into arg_var.
+
+        The extraction is done by allocating an array and filling the elements with values
+        extracted from the indexed Python tuple in collect_arg.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        bound_argument : bool
+            True if the argument is the self argument of a class method. False otherwise.
+            This should always be False for this function.
+
+        is_bind_c_argument : bool
+            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+
+        arg_var : Variable | IndexedElement, optional
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            A list of expressions which extract the argument from collect_arg into arg_var.
+        """
+        assert bound_argument is False
+
+        if is_bind_c_argument:
+            if arg_var is None:
+                data_var = Variable(CStackArray(CharType()), self.scope.get_expected_name(orig_var.name),
+                                    shape = (None,), memory_handling='alias', is_const = True)
+                size_var = Variable(PythonNativeInt(), self.scope.get_new_name(f'{data_var.name}_size'))
+                arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+                                    shape = (LiteralInteger(2),))
+                self.scope.insert_variable(data_var, orig_var.name)
+                self.scope.insert_variable(size_var)
+                self.scope.insert_variable(arg_var, tuple_recursive = False)
+                self.scope.insert_symbolic_alias(arg_var[0], ObjectAddress(data_var))
+                self.scope.insert_symbolic_alias(arg_var[1], size_var)
+
+            if getattr(orig_var, 'is_optional', False):
+                body = [AliasAssign(orig_var, PyUnicode_AsUTF8(collect_arg)),
+                        Assign(self.scope.collect_tuple_element(arg_var[1]), PyUnicode_GetLength(collect_arg))]
+            else:
+                body = [Assign(orig_var, PyUnicode_AsUTF8(collect_arg)),
+                        Assign(self.scope.collect_tuple_element(arg_var[1]), PyUnicode_GetLength(collect_arg))]
+
+            default_init = [AliasAssign(data_var, Nil()),
+                            Assign(size_var, 0)]
+        else:
+
+            if arg_var is None:
+                arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
+                                        is_argument = False)
+                self.scope.insert_variable(arg_var, orig_var.name)
+
+            body = [Assign(orig_var, PythonStr(PyUnicode_AsUTF8(collect_arg)))]
+
+            default_init = [AliasAssign(arg_var, Nil())]
+            if getattr(orig_var, 'is_optional', False):
+                memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False,
+                                                clone_scope = self.scope)
+                body.insert(0, AliasAssign(arg_var, memory_var))
+
+        return {'body': body,
+                'args': [arg_var],
+                'default_init': default_init}
+
     def _extract_FunctionDefResult(self, orig_var, is_bind_c, funcdef = None, name_hint = None):
         """
         Get the code which translates a C-compatible `Variable` to a Python `FunctionDefResult`.
@@ -2985,13 +3069,15 @@ class CToPythonWrapper(Wrapper):
             c_res = Variable(CharType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
             self.scope.insert_variable(c_res)
             char_data = ObjectAddress(c_res)
+            result = [char_data]
         else:
             c_res = Variable(StringType(), self.scope.get_new_name(name), memory_handling='heap')
             self.scope.insert_variable(c_res)
             char_data = CStrStr(c_res)
+            result = [c_res]
 
         body = [AliasAssign(py_res, PyBuildValueNode([char_data]))]
         if is_bind_c:
             body.append(Deallocate(c_res))
-        return {'c_results': [c_res], 'py_result': py_res, 'body': body}
+        return {'c_results': result, 'py_result': py_res, 'body': body}
 

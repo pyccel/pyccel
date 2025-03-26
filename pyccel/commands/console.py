@@ -270,24 +270,24 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     try:
         # TODO: prune options
         execute_pyccel(filename,
-                       syntax_only   = args.syntax_only,
-                       semantic_only = args.semantic_only,
-                       convert_only  = args.convert_only,
-                       verbose       = args.verbose,
-                       show_timings  = args.time_execution,
-                       language      = args.language,
-                       compiler      = compiler,
-                       fflags        = args.flags,
-                       wrapper_flags = args.wrapper_flags,
-                       includes      = args.includes,
-                       libdirs       = args.libdirs,
-                       modules       = (),
-                       libs          = args.libs,
-                       debug         = args.debug,
-                       accelerators  = accelerators,
-                       folder        = args.output,
+                       syntax_only     = args.syntax_only,
+                       semantic_only   = args.semantic_only,
+                       convert_only    = args.convert_only,
+                       verbose         = args.verbose,
+                       show_timings    = args.time_execution,
+                       language        = args.language,
+                       compiler_family = compiler,
+                       fflags          = args.flags,
+                       wrapper_flags   = args.wrapper_flags,
+                       includes        = args.includes,
+                       libdirs         = args.libdirs,
+                       modules         = (),
+                       libs            = args.libs,
+                       debug           = args.debug,
+                       accelerators    = accelerators,
+                       folder          = args.output,
                        compiler_export_file = compiler_export_file,
-                       conda_warnings = args.conda_warnings)
+                       conda_warnings  = args.conda_warnings)
     except PyccelError:
         sys.exit(1)
     finally:
