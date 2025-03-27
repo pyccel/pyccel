@@ -19,7 +19,8 @@ import numpy as np
 
 from pyccel.ast.basic import TypedAstNode
 
-from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule, BindCClassDef
+from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCModule, BindCClassDef
+from pyccel.ast.bind_c import BindCVariable
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
@@ -57,7 +58,7 @@ from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal, LiteralEllipsis
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
-from pyccel.ast.literals  import Nil
+from pyccel.ast.literals  import Nil, convert_to_literal
 
 from pyccel.ast.low_level_tools  import MacroDefinition, IteratorType, PairType
 from pyccel.ast.low_level_tools  import MacroUndef
@@ -81,7 +82,7 @@ from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthe
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
-from pyccel.ast.utilities import expand_to_loops, flatten_tuple_var
+from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.ast.variable import Variable, IndexedElement, DottedName
 
@@ -1324,7 +1325,8 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_FunctionDefArgument(self, expr):
-        return self._print(expr.name)
+        var = expr.var
+        return ', '.join(self._print(v) for v in self.scope.collect_all_tuple_elements(var))
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
@@ -1410,6 +1412,16 @@ class FCodePrinter(CodePrinter):
             self._additional_code += code
             return lhs_code
 
+    def _print_ListClear(self, expr):
+        target = self._print(expr.list_obj)
+        return f'call {target} % clear()\n'
+
+    def _print_ListReverse(self, expr):
+        target = self._print(expr.list_obj)
+        type_name = self._print(expr.list_obj.class_type)
+        self.add_import(self._build_gFTL_extension_module(expr.list_obj.class_type))
+        return f'call {type_name}_reverse({target})\n'
+
     #========================== Set Methods ================================#
 
     def _print_SetAdd(self, expr):
@@ -1427,6 +1439,7 @@ class FCodePrinter(CodePrinter):
         var_code = self._print(expr.set_variable)
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
+        # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
         return f'{type_name}_pop({var_code})\n'
 
     def _print_SetCopy(self, expr):
@@ -1472,6 +1485,7 @@ class FCodePrinter(CodePrinter):
         var_code = self._print(expr.set_variable)
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
+        # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
         return ''.join(f'call {type_name}_intersection_update({var_code}, {self._print(arg)})\n' \
                 for arg in expr.args)
 
@@ -1481,7 +1495,17 @@ class FCodePrinter(CodePrinter):
         success = self.scope.get_temporary_variable(PythonNativeInt())
         return f'{success} = {var} % erase_value({val})\n'
 
-   #========================== Dict Methods ================================#
+    def _print_SetIsDisjoint(self, expr):
+        var = expr.set_variable
+        expr_type = var.class_type
+        var_code = self._print(expr.set_variable)
+        arg_code = self._print(expr.args[0])
+        type_name = self._print(expr_type)
+        self.add_import(self._build_gFTL_extension_module(expr_type))
+        # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
+        return f'{type_name}_is_disjoint({var_code}, {arg_code})'
+
+    #========================== Dict Methods ================================#
 
     def _print_DictClear(self, expr):
         var = self._print(expr.dict_obj)
@@ -1491,6 +1515,11 @@ class FCodePrinter(CodePrinter):
         dict_obj = self._print(expr.dict_obj)
         key = self._print(expr.key)
         return f'{dict_obj} % of( {key} )'
+
+    #========================== String Methods ===============================#
+
+    def _print_PythonStr(self, expr):
+        return self._print(expr.args[0])
 
     #========================== Numpy Elements ===============================#
 
@@ -2297,7 +2326,10 @@ class FCodePrinter(CodePrinter):
             elif expr.alloc_type == 'reserve':
                 var_code = self._print(expr.variable)
                 size_code = self._print(expr.shape[0])
-                return f'call {var_code} % reserve({size_code})\n'
+                if expr.status == 'unallocated':
+                    return f'call {var_code} % reserve({size_code})\n'
+                return (f'call {var_code} % clear()\n'
+                        f'call {var_code} % reserve({size_code})\n')
             else:
                 return ''
         elif isinstance(class_type, (HomogeneousContainerType, DictType, StringType)):
@@ -2501,10 +2533,9 @@ class FCodePrinter(CodePrinter):
         """
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        out_args = [v for v in flatten_tuple_var(expr.results.var, self.scope) if v and not v.is_argument]
+        out_args = [v for v in self.scope.collect_all_tuple_elements(expr.results.var) if v and not v.is_argument]
         args_decs = OrderedDict()
         arguments = expr.arguments
-        argument_vars = [a.var for a in arguments]
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
@@ -2530,17 +2561,13 @@ class FCodePrinter(CodePrinter):
         for i, arg in enumerate(arguments):
             arg_var = arg.var
             if isinstance(arg_var, Variable):
-                if isinstance(arg, BindCFunctionDefArgument) and arg.original_function_argument_variable.rank!=0:
-                    for b_arg in arg.get_all_function_def_arguments():
-                        v = b_arg.var
-                        dec = Declare(v, intent='in')
-                        args_decs[v] = dec
-                else:
-                    if arg.inout:
-                        dec = Declare(arg_var, intent='inout')
+                inout = arg.inout and not isinstance(arg_var, BindCVariable)
+                for v in self.scope.collect_all_tuple_elements(arg_var):
+                    if inout:
+                        dec = Declare(v, intent='inout')
                     else:
-                        dec = Declare(arg_var, intent='in')
-                    args_decs[arg_var] = dec
+                        dec = Declare(v, intent='in')
+                    args_decs[v] = dec
 
         # treat case of pure function
         sig = '{0}{1} {2}'.format(rec, func_type, name)
@@ -2580,7 +2607,7 @@ class FCodePrinter(CodePrinter):
         body_code = self._print(expr.body)
         docstring = self._print(expr.docstring) if expr.docstring else ''
 
-        decs = [Declare(v) for v in expr.local_vars]
+        decs = [Declare(v) for v in expr.local_vars if not v.is_argument]
         self._get_external_declarations(decs)
 
         prelude += ''.join(self._print(i) for i in decs)
@@ -3116,7 +3143,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelAdd(self, expr):
         if isinstance(expr.dtype, StringType):
-            return '//'.join('trim('+self._print(a)+')' for a in expr.args)
+            return ' // '.join(self._print(a) for a in expr.args)
         else:
             args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
             return ' + '.join(self._print(a) for a in args)
@@ -3604,9 +3631,11 @@ class FCodePrinter(CodePrinter):
         for k, m in _default_methods.items():
             f_name = f_name.replace(k, m)
         args   = expr.args
-        func_results = [v for v in flatten_tuple_var(func.results.var, func.scope) if v and not v.is_argument]
+        func_result_variables = func.scope.collect_all_tuple_elements(func.results.var) \
+                                    if func.scope else [func.results.var]
+        out_results = [v for v in func_result_variables if v and not v.is_argument]
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, (Assign, AliasAssign)))
-        is_function =  len(func_results) == 1 and func.results.var.rank == 0
+        is_function =  len(out_results) == 1 and func.results.var.rank == 0
 
         if func.arguments and func.arguments[0].bound_argument:
             class_variable = args[0].value
@@ -3622,10 +3651,10 @@ class FCodePrinter(CodePrinter):
 
         if parent_assign:
             lhs = parent_assign[0].lhs
-            if len(func_results) == 1:
-                lhs_vars = {func_results[0]:lhs}
+            if len(out_results) == 1:
+                lhs_vars = {out_results[0]:lhs}
             else:
-                lhs_vars = dict(zip(func_results,lhs))
+                lhs_vars = dict(zip(out_results,lhs))
             assign_args = []
             for a in args:
                 key = a.keyword
@@ -3651,14 +3680,14 @@ class FCodePrinter(CodePrinter):
                 else:
                     results_strs = [self._print(r) for r in lhs_vars.values()]
 
-        elif not is_function and len(func_results)!=0:
+        elif not is_function and len(out_results)!=0:
             results = [r.clone(name = self.scope.get_new_name()) \
-                        for r in func_results]
+                        for r in out_results]
             for var in results:
                 self.scope.insert_variable(var)
 
             results_strs = [f'{self._print(n)} = {self._print(r)}' \
-                            for n,r in zip(func_results, results)]
+                            for n,r in zip(out_results, results)]
 
         else:
             results_strs = []
@@ -3674,11 +3703,11 @@ class FCodePrinter(CodePrinter):
                 code = f'call {code}\n'
 
         if not parent_assign:
-            if is_function or len(func_results) == 0:
+            if is_function or len(out_results) == 0:
                 return code
             else:
                 self._additional_code += code
-                if len(func_results) == 1:
+                if len(out_results) == 1:
                     return self._print(results[0])
                 else:
                     return self._print(tuple(results))
@@ -3907,3 +3936,15 @@ class FCodePrinter(CodePrinter):
 
     def _print_KindSpecification(self, expr):
         return f'(kind = {self.print_kind(expr.type_specifier)})'
+
+    def _print_MinLimit(self, expr):
+        # TypeError: '<' not supported between instances of 'complex' and 'complex'
+        assert not isinstance(expr.class_type.primitive_type, PrimitiveComplexType)
+        example_of_type = convert_to_literal(0, dtype = expr.class_type)
+        return f'-Huge({self._print(example_of_type)})'
+
+    def _print_MaxLimit(self, expr):
+        # TypeError: '>' not supported between instances of 'complex' and 'complex'
+        assert not isinstance(expr.class_type.primitive_type, PrimitiveComplexType)
+        example_of_type = convert_to_literal(0, dtype = expr.class_type)
+        return f'Huge({self._print(example_of_type)})'

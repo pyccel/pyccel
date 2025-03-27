@@ -14,7 +14,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PyccelType, InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType, DictType
-from .datatypes import ContainerType, HomogeneousTupleType
+from .datatypes import ContainerType, HomogeneousTupleType, CharType, StringType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .internals import apply_pickle
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
@@ -731,11 +731,18 @@ class IndexedElement(TypedAstNode):
                 self._is_slice = True
                 self._shape = tuple(new_shape)
 
-        super().__init__()
+            if isinstance(self._class_type, CharType):
+                self._class_type = StringType()
+                self._shape = (1,)
 
         if isinstance(self._class_type, InhomogeneousTupleType) and self._shape is None:
-            self._shape = (len(self._class_type),)
-        elif isinstance(self._class_type, ContainerType) and self._shape is None:
+            self._shape = (LiteralInteger(len(self._class_type)),)
+
+        super().__init__()
+
+        # This must appear after the call to super().__init__ to avoid setting "self"  as a
+        # user of itself
+        if isinstance(self._class_type, ContainerType) and self._shape is None:
             self._shape = tuple(PyccelArrayShapeElement(self, i) \
                                 for i in range(self._class_type.container_rank))
 

@@ -283,6 +283,7 @@ else:
                 possible_shared_lib = preferred_lib
 
         python_info['python']['dependencies'] = (possible_shared_lib[0],)
+        python_info['python']['libdirs'] = (os.path.dirname(possible_shared_lib[0]),)
     elif possible_static_lib:
         if len(possible_static_lib)>1:
             preferred_lib = [l for l in possible_static_lib if l.endswith('.a')]

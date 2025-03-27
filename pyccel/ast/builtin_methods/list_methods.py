@@ -21,7 +21,8 @@ __all__ = ('ListAppend',
            'ListMethod',
            'ListPop',
            'ListRemove',
-           'ListSort',
+           'ListReverse',
+           'ListSort'
            )
 
 #==============================================================================
@@ -55,6 +56,16 @@ class ListMethod(PyccelFunction):
         Get the object representing the list.
         """
         return self._list_obj
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return (self._list_obj,)
 
 #==============================================================================
 class ListAppend(ListMethod):
@@ -290,6 +301,16 @@ class ListCopy(ListMethod) :
         self._class_type = list_obj.class_type
         super().__init__(list_obj)
 
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
+
 #==============================================================================
 class ListSort(ListMethod) :
     """
@@ -328,3 +349,31 @@ class ListSort(ListMethod) :
         if reverse is not None or key is not None:
             raise TypeError("Optional Parameters are not supported for sort() method.")
         super().__init__(list_obj, reverse, key)
+
+#==============================================================================
+class ListReverse(ListMethod):
+    """
+    Represents a call to the .reverse() method.
+
+    Represents a call to the `.reverse()` method, which reverses the elements of the
+    list in place. This means that the elements of the original list are rearranged
+    in reverse order. The .reverse() method does not return any value and does not
+    accept any optional parameters.
+
+    >>> a = [1, 2, 3, 4, 5]
+    >>> a.reverse()
+    >>> print(a)
+    [5, 4, 3, 2, 1]
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+    """
+    __slots__ = ()
+    _shape = None
+    _class_type = VoidType()
+    name = 'reverse'
+
+    def __init__(self, list_obj) -> None:
+        super().__init__(list_obj)
