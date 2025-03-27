@@ -37,7 +37,7 @@ from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_New
 from pyccel.ast.cwrapper      import PyTuple_GetItem, PyTuple_SetItem
 from pyccel.ast.cwrapper      import PySet_New, PySet_Add, PyList_Check, PyList_Size
 from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PyObj_GetIter, PySet_Clear
-from pyccel.ast.cwrapper      import PyIter_Next
+from pyccel.ast.cwrapper      import PyIter_Next, PyList_Clear
 from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
 from pyccel.ast.cwrapper      import PyUnicode_AsUTF8, PyUnicode_Check, PyUnicode_GetLength
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
@@ -2585,7 +2585,7 @@ class CToPythonWrapper(Wrapper):
         assert not bound_argument
 
         size_var = self.scope.get_temporary_variable(PythonNativeInt(), self.scope.get_new_name(f'{orig_var.name}_size'))
-        body = [Assign(size_var, PySet_Size(collect_arg))]
+        body = [Assign(size_var, PyList_Size(collect_arg))]
 
         if is_bind_c_argument:
             element_type = orig_var.class_type.element_type
@@ -2632,20 +2632,20 @@ class CToPythonWrapper(Wrapper):
         clean_up = []
         if not orig_var.is_const:
             if is_bind_c_argument:
-                errors.report("Sets should be passed as constant arguments when translating to languages other than c." +
+                errors.report("Lists should be passed as constant arguments when translating to languages other than c." +
                               "Any changes to the set will not be reflected in the calling code.",
                               severity='warning', symbol=orig_var)
             else:
                 element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx),
                                                 is_bind_c_argument, None)
-                elem_set = PySet_Add(collect_arg, element_extraction['py_result'])
+                elem_set = PyList_Append(collect_arg, element_extraction['py_result'])
                 for_body = [*element_extraction['body'],
                         If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
                                                  [Return(self._error_exit_code)]))]
 
                 loop_iterator = VariableIterator(arg_var)
                 loop_iterator.set_loop_counter(idx)
-                clean_up = [If(IfSection(PyccelEq(PySet_Clear(collect_arg), PyccelUnarySub(LiteralInteger(1))),
+                clean_up = [If(IfSection(PyccelEq(PyList_Clear(collect_arg), PyccelUnarySub(LiteralInteger(1))),
                                                  [Return(self._error_exit_code)])),
                         For((element_extraction['c_results'][0],), loop_iterator, for_body, for_scope)]
 

@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+import sys
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
@@ -599,3 +600,10 @@ class CWrapperCodePrinter(CCodePrinter):
         n = len(args)
         args_code = ', '.join(self._print(a) for a in args)
         return f'(*PyTuple_Pack( {n}, {args_code} ))'
+
+    def _print_PyList_Clear(self, expr):
+        list_code = self._print(ObjectAddress(expr.list_obj))
+        if sys.version_info < (3, 13):
+            return f'PyList_SetSlice({list_code}, 0, PY_SSIZE_T_MAX, NULL)'
+        else:
+            return f'PyList_Clear({list_code})'

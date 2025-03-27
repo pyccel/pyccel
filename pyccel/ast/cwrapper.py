@@ -13,7 +13,7 @@ from pyccel.utilities.metaclasses import Singleton
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import PyccelAstNode
+from .basic     import PyccelAstNode, TypedAstNode
 
 from .bind_c    import BindCPointer
 
@@ -1188,6 +1188,37 @@ PyList_Size = FunctionDef(name = 'PyList_Size',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias'))],
                     results = FunctionDefResult(Variable(PythonNativeInt(), 'i')),
                     body = [])
+
+class PyList_Clear(TypedAstNode):
+    """
+    A class representing a call to list.clear() in the wrapper.
+
+    A class representing a call to list.clear() in the wrapper.
+    There is no simple method to describe this operation before
+    Python 3.13.
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list that must be emptied.
+    """
+    __slots__ = ('_list_obj',)
+    _attribute_nodes = ('_list_obj',)
+    _class_type = PythonNativeInt()
+    _shape = ()
+
+    def __init__(self, list_obj):
+        self._list_obj = list_obj
+        super().__init__()
+
+    @property
+    def list_obj(self):
+        """
+        The list that must be emptied.
+
+        The list that must be emptied.
+        """
+        return self._list_obj
 
 #-------------------------------------------------------------------
 #                         Tuple functions
