@@ -1177,6 +1177,18 @@ PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
                                      FunctionDefArgument(Variable(PyccelPyObject(), name='new_item', memory_handling='alias'))],
                         results = FunctionDefResult(Variable(CNativeInt(), 'i')))
 
+# https://docs.python.org/3/c-api/list.html#c.PyList_Check
+PyList_Check = FunctionDef(name = 'PyList_Check',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(CNativeInt(), 'i')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Size
+PyList_Size = FunctionDef(name = 'PyList_Size',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(PythonNativeInt(), 'i')),
+                    body = [])
+
 #-------------------------------------------------------------------
 #                         Tuple functions
 #-------------------------------------------------------------------
@@ -1244,7 +1256,7 @@ PySet_Size = FunctionDef(name = 'PySet_Size',
                     body = [])
 
 # https://docs.python.org/3/c-api/object.html#c.PyObject_GetIter
-PySet_GetIter = FunctionDef(name = 'PyObject_GetIter',
+PyObj_GetIter = FunctionDef(name = 'PyObject_GetIter',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
                         results = FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias')))

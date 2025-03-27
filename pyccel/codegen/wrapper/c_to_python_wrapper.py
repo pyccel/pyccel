@@ -12,9 +12,10 @@ from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer
 from pyccel.ast.bind_c        import BindCModule, BindCModuleVariable, BindCVariable
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty, BindCArrayType
 from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
-from pyccel.ast.builtins      import VariableIterator, PythonStr
-from pyccel.ast.builtin_methods.set_methods import SetAdd, SetPop
+from pyccel.ast.builtins      import VariableIterator, PythonStr, PythonList
 from pyccel.ast.builtin_methods.dict_methods import DictItems
+from pyccel.ast.builtin_methods.list_methods import ListAppend
+from pyccel.ast.builtin_methods.set_methods import SetAdd, SetPop
 from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -34,8 +35,8 @@ from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, PyCapsul
 from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString, PyGetSetDefElement
 from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_New
 from pyccel.ast.cwrapper      import PyTuple_GetItem, PyTuple_SetItem
-from pyccel.ast.cwrapper      import PySet_New, PySet_Add
-from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PySet_GetIter, PySet_Clear
+from pyccel.ast.cwrapper      import PySet_New, PySet_Add, PyList_Check, PyList_Size
+from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PyObj_GetIter, PySet_Clear
 from pyccel.ast.cwrapper      import PyIter_Next
 from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
 from pyccel.ast.cwrapper      import PyUnicode_AsUTF8, PyUnicode_Check, PyUnicode_GetLength
@@ -44,6 +45,7 @@ from pyccel.ast.c_concepts    import CStrStr
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
 from pyccel.ast.datatypes     import HomogeneousSetType, HomogeneousListType
+from pyccel.ast.datatypes     import HomogeneousContainerType
 from pyccel.ast.datatypes     import TupleType, CharType, StringType
 from pyccel.ast.internals     import Slice
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
@@ -347,36 +349,20 @@ class CToPythonWrapper(Wrapper):
             else:
                 type_check_condition = is_numpy_array(py_obj, type_ref, LiteralInteger(rank), flag)
 
-        elif isinstance(arg.class_type, HomogeneousTupleType):
-            # Create type check result variable
-            type_check_condition = self.scope.get_temporary_variable(PythonNativeBool(), 'is_homog_tuple')
-
-            # Check if the object is a tuple
-            tuple_check = PyTuple_Check(py_obj)
-
-            # If the tuple is an object check that the elements have the right type
-            for_scope = self.scope.create_new_loop_scope()
-            size_var = self.scope.get_temporary_variable(PythonNativeInt(), 'size')
-            idx = self.scope.get_temporary_variable(CNativeInt())
-            indexed_py_obj = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
-
-            indexed_init = AliasAssign(indexed_py_obj, PyTuple_GetItem(py_obj, idx))
-            size_assign = Assign(size_var, PyTuple_Size(py_obj))
-            for_body = [indexed_init]
-            internal_type_check_condition, _ = self._get_type_check_condition(indexed_py_obj, arg[0], False, for_body)
-            for_body.append(Assign(type_check_condition, PyccelAnd(type_check_condition, internal_type_check_condition)))
-            internal_type_check = For((idx,), PythonRange(size_var), for_body, scope = for_scope)
-
-            tuple_checks = IfSection(tuple_check, [size_assign, Assign(type_check_condition, LiteralTrue()), internal_type_check])
-            default_value = IfSection(LiteralTrue(), [Assign(type_check_condition, LiteralFalse())])
-            body.append(If(tuple_checks, default_value))
-
-        elif isinstance(arg.class_type, HomogeneousSetType):
+        elif isinstance(arg.class_type, HomogeneousContainerType):
             # Create type check result variable
             type_check_condition = self.scope.get_temporary_variable(PythonNativeBool(), 'is_homog_set')
 
+            check_funcs = {'set': PySet_Check,
+                           'tuple': PyTuple_Check,
+                           'list': PyList_Check}
+
+            size_getter = {'set': PySet_Size,
+                           'tuple': PyTuple_Size,
+                           'list': PyList_Size}
+
             # Check if the object is a set
-            set_check = PySet_Check(py_obj)
+            type_check = check_funcs[arg.class_type.name](py_obj)
 
             # If the set is an object check that the elements have the right type
             for_scope = self.scope.create_new_loop_scope()
@@ -385,17 +371,17 @@ class CToPythonWrapper(Wrapper):
             indexed_py_obj = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
             iter_obj = self.scope.get_temporary_variable(PyccelPyObject(), 'iter', memory_handling='alias')
 
-            size_assign = Assign(size_var, PySet_Size(py_obj))
-            iter_assign = AliasAssign(iter_obj, PySet_GetIter(py_obj))
+            size_assign = Assign(size_var, size_getter[arg.class_type.name](py_obj))
+            iter_assign = AliasAssign(iter_obj, PyObj_GetIter(py_obj))
             indexed_init = AliasAssign(indexed_py_obj, PyIter_Next(iter_obj))
             for_body = [indexed_init]
             internal_type_check_condition, _ = self._get_type_check_condition(indexed_py_obj, arg[0], False, for_body)
             for_body.append(Assign(type_check_condition, PyccelAnd(type_check_condition, internal_type_check_condition)))
             internal_type_check = For((idx,), PythonRange(size_var), for_body, scope = for_scope)
 
-            set_checks = IfSection(set_check, [size_assign, iter_assign, Assign(type_check_condition, LiteralTrue()), internal_type_check])
+            type_checks = IfSection(type_check, [size_assign, iter_assign, Assign(type_check_condition, LiteralTrue()), internal_type_check])
             default_value = IfSection(LiteralTrue(), [Assign(type_check_condition, LiteralFalse())])
-            body.append(If(set_checks, default_value))
+            body.append(If(type_checks, default_value))
         else:
             errors.report(f"Can't check the type of an array of {arg.class_type}\n"+PYCCEL_RESTRICTION_TODO,
                     symbol=arg, severity='fatal')
@@ -2546,7 +2532,7 @@ class CToPythonWrapper(Wrapper):
 
         iter_obj = self.scope.get_temporary_variable(PyccelPyObject(), 'iter', memory_handling='alias')
 
-        body.append(AliasAssign(iter_obj, PySet_GetIter(collect_arg)))
+        body.append(AliasAssign(iter_obj, PyObj_GetIter(collect_arg)))
 
         for_scope = self.scope.create_new_loop_scope()
         self.scope = for_scope
@@ -2557,6 +2543,83 @@ class CToPythonWrapper(Wrapper):
             for_body.append(Assign(IndexedElement(arr_var, idx), indexed_orig_var))
         else:
             for_body.append(SetAdd(arg_var, indexed_orig_var))
+        self.exit_scope()
+
+        body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
+
+        clean_up = []
+        if not orig_var.is_const:
+            if is_bind_c_argument:
+                errors.report("Sets should be passed as constant arguments when translating to languages other than c." +
+                              "Any changes to the set will not be reflected in the calling code.",
+                              severity='warning', symbol=orig_var)
+            else:
+                element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx),
+                                                is_bind_c_argument, None)
+                elem_set = PySet_Add(collect_arg, element_extraction['py_result'])
+                for_body = [*element_extraction['body'],
+                        If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
+                                                 [Return(self._error_exit_code)]))]
+
+                loop_iterator = VariableIterator(arg_var)
+                loop_iterator.set_loop_counter(idx)
+                clean_up = [If(IfSection(PyccelEq(PySet_Clear(collect_arg), PyccelUnarySub(LiteralInteger(1))),
+                                                 [Return(self._error_exit_code)])),
+                        For((element_extraction['c_results'][0],), loop_iterator, for_body, for_scope)]
+
+        return {'body': body, 'args': arg_vars, 'clean_up': clean_up}
+
+    def _extract_HomogeneousListType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
+            is_bind_c_argument, *, arg_var = None):
+        assert arg_var is None
+
+        if orig_var.is_optional:
+            errors.report("Optionals are not yet supported",
+                    severity='fatal', symbol=orig_var)
+
+        assert not bound_argument
+
+        size_var = self.scope.get_temporary_variable(PythonNativeInt(), self.scope.get_new_name(f'{orig_var.name}_size'))
+        body = [Assign(size_var, PySet_Size(collect_arg))]
+
+        if is_bind_c_argument:
+            element_type = orig_var.class_type.element_type
+            #raise errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
+            arr_var = Variable(NumpyNDArrayType(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
+                                shape = (size_var,), memory_handling = 'heap')
+            self.scope.insert_variable(arr_var, orig_var.name)
+            arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+                        shape = (LiteralInteger(2),))
+            data = DottedVariable(VoidType(), 'data', lhs=arr_var)
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), data)
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(1)), size_var)
+            arg_vars = [arg_var]
+            body.append(Allocate(arr_var, shape = (size_var,), status='unallocated'))
+        else:
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+                                    memory_handling='heap', new_class = Variable, is_const = False)
+            self._wrapping_arrays = True
+            self.scope.insert_variable(arg_var, orig_var.name)
+            arg_vars = [arg_var]
+            body.append(Assign(arg_var, PythonList()))
+
+        idx = self.scope.get_temporary_variable(CNativeInt())
+        indexed_orig_var = self.scope.get_temporary_variable(orig_var.class_type.element_type)
+        indexed_collect_arg = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
+
+        iter_obj = self.scope.get_temporary_variable(PyccelPyObject(), 'iter', memory_handling='alias')
+
+        body.append(AliasAssign(iter_obj, PyObj_GetIter(collect_arg)))
+
+        for_scope = self.scope.create_new_loop_scope()
+        self.scope = for_scope
+        for_body = [AliasAssign(indexed_collect_arg, PyIter_Next(iter_obj))]
+        for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_collect_arg,
+                                    bound_argument, is_bind_c_argument, arg_var = indexed_orig_var)['body']
+        if is_bind_c_argument:
+            for_body.append(Assign(IndexedElement(arr_var, idx), indexed_orig_var))
+        else:
+            for_body.append(ListAppend(arg_var, indexed_orig_var))
         self.exit_scope()
 
         body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
