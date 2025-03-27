@@ -2287,27 +2287,8 @@ class CCodePrinter(CodePrinter):
         if func.is_inline:
             return self._handle_inline_func_call(expr)
          # Ensure the correct syntax is used for pointers
-        args = []
-        for a, f in zip(expr.args, func.arguments):
-            arg_val = a.value or Nil()
-            f = f.var
-            if self.is_c_pointer(f):
-                if isinstance(arg_val, Variable):
-                    args.append(ObjectAddress(arg_val))
-                elif not self.is_c_pointer(arg_val):
-                    tmp_var = self.scope.get_temporary_variable(f.dtype)
-                    assign = Assign(tmp_var, arg_val)
-                    code = self._print(assign)
-                    self._additional_code += code
-                    args.append(ObjectAddress(tmp_var))
-                else:
-                    args.append(arg_val)
-            else :
-                args.append(arg_val)
-
-        args += self._temporary_args
+        args = ', '.join(self._print(a) for a in chain(expr.args, self._temporary_args))
         self._temporary_args = []
-        args = ', '.join(self._print(ai) for a in args for ai in self.scope.collect_all_tuple_elements(a))
 
         call_code = f'{func.name}({args})'
         if func.results.var is not Nil() and \
@@ -2724,7 +2705,31 @@ class CCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_FunctionCallArgument(self, expr):
-        return self._print(expr.value)
+        func_call, = expr.get_direct_user_nodes(lambda u: isinstance(u, FunctionCall))
+        idx = func_call.args.index(expr)
+        funcdef_arg = func_call.funcdef.arguments[idx]
+        if isinstance(expr.value, Variable):
+            vals = self.scope.collect_all_tuple_elements(expr.value)
+        elif isinstance(expr.value.class_type, InhomogeneousTupleType):
+            vals = expr.value
+        else:
+            vals = [expr.value]
+        if self.is_c_pointer(funcdef_arg.var):
+            code_elems = []
+            for v in vals:
+                if isinstance(v, Variable):
+                    code_elems.append(self._print(ObjectAddress(v)))
+                elif not self.is_c_pointer(v):
+                    tmp_var = self.scope.get_temporary_variable(v.dtype)
+                    assign = Assign(tmp_var, v)
+                    code_elems = self._print(assign)
+                    self._additional_code += code_elems
+                    code_elems.append(self._print(ObjectAddress(tmp_var)))
+                else:
+                    code_elems.append(self._print(v))
+            return ', '.join(code_elems)
+        else:
+            return ', '.join(self._print(v) for v in vals)
 
     def _print_ObjectAddress(self, expr):
         obj_code = self._print(expr.obj)
