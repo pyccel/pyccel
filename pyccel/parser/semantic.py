@@ -2691,13 +2691,16 @@ class SemanticParser(BasicParser):
                 dtype = v.class_type
                 if isinstance(value, Literal) and value is not Nil():
                     value = convert_to_literal(value.python_value, dtype)
-                if isinstance(dtype, InhomogeneousTupleType):
-                    # Raise an error as elements are not yet correctly marked with is_argument.
-                    # This leads to printing errors
-                    errors.report("Inhomogeneous tuples are not yet supported as arguments",
-                            severity='error', symbol=expr)
-                clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
-                args.append(FunctionDefArgument(clone_var, bound_argument = bound_argument,
+
+                tuple_vars = {v}
+                while tuple_vars:
+                    t_var = tuple_vars.pop()
+                    t_var.is_optional = is_optional
+                    t_var.declare_as_argument()
+                    if isinstance(dtype, InhomogeneousTupleType):
+                        tuple_vars.update(self.scope.collect_tuple_element(vi) for vi in t_var)
+
+                args.append(FunctionDefArgument(v, bound_argument = bound_argument,
                                         value = value, kwonly = kwonly, annotation = expr.annotation))
             else:
                 args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional,
