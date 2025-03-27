@@ -15,6 +15,7 @@ from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePoint
 from pyccel.ast.bind_c import BindCClassProperty, c_malloc, BindCSizeOf
 from pyccel.ast.bind_c import BindCVariable, BindCArrayType, C_NULL_CHAR
 from pyccel.ast.builtins import VariableIterator, PythonRange
+from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.builtin_methods.set_methods import SetAdd
 from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
@@ -450,7 +451,7 @@ class FortranToCWrapper(Wrapper):
 
         return {'c_arg': BindCVariable(c_arg_var, var), 'f_arg': arg_var, 'body': body}
 
-    def _extract_HomogeneousSetType_FunctionDefArgument(self, var, func):
+    def _extract_HomogeneousContainerType_FunctionDefArgument(self, var, func):
         name = var.name
         scope = self.scope
         scope.insert_symbol(name)
@@ -475,10 +476,17 @@ class FortranToCWrapper(Wrapper):
         iterator.set_loop_counter(idx)
         self.scope.insert_variable(idx)
 
+        insert_call = {'set': SetAdd,
+                       'list': ListAppend}
+
+        if var.class_type.name not in insert_call:
+            return errors.report(f"Wrapping function arguments is not implemented for type {class_type}. "
+                    + PYCCEL_RESTRICTION_TODO, symbol=var, severity='fatal')
+
         # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
         # Lists are 1-indexed but Pyccel adds the shift during printing so they are
         # treated as 0-indexed here
-        for_body = [SetAdd(arg_var, IndexedElement(local_var, idx))]
+        for_body = [insert_call[var.class_type.name](arg_var, IndexedElement(local_var, idx))]
 
         body = [C_F_Pointer(bind_var, local_var, (shape_var,)),
                 Allocate(arg_var, shape = (shape_var,), status = 'unallocated',

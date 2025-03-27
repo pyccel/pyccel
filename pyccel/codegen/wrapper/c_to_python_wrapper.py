@@ -361,6 +361,10 @@ class CToPythonWrapper(Wrapper):
                            'tuple': PyTuple_Size,
                            'list': PyList_Size}
 
+            if arg.class_type.name not in check_funcs:
+                return errors.report(f"Wrapping function arguments is not implemented for type {class_type}. "
+                        + PYCCEL_RESTRICTION_TODO, symbol=var, severity='fatal')
+
             # Check if the object is a set
             type_check = check_funcs[arg.class_type.name](py_obj)
 
@@ -2550,8 +2554,9 @@ class CToPythonWrapper(Wrapper):
         clean_up = []
         if not orig_var.is_const:
             if is_bind_c_argument:
-                errors.report("Sets should be passed as constant arguments when translating to languages other than c." +
-                              "Any changes to the set will not be reflected in the calling code.",
+                errors.report("Python built-in containers should be passed as constant arguments when "
+                              "translating to languages other than c. Any changes to the set will not "
+                              "be reflected in the calling code.",
                               severity='warning', symbol=orig_var)
             else:
                 element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx),
