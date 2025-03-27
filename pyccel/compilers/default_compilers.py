@@ -117,24 +117,22 @@ gcc_info = {'exec' : 'gcc',
             'family': 'GNU',
             }
 
-amdclang_info = {
-    'exec': 'amdclang',
-    'mpi_exec': 'mpicc',
-    'language': 'c',
-    'debug_flags': ("-g", "-O0"),
-    'release_flags': ("-O3", "-funroll-loops"),
-    'general_flags': ("-fPIC",),
-    'standard_flags': ("-std=c99",),
-    'mpi': {},
-    'openmp': {
-        'flags': ("-fopenmp", "--offload-arch=gfx942"),
-        'libs': (),
-    },
-    'openacc': {
-        'flags': ("-ta=multicore", "-Minfo=accel"),
-    },
-    'family': 'GNU',
-}
+clang_info = {'exec': 'clang',
+            'mpi_exec': 'mpicc',
+            'language': 'c',
+            'debug_flags': ("-g", "-O0"),
+            'release_flags': ("-O3", "-funroll-loops"),
+            'general_flags': ("-fPIC",),
+            'standard_flags': ("-std=c99",),
+            'mpi': {},
+            'openmp': {
+                'flags': ("-fopenmp"),
+            },
+            'openacc': {
+                'flags': ("-ta=multicore", "-Minfo=accel"),
+            },
+            'family': 'LLVM',
+            }
 
 
 if sys.platform == "darwin":
@@ -309,7 +307,7 @@ pgcc_info.update(python_info)
 pgfortran_info.update(python_info)
 nvc_info.update(python_info)
 nvfort_info.update(python_info)
-amdclang_info.update(python_info)
+clang_info.update(python_info)
 
 available_compilers = {('GNU', 'c') : gcc_info,
                        ('GNU', 'fortran') : gfort_info,
@@ -319,7 +317,7 @@ available_compilers = {('GNU', 'c') : gcc_info,
                        ('PGI', 'fortran') : pgfortran_info,
                        ('nvidia', 'c') : nvc_info,
                        ('nvidia', 'fortran') : nvfort_info,
-                       ('amdclang','c'): amdclang_info,
+                       ('clang','c'): clang_info,
                        }
 
-vendors = ('GNU','intel','PGI','nvidia','amdclang')
+vendors = ('GNU','intel','PGI','nvidia','clang')
