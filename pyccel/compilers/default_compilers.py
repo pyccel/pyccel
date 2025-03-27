@@ -129,7 +129,26 @@ clang_info = {'exec': 'clang',
                 'flags': ("-fopenmp"),
             },
             'openacc': {
-                'flags': ("-ta=multicore", "-Minfo=accel"),
+                'flags': ("-fopenacc"),
+            },
+            'family': 'LLVM',
+            }
+
+flang_info = {
+            'exec': 'flang',
+            'mpi_exec': 'mpif90',
+            'language': 'fortran',
+            'module_output_flag': '-module',
+            'debug_flags': ("-g", "-O0"),
+            'release_flags': ("-O3", "-funroll-loops"),
+            'general_flags': ("-fPIC",),
+            'standard_flags': ("-std=f2003",),
+            'mpi': {},
+            'openmp': {
+                'flags': ("-fopenmp",),
+            },
+            'openacc': {
+                'flags': ("-fopenacc",),
             },
             'family': 'LLVM',
             }
@@ -308,6 +327,7 @@ pgfortran_info.update(python_info)
 nvc_info.update(python_info)
 nvfort_info.update(python_info)
 clang_info.update(python_info)
+flang_info.update(python_info)
 
 available_compilers = {('GNU', 'c') : gcc_info,
                        ('GNU', 'fortran') : gfort_info,
@@ -318,6 +338,7 @@ available_compilers = {('GNU', 'c') : gcc_info,
                        ('nvidia', 'c') : nvc_info,
                        ('nvidia', 'fortran') : nvfort_info,
                        ('clang','c'): clang_info,
+                       ('flang','fortran'): flang_info,
                        }
 
-vendors = ('GNU','intel','PGI','nvidia','clang')
+vendors = ('GNU','intel','PGI','nvidia','LLVM')
