@@ -333,7 +333,6 @@ class CToPythonWrapper(Wrapper):
             except KeyError:
                 errors.report(f"Can't check the type of an array of {dtype}\n"+PYCCEL_RESTRICTION_TODO,
                         symbol=arg, severity='fatal')
-            self._wrapping_arrays = True
 
             # order flag
             if rank == 1:
@@ -2432,7 +2431,6 @@ class CToPythonWrapper(Wrapper):
         else:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     memory_handling='heap', new_class = Variable)
-            self._wrapping_arrays = True
             self.scope.insert_variable(arg_var, orig_var.name)
             fill_var = arg_var
             like = None
@@ -2525,7 +2523,6 @@ class CToPythonWrapper(Wrapper):
         else:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     memory_handling='heap', new_class = Variable, is_const = False)
-            self._wrapping_arrays = True
             self.scope.insert_variable(arg_var, orig_var.name)
             arg_vars = [arg_var]
             body.append(Assign(arg_var, PythonSet()))
@@ -2603,7 +2600,6 @@ class CToPythonWrapper(Wrapper):
         else:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     memory_handling='heap', new_class = Variable, is_const = False)
-            self._wrapping_arrays = True
             self.scope.insert_variable(arg_var, orig_var.name)
             arg_vars = [arg_var]
             body.append(Assign(arg_var, PythonList()))
