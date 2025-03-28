@@ -242,7 +242,9 @@ def test_append_user_defined_objects(limited_language):
     modnew = epyccel(mod, language=limited_language)
     python_list = mod.fn()
     accelerated_list = modnew.fn()
-    assert python_list == accelerated_list
+    assert len(python_list) == len(accelerated_list)
+    for pi, ai in zip(python_list, accelerated_list):
+        assert pi.x == ai.x
 
 def test_insert_basic(limited_language):
     def f():
