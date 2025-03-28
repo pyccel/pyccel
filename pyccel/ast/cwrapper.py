@@ -74,6 +74,7 @@ __all__ = (
     'PyUnicode_FromString',
     'PyList_GetItem',
     'PyList_SetItem',
+    'PyList_Clear',
     'PyErr_Occurred',
     'PyErr_SetString',
     'PyAttributeError',
