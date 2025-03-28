@@ -69,18 +69,39 @@ __all__ = (
 #----- C / PYTHON FUNCTIONS ---
     'Py_INCREF',
     'Py_DECREF',
-    'PyObject_TypeCheck',
+    'PyType_Ready',
     'PySys_GetObject',
     'PyUnicode_FromString',
-    'PyList_GetItem',
-    'PyList_SetItem',
-    'PyList_Clear',
     'PyErr_Occurred',
     'PyErr_SetString',
     'PyAttributeError',
     'PyNotImplementedError',
     'PyTypeError',
     'PyObject_TypeCheck',
+    'PyList_New',
+    'PyList_Append',
+    'PyList_GetItem',
+    'PyList_SetItem',
+    'PyList_Size',
+    'PyList_Check',
+    'PyList_Clear',
+    'PyTuple_New',
+    'PyTuple_Check',
+    'PyTuple_Size',
+    'PyTuple_GetItem',
+    'PyTuple_SetItem',
+    'PySet_New',
+    'PySet_Add',
+    'PySet_Check',
+    'PySet_Size',
+    'PySet_Clear',
+    'PyObj_GetIter',
+    'PyIter_Next',
+    'PyDict_New',
+    'PyDict_SetItem',
+    'PyUnicode_AsUTF8',
+    'PyUnicode_Check',
+    'PyUnicode_GetLength',
 )
 
 #-------------------------------------------------------------------
@@ -1182,12 +1203,6 @@ PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
 PyList_Check = FunctionDef(name = 'PyList_Check',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias'))],
                     results = FunctionDefResult(Variable(CNativeInt(), 'i')),
-                    body = [])
-
-# https://docs.python.org/3/c-api/set.html#c.PySet_Size
-PyList_Size = FunctionDef(name = 'PyList_Size',
-                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias'))],
-                    results = FunctionDefResult(Variable(PythonNativeInt(), 'i')),
                     body = [])
 
 class PyList_Clear(TypedAstNode):
