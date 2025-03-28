@@ -362,8 +362,8 @@ class CToPythonWrapper(Wrapper):
                            'list': PyList_Size}
 
             if arg.class_type.name not in check_funcs:
-                return errors.report(f"Wrapping function arguments is not implemented for type {class_type}. "
-                        + PYCCEL_RESTRICTION_TODO, symbol=var, severity='fatal')
+                return errors.report(f"Wrapping function arguments is not implemented for type {arg.class_type}. "
+                        + PYCCEL_RESTRICTION_TODO, symbol=arg, severity='fatal')
 
             # Check if the object is a set
             type_check = check_funcs[arg.class_type.name](py_obj)
