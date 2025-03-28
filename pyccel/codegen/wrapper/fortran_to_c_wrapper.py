@@ -480,7 +480,7 @@ class FortranToCWrapper(Wrapper):
                        'list': ListAppend}
 
         if var.class_type.name not in insert_call:
-            return errors.report(f"Wrapping function arguments is not implemented for type {class_type}. "
+            return errors.report(f"Wrapping function arguments is not implemented for type {var.class_type}. "
                     + PYCCEL_RESTRICTION_TODO, symbol=var, severity='fatal')
 
         # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
