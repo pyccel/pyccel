@@ -761,6 +761,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
     element_type : PyccelType
         The type of the elements of the homogeneous tuple.
     """
+    _name = 'tuple'
     __slots__ = ('_element_type', '_order')
     _container_rank = 1
 
