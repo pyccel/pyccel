@@ -251,3 +251,21 @@ def test_for_expression(language):
     f2 = epyccel( f1, language = language )
 
     assert f1() == f2()
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="lists of lists not yet implemented in Fortran. See #2210"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="lists of lists not yet implemented in C. See #2210"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_for_lists_of_lists(language):
+    f1 = loops.for_lists_of_lists
+    f2 = epyccel( f1, language = language )
+
+    assert f1() == f2()
