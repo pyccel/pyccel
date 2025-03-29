@@ -141,7 +141,7 @@ All notable changes to this project will be documented in this file.
 -   #2098 : Fix using multiple list comprehensions.
 -   #1948 : Fix list comprehension does not work in C.
 -   #2245 : Fix internal error when an inhomogeneous tuple appears as an indexed element.
--   #2258 : Fix missing errors for bad pointer handling with multi-level containers.
+-   #2258 : Fix missing errors for bad pointer handling in the case of containers with mutable elements.
 
 ### Changed
 
