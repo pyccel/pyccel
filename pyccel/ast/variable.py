@@ -822,10 +822,9 @@ class IndexedElement(TypedAstNode):
     @property
     def is_slice(self):
         """
-        Indicates whether the result is a slice of a container.
+        Indicates whether this instance represents a slice.
 
-        Indicates whether the result is a slice of a container or an element
-        of a container.
+        Indicates whether this instance represents a slice or an element.
         """
         return self._is_slice
 
