@@ -13,4 +13,4 @@ def fn():
     lst = [a, b, c]
     lst2 = [d, e]
     lst.extend(lst2)
-    return lst
+    return len(lst)

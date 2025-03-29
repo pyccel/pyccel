@@ -819,6 +819,15 @@ class IndexedElement(TypedAstNode):
         """
         return self.base.allows_negative_indexes
 
+    @property
+    def is_slice(self):
+        """
+        Indicates whether this instance represents a slice.
+
+        Indicates whether this instance represents a slice or an element.
+        """
+        return self._is_slice
+
     def __hash__(self):
         return hash((self.base, self._indices))
 
