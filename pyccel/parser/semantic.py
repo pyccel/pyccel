@@ -1191,9 +1191,10 @@ class SemanticParser(BasicParser):
                             new_expr = DottedName(args[0].value, FunctionCall(func, args[1:]))
                         else:
                             new_expr = FunctionCall(func, args)
-                        new_expr.set_current_ast(expr.python_ast)
+                        new_expr.set_current_ast(expr.python_ast or self._current_ast_node)
                         pyccel_stage.set_stage('semantic')
-                        new_expr.set_current_user_node(expr.current_user_node)
+                        for u in expr.get_all_user_nodes():
+                            new_expr.set_current_user_node(u)
                         expr = new_expr
                     return getattr(self, annotation_method)(expr, args)
 
@@ -1503,6 +1504,9 @@ class SemanticParser(BasicParser):
                 rhs.base.is_target = not rhs.base.is_alias
 
             elif isinstance(rhs, (ListPop, DictPop)):
+                d_lhs['memory_handling'] = 'alias'
+
+            elif isinstance(rhs, IndexedElement) and not rhs.is_slice:
                 d_lhs['memory_handling'] = 'alias'
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign = False,
@@ -5439,7 +5443,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : DottedName
-            The syntactic DottedName node that represent the call to `.extend()`.
+            The syntactic DottedName node that represents the call to `.extend()`.
 
         args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
@@ -5494,7 +5498,7 @@ class SemanticParser(BasicParser):
             The syntactic FunctionCall describing the call to `cmath.sqrt`.
 
         func_call_args : iterable[FunctionCallArgument]
-            The semantic arguments passed to the function.
+            The semantic argument passed to the function.
 
         Returns
         -------
@@ -5551,7 +5555,7 @@ class SemanticParser(BasicParser):
             The syntactic FunctionCall describing the call to `cmath.sqrt`.
 
         func_call_args : iterable[FunctionCallArgument]
-            The semantic arguments passed to the function.
+            The semantic argument passed to the function.
 
         Returns
         -------
@@ -5601,7 +5605,7 @@ class SemanticParser(BasicParser):
             The syntactic FunctionCall describing the call to `cmath.polar`.
 
         func_call_args : iterable[FunctionCallArgument]
-            The semantic arguments passed to the function.
+            The semantic argument passed to the function.
 
         Returns
         -------
@@ -5638,7 +5642,7 @@ class SemanticParser(BasicParser):
             The syntactic FunctionCall describing the call to `cmath.rect`.
 
         func_call_args : iterable[FunctionCallArgument]
-            The semantic arguments passed to the function.
+            The 2 semantic arguments passed to the function.
 
         Returns
         -------
@@ -5668,7 +5672,7 @@ class SemanticParser(BasicParser):
             The syntactic FunctionCall describing the call to `cmath.phase`.
 
         func_call_args : iterable[FunctionCallArgument]
-            The semantic arguments passed to the function.
+            The semantic argument passed to the function.
 
         Returns
         -------
@@ -5798,7 +5802,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : DottedName | AugAssign
-            The syntactic DottedName node that represent the call to `.update()`.
+            The syntactic DottedName node that represents the call to `.update()`.
 
         args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
@@ -5858,7 +5862,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : DottedName
-            The syntactic DottedName node that represent the call to `.union()`.
+            The syntactic DottedName node that represents the call to `.union()`.
 
         function_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
@@ -5913,7 +5917,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : DottedName
-            The syntactic DottedName node that represent the call to `.intersection()`.
+            The syntactic DottedName node that represents the call to `.intersection()`.
 
         function_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
@@ -5960,10 +5964,10 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : FunctionCall
-            The syntactic node that represent the call to `len()`.
+            The syntactic node that represents the call to `len()`.
 
         function_call_args : iterable[FunctionCallArgument]
-            The semantic arguments passed to the function.
+            The semantic argument passed to the function.
 
         Returns
         -------
@@ -6001,7 +6005,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : FunctionCall
-            The syntactic node that represent the call to `PythonSetFunction`.
+            The syntactic node that represents the call to `PythonSetFunction`.
 
         function_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
@@ -6051,15 +6055,15 @@ class SemanticParser(BasicParser):
 
         The purpose of this `_build` method is to construct a literal boolean indicating
         whether or not the expression has the expected type.
-            The syntactic node that represent the call to `isinstance()`.
+        The syntactic node that represents the call to `isinstance()`.
 
         Parameters
         ----------
         expr : FunctionCall
-            The syntactic node that represent the call to `PythonSetFunction`.
+            The syntactic node that represents the call to `PythonSetFunction`.
 
         function_call_args : iterable[FunctionCallArgument]
-            The semantic arguments passed to the function.
+            The 2 semantic arguments passed to the function.
 
         Returns
         -------
@@ -6119,10 +6123,10 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : DottedName
-            The syntactic DottedName node that represent the call to `.append()`.
+            The syntactic DottedName node that represents the call to `.append()`.
 
         args : iterable[FunctionCallArgument]
-            The semantic arguments passed to the function.
+            An iterable containing the 1 semantic argument passed to the function.
 
         Returns
         -------
@@ -6146,10 +6150,10 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : DottedName
-            The syntactic DottedName node that represent the call to `.insert()`.
+            The syntactic DottedName node that represents the call to `.insert()`.
 
         args : iterable[FunctionCallArgument]
-            The semantic arguments passed to the function.
+            The 2 semantic arguments passed to the function.
 
         Returns
         -------
