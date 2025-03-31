@@ -107,9 +107,9 @@ gcc_info = {'exec' : 'gcc',
                 },
             }
 
+#------------------------------------------------------------
 clang_info = {'exec': 'clang',
             'mpi_exec': 'mpicc',
-            'language': 'c',
             'debug_flags': ("-g", "-O0"),
             'release_flags': ("-O3", "-funroll-loops"),
             'general_flags': ("-fPIC",),
@@ -121,13 +121,12 @@ clang_info = {'exec': 'clang',
             'openacc': {
                 'flags': ("-fopenacc"),
             },
-            'family': 'LLVM',
             }
 
+#------------------------------------------------------------
 flang_info = {
             'exec': 'flang',
             'mpi_exec': 'mpif90',
-            'language': 'fortran',
             'module_output_flag': '-module',
             'debug_flags': ("-g", "-O0"),
             'release_flags': ("-O3", "-funroll-loops"),
@@ -140,7 +139,6 @@ flang_info = {
             'openacc': {
                 'flags': ("-fopenacc",),
             },
-            'family': 'LLVM',
             }
 
 
