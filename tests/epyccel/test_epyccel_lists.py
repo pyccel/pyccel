@@ -154,13 +154,13 @@ def test_append_multiple(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-def test_append_list(limited_language):
+def test_append_list(stc_language):
     def f():
         a = [[1, 2, 3]]
         a.append([4, 5, 6])
         return len(a)
 
-    epyc_f = epyccel(f, language=limited_language)
+    epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
 
 def test_append_range(language):
@@ -174,14 +174,14 @@ def test_append_range(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-def test_append_range_list(limited_language):
+def test_append_range_list(stc_language):
     def f():
         a = [[1, 2, 3]]
         for i in range(0, 1000):
             a.append([i, i + 1])
         return a
 
-    epyc_f = epyccel(f, language=limited_language)
+    epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
 
 def test_append_bool(language):
@@ -656,14 +656,8 @@ def test_mixed_list_methods(limited_language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="List return not supported in c"),
+            pytest.mark.skip(reason="Function in function not implemented in C. See #601"),
             pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="List return not supported in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = [
-            pytest.mark.xfail(reason="List return not implemented, related issue #337"),
-            pytest.mark.fortran]),
     ]
 )
 def test_extend_returned_list(language):
@@ -685,7 +679,6 @@ def test_mutable_indexing(stc_language):
     epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
 
-@pytest.mark.xfail(reason="No way to tell from type if b is a list of pointers or a list of values")
 def test_mutable_multi_level_indexing(stc_language):
     def f():
         a = [1,2,3,4]
