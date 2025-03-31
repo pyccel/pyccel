@@ -110,16 +110,16 @@ gcc_info = {'exec' : 'gcc',
 #------------------------------------------------------------
 clang_info = {'exec': 'clang',
             'mpi_exec': 'mpicc',
-            'debug_flags': ("-g", "-O0"),
+            'debug_flags': ("-g", "-O0",),
             'release_flags': ("-O3", "-funroll-loops"),
             'general_flags': ("-fPIC",),
             'standard_flags': ("-std=c99",),
             'mpi': {},
             'openmp': {
-                'flags': ("-fopenmp"),
+                'flags': ("-fopenmp",),
             },
             'openacc': {
-                'flags': ("-fopenacc"),
+                'flags': ("-fopenacc",),
             },
             }
 
@@ -127,9 +127,9 @@ clang_info = {'exec': 'clang',
 flang_info = {
             'exec': 'flang',
             'mpi_exec': 'mpif90',
-            'module_output_flag': '-module',
-            'debug_flags': ("-g", "-O0"),
-            'release_flags': ("-O3", "-funroll-loops"),
+            'module_output_flag': '-J',
+            'debug_flags': ("-g", "-O0",),
+            'release_flags': ("-O3",),
             'general_flags': ("-fPIC",),
             'standard_flags': ("-std=f2003",),
             'mpi': {},
