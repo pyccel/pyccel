@@ -311,17 +311,27 @@ nvfort_info.update(python_info)
 clang_info.update(python_info)
 flang_info.update(python_info)
 
-available_compilers = {'GNU': {'c' : gcc_info,
-                               'fortran' : gfort_info},
-                       'intel': {'c' : icc_info,
-                                 'fortran' : ifort_info},
-                       'PGI': {'c' : pgcc_info,
-                               'fortran' : pgfortran_info},
-                       'nvidia': {'c' : nvc_info,
-                                  'fortran' : nvfort_info},
+available_compilers = {
+                        'GNU': {
+                            'c' : gcc_info,
+                            'fortran' : gfort_info
+                            },
+                        'intel': {
+                            'c' : icc_info,
+                            'fortran' : ifort_info
+                            },
+                        'PGI': {
+                            'c' : pgcc_info,
+                            'fortran' : pgfortran_info
+                            },
+                        'nvidia': {
+                           'c' : nvc_info,
+                            'fortran' : nvfort_info
+                            },
                         'LLVM': {
-                             'c': clang_info,
-                             'fortran': flang_info},
+                            'c': clang_info,
+                            'fortran': flang_info
+                            },
                         }
 
 vendors = ('GNU','intel','PGI','nvidia','LLVM')
