@@ -85,21 +85,17 @@ contains
     __T_declare_dummy__, intent(in)           :: value
   
     integer(i64) :: n, pos, i
+    type(VectorIterator) :: iter
   
     n = my_vector%size()
     pos = idx
+    iter = my_vector % begin()
   
     if (pos < 0) pos = pos + n
     if (pos < 0) pos = 0
     if (pos > n) pos = n
   
-    call my_vector%resize(n + 1)
-  
-    do i = n + 1, pos + 1, -1
-       call my_vector%set(i, my_vector%of(i - 1))
-    end do
-  
-    call my_vector%set(pos + 1, value)
+    iter =  my_vector % insert(iter + pos, value)
   end subroutine __IDENTITY(Vector)_insert
 
 #include <vector/tail.inc>
