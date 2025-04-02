@@ -1422,6 +1422,14 @@ class FCodePrinter(CodePrinter):
         self.add_import(self._build_gFTL_extension_module(expr.list_obj.class_type))
         return f'call {type_name}_reverse({target})\n'
 
+
+    def _print_ListCount(self, expr):
+        vector = self._print(expr.list_obj)
+        type_name = self._print(expr.list_obj.class_type)
+        target = self._print(expr.target)
+        self.add_import(self._build_gFTL_extension_module(expr.list_obj.class_type))
+        return f'{type_name}_count({vector}, {target})'
+
     #========================== Set Methods ================================#
 
     def _print_SetAdd(self, expr):

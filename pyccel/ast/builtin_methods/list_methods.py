@@ -10,12 +10,13 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import VoidType
+from pyccel.ast.datatypes import VoidType, PythonNativeInt
 from pyccel.ast.internals import PyccelFunction
 
 __all__ = ('ListAppend',
            'ListClear',
            'ListCopy',
+           'ListCount',
            'ListExtend',
            'ListInsert',
            'ListMethod',
@@ -377,3 +378,39 @@ class ListReverse(ListMethod):
 
     def __init__(self, list_obj) -> None:
         super().__init__(list_obj)
+
+#==============================================================================
+class ListCount(ListMethod) :
+    """
+    Represents a call to the .count(x) method.
+    
+    Represents a call to the .count(x) method which
+    represents the number of times x appears in the list. 
+
+    >>> [3, 2, 4, 3, 5, 6, 5, 3].count(3)
+    3
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+
+    target : TypedAstNode
+        The argument passed to count() method.
+    """
+    __slots__ = ('_class_type', '_shape')
+    name = 'count'
+
+    def __init__(self, list_obj, target) -> None:
+        self._shape = None
+        self._class_type = PythonNativeInt()
+        super().__init__(list_obj, target)
+
+    @property
+    def target(self):
+        """
+        The target value to be counted.
+
+        The target value to be counted.
+        """
+        return self._args[0]

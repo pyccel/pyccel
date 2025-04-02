@@ -44,6 +44,17 @@ static inline i_key _c_MEMB(_max)(const Self* self) {
     return max_val;
 }
 #endif
+
+static inline int64_t _c_MEMB(_count)(const Self* self, i_key target) {
+    int64_t count = 0;
+    c_foreach(it, Self, *self) {
+        if (target == *it.ref) {
+            count++;
+        }
+    }
+    return count;
+}
+
 #undef i_type
 #undef i_key
 #undef i_use_cmp

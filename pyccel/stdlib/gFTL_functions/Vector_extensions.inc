@@ -77,4 +77,23 @@ contains
 
   end function __IDENTITY(Vector)_max
 
+  function __IDENTITY(Vector)_count(my_vector, target) result(count)
+    class(Vector), intent(in) :: my_vector
+    __T_declare_dummy__, intent(in) :: target
+    integer :: count
+    type(VectorIterator) :: iter, last
+  
+    count = 0
+    iter = my_vector%begin()
+    last = my_vector%end()
+  
+    do while (iter /= last)
+      if (T_EQ(target, iter%of())) then
+        count = count + 1
+      end if
+      call iter%next()
+    end do
+  
+  end function __IDENTITY(Vector)_count
+
 #include <vector/tail.inc>

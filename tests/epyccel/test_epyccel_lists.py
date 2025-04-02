@@ -841,3 +841,52 @@ def test_list_str(stc_language):
     python_result = list_str()
     assert python_result == pyccel_result
 
+def test_count_int(language):
+    def count_int():
+        a = [1, 2, 2, 3, 2]
+        return a.count(2)
+    epyc_count_int = epyccel(count_int, language=language)
+    python_result = count_int()
+    pyccel_result = epyc_count_int()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_count_float(language):
+    def count_float():
+        a = [1.1, 2.2, 2.2, 3.3, 2.2]
+        return a.count(2.2)
+    epyc_count_float = epyccel(count_float, language=language)
+    python_result = count_float()
+    pyccel_result = epyc_count_float()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_count_bool(language):
+    def count_bool():
+        a = [True, False, True, True, False]
+        return a.count(True)
+    epyc_count_bool = epyccel(count_bool, language=language)
+    python_result = count_bool()
+    pyccel_result = epyc_count_bool()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_count_complex(language):
+    def count_complex():
+        a = [1+1j, 2+2j, 1+1j, 3+3j, 1+1j]
+        return a.count(1+1j)
+    epyc_count_complex = epyccel(count_complex, language=language)
+    python_result = count_complex()
+    pyccel_result = epyc_count_complex()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_count_expression_int(language):
+    def count_expression_int():
+        a = [1, 1, 2, 1, 3]
+        return a.count(1) - 1
+    epyc_count_expression_int = epyccel(count_expression_int, language=language)
+    python_result = count_expression_int()
+    pyccel_result = epyc_count_expression_int()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result

@@ -2917,6 +2917,14 @@ class CCodePrinter(CodePrinter):
         self.add_import(Import('stc/algorithm' ,AsName(VariableTypeAnnotation(class_type), c_type)))
         return f'c_reverse({c_type}, {list_obj});\n'
 
+    def _print_ListCount(self, expr):
+        class_type = expr.list_obj.class_type
+        c_type = self.get_c_type(class_type)
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        value = self._print(expr.target) 
+        return f'{c_type}_count({list_obj}, {value})'
+
+
     #================== Set methods ==================
 
     def _print_SetPop(self, expr):
