@@ -2907,8 +2907,8 @@ class CCodePrinter(CodePrinter):
         target = expr.list_obj
         class_type = target.class_type
         c_type = self.get_c_type(class_type)
-        idx = self._print(expr.args[0])
-        value = self._print(expr.args[1])
+        idx = self._print(expr.index)
+        value = self._print(expr.value)
         list_obj = self._print(ObjectAddress(expr.list_obj))
         return f'{c_type}_insert({list_obj}, {idx}, {value});\n'
 

@@ -200,6 +200,24 @@ class ListInsert(ListMethod):
             raise TypeError("Expecting an argument of the same type as the elements of the list")
         super().__init__(list_obj, index, new_elem)
 
+    @property
+    def index(self):
+        """
+        The index of the element before which to insert.
+
+        The index of the element before which to insert.
+        """
+        return self._args[0]
+
+    @property
+    def value(self):
+        """
+        The value to insert into the list.
+
+        The value to insert into the list.
+        """
+        return self._args[1]
+
 #==============================================================================
 class ListExtend(ListMethod):
     """
