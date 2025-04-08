@@ -48,7 +48,7 @@ from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil, convert_to_literal
 
-from pyccel.ast.low_level_tools import IteratorType
+from pyccel.ast.low_level_tools import IteratorType, MemoryHandlerType
 
 from pyccel.ast.mathext  import math_constants
 
@@ -1454,7 +1454,7 @@ class CCodePrinter(CodePrinter):
             code += formatted_args_to_printf(args_format, args, end)
         return code
 
-    def get_c_type(self, dtype):
+    def get_c_type(self, dtype, in_container = False):
         """
         Find the corresponding C type of the PyccelType.
 
@@ -1470,6 +1470,10 @@ class CCodePrinter(CodePrinter):
         dtype : PyccelType
             The data type of the expression. This can be a fixed-size numeric type,
             a primitive type, or a container type.
+
+        in_container : bool, default = False
+            A boolean indicating whether the type will be stored in a container.
+            If this is the case then an additional arc type may be created.
 
         Returns
         -------
@@ -1495,30 +1499,40 @@ class CCodePrinter(CodePrinter):
 
             key = (primitive_type, dtype.precision)
 
+        elif isinstance(dtype, StringType):
+            self.add_import(c_imports['stc/cstr'])
+            return 'cstr'
+
+        elif in_container:
+            return self.get_c_type(MemoryHandlerType(dtype))
+
         elif isinstance(dtype, (NumpyNDArrayType, HomogeneousTupleType)):
-            element_type = self.get_c_type(dtype.datatype).replace(' ', '_').rstrip('_t')
+            element_type = self.get_c_type(dtype.datatype, in_container = True).replace(' ', '_')
             i_type = f'array_{element_type}_{dtype.rank}d'
             self.add_import(Import('stc/cspan', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
 
         elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
             container_type = 'hset' if dtype.name == 'set' else 'vec'
-            element_type = self.get_c_type(dtype.element_type).replace(' ', '_')
+            element_type = self.get_c_type(dtype.element_type, in_container = True).replace(' ', '_')
             i_type = f'{container_type}_{element_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
 
         elif isinstance(dtype, DictType):
             container_type = 'hmap'
-            key_type = self.get_c_type(dtype.key_type).replace(' ', '_')
-            val_type = self.get_c_type(dtype.value_type).replace(' ', '_')
+            key_type = self.get_c_type(dtype.key_type, in_container = True).replace(' ', '_')
+            val_type = self.get_c_type(dtype.value_type, in_container = True).replace(' ', '_')
             i_type = f'{container_type}_{key_type}_{val_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
 
-        elif isinstance(dtype, StringType):
-            self.add_import(c_imports['stc/cstr'])
-            return 'cstr'
+        elif isinstance(dtype, MemoryHandlerType):
+            element_type = self.get_c_type(dtype.element_type).replace(' ', '_')
+            i_type = f'{element_type}_mem'
+            self.add_import(Import('stc/arc', AsName(VariableTypeAnnotation(dtype), i_type)))
+            return i_type
+
         else:
             key = dtype
 
@@ -1571,6 +1585,8 @@ class CCodePrinter(CodePrinter):
             dtype = self.get_c_type(expr.class_type.element_type)
         elif isinstance(expr.class_type, (HomogeneousContainerType, DictType)):
             dtype = self.get_c_type(expr.class_type)
+        elif isinstance(class_type, MemoryHandlerType):
+            dtype = self.get_c_type(class_type.element_type) + '_mem'
         elif not isinstance(class_type, CustomDataType):
             dtype = self.get_c_type(expr.dtype)
         else:
@@ -1930,7 +1946,8 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
 
     def _print_Deallocate(self, expr):
-        if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType, StringType)):
+        if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType,
+                                                 DictType, StringType, MemoryHandlerType)):
             if expr.variable.is_alias:
                 return ''
             variable_address = self._print(ObjectAddress(expr.variable))
@@ -2818,6 +2835,11 @@ class CCodePrinter(CodePrinter):
                 return '-LDBL_MAX'
         raise errors.report(PYCCEL_INTERNAL_ERROR,
                 symbol = expr, severity='fatal')
+
+    def _print_UnpackManagedMemory(self, expr):
+        return (self._print(expr.memory_handler_assignment) +
+                self._print(ObjectAddress(expr.out_ptr)) + ' = ' + self._print(expr.memory_handler_var) + '.get;\n')
+
 
     #=================== OMP ==================
 
