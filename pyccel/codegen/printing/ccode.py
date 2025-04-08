@@ -256,6 +256,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'CSpan_extensions']}
 
 import_header_guard_prefix = {
+    'stc/arc': '_TOOLS_ARC',
     'stc/common': '_TOOLS_COMMON',
     'stc/cspan': '', # Included for import sorting
     'stc/hmap': '_TOOLS_DICT',
@@ -802,6 +803,48 @@ class CCodePrinter(CodePrinter):
                             ElementExpression, start_val)
             return self._print(tmp_var)
 
+    def _get_stc_element_type_decl(self, element_type, expr, tag = 'key', in_arc = False):
+        """
+        Get the declaration of an STC type in an include header.
+        Get the declaration of an STC type in an include header. This method is
+        provided to reduce duplication.
+        Parameters
+        ----------
+        element_type : PyccelType
+            The type of an element of the container being declared.
+        expr : TypedAstNode
+            A node describing the include. This is used for error handling.
+        tag : str, optional, default='key'
+            The name under which the element is identified in STC (usually key
+            or value).
+        in_arc : bool, default = True
+            Indicates whether the STC element should print the type that is stored
+            in a container (i.e. the memory handler) or in an arc type.
+        Returns
+        -------
+        prefix : str
+            Code that should be printed before the include command.
+        decl_line : str
+            Code that describes the declaration of the element type. This code
+            is printed both when including the STC file and when including the
+            STC extension.
+        """
+        if isinstance(element_type, FixedSizeType):
+            decl_line = f'#define i_{tag} {self.get_c_type(element_type)}\n'
+        elif isinstance(element_type, StringType):
+            decl_line = f'#define i_{tag}pro cstr\n'
+        elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            type_decl = self.get_c_type(element_type, not in_arc)
+            if in_arc:
+                decl_line = f'#define i_{tag}class {type_decl}\n'
+            else:
+                decl_line = f'#define i_{tag}pro {type_decl}\n'
+        else:
+            decl_line = ''
+            errors.report(f"The declaration of type {element_type} is not yet implemented.",
+                    symbol=expr, severity='error')
+        return decl_line
+
     # ============ Elements ============ #
 
     def _print_PythonAbs(self, expr):
@@ -1221,37 +1264,25 @@ class CCodePrinter(CodePrinter):
             for t in expr.target:
                 class_type = t.object.class_type
                 container_type = t.local_alias
-                self.add_import(Import(stc_extension_mapping[source],
-                       AsName(VariableTypeAnnotation(class_type), container_type),
-                       ignore_at_print=True))
+                if source in stc_extension_mapping:
+                    self.add_import(Import(stc_extension_mapping[source],
+                           AsName(VariableTypeAnnotation(class_type), container_type),
+                           ignore_at_print=True))
+
+                decl_line = f'#define i_type {container_type}\n'
                 if isinstance(class_type, DictType):
-                    key_type = class_type.key_type
-                    container_key_key = self.get_c_type(class_type.key_type)
-                    container_val_key = self.get_c_type(class_type.value_type)
-                    container_key = f'{container_key_key}_{container_val_key}'
-                    type_decl = f'{container_key_key},{container_val_key}'
-                    if isinstance(key_type, FixedSizeType):
-                        decl_line = f'#define i_type {container_type},{type_decl}\n'
-                    elif isinstance(key_type, StringType):
-                        decl_line = (f'#define i_type {container_type}\n'
-                                     f'#define i_keypro cstr\n'
-                                     f'#define i_val {container_val_key}\n')
+                    key_decl_line = self._get_stc_element_type_decl(class_type.key_type, expr)
+                    val_decl_line = self._get_stc_element_type_decl(class_type.value_type, expr, 'val')
+                    decl_line += (key_decl_line + val_decl_line)
+                elif isinstance(class_type, (HomogeneousListType, HomogeneousSetType)):
+                    key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr)
+                    decl_line += key_decl_line
+                elif isinstance(class_type, MemoryHandlerType):
+                    element_type = self.get_c_type(class_type.element_type)
+                    m_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr, in_arc = True)
+                    decl_line += m_decl_line
                 else:
-                    element_type = class_type.element_type
-                    if isinstance(element_type, FixedSizeType):
-                        type_decl = self.get_c_type(element_type)
-                        decl_line = f'#define i_type {container_type},{type_decl}\n'
-                    elif isinstance(element_type, StringType):
-                        decl_line = (f'#define i_type {container_type}\n'
-                                     f'#define i_keypro cstr\n')
-                    elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-                        type_decl = self.get_c_type(element_type)
-                        decl_line = (f'#define i_type {container_type}\n'
-                                     f'#define i_keyclass {type_decl}\n')
-                    else:
-                        decl_line = ''
-                        errors.report(f"The declaration of type {class_type} is not yet implemented.",
-                                symbol=expr, severity='error')
+                    raise NotImplementedError(f"Import not implemented for {container_type}")
                 if isinstance(class_type, (HomogeneousListType, HomogeneousSetType)) and isinstance(class_type.element_type, FixedSizeNumericType) \
                         and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
                     decl_line += '#define i_use_cmp\n'
