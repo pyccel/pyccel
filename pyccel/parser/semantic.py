@@ -616,7 +616,7 @@ class SemanticParser(BasicParser):
                         continue
                 if isinstance(i.class_type, CustomDataType) and i.is_alias:
                     continue
-                deallocs.append(Deallocate(i))
+                deallocs.append(Deallocate(self._var_mem[-1].get(i, i)))
         self._allocs.pop()
         return deallocs
 
@@ -1817,7 +1817,7 @@ class SemanticParser(BasicParser):
             # we allow pointers to be reassigned multiple times
             # pointers reassigning need to call free_pointer func
             # to remove memory leaks
-            new_expressions.append(Deallocate(var))
+            new_expressions.append(Deallocate(self._var_mem[-1].get(var, var)))
             return
 
         elif class_type != var.class_type:
@@ -1939,7 +1939,7 @@ class SemanticParser(BasicParser):
 
                 new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
             elif isinstance(var.class_type, CustomDataType) and not var.is_alias:
-                new_expressions.append(Deallocate(var))
+                new_expressions.append(Deallocate(self._var_mem[-1].get(var, var)))
 
     def _assign_GeneratorComprehension(self, lhs_name, expr):
         """
@@ -3921,10 +3921,10 @@ class SemanticParser(BasicParser):
                         else:
                             mem_var = Variable(MemoryHandlerType(l.class_type),
                                                self.scope.get_new_name(f'{l.name}_mem'),
-                                               shape=None, memory_handling='alias')
+                                               shape=None, memory_handling='heap')
                             self.scope.insert_variable(mem_var)
                             self._var_mem[-1][l] = mem_var
-                        new_expr = Assign(l, UnpackManagedMemory(r, mem_var))
+                        new_expr = UnpackManagedMemory(l, r, mem_var)
                     else:
                         new_expr = AliasAssign(l, r)
 
@@ -4507,7 +4507,7 @@ class SemanticParser(BasicParser):
         # the arrays that will be returned.
         results_vars = self.scope.collect_all_tuple_elements(results)
         self._check_pointer_targets(results_vars)
-        code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results_vars]
+        code = assigns + [Deallocate(self._var_mem[-1].get(i, i)) for i in self._allocs[-1] if i not in results_vars]
         if results is Nil():
             results = None
         if code:
