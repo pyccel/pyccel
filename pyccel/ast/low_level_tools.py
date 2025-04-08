@@ -152,7 +152,7 @@ class MemoryHandlerType(PyccelType, metaclass=ArgumentSingleton):
         return self._element_type
 
     @property
-    def rank(self):
+    def container_rank(self):
         """
         Number of dimensions of the object.
 
@@ -161,6 +161,36 @@ class MemoryHandlerType(PyccelType, metaclass=ArgumentSingleton):
         managed.
         """
         return 0
+
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. This is equal to the
+        number of dimensions of the element whose memory is being
+        managed.
+        """
+        return self._element_type.rank
+
+    def shape_is_compatible(self, shape):
+        """
+        Check if the provided shape is compatible with the datatype.
+
+        Check if the provided shape is compatible with the format expected for
+        this datatype.
+
+        Parameters
+        ----------
+        shape : Any
+            The proposed shape.
+
+        Returns
+        -------
+        bool
+            True if the shape is acceptable, False otherwise.
+        """
+        return shape == ()
 
 #------------------------------------------------------------------------------
 class MacroDefinition(PyccelAstNode):
@@ -234,13 +264,18 @@ class MacroUndef(PyccelAstNode):
 
 #------------------------------------------------------------------------------
 class UnpackManagedMemory(PyccelAstNode):
-    _attribute_nodes = ('_managed_object','_mem_var')
-    __slots__ = ('_managed_object','_mem_var')
+    _attribute_nodes = ('_managed_object','_mem_var', '_out_ptr')
+    __slots__ = ('_managed_object','_mem_var', '_out_ptr')
 
-    def __init__(self, managed_object, mem_var):
+    def __init__(self, out_ptr, managed_object, mem_var):
         self._managed_object = managed_object
         self._mem_var = mem_var
+        self._out_ptr = out_ptr
         super().__init__()
+
+    @property
+    def out_ptr(self):
+        return self._out_ptr
 
     @property
     def managed_object(self):
@@ -248,7 +283,7 @@ class UnpackManagedMemory(PyccelAstNode):
 
     @property
     def memory_handler_assignment(self):
-        return AliasAssign(self._mem_var, self._managed_object)
+        return Assign(self._mem_var, self._managed_object)
 
     @property
     def memory_handler_var(self):
