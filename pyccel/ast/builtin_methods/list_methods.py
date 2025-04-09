@@ -203,18 +203,18 @@ class ListInsert(ListMethod):
     @property
     def index(self):
         """
-        The index of the element before which to insert.
+        The index of the object after insertion in the list.
 
-        The index of the element before which to insert.
+        The index of the object after insertion in the list.
         """
         return self._args[0]
 
     @property
-    def value(self):
+    def object(self):
         """
-        The value to insert into the list.
+        The object to insert into the list.
 
-        The value to insert into the list.
+        The object to insert into the list.
         """
         return self._args[1]
 

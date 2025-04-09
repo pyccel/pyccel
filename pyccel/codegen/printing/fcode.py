@@ -1417,8 +1417,8 @@ class FCodePrinter(CodePrinter):
         type_name = self._print(expr.list_obj.class_type)
         self.add_import(self._build_gFTL_extension_module(expr.list_obj.class_type))
         idx = self._print(expr.index)
-        value = self._print(expr.value)
-        return f'call {type_name}_insert({target}, {idx}, {value})\n'
+        object = self._print(expr.object)
+        return f'call {type_name}_insert({target}, {idx}, {object})\n'
 
     def _print_ListClear(self, expr):
         target = self._print(expr.list_obj)
