@@ -847,9 +847,11 @@ class CCodePrinter(CodePrinter):
         elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             type_decl = self.get_c_type(element_type, not in_arc)
             if in_arc:
-                decl_line = f'#define i_{tag}class {type_decl}\n'
+                decl_line = (f'#define i_{tag} {type_decl}*\n'
+                             f'#define i_{tag}drop(x) {type_decl}_drop(*x)\n'
+                             f'#define i_{tag}clone(x) x\n')
             else:
-                decl_line = f'#define i_{tag}pro {type_decl}\n'
+                decl_line = f'#define i_{tag}class {type_decl}\n'
         else:
             decl_line = ''
             errors.report(f"The declaration of type {element_type} is not yet implemented.",
@@ -1787,7 +1789,7 @@ class CCodePrinter(CodePrinter):
                 if is_mut:
                     code = f"{container_type}_at_mut({list_var}, {index})"
             if base.class_type.rank > 1:
-                return f'(*{code}->get)'
+                return f'(*(*{code}->get))'
             else:
                 return f'(*{code})'
 
