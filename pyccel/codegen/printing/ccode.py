@@ -3043,6 +3043,15 @@ class CCodePrinter(CodePrinter):
         else:
             return f'{c_type}_pull({list_obj})'
 
+    def _print_ListInsert(self, expr):
+        target = expr.list_obj
+        class_type = target.class_type
+        c_type = self.get_c_type(class_type)
+        idx = self._print(expr.index)
+        obj = self._print(expr.object)
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        return f'{c_type}_insert({list_obj}, {idx}, {obj});\n'
+
     def _print_ListClear(self, expr):
         target = expr.list_obj
         class_type = target.class_type

@@ -43,7 +43,26 @@ static inline i_key _c_MEMB(_max)(const Self* self) {
     }
     return max_val;
 }
+
 #endif
+
+// Function to insert value before position idx
+static inline void _c_MEMB(_insert)(Self* self, intptr_t idx, i_key value) {
+    size_t n = _c_MEMB(_size)(self);
+
+    if (idx < 0) idx += (intptr_t)n;
+    if (idx < 0) idx = 0;
+
+    if ((size_t)idx >= n) {
+        _c_MEMB(_push_back)(self, value);
+    }
+    else {
+        _c_MEMB(_insert_at)(self,
+            _c_MEMB(_advance)(_c_MEMB(_begin)(self), idx),
+            value);
+    }
+}
+
 #undef i_type
 #undef i_key
 #undef i_use_cmp

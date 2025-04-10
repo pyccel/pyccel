@@ -1412,6 +1412,14 @@ class FCodePrinter(CodePrinter):
             self._additional_code += code
             return lhs_code
 
+    def _print_ListInsert(self, expr):
+        target = self._print(expr.list_obj)
+        type_name = self._print(expr.list_obj.class_type)
+        self.add_import(self._build_gFTL_extension_module(expr.list_obj.class_type))
+        idx = self._print(expr.index)
+        obj = self._print(expr.object)
+        return f'call {type_name}_insert({target}, {idx}, {obj})\n'
+
     def _print_ListClear(self, expr):
         target = self._print(expr.list_obj)
         return f'call {target} % clear()\n'
