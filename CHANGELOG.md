@@ -35,6 +35,7 @@ All notable changes to this project will be documented in this file.
 -   #1690 : Add C and Fortran support for list method `pop()`.
 -   #1695 : Add C and Fortran support for list method `reverse()`.
 -   #2256 : Add C and Fortran support for list method `clear()`.
+-   #2259 : Add C and Fortran support for list method `insert()`.
 -   #1663 : Add C and Fortran support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
