@@ -733,7 +733,8 @@ class CCodePrinter(CodePrinter):
                     mem_var_ptr = self._print(ObjectAddress(mem_var))
                     stc_init_elements.append(self._print(mem_var))
                 else:
-                    stc_init_elements.append(self.init_stc_container(e, class_type))
+                    code = self.init_stc_container(e, class_type)
+                    stc_init_elements.append(f'{arc_type}_from({code})')
             return stc_init_elements
         else:
             return [self._print(e) for e in elements]
@@ -1337,6 +1338,7 @@ class CCodePrinter(CodePrinter):
                 if isinstance(class_type, DictType):
                     _, key_decl_line = self._get_stc_element_type_decl(class_type.key_type, expr)
                     _, val_decl_line = self._get_stc_element_type_decl(class_type.value_type, expr, 'val')
+                    prefix = ''
                     decl_line += (key_decl_line + val_decl_line)
                 elif isinstance(class_type, (HomogeneousListType, HomogeneousSetType)):
                     prefix, key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr)
@@ -1699,6 +1701,9 @@ class CCodePrinter(CodePrinter):
     def _print_Declare(self, expr):
         var = expr.variable
         if isinstance(var.class_type, InhomogeneousTupleType):
+            return ''
+
+        if self._get_managed_memory_object(var) is not var:
             return ''
 
         declaration_type = self.get_declare_type(var)

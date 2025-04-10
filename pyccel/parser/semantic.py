@@ -711,13 +711,14 @@ class SemanticParser(BasicParser):
 
         if pointer.class_type != target.class_type and target.rank != pointer.rank:
             managed_var = target if target.rank < pointer.rank else pointer
-            managed_mem = managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
-            if not managed_mem:
-                mem_var = Variable(MemoryHandlerType(managed_var.class_type),
-                                   self.scope.get_new_name(f'{managed_var.name}_mem'),
-                                   shape=None, memory_handling='heap')
-                self.scope.insert_variable(mem_var)
-                ManagedMemory(managed_var, mem_var)
+            if isinstance(managed_var, Variable):
+                managed_mem = managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+                if not managed_mem:
+                    mem_var = Variable(MemoryHandlerType(managed_var.class_type),
+                                       self.scope.get_new_name(f'{managed_var.name}_mem'),
+                                       shape=None, memory_handling='heap')
+                    self.scope.insert_variable(mem_var)
+                    ManagedMemory(managed_var, mem_var)
 
         # The class itself should also be aware of the target for freeing
         if isinstance(pointer, DottedVariable):
