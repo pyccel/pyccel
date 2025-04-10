@@ -48,7 +48,7 @@ from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil, convert_to_literal
 
-from pyccel.ast.low_level_tools import IteratorType, MemoryHandlerType
+from pyccel.ast.low_level_tools import IteratorType, MemoryHandlerType, ManagedMemory
 
 from pyccel.ast.mathext  import math_constants
 
@@ -1667,6 +1667,15 @@ class CCodePrinter(CodePrinter):
             preface = ''
             if isinstance(var.class_type, (HomogeneousContainerType, DictType)) and not expr.external:
                 init = ' = {0}'
+            elif isinstance(var.class_type, MemoryHandlerType) and not expr.external:
+                managed_mem_lst = var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+                if managed_mem_lst:
+                    managed_mem = managed_mem_lst[0]
+                    managed_var = managed_mem.var
+                    if managed_var.memory_handling != 'alias':
+                        c_type = self.get_c_type(var.class_type)
+                        elem_type = self.get_c_type(var.class_type.element_type)
+                        init = f' = {c_type}_from({elem_type}_init())'
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''

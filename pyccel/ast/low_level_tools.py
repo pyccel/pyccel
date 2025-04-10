@@ -288,3 +288,18 @@ class UnpackManagedMemory(PyccelAstNode):
     @property
     def memory_handler_var(self):
         return self._mem_var
+
+#------------------------------------------------------------------------------
+class ManagedMemory(PyccelAstNode):
+    __slots__ = ('_var', '_mem_var')
+    _attribute_nodes = ('_var', '_mem_var')
+
+    def __init__(self, var, mem_var):
+        assert isinstance(mem_var.class_type, MemoryHandlerType)
+        self._var = var
+        self._mem_var = mem_var
+        super().__init__()
+
+    @property
+    def var(self):
+        return self._var

@@ -91,7 +91,7 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil, LiteralString, LiteralImaginaryUnit
 from pyccel.ast.literals import Literal, convert_to_literal, LiteralEllipsis
 
-from pyccel.ast.low_level_tools import MemoryHandlerType, UnpackManagedMemory
+from pyccel.ast.low_level_tools import MemoryHandlerType, UnpackManagedMemory, ManagedMemory
 
 from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
 
@@ -703,6 +703,16 @@ class SemanticParser(BasicParser):
 
         assert pointer != target
         assert not isinstance(pointer.class_type, (StringType, FixedSizeNumericType))
+
+        if pointer.class_type != target.class_type and target.rank != pointer.rank:
+            managed_var = target if target.rank < pointer.rank else pointer
+            managed_mem = managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+            if not managed_mem:
+                mem_var = Variable(MemoryHandlerType(managed_var.class_type),
+                                   self.scope.get_new_name(f'{managed_var.name}_mem'),
+                                   shape=None, memory_handling='heap')
+                self.scope.insert_variable(mem_var)
+                ManagedMemory(managed_var, mem_var)
 
         # The class itself should also be aware of the target for freeing
         if isinstance(pointer, DottedVariable):
