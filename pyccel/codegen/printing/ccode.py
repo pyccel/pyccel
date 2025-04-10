@@ -443,6 +443,14 @@ class CCodePrinter(CodePrinter):
                 return [arg]
         return to_list(irregular_list)
 
+    def _get_managed_memory_object(self, maybe_managed_var):
+        managed_mem = maybe_managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+        if managed_mem:
+            return managed_mem[0].mem_var
+        else:
+            return maybe_managed_var
+
+
     #========================== Numpy Elements ===============================#
     def copy_NumpyArray_Data(self, lhs, rhs):
         """
@@ -684,7 +692,53 @@ class CCodePrinter(CodePrinter):
 
         return code
 
-    def init_stc_container(self, expr, assignment_var):
+    def get_stc_init_elements(self, class_type, elements, current_type):
+        """
+        Get the elements that can be passed to a `c_init` call.
+
+        Get the elements that can be passed to a `c_init` call. For some
+        types this calculation is non-trivial. For example for elements
+        that may be pointers an arc type must be created in order to
+        ensure correct memory deallocation.
+
+        From a STC point of view this method constructs types that are
+        saved in the container (e.g. i_key) from the equivalent raw type
+        (e.g. i_keyraw).
+
+        Parameters
+        ----------
+        class_type : PyccelType
+            The type of the elements in the `c_init` call.
+        elements : list[TypedAstNode]
+            The elements that should be printed in the `c_init` call.
+        current_type : str
+            A string describing the type being created by the `c_init` call.
+
+        Returns
+        -------
+        list[str]
+            A list whose elements describe the c code which gets an element
+            of the container from a raw object.
+        """
+        if isinstance(class_type, StringType):
+            return [self._print(CStrStr(e)) for e in elements]
+        elif class_type.rank > 0:
+            element_type = self.get_c_type(class_type)
+            arc_type = f'{element_type}_mem'
+            stc_init_elements = []
+            for e in elements:
+                if isinstance(e, Variable):
+                    mem_var = self._get_managed_memory_object(e)
+                    e_ptr = self._print(ObjectAddress(e))
+                    mem_var_ptr = self._print(ObjectAddress(mem_var))
+                    stc_init_elements.append(self._print(mem_var))
+                else:
+                    stc_init_elements.append(self.init_stc_container(e, class_type))
+            return stc_init_elements
+        else:
+            return [self._print(e) for e in elements]
+
+    def init_stc_container(self, expr, class_type):
         """
         Generate the initialization of an STC container in C.
 
@@ -703,25 +757,19 @@ class CCodePrinter(CodePrinter):
         str
             The generated C code for the container initialization.
         """
-
-        class_type = assignment_var.class_type
         dtype = self.get_c_type(class_type)
         if isinstance(expr, PythonDict):
-            values = [self._print(k) for k in expr.values]
-            if isinstance(class_type.key_type, StringType):
-                keys = [self._print(CStrStr(k)) for k in expr.keys]
-            else:
-                keys = [self._print(k) for k in expr.keys]
+            values = self.get_stc_init_elements(class_type.value_type, expr.values, dtype)
+            keys = self.get_stc_init_elements(class_type.key_type, expr.keys, dtype)
             keyraw = '{' + ', '.join(f'{{{k}, {v}}}' for k,v in zip(keys, values)) + '}'
         else:
-            if isinstance(class_type.element_type, StringType):
-                args = [self._print(CStrStr(a)) for a in expr.args]
-            else:
-                args = [self._print(a) for a in expr.args]
+            args = self.get_stc_init_elements(class_type.element_type, expr.args, dtype)
             keyraw = '{' + ', '.join(args) + '}'
-        container_name = self._print(assignment_var)
-        init = f'{container_name} = c_init({dtype}, {keyraw});\n'
-        return init
+            if not isinstance(class_type.element_type, (StringType, FixedSizeNumericType)):
+                assert all(isinstance(a, Variable) for a in expr.args) or all(not isinstance(a, Variable) for a in expr.args)
+                if all(isinstance(a, Variable) for a in expr.args):
+                    return f'c_init({dtype}, {keyraw})'
+        return f'c_init({dtype}, {keyraw})'
 
     def rename_imported_methods(self, expr):
         """
@@ -840,6 +888,7 @@ class CCodePrinter(CodePrinter):
             is printed both when including the STC file and when including the
             STC extension.
         """
+        prefix = ''
         if isinstance(element_type, FixedSizeType):
             decl_line = f'#define i_{tag} {self.get_c_type(element_type)}\n'
         elif isinstance(element_type, StringType):
@@ -847,16 +896,18 @@ class CCodePrinter(CodePrinter):
         elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             type_decl = self.get_c_type(element_type, not in_arc)
             if in_arc:
-                decl_line = (f'#define i_{tag} {type_decl}*\n'
-                             f'#define i_{tag}drop(x) {type_decl}_drop(*x)\n'
-                             f'#define i_{tag}clone(x) x\n')
+                decl_line = f'#define i_{tag}pro {type_decl}_ptr\n'
+                prefix = (f'#define i_type {type_decl}_ptr\n'
+                          f'#define i_keyclass {type_decl}\n'
+                           '#define i_opt c_no_clone\n'
+                           '#include <stc/box.h>\n')
             else:
                 decl_line = f'#define i_{tag}class {type_decl}\n'
         else:
             decl_line = ''
             errors.report(f"The declaration of type {element_type} is not yet implemented.",
                     symbol=expr, severity='error')
-        return decl_line
+        return prefix, decl_line
 
     # ============ Elements ============ #
 
@@ -1284,15 +1335,15 @@ class CCodePrinter(CodePrinter):
 
                 decl_line = f'#define i_type {container_type}\n'
                 if isinstance(class_type, DictType):
-                    key_decl_line = self._get_stc_element_type_decl(class_type.key_type, expr)
-                    val_decl_line = self._get_stc_element_type_decl(class_type.value_type, expr, 'val')
+                    _, key_decl_line = self._get_stc_element_type_decl(class_type.key_type, expr)
+                    _, val_decl_line = self._get_stc_element_type_decl(class_type.value_type, expr, 'val')
                     decl_line += (key_decl_line + val_decl_line)
                 elif isinstance(class_type, (HomogeneousListType, HomogeneousSetType)):
-                    key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr)
+                    prefix, key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr)
                     decl_line += key_decl_line
                 elif isinstance(class_type, MemoryHandlerType):
                     element_type = self.get_c_type(class_type.element_type)
-                    m_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr, in_arc = True)
+                    prefix, m_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr, in_arc = True)
                     decl_line += m_decl_line
                 else:
                     raise NotImplementedError(f"Import not implemented for {container_type}")
@@ -1303,6 +1354,7 @@ class CCodePrinter(CodePrinter):
                 header_guard = f'{header_guard_prefix}_{container_type.upper()}'
                 code += ''.join((f'#ifndef {header_guard}\n',
                                  f'#define {header_guard}\n',
+                                 prefix,
                                  decl_line,
                                  f'#include <{source}.h>\n'))
                 if source in stc_extension_mapping:
@@ -1798,7 +1850,7 @@ class CCodePrinter(CodePrinter):
                 if is_mut:
                     code = f"{container_type}_at_mut({list_var}, {index})"
             if base.class_type.rank > 1:
-                return f'(*(*{code}->get))'
+                return f'(*{code}->get->get)'
             else:
                 return f'(*{code})'
 
@@ -2553,8 +2605,9 @@ class CCodePrinter(CodePrinter):
             return self.arrayFill(expr)
         lhs_code = self._print(lhs)
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
-            return self.init_stc_container(rhs, expr.lhs)
-        rhs_code = self._print(rhs)
+            rhs_code = self.init_stc_container(rhs, expr.lhs.class_type)
+        else:
+            rhs_code = self._print(rhs)
         return f'{lhs_code} = {rhs_code};\n'
 
     def _print_AliasAssign(self, expr):
@@ -2789,7 +2842,10 @@ class CCodePrinter(CodePrinter):
 
 
     def _print_Variable(self, expr):
-        if self.is_c_pointer(expr):
+        managed_mem = self._get_managed_memory_object(expr)
+        if managed_mem is not expr:
+            return f'(*{managed_mem.name}.get->get)'
+        elif self.is_c_pointer(expr):
             return '(*{0})'.format(expr.name)
         else:
             return expr.name
@@ -3056,12 +3112,6 @@ class CCodePrinter(CodePrinter):
         arg_val = self._print(ObjectAddress(expr.args[0]))
         # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{var_type}_is_disjoint({set_var}, {arg_val});\n'
-
-    def _print_PythonSet(self, expr):
-        tmp_var = self.scope.get_temporary_variable(expr.class_type, shape = expr.shape,
-                    memory_handling='heap')
-        self._additional_code += self.init_stc_container(expr, tmp_var)
-        return self._print(tmp_var)
 
     #================== Dict methods ==================
 
