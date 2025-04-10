@@ -277,7 +277,7 @@ class CToPythonWrapper(Wrapper):
         """
         Get the condition which checks if an argument has the expected type.
 
-        Using the c-compatible description of a function argument, determine whether the Python
+        Using the C-compatible description of a function argument, determine whether the Python
         object (with datatype `PyccelPyObject`) holds data which is compatible with the expected
         type. The check is returned along with any errors that may be raised depending upon the
         result and the value of `raise_error`.
@@ -2552,7 +2552,7 @@ class CToPythonWrapper(Wrapper):
         if not orig_var.is_const:
             if is_bind_c_argument:
                 errors.report("Python built-in containers should be passed as constant arguments when "
-                              "translating to languages other than c. Any changes to the set will not "
+                              "translating to languages other than C. Any changes to the set will not "
                               "be reflected in the calling code.",
                               severity='warning', symbol=orig_var)
             else:
@@ -2628,8 +2628,8 @@ class CToPythonWrapper(Wrapper):
         clean_up = []
         if not orig_var.is_const:
             if is_bind_c_argument:
-                errors.report("Lists should be passed as constant arguments when translating to languages other than c." +
-                              "Any changes to the set will not be reflected in the calling code.",
+                errors.report("Lists should be passed as constant arguments when translating to languages other than C." +
+                              "Any changes to the list will not be reflected in the calling code.",
                               severity='warning', symbol=orig_var)
             else:
                 element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx),
