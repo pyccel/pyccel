@@ -190,7 +190,7 @@ class MemoryHandlerType(PyccelType, metaclass=ArgumentSingleton):
         bool
             True if the shape is acceptable, False otherwise.
         """
-        return shape == ()
+        return shape == (() if self.rank else None)
 
 #------------------------------------------------------------------------------
 class MacroDefinition(PyccelAstNode):
