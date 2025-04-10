@@ -16,6 +16,7 @@ from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, Hom
 from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
+from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
@@ -376,8 +377,10 @@ class PythonCodePrinter(CodePrinter):
     def _print_Return(self, expr):
 
         if expr.stmt:
-            to_print = [l for l in expr.stmt.body if not (isinstance(l, Assign) and isinstance(l.lhs, Variable))]
-            assigns = {a.lhs: a.rhs for a in expr.stmt.body if a not in to_print}
+            to_print = [l for l in expr.stmt.body if not ((isinstance(l, Assign) and isinstance(l.lhs, Variable))
+                                                        or isinstance(l, UnpackManagedMemory))]
+            assign_nodes = [getattr(a, 'memory_handler_assignment', a) for a in expr.stmt.body if a not in to_print]
+            assigns = {a.lhs: a.rhs for a in assign_nodes}
             prelude = ''.join(self._print(l) for l in to_print)
         else:
             assigns = {}
