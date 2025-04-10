@@ -268,8 +268,6 @@ class SemanticParser(BasicParser):
         # contain persistent pointers
         self._pointer_targets = []
 
-        self._var_mem = []
-
         #
         self._code = parser._code
         # ...
@@ -616,7 +614,7 @@ class SemanticParser(BasicParser):
                         continue
                 if isinstance(i.class_type, CustomDataType) and i.is_alias:
                     continue
-                deallocs.append(Deallocate(self._var_mem[-1].get(i, i)))
+                deallocs.append(Deallocate(self._get_managed_memory_object(i)))
         self._allocs.pop()
         return deallocs
 
@@ -677,6 +675,13 @@ class SemanticParser(BasicParser):
                             argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
                             assert len(argument_objects) == 1
                             argument_objects[0].persistent_target = True
+
+    def _get_managed_memory_object(self, maybe_managed_var):
+        managed_mem = maybe_managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+        if managed_mem:
+            return managed_mem[0].mem_var
+        else:
+            return maybe_managed_var
 
     def _indicate_pointer_target(self, pointer, target, expr):
         """
@@ -1827,7 +1832,7 @@ class SemanticParser(BasicParser):
             # we allow pointers to be reassigned multiple times
             # pointers reassigning need to call free_pointer func
             # to remove memory leaks
-            new_expressions.append(Deallocate(self._var_mem[-1].get(var, var)))
+            new_expressions.append(Deallocate(self._get_managed_memory_object(var)))
             return
 
         elif class_type != var.class_type:
@@ -1949,7 +1954,7 @@ class SemanticParser(BasicParser):
 
                 new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
             elif isinstance(var.class_type, CustomDataType) and not var.is_alias:
-                new_expressions.append(Deallocate(self._var_mem[-1].get(var, var)))
+                new_expressions.append(Deallocate(self._get_managed_memory_object(var)))
 
     def _assign_GeneratorComprehension(self, lhs_name, expr):
         """
@@ -3924,20 +3929,6 @@ class SemanticParser(BasicParser):
                 new_expr = Assign(l, r)
 
                 if is_pointer_i:
-                    if not isinstance(r.class_type, NumpyNDArrayType) and not isinstance(r, Variable):
-                        if l in self._var_mem[-1]:
-                            mem_var = self._var_mem[-1][l]
-                            new_expressions.append(Deallocate(mem_var))
-                        else:
-                            mem_var = Variable(MemoryHandlerType(l.class_type),
-                                               self.scope.get_new_name(f'{l.name}_mem'),
-                                               shape=None, memory_handling='heap')
-                            self.scope.insert_variable(mem_var)
-                            self._var_mem[-1][l] = mem_var
-                        new_expr = UnpackManagedMemory(l, r, mem_var)
-                    else:
-                        new_expr = AliasAssign(l, r)
-
                     if isinstance(r, FunctionCall):
                         funcdef = r.funcdef
                         target_r_idx = funcdef.result_pointer_map[funcdef.results.var]
@@ -3945,6 +3936,12 @@ class SemanticParser(BasicParser):
                             self._indicate_pointer_target(l, r.args[ti].value, expr)
                     else:
                         self._indicate_pointer_target(l, r, expr)
+
+                    if not isinstance(r.class_type, NumpyNDArrayType) and not isinstance(r, Variable):
+                        mem_var = self._get_managed_memory_object(l)
+                        new_expr = UnpackManagedMemory(l, r, mem_var)
+                    else:
+                        new_expr = AliasAssign(l, r)
 
                 elif isinstance(l.class_type, SymbolicType):
                     errors.report(PYCCEL_RESTRICTION_TODO,
@@ -4517,7 +4514,7 @@ class SemanticParser(BasicParser):
         # the arrays that will be returned.
         results_vars = self.scope.collect_all_tuple_elements(results)
         self._check_pointer_targets(results_vars)
-        code = assigns + [Deallocate(self._var_mem[-1].get(i, i)) for i in self._allocs[-1] if i not in results_vars]
+        code = assigns + [Deallocate(self._get_managed_memory_object(i)) for i in self._allocs[-1] if i not in results_vars]
         if results is Nil():
             results = None
         if code:
@@ -4715,7 +4712,6 @@ class SemanticParser(BasicParser):
             # Create a new list that store local variables for each FunctionDef to handle nested functions
             self._allocs.append(set())
             self._pointer_targets.append({})
-            self._var_mem.append({})
 
             import_init_calls = [self._visit(i) for i in expr.imports]
 
@@ -4826,7 +4822,6 @@ class SemanticParser(BasicParser):
                                                        [Assign(var, a.var)])))
             body.insert2body(*optional_inits, back=False)
 
-            self._var_mem.pop()
             func_kwargs = {
                     'global_vars':global_vars,
                     'is_pure':is_pure,

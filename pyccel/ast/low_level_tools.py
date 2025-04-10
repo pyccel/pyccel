@@ -303,3 +303,7 @@ class ManagedMemory(PyccelAstNode):
     @property
     def var(self):
         return self._var
+
+    @property
+    def mem_var(self):
+        return self._mem_var
