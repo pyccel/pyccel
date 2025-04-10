@@ -6,6 +6,8 @@
 """
 Module representing objects (functions/variables etc) required for the interface
 between Python code and C code (using Python/C Api and cwrapper.c).
+This file contains classes but also many FunctionDef/Variable instances representing
+objects defined in Python.h.
 """
 
 from pyccel.utilities.metaclasses import Singleton
