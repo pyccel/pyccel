@@ -135,6 +135,9 @@ class PyccelType:
 
     Where applicable, types also contain an and operator. The operator indicates the type that
     is expected when calling a bitwise comparison operator on objects of these types.
+
+    A type also contains an attribute _name which can be useful to examine
+    the type.
     """
     __slots__ = ()
     _name = None
