@@ -154,13 +154,13 @@ def test_append_multiple(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-def test_append_list(stc_language):
+def test_append_list(limited_language):
     def f():
         a = [[1, 2, 3]]
         a.append([4, 5, 6])
         return len(a)
 
-    epyc_f = epyccel(f, language=stc_language)
+    epyc_f = epyccel(f, language=limited_language)
     assert f() == epyc_f()
 
 def test_append_range(language):
@@ -174,14 +174,14 @@ def test_append_range(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-def test_append_range_list(stc_language):
+def test_append_range_list(limited_language):
     def f():
         a = [[1, 2, 3]]
         for i in range(0, 1000):
             a.append([i, i + 1])
         return a
 
-    epyc_f = epyccel(f, language=stc_language)
+    epyc_f = epyccel(f, language=limited_language)
     assert f() == epyc_f()
 
 def test_append_bool(language):
