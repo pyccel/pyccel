@@ -36,7 +36,7 @@ from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString, PyGe
 from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_New
 from pyccel.ast.cwrapper      import PyTuple_GetItem, PyTuple_SetItem
 from pyccel.ast.cwrapper      import PySet_New, PySet_Add, PyList_Check, PyList_Size
-from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PyObj_GetIter, PySet_Clear
+from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PyObject_GetIter, PySet_Clear
 from pyccel.ast.cwrapper      import PyIter_Next, PyList_Clear
 from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
 from pyccel.ast.cwrapper      import PyUnicode_AsUTF8, PyUnicode_Check, PyUnicode_GetLength
@@ -375,7 +375,7 @@ class CToPythonWrapper(Wrapper):
             iter_obj = self.scope.get_temporary_variable(PyccelPyObject(), 'iter', memory_handling='alias')
 
             size_assign = Assign(size_var, size_getter[arg.class_type.name](py_obj))
-            iter_assign = AliasAssign(iter_obj, PyObj_GetIter(py_obj))
+            iter_assign = AliasAssign(iter_obj, PyObject_GetIter(py_obj))
             indexed_init = AliasAssign(indexed_py_obj, PyIter_Next(iter_obj))
             for_body = [indexed_init]
             internal_type_check_condition, _ = self._get_type_check_condition(indexed_py_obj, arg[0], False, for_body)
@@ -2533,7 +2533,7 @@ class CToPythonWrapper(Wrapper):
 
         iter_obj = self.scope.get_temporary_variable(PyccelPyObject(), 'iter', memory_handling='alias')
 
-        body.append(AliasAssign(iter_obj, PyObj_GetIter(collect_arg)))
+        body.append(AliasAssign(iter_obj, PyObject_GetIter(collect_arg)))
 
         for_scope = self.scope.create_new_loop_scope()
         self.scope = for_scope
@@ -2610,7 +2610,7 @@ class CToPythonWrapper(Wrapper):
 
         iter_obj = self.scope.get_temporary_variable(PyccelPyObject(), 'iter', memory_handling='alias')
 
-        body.append(AliasAssign(iter_obj, PyObj_GetIter(collect_arg)))
+        body.append(AliasAssign(iter_obj, PyObject_GetIter(collect_arg)))
 
         for_scope = self.scope.create_new_loop_scope()
         self.scope = for_scope

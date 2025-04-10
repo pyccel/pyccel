@@ -95,7 +95,7 @@ __all__ = (
     'PySet_Check',
     'PySet_Size',
     'PySet_Clear',
-    'PyObj_GetIter',
+    'PyObject_GetIter',
     'PyIter_Next',
     'PyDict_New',
     'PyDict_SetItem',
@@ -1303,7 +1303,7 @@ PySet_Size = FunctionDef(name = 'PySet_Size',
                     body = [])
 
 # https://docs.python.org/3/c-api/object.html#c.PyObject_GetIter
-PyObj_GetIter = FunctionDef(name = 'PyObject_GetIter',
+PyObject_GetIter = FunctionDef(name = 'PyObject_GetIter',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
                         results = FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias')))
