@@ -2460,42 +2460,6 @@ class CToPythonWrapper(Wrapper):
 
     def _extract_HomogeneousSetType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
             is_bind_c_argument, *, arg_var = None):
-        """
-        Extract the C-compatible homogeneous tuple FunctionDefArgument from the PythonObject.
-
-        Extract the C-compatible homogeneous tuple FunctionDefArgument from the PythonObject.
-        The C-compatible argument is extracted from collect_arg which holds a Python
-        object into arg_var.
-
-        The extraction is done by allocating an array and filling the elements with values
-        extracted from the indexed Python tuple in collect_arg.
-
-        Parameters
-        ----------
-        orig_var : Variable | IndexedElement
-            An object representing the variable or an element of the variable from the
-            FunctionDefArgument being wrapped.
-
-        collect_arg : Variable
-            A variable with type PythonObject* holding the Python argument from which the
-            C-compatible argument should be collected.
-
-        bound_argument : bool
-            True if the argument is the self argument of a class method. False otherwise.
-            This should always be False for this function.
-
-        is_bind_c_argument : bool
-            True if the argument was defined in a BindCFunctionDef. False otherwise.
-
-        arg_var : Variable | IndexedElement, optional
-            A variable or an element of the variable representing the argument that
-            will be passed to the low-level function call.
-
-        Returns
-        -------
-        list[PyccelAstNode]
-            A list of expressions which extract the argument from collect_arg into arg_var.
-        """
         assert arg_var is None
 
         if orig_var.is_optional:
