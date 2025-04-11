@@ -729,8 +729,6 @@ class CCodePrinter(CodePrinter):
             for e in elements:
                 if isinstance(e, Variable):
                     mem_var = self._get_managed_memory_object(e)
-                    e_ptr = self._print(ObjectAddress(e))
-                    mem_var_ptr = self._print(ObjectAddress(mem_var))
                     stc_init_elements.append(self._print(mem_var))
                 else:
                     code = self.init_stc_container(e, class_type)
@@ -3126,6 +3124,12 @@ class CCodePrinter(CodePrinter):
         arg_val = self._print(ObjectAddress(expr.args[0]))
         # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{var_type}_is_disjoint({set_var}, {arg_val});\n'
+
+    def _print_PythonSet(self, expr):
+        tmp_var = self.scope.get_temporary_variable(expr.class_type, shape = expr.shape,
+                    memory_handling='heap')
+        self._additional_code += self.init_stc_container(expr, tmp_var)
+        return self._print(tmp_var)
 
     #================== Dict methods ==================
 
