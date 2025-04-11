@@ -20,6 +20,10 @@ def l(a : 'T'):
         print(tup[i])
     return tup
 
+def m(b : int):
+    B = b + 2
+    return B
+
 class A:
     def __init__(self, x : int):
         self._x = x

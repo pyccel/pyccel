@@ -63,3 +63,7 @@ def l(a : 'T') -> 'tuple[float, ...]':
 def l(a : 'T') -> 'tuple[complex, ...]':
     tup : 'tuple[complex, ...]'
     return tup
+
+def m(b : 'int') -> 'int':
+    B : 'int'
+    return B
