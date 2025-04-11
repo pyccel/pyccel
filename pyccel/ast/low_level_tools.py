@@ -16,7 +16,9 @@ __all__ = ('IteratorType',
            'PairType',
            'MacroDefinition',
            'MacroUndef',
-           'MemoryHandlerType')
+           'ManagedMemory',
+           'MemoryHandlerType',
+           'UnpackManagedMemory')
 
 #------------------------------------------------------------------------------
 class IteratorType(PyccelType, metaclass=ArgumentSingleton):
