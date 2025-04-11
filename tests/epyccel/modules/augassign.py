@@ -139,3 +139,6 @@ def augassign_array_func(x : 'float[:]', y : 'float[:]'):
     def fun1(x: 'float[:]') -> 'float[:]':
         return x + 1
     x %= fun1(y)
+
+def augassign_floor_div(a : 'float[:]'):
+    a //= 3
