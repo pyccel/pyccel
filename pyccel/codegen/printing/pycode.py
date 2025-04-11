@@ -379,8 +379,8 @@ class PythonCodePrinter(CodePrinter):
         if expr.stmt:
             to_print = [l for l in expr.stmt.body if not ((isinstance(l, Assign) and isinstance(l.lhs, Variable))
                                                         or isinstance(l, UnpackManagedMemory))]
-            assign_nodes = [getattr(a, 'memory_handler_assignment', a) for a in expr.stmt.body if a not in to_print]
-            assigns = {a.lhs: a.rhs for a in assign_nodes}
+            assigns = {a.lhs: a.rhs for a in expr.stmt.body if (isinstance(a, Assign) and isinstance(a.lhs, Variable))}
+            assigns.update({a.out_ptr: a.managed_object for a in expr.stmt.body if isinstance(a, UnpackManagedMemory)})
             prelude = ''.join(self._print(l) for l in to_print)
         else:
             assigns = {}
