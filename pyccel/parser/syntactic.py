@@ -502,6 +502,8 @@ class SyntaxParser(BasicParser):
             return AugAssign(lhs, '<<', rhs)
         elif isinstance(stmt.op, ast.RShift):
             return AugAssign(lhs, '>>', rhs)
+        elif isinstance(stmt.op, ast.FloorDiv):
+            return AugAssign(lhs, '//', rhs)
         else:
             return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
                     severity='error')
