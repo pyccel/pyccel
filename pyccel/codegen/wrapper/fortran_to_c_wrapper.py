@@ -17,6 +17,7 @@ from pyccel.ast.bind_c import BindCVariable, BindCArrayType, C_NULL_CHAR
 from pyccel.ast.builtins import VariableIterator, PythonRange
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.builtin_methods.set_methods import SetAdd
+from pyccel.ast.builtin_methods.dict_methods import DictItems
 from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
@@ -887,6 +888,54 @@ class FortranToCWrapper(Wrapper):
         # treated as 0-indexed here
         for_body = [Assign(IndexedElement(f_array, PyccelAdd(idx, LiteralInteger(1))), elem)]
         body.append(For((elem,), iterator, for_body, scope = for_scope))
+        return result
+
+    def _extract_DictType_FunctionDefResult(self, orig_var, orig_func_scope):
+        name = orig_var.name
+        scope = self.scope
+        scope.insert_symbol(name)
+        memory_handling = 'alias' if isinstance(orig_var, DottedVariable) else orig_var.memory_handling
+
+        # Allocatable is not returned so it must appear in local scope
+        local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
+                            memory_handling = memory_handling)
+        scope.insert_variable(local_var, name)
+
+        key_result = self._get_bind_c_array(f'{name}_key', orig_var, local_var.shape)
+        val_result = self._get_bind_c_array(f'{name}_val', orig_var, local_var.shape)
+
+        body = key_result['body'] + val_result['body']
+        result = {'f_result' : local_var,
+                  'body' : body}
+
+        for_scope = scope.create_new_loop_scope()
+        iterator = DictItems(local_var)
+        key = Variable(orig_var.class_type.key_type, self.scope.get_new_name())
+        value = Variable(orig_var.class_type.value_type, self.scope.get_new_name())
+        idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+        self.scope.insert_variable(key)
+        self.scope.insert_variable(value)
+        self.scope.insert_variable(idx)
+        iterator.set_loop_counter(idx)
+
+        key_c_array = key_result['c_result']
+        val_c_array = val_result['c_result']
+        key_array = key_result['f_array']
+        val_array = val_result['f_array']
+        # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
+        # Lists are 1-indexed but Pyccel adds the shift during printing so they are
+        # treated as 0-indexed here
+        for_body = [Assign(IndexedElement(key_array, PyccelAdd(idx, LiteralInteger(1))), key),
+                    Assign(IndexedElement(val_array, PyccelAdd(idx, LiteralInteger(1))), value),
+                    Assign(idx, PyccelAdd(idx, LiteralInteger(1)))]
+        fill_for = For((key, value), iterator, for_body, scope = for_scope)
+        body.extend([Assign(idx, LiteralInteger(0)), fill_for])
+
+        result_var = Variable(InhomogeneousTupleType(key_c_array.class_type, val_c_array.class_type),
+                            scope.get_new_name(), shape = (2,))
+        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(0)), key_c_array)
+        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(1)), val_c_array)
+        result['c_result'] = BindCVariable(result_var, orig_var)
         return result
 
     def _extract_StringType_FunctionDefResult(self, orig_var, orig_func_scope):
