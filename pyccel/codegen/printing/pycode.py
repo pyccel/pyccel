@@ -279,8 +279,6 @@ class PythonCodePrinter(CodePrinter):
                     args = f"'{func[0]}', (" + ', '.join(f"'{self._print(t)}'" for t in func[1].type_list) + ')'
                 else:
                     args = ', '.join(self._print(LiteralString(a)) for a in func)
-                if name == 'types':
-                    continue
 
                 if args:
                     dec += f'@{name}({args})\n'
