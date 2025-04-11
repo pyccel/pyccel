@@ -145,6 +145,7 @@ All notable changes to this project will be documented in this file.
 -   #2245 : Fix internal error when an inhomogeneous tuple appears as an indexed element.
 -   #2258 : Fix missing errors for bad pointer handling in the case of containers with mutable elements.
 -   #2274 : Do not pass include flags to linker.
+-   Always use the C compiler to build the C wrapper for NumPy arrays.
 
 ### Changed
 
