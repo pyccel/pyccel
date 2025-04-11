@@ -3128,7 +3128,8 @@ class CCodePrinter(CodePrinter):
     def _print_PythonSet(self, expr):
         tmp_var = self.scope.get_temporary_variable(expr.class_type, shape = expr.shape,
                     memory_handling='heap')
-        self._additional_code += self.init_stc_container(expr, tmp_var)
+        assign_code = self._print(Assign(tmp_var, expr))
+        self._additional_code += assign_code
         return self._print(tmp_var)
 
     #================== Dict methods ==================
