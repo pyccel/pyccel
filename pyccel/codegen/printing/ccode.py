@@ -2607,7 +2607,7 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
-        if op == '%' and isinstance(lhs.dtype.primitive_type, PrimitiveFloatingPointType):
+        if op == '//' or (op == '%' and isinstance(lhs.dtype.primitive_type, PrimitiveFloatingPointType)):
             _expr = expr.to_basic_assign()
             expr.invalidate_node()
             return self._print(_expr)
