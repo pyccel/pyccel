@@ -132,6 +132,9 @@ class PyccelType:
 
     Where applicable, types also contain an and operator. The operator indicates the type that
     is expected when calling a bitwise comparison operator on objects of these types.
+
+    A type also contains an attribute _name which can be useful to examine
+    the type.
     """
     __slots__ = ()
     _name = None
@@ -758,6 +761,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
     element_type : PyccelType
         The type of the elements of the homogeneous tuple.
     """
+    _name = 'tuple'
     __slots__ = ('_element_type', '_order')
     _container_rank = 1
 
