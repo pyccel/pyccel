@@ -7,9 +7,10 @@ Module to handle low-level language agnostic objects such as macros.
 """
 from pyccel.utilities.metaclasses import ArgumentSingleton
 
-from .basic import PyccelAstNode
+from .basic import PyccelAstNode, TypedAstNode
 from .core import Assign
 from .datatypes import PyccelType
+from .variable import Variable
 
 __all__ = ('IteratorType',
            'PairType',
@@ -264,10 +265,28 @@ class MacroUndef(PyccelAstNode):
 
 #------------------------------------------------------------------------------
 class UnpackManagedMemory(PyccelAstNode):
+    """
+    Assign a pointer to a managed memory block.
+
+    A class representing the operation whereby an object whose memory is managed
+    by a MemoryHandlerType is assigned as the target of a pointer.
+
+    Parameters
+    ----------
+    out_ptr : Variable
+        The variable which will point at this memory block.
+    managed_object : TypedAstNode
+        The object whose memory is being managed.
+    mem_var : Variable
+        The variable responsible for managing the memory.
+    """
     _attribute_nodes = ('_managed_object','_mem_var', '_out_ptr')
     __slots__ = ('_managed_object','_mem_var', '_out_ptr')
 
     def __init__(self, out_ptr, managed_object, mem_var):
+        assert isinstance(out_ptr, Variable)
+        assert isinstance(managed_object, TypedAstNode)
+        assert isinstance(mem_var, Variable)
         self._managed_object = managed_object
         self._mem_var = mem_var
         self._out_ptr = out_ptr
@@ -275,26 +294,64 @@ class UnpackManagedMemory(PyccelAstNode):
 
     @property
     def out_ptr(self):
+        """
+        Get the variable which will point at the managed memory block.
+
+        Get the variable which will point at the managed memory block.
+        """
         return self._out_ptr
 
     @property
     def managed_object(self):
+        """
+        Get the object whose memory is being managed.
+
+        Get the object whose memory is being managed.
+        """
         return self._managed_object
 
     @property
     def memory_handler_assignment(self):
+        """
+        Get the assignement of the memory handler.
+
+        Get an assign node representing the assignment of the object whose memory
+        is being managed to the variable responsible for the management.
+        """
         return Assign(self._mem_var, self._managed_object)
 
     @property
     def memory_handler_var(self):
+        """
+        Get the variable responsible for managing the memory.
+
+        Get the variable responsible for managing the memory.
+        """
         return self._mem_var
 
 #------------------------------------------------------------------------------
 class ManagedMemory(PyccelAstNode):
+    """
+    A class which links a variable to the variable which manages its memory.
+
+    A class which links a variable to the variable which manages its memory.
+    This class does not need to appear in the AST description of the file.
+    Simply creating an instance will add it to the AST tree which will ensure
+    that it is found when examining the variable.
+
+    Parameters
+    ----------
+    var : Variable
+        The variable whose memory is being managed.
+    mem_var : Variable
+        The variable responsible for managing the memory.
+    """
     __slots__ = ('_var', '_mem_var')
     _attribute_nodes = ('_var', '_mem_var')
 
     def __init__(self, var, mem_var):
+        assert isinstance(var, Variable)
+        assert isinstance(mem_var, Variable)
         assert isinstance(mem_var.class_type, MemoryHandlerType)
         self._var = var
         self._mem_var = mem_var
@@ -302,8 +359,18 @@ class ManagedMemory(PyccelAstNode):
 
     @property
     def var(self):
+        """
+        Get the variable whose memory is being managed.
+
+        Get the variable whose memory is being managed.
+        """
         return self._var
 
     @property
     def mem_var(self):
+        """
+        Get the variable responsible for managing the memory.
+
+        Get the variable responsible for managing the memory.
+        """
         return self._mem_var
