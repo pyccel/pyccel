@@ -2954,8 +2954,7 @@ class CCodePrinter(CodePrinter):
                 symbol = expr, severity='fatal')
 
     def _print_UnpackManagedMemory(self, expr):
-        return (self._print(expr.memory_handler_assignment) +
-                self._print(ObjectAddress(expr.out_ptr)) + ' = ' + self._print(expr.memory_handler_var) + '.get;\n')
+        return self._print(expr.memory_handler_assignment)
 
 
     #=================== OMP ==================
