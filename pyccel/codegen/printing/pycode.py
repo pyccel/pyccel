@@ -13,7 +13,7 @@ from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, P
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress, If
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.core       import Interface
+from pyccel.ast.core       import Interface, FunctionDefArgument
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType
 from pyccel.ast.functionalexpr import FunctionalFor
@@ -178,7 +178,13 @@ class PythonCodePrinter(CodePrinter):
         return name
 
     def _get_type_annotation(self, var):
-        if isinstance(var, Variable):
+        if isinstance(var, FunctionDefArgument):
+            if var.annotation:
+                type_annotation = self._print(var.annotation)
+                return f"'{type_annotation}'"
+            else:
+                return self._get_type_annotation(var.var)
+        elif isinstance(var, Variable):
             type_annotation = self._print(var.class_type)
             return f"'{type_annotation}'"
         elif isinstance(var, FunctionAddress):
@@ -305,8 +311,7 @@ class PythonCodePrinter(CodePrinter):
         if expr.annotation and not self._in_header:
             type_annotation = f"'{self._print(expr.annotation)}'"
         else:
-            var = expr.var
-            type_annotation = self._get_type_annotation(var)
+            type_annotation = self._get_type_annotation(expr)
 
         if expr.has_default:
             if isinstance(expr.value, FunctionDef):
