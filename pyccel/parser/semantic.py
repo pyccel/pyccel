@@ -709,9 +709,16 @@ class SemanticParser(BasicParser):
         assert pointer != target
         assert not isinstance(pointer.class_type, (StringType, FixedSizeNumericType))
 
-        if pointer.class_type != target.class_type and target.rank != pointer.rank and \
-                isinstance(target.class_type, (HomogeneousSetType, HomogeneousListType, DictType)) and \
-                isinstance(pointer.class_type, (HomogeneousSetType, HomogeneousListType, DictType)):
+        pointing_at_container_element = (isinstance(pointer.class_type, (HomogeneousSetType, HomogeneousListType)) \
+                                        and (target.class_type is pointer.class_type.element_type)) or \
+                                        (isinstance(pointer.class_type, DictType) \
+                                        and (target.class_type is pointer.class_type.value_type))
+        container_pointing_at_element = (isinstance(target.class_type, (HomogeneousSetType, HomogeneousListType)) \
+                                        and (pointer.class_type is target.class_type.element_type)) or \
+                                        (isinstance(target.class_type, DictType) \
+                                        and (pointer.class_type is target.class_type.value_type))
+
+        if pointing_at_container_element or container_pointing_at_element:
             managed_var = target if target.rank < pointer.rank else pointer
             if isinstance(managed_var, Variable):
                 managed_mem = managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
@@ -755,6 +762,7 @@ class SemanticParser(BasicParser):
                     self._indicate_pointer_target(pointer, v, expr)
         elif isinstance(target, (ListPop, DictPop)):
             target_var = target.list_obj if isinstance(target, ListPop) else target.dict_obj
+            self._indicate_pointer_target(pointer, target_var, expr)
             if target_var in self._pointer_targets[-1]:
                 sub_targets = self._pointer_targets[-1][target_var]
                 self._pointer_targets[-1].setdefault(pointer, []).extend((t[0], expr) for t in sub_targets)
