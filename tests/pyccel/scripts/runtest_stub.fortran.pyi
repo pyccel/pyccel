@@ -1,4 +1,5 @@
 from typing import Final
+from pyccel.decorators import template
 from numpy import float64
 
 
