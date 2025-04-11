@@ -778,12 +778,19 @@ class SemanticParser(BasicParser):
                     self._indicate_pointer_target(pointer, v, expr)
         elif isinstance(target, (ListPop, DictPop)):
             target_var = target.list_obj if isinstance(target, ListPop) else target.dict_obj
-            self._indicate_pointer_target(pointer, target_var, expr)
             if target_var in self._pointer_targets[-1]:
                 sub_targets = self._pointer_targets[-1][target_var]
                 self._pointer_targets[-1].setdefault(pointer, []).extend((t[0], expr) for t in sub_targets)
             elif isinstance(pointer, Variable):
                 self._allocs[-1].add(pointer)
+            if isinstance(pointer, Variable):
+                managed_mem = pointer.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+                if not managed_mem:
+                    mem_var = Variable(MemoryHandlerType(pointer.class_type),
+                                       self.scope.get_new_name(f'{pointer.name}_mem'),
+                                       shape=None, memory_handling='heap')
+                    self.scope.insert_variable(mem_var)
+                    ManagedMemory(pointer, mem_var)
         elif isinstance(target, PythonDict):
             if not isinstance(target.class_type.value_type, (StringType, FixedSizeNumericType)):
                 for v in target.values:
