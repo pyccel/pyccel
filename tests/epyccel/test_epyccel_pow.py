@@ -214,7 +214,5 @@ def test_fcomplex_type_conversion(language):
     x = randint(40) + 1j * randint(40)
     y = randint(40) + 1j * randint(40)
 
-    assert isclose(f(x), fcomplex(x), rtol=RTOL, atol=ATOL)
-    assert isinstance(f(x), type(fcomplex(x)))
-    assert isclose(f(y), fcomplex(y), rtol=RTOL, atol=ATOL)
-    assert isinstance(f(y), type(fcomplex(y)))
+    assert isclose(f(x,y), fcomplex(x,y), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(x,y), type(fcomplex(x,y)))
