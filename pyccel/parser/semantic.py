@@ -677,6 +677,22 @@ class SemanticParser(BasicParser):
                             argument_objects[0].persistent_target = True
 
     def _get_managed_memory_object(self, maybe_managed_var):
+        """
+        Get the variable responsible for managing the memory of the object passed as argument.
+
+        Get the variable responsible for managing the memory of the object passed as argument.
+        This may be the variable itself or a different variable of type MemoryHandlerType.
+
+        Parameters
+        ----------
+        maybe_managed_var : Variable
+            The variable whose management we are interested in.
+
+        Returns
+        -------
+        Variable
+            The variable responsible for managing the memory of the object.
+        """
         managed_mem = maybe_managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
         if managed_mem:
             return managed_mem[0].mem_var
