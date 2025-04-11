@@ -16,7 +16,7 @@ on:
         required: false
         type: string
   push:
-    branches: [devel, main]
+    branches: [devel, main, issue-2273]
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -78,6 +78,11 @@ jobs:
         shell: bash
       - name: Coverage install
         uses: ./.github/actions/coverage_install
+      - name: Test ifx
+        run: |
+          pyccel c_arrays.py --verbose
+        shell: bash
+        working-directory: ./tests/pyccel/scripts
       - name: Fortran/C tests with pytest
         id: f_c_pytest
         timeout-minutes: 60
