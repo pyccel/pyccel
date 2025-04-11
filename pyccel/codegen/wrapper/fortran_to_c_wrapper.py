@@ -901,40 +901,75 @@ class FortranToCWrapper(Wrapper):
                             memory_handling = memory_handling)
         scope.insert_variable(local_var, name)
 
-        key_result = self._get_bind_c_array(f'{name}_key', orig_var, local_var.shape)
-        val_result = self._get_bind_c_array(f'{name}_val', orig_var, local_var.shape)
+        # Create the C-compatible data pointer
+        key_bind_var = Variable(BindCPointer(),
+                            scope.get_new_name(f'bound_{name}_key'),
+                            is_const=False, memory_handling='alias')
+        val_bind_var = Variable(BindCPointer(),
+                            scope.get_new_name(f'bound_{name}_key'),
+                            is_const=False, memory_handling='alias')
+        shape_var = Variable(NumpyInt32Type(), scope.get_new_name(f'{name}_len'))
+        scope.insert_variable(shape_var)
 
-        body = key_result['body'] + val_result['body']
+        # Check how to unpack elements
+        class_type = orig_var.class_type
+        key_var = Variable(class_type.key_type, scope.get_new_name(name+'_key'))
+        val_var = Variable(class_type.value_type, scope.get_new_name(name+'_val'))
+        key_wrap = self._extract_FunctionDefResult(key_var, orig_func_scope)
+        val_wrap = self._extract_FunctionDefResult(val_var, orig_func_scope)
+
+        # Get storage arrays
+        key_c_class_type = key_wrap['c_result'].new_var.class_type
+        key_ptr_var = Variable(NumpyNDArrayType(key_c_class_type, 1, None), scope.get_new_name(name+'_key_ptr'),
+                            memory_handling='alias')
+        key_bind_var = Variable(BindCPointer(),
+                            scope.get_new_name(f'bound_{name}_key'),
+                            is_const=False, memory_handling='alias')
+        scope.insert_variable(key_ptr_var)
+        scope.insert_variable(key_bind_var)
+
+        val_c_class_type = val_wrap['c_result'].new_var.class_type
+        val_ptr_var = Variable(NumpyNDArrayType(val_c_class_type, 1, None), scope.get_new_name(name+'_val_ptr'),
+                            memory_handling='alias')
+        val_bind_var = Variable(BindCPointer(),
+                            scope.get_new_name(f'bound_{name}_val'),
+                            is_const=False, memory_handling='alias')
+        scope.insert_variable(val_ptr_var)
+        scope.insert_variable(val_bind_var)
+
+        # Define the additional steps necessary to define and fill ptr_var
+        scope.insert_variable(key_wrap['c_result'])
+        scope.insert_variable(val_wrap['c_result'])
+        key_size = PyccelMul(BindCSizeOf(key_wrap['c_result']), shape_var)
+        val_size = PyccelMul(BindCSizeOf(val_wrap['c_result']), shape_var)
+        body = [Assign(shape_var, local_var.shape[0]),
+                Assign(key_bind_var, c_malloc(key_size)),
+                Assign(val_bind_var, c_malloc(val_size)),
+                C_F_Pointer(key_bind_var, key_ptr_var, (shape_var,)),
+                C_F_Pointer(val_bind_var, val_ptr_var, (shape_var,))]
+
+        # Start to construct the result
         result = {'f_result' : local_var,
                   'body' : body}
 
+        # Construct the loop which builds the result
         for_scope = scope.create_new_loop_scope()
         iterator = DictItems(local_var)
-        key = Variable(orig_var.class_type.key_type, self.scope.get_new_name())
-        value = Variable(orig_var.class_type.value_type, self.scope.get_new_name())
         idx = Variable(PythonNativeInt(), self.scope.get_new_name())
-        self.scope.insert_variable(key)
-        self.scope.insert_variable(value)
         self.scope.insert_variable(idx)
         iterator.set_loop_counter(idx)
 
-        key_c_array = key_result['c_result']
-        val_c_array = val_result['c_result']
-        key_array = key_result['f_array']
-        val_array = val_result['f_array']
-        # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
-        # Lists are 1-indexed but Pyccel adds the shift during printing so they are
-        # treated as 0-indexed here
-        for_body = [Assign(IndexedElement(key_array, PyccelAdd(idx, LiteralInteger(1))), key),
-                    Assign(IndexedElement(val_array, PyccelAdd(idx, LiteralInteger(1))), value),
+        for_body = [*key_wrap['body'], Assign(IndexedElement(key_ptr_var, PyccelAdd(idx, LiteralInteger(1))), key_wrap['c_result']),
+                    *val_wrap['body'], Assign(IndexedElement(val_ptr_var, PyccelAdd(idx, LiteralInteger(1))), val_wrap['c_result']),
                     Assign(idx, PyccelAdd(idx, LiteralInteger(1)))]
-        fill_for = For((key, value), iterator, for_body, scope = for_scope)
+        fill_for = For((key_var, val_var), iterator, for_body, scope = for_scope)
         body.extend([Assign(idx, LiteralInteger(0)), fill_for])
 
-        result_var = Variable(InhomogeneousTupleType(key_c_array.class_type, val_c_array.class_type),
-                            scope.get_new_name(), shape = (2,))
-        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(0)), key_c_array)
-        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(1)), val_c_array)
+        result_var = Variable(InhomogeneousTupleType(BindCPointer(), BindCPointer(), NumpyInt32Type()),
+                            scope.get_new_name(), shape = (3,))
+        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(0)), key_bind_var)
+        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(1)), val_bind_var)
+        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(2)), shape_var)
         result['c_result'] = BindCVariable(result_var, orig_var)
         return result
 
