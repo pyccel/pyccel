@@ -3092,6 +3092,9 @@ class CToPythonWrapper(Wrapper):
         for_body = [*key_extraction['body'], *value_extraction['body'],
                     If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
                                          [Return(self._error_exit_code)]))]
+        if is_bind_c:
+            for_body = [Assign(key_extraction['c_results'][0], key_elem),
+                        Assign(value_extraction['c_results'][0], val_elem)] + for_body
         self.exit_scope()
         for_loop = For((key_extraction['c_results'][0], value_extraction['c_results'][0]),
                         iterable, for_body, for_scope)
