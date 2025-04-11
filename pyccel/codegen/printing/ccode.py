@@ -731,8 +731,12 @@ class CCodePrinter(CodePrinter):
                     mem_var = self._get_managed_memory_object(e)
                     stc_init_elements.append(self._print(mem_var))
                 else:
+                    tmp_mem_var = self.scope.get_temporary_variable(MemoryHandlerType(class_type),
+                                shape = e.shape, memory_handling='heap')
                     code = self.init_stc_container(e, class_type)
-                    stc_init_elements.append(f'{arc_type}_from({code})')
+                    tmp_mem_var_code = self._print(tmp_mem_var)
+                    self._additional_code += f'{tmp_mem_var_code} = {arc_type}_from({code});\n'
+                    stc_init_elements.append(tmp_mem_var_code)
             return stc_init_elements
         else:
             return [self._print(e) for e in elements]
@@ -2392,6 +2396,10 @@ class CCodePrinter(CodePrinter):
             elif not isinstance(res, Variable):
                 raise NotImplementedError(f"Can't return {type(res)} from a function")
         decs  = ''.join(self._print(i) for i in decs)
+
+        extra_deallocs = [v for v in expr.local_vars if isinstance(v.class_type, MemoryHandlerType) and \
+                                        v.is_temp]
+        body += ''.join(self._print(Deallocate(v)) for v in extra_deallocs)
 
         sep = self._print(SeparatorComment(40))
         if self._additional_args :
