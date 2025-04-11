@@ -1222,6 +1222,7 @@ def test_module_name_containing_conflict(language):
         pytest.param("c", marks = pytest.mark.c)
     )
 )
+@pytest.mark.xdist_incompatible
 def test_stubs(language):
     """
     This tests that a stub file is generated and ensures the stub files are
