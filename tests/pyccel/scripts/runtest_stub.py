@@ -15,7 +15,7 @@ def h(arg : Final[list[int]]):
 def k(a : 'T'):
     return (a, 2*a, 3*a)
 
-@template('T', [int, float, complex])
+@template('T', ['const int', 'const float', 'const complex'])
 def l(a : 'T'):
     tup = (a, 2*a, 3*a)
     for i in range(3):
