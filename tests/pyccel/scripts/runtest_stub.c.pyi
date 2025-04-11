@@ -68,3 +68,10 @@ def l(a : 'T') -> 'tuple[complex, ...]':
 def m(b : 'int') -> 'int':
     B : 'int'
     return B
+
+def n(arg : 'Final[list[int]]') -> None:
+    ...
+
+def high_int_1(function : '(int)(int)', a : 'int') -> 'int':
+    x : 'int'
+    return x

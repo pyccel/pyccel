@@ -26,6 +26,13 @@ def m(b : int):
     B = b + 2
     return B
 
+def n(arg : Final[list[int]]) -> None:
+    print(arg[0])
+
+def high_int_1(function : '(int)(int)', a : int):
+    x = function(a)
+    return x
+
 class A:
     def __init__(self, x : int):
         self._x = x
