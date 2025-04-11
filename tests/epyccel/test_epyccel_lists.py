@@ -2,6 +2,7 @@
 import pytest
 import numpy as np
 from pyccel import epyccel
+from pyccel.decorators import template
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = [
@@ -841,3 +842,32 @@ def test_list_str(stc_language):
     python_result = list_str()
     assert python_result == pyccel_result
 
+def test_list_const_arg(language):
+    @template('T', ['int', 'float', 'complex'])
+    def list_arg(arg : 'const list[T]', my_sum : 'T'):
+        for ai in arg:
+            my_sum += ai
+        return my_sum
+
+    epyccel_func = epyccel(list_arg, language = language)
+    int_arg = [1,2,3,4,5,6,7]
+    float_arg = [1.5, 2.5, 3.5, 4.5, 6.7]
+    complex_arg = [1+0j,4j,2.5+2j]
+    for arg in (int_arg, float_arg, complex_arg):
+        start = type(next(iter(arg)))(0)
+        pyccel_result = epyccel_func(arg, start)
+        python_result = list_arg(arg, start)
+        assert python_result == pyccel_result
+        assert isinstance(pyccel_result, type(python_result))
+
+def test_list_arg(stc_language):
+    def list_arg(arg : 'list[int]', n : int):
+        arg.extend(range(n))
+
+    epyccel_func = epyccel(list_arg, language = stc_language)
+    arg_pyc = [7,8,9,10]
+    arg_pyt = arg_pyc.copy()
+    n = 6
+    epyccel_func(arg_pyc, n)
+    list_arg(arg_pyt, n)
+    assert arg_pyc == arg_pyt
