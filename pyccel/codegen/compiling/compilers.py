@@ -497,7 +497,7 @@ class Compiler:
         sharedlib_modname = sharedlib_modname or compile_obj.python_module
         file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
 
-        cmd = [exec_cmd, *flags, *includes, *libdirs_flags, *linker_libdirs_flags,
+        cmd = [exec_cmd, *flags, *libdirs_flags, *linker_libdirs_flags,
                 compile_obj.module_target, *m_code,
                 '-o', file_out, *libs_flags]
 
