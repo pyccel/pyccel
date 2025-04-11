@@ -1629,6 +1629,9 @@ class CCodePrinter(CodePrinter):
             self.add_import(Import('stc/arc', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
 
+        elif isinstance(dtype, CustomDataType):
+            return self._print(dtype)
+
         else:
             key = dtype
 
@@ -1683,10 +1686,8 @@ class CCodePrinter(CodePrinter):
             dtype = self.get_c_type(expr.class_type)
         elif isinstance(class_type, MemoryHandlerType):
             dtype = self.get_c_type(class_type.element_type) + '_mem'
-        elif not isinstance(class_type, CustomDataType):
-            dtype = self.get_c_type(expr.dtype)
         else:
-            dtype = self._print(expr.class_type)
+            dtype = self.get_c_type(expr.class_type)
 
         if getattr(expr, 'is_const', False):
             dtype = f'const {dtype}'
