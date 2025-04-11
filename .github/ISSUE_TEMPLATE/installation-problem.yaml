@@ -1,0 +1,74 @@
+name: Installation Problem
+description: Report an issue encountered during installation
+title: "[Installation Issue] "
+labels: [ 'package' ]
+assignees: []
+
+body:
+- type: textarea
+  id: relevant-discussion
+  attributes:
+    label: Relevant Discussion
+    description: |
+      Most installation problems are related to dependencies rather than Pyccel itself.  
+      Please provide a link to the relevant discussion in the [Q&A section](https://github.com/pyccel/pyccel/discussions/categories/q-a) where the problem was investigated.
+    placeholder: "Paste the discussion link here."
+  validations:
+    required: true
+
+- type: textarea
+  id: description
+  attributes:
+    label: Problem Description
+    description: Provide a clear and concise description of the problem encountered.
+    placeholder: "Explain what went wrong during installation."
+  validations:
+    required: true
+
+- type: input
+  id: python-version
+  attributes:
+    label: Python Version
+    description: Enter the Python version you are using (e.g., 3.9.7).
+    placeholder: "e.g., 3.11.2"
+  validations:
+    required: true
+
+- type: input
+  id: os-version
+  attributes:
+    label: OS Version
+    description: Enter your operating system version (e.g., Ubuntu 22.04, Windows 11).
+    placeholder: "e.g., Windows 11"
+  validations:
+    required: true
+
+- type: textarea
+  id: dependencies
+  attributes:
+    label: Dependency Versions
+    description: List versions of any relevant dependencies (e.g., NumPy, SciPy). You can paste the output of `pip freeze` here.
+    placeholder: "Paste output of `pip freeze` here."
+  validations:
+    required: false
+
+- type: textarea
+  id: logs
+  attributes:
+    label: Error Logs
+    description: If applicable, paste any relevant error messages or logs that appeared during installation.
+    placeholder: "Paste error logs here."
+  validations:
+    required: false
+
+- type: checkboxes
+  id: terms
+  attributes:
+    label: Confirmation
+    options:
+    - label: "I have searched the [Q&A section](https://github.com/pyccel/pyccel/discussions/categories/q-a) before opening this issue."
+      required: true
+    - label: "I have read the [Contributing Guidelines](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)."
+      required: true
+    - label: "I have starred the repository"
+      required: false

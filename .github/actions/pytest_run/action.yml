@@ -63,7 +63,9 @@ runs:
       id: pytest_4
     - name: Test multi-file Fortran translations
       run: |
-        python -m pytest -rX ${FLAGS} -m "xdist_incompatible and not parallel and not (c or python) ${{ inputs.pytest_mark }}" 2>&1 | tee s5_outfile.out
+        # Temporarily run warnings separately as lists of lists are used in errors and singleton means warning is only raised once
+        python -m pytest -rX ${FLAGS} -m "xdist_incompatible and not parallel and not (c or python) ${{ inputs.pytest_mark }}" --ignore=warnings 2>&1 | tee s5_outfile.out
+        python -m pytest -rX ${FLAGS} -m "xdist_incompatible and not parallel and not (c or python) ${{ inputs.pytest_mark }}" warnings 2>&1 | tee -a s5_outfile.out
         pyccel-clean
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests

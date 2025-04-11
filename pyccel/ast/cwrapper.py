@@ -6,6 +6,8 @@
 """
 Module representing objects (functions/variables etc) required for the interface
 between Python code and C code (using Python/C Api and cwrapper.c).
+This file contains classes but also many FunctionDef/Variable instances representing
+objects defined in Python.h.
 """
 
 from pyccel.utilities.metaclasses import Singleton
@@ -13,7 +15,7 @@ from pyccel.utilities.metaclasses import Singleton
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import PyccelAstNode
+from .basic     import PyccelAstNode, TypedAstNode
 
 from .bind_c    import BindCPointer
 
@@ -69,17 +71,39 @@ __all__ = (
 #----- C / PYTHON FUNCTIONS ---
     'Py_INCREF',
     'Py_DECREF',
-    'PyObject_TypeCheck',
+    'PyType_Ready',
     'PySys_GetObject',
     'PyUnicode_FromString',
-    'PyList_GetItem',
-    'PyList_SetItem',
     'PyErr_Occurred',
     'PyErr_SetString',
     'PyAttributeError',
     'PyNotImplementedError',
     'PyTypeError',
     'PyObject_TypeCheck',
+    'PyList_New',
+    'PyList_Append',
+    'PyList_GetItem',
+    'PyList_SetItem',
+    'PyList_Size',
+    'PyList_Check',
+    'PyList_Clear',
+    'PyTuple_New',
+    'PyTuple_Check',
+    'PyTuple_Size',
+    'PyTuple_GetItem',
+    'PyTuple_SetItem',
+    'PySet_New',
+    'PySet_Add',
+    'PySet_Check',
+    'PySet_Size',
+    'PySet_Clear',
+    'PyObject_GetIter',
+    'PyIter_Next',
+    'PyDict_New',
+    'PyDict_SetItem',
+    'PyUnicode_AsUTF8',
+    'PyUnicode_Check',
+    'PyUnicode_GetLength',
 )
 
 #-------------------------------------------------------------------
@@ -1177,6 +1201,43 @@ PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
                                      FunctionDefArgument(Variable(PyccelPyObject(), name='new_item', memory_handling='alias'))],
                         results = FunctionDefResult(Variable(CNativeInt(), 'i')))
 
+# https://docs.python.org/3/c-api/list.html#c.PyList_Check
+PyList_Check = FunctionDef(name = 'PyList_Check',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(CNativeInt(), 'i')),
+                    body = [])
+
+class PyList_Clear(TypedAstNode):
+    """
+    A class representing a call to list.clear() in the wrapper.
+
+    A class representing a call to list.clear() in the wrapper.
+    There is no simple method to describe this operation before
+    Python 3.13.
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list that must be emptied.
+    """
+    __slots__ = ('_list_obj',)
+    _attribute_nodes = ('_list_obj',)
+    _class_type = PythonNativeInt()
+    _shape = ()
+
+    def __init__(self, list_obj):
+        self._list_obj = list_obj
+        super().__init__()
+
+    @property
+    def list_obj(self):
+        """
+        The list that must be emptied.
+
+        The list that must be emptied.
+        """
+        return self._list_obj
+
 #-------------------------------------------------------------------
 #                         Tuple functions
 #-------------------------------------------------------------------
@@ -1244,7 +1305,7 @@ PySet_Size = FunctionDef(name = 'PySet_Size',
                     body = [])
 
 # https://docs.python.org/3/c-api/object.html#c.PyObject_GetIter
-PySet_GetIter = FunctionDef(name = 'PyObject_GetIter',
+PyObject_GetIter = FunctionDef(name = 'PyObject_GetIter',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
                         results = FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias')))
@@ -1280,6 +1341,27 @@ PyDict_SetItem = FunctionDef(name = 'PyDict_SetItem',
                     results = FunctionDefResult(Variable(PythonNativeInt(), 'i')),
                     body = [])
 
+
+#-------------------------------------------------------------------
+#                         String functions
+#-------------------------------------------------------------------
+# https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_AsUTF8
+PyUnicode_AsUTF8 = FunctionDef(name = 'PyUnicode_AsUTF8',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'unicode', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(CharType(), 'str', memory_handling='alias')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_Check
+PyUnicode_Check = FunctionDef(name = 'PyUnicode_Check',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'str', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(CharType(), 'out', memory_handling='alias')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_GetLength
+PyUnicode_GetLength = FunctionDef(name = 'PyUnicode_GetLength',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'str', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(PythonNativeInt(), 'len')),
+                    body = [])
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {

@@ -10,7 +10,8 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
 from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple
-from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
+from pyccel.ast.builtin_methods.list_methods import ListAppend
+from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress, If
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
 from pyccel.ast.core       import Interface
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
@@ -100,25 +101,30 @@ class PythonCodePrinter(CodePrinter):
 
     def _find_functional_expr_and_iterables(self, expr):
         """
+        Extract the central expression and iterables from a FunctionalFor or GeneratorComprehension.
+
         Traverse through the loop representing a FunctionalFor or GeneratorComprehension
-        to extract the central expression and the different iterable objects
+        to extract the central expression and the different iterable objects.
 
         Parameters
         ----------
         expr : FunctionalFor
+               The loop or generator comprehension to be analyzed.
 
         Returns
         -------
         body      : TypedAstNode
-                    The expression inside the for loops
+                    The expression inside the for loops.
         iterables : list of Iterables
-                    The iterables over which the for loops iterate
+                    The iterables over which the for loops iterate.
         """
         dummy_var = expr.index
         iterables = []
-        body = expr.loops[1]
-        while not isinstance(body, Assign):
-            if isinstance(body, CodeBlock):
+        body = expr.loops[-1]
+        while not isinstance(body, (Assign, ListAppend)):
+            if isinstance(body, If):
+                body = body.blocks[0].body.body[0]
+            elif isinstance(body, CodeBlock):
                 body = list(body.body)
                 while isinstance(body[0], FunctionalFor):
                     func_for = body.pop(0)
@@ -697,15 +703,20 @@ class PythonCodePrinter(CodePrinter):
     def _print_FunctionalFor(self, expr):
         body, iterators = self._find_functional_expr_and_iterables(expr)
         lhs = self._print(expr.lhs)
-        body = self._print(body.rhs)
-        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
-                        for idx, iters in zip(expr.indices, iterators)])
+        condition = ''
+        if isinstance(body, Assign):
+            body = self._print(body.rhs)
+        else:
+            assert isinstance(body, ListAppend)
+            body = self._print(body.args[0])
 
-        name = self._aliases.get(type(expr),'array')
-        if name == 'array':
-            self.add_import(Import('numpy', [AsName(NumpyArray, 'array')]))
+        for_loops = ' '.join(f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
+                             for idx, iters, condition in zip(expr.indices, iterators, expr.conditions))
 
-        return '{} = {}([{} {}])\n'.format(lhs, name, body, for_loops)
+        if isinstance(expr.class_type, NumpyNDArrayType):
+            array = self._get_numpy_name(NumpyArray)
+            return f'{lhs} = {array}([{body} {for_loops} {condition}])\n'
+        return f'{lhs} = [{body} {for_loops} {condition}]\n'
 
     def _print_GeneratorComprehension(self, expr):
         body, iterators = self._find_functional_expr_and_iterables(expr)
@@ -721,8 +732,8 @@ class PythonCodePrinter(CodePrinter):
                     rhs = type(body.rhs)(*args)
 
         body = self._print(rhs)
-        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
-                        for idx, iters in zip(expr.indices, iterators)])
+        for_loops = ' '.join(f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
+                             for idx, iters, condition in zip(expr.indices, iterators, expr.conditions))
 
         if expr.get_user_nodes(FunctionalFor):
             return '{}({} {})'.format(expr.name, body, for_loops)
@@ -1287,7 +1298,10 @@ class PythonCodePrinter(CodePrinter):
         cls_variable = expr.cls_variable
         cls_name = cls_variable.cls_base.name
         args = ', '.join(self._print(arg) for arg in expr.args[1:])
-        return f"{cls_variable} = {cls_name}({args})\n"
+        if expr.get_direct_user_nodes(lambda u: isinstance(u, CodeBlock)):
+            return f"{cls_variable} = {cls_name}({args})\n"
+        else:
+            return f"{cls_name}({args})"
 
     def _print_Del(self, expr):
         return ''.join(f'del {var.variable}\n' for var in expr.variables)

@@ -16,7 +16,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
-from .datatypes import GenericType, PythonNativeComplex
+from .datatypes import GenericType, PythonNativeComplex, CharType
 from .datatypes import PrimitiveBooleanType, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType, TupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
@@ -58,6 +58,7 @@ __all__ = (
     'PythonRound',
     'PythonSet',
     'PythonSetFunction',
+    'PythonStr',
     'PythonSum',
     'PythonTuple',
     'PythonTupleFunction',
@@ -1485,10 +1486,11 @@ class PythonMax(PyccelFunction):
 
         if isinstance(x, (list, tuple)):
             x = PythonTuple(*x)
-        elif not isinstance(x, (PythonTuple, PythonList)):
+        elif not (isinstance(x, (PythonTuple, PythonList))
+                  or (isinstance(x, Variable) and isinstance(x.class_type, HomogeneousContainerType))):
             raise TypeError(f'Unknown type of {type(x)}.' )
 
-        if not x.is_homogeneous:
+        if isinstance(x, (PythonTuple, PythonList)) and not x.is_homogeneous:
             types = ', '.join(str(xi.dtype) for xi in x)
             raise TypeError("Cannot determine final dtype of 'max' call with arguments of different "
                              f"types ({types}). Please cast arguments to the desired dtype")
@@ -1521,10 +1523,11 @@ class PythonMin(PyccelFunction):
 
         if isinstance(x, (list, tuple)):
             x = PythonTuple(*x)
-        elif not isinstance(x, (PythonTuple, PythonList)):
+        elif not (isinstance(x, (PythonTuple, PythonList))
+                  or (isinstance(x, Variable) and isinstance(x.class_type, HomogeneousContainerType))):
             raise TypeError(f'Unknown type of {type(x)}.' )
 
-        if not x.is_homogeneous:
+        if isinstance(x, (PythonTuple, PythonList)) and not x.is_homogeneous:
             types = ', '.join(str(xi.dtype) for xi in x)
             raise TypeError("Cannot determine final dtype of 'min' call with arguments of different "
                               f"types ({types}). Please cast arguments to the desired dtype")
@@ -1723,6 +1726,36 @@ class PythonIsInstance(PyccelFunction):
         super().__init__(obj, class_or_tuple)
 
 #==============================================================================
+class PythonStr(PyccelFunction):
+    """
+    Represents a call to Python's `str` function.
+
+    Represents a call to Python's `str` function which describes a string
+    cast.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument that is cast to a string.
+    """
+    __slots__ = ('_shape',)
+    _static_type = StringType()
+    _class_type = StringType()
+    name = 'str'
+
+    def __new__(cls, arg):
+        if isinstance(arg, LiteralString):
+            return arg
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, arg):
+        if not isinstance(arg.class_type, (StringType, CharType)):
+            raise NotImplementedError("Support for casting non-character types to strings is not yet available")
+        self._shape = (None,)
+        super().__init__(arg)
+
+#==============================================================================
 
 DtypePrecisionToCastFunction = {
         PythonNativeBool()    : PythonBool,
@@ -1751,7 +1784,7 @@ builtin_functions_dict = {
     'range'      : PythonRange,
     'round'      : PythonRound,
     'set'        : PythonSetFunction,
-    'str'        : LiteralString,
+    'str'        : PythonStr,
     'sum'        : PythonSum,
     'tuple'      : PythonTupleFunction,
     'type'       : PythonType,

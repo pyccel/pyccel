@@ -11,4 +11,5 @@ ignore_patterns:
   ".*code":
     - "_print_.*"
   ".*_wrapper":
+    - "_extract_.*_FunctionDefArgument"
     - "_extract_.*_FunctionDefResult"

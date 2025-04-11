@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+import sys
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
@@ -158,9 +159,16 @@ class CWrapperCodePrinter(CCodePrinter):
         CCodePrinter.get_declare_type : The extended function.
         """
         if expr.dtype is BindCPointer():
-            return 'void*'
+            if expr.is_const:
+                return 'const void*'
+            else:
+                return 'void*'
         if expr.dtype is Py_ssize_t():
-            return 'Py_ssize_t*' if self.is_c_pointer(expr) else 'Py_ssize_t'
+            dtype =  'Py_ssize_t*' if self.is_c_pointer(expr) else 'Py_ssize_t'
+            if expr.is_const:
+                return f'const {dtype}'
+            else:
+                return dtype
         return CCodePrinter.get_declare_type(self, expr)
 
     def _handle_is_operator(self, Op, expr):
@@ -592,3 +600,10 @@ class CWrapperCodePrinter(CCodePrinter):
         n = len(args)
         args_code = ', '.join(self._print(a) for a in args)
         return f'(*PyTuple_Pack( {n}, {args_code} ))'
+
+    def _print_PyList_Clear(self, expr):
+        list_code = self._print(ObjectAddress(expr.list_obj))
+        if sys.version_info < (3, 13):
+            return f'PyList_SetSlice({list_code}, 0, PY_SSIZE_T_MAX, NULL)'
+        else:
+            return f'PyList_Clear({list_code})'
