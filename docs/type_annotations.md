@@ -72,7 +72,7 @@ a : list[int] = [1, 2]
 b : list[bool] = [False, True]
 c : list[float] = []
 ```
-So far lists can be declared as local variables or as results of functions.
+So far lists can be declared as local variables or as arguments or results of functions.
 
 ## Sets
 
