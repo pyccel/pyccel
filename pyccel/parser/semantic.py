@@ -4553,7 +4553,7 @@ class SemanticParser(BasicParser):
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
         templates = self.scope.find_all('templates')
-        if decorators['template']:
+        if 'template' in decorators:
             # Load templates dict from decorators dict
             templates.update(decorators['template']['template_dict'])
 
@@ -4612,7 +4612,7 @@ class SemanticParser(BasicParser):
         template_names = list(templates.keys())
         n_templates = len(template_combinations)
 
-        decorators['template'] = templates
+        decorators.setdefault('template', {})['template_dict'] = templates
 
         # this for the case of a function without arguments => no headers
         interface_name = name

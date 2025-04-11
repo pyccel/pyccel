@@ -883,9 +883,6 @@ class SyntaxParser(BasicParser):
             template['decorator_list'] = decorators['template']
             decorators['template'] = template
 
-        if not template['template_dict']:
-            decorators['template'] = None
-
         argument_annotations = [a.annotation for a in arguments]
         result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))
 

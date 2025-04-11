@@ -273,7 +273,7 @@ class PythonCodePrinter(CodePrinter):
                 self.add_import(Import(DottedName('pyccel.decorators'), [AsName(decorators_mod[name], name)]))
             # TODO - All decorators must be stored in a list
             if name == 'template':
-                f = list(f.items())
+                f = list(f['template_dict'].items())
             elif not isinstance(f, list):
                 f = [f]
             for func in f:
