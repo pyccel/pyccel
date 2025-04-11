@@ -710,7 +710,8 @@ class SemanticParser(BasicParser):
         assert not isinstance(pointer.class_type, (StringType, FixedSizeNumericType))
 
         if pointer.class_type != target.class_type and target.rank != pointer.rank and \
-                not (isinstance(target.class_type, NumpyNDArrayType) and isinstance(pointer.class_type, NumpyNDArrayType)):
+                isinstance(target.class_type, (HomogeneousContainerType, DictType)) and \
+                isinstance(pointer.class_type, (HomogeneousContainerType, DictType)):
             managed_var = target if target.rank < pointer.rank else pointer
             if isinstance(managed_var, Variable):
                 managed_mem = managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
