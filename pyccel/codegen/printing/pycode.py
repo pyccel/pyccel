@@ -202,12 +202,6 @@ class PythonCodePrinter(CodePrinter):
         elif isinstance(obj, Variable):
             type_annotation = self._print(obj.class_type)
             return f"'{type_annotation}'"
-        elif isinstance(obj, FunctionAddress):
-            results = self._get_type_annotation(obj.results.var)
-            arguments = ', '.join(self._get_type_annotation(a.var) for a in obj.arguments)
-            return f'"({results})({arguments})"'
-        elif isinstance(obj, Nil):
-            return None
         else:
             raise NotImplementedError(f"Unexpected object of type {type(obj)}")
 
