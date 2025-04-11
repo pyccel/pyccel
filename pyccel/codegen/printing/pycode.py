@@ -21,7 +21,7 @@ from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger, Ni
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
-from pyccel.ast.type_annotations import UnionTypeAnnotation, VariableTypeAnnotation
+from pyccel.ast.type_annotations import VariableTypeAnnotation
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
 from pyccel.ast.variable   import DottedName, Variable, IndexedElement
@@ -177,26 +177,57 @@ class PythonCodePrinter(CodePrinter):
             self.add_import(Import('numpy', [AsName(cls, name)]))
         return name
 
-    def _get_type_annotation(self, var):
-        if isinstance(var, FunctionDefArgument):
-            if var.annotation:
-                type_annotation = self._print(var.annotation)
+    def _get_type_annotation(self, obj):
+        """
+        Get the code for the type annotation.
+
+        Get the code for the type annotation of the object passed as argument.
+
+        Parameters
+        ----------
+        obj : TypedAstNode
+            An object for which a type annotation should be printed.
+
+        Returns
+        -------
+        str
+            A string containing the type annotation.
+        """
+        if isinstance(obj, FunctionDefArgument):
+            if obj.annotation:
+                type_annotation = self._print(obj.annotation)
                 return f"'{type_annotation}'"
             else:
-                return self._get_type_annotation(var.var)
-        elif isinstance(var, Variable):
-            type_annotation = self._print(var.class_type)
+                return self._get_type_annotation(obj.var)
+        elif isinstance(obj, Variable):
+            type_annotation = self._print(obj.class_type)
             return f"'{type_annotation}'"
-        elif isinstance(var, FunctionAddress):
-            results = self._get_type_annotation(var.results.var)
-            arguments = ', '.join(self._get_type_annotation(a.var) for a in var.arguments)
+        elif isinstance(obj, FunctionAddress):
+            results = self._get_type_annotation(obj.results.var)
+            arguments = ', '.join(self._get_type_annotation(a.var) for a in obj.arguments)
             return f'"({results})({arguments})"'
-        elif isinstance(var, Nil):
+        elif isinstance(obj, Nil):
             return None
         else:
-            raise NotImplementedError(f"Unexpected object of type {type(var)}")
+            raise NotImplementedError(f"Unexpected object of type {type(obj)}")
 
     def _function_signature(self, func):
+        """
+        Print the function signature.
+
+        Print the function signature in a .pyi file. This contains arguments,
+        result declarations and type annotations.
+
+        Parameters
+        ----------
+        func : FunctionDef | Interface
+            The function whose signature is of interest.
+
+        Returns
+        -------
+        str
+            The code which describes the function signature.
+        """
         interface = func.get_direct_user_nodes(lambda x: isinstance(x, Interface))
         overload = '@overload\n' if interface else ''
         if func.is_inline:
@@ -219,6 +250,21 @@ class PythonCodePrinter(CodePrinter):
             return overload + f"def {name}({args}){res}:\n"+self._indent_codestring(body)
 
     def _handle_decorators(self, decorators):
+        """
+        Print decorators for a function.
+
+        Print all decorators for a function in the expected format.
+
+        Parameters
+        ----------
+        decorators : dict
+            A dictionary describing the function templates.
+
+        Returns
+        -------
+        str
+            The code which describes the decorators.
+        """
         if len(decorators) == 0:
             return ''
         dec = ''
