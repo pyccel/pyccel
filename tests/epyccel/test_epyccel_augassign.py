@@ -256,3 +256,15 @@ def test_augassign_array_func(language):
     func_epyc(x_epyc,y)
 
     assert np.allclose(x, x_epyc, rtol=RTOL, atol=ATOL)
+
+def test_augassign_floor_div(language):
+    func = mod.augassign_floor_div
+    func_epyc = epyccel(func, language = language)
+
+    x1_float = random((5,))*10
+    x2_float = x1_float.copy()
+
+    func(x1_float)
+    func_epyc(x2_float)
+
+    assert np.allclose(x1_float, x2_float, rtol=RTOL, atol=ATOL)
