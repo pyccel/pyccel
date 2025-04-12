@@ -2947,7 +2947,18 @@ class CCodePrinter(CodePrinter):
                 symbol = expr, severity='fatal')
 
     def _print_UnpackManagedMemory(self, expr):
-        return self._print(expr.memory_handler_assignment)
+        assign_node = expr.memory_handler_assignment
+        lhs_code = self._print(assign_node.lhs)
+        rhs = assign_node.rhs
+        rhs_code = self._print(assign_node.rhs)
+        if '->get' in rhs_code:
+            rhs_code = rhs_code.removesuffix('->get)').removeprefix('(*')
+            rhs_code = f'(*{rhs_code})'
+        else:
+            assert '.get' in rhs_code
+            rhs_code = rhs_code.removesuffix('.get)').removeprefix('(*')
+
+        return f'{lhs_code} = {rhs_code};\n'
 
 
     #=================== OMP ==================
@@ -3030,9 +3041,14 @@ class CCodePrinter(CodePrinter):
                 idx_code = self._print(PyccelAdd(PythonLen(expr.list_obj), expr.index_element, simplify=True))
             else:
                 idx_code = self._print(expr.index_element)
-            return f'{c_type}_pull_elem({list_obj}, {idx_code})'
+            code = f'{c_type}_pull_elem({list_obj}, {idx_code})'
         else:
-            return f'{c_type}_pull({list_obj})'
+            code = f'{c_type}_pull({list_obj})'
+
+        if not isinstance(expr.class_type, FixedSizeNumericType):
+            code = f'(*{code}.get)'
+
+        return code
 
     def _print_ListInsert(self, expr):
         target = expr.list_obj
@@ -3179,13 +3195,15 @@ class CCodePrinter(CodePrinter):
             key = self._print(expr.key)
         assign = expr.get_user_nodes(Assign)
         if assign:
-            assert len(assign) == 1
-            assign_node = assign[0]
-            lhs = assign_node.lhs
-            if lhs == expr or lhs.is_user_of(expr):
-                return f"(*{container_type}_at_mut({dict_obj_code}, {key}))"
+            if any(a.lhs == expr or a.lhs.is_user_of(expr) for a in assign):
+                code = f"(*{container_type}_at_mut({dict_obj_code}, {key}))"
 
-        return f"(*{container_type}_at({dict_obj_code}, {key}))"
+        code = f"(*{container_type}_at({dict_obj_code}, {key}))"
+
+        if not isinstance(expr.class_type, FixedSizeNumericType):
+            code = code[:-1] + '->get)'
+
+        return code
 
     #================== String methods ==================
 
