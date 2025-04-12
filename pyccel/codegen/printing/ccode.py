@@ -889,13 +889,10 @@ class CCodePrinter(CodePrinter):
             decl_line = f'#define i_{tag}pro cstr\n'
         elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             type_decl = self.get_c_type(element_type, not in_arc)
-            if in_arc:
-                decl_line = f'#define i_{tag}class {type_decl}\n'
-            else:
-                decl_line = f'#define i_{tag}class {type_decl}\n'
+            decl_line = f'#define i_{tag}class {type_decl}\n'
         else:
             decl_line = ''
-            errors.report(f"The declaration of type {element_type} is not yet implemented.",
+            errors.report(f"The declaration of type {element_type} is not yet implemented for containers.",
                     symbol=expr, severity='error')
         return decl_line
 
