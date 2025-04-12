@@ -760,10 +760,6 @@ class CCodePrinter(CodePrinter):
         else:
             args = self.get_stc_init_elements(class_type.element_type, expr.args, dtype)
             keyraw = '{' + ', '.join(args) + '}'
-            if not isinstance(class_type.element_type, (StringType, FixedSizeNumericType)):
-                assert all(isinstance(a, Variable) for a in expr.args) or all(not isinstance(a, Variable) for a in expr.args)
-                if all(isinstance(a, Variable) for a in expr.args):
-                    return f'c_init({dtype}, {keyraw})'
         return f'c_init({dtype}, {keyraw})'
 
     def rename_imported_methods(self, expr):
