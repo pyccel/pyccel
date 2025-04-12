@@ -883,7 +883,6 @@ class CCodePrinter(CodePrinter):
             is printed both when including the STC file and when including the
             STC extension.
         """
-        prefix = ''
         if isinstance(element_type, FixedSizeType):
             decl_line = f'#define i_{tag} {self.get_c_type(element_type)}\n'
         elif isinstance(element_type, StringType):
@@ -891,18 +890,14 @@ class CCodePrinter(CodePrinter):
         elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             type_decl = self.get_c_type(element_type, not in_arc)
             if in_arc:
-                decl_line = f'#define i_{tag}pro {type_decl}_ptr\n'
-                prefix = (f'#define i_type {type_decl}_ptr\n'
-                          f'#define i_keyclass {type_decl}\n'
-                           '#define i_opt c_no_clone\n'
-                           '#include <stc/box.h>\n')
+                decl_line = f'#define i_{tag}class {type_decl}\n'
             else:
                 decl_line = f'#define i_{tag}class {type_decl}\n'
         else:
             decl_line = ''
             errors.report(f"The declaration of type {element_type} is not yet implemented.",
                     symbol=expr, severity='error')
-        return prefix, decl_line
+        return decl_line
 
     # ============ Elements ============ #
 
@@ -1330,16 +1325,15 @@ class CCodePrinter(CodePrinter):
 
                 decl_line = f'#define i_type {container_type}\n'
                 if isinstance(class_type, DictType):
-                    _, key_decl_line = self._get_stc_element_type_decl(class_type.key_type, expr)
-                    _, val_decl_line = self._get_stc_element_type_decl(class_type.value_type, expr, 'val')
-                    prefix = ''
+                    key_decl_line = self._get_stc_element_type_decl(class_type.key_type, expr)
+                    val_decl_line = self._get_stc_element_type_decl(class_type.value_type, expr, 'val')
                     decl_line += (key_decl_line + val_decl_line)
                 elif isinstance(class_type, (HomogeneousListType, HomogeneousSetType)):
-                    prefix, key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr)
+                    key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr)
                     decl_line += key_decl_line
                 elif isinstance(class_type, MemoryHandlerType):
                     element_type = self.get_c_type(class_type.element_type)
-                    prefix, m_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr, in_arc = True)
+                    m_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr, in_arc = True)
                     decl_line += m_decl_line
                 else:
                     raise NotImplementedError(f"Import not implemented for {container_type}")
@@ -1350,7 +1344,6 @@ class CCodePrinter(CodePrinter):
                 header_guard = f'{header_guard_prefix}_{container_type.upper()}'
                 code += ''.join((f'#ifndef {header_guard}\n',
                                  f'#define {header_guard}\n',
-                                 prefix,
                                  decl_line,
                                  f'#include <{source}.h>\n'))
                 if source in stc_extension_mapping:
@@ -1850,7 +1843,7 @@ class CCodePrinter(CodePrinter):
                 if is_mut:
                     code = f"{container_type}_at_mut({list_var}, {index})"
             if base.class_type.rank > 1:
-                return f'(*{code}->get->get)'
+                return f'(*{code}->get)'
             else:
                 return f'(*{code})'
 
@@ -2848,7 +2841,7 @@ class CCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         managed_mem = get_managed_memory_object(expr)
         if managed_mem is not expr:
-            return f'(*{managed_mem.name}.get->get)'
+            return f'(*{managed_mem.name}.get)'
         elif self.is_c_pointer(expr):
             return '(*{0})'.format(expr.name)
         else:
