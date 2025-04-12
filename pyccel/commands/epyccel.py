@@ -338,7 +338,7 @@ def epyccel( python_function_or_module, **kwargs ):
     context = inspect.stack()
     context_dict = {}
     for f in reversed(context[1:]):
-        context_dict.update({k: v for k,v in f.frame.f_locals.items()})
+        context_dict.update(f.frame.f_locals)
 
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
