@@ -16,11 +16,11 @@ from pyccel import epyccel
 def python_only_language(request):
     return request.param
 
-def test_dict_init(stc_language):
+def test_dict_init(language):
     def dict_init():
         a = {1:1.0, 2:2.0}
         return a
-    epyc_dict_init = epyccel(dict_init, language = stc_language)
+    epyc_dict_init = epyccel(dict_init, language = language)
     pyccel_result = epyc_dict_init()
     python_result = dict_init()
     assert isinstance(python_result, type(pyccel_result))
@@ -36,11 +36,11 @@ def test_dict_str_keys(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_dict_empty_init(stc_language):
+def test_dict_empty_init(language):
     def dict_empty_init():
         a : 'dict[int, float]' = {}
         return a
-    epyc_dict_empty_init = epyccel(dict_empty_init, language = stc_language)
+    epyc_dict_empty_init = epyccel(dict_empty_init, language = language)
     pyccel_result = epyc_dict_empty_init()
     python_result = dict_empty_init()
     assert isinstance(python_result, type(pyccel_result))
