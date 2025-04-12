@@ -744,8 +744,8 @@ class CCodePrinter(CodePrinter):
         expr : TypedAstNode
             The object representing the container being printed (e.g., PythonList, PythonSet).
 
-        assignment_var : Variable
-            The variable that the Python container is being assigned to.
+        class_type : PyccelType
+            The type of the Python container being created.
 
         Returns
         -------
@@ -856,8 +856,10 @@ class CCodePrinter(CodePrinter):
     def _get_stc_element_type_decl(self, element_type, expr, tag = 'key', in_arc = False):
         """
         Get the declaration of an STC type in an include header.
+
         Get the declaration of an STC type in an include header. This method is
         provided to reduce duplication.
+
         Parameters
         ----------
         element_type : PyccelType
@@ -870,6 +872,7 @@ class CCodePrinter(CodePrinter):
         in_arc : bool, default = True
             Indicates whether the STC element should print the type that is stored
             in a container (i.e. the memory handler) or in an arc type.
+
         Returns
         -------
         prefix : str
