@@ -25,7 +25,7 @@ from .datatypes     import StringType
 from .internals     import PyccelFunction, Slice, PyccelArrayShapeElement
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
-from .low_level_tools import UnpackManagedMemory
+from .low_level_tools import UnpackManagedMemory, ManagedMemory
 from .mathext       import math_mod
 from .numpyext      import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace
 from .numpyext      import get_shape_of_multi_level_container
