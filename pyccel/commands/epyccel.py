@@ -123,7 +123,8 @@ def epyccel_seq(function_or_module, *,
                 conda_warnings= 'basic',
                 comm          = None,
                 root          = None,
-                bcast         = None):
+                bcast         = None,
+                context_dict  = None):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
@@ -168,6 +169,9 @@ def epyccel_seq(function_or_module, *,
         Output folder for the compiled code.
     conda_warnings : {off, basic, verbose}
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+    context_dict : dict, optional
+        A dictionary containing any variables that are available in the calling context.
+        This can allow certain constants to be defined outside of the function passed to epyccel.
 
     Returns
     -------
@@ -257,7 +261,8 @@ def epyccel_seq(function_or_module, *,
                            debug           = debug,
                            accelerators    = accelerators,
                            output_name     = module_name,
-                           conda_warnings  = conda_warnings)
+                           conda_warnings  = conda_warnings,
+                           context_dict    = context_dict)
         finally:
             # Change working directory back to starting point
             os.chdir(base_dirpath)
@@ -328,6 +333,13 @@ def epyccel( python_function_or_module, **kwargs ):
     """
     assert isinstance( python_function_or_module, (FunctionType, type, ModuleType, str) )
 
+    # Retrieve the information about the variables that are available in the calling context.
+    # This can allow certain constants to be defined outside of the function passed to epyccel.
+    context = inspect.stack()
+    context_dict = {}
+    for f in reversed(context[1:]):
+        context_dict.update({k: v for k,v in f.frame.f_locals.items()})
+
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
     bcast = kwargs.pop('bcast', True)
@@ -356,7 +368,7 @@ def epyccel( python_function_or_module, **kwargs ):
         # Master process calls epyccel
         if comm.rank == root:
             try:
-                mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+                mod, fun = epyccel_seq( python_function_or_module, **kwargs, context_dict = context_dict )
                 mod_path = os.path.abspath(mod.__file__)
                 mod_name = mod.__name__
                 fun_name = python_function_or_module.__name__ if fun else None
@@ -402,7 +414,7 @@ def epyccel( python_function_or_module, **kwargs ):
     # Serial version
     else:
         try:
-            mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+            mod, fun = epyccel_seq( python_function_or_module, **kwargs, context_dict = context_dict )
         except PyccelError as e:
             raise type(e)(str(e)) from None
 
