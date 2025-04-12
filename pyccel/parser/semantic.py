@@ -2949,7 +2949,7 @@ class SemanticParser(BasicParser):
         if var is None and self._context_dict and name in self._context_dict:
             env_var = self._context_dict[name]
             if env_var in original_type_to_pyccel_type:
-                var = PyccelFunctionDef(env_var.__name__, original_type_to_pyccel_type[env_var])
+                var = VariableTypeAnnotation(original_type_to_pyccel_type[env_var])
             elif isinstance(env_var, UnionType):
                 python_types = typing.get_args(env_var)
                 if all(t in original_type_to_pyccel_type for t in python_types):
