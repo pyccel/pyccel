@@ -336,9 +336,8 @@ def epyccel( python_function_or_module, **kwargs ):
     # Retrieve the information about the variables that are available in the calling context.
     # This can allow certain constants to be defined outside of the function passed to epyccel.
     context = inspect.stack()
-    context_dict = {}
-    for f in reversed(context[1:]):
-        context_dict.update(f.frame.f_locals)
+    context_dict = context[1].frame.f_locals.copy()
+    context_dict.update(context[1].frame.f_globals)
 
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
