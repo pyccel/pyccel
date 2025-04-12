@@ -67,7 +67,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
-from pyccel.ast.utilities import expand_to_loops, is_literal_integer
+from pyccel.ast.utilities import expand_to_loops, is_literal_integer, get_managed_memory_object
 
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
@@ -443,30 +443,6 @@ class CCodePrinter(CodePrinter):
                 return [arg]
         return to_list(irregular_list)
 
-    def _get_managed_memory_object(self, maybe_managed_var):
-        """
-        Get the variable responsible for managing the memory of the object passed as argument.
-
-        Get the variable responsible for managing the memory of the object passed as argument.
-        This may be the variable itself or a different variable of type MemoryHandlerType.
-
-        Parameters
-        ----------
-        maybe_managed_var : Variable
-            The variable whose management we are interested in.
-
-        Returns
-        -------
-        Variable
-            The variable responsible for managing the memory of the object.
-        """
-        managed_mem = maybe_managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
-        if managed_mem:
-            return managed_mem[0].mem_var
-        else:
-            return maybe_managed_var
-
-
     #========================== Numpy Elements ===============================#
     def copy_NumpyArray_Data(self, lhs, rhs):
         """
@@ -744,7 +720,7 @@ class CCodePrinter(CodePrinter):
             stc_init_elements = []
             for e in elements:
                 if isinstance(e, Variable):
-                    mem_var = self._get_managed_memory_object(e)
+                    mem_var = get_managed_memory_object(e)
                     stc_init_elements.append(self._print(mem_var))
                 else:
                     tmp_mem_var = self.scope.get_temporary_variable(MemoryHandlerType(class_type),
@@ -1722,7 +1698,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(var.class_type, InhomogeneousTupleType):
             return ''
 
-        if self._get_managed_memory_object(var) is not var:
+        if get_managed_memory_object(var) is not var:
             return ''
 
         declaration_type = self.get_declare_type(var)
@@ -2870,7 +2846,7 @@ class CCodePrinter(CodePrinter):
 
 
     def _print_Variable(self, expr):
-        managed_mem = self._get_managed_memory_object(expr)
+        managed_mem = get_managed_memory_object(expr)
         if managed_mem is not expr:
             return f'(*{managed_mem.name}.get->get)'
         elif self.is_c_pointer(expr):

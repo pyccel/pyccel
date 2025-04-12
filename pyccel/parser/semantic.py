@@ -122,7 +122,7 @@ from pyccel.ast.typingext import TypingFinal
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import split_positional_keyword_arguments
-from pyccel.ast.utilities import recognised_source, is_literal_integer
+from pyccel.ast.utilities import recognised_source, is_literal_integer, get_managed_memory_object
 
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
@@ -614,7 +614,7 @@ class SemanticParser(BasicParser):
                         continue
                 if isinstance(i.class_type, CustomDataType) and i.is_alias:
                     continue
-                deallocs.append(Deallocate(self._get_managed_memory_object(i)))
+                deallocs.append(Deallocate(get_managed_memory_object(i)))
         self._allocs.pop()
         return deallocs
 
@@ -675,29 +675,6 @@ class SemanticParser(BasicParser):
                             argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
                             assert len(argument_objects) == 1
                             argument_objects[0].persistent_target = True
-
-    def _get_managed_memory_object(self, maybe_managed_var):
-        """
-        Get the variable responsible for managing the memory of the object passed as argument.
-
-        Get the variable responsible for managing the memory of the object passed as argument.
-        This may be the variable itself or a different variable of type MemoryHandlerType.
-
-        Parameters
-        ----------
-        maybe_managed_var : Variable
-            The variable whose management we are interested in.
-
-        Returns
-        -------
-        Variable
-            The variable responsible for managing the memory of the object.
-        """
-        managed_mem = maybe_managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
-        if managed_mem:
-            return managed_mem[0].mem_var
-        else:
-            return maybe_managed_var
 
     def _indicate_pointer_target(self, pointer, target, expr):
         """
@@ -1866,7 +1843,7 @@ class SemanticParser(BasicParser):
             # we allow pointers to be reassigned multiple times
             # pointers reassigning need to call free_pointer func
             # to remove memory leaks
-            new_expressions.append(Deallocate(self._get_managed_memory_object(var)))
+            new_expressions.append(Deallocate(get_managed_memory_object(var)))
             return
 
         elif class_type != var.class_type:
@@ -1988,7 +1965,7 @@ class SemanticParser(BasicParser):
 
                 new_expressions.append(Allocate(var, shape=d_var['shape'], status=status))
             elif isinstance(var.class_type, CustomDataType) and not var.is_alias:
-                new_expressions.append(Deallocate(self._get_managed_memory_object(var)))
+                new_expressions.append(Deallocate(get_managed_memory_object(var)))
 
     def _assign_GeneratorComprehension(self, lhs_name, expr):
         """
@@ -3972,7 +3949,7 @@ class SemanticParser(BasicParser):
                         self._indicate_pointer_target(l, r, expr)
 
                     if not isinstance(r.class_type, NumpyNDArrayType) and not isinstance(r, Variable):
-                        mem_var = self._get_managed_memory_object(l)
+                        mem_var = get_managed_memory_object(l)
                         new_expr = UnpackManagedMemory(l, r, mem_var)
                     else:
                         new_expr = AliasAssign(l, r)
@@ -4548,7 +4525,7 @@ class SemanticParser(BasicParser):
         # the arrays that will be returned.
         results_vars = self.scope.collect_all_tuple_elements(results)
         self._check_pointer_targets(results_vars)
-        code = assigns + [Deallocate(self._get_managed_memory_object(i)) for i in self._allocs[-1] if i not in results_vars]
+        code = assigns + [Deallocate(get_managed_memory_object(i)) for i in self._allocs[-1] if i not in results_vars]
         if results is Nil():
             results = None
         if code:

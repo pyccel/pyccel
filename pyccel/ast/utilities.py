@@ -843,4 +843,26 @@ def is_literal_integer(expr):
     return isinstance(expr, (int, LiteralInteger)) or \
         isinstance(expr, PyccelUnarySub) and isinstance(expr.args[0], (int, LiteralInteger))
 
+#==============================================================================
+def get_managed_memory_object(maybe_managed_var):
+    """
+    Get the variable responsible for managing the memory of the object passed as argument.
 
+    Get the variable responsible for managing the memory of the object passed as argument.
+    This may be the variable itself or a different variable of type MemoryHandlerType.
+
+    Parameters
+    ----------
+    maybe_managed_var : Variable
+        The variable whose management we are interested in.
+
+    Returns
+    -------
+    Variable
+        The variable responsible for managing the memory of the object.
+    """
+    managed_mem = maybe_managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+    if managed_mem:
+        return managed_mem[0].mem_var
+    else:
+        return maybe_managed_var
