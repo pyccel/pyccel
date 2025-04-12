@@ -78,6 +78,7 @@ All notable changes to this project will be documented in this file.
 -   #2139 : Add support for `__getitem__`
 -   #337 : Add support for returning tuples from functions.
 -   #2194 : Add support for strings as arguments.
+-   #2192 : Add support for the floor division assignment operator.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.

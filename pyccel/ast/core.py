@@ -27,6 +27,7 @@ from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
 from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
+from .operators import PyccelFloorDiv
 
 from .variable import DottedName, IndexedElement
 from .variable import Variable, AnnotatedPyccelSymbol
@@ -721,6 +722,7 @@ class AugAssign(Assign):
             '-' : PyccelMinus,
             '*' : PyccelMul,
             '/' : PyccelDiv,
+            '//': PyccelFloorDiv,
             '%' : PyccelMod,
             '|' : PyccelBitOr,
             '&' : PyccelBitAnd,
