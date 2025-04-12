@@ -4,6 +4,7 @@
 #------------------------------------------------------------------------------------------#
 """ This module contains all literal types
 """
+import numpy as np
 from pyccel.utilities.metaclasses import Singleton
 
 from .basic     import TypedAstNode, PyccelAstNode
@@ -138,7 +139,7 @@ class LiteralInteger(Literal):
 
     def __init__(self, value, dtype = PythonNativeInt()):
         assert value >= 0
-        if not isinstance(value, int):
+        if not isinstance(value, (int, np.integer)):
             raise TypeError("A LiteralInteger can only be created with an integer")
         self._value = value
         self._class_type = dtype
@@ -174,7 +175,7 @@ class LiteralFloat(Literal):
     __slots__   = ('_value', '_class_type')
 
     def __init__(self, value, dtype = PythonNativeFloat()):
-        if not isinstance(value, (int, float, LiteralFloat)):
+        if not isinstance(value, (int, float, LiteralFloat, np.integer, np.floating)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         if isinstance(value, LiteralFloat):
             self._value = value.python_value
