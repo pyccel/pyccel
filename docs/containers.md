@@ -3,6 +3,9 @@
 Pyccel provides support for some container types with certain limits. The types that are currently supported are:
 -   NumPy arrays
 -   Tuples
+-   Lists
+-   Sets
+-   Dictionaries
 
 ## NumPy arrays
 
@@ -84,4 +87,93 @@ def f():
 ERROR at annotation (semantic) stage
 pyccel:
  |fatal [semantic]: foo.py [4,10]| Inhomogeneous tuples must be indexed with constant integers for the type inference to work (a)
+```
+
+## Lists/Sets/Dictionaries
+
+Homogeneous lists, sets and dictionaries are implemented using external libraries. In C we rely on [STC](https://github.com/stclib/STC). In Fortran we rely on [gFTL](https://github.com/goddard-Fortran-Ecosystem/gFTL/).
+
+For example the following code:
+```python
+def f():
+    my_list = [1, 2, 3, 4]
+    my_set = {1, 2, 3, 4}
+    my_dict = {1:1.0, 2:2.0}
+    b = my_list[0]+2
+    return b + my_set.pop() + my_dict[1]
+```
+is translated to the following C code:
+```c
+double f(void)
+{
+    vec_int64_t my_list = {0};
+    hset_int64_t my_set = {0};
+    hmap_int64_t_double my_dict = {0};
+    int64_t b;
+    double result;
+    my_list = c_init(vec_int64_t, {INT64_C(1), INT64_C(2), INT64_C(3), INT64_C(4)});
+    my_set = c_init(hset_int64_t, {INT64_C(1), INT64_C(2), INT64_C(3), INT64_C(4)});
+    my_dict = c_init(hmap_int64_t_double, {{INT64_C(1), 1.0}, {INT64_C(2), 2.0}});
+    b = (*vec_int64_t_at(&my_list, INT64_C(0))) + INT64_C(2);
+    result = b + hset_int64_t_pop(&my_set) + (*hmap_int64_t_double_at(&my_dict, INT64_C(1)));
+    hmap_int64_t_double_drop(&my_dict);
+    vec_int64_t_drop(&my_list);
+    hset_int64_t_drop(&my_set);
+    return result;
+}
+```
+and the following Fortran code:
+```fortran
+  function f() result(result_0001)
+
+    implicit none
+
+    real(f64) :: result_0001
+    type(Vector_integer8) :: my_list
+    type(Set_integer8) :: my_set
+    type(Map_integer8__real8) :: my_dict
+    integer(i64) :: b
+
+    my_list = Vector_integer8([1_i64, 2_i64, 3_i64, 4_i64])
+    my_set = Set_integer8([1_i64, 2_i64, 3_i64, 4_i64])
+    my_dict = Map_integer8__real8([Pair_integer8__real8(1_i64, 1.0_f64), &
+          Pair_integer8__real8(2_i64, 2.0_f64)])
+    b = my_list%of(1_i64) + 2_i64
+    result_0001 = b + Set_integer8_pop(my_set) + my_dict % of( 1_i64 )
+    return
+
+  end function f
+```
+
+### Lists of lists and more
+
+Containers such as lists, sets and dictionaries can also contain other containers. In this case memory management is critical to ensure that the memory is shared as it would be in Python. Consider the following example:
+```python
+def f():
+    a = [1, 2, 3]
+    b = [a, [4, 5, 6]]
+    c = b[1]
+    a[0] = 4 # This modifies b
+    c[0] = 7 # This modifies b
+```
+The memory deallocation is not trivial in this case. As a result managed memory counting is used.
+The example above is translated to the following C code:
+```c
+void f(void)
+{
+    vec_vec_int64_t_mem b = {0};
+    vec_int64_t_mem a_mem = vec_int64_t_mem_from(vec_int64_t_init());
+    vec_int64_t_mem c_mem;
+    vec_int64_t_mem Dummy_0000;
+    (*a_mem.get) = c_init(vec_int64_t, {INT64_C(1), INT64_C(2), INT64_C(3)});
+    Dummy_0000 = vec_int64_t_mem_from(c_init(vec_int64_t, {INT64_C(4), INT64_C(5), INT64_C(6)}));
+    b = c_init(vec_vec_int64_t_mem, {a_mem, Dummy_0000});
+    c_mem = (*vec_vec_int64_t_mem_at(&b, INT64_C(1)));
+    (*vec_int64_t_at_mut(&(*a_mem.get), INT64_C(0))) = INT64_C(4);
+    (*vec_int64_t_at_mut(c_mem.get, INT64_C(0))) = INT64_C(7);
+    vec_int64_t_mem_drop(&c_mem);
+    vec_vec_int64_t_mem_drop(&b);
+    vec_int64_t_mem_drop(&a_mem);
+    vec_int64_t_mem_drop(&Dummy_0000);
+}
 ```
