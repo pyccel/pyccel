@@ -2942,7 +2942,6 @@ class CCodePrinter(CodePrinter):
     def _print_UnpackManagedMemory(self, expr):
         assign_node = expr.memory_handler_assignment
         lhs_code = self._print(assign_node.lhs)
-        rhs = assign_node.rhs
         rhs_code = self._print(assign_node.rhs)
         if '->get' in rhs_code:
             rhs_code = rhs_code.removesuffix('->get)').removeprefix('(*')
