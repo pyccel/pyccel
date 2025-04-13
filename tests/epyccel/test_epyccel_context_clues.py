@@ -1,5 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import sys
 import numpy as np
+import pytest
 from pyccel import epyccel
 
 def test_numpy_context(language):
