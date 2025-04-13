@@ -212,6 +212,7 @@ def epyccel_seq(function_or_module, *,
         code = get_source_function(pyfunc)
 
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
+        context_dict.update(function_or_module.__globals__)
 
     elif isinstance(function_or_module, ModuleType):
         pymod = function_or_module
@@ -337,7 +338,6 @@ def epyccel( python_function_or_module, **kwargs ):
     # This can allow certain constants to be defined outside of the function passed to epyccel.
     context = inspect.stack()
     context_dict = context[1].frame.f_locals.copy()
-    context_dict.update(context[1].frame.f_globals)
 
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
