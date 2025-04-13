@@ -9,9 +9,13 @@ See the developer docs for more details
 
 from itertools import chain, product
 import os
-from types import ModuleType, UnionType
+from types import ModuleType
+import sys
 import typing
 import warnings
+
+if sys.version_info >= (3, 10):
+    from types import UnionType
 
 from sympy.utilities.iterables import iterable as sympy_iterable
 
@@ -2950,7 +2954,7 @@ class SemanticParser(BasicParser):
             env_var = self._context_dict[name]
             if env_var in original_type_to_pyccel_type:
                 var = VariableTypeAnnotation(original_type_to_pyccel_type[env_var])
-            elif isinstance(env_var, UnionType):
+            elif sys.version_info >= (3, 10) and isinstance(env_var, UnionType):
                 python_types = typing.get_args(env_var)
                 if all(t in original_type_to_pyccel_type for t in python_types):
                     var = UnionTypeAnnotation(*[VariableTypeAnnotation(original_type_to_pyccel_type[t]) for t in python_types])
