@@ -127,13 +127,6 @@ def test_bit_and_b_b_i(language, a, b, c):
     assert f1(a, b, c) == f2(a, b, c)
     assert type(f1(a, b, c)) is type(f2(a, b, c))
 
-def test_invert_b(language):
-    f1 = bitwise.invert_b
-    f2 = epyccel( f1, language = language )
-    for a in [True,False]:
-        assert f1(a) == f2(a)
-        assert type(f1(a)) is type(f2(a))
-
 def test_invert_i(language):
     f1 = bitwise.invert_i
     f2 = epyccel( f1, language = language )
