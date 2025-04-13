@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 from pyccel import epyccel
 
@@ -29,6 +30,7 @@ def test_type_alias_context(language):
     assert f(3) == epyc_f(3)
     assert isinstance(f(2), type(epyc_f(2)))
 
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="Union of types implemented in Python 3.10")
 def test_type_union_context(language):
     T = int | float
 
