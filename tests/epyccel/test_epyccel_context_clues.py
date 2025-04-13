@@ -32,7 +32,7 @@ def test_type_alias_context(language):
 
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="Union of types implemented in Python 3.10")
 def test_type_union_context(language):
-    T = int | float
+    T = int | float #pylint: disable=unsupported-binary-operation
 
     def f(a : T):
         return 2*a
