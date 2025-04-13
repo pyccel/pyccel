@@ -9,6 +9,7 @@
 import inspect
 import importlib
 import sys
+from typing import TypeVar
 import os
 
 from filelock import FileLock, Timeout
@@ -18,7 +19,9 @@ from importlib.machinery import ExtensionFileLoader
 
 from pyccel.utilities.strings  import random_string
 from pyccel.codegen.pipeline   import execute_pyccel
-from pyccel.errors.errors      import ErrorsMode, PyccelError
+from pyccel.errors.errors      import ErrorsMode, PyccelError, Errors
+
+errors = Errors()
 
 __all__ = ['get_source_function', 'epyccel_seq', 'epyccel']
 
@@ -50,12 +53,15 @@ def get_source_function(func):
     if not callable(func):
         raise TypeError('Expecting a callable function')
 
+    name = func.__name__
+    sig = inspect.signature(func)
+
     lines, _ = inspect.getsourcelines(func)
     # remove indentation if the first line is indented
-    a = lines[0]
-    leading_spaces = len(a) - len(a.lstrip())
+    decl, body = lines[0], lines[1:]
+    leading_spaces = len(decl) - len(decl.lstrip())
 
-    return ''.join(a[leading_spaces:] for a in lines)
+    return f'def {name}{sig}:\n' + ''.join(a[leading_spaces:] for a in body)
 
 #==============================================================================
 def get_unique_name(prefix, path):
@@ -123,8 +129,7 @@ def epyccel_seq(function_or_module, *,
                 conda_warnings= 'basic',
                 comm          = None,
                 root          = None,
-                bcast         = None,
-                context_dict  = None):
+                bcast         = None):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
@@ -169,9 +174,6 @@ def epyccel_seq(function_or_module, *,
         Output folder for the compiled code.
     conda_warnings : {off, basic, verbose}
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
-    context_dict : dict, optional
-        A dictionary containing any variables that are available in the calling context.
-        This can allow certain constants to be defined outside of the function passed to epyccel.
 
     Returns
     -------
@@ -206,13 +208,33 @@ def epyccel_seq(function_or_module, *,
     epyccel_dirname = '__epyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
     epyccel_dirpath = os.path.join(folder, epyccel_dirname)
 
+    # Define variable for context information
+    context_dict = None
+
     # ... get the module source code
     if isinstance(function_or_module, (FunctionType, type)):
         pyfunc = function_or_module
         code = get_source_function(pyfunc)
 
+        # Retrieve the information about the variables that are available in the calling context.
+        # This can allow certain constants to be defined outside of the function passed to epyccel.
+        context_dict = function_or_module.__globals__.copy()
+        context_dict.update(inspect.getclosurevars(function_or_module).nonlocals)
+
+        # Extract TypeVars to context
+        for arg, p in inspect.signature(pyfunc).parameters.items():
+            annot = p.annotation
+            if isinstance(annot, TypeVar):
+                name = annot.__name__
+                if name in context_dict:
+                    if context_dict[name] != annot:
+                        errors.report("Multiple TypeVars found with the same name",
+                                severity='fatal', line=1)
+                else:
+                    context_dict[name] = annot
+                code = code.replace(str(annot), name)
+
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
-        context_dict.update(function_or_module.__globals__)
 
     elif isinstance(function_or_module, ModuleType):
         pymod = function_or_module
@@ -334,11 +356,6 @@ def epyccel( python_function_or_module, **kwargs ):
     """
     assert isinstance( python_function_or_module, (FunctionType, type, ModuleType, str) )
 
-    # Retrieve the information about the variables that are available in the calling context.
-    # This can allow certain constants to be defined outside of the function passed to epyccel.
-    context = inspect.stack()
-    context_dict = context[1].frame.f_locals.copy()
-
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
     bcast = kwargs.pop('bcast', True)
@@ -367,7 +384,7 @@ def epyccel( python_function_or_module, **kwargs ):
         # Master process calls epyccel
         if comm.rank == root:
             try:
-                mod, fun = epyccel_seq( python_function_or_module, **kwargs, context_dict = context_dict )
+                mod, fun = epyccel_seq( python_function_or_module, **kwargs )
                 mod_path = os.path.abspath(mod.__file__)
                 mod_name = mod.__name__
                 fun_name = python_function_or_module.__name__ if fun else None
@@ -413,7 +430,7 @@ def epyccel( python_function_or_module, **kwargs ):
     # Serial version
     else:
         try:
-            mod, fun = epyccel_seq( python_function_or_module, **kwargs, context_dict = context_dict )
+            mod, fun = epyccel_seq( python_function_or_module, **kwargs )
         except PyccelError as e:
             raise type(e)(str(e)) from None
 
