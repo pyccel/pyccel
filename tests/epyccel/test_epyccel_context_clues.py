@@ -73,4 +73,4 @@ def test_bad_type_var_context(language):
         return 2*a
 
     with pytest.raises(PyccelError):
-        epyc_f = epyccel(f, language=language)
+        epyccel(f, language=language)

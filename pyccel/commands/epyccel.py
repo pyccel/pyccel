@@ -222,7 +222,7 @@ def epyccel_seq(function_or_module, *,
         context_dict.update(inspect.getclosurevars(function_or_module).nonlocals)
 
         # Extract TypeVars to context
-        for arg, p in inspect.signature(pyfunc).parameters.items():
+        for p in inspect.signature(pyfunc).parameters.values():
             annot = p.annotation
             if isinstance(annot, TypeVar):
                 name = annot.__name__
