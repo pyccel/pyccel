@@ -68,6 +68,15 @@ def get_source_code_and_context(func_or_class):
     leading_spaces = len(unindented_line) - len(unindented_line.lstrip())
     lines = [l[leading_spaces:] for l in lines]
 
+    # Strip trailing comments (e.g. pylint disable)
+    new_lines = []
+    for l in lines:
+        comment = l.rfind('#')
+        if "'" not in l[comment:] and "'" not in l[comment:]:
+            l = l[:comment] + '\n'
+        new_lines.append(l)
+    lines = new_lines
+
     # Search for methods
     methods = [(func_or_class.__name__, func_or_class)] if isinstance(func_or_class, FunctionType) else \
                 inspect.getmembers(func_or_class, predicate=inspect.isfunction)
@@ -121,6 +130,8 @@ def get_source_code_and_context(func_or_class):
 
         # Save the updated prototype
         lines[prototype_idx] = method_prototype
+
+    print(''.join(lines))
 
     return ''.join(lines), context_dict
 
