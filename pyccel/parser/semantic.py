@@ -2954,7 +2954,7 @@ class SemanticParser(BasicParser):
             env_var = self._context_dict[name]
             if env_var in original_type_to_pyccel_type:
                 var = VariableTypeAnnotation(original_type_to_pyccel_type[env_var])
-            elif sys.version_info >= (3, 10) and isinstance(env_var, UnionType):
+            elif sys.version_info >= (3, 10) and isinstance(env_var, UnionType): # pylint:disable=possibly-used-before-assignment
                 python_types = typing.get_args(env_var)
                 if all(t in original_type_to_pyccel_type for t in python_types):
                     var = UnionTypeAnnotation(*[VariableTypeAnnotation(original_type_to_pyccel_type[t]) for t in python_types])
