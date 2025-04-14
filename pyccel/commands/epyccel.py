@@ -8,6 +8,7 @@
 
 import inspect
 import importlib
+import re
 import sys
 from typing import TypeVar
 import os
@@ -23,26 +24,34 @@ from pyccel.errors.errors      import ErrorsMode, PyccelError, Errors
 
 errors = Errors()
 
-__all__ = ['get_source_function', 'epyccel_seq', 'epyccel']
+__all__ = ['get_source_code_and_context', 'epyccel_seq', 'epyccel']
 
 
 #==============================================================================
-def get_source_function(func):
+def get_source_code_and_context(func_or_class):
     """
-    Get the source code from a function.
+    Get the source code and context from a function or a class.
 
     Get a string containing the source code of a function from a function
-    object. Excessive indenting is stripped away.
+    object or the source code of a class from a class object. Excessive
+    indenting is stripped away.
+
+    Additionally retrieve the information about the variables that are
+    available in the calling context. This can allow certain constants such as
+    type hints to be defined outside of the function passed to epyccel.
 
     Parameters
     ----------
-    func : Function
-        A Python function.
+    func_or_class : Function | type
+        A Python function or class.
 
     Returns
     -------
-    str
-        A string containing the source code.
+    code : list[str]
+        A list of strings containing the lines of the source code.
+    context_dict : dict[str, object]
+        A dictionary containing any objects defined in the context
+        which may be useful for the function.
 
     Raises
     ------
@@ -50,23 +59,63 @@ def get_source_function(func):
         A type error is raised if the object passed to the function is not
         callable.
     """
-    if not callable(func):
+    if not callable(func_or_class):
         raise TypeError('Expecting a callable function')
 
-    name = func.__name__
-    sig = inspect.signature(func)
-
-    lines, _ = inspect.getsourcelines(func)
+    lines, _ = inspect.getsourcelines(func_or_class)
     # remove indentation if the first line is indented
     unindented_line = lines[0]
     leading_spaces = len(unindented_line) - len(unindented_line.lstrip())
     lines = [l[leading_spaces:] for l in lines]
-    prototype_idx = next(i for i,l in enumerate(lines) if l.startswith('def '))
 
-    decorators = lines[:prototype_idx]
-    body = lines[prototype_idx+1:]
+    # Search for methods
+    methods = [(func_or_class.__name__, func_or_class)] if isinstance(func_or_class, FunctionType) else \
+                inspect.getmembers(func_or_class, predicate=inspect.isfunction)
 
-    return ''.join(decorators) + f'def {name}{sig}:\n' + ''.join(body)
+    func_name_regex = re.compile('^\s*def\s+([a-zA-Z0-9_]+)\s*\(')
+    func_match = [re.match(func_name_regex, l) for l in lines]
+    prototypes = {m[1]: i for i, m in enumerate(func_match) if m}
+
+    if len(methods) == 0:
+        return ''.join(lines), {}
+
+    # Build context dict with globals
+    _, method0 = methods[0]
+    context_dict = method0.__globals__.copy()
+
+    for m_name, m in methods:
+        # Update context dict with closure vars
+        context_dict.update(inspect.getclosurevars(m).nonlocals)
+
+        # Print signature (Python has already executed the line with the prototype
+        # so any variables in the line cannot be deduced from the closure vars or
+        # globals, the only way to get a clean version is to reprint the signature)
+        sig = inspect.signature(m)
+        prototype_idx = prototypes[m_name]
+        method_prototype = lines[prototype_idx]
+        indent = len(method_prototype) - len(method_prototype.lstrip())
+        method_prototype = ' '*indent + f'def {m_name}{sig}:\n'
+
+        # TypeVar in a signature appear as +T, -T or ~T but the associated variable
+        # T will not be available from the closure vars or globals, we therefore
+        # search for TypeVars, put their definition in the context_dict and use the
+        # variable name (e.g. T) in the signature.
+        for p in sig.parameters.values():
+            annot = p.annotation
+            if isinstance(annot, TypeVar):
+                name = annot.__name__
+                if name in context_dict:
+                    if context_dict[name] != annot:
+                        errors.report("Multiple TypeVars found with the same name",
+                                severity='fatal', line=1)
+                else:
+                    context_dict[name] = annot
+                method_prototype = method_prototype.replace(str(annot), name)
+
+        # Save the updated prototype
+        lines[prototype_idx] = method_prototype
+
+    return ''.join(lines), context_dict
 
 #==============================================================================
 def get_unique_name(prefix, path):
@@ -218,25 +267,7 @@ def epyccel_seq(function_class_or_module, *,
 
     # ... get the module source code
     if isinstance(function_class_or_module, (FunctionType, type)):
-        code = get_source_function(function_class_or_module)
-
-        # Retrieve the information about the variables that are available in the calling context.
-        # This can allow certain constants to be defined outside of the function passed to epyccel.
-        context_dict = function_class_or_module.__globals__.copy()
-        context_dict.update(inspect.getclosurevars(function_class_or_module).nonlocals)
-
-        # Extract TypeVars to context
-        for p in inspect.signature(function_class_or_module).parameters.values():
-            annot = p.annotation
-            if isinstance(annot, TypeVar):
-                name = annot.__name__
-                if name in context_dict:
-                    if context_dict[name] != annot:
-                        errors.report("Multiple TypeVars found with the same name",
-                                severity='fatal', line=1)
-                else:
-                    context_dict[name] = annot
-                code = code.replace(str(annot), name)
+        code, context_dict = get_source_code_and_context(function_class_or_module)
 
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
