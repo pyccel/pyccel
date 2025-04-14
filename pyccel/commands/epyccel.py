@@ -72,7 +72,7 @@ def get_source_code_and_context(func_or_class):
     methods = [(func_or_class.__name__, func_or_class)] if isinstance(func_or_class, FunctionType) else \
                 inspect.getmembers(func_or_class, predicate=inspect.isfunction)
 
-    func_name_regex = re.compile('^\s*def\s+([a-zA-Z0-9_]+)\s*\(')
+    func_name_regex = re.compile(r'^\s*def\s+([a-zA-Z0-9_]+)\s*\(')
     func_match = [re.match(func_name_regex, l) for l in lines]
     prototypes = {m[1]: i for i, m in enumerate(func_match) if m}
 
