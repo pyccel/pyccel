@@ -74,3 +74,28 @@ def test_bad_type_var_context(language):
 
     with pytest.raises(PyccelError):
         epyccel(f, language=language)
+
+def test_class_context(language):
+    T = int
+    T2 = float
+    class A:
+        def __init__(self, x : T):
+            self._x : T2 = T2(x)
+
+        def times(self, y : T):
+            return self._x * y
+
+        def __iadd__(self, y : T):
+            self._x += y
+            return self
+
+    epyc_A = epyccel(A, language=language)
+
+    a = A(3)
+    epyc_a = A(3)
+    assert a.times(2) == epyc_a.times(2)
+    assert isinstance(a.times(2), type(epyc_a.times(2)))
+    a += 5
+    epyc_a += 5
+    assert a.times(1) == epyc_a.times(1)
+    assert isinstance(a.times(1), type(epyc_a.times(1)))
