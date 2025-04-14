@@ -174,7 +174,7 @@ class Parser(object):
 
         Parameters
         ----------
-        settings : dict
+        **settings : dict
             Additional keyword arguments for BasicParser.
         """
 
