@@ -92,8 +92,15 @@ def get_source_code_and_context(func_or_class):
         # globals, the only way to get a clean version is to reprint the signature)
         sig = inspect.signature(m)
         prototype_idx = prototypes[m_name]
+
         method_prototype = lines[prototype_idx]
         indent = len(method_prototype) - len(method_prototype.lstrip())
+
+        # Handle multi-line prototypes
+        end_of_prototype_idx = next(i for i, l in enumerate(lines[prototype_idx:]) if l.strip().endswith(':'))
+        if end_of_prototype_idx > prototype_idx:
+            lines = lines[:prototype_idx+1] + lines[end_of_prototype_idx+1:]
+
         method_prototype = ' '*indent + f'def {m_name}{sig}:\n'
 
         # TypeVar in a signature appear as +T, -T or ~T but the associated variable
