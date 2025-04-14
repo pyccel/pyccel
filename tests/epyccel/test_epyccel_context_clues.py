@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-class-docstring, missing-module-docstring
 import sys
 from typing import TypeVar
 import numpy as np
@@ -92,7 +92,7 @@ def test_class_context(language):
     epyc_A = epyccel(A, language=language)
 
     a = A(3)
-    epyc_a = A(3)
+    epyc_a = epyc_A(3)
     assert a.times(2) == epyc_a.times(2)
     assert isinstance(a.times(2), type(epyc_a.times(2)))
     a += 5
