@@ -69,13 +69,13 @@ def get_source_code_and_context(func_or_class):
     lines = [l[leading_spaces:] for l in lines]
 
     # Strip trailing comments (e.g. pylint disable)
-    new_lines = []
+    commentless_lines = []
     for l in lines:
         comment = l.rfind('#')
-        if "'" not in l[comment:] and "'" not in l[comment:]:
+        # Avoid # in a string
+        if l[:comment].count("'") % 2 == 0 and l[:comment].count("'") % 2 == 0:
             l = l[:comment] + '\n'
-        new_lines.append(l)
-    lines = new_lines
+        commentless_lines.append(l)
 
     # Search for methods
     methods = [(func_or_class.__name__, func_or_class)] if isinstance(func_or_class, FunctionType) else \
@@ -92,6 +92,10 @@ def get_source_code_and_context(func_or_class):
     _, method0 = methods[0]
     context_dict = method0.__globals__.copy()
 
+    # Sort the methods in reverse order of appearance to preserve line indices
+    # during treatment of methods
+    methods.sort(key = lambda m: prototypes[m[0]], reverse=True)
+
     for m_name, m in methods:
         # Update context dict with closure vars
         context_dict.update(inspect.getclosurevars(m).nonlocals)
@@ -106,7 +110,7 @@ def get_source_code_and_context(func_or_class):
         indent = len(method_prototype) - len(method_prototype.lstrip())
 
         # Handle multi-line prototypes
-        end_of_prototype_idx = next(i for i, l in enumerate(lines[prototype_idx:]) if l.strip().endswith(':'))
+        end_of_prototype_idx = next(i for i, l in enumerate(commentless_lines[prototype_idx:]) if l.strip().endswith(':'))
         if end_of_prototype_idx > prototype_idx:
             lines = lines[:prototype_idx+1] + lines[end_of_prototype_idx+1:]
 
