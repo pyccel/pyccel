@@ -58,10 +58,15 @@ def get_source_function(func):
 
     lines, _ = inspect.getsourcelines(func)
     # remove indentation if the first line is indented
-    decl, body = lines[0], lines[1:]
-    leading_spaces = len(decl) - len(decl.lstrip())
+    unindented_line = lines[0]
+    leading_spaces = len(unindented_line) - len(unindented_line.lstrip())
+    lines = [l[leading_spaces:] for l in lines]
+    prototype_idx = next(i for i,l in enumerate(lines) if l.startswith('def '))
 
-    return f'def {name}{sig}:\n' + ''.join(a[leading_spaces:] for a in body)
+    decorators = lines[:prototype_idx]
+    body = lines[prototype_idx+1:]
+
+    return ''.join(decorators) + f'def {name}{sig}:\n' + ''.join(body)
 
 #==============================================================================
 def get_unique_name(prefix, path):
