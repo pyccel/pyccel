@@ -14,9 +14,6 @@ import sys
 import typing
 import warnings
 
-if sys.version_info >= (3, 10):
-    from types import UnionType
-
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
@@ -160,6 +157,9 @@ from pyccel.parser.syntax.headers import types_meta
 from pyccel.utilities.stage import PyccelStage
 
 import pyccel.decorators as def_decorators
+
+if sys.version_info >= (3, 10):
+    from types import UnionType
 #==============================================================================
 
 errors = Errors()
