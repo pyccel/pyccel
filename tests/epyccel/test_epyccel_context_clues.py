@@ -99,3 +99,12 @@ def test_class_context(language):
     epyc_a += 5
     assert a.times(1) == epyc_a.times(1)
     assert isinstance(a.times(1), type(epyc_a.times(1)))
+
+def test_numpy_cast_context(language):
+    T = int
+    def f():
+        a = np.ones(5, dtype=T)
+        return a.sum()
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
