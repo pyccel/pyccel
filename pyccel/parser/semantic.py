@@ -3492,6 +3492,12 @@ class SemanticParser(BasicParser):
                 name = _get_name(func.name)
                 args = macro.apply(args)
 
+            if func is None and name in self._context_dict:
+                env_var = self._context_dict[name]
+                func = builtin_functions_dict.get(env_var.__name__, None)
+                if func is not None:
+                    func = PyccelFunctionDef(env_var.__name__, func)
+
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
