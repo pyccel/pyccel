@@ -2544,6 +2544,7 @@ class FCodePrinter(CodePrinter):
         out_args = [v for v in self.scope.collect_all_tuple_elements(expr.results.var) if v and not v.is_argument]
         args_decs = OrderedDict()
         arguments = expr.arguments
+        class_arg = next((a for a in arguments if a.bound_argument), None)
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
@@ -2586,7 +2587,11 @@ class FCodePrinter(CodePrinter):
         if is_elemental:
             sig = 'elemental {}'.format(sig)
 
-        arg_code  = ', '.join(self._print(i) for i in chain( out_args, arguments ))
+        if class_arg:
+            arg_iter = chain((class_arg,), out_args, arguments[1:])
+        else:
+            arg_iter = chain(out_args, arguments)
+        arg_code  = ', '.join(self._print(i) for i in arg_iter)
 
         arg_decs = ''.join(self._print(i) for i in args_decs.values())
 

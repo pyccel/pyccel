@@ -1647,7 +1647,10 @@ class CCodePrinter(CodePrinter):
 
         if n_results > 1 or isinstance(expr.results.var.class_type, InhomogeneousTupleType):
             ret_type = self.get_c_type(PythonNativeInt())
-            arg_vars = result_vars + arg_vars
+            if expr.arguments and expr.arguments[0].bound_argument:
+                arg_vars = arg_vars[:1] + result_vars + arg_vars[1:]
+            else:
+                arg_vars = result_vars + arg_vars
             self._additional_args.append(result_vars) # Ensure correct result for is_c_pointer
         elif n_results == 1:
             ret_type = self.get_declare_type(result_vars[0])
@@ -2305,7 +2308,10 @@ class CCodePrinter(CodePrinter):
             else :
                 args.append(arg_val)
 
-        args = self._temporary_args + args
+        if func.arguments and func.arguments[0].bound_argument:
+            args = args[:1] + self._temporary_args + args[1:]
+        else:
+            args = self._temporary_args + args
         self._temporary_args = []
         args = ', '.join(self._print(ai) for a in args for ai in self.scope.collect_all_tuple_elements(a))
 
