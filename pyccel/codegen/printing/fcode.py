@@ -2586,7 +2586,7 @@ class FCodePrinter(CodePrinter):
         if is_elemental:
             sig = 'elemental {}'.format(sig)
 
-        arg_code  = ', '.join(self._print(i) for i in chain( arguments, out_args ))
+        arg_code  = ', '.join(self._print(i) for i in chain( out_args, arguments ))
 
         arg_decs = ''.join(self._print(i) for i in args_decs.values())
 
@@ -3680,13 +3680,7 @@ class FCodePrinter(CodePrinter):
             if is_function:
                 results_strs = []
             else:
-                # If func body is unknown then we may not know result names
-                use_names = (len(func.body.body) != 0)
-                if use_names:
-                    results_strs = [f'{self._print(n)} = {self._print(r)}'
-                            for n,r in lhs_vars.items()]
-                else:
-                    results_strs = [self._print(r) for r in lhs_vars.values()]
+                results_strs = [self._print(r) for r in lhs_vars.values()]
 
         elif not is_function and len(out_results)!=0:
             results = [r.clone(name = self.scope.get_new_name()) \
@@ -3694,8 +3688,7 @@ class FCodePrinter(CodePrinter):
             for var in results:
                 self.scope.insert_variable(var)
 
-            results_strs = [f'{self._print(n)} = {self._print(r)}' \
-                            for n,r in zip(out_results, results)]
+            results_strs = [f'{self._print(r)}' for r in results]
 
         else:
             results_strs = []
@@ -3705,7 +3698,7 @@ class FCodePrinter(CodePrinter):
             code = self._handle_inline_func_call(expr, assign_lhs = results)
         else:
             args_strs = [self._print(a) for a in args if not isinstance(a.value, Nil)]
-            args_code = ', '.join(args_strs+results_strs)
+            args_code = ', '.join(results_strs+args_strs)
             code = f'{f_name}({args_code})'
             if not is_function:
                 code = f'call {code}\n'
