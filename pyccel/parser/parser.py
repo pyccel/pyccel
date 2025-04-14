@@ -176,6 +176,11 @@ class Parser(object):
         ----------
         **settings : dict
             Additional keyword arguments for BasicParser.
+
+        Returns
+        -------
+        SemanticParser
+            The semantic parser that was used to annotate the AST.
         """
 
         # If the semantic parser already exists, do nothing
