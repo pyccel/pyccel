@@ -117,7 +117,7 @@ def get_unique_name(prefix, path):
     return module_name, lock
 
 #==============================================================================
-def epyccel_seq(function_or_module, *,
+def epyccel_seq(function_class_or_module, *,
                 language      = None,
                 compiler      = None,
                 fflags        = None,
@@ -144,7 +144,7 @@ def epyccel_seq(function_or_module, *,
 
     Parameters
     ----------
-    function_or_module : function | module | str
+    function_class_or_module : function | module | str
         Python function or module to be accelerated.
         If a string is passed then it is assumed to be the code from a module which
         should be accelerated. The module must be capable of running as a standalone
@@ -197,11 +197,11 @@ def epyccel_seq(function_or_module, *,
     # Store current directory
     base_dirpath = os.getcwd()
 
-    if isinstance(function_or_module, (FunctionType, type, str)):
+    if isinstance(function_class_or_module, (FunctionType, type, str)):
         dirpath = os.getcwd()
 
-    elif isinstance(function_or_module, ModuleType):
-        dirpath = os.path.dirname(function_or_module.__file__)
+    elif isinstance(function_class_or_module, ModuleType):
+        dirpath = os.path.dirname(function_class_or_module.__file__)
 
     # Define working directory 'folder'
     if folder is None:
@@ -217,17 +217,16 @@ def epyccel_seq(function_or_module, *,
     context_dict = None
 
     # ... get the module source code
-    if isinstance(function_or_module, (FunctionType, type)):
-        pyfunc = function_or_module
-        code = get_source_function(pyfunc)
+    if isinstance(function_class_or_module, (FunctionType, type)):
+        code = get_source_function(function_class_or_module)
 
         # Retrieve the information about the variables that are available in the calling context.
         # This can allow certain constants to be defined outside of the function passed to epyccel.
-        context_dict = function_or_module.__globals__.copy()
-        context_dict.update(inspect.getclosurevars(function_or_module).nonlocals)
+        context_dict = function_class_or_module.__globals__.copy()
+        context_dict.update(inspect.getclosurevars(function_class_or_module).nonlocals)
 
         # Extract TypeVars to context
-        for p in inspect.signature(pyfunc).parameters.values():
+        for p in inspect.signature(function_class_or_module).parameters.values():
             annot = p.annotation
             if isinstance(annot, TypeVar):
                 name = annot.__name__
@@ -241,15 +240,15 @@ def epyccel_seq(function_or_module, *,
 
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
-    elif isinstance(function_or_module, ModuleType):
-        pymod = function_or_module
+    elif isinstance(function_class_or_module, ModuleType):
+        pymod = function_class_or_module
         lines = inspect.getsourcelines(pymod)[0]
         code = ''.join(lines)
 
         module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
 
-    elif isinstance(function_or_module, str):
-        code = function_or_module
+    elif isinstance(function_class_or_module, str):
+        code = function_class_or_module
 
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
@@ -313,8 +312,8 @@ def epyccel_seq(function_or_module, *,
                 raise ImportError('Could not load shared library')
 
         # If Python object was function, extract it from module
-        if isinstance(function_or_module, (FunctionType, type)):
-            func = getattr(package, pyfunc.__name__)
+        if isinstance(function_class_or_module, (FunctionType, type)):
+            func = getattr(package, function_class_or_module.__name__)
         else:
             func = None
     finally:
