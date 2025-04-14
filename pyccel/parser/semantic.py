@@ -225,6 +225,10 @@ class SemanticParser(BasicParser):
     d_parsers : list
         A list of parsers describing files imported by this file.
 
+    context_dict : dict, optional
+        A dictionary describing any variables in the context where the translated
+        objected was defined.
+
     **kwargs : dict
         Additional keyword arguments for BasicParser.
     """
@@ -274,7 +278,7 @@ class SemanticParser(BasicParser):
         self._pointer_targets = []
 
         # provides information about the calling context to collect constants
-        self._context_dict = context_dict
+        self._context_dict = context_dict or {}
 
         #
         self._code = parser._code
@@ -2950,7 +2954,7 @@ class SemanticParser(BasicParser):
             elif name == '*':
                 return GenericType()
 
-        if var is None and self._context_dict and name in self._context_dict:
+        if var is None and name in self._context_dict:
             env_var = self._context_dict[name]
             if env_var in original_type_to_pyccel_type:
                 var = VariableTypeAnnotation(original_type_to_pyccel_type[env_var])

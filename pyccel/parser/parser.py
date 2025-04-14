@@ -166,6 +166,17 @@ class Parser(object):
         return parser.ast
 
     def annotate(self, **settings):
+        """
+        Annotate the AST collected from the syntactic stage.
+
+        Use the semantic parser to annotate the AST collected from
+        the syntactic stage.
+
+        Parameters
+        ----------
+        settings : dict
+            Additional keyword arguments for BasicParser.
+        """
 
         # If the semantic parser already exists, do nothing
         if self._semantic_parser:
