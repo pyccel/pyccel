@@ -11,6 +11,14 @@ ATOL = 1e-15
 def modnew(language):
     return epyccel(mod, language = language)
 
+def test_empty_class(language):
+    class A:
+        pass
+
+    epyc_A = epyccel(A, language = language)
+
+    assert isinstance(epyc_A, type)
+
 def test_class_import(language):
     class A:
         def __init__(self : 'A'):

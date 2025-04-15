@@ -38,7 +38,7 @@ from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, Num
 from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type, NumpyNDArrayType
 from .numpytypes     import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type, numpy_precision_map
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
-from .type_annotations import typenames_to_dtypes as dtype_registry
+from .type_annotations import VariableTypeAnnotation, typenames_to_dtypes as dtype_registry
 from .variable       import Variable, Constant, IndexedElement
 
 errors = Errors()
@@ -610,7 +610,7 @@ def process_dtype(dtype):
 
     Parameters
     ----------
-    dtype : PythonType, PyccelFunctionDef, LiteralString, str
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, VariableTypeAnnotation
         The actual dtype passed to the NumPy function.
 
     Returns
@@ -625,6 +625,8 @@ def process_dtype(dtype):
     TypeError: In the case of unrecognized argument type.
     TypeError: In the case of passed string argument not recognized as valid dtype.
     """
+    if isinstance(dtype, VariableTypeAnnotation):
+        dtype = dtype.class_type
 
     if isinstance(dtype, PythonType):
         if dtype.arg.rank > 0:
