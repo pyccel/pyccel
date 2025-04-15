@@ -141,7 +141,7 @@ class LiteralInteger(Literal):
         assert value >= 0
         if not isinstance(value, (int, np.integer)):
             raise TypeError("A LiteralInteger can only be created with an integer")
-        self._value = value
+        self._value = int(value)
         self._class_type = dtype
         super().__init__()
 
@@ -179,10 +179,8 @@ class LiteralFloat(Literal):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         if isinstance(value, LiteralFloat):
             self._value = value.python_value
-        elif isinstance(value, (int, np.integer)):
-            self._value = float(value)
         else:
-            self._value = value
+            self._value = float(value)
         self._class_type = dtype
         super().__init__()
 
@@ -253,9 +251,9 @@ class LiteralComplex(Literal):
             The Python value of the argument.
         """
         if isinstance(arg, Literal):
-            return arg.python_value
-        elif isinstance(arg, (int, float)):
-            return arg
+            return float(arg.python_value)
+        elif isinstance(arg, (int, float, np.integer, np.floating)):
+            return float(arg)
         else:
             raise TypeError(f"LiteralComplex argument must be an int/float/LiteralInt/LiteralFloat not a {type(arg)}")
 
