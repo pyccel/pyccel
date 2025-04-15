@@ -387,7 +387,7 @@ def epyccel( python_function_class_or_module, **kwargs ):
     python_function_class_or_module : function | class | module | str
         Python function or module to be accelerated.
         If a string is passed then it is assumed to be the code from a module which
-        should be accelerated..
+        should be accelerated.
     **kwargs :
         Additional keyword arguments for configuring the compilation and acceleration process.
         Available options are defined in epyccel_seq.
@@ -395,7 +395,7 @@ def epyccel( python_function_class_or_module, **kwargs ):
     Returns
     -------
     object
-        Accelerated function or module.
+        Accelerated function, class or module.
 
     See Also 
     -------- 
@@ -439,10 +439,10 @@ def epyccel( python_function_class_or_module, **kwargs ):
         # Master process calls epyccel
         if comm.rank == root:
             try:
-                mod, fun = epyccel_seq( python_function_class_or_module, **kwargs )
+                mod, obj = epyccel_seq( python_function_class_or_module, **kwargs )
                 mod_path = os.path.abspath(mod.__file__)
                 mod_name = mod.__name__
-                fun_name = python_function_class_or_module.__name__ if fun else None
+                obj_name = python_function_class_or_module.__name__ if obj else None
                 success  = True
             # error handling carried out after broadcast to prevent deadlocks
             except PyccelError as e:
@@ -453,10 +453,10 @@ def epyccel( python_function_class_or_module, **kwargs ):
 
         # Non-master processes initialize empty variables
         else:
-            mod, fun = None, None
+            mod, obj = None, None
             mod_path = None
             mod_name = None
-            fun_name = None
+            obj_name = None
             exc_info = None
             success  = None
 
@@ -468,7 +468,7 @@ def epyccel( python_function_class_or_module, **kwargs ):
             # Broadcast Fortran module path/name and function name to all processes
             mod_path = comm.bcast( mod_path, root=root )
             mod_name = comm.bcast( mod_name, root=root )
-            fun_name = comm.bcast( fun_name, root=root )
+            obj_name = comm.bcast( obj_name, root=root )
 
             # Non-master processes import Fortran module directly from its path
             # and extract function if its name is given
@@ -480,14 +480,14 @@ def epyccel( python_function_class_or_module, **kwargs ):
                 importlib.invalidate_caches()
                 mod = importlib.import_module(mod_name)
                 sys.path.remove(folder)
-                fun = getattr(mod, fun_name) if fun_name else None
+                obj = getattr(mod, obj_name) if obj_name else None
 
     # Serial version
     else:
         try:
-            mod, fun = epyccel_seq( python_function_class_or_module, **kwargs )
+            mod, obj = epyccel_seq( python_function_class_or_module, **kwargs )
         except PyccelError as e:
             raise type(e)(str(e)) from None
 
     # Return Fortran function (if any), otherwise module
-    return fun or mod
+    return obj or mod
