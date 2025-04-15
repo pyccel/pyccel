@@ -24,6 +24,8 @@ accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):[
                             re.compile('tests/errors/syntax_errors/import_star.py'):['wildcard-import'],
                             re.compile('tests/stc_containers/leaks_check.py'):['unused-variable'],
                             re.compile('tests/epyccel/modules/arrays.py'):['reimported'], # Repeat NumPy imports due to functions being translated individually
+                            re.compile('tests/macro/*'):['undefined-variable'], # Ignore old macro tests to be removed with macros
+                            re.compile('tests/macro/*'):['unused-import'], # Ignore old macro tests to be removed with macros
                            }
 
 def run_pylint(file, flag, messages):
