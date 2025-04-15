@@ -79,6 +79,7 @@ All notable changes to this project will be documented in this file.
 -   #337 : Add support for returning tuples from functions.
 -   #2194 : Add support for strings as arguments.
 -   #2192 : Add support for the floor division assignment operator.
+-   #2279 : Allow scalar literals (including Type hints) and recognised modules to be deduced from a function's context.
 -   Generate stub files to allow double compilation to potentially be bypassed.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.

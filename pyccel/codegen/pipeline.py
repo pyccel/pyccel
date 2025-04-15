@@ -58,7 +58,8 @@ def execute_pyccel(fname, *,
                    accelerators    = (),
                    output_name     = None,
                    compiler_export_file = None,
-                   conda_warnings  = 'basic'):
+                   conda_warnings  = 'basic',
+                   context_dict    = None):
     """
     Run Pyccel on the provided code.
 
@@ -113,6 +114,9 @@ def execute_pyccel(fname, *,
         Name of the JSON file to which compiler information is exported. Default is None.
     conda_warnings : str, optional
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+    context_dict : dict[str, object], optional
+        A dictionary containing any variables that are available in the calling context.
+        This can allow certain constants to be defined outside of the function passed to epyccel.
     """
     start = time.time()
     timers = {}
@@ -209,7 +213,7 @@ def execute_pyccel(fname, *,
     timers["Initialisation"] = start_syntax-start
     # Parse Python file
     try:
-        parser = Parser(pymod_filepath)
+        parser = Parser(pymod_filepath, context_dict = context_dict)
         parser.parse(verbose=verbose)
     except NotImplementedError as error:
         msg = str(error)
