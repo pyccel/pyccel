@@ -179,8 +179,10 @@ class LiteralFloat(Literal):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         if isinstance(value, LiteralFloat):
             self._value = value.python_value
-        else:
+        elif isinstance(value, (int, np.integer)):
             self._value = float(value)
+        else:
+            self._value = value
         self._class_type = dtype
         super().__init__()
 
