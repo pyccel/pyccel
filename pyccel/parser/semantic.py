@@ -1913,9 +1913,6 @@ class SemanticParser(BasicParser):
                             bounding_box=(self.current_ast_node.lineno,
                                 self.current_ast_node.col_offset))
 
-                elif var.is_alias:
-                    pass
-
                 else:
                     alloc_type = None
                     if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
