@@ -17,11 +17,12 @@ from pyccel.ast.core       import Interface, FunctionDefArgument
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType
 from pyccel.ast.functionalexpr import FunctionalFor
+from pyccel.ast.internals  import PyccelSymbol
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
-from pyccel.ast.type_annotations import VariableTypeAnnotation
+from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
 from pyccel.ast.variable   import DottedName, Variable, IndexedElement
@@ -194,7 +195,9 @@ class PythonCodePrinter(CodePrinter):
             A string containing the type annotation.
         """
         if isinstance(obj, FunctionDefArgument):
-            if obj.annotation:
+            is_temp_union_name = isinstance(obj.annotation, SyntacticTypeAnnotation) and \
+                                 isinstance(obj.annotation.dtype, PyccelSymbol)
+            if obj.annotation and not is_temp_union_name:
                 type_annotation = self._print(obj.annotation)
                 return f"'{type_annotation}'"
             else:
