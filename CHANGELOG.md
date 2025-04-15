@@ -153,6 +153,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   #2282 : Change the order of the function arguments (out arguments are now first).
 -   #2008 : Remove dependency on `astunparse` package.
 -   #1920 : Add a maximum version for NumPy.
 -   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
