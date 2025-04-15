@@ -3762,7 +3762,7 @@ class FCodePrinter(CodePrinter):
 
     def _wrap_fortran(self, lines):
         """
-        Wrap long Fortran lines
+        Wrap long Fortran lines.
 
         A comment line is split at white space. Code lines are split with a more
         complex rule to give nice results.
