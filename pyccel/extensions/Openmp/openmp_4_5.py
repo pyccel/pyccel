@@ -66,6 +66,18 @@ class SyntaxParser:
                 symbol=self._directives_stack,
                 severity="fatal",
             )
+    def _treat_comment_line(self, line, expr):
+        from textx.exceptions import TextXError
+        try:
+            model = self._omp_metamodel.model_from_str(line)
+            model.raw = line
+            directive = OmpDirective.from_tx_directive(model.statement)
+            directive.set_current_ast(expr)
+            return self._visit(directive)
+
+        except TextXError as e:
+            errors.report(e.message, severity="fatal", symbol=expr)
+            return None
 
     def _visit_CommentLine(self, expr):
         from textx.exceptions import TextXError
@@ -101,7 +113,7 @@ class SyntaxParser:
                 body.append(expr)
             if end is None:
                 errors.report(
-                    f"missing `end {expr.name}` directive",
+                    f"missing `end {stmt.name}` directive",
                     symbol=stmt,
                     severity="fatal",
                 )

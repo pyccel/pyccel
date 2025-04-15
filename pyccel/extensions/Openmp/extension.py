@@ -34,6 +34,14 @@ class Openmp(Extension):
                     return EmptyNode()
                 return(sp._visit(self, stmt))
 
+            def _treat_comment_line(self, line, stmt):
+                tmp = line
+                if line.startswith('#$'):
+                    line = line[2:].lstrip()
+                    if line.startswith('omp'):
+                        return mixin._treat_comment_line(self, tmp, stmt)
+                return sp._treat_comment_line(self, tmp, stmt)
+
             def _visit_CommentLine(self, stmt):
                 line = stmt.s
                 if line.startswith('#$'):
