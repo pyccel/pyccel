@@ -2948,7 +2948,8 @@ class CCodePrinter(CodePrinter):
         rhs_code = self._print(assign_node.rhs)
         if '->get' in rhs_code:
             rhs_code = rhs_code.removesuffix('->get)').removeprefix('(*')
-            rhs_code = f'(*{rhs_code})'
+            class_type = self.get_c_type(assign_node.lhs.class_type)
+            rhs_code = f'{class_type}_clone(*{rhs_code})'
         else:
             assert '.get' in rhs_code
             rhs_code = rhs_code.removesuffix('.get)').removeprefix('(*')
