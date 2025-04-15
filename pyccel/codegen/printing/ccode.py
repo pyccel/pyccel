@@ -3189,11 +3189,11 @@ class CCodePrinter(CodePrinter):
         else:
             key = self._print(expr.key)
         assign = expr.get_user_nodes(Assign)
+
+        code = f"(*{container_type}_at({dict_obj_code}, {key}))"
         if assign:
             if any(a.lhs == expr or a.lhs.is_user_of(expr) for a in assign):
                 code = f"(*{container_type}_at_mut({dict_obj_code}, {key}))"
-
-        code = f"(*{container_type}_at({dict_obj_code}, {key}))"
 
         if not isinstance(expr.class_type, FixedSizeNumericType):
             code = code[:-1] + '->get)'
