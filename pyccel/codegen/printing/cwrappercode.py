@@ -3,17 +3,18 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+import sys
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.bind_c     import BindCPointer
 from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
-from pyccel.ast.c_concepts import CStackArray
+from pyccel.ast.c_concepts import CStackArray, CStrStr
 from pyccel.ast.core       import FunctionAddress, SeparatorComment
 from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType, Py_ssize_t
-from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
+from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject, PyTuple_Pack
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
 from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
 from pyccel.ast.c_concepts import ObjectAddress
@@ -86,9 +87,10 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         CCodePrinter.is_c_pointer : The extended function.
         """
-        if isinstance(a.class_type, (WrapperCustomDataType, BindCPointer, CStackArray)):
+        if isinstance(a.class_type, (WrapperCustomDataType, BindCPointer,
+                                     CStackArray, PyTuple_Pack)):
             return True
-        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create, LiteralString)):
+        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create)):
             return True
         else:
             return CCodePrinter.is_c_pointer(self,a)
@@ -157,9 +159,16 @@ class CWrapperCodePrinter(CCodePrinter):
         CCodePrinter.get_declare_type : The extended function.
         """
         if expr.dtype is BindCPointer():
-            return 'void*'
+            if expr.is_const:
+                return 'const void*'
+            else:
+                return 'void*'
         if expr.dtype is Py_ssize_t():
-            return 'Py_ssize_t*' if self.is_c_pointer(expr) else 'Py_ssize_t'
+            dtype =  'Py_ssize_t*' if self.is_c_pointer(expr) else 'Py_ssize_t'
+            if expr.is_const:
+                return f'const {dtype}'
+            else:
+                return dtype
         return CCodePrinter.get_declare_type(self, expr)
 
     def _handle_is_operator(self, Op, expr):
@@ -350,7 +359,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                      '}},\n').format(
                                             name = self.get_python_name(expr.scope, f.original_function),
                                             wrapper_name = f.name,
-                                            docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+                                            docstring = self._print(CStrStr(LiteralString('\n'.join(f.docstring.comments)))) \
                                                         if f.docstring else '""')
                                      for f in funcs if not getattr(f, 'is_header', False))
 
@@ -391,7 +400,7 @@ class CWrapperCodePrinter(CCodePrinter):
         struct_name = expr.struct_name
         type_name = expr.type_name
         name = self.scope.get_python_name(expr.name)
-        docstring = self._print(LiteralString('\n'.join(expr.docstring.comments))) \
+        docstring = self._print(CStrStr(LiteralString('\n'.join(expr.docstring.comments)))) \
                     if expr.docstring else '""'
 
         original_scope = expr.original_class.scope
@@ -410,13 +419,13 @@ class CWrapperCodePrinter(CCodePrinter):
             elif py_name == '__del__':
                 del_string = f"    .tp_dealloc = (destructor) {f.name},\n"
             else:
-                docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+                docstring = self._print(CStrStr(LiteralString('\n'.join(f.docstring.comments)))) \
                                                         if f.docstring else '""'
                 funcs[py_name] = (f.name, docstring)
 
         for f in expr.interfaces:
             py_name = self.get_python_name(original_scope, f.original_function)
-            docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+            docstring = self._print(CStrStr(LiteralString('\n'.join(f.docstring.comments)))) \
                                                     if f.docstring else '""'
             funcs[py_name] = (f.name, docstring)
 
@@ -487,8 +496,9 @@ class CWrapperCodePrinter(CCodePrinter):
         map_magic_methods_def = f"static PyMappingMethods {map_magic_method_name} = {{\n"
         if '__len__' in magic_methods:
             map_magic_methods_def += f"    .mp_length = (lenfunc){magic_methods['__len__'].name},\n"
+        if '__getitem__' in magic_methods:
+            map_magic_methods_def += f"     .mp_subscript = (binaryfunc){magic_methods['__getitem__'].name},\n"
         map_magic_methods_def += '};\n'
-
         method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
                         f'{method_def_funcs}'
@@ -584,3 +594,16 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Py_ssize_t_Cast(self, expr):
         var = self._print(expr.args[0])
         return f'(Py_ssize_t){var}'
+
+    def _print_PyTuple_Pack(self, expr):
+        args = expr.args
+        n = len(args)
+        args_code = ', '.join(self._print(a) for a in args)
+        return f'(*PyTuple_Pack( {n}, {args_code} ))'
+
+    def _print_PyList_Clear(self, expr):
+        list_code = self._print(ObjectAddress(expr.list_obj))
+        if sys.version_info < (3, 13):
+            return f'PyList_SetSlice({list_code}, 0, PY_SSIZE_T_MAX, NULL)'
+        else:
+            return f'PyList_Clear({list_code})'

@@ -380,7 +380,6 @@ def test_omp_arraysum_combined(language):
     assert f1(x) == np.sum(x)
 
 @pytest.mark.external
-@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='#1539')
 def test_omp_range_sum_critical(language):
     f1 = epyccel(openmp.omp_range_sum_critical, fflags = '-Wall', accelerators=['openmp'], language=language)
 
@@ -475,7 +474,8 @@ def test_omp_barrier(language):
 
 @pytest.mark.external
 def test_combined_for_simd(language):
-    f1 = epyccel(openmp.combined_for_simd, fflags = '-Wall', accelerators=['openmp'], language=language)
+    # Intel compiler has a bug in debug mode
+    f1 = epyccel(openmp.combined_for_simd, fflags = '-Wall', accelerators=['openmp'], language=language, debug=False)
     f2 = openmp.combined_for_simd
     assert f1() == f2()
 

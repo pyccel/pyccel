@@ -16,11 +16,11 @@ from pyccel import epyccel
 def python_only_language(request):
     return request.param
 
-def test_dict_init(stc_language):
+def test_dict_init(language):
     def dict_init():
         a = {1:1.0, 2:2.0}
         return a
-    epyc_dict_init = epyccel(dict_init, language = stc_language)
+    epyc_dict_init = epyccel(dict_init, language = language)
     pyccel_result = epyc_dict_init()
     python_result = dict_init()
     assert isinstance(python_result, type(pyccel_result))
@@ -36,11 +36,11 @@ def test_dict_str_keys(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_dict_empty_init(stc_language):
+def test_dict_empty_init(language):
     def dict_empty_init():
         a : 'dict[int, float]' = {}
         return a
-    epyc_dict_empty_init = epyccel(dict_empty_init, language = stc_language)
+    epyc_dict_empty_init = epyccel(dict_empty_init, language = language)
     pyccel_result = epyc_dict_empty_init()
     python_result = dict_empty_init()
     assert isinstance(python_result, type(pyccel_result))
@@ -120,11 +120,22 @@ def test_pop_falsy_bool_default_element(stc_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_pop_str_keys(python_only_language):
+def test_pop_str_keys(stc_language):
     def pop_str_keys():
         a = {'a':1, 'b':2}
         return a.pop('a')
-    epyc_str_keys = epyccel(pop_str_keys, language = python_only_language)
+    epyc_str_keys = epyccel(pop_str_keys, language = stc_language)
+    pyccel_result = epyc_str_keys()
+    python_result = pop_str_keys()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_pop_non_literal_str_keys(stc_language):
+    def pop_str_keys():
+        a = {'a':1, 'b':2}
+        my_str = 'a'
+        return a.pop(my_str)
+    epyc_str_keys = epyccel(pop_str_keys, language = stc_language)
     pyccel_result = epyc_str_keys()
     python_result = pop_str_keys()
     assert isinstance(python_result, type(pyccel_result))
@@ -215,11 +226,11 @@ def test_get_str_keys(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_get_default_str_keys(python_only_language):
+def test_get_default_str_keys(stc_language):
     def get_default_str_keys():
         a = {'a':1, 'b':2}
         return a.get('c', 4)
-    epyc_str_keys = epyccel(get_default_str_keys, language = python_only_language)
+    epyc_str_keys = epyccel(get_default_str_keys, language = stc_language)
     pyccel_result = epyc_str_keys()
     python_result = get_default_str_keys()
     assert isinstance(python_result, type(pyccel_result))
@@ -255,11 +266,11 @@ def test_getitem_element(language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_getitem_str_keys(python_only_language):
+def test_getitem_str_keys(stc_language):
     def getitem_str_keys():
         a = {'a':1, 'b':2}
         return a['a']
-    epyc_str_keys = epyccel(getitem_str_keys, language = python_only_language)
+    epyc_str_keys = epyccel(getitem_str_keys, language = stc_language)
     pyccel_result = epyc_str_keys()
     python_result = getitem_str_keys()
     assert isinstance(python_result, type(pyccel_result))

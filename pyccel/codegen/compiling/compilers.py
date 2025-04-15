@@ -75,31 +75,25 @@ class Compiler:
     ----------
     vendor : str
                Name of the family of compilers.
-    language : str
-               Language that we are translating to.
     debug : bool
                Indicates whether we are compiling in debug mode.
     """
-    __slots__ = ('_debug','_info')
+    __slots__ = ('_debug','_compiler_info','_language_info')
     acceptable_bin_paths = None
-    def __init__(self, vendor : str, language : str, debug=False):
-        if language=='python':
-            return
+    def __init__(self, vendor : str, debug=False):
         if vendor.endswith('.json') and os.path.exists(vendor):
             with open(vendor, encoding="utf-8") as vendor_file:
-                self._info = json.load(vendor_file)
-            if language != self._info['language']:
-                warnings.warn(UserWarning("Language does not match compiler. Using GNU compiler"))
-                self._info = available_compilers[('GNU',language)]
+                self._compiler_info = json.load(vendor_file)
         else:
             if vendor not in vendors:
                 raise NotImplementedError(f"Unrecognised compiler vendor : {vendor}")
             try:
-                self._info = available_compilers[(vendor,language)]
+                self._compiler_info = available_compilers[vendor]
             except KeyError as e:
                 raise NotImplementedError("Compiler not available") from e
 
         self._debug = debug
+        self._language_info = None
 
     def _get_exec(self, accelerators):
         """
@@ -124,7 +118,7 @@ class Compiler:
             If the compiler executable cannot be found.
         """
         # Get executable
-        exec_cmd = self._info['mpi_exec'] if 'mpi' in accelerators else self._info['exec']
+        exec_cmd = self._language_info['mpi_exec'] if 'mpi' in accelerators else self._language_info['exec']
 
         # Clean conda paths out of the PATH variable
         current_path = os.environ['PATH']
@@ -144,55 +138,86 @@ class Compiler:
 
     def _get_flags(self, flags = (), accelerators = ()):
         """
-        Collect necessary compile flags
+        Collect necessary compile flags.
+
+        Collect necessary compile flags, e.g. those relevant to the
+        language or compilation mode (debug/release).
 
         Parameters
         ----------
-        flags        : iterable of str
-                       Any additional flags requested by the user
-                       / required by the file
+        flags : iterable of str
+            Any additional flags requested by the user / required by
+            the file.
         accelerators : iterable or str
-                       Accelerators used by the code
+            Accelerators used by the code.
+
+        Returns
+        -------
+        list[str]
+            A list containing the flags.
         """
         flags = list(flags)
 
         if self._debug:
-            flags.extend(self._info.get('debug_flags',()))
+            flags.extend(self._language_info.get('debug_flags',()))
         else:
-            flags.extend(self._info.get('release_flags',()))
+            flags.extend(self._language_info.get('release_flags',()))
 
-        flags.extend(self._info.get('general_flags',()))
+        flags.extend(self._language_info.get('general_flags',()))
         # M_PI is not in the standard
         #if 'python' not in accelerators:
         #    # Python sets its own standard
-        #    flags.extend(self._info.get('standard_flags',()))
+        #    flags.extend(self._language_info.get('standard_flags',()))
 
         for a in accelerators:
-            flags.extend(self._info.get(a,{}).get('flags',()))
+            flags.extend(self._language_info.get(a,{}).get('flags',()))
 
         return flags
 
-    def _get_property(self, key, prop = (), accelerators = ()):
+    def _get_property(self, key, properties = (), accelerators = ()):
         """
-        Collect necessary compile property
+        Collect necessary compile property.
+
+        Collect necessary compile properties such as include folders
+        or library directories.
 
         Parameters
         ----------
-        property     : iterable of str
-                       Any additional values of the property
-                       requested by the user / required by the file
+        key : str
+            A key describing the property of interest.
+        properties : iterable of str
+            Any additional values of the property requested by the
+            user / required by the file.
         accelerators : iterable or str
-                       Accelerators used by the code
-        """
-        # Use dict keys as an ordered set
-        prop = dict.fromkeys(prop)
+            Accelerators used by the code.
 
-        prop.update(dict.fromkeys(self._info.get(key,())))
+        Returns
+        -------
+        iterable[str]
+            An iterable containing the relevant information from the
+            requested property.
+
+        Examples
+        --------
+        >>> self._get_property("libs", ("-lmy_lib",), ())
+        dict_keys(['-lmy_lib', '-lm'])
+
+        >>> self._get_property("libs", ("-lmy_lib",), ("openmp",))
+        dict_keys(['-lmy_lib', '-lm', 'gomp'])
+
+        >>> self._get_property("includes", ("/home/user/homemade-install-dir/",), ("mpi",))
+        dict_keys(['/home/user/homemade-install-dir/'])
+        """
+        # Use a dictionary instead of a set to ensure properties are ordered by insertion
+        # The keys of the dictionary contain the values for the property of interest.
+        properties = dict.fromkeys(properties)
+
+        properties.update(dict.fromkeys(self._language_info.get(key,())))
 
         for a in accelerators:
-            prop.update(dict.fromkeys(self._info.get(a,{}).get(key,())))
+            properties.update(dict.fromkeys(self._language_info.get(a,{}).get(key,())))
 
-        return prop.keys()
+        return properties.keys()
 
     def _get_includes(self, includes = (), accelerators = ()):
         """
@@ -312,7 +337,7 @@ class Compiler:
 
         return exec_cmd, inc_flags, libs_flags, libdirs_flags, m_code
 
-    def compile_module(self, compile_obj, output_folder, verbose = False):
+    def compile_module(self, compile_obj, output_folder, language, verbose = False):
         """
         Compile a module.
 
@@ -326,11 +351,16 @@ class Compiler:
         output_folder : str
             The folder where the result should be saved.
 
+        language : str
+            Language that we are compiling.
+
         verbose : bool
             Indicates whether additional output should be shown.
         """
         if not compile_obj.has_target_file:
             return
+
+        self._language_info = self._compiler_info[language]
 
         accelerators = compile_obj.accelerators
 
@@ -345,8 +375,8 @@ class Compiler:
         # Get executable
         exec_cmd = self._get_exec(accelerators)
 
-        if self._info['language'] == 'fortran':
-            j_code = (self._info['module_output_flag'], output_folder)
+        if language == 'fortran':
+            j_code = (self._language_info['module_output_flag'], output_folder)
         else:
             j_code = ()
 
@@ -357,7 +387,9 @@ class Compiler:
         with compile_obj:
             self.run_command(cmd, verbose)
 
-    def compile_program(self, compile_obj, output_folder, verbose = False):
+        self._language_info = None
+
+    def compile_program(self, compile_obj, output_folder, language, verbose = False):
         """
         Compile a program.
 
@@ -371,6 +403,9 @@ class Compiler:
         output_folder : str
             The folder where the result should be saved.
 
+        language : str
+            Language that we are compiling.
+
         verbose : bool
             Indicates whether additional output should be shown.
 
@@ -379,6 +414,8 @@ class Compiler:
         str
             The name of the generated executable.
         """
+        self._language_info = self._compiler_info[language]
+
         accelerators = compile_obj.accelerators
 
         # get flags
@@ -389,8 +426,8 @@ class Compiler:
                 self._get_compile_components(compile_obj, accelerators)
         linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
 
-        if self._info['language'] == 'fortran':
-            j_code = (self._info['module_output_flag'], output_folder)
+        if language == 'fortran':
+            j_code = (self._language_info['module_output_flag'], output_folder)
         else:
             j_code = ()
 
@@ -402,9 +439,11 @@ class Compiler:
         with compile_obj:
             self.run_command(cmd, verbose)
 
+        self._language_info = None
+
         return compile_obj.program_target
 
-    def compile_shared_library(self, compile_obj, output_folder, verbose = False, sharedlib_modname=None):
+    def compile_shared_library(self, compile_obj, output_folder, language, verbose = False, sharedlib_modname=None):
         """
         Compile a module to a shared library.
 
@@ -419,6 +458,9 @@ class Compiler:
         output_folder : str
             The folder where the result should be saved.
 
+        language : str
+            Language that we are compiling.
+
         verbose : bool
             Indicates whether additional output should be shown.
 
@@ -431,6 +473,8 @@ class Compiler:
         str
             Generated library name.
         """
+        self._language_info = self._compiler_info[language]
+
         # Ensure python options are collected
         accelerators = set(compile_obj.accelerators)
 
@@ -449,16 +493,18 @@ class Compiler:
         flags.insert(0,"-shared")
 
         # Get name of file
-        ext_suffix = self._info['python']['shared_suffix']
+        ext_suffix = self._language_info['python']['shared_suffix']
         sharedlib_modname = sharedlib_modname or compile_obj.python_module
         file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
 
-        cmd = [exec_cmd, *flags, *includes, *libdirs_flags, *linker_libdirs_flags,
+        cmd = [exec_cmd, *flags, *libdirs_flags, *linker_libdirs_flags,
                 compile_obj.module_target, *m_code,
                 '-o', file_out, *libs_flags]
 
         with compile_obj:
             self.run_command(cmd, verbose)
+
+        self._language_info = None
 
         return file_out
 
@@ -523,5 +569,5 @@ class Compiler:
             should be printed.
         """
         with open(compiler_export_file,'w', encoding="utf-8") as out_file:
-            print(json.dumps(self._info, indent=4),
+            print(json.dumps(self._compiler_info, indent=4),
                     file=out_file)

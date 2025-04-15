@@ -26,8 +26,8 @@ from .internals     import PyccelFunction, Slice, PyccelArrayShapeElement
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
 from .mathext       import math_mod
-from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
-                            NumpyTranspose, NumpyLinspace)
+from .numpyext      import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace
+from .numpyext      import get_shape_of_multi_level_container
 from .numpytypes    import NumpyNDArrayType
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .operators     import PyccelUnarySub
@@ -510,7 +510,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                         "which return tuples or None",
                         symbol=line, severity='fatal')
 
-            func_results = [f.funcdef.results[0].var for f in funcs]
+            func_results = [f.funcdef.results.var for f in funcs]
             func_vars2 = [new_index(r.dtype, r.name) for r in func_results]
             assigns   += [Assign(v, f) for v,f in zip(func_vars2, funcs)]
 
@@ -527,7 +527,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 current_level = 0
 
             rank = line.lhs.rank
-            shape = line.lhs.shape
+            shape = get_shape_of_multi_level_container(line.lhs) if isinstance(line.lhs.class_type, HomogeneousTupleType) \
+                    else line.lhs.shape
             new_vars = variables
             handled_funcs = transposed_vars + indexed_funcs
             # Loop over indexes, inserting until the expression can be evaluated
@@ -841,31 +842,4 @@ def is_literal_integer(expr):
     return isinstance(expr, (int, LiteralInteger)) or \
         isinstance(expr, PyccelUnarySub) and isinstance(expr.args[0], (int, LiteralInteger))
 
-#==============================================================================
-def flatten_tuple_var(expr, scope):
-    """
-    Get a list of all variables in an inhomogeneous tuple Variable.
-
-    Get a list of all variables in an inhomogeneous tuple Variable by recursively
-    applying this function to the elements of the tuple.
-
-    Parameters
-    ----------
-    expr : Variable
-        A variable which may have the type InhomogeneousTupleType.
-    scope : Scope
-        A scope describing how tuple elements are mapped to Variables.
-
-    Returns
-    -------
-    list[Variable]
-        A list of all the variables that should be printed to describe the
-        inhomogeneous tuple Variable.
-    """
-    if isinstance(expr, BindCVariable):
-        return flatten_tuple_var(expr.new_var, scope)
-    if isinstance(expr.class_type, InhomogeneousTupleType):
-        return [v for e in expr for v in flatten_tuple_var(scope.collect_tuple_element(e), scope)]
-    else:
-        return [expr]
 

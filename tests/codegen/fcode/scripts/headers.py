@@ -15,7 +15,7 @@ def f(a,b):
 
 #$ header function g(int, int) &
 #$                 results &
-#$ (int, int)
+#$ (tuple[int, int])
 
 def g(a,b):
     c = a + b

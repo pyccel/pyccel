@@ -75,8 +75,7 @@ from pyccel.parser.syntax.openacc import parse as acc_parse
 
 from pyccel.utilities.stage import PyccelStage
 
-from pyccel.errors.errors import Errors
-
+from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
 
 # TODO - remove import * and only import what we need
 from pyccel.errors.messages import *
@@ -169,8 +168,6 @@ class SyntaxParser(BasicParser):
 
         pyccel_stage.set_stage('syntactic')
         ast       = self._visit(self.fst)
-
-
         self._ast = ast
 
         self._syntax_done = True
@@ -288,6 +285,53 @@ class SyntaxParser(BasicParser):
                         symbol = stmt, severity='error')
             return EmptyNode()
 
+    def _get_unique_name(self, possible_names, valid_names, forbidden_names, suggestion):
+        """
+        Get a name for a variable amongst multiple possibilities.
+
+        Get a name for a variable. If the name is the only possibility it is
+        chosen. Otherwise a new name is constructed from the suggestions.
+        This function is usually used to find the name(s) of the result of a
+        FunctionDef.
+
+        Parameters
+        ----------
+        possible_names : iterable[PyccelSymbol | TypedAstNode]
+            The possible names found for the variable.
+        valid_names : iterable[PyccelSymbol]
+            The names found in the scope that can be used for this variable (this is
+            important to avoid accidentally using an imported variable).
+        forbidden_names : iterable[PyccelSymbol]
+            The names that should not be used.
+        suggestion : PyccelSymbol
+            The name that may be used instead.
+
+        Returns
+        -------
+        str
+            The new name of the variable.
+        """
+        if all(isinstance(n, (PythonTuple, PythonList)) for n in possible_names) and \
+                len(set(len(n) for n in possible_names)) == 1:
+            # If all possible names are iterables of the same length then find a name
+            # for each element and link them to an element describing this variable
+            # via IndexedElement (these are tuple elements).
+            possible_names = list(zip(*[n.args for n in possible_names]))
+            unique_names = [self._get_unique_name(n, valid_names, forbidden_names, f'{suggestion}_{i}') \
+                            for i,n in enumerate(possible_names)]
+            temp_name = self.scope.get_new_name(suggestion, is_temp = True)
+            for i, n in enumerate(unique_names):
+                self.scope.insert_symbolic_alias(IndexedElement(temp_name, i), n)
+            return temp_name
+        else:
+            suggested_names = set(n for n in possible_names if isinstance(n, PyccelSymbol))
+            if len(suggested_names) == 1:
+                # If one name is suggested then return it unless it is forbidden
+                new_name = suggested_names.pop()
+                if new_name not in forbidden_names and new_name in valid_names:
+                    return new_name
+            return self.scope.get_new_name(suggestion, is_temp = True)
+
     #====================================================
     #                 _visit functions
     #====================================================
@@ -316,13 +360,23 @@ class SyntaxParser(BasicParser):
         # TODO - add settings to Errors
         #      - line and column
         #      - blocking errors
+
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
             self._context.append(stmt)
-            result = getattr(self, syntax_method)(stmt)
-            if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
-                result.set_current_ast(stmt)
+            try:
+                result = getattr(self, syntax_method)(stmt)
+                if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
+                    result.set_current_ast(stmt)
+            except (PyccelError, NotImplementedError) as err:
+                raise err
+            except Exception as err: #pylint: disable=broad-exception-caught
+                if ErrorsMode().value == 'user':
+                    errors.report(PYCCEL_INTERNAL_ERROR,
+                            symbol = self._context[-1], severity='fatal')
+                else:
+                    raise err
             self._context.pop()
             return result
 
@@ -439,6 +493,8 @@ class SyntaxParser(BasicParser):
             return AugAssign(lhs, '<<', rhs)
         elif isinstance(stmt.op, ast.RShift):
             return AugAssign(lhs, '>>', rhs)
+        elif isinstance(stmt.op, ast.FloorDiv):
+            return AugAssign(lhs, '//', rhs)
         else:
             return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
                     severity='error')
@@ -722,10 +778,6 @@ class SyntaxParser(BasicParser):
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
-        if results is Nil():
-            results = []
-        elif not isinstance(results, (list, PythonTuple, PythonList)):
-            results = [results]
         return Return(results)
 
     def _visit_Pass(self, stmt):
@@ -929,6 +981,7 @@ class SyntaxParser(BasicParser):
         #                   End of : To remove when headers are deprecated
         #---------------------------------------------------------------------------------------------------------
 
+        argument_names = {a.var.name for a in arguments}
         # Repack AnnotatedPyccelSymbols to insert argument_annotations from headers or types decorators
         arguments = [FunctionDefArgument(AnnotatedPyccelSymbol(a.var.name, annot), annotation=annot, value=a.value, kwonly=a.is_kwonly)
                            for a, annot in zip(arguments, argument_annotations)]
@@ -963,38 +1016,22 @@ class SyntaxParser(BasicParser):
 
         body = CodeBlock(body)
 
-        returns = [i.expr for i in body.get_attribute_nodes(Return,
-                    excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))]
-        assert all(len(i) == len(returns[0]) for i in returns)
-        if is_inline and len(returns)>1:
-            errors.report("Inline functions cannot have multiple return statements",
-                    symbol = stmt,
-                    severity = 'error')
-        results = []
-        result_counter = 1
-
-        local_symbols = self.scope.local_used_symbols
-
-        if result_annotation and not isinstance(result_annotation, (tuple, list)):
-            result_annotation = [result_annotation]
-
-        for i,r in enumerate(zip(*returns)):
-            r0 = r[0]
-
-            pyccel_symbol  = isinstance(r0, PyccelSymbol)
-            same_results   = all(r0 == ri for ri in r)
-            name_available = all(r0 != a.name for a in arguments) and r0 in local_symbols
-
-            if pyccel_symbol and same_results and name_available:
-                result_name = r0
-            else:
-                result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
+        returns = body.get_attribute_nodes(Return,
+                    excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
+        if len(returns) == 0 or all(r.expr is Nil() for r in returns):
+            results = FunctionDefResult(Nil())
+        else:
+            results = self._get_unique_name([r.expr for r in returns],
+                                        valid_names = self.scope.local_used_symbols.keys(),
+                                        forbidden_names = argument_names,
+                                        suggestion = 'result')
 
             if result_annotation:
-                result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation[i])
+                results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
 
-            results.append(FunctionDefResult(result_name, annotation = result_annotation))
-            results[-1].set_current_ast(stmt)
+            results = FunctionDefResult(results, annotation = result_annotation)
+
+        results.set_current_ast(stmt)
 
         self.exit_function_scope()
 
@@ -1139,26 +1176,68 @@ class SyntaxParser(BasicParser):
     def _visit_comprehension(self, stmt):
 
         scope = self.create_new_loop_scope()
+        condition = None
 
         self._in_lhs_assign = True
         iterator = self._visit(stmt.target)
         self._in_lhs_assign = False
         iterable = self._visit(stmt.iter)
 
+        if stmt.ifs:
+            cond = PyccelAnd(*[self._visit(if_cond)
+                                      for if_cond in stmt.ifs])
+            condition = If(IfSection(cond, CodeBlock([])))
+
         self.exit_loop_scope()
 
-        if stmt.ifs:
-            errors.report("Cannot handle if statements in list comprehensions. List length cannot be calculated.\n" + PYCCEL_RESTRICTION_TODO,
-                    symbol=stmt, severity='error')
-
-        expr = For(iterator, iterable, [], scope=scope)
+        expr = (For(iterator, iterable, [], scope=scope), condition)
         return expr
 
     def _visit_ListComp(self, stmt):
+        """
+        Converts a list comprehension statement into a `FunctionalFor` AST object.
+
+        This method translates the list comprehension into an equivalent `FunctionalFor`
+
+        Parameters
+        ----------
+        stmt : ast.stmt
+            Object to visit of type X.
+
+        Returns
+        -------
+        pyccel.ast.functionalexpr.FunctionalFor
+            AST object which is the syntactic equivalent of the list comprehension.
+        """
+
+        def create_target_operations():
+            operations = {'list' : [], 'numpy_array' : []}
+            index = PyccelSymbol('_', is_temp=True)
+            args = [index]
+            target = IndexedElement(lhs, *args)
+            target = Assign(target, result)
+            assign1 = Assign(index, LiteralInteger(0))
+            assign1.set_current_ast(stmt)
+            operations['numpy_array'].append(assign1)
+            target.set_current_ast(stmt)
+            operations['numpy_array'].append(target)
+            assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
+            assign2.set_current_ast(stmt)
+            operations['numpy_array'].append(assign2)
+            operations['list'].append(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
+
+            return index, operations
+
 
         result = self._visit(stmt.elt)
+        output_type = None
+        comprehensions = list(self._visit(stmt.generators))
+        generators = [c[0] for c in comprehensions]
+        conditions = [c[1] for c in comprehensions]
 
-        generators = list(self._visit(stmt.generators))
+        parent = self._context[-2]
+        if isinstance(parent, ast.Call):
+            output_type = self._visit(parent.func)
 
         success = isinstance(self._context[-2],ast.Assign)
         if not success and len(self._context) > 2:
@@ -1178,40 +1257,25 @@ class SyntaxParser(BasicParser):
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
 
-        parent = self._context[-2]
-        if isinstance(parent, ast.Call):
-            output_type = self._visit(parent.func)
-        else:
-            output_type = 'list'
+        indices = [generator.target for generator in generators]
+        index, operations = create_target_operations()
 
-        index = PyccelSymbol('_', is_temp=True)
-
-        args = [index]
-        target = IndexedElement(lhs, *args)
-        target = Assign(target, result)
-        assign1 = Assign(index, LiteralInteger(0))
-        assign1.set_current_ast(stmt)
-        target.set_current_ast(stmt)
-        generators[-1].insert2body(target)
-        assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
-        assign2.set_current_ast(stmt)
-        generators[-1].insert2body(assign2)
-
-        indices = [generators[-1].target]
-        while len(generators) > 1:
-            F = generators.pop()
-            generators[-1].insert2body(F)
-            indices.append(generators[-1].target)
-        indices = indices[::-1]
-
-        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
-                             indices, index, target_type = output_type)
+        return FunctionalFor(generators, result, lhs,indices,index=index,
+                             conditions=conditions,
+                             target_type=output_type, operations=operations)
 
     def _visit_GeneratorExp(self, stmt):
+        conditions = []
+        generators = []
+        indices = []
+        condition = None
 
         result = self._visit(stmt.elt)
 
-        generators = self._visit(stmt.generators)
+        comprehensions = list(self._visit(stmt.generators))
+        generators = [c[0] for c in comprehensions]
+        conditions = [c[1] for c in comprehensions]
+
         parent = self._context[-2]
         if not isinstance(parent, ast.Call):
             raise NotImplementedError("GeneratorExp is not the argument of a function call")
@@ -1234,20 +1298,35 @@ class SyntaxParser(BasicParser):
             body = Assign(lhs, body)
 
         body.set_current_ast(parent)
-        indices = []
-        generators = list(generators)
-        while len(generators) > 0:
-            indices.append(generators[-1].target)
+
+        for loop, condition in zip(generators, conditions):
+            if condition:
+                loop.insert2body(condition)
+
+        if generators[-1].body.body: # this is an If node
+            if_node = generators[-1].body.body[0]
+            if_node.blocks[0].body.insert2body(body)
+        else:
             generators[-1].insert2body(body)
-            body = generators.pop()
+
+        while len(generators) > 1:
+            indices.append(generators[-1].target)
+            outer_loop = generators.pop()
+            inserted_into = generators[-1]
+            if inserted_into.body.body:
+                inserted_into.body.body[0].blocks[0].body.insert2body(outer_loop)
+            else:
+                inserted_into.insert2body(outer_loop)
+        indices.append(generators[-1].target)
 
         indices = indices[::-1]
+
         if name == 'sum':
-            expr = FunctionalSum(body, result, lhs, indices)
+            expr = FunctionalSum(generators[0], result, lhs, indices, conditions=conditions)
         elif name == 'min':
-            expr = FunctionalMin(body, result, lhs, indices)
+            expr = FunctionalMin(generators[0], result, lhs, indices, conditions=conditions)
         elif name == 'max':
-            expr = FunctionalMax(body, result, lhs, indices)
+            expr = FunctionalMax(generators[0], result, lhs, indices, conditions=conditions)
         else:
             expr = EmptyNode()
             errors.report(PYCCEL_RESTRICTION_TODO,

@@ -443,6 +443,7 @@ def combined_for_simd():
 
     for i in range(0, 8):
         func_result = func_result + z[i]
+
     return func_result
 
 def omp_sections():

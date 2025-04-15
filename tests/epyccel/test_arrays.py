@@ -1744,7 +1744,6 @@ def test_array_float_4d_F_array_initialization(language):
     assert np.array_equal(x1, x2)
 
 
-@pytest.mark.xfail(reason='Inhomogeneous arguments due to unknown shape')
 def test_array_float_4d_F_array_initialization_mixed_ordering(language):
 
     f1 = arrays.array_float_4d_F_array_initialization_mixed_ordering
@@ -4139,11 +4138,11 @@ def test_array_float_nested_C_array_initialization_3(language):
 #==============================================================================
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="List comprehension not yet implemented"),
+            pytest.mark.xfail(reason="Lists of lists are not yet supported in Fortran, related issue #2210"),
             pytest.mark.fortran]
         ),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="List indexing is not yet supported in C, related issue #1876"),
+            pytest.mark.xfail(reason="Lists of lists are not yet supported in C, related issue #2210"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)

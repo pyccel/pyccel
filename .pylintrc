@@ -48,7 +48,7 @@ unsafe-load-any-extension=no
 
 # Minimum Python version to use for version dependent checks. Will default to
 # the version used to run pylint.
-py-version=3.8 # Set to last python which has not reached end-of-life
+py-version=3.9 # Set to last python which has not reached end-of-life
 
 [MESSAGES CONTROL]
 
@@ -411,7 +411,7 @@ name-group=
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
-no-docstring-rgx=^(_visit_)|(_print_)|(__.*__)|(_extract_.*_FunctionDefResult)
+no-docstring-rgx=^(_visit_)|(_print_)|(__.*__)|(_extract_.*_FunctionDefResult)|(_extract_.*_FunctionDefArgument)
 
 # List of decorators that produce properties, such as abc.abstractproperty. Add
 # to this list to register other decorators that produce valid properties.

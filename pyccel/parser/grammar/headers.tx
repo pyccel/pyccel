@@ -23,7 +23,7 @@ TemplateStmt: 'template' name = ID '(' dtypes+=TypeHeader['|'] ')';
 
 FunctionKind: 'function' | 'method';
 Static: 'static';
-HeaderResults: 'results' '(' decs+=TypeHeader[','] ')';
+HeaderResults: 'results' '(' (decs=TypeHeader) ')';
 
 MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
 MetavarValues: BOOL|STRING;

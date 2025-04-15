@@ -15,12 +15,10 @@ from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 
 from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRShift
 
-from .builtins  import PythonBool, PythonTuple
-
-from .c_concepts import PointerCast
+from .builtins  import PythonBool, PythonTuple, PythonList
 
 from .datatypes import (PyccelType, HomogeneousTupleType, VoidType, CustomDataType,
-                        PythonNativeBool, InhomogeneousTupleType, SymbolicType)
+                        PythonNativeBool, InhomogeneousTupleType, TupleType, SymbolicType)
 
 from .internals import PyccelSymbol, PyccelFunction, Iterable
 
@@ -29,6 +27,7 @@ from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
 from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
+from .operators import PyccelFloorDiv
 
 from .variable import DottedName, IndexedElement
 from .variable import Variable, AnnotatedPyccelSymbol
@@ -66,7 +65,6 @@ __all__ = (
     'ErrorExit',
     'Exit',
     'For',
-    'FuncAddressDeclare',
     'FunctionAddress',
     'FunctionCall',
     'FunctionCallArgument',
@@ -389,7 +387,7 @@ class Allocate(PyccelAstNode):
     # ...
     def __init__(self, variable, *, shape, status, like = None, alloc_type = None):
 
-        if not isinstance(variable, (Variable, PointerCast)):
+        if pyccel_stage == 'semantic' and not isinstance(variable, Variable):
             raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
 
         if variable.on_stack:
@@ -399,9 +397,7 @@ class Allocate(PyccelAstNode):
         if shape and not isinstance(shape, (int, tuple, list)):
             raise TypeError(f"Cannot understand 'shape' parameter of type '{type(shape)}'")
 
-        class_type = variable.class_type
-        if class_type.rank != len(shape):
-            raise ValueError("Incompatible rank in variable allocation")
+        assert variable.class_type.shape_is_compatible(shape)
 
         if not isinstance(status, str):
             raise TypeError(f"Cannot understand 'status' parameter of type '{type(status)}'")
@@ -666,7 +662,7 @@ class AliasAssign(PyccelAstNode):
             if not lhs.is_alias:
                 raise TypeError('lhs must be a pointer')
 
-            if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].var.is_alias:
+            if isinstance(rhs, FunctionCall) and not rhs.funcdef.results.var.is_alias:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
         self._lhs = lhs
@@ -726,6 +722,7 @@ class AugAssign(Assign):
             '-' : PyccelMinus,
             '*' : PyccelMul,
             '/' : PyccelDiv,
+            '//': PyccelFloorDiv,
             '%' : PyccelMod,
             '|' : PyccelBitOr,
             '&' : PyccelBitAnd,
@@ -1708,12 +1705,12 @@ class FunctionDefResult(TypedAstNode):
         self._annotation = annotation
 
         if pyccel_stage == 'syntactic':
-            if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol)):
+            if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol, Nil, PythonTuple)):
                 raise TypeError(f"Var must be a PyccelSymbol or an AnnotatedPyccelSymbol, not a {type(var)}")
-        elif not isinstance(var, Variable):
+        elif not isinstance(var, (Variable, Nil)):
             raise TypeError(f"Var must be a Variable not a {type(var)}")
         else:
-            self._is_argument = var.is_argument
+            self._is_argument = getattr(var, 'is_argument', False)
 
         super().__init__()
 
@@ -1748,11 +1745,18 @@ class FunctionDefResult(TypedAstNode):
         """
         return self._is_argument
 
+    def __len__(self):
+        return 0 if self.var is None else \
+                (self.var.shape[0] if isinstance(self.var.class_type, InhomogeneousTupleType) else 1)
+
     def __repr__(self):
         return f'FunctionDefResult({repr(self.var)})'
 
     def __str__(self):
         return str(self.var)
+
+    def __bool__(self):
+        return self.var is not Nil()
 
 class FunctionCall(TypedAstNode):
     """
@@ -1835,31 +1839,18 @@ class FunctionCall(TypedAstNode):
 
         # Handle function as argument
         arg_vals = [None if a is None else a.value for a in args]
-        args = [FunctionCallArgument(FunctionAddress(av.name, av.arguments, av.results), keyword=a.keyword)
+        args = [FunctionCallArgument(FunctionAddress(av.name, av.arguments, av.results, scope=av.scope), keyword=a.keyword)
                 if isinstance(av, FunctionDef) else a for a, av in zip(args, arg_vals)]
 
         if current_function == func.name:
-            if len(func.results)>0 and not isinstance(func.results[0], TypedAstNode):
+            if len(func.results)>0 and not isinstance(func.results, TypedAstNode):
                 errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
         self._funcdef    = func
         self._arguments  = args
         self._func_name  = func.name
-        n_results = len(func.results)
-        if n_results == 1:
-            self._shape      = func.results[0].var.shape
-            self._class_type = func.results[0].var.class_type
-        elif n_results == 0:
-            self._shape      = None
-            self._class_type = VoidType()
-        else:
-            dtypes = [r.var.dtype for r in func.results]
-            if all(d is dtypes[0] for d in dtypes):
-                dtype = HomogeneousTupleType(dtypes[0])
-            else:
-                dtype = InhomogeneousTupleType(*dtypes)
-            self._shape      = (LiteralInteger(n_results),)
-            self._class_type = dtype
+        self._shape      = func.results.var.shape
+        self._class_type = func.results.var.class_type
 
         super().__init__()
 
@@ -1902,7 +1893,7 @@ class FunctionCall(TypedAstNode):
         Check if the result of the function call is an alias type.
         """
         assert len(self._funcdef.results) == 1
-        return self._funcdef.results[0].var.is_alias
+        return self._funcdef.results.var.is_alias
 
     def __repr__(self):
         args = ', '.join(str(a) for a in self.args)
@@ -1936,7 +1927,7 @@ class ConstructorCall(FunctionCall):
         Used to store data inside the class, set during object creation.
     """
     __slots__ = ('_cls_variable',)
-    _attribute_nodes = ()
+    _attribute_nodes = FunctionCall._attribute_nodes + ('_cls_variable',)
 
     # TODO improve
 
@@ -1951,6 +1942,8 @@ class ConstructorCall(FunctionCall):
 
         self._cls_variable = cls_variable
         super().__init__(func, arguments, self._cls_variable)
+        self._class_type = cls_variable.class_type
+        self._shape      = cls_variable.shape
 
     @property
     def cls_variable(self):
@@ -1982,16 +1975,20 @@ class Return(PyccelAstNode):
     stmt : PyccelAstNode
         Any assign statements in the case of expression return.
     """
-    __slots__ = ('_expr', '_stmt')
+    __slots__ = ('_expr', '_stmt', '_n_returns')
     _attribute_nodes = ('_expr', '_stmt')
 
     def __init__(self, expr, stmt=None):
 
-        if stmt and not isinstance(stmt, CodeBlock):
-            raise TypeError('stmt should only be of type CodeBlock')
+        assert stmt is None or isinstance(stmt, CodeBlock)
+        assert expr is None or isinstance(expr, (TypedAstNode, PyccelSymbol, DottedName))
 
         self._expr = expr
         self._stmt = stmt
+
+        self._n_returns = 0 if isinstance(expr, Nil) else \
+                1 if not isinstance(expr, (PythonTuple, PythonList)) else \
+                len(expr)
 
         super().__init__()
 
@@ -2003,13 +2000,21 @@ class Return(PyccelAstNode):
     def stmt(self):
         return self._stmt
 
+    @property
+    def n_explicit_results(self):
+        """
+        The number of variables explicitly returned.
+
+        The number of variables explicitly returned.
+        """
+        return self._n_returns
+
     def __repr__(self):
         if self.stmt:
             code = repr(self.stmt)+';'
         else:
             code = ''
-        exprs = ','.join(repr(e) for e in self.expr)
-        return code+f"Return({exprs})"
+        return code+f"Return({repr(self.expr)})"
 
 class FunctionDef(ScopedAstNode):
 
@@ -2031,7 +2036,7 @@ class FunctionDef(ScopedAstNode):
     body : iterable
         The body of the function.
 
-    results : iterable
+    results : FunctionDefResult, optional
         The direct outputs of the function.
 
     global_vars : list of Symbols
@@ -2143,7 +2148,7 @@ class FunctionDef(ScopedAstNode):
         name,
         arguments,
         body,
-        results = (),
+        results = None,
         *,
         global_vars=(),
         cls_name=None,
@@ -2195,7 +2200,9 @@ class FunctionDef(ScopedAstNode):
         assert isinstance(body,CodeBlock)
 
         # results
-        assert iterable(results) and all(isinstance(r, FunctionDefResult) for r in results)
+        if results is None:
+            results = FunctionDefResult(Nil())
+        assert isinstance(results, FunctionDefResult)
 
         if cls_name:
 
@@ -2300,10 +2307,15 @@ class FunctionDef(ScopedAstNode):
         includes arguments, results, and variables defined inside the
         function.
         """
-        local_vars = self.scope.variables.values()
-        argument_vars = [a.var for a in self.arguments]
-        result_vars = [r.var for r in self.results]
-        return tuple(l for l in local_vars if l not in result_vars and l not in argument_vars)
+        scope = self.scope
+        local_vars = scope.variables.values()
+        result_vars = [self.results.var]
+        tuple_result_vars = [self.results.var]
+        while any(isinstance(r.class_type, InhomogeneousTupleType) for r in tuple_result_vars):
+            tuple_result_vars = [ri for r in result_vars for ri in scope.collect_all_tuple_elements(r)]
+            result_vars += tuple_result_vars
+
+        return tuple(l for l in local_vars if l not in result_vars and not l.is_argument)
 
     @property
     def global_vars(self):
@@ -2530,10 +2542,8 @@ class FunctionDef(ScopedAstNode):
         return args, kwargs
 
     def __str__(self):
-        result = 'None' if len(self.results) == 0 else \
-                    ', '.join(str(r) for r in self.results)
         args = ', '.join(str(a) for a in self.arguments)
-        return f'{self.name}({args}) -> {result}'
+        return f'{self.name}({args}) -> {self.results}'
 
     @property
     def is_unused(self):
@@ -2719,9 +2729,8 @@ class PyccelFunctionDef(FunctionDef):
                 issubclass(func_class, (PyccelFunction, TypedAstNode, Iterable))
         assert isinstance(argument_description, dict)
         arguments = ()
-        results = ()
         body = ()
-        super().__init__(name, arguments, results, body, decorators=decorators)
+        super().__init__(name, arguments, body, decorators=decorators)
         self._cls_name = func_class
         self._argument_description = argument_description
 
@@ -3002,13 +3011,11 @@ class FunctionAddress(FunctionDef):
 
     Examples
     --------
-    >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
+    >>> from pyccel.ast.core import Variable, FunctionAddress, FunctionDef
     >>> x = Variable(PythonNativeFloat(), 'x')
     >>> y = Variable(PythonNativeFloat(), 'y')
     >>> # a function definition can have a FunctionAddress as an argument
     >>> FunctionDef('g', [FunctionAddress('f', [x], [y])], [], [])
-    >>> # we can also Declare a FunctionAddress
-    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
     """
     __slots__ = ('_is_optional','_is_kwonly','_is_argument', '_memory_handling')
 
@@ -3023,7 +3030,7 @@ class FunctionAddress(FunctionDef):
         memory_handling='stack',
         **kwargs
         ):
-        super().__init__(name, arguments, body=[], results=results, scope=None, **kwargs)
+        super().__init__(name, arguments, body=[], results=results, **kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
@@ -3076,12 +3083,11 @@ class FunctionAddress(FunctionDef):
         See https://docs.python.org/3/library/pickle.html#object.__getnewargs_ex__
         """
         args, kwargs = super().__getnewargs_ex__()
-        args = args[:2] + (kwargs.pop('results'),)
-        kwargs.pop('scope')
-        kwargs['is_optional'] = self._is_optional
-        kwargs['is_kwonly'] = self._is_kwonly
-        kwargs['is_argument'] = self._is_argument
-        kwargs['memory_handling'] = self._memory_handling
+        args = args[:-1] # Remove body argument
+        kwargs['is_argument'] = self.is_argument
+        kwargs['is_kwonly'] = self.is_kwonly
+        kwargs['is_optional'] = self.is_optional
+        kwargs['memory_handling'] = self.memory_handling
         return args, kwargs
 
 class SympyFunction(FunctionDef):
@@ -3753,85 +3759,6 @@ class Import(PyccelAstNode):
 
 
 # TODO: Should Declare have an optional init value for each var?
-
-class FuncAddressDeclare(PyccelAstNode):
-    """
-    Represents a FunctionAddress declaration in the code.
-
-    Represents a FunctionAddress declaration in the code.
-
-    Parameters
-    ----------
-    variable : FunctionAddress
-        An instance of FunctionAddress.
-    intent : str, optional
-        One among {'in', 'out', 'inout'}.
-    value : TypedAstNode
-        Variable value.
-    static : bool
-        True for a static declaration of an array.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
-    >>> x = Variable(PythonNativeFloat(), 'x')
-    >>> y = Variable(PythonNativeFloat(), 'y')
-    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
-    """
-    __slots__ = ('_variable','_intent','_value','_static')
-    _attribute_nodes = ('_variable', '_value')
-
-    def __init__(
-        self,
-        variable,
-        intent=None,
-        value=None,
-        static=False,
-        ):
-
-        if not isinstance(variable, FunctionAddress):
-            raise TypeError(f'variable must be of type FunctionAddress, given {variable}')
-
-        if intent:
-            if not intent in ['in', 'out', 'inout']:
-                raise ValueError("intent must be one among {'in', 'out', 'inout'}")
-
-        if not isinstance(static, bool):
-            raise TypeError('Expecting a boolean for static attribute')
-
-        self._variable  = variable
-        self._intent    = intent
-        self._value     = value
-        self._static    = static
-        super().__init__()
-
-    @property
-    def results(self):
-        return self._variable.results
-
-    @property
-    def arguments(self):
-        return self._variable.arguments
-
-    @property
-    def name(self):
-        return self._variable.name
-
-    @property
-    def variable(self):
-        return self._variable
-
-    @property
-    def intent(self):
-        return self._intent
-
-    @property
-    def value(self):
-        return self._value
-
-    @property
-    def static(self):
-        return self._static
 
 # ARA : issue-999 add is_external for external function exported through header files
 class Declare(PyccelAstNode):

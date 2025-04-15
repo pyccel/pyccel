@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
--   #1787 : Ensure STC v5.0 is installed with Pyccel.
+-   #1787 : Ensure STC v5.0 (`ef322ae`) is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
 -   #1694 : Add Python support for list method `extend()`.
 -   #1700 : Add Python support for list method `sort()`.
@@ -29,10 +29,14 @@ All notable changes to this project will be documented in this file.
 -   #1875 : Add C and Fortran support for the `len()` function for the `set` container.
 -   #1908 : Add C and Fortran support for the `len()` function for the `dict` container.
 -   #1665 : Add C and Fortran support for returning lists from functions.
+-   #1663 : Add C and Fortran support for lists as arguments.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C and Fortran support for list method `pop()`.
--   #1663 : Add C support for sets as arguments.
+-   #1695 : Add C and Fortran support for list method `reverse()`.
+-   #2256 : Add C and Fortran support for list method `clear()`.
+-   #2259 : Add C and Fortran support for list method `insert()`.
+-   #1663 : Add C and Fortran support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
 -   #1893 : Add support for set initialisation with `set()`.
@@ -46,7 +50,8 @@ All notable changes to this project will be documented in this file.
 -   #1754 : Add support for set method `update()`.
 -   #1744 : Add support for set method `intersection()`.
 -   #1745 : Add support for set method `intersection_update()`.
--   #2059 : Add C support for returning dictionaries from functions.
+-   #1745 : Add support for set method `isdisjoint()`.
+-   #2059 : Add C and Fortran support for returning dictionaries from functions.
 -   #2164 : Add support for dict indexing.
 -   #1880 : Add support for dict method `clear()`.
 -   #1884 : Add support for dict method `items()`.
@@ -69,6 +74,12 @@ All notable changes to this project will be documented in this file.
 -   #983 : Add support for built-in function `round`.
 -   Add support for `type` as a type annotation.
 -   #2182 : Add support for `isinstance`.
+-   #2183 : Add compile time analysis of if block conditions.
+-   #2139 : Add support for `__getitem__`
+-   #337 : Add support for returning tuples from functions.
+-   #2194 : Add support for strings as arguments.
+-   #2192 : Add support for the floor division assignment operator.
+-   #2279 : Allow scalar literals (including Type hints) and recognised modules to be deduced from a function's context.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
@@ -113,10 +124,35 @@ All notable changes to this project will be documented in this file.
 -   #2149 : Fix multi-line expressions in `if` conditions.
 -   #2181 : Allow saving an array result of a function to a slice but raise a warning about suboptimal performance.
 -   #2190 : Fix missing error for list pointer assignment.
+-   #2198 : Fix saving an empty string in Fortran.
+-   #2195 : Fix string comparisons.
+-   Fixed returning strings from functions.
+-   #2197 : Allow strings as dictionary keys in C.
+-   #2104 : Add support for Pythonic swapping and raise errors for expressions which are too complex.
 -   Lifted the restriction on ndarrays limiting them to rank<15.
+-   #2175 : Fix the shape of multi-level containers.
+-   Catch all internal errors arising in the syntactic, semantic, printing or code generation stages.
+-   #2206 : Fix returning an array of unknown literal size.
+-   #2112 : Improve floor division.
+-   #2220 : Fix premature `stc/cspan` import.
+-   #2214 : Fix returning a local variable from an inline function.
+-   #1321 : Fix use of tuples returned from functions in a non-assign statement.
+-   #2229 : Fix annotation of variables that are returned in a function whose result type is annotated.
+-   #2238 : Fix incorrect memory handling for temporary variable.
+-   #2239 : Fix missing library directory for Python shared library.
+-   #1410 : Fix conditional statement not working inside of a list comprehension.
+-   #1297 : Fix iteration over an `enumerate`, `map` or `zip` in a list comprehension.
+-   #2098 : Fix using multiple list comprehensions.
+-   #1948 : Fix list comprehension does not work in C.
+-   #2245 : Fix internal error when an inhomogeneous tuple appears as an indexed element.
+-   #2258 : Fix missing errors for bad pointer handling in the case of containers with mutable elements.
+-   #2274 : Do not pass include flags to linker (they are useless).
+-   #2274 : Always use the C compiler to build the C wrapper for NumPy arrays (fixes Intel failures).
 
 ### Changed
 
+-   #2282 : Change the order of the function arguments (out arguments are now first).
+-   #2008 : Remove dependency on `astunparse` package.
 -   #1920 : Add a maximum version for NumPy.
 -   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
@@ -125,6 +161,9 @@ All notable changes to this project will be documented in this file.
 -   #1941 : Rename "target" in `AsName` to `local_alias` to better illustrate its use in the local context.
 -   #1961 : Use STC's `cspan` to describe `np.ndarray` in C. This results in a large speed-up for pathological cases.
 -   #2187 : Removed use of pickle.
+-   #2234 : Print all constant C variables with `const` specifier.
+-   #2249 : Improve installation docs and recommend virtual environment.
+-   #2242 : Change format of compiler info files.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -153,9 +192,13 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Change the order of the constructor arguments of `FunctionDef`.
 -   \[INTERNALS\] Use `_extract_X_FunctionDefResult` methods in Fortran-to-C wrapper.
 -   \[INTERNALS\] Rename `BindCVariable`->`BindCModuleVariable`.
+-   \[INTERNALS\] Save a shape whose length is limited to the container length.
+-   \[INTERNALS\] Restrict use of `FunctionDefResult` to one instance per function.
+-   \[INTERNALS\] Use `_extract_X_FunctionDefArgument` methods in Fortran-to-C wrapper.
 
 ### Deprecated
 
+-   #2008 : Remove support for Python 3.8.
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
@@ -168,6 +211,9 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
 -   \[INTERNALS\] Remove unused classes `SymbolicAssign` and `SymbolicPrint`.
 -   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefResult` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
+-   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefArgument` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
+-   \[INTERNALS\] Remove unused class `ast.core.FuncAddressDeclare`.
+-   \[INTERNALS\] Remove unnecessary function `ast.utilities.flatten_tuple_var` (replaced by calls to `Scope.collect_all_tuple_elements`).
 
 ## \[1.12.1\] - 2024-10-01
 

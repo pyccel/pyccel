@@ -350,12 +350,12 @@ def test_set_copy_from_arg1(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_set_copy_from_arg2(stc_language):
+def test_set_copy_from_arg2(language):
     def copy_from_arg2(a : 'set[float]'):
         b = set(a)
         return b
     a = {2.5, 1.4, 9.2}
-    epyc_copy_from_arg = epyccel(copy_from_arg2, language = stc_language)
+    epyc_copy_from_arg = epyccel(copy_from_arg2, language = language)
     pyccel_result = epyc_copy_from_arg(a)
     python_result = copy_from_arg2(a)
     assert isinstance(python_result, type(pyccel_result))
@@ -703,14 +703,14 @@ def test_set_iter_prod(language):
     assert python_result == pyccel_result
     assert isinstance(python_result, type(pyccel_result))
 
-def test_set_const_arg(stc_language):
+def test_set_const_arg(language):
     @template('T', ['int', 'float', 'complex'])
     def set_arg(arg : 'const set[T]', my_sum : 'T'):
         for ai in arg:
             my_sum += ai
         return my_sum
 
-    epyccel_func = epyccel(set_arg, language = stc_language)
+    epyccel_func = epyccel(set_arg, language = language)
     int_arg = {1,2,3,4,5,6,7}
     float_arg = {1.5, 2.5, 3.5, 4.5, 6.7}
     complex_arg = {1+0j,4j,2.5+2j}
@@ -744,3 +744,27 @@ def test_set_return(language):
     assert python_result == pyccel_result
     assert isinstance(python_result, type(pyccel_result))
     assert isinstance(python_result.pop(), type(pyccel_result.pop()))
+
+def test_set_min_max(language):
+    def set_min_max():
+        a_int = {1,2,3,4,5}
+        a_float = {1.1,2.2,3.3,4.4,5.5}
+        return min(a_int), min(a_float), max(a_int), max(a_float)
+
+    epyccel_func = epyccel(set_min_max, language = language)
+    pyccel_result = epyccel_func()
+    python_result = set_min_max()
+    assert python_result == pyccel_result
+    assert isinstance(python_result, type(pyccel_result))
+
+def test_set_is_disjoint(language):
+    def set_is_disjoint(a : set[int], b : set[int]):
+        return a.isdisjoint(b)
+
+    epyccel_func = epyccel(set_is_disjoint, language = language)
+    example_set1 = {1,2,3,4}
+    example_set2 = {5,6,7,8}
+    example_set3 = {7,8,2}
+    assert set_is_disjoint(example_set1, example_set2) == epyccel_func(example_set1, example_set2)
+    assert set_is_disjoint(example_set1, example_set3) == epyccel_func(example_set1, example_set3)
+    assert set_is_disjoint(example_set3, example_set2) == epyccel_func(example_set3, example_set2)
