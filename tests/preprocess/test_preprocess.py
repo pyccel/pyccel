@@ -6,6 +6,7 @@ import pytest
 
 from pyccel.parser.parser import Parser
 from pyccel.errors.errors import Errors
+from pyccel.utilities.extensions import Extensions
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
@@ -15,6 +16,8 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 
 @pytest.mark.parametrize("f", files)
 def test_preprocess(f):
+    extensions = Extensions()
+    extensions.set_options(accelerators=['openmp'])
     pyccel = Parser(f)
     pyccel.parse()
     print(pyccel.fst)
