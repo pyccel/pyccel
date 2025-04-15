@@ -215,7 +215,7 @@ def epyccel_seq(function_class_or_module, *,
 
     Parameters
     ----------
-    function_class_or_module : function | module | str
+    function_class_or_module : function | class | module | str
         Python function or module to be accelerated.
         If a string is passed then it is assumed to be the code from a module which
         should be accelerated. The module must be capable of running as a standalone
@@ -364,7 +364,7 @@ def epyccel_seq(function_class_or_module, *,
             if not isinstance(loader, ExtensionFileLoader):
                 raise ImportError('Could not load shared library')
 
-        # If Python object was function, extract it from module
+        # If Python object was a function or a class, extract it from module
         if isinstance(function_class_or_module, (FunctionType, type)):
             func = getattr(package, function_class_or_module.__name__)
         else:
@@ -376,7 +376,7 @@ def epyccel_seq(function_class_or_module, *,
     return package, func
 
 #==============================================================================
-def epyccel( python_function_or_module, **kwargs ):
+def epyccel( python_function_class_or_module, **kwargs ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
@@ -386,7 +386,7 @@ def epyccel( python_function_or_module, **kwargs ):
 
     Parameters
     ----------
-    python_function_or_module : function | module | str
+    python_function_class_or_module : function | class | module | str
         Python function or module to be accelerated.
         If a string is passed then it is assumed to be the code from a module which
         should be accelerated..
@@ -411,7 +411,7 @@ def epyccel( python_function_or_module, **kwargs ):
     >>> one_f = epyccel(one, language='fortran')
     >>> one_c = epyccel(one, language='c')
     """
-    assert isinstance( python_function_or_module, (FunctionType, type, ModuleType, str) )
+    assert isinstance( python_function_class_or_module, (FunctionType, type, ModuleType, str) )
 
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
@@ -441,10 +441,10 @@ def epyccel( python_function_or_module, **kwargs ):
         # Master process calls epyccel
         if comm.rank == root:
             try:
-                mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+                mod, fun = epyccel_seq( python_function_class_or_module, **kwargs )
                 mod_path = os.path.abspath(mod.__file__)
                 mod_name = mod.__name__
-                fun_name = python_function_or_module.__name__ if fun else None
+                fun_name = python_function_class_or_module.__name__ if fun else None
                 success  = True
             # error handling carried out after broadcast to prevent deadlocks
             except PyccelError as e:
@@ -487,7 +487,7 @@ def epyccel( python_function_or_module, **kwargs ):
     # Serial version
     else:
         try:
-            mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+            mod, fun = epyccel_seq( python_function_class_or_module, **kwargs )
         except PyccelError as e:
             raise type(e)(str(e)) from None
 
