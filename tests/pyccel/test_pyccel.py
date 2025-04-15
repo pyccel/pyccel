@@ -985,9 +985,9 @@ def get_lang_exit_value(abs_path, language, cwd=None):
     return p.returncode
 
 @pytest.mark.parametrize( "test_file", ["scripts/asserts/valid_assert.py",
-                                        "scripts/asserts/unvalid_assert1.py",
-                                        "scripts/asserts/unvalid_assert2.py",
-                                        "scripts/asserts/unvalid_assert3.py",
+                                        "scripts/asserts/invalid_assert1.py",
+                                        "scripts/asserts/invalid_assert2.py",
+                                        "scripts/asserts/invalid_assert3.py",
                                         ] )
 
 def test_assert(language, test_file):
