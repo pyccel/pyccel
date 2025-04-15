@@ -27,11 +27,15 @@ class Parser(object):
     filename : str
         The name of the file being translated.
 
+    context_dict : dict, optional
+        A dictionary containing any variables that are available in the calling context.
+        This can allow certain constants to be defined outside of the function passed to epyccel.
+
     **kwargs : dict
         Any keyword arguments for BasicParser.
     """
 
-    def __init__(self, filename, **kwargs):
+    def __init__(self, filename, context_dict = None, **kwargs):
 
         self._filename = filename
         self._kwargs   = kwargs
@@ -47,6 +51,8 @@ class Parser(object):
         self._syntax_parser   = None
         self._semantic_parser = None
         self._compile_obj     = None
+
+        self._context_dict = context_dict
 
         self._input_folder = os.path.dirname(filename)
 
@@ -160,6 +166,22 @@ class Parser(object):
         return parser.ast
 
     def annotate(self, **settings):
+        """
+        Annotate the AST collected from the syntactic stage.
+
+        Use the semantic parser to annotate the AST collected from
+        the syntactic stage.
+
+        Parameters
+        ----------
+        **settings : dict
+            Additional keyword arguments for BasicParser.
+
+        Returns
+        -------
+        SemanticParser
+            The semantic parser that was used to annotate the AST.
+        """
 
         # If the semantic parser already exists, do nothing
         if self._semantic_parser:
@@ -171,8 +193,9 @@ class Parser(object):
 
         # Create a new semantic parser and store it in object
         parser = SemanticParser(self._syntax_parser,
-                                d_parsers=self.d_parsers,
-                                parents=self.parents,
+                                d_parsers = self.d_parsers,
+                                parents = self.parents,
+                                context_dict = self._context_dict,
                                 **settings)
         self._semantic_parser = parser
 
