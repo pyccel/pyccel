@@ -5,24 +5,24 @@ OmpStatement:
 OmpDirective:
     name=/parallel\s+for\s+simd/ _tx_clauses*=ParallelForSimdClauses
     | name=/parallel\s+for/ _tx_clauses*=ParallelForClauses
-    | name=/parallel\s+sections/ _tx_clauses*=ParallelSectionsClauses require_end_directive=TRUE
-    | name=/for\s+simd/ _tx_clauses*=ForSimdClauses require_end_directive=TRUE
-    | name='parallel' _tx_clauses*=ParallelClauses _invalid_clauses*=AllOmpClauses require_end_directive=TRUE
-    | name='for' _tx_clauses*=ForClauses require_end_directive=TRUE
-    | name='sections' _tx_clauses*=SectionsClauses require_end_directive=TRUE
-    | name='section' require_end_directive=TRUE
-    | name='single' _tx_clauses*=SingleClauses require_end_directive=TRUE
+    | name=/parallel\s+sections/ _tx_clauses*=ParallelSectionsClauses is_construct=TRUE
+    | name=/for\s+simd/ _tx_clauses*=ForSimdClauses is_construct=TRUE
+    | name='parallel' _tx_clauses*=ParallelClauses _invalid_clauses*=AllOmpClauses is_construct=TRUE
+    | name='for' _tx_clauses*=ForClauses is_construct=TRUE
+    | name='sections' _tx_clauses*=SectionsClauses is_construct=TRUE
+    | name='section' is_construct=TRUE
+    | name='single' _tx_clauses*=SingleClauses is_construct=TRUE
     | name='simd' _tx_clauses*=SimdClauses
     | name='taskloop' _tx_clauses*=TaskloopClauses
     | name='taskyield'
     | name='taskwait'
     | name='taskgroup'
-    | name='task' _tx_clauses*=TaskClauses require_end_directive=TRUE
-    | name='target' _tx_clauses*=TargetClauses require_end_directive=TRUE
-    | name='teams' _tx_clauses*=TeamsClauses require_end_directive=TRUE
+    | name='task' _tx_clauses*=TaskClauses is_construct=TRUE
+    | name='target' _tx_clauses*=TargetClauses is_construct=TRUE
+    | name='teams' _tx_clauses*=TeamsClauses is_construct=TRUE
     | name='distribute' _tx_clauses*=DistributeClauses
-    | name='master' require_end_directive=TRUE
-    | name='critical' require_end_directive=TRUE
+    | name='master' is_construct=TRUE
+    | name='critical' is_construct=TRUE
     | name='barrier'
     | name='ordered' _tx_clauses*=OrderedClauses
     | name='cancel' _tx_clauses*=CancelClauses

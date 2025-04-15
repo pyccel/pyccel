@@ -48,25 +48,28 @@ class SyntaxParser:
             'OMP_VERSION': lambda _: 4.5,
         })
         self._omp_metamodel.register_obj_processors(obj_processors)
-        self._directives_stack = []
-        self._structured_blocks_stack = []
         self._skip_stmts_count = 0
 
-    @property
-    def directives_stack(self):
-        """Returns a list of directives that waits for an end directive"""
-        return self._directives_stack
-
-
-    def post_parse_checks(self):
-        """Performs every post syntactic parsing checks"""
-        if any(pd.require_end_directive for pd in self._directives_stack):
-            errors.report(
-                "directives need closing",
-                symbol=self._directives_stack,
-                severity="fatal",
-            )
     def _treat_comment_line(self, line, expr):
+        """
+        Parse a comment line.
+
+        Parse a comment which fits in a single line if the comment
+        begins with `#$omp` using textx.
+
+        Parameters
+        ----------
+        line : str
+            The comment line.
+        expr : ast.Ast
+            The comment object in the code. This is useful for raising
+            errors.
+
+        Returns
+        -------
+        pyccel.ast.basic.PyccelAstNode
+            The treated object as an Openmp node.
+        """
         from textx.exceptions import TextXError
         try:
             model = self._omp_metamodel.model_from_str(line)
@@ -80,24 +83,21 @@ class SyntaxParser:
             return None
 
     def _visit_CommentLine(self, expr):
-        from textx.exceptions import TextXError
-        try:
-            model = self._omp_metamodel.model_from_str(expr.s)
-            model.raw = expr.s
-            directive = OmpDirective.from_tx_directive(model.statement)
-            directive.set_current_ast(expr)
-            return self._visit(directive)
+        """
+        Parse a comment line.
 
-        except TextXError as e:
-            errors.report(e.message, severity="fatal", symbol=expr)
-            return None
+        Parameters
+        ----------
+        expr : ast.Ast
+        """
+        return self._treat_comment_line(expr.s, expr)
 
     def _visit_OmpDirective(self, stmt):
         if hasattr(self, f"_visit_{stmt.name.replace(' ', '_')}_directive"):
             return getattr(self, f"_visit_{stmt.name.replace(' ', '_')}_directive")(stmt)
         clauses = [self._visit(clause) for clause in stmt.clauses]
         directive = OmpDirective.from_directive(stmt, clauses=clauses)
-        if stmt.require_end_directive:
+        if stmt.is_construct:
             body = []
             end = None
             container = None
@@ -356,7 +356,7 @@ class CCodePrinter:
         return f"#pragma omp {expr.raw}\n"
 
     def _print_OmpEndDirective(self, expr):
-        if expr.parent.start.require_end_directive:
+        if expr.parent.start.is_construct:
             return ""
         else:
             return f"#pragma omp {expr.raw}\n"

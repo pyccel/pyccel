@@ -162,19 +162,19 @@ class OmpDirective(OmpAnnotatedComment):
     name: str
           The name of the directive
 
-    require_end_directive bool
+    is_construct bool
           True if the directive is syntactically incorrect without a corresponding end directive
 
     clauses: OmpClause
               Clauses passed to the directive
     """
-    __slots__ = ("_name", "_clauses", "_require_end_directive", "_tx_clauses", "_invalid_clauses")
+    __slots__ = ("_name", "_clauses", "_is_construct", "_tx_clauses", "_invalid_clauses")
     _attribute_nodes = ("_clauses",)
 
     def __init__(self, **kwargs):
 
         self._name = kwargs.pop("name")
-        self._require_end_directive = kwargs.pop("require_end_directive", False)
+        self._is_construct = kwargs.pop("is_construct", False)
         self._clauses = kwargs.pop("clauses", [])
         super().__init__(**kwargs)
 
@@ -189,9 +189,9 @@ class OmpDirective(OmpAnnotatedComment):
         return self._clauses
 
     @property
-    def require_end_directive(self):
-        """Returns True if the Directive requires an end directive"""
-        return self._require_end_directive
+    def is_construct(self):
+        """Returns True if the Directive is a construct"""
+        return self._is_construct
 
     @property
     def raw(self):
@@ -219,7 +219,7 @@ class OmpDirective(OmpAnnotatedComment):
         coresponding_directive = kwargs.pop('coresponding_directive', None)
         d_attrs = directive.get_fixed_state()
         return cls(clauses=clauses,
-                   require_end_directive=directive.require_end_directive,
+                   is_construct=directive.is_construct,
                    name=directive.name,
                    parent=parent,
                    coresponding_directive=coresponding_directive,
@@ -228,9 +228,9 @@ class OmpDirective(OmpAnnotatedComment):
     @classmethod
     def from_tx_directive(cls, directive, fst=None):
         """Takes a tx object that represent a directive and returns a directive"""
-        require_end_directive = directive.require_end_directive
-        if require_end_directive is None:
-            require_end_directive = False
+        is_construct = directive.is_construct
+        if is_construct is None:
+            is_construct = False
 
         # Imposed by the grammar: clean up the tx directive object's clauses.
         tx_clauses = getattr(directive, '_tx_clauses', [])
@@ -268,7 +268,7 @@ class OmpDirective(OmpAnnotatedComment):
                                           raw=None)
         else:
             return cls(clauses=clauses,
-                       require_end_directive=require_end_directive,
+                       is_construct=is_construct,
                        name=directive.name,
                        parent=directive.parent,
                        VERSION=VERSION,
