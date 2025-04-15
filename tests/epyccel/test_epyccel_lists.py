@@ -59,6 +59,17 @@ def test_pop_list_of_lists(stc_language) :
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
+def test_pop_list_of_lists_var(stc_language) :
+    def pop_last_element():
+        a = [[4.6, 3.3], [4.2, 9.1], [2.3, 6.8]]
+        b = a.pop()
+        return b
+    epyc_last_element = epyccel(pop_last_element, language = stc_language)
+    pyccel_result = epyc_last_element()
+    python_result = pop_last_element()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
 def test_pop_list_of_tuples(limited_language) :
     def pop_last_element():
         a = [(4.6, 3.3), (4.2, 9.1), (2.3, 6.8)]
