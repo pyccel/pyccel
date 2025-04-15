@@ -3942,14 +3942,15 @@ class SemanticParser(BasicParser):
                         target_r_idx = funcdef.result_pointer_map[funcdef.results.var]
                         for ti in target_r_idx:
                             self._indicate_pointer_target(l, r.args[ti].value, expr)
+                        new_expr = AliasAssign(l, r)
                     else:
                         self._indicate_pointer_target(l, r, expr)
 
-                    if not isinstance(r.class_type, NumpyNDArrayType) and not isinstance(r, Variable):
-                        mem_var = get_managed_memory_object(l)
-                        new_expr = UnpackManagedMemory(l, r, mem_var)
-                    else:
-                        new_expr = AliasAssign(l, r)
+                        if not isinstance(r.class_type, NumpyNDArrayType) and not isinstance(r, Variable):
+                            mem_var = get_managed_memory_object(l)
+                            new_expr = UnpackManagedMemory(l, r, mem_var)
+                        else:
+                            new_expr = AliasAssign(l, r)
 
                 elif isinstance(l.class_type, SymbolicType):
                     errors.report(PYCCEL_RESTRICTION_TODO,
