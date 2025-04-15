@@ -2,7 +2,6 @@
 import subprocess
 import json
 import os
-import pathlib
 import platform
 import shutil
 import sys
@@ -10,6 +9,7 @@ import re
 import random
 import pytest
 import numpy as np
+from filelock import FileLock
 from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.ast.utilities import python_builtin_libs
 
@@ -1218,7 +1218,6 @@ def test_module_name_containing_conflict(language):
     assert out1 == out2
 
 #------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_stubs(language):
     """
     This tests that a stub file is generated and ensures the stub files are
@@ -1229,13 +1228,15 @@ def test_stubs(language):
     """
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
-    compile_pyccel(path_dir, get_abs_path("scripts/runtest_stub.py"), options = f"--language={language} --output=stub_test")
 
     with open(get_abs_path(f"scripts/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
         expected_pyi = f.read()
 
-    with open(get_abs_path("scripts/stub_test/__pyccel__/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
-        generated_pyi = f.read()
+    wk_dir = get_abs_path("scripts/stub_test")
+    with FileLock(wk_dir+'.lock'):
+        compile_pyccel(path_dir, get_abs_path("scripts/runtest_stub.py"), options = f"--language={language} --output=stub_test")
+        with open(get_abs_path(f"scripts/stub_test/__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
+            generated_pyi = f.read()
+        shutil.rmtree(wk_dir)
 
     assert expected_pyi == generated_pyi
-    pathlib.Path.rmdir(get_abs_path("scripts/stub_test"))
