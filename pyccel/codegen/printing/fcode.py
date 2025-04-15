@@ -1416,7 +1416,7 @@ class FCodePrinter(CodePrinter):
         target = self._print(expr.list_obj)
         type_name = self._print(expr.list_obj.class_type)
         self.add_import(self._build_gFTL_extension_module(expr.list_obj.class_type))
-        idx = self._print(expr.index)
+        idx = self._print(self._apply_cast(NumpyInt64Type(), expr.index))
         obj = self._print(expr.object)
         return f'call {type_name}_insert({target}, {idx}, {obj})\n'
 
