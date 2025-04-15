@@ -114,7 +114,7 @@ def execute_pyccel(fname, *,
         Name of the JSON file to which compiler information is exported. Default is None.
     conda_warnings : str, optional
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
-    context_dict : dict, optional
+    context_dict : dict[str, object], optional
         A dictionary containing any variables that are available in the calling context.
         This can allow certain constants to be defined outside of the function passed to epyccel.
     """
