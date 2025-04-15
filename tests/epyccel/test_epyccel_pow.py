@@ -204,3 +204,15 @@ def test_complicated_abs(language):
     assert isinstance(f(x), type(norm(x)))
     assert isclose(f(y), norm(y), rtol=RTOL, atol=ATOL)
     assert isinstance(f(y), type(norm(y)))
+
+def test_fcomplex_type_conversion(language):
+    def fcomplex(x: complex, y: complex) -> complex:
+        z = (x + y)**0.5
+        return z
+
+    f = epyccel(fcomplex, language=language)
+    x = randint(40) + 1j * randint(40)
+    y = randint(40) + 1j * randint(40)
+
+    assert isclose(f(x,y), fcomplex(x,y), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(x,y), type(fcomplex(x,y)))

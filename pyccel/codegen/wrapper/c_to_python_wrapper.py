@@ -3031,7 +3031,7 @@ class CToPythonWrapper(Wrapper):
 
         return {'c_results': c_results, 'py_result': py_res, 'body': body}
 
-    def _extract_DictType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+    def _extract_DictType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
         """
         Get the code which translates a `Variable` containing a dictionary to a PyObject.
 
@@ -3039,7 +3039,7 @@ class CToPythonWrapper(Wrapper):
 
         Parameters
         ----------
-        orig_var : Variable | IndexedElement
+        wrapped_var : Variable | IndexedElement
             An object representing the variable or an element of the variable from the
             FunctionDefResult being wrapped.
         is_bind_c : bool
@@ -3052,27 +3052,49 @@ class CToPythonWrapper(Wrapper):
         dict
             A dictionary describing the objects necessary to collect the result.
         """
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
         name = getattr(orig_var, 'name', 'tmp')
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         if is_bind_c:
-            raise NotImplementedError("Can't return a dict from Fortran")
+            result = wrapped_var.new_var
+            key_ptr_var = funcdef.scope.collect_tuple_element(result[0])
+            val_ptr_var = funcdef.scope.collect_tuple_element(result[1])
+            shape_var = funcdef.scope.collect_tuple_element(result[2])
+            key_c_res = Variable(CStackArray(orig_var.class_type.key_type),
+                             self.scope.get_new_name(key_ptr_var.name))
+            val_c_res = Variable(CStackArray(orig_var.class_type.value_type),
+                             self.scope.get_new_name(val_ptr_var.name))
+            loop_size = shape_var.clone(self.scope.get_new_name(shape_var.name), is_argument = False)
+            c_results = [ObjectAddress(key_c_res), ObjectAddress(val_c_res), loop_size]
+            iterable = PythonRange(shape_var)
+            self.scope.insert_variable(key_c_res)
+            self.scope.insert_variable(val_c_res)
+            self.scope.insert_variable(shape_var)
+            idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+            self.scope.insert_variable(idx)
+            iterable.set_loop_counter(idx)
+            key_elem = IndexedElement(key_c_res, idx)
+            val_elem = IndexedElement(val_c_res, idx)
         else:
             c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)
             c_results = [c_res]
             iterable = DictItems(c_res)
+            self.scope.insert_variable(c_res)
+            iterable.set_loop_counter(Variable(PythonNativeInt(), self.scope.get_new_name()))
+            key_elem, val_elem = iterable.get_python_iterable_item()
 
-        iterable.set_loop_counter(Variable(PythonNativeInt(), self.scope.get_new_name()))
-        self.scope.insert_variable(c_res)
 
         for_scope = self.scope.create_new_loop_scope()
         self.scope = for_scope
-        key_elem, val_elem = iterable.get_python_iterable_item()
         key_extraction = self._extract_FunctionDefResult(key_elem, is_bind_c, funcdef)
         value_extraction = self._extract_FunctionDefResult(val_elem, is_bind_c, funcdef)
         elem_set = PyDict_SetItem(py_res, key_extraction['py_result'], value_extraction['py_result'])
         for_body = [*key_extraction['body'], *value_extraction['body'],
                     If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
                                          [Return(self._error_exit_code)]))]
+        if is_bind_c:
+            for_body = [Assign(key_extraction['c_results'][0], key_elem),
+                        Assign(value_extraction['c_results'][0], val_elem)] + for_body
         self.exit_scope()
         for_loop = For((key_extraction['c_results'][0], value_extraction['c_results'][0]),
                         iterable, for_body, for_scope)

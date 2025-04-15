@@ -17,6 +17,7 @@ from pyccel.ast.bind_c import BindCVariable, BindCArrayType, C_NULL_CHAR
 from pyccel.ast.builtins import VariableIterator, PythonRange
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.builtin_methods.set_methods import SetAdd
+from pyccel.ast.builtin_methods.dict_methods import DictItems
 from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
@@ -887,6 +888,89 @@ class FortranToCWrapper(Wrapper):
         # treated as 0-indexed here
         for_body = [Assign(IndexedElement(f_array, PyccelAdd(idx, LiteralInteger(1))), elem)]
         body.append(For((elem,), iterator, for_body, scope = for_scope))
+        return result
+
+    def _extract_DictType_FunctionDefResult(self, orig_var, orig_func_scope):
+        name = orig_var.name
+        scope = self.scope
+        scope.insert_symbol(name)
+        memory_handling = 'alias' if isinstance(orig_var, DottedVariable) else orig_var.memory_handling
+
+        # Allocatable is not returned so it must appear in local scope
+        local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
+                            memory_handling = memory_handling)
+        scope.insert_variable(local_var, name)
+
+        # Create the C-compatible data pointer
+        key_bind_var = Variable(BindCPointer(),
+                            scope.get_new_name(f'bound_{name}_key'),
+                            is_const=False, memory_handling='alias')
+        val_bind_var = Variable(BindCPointer(),
+                            scope.get_new_name(f'bound_{name}_key'),
+                            is_const=False, memory_handling='alias')
+        shape_var = Variable(NumpyInt32Type(), scope.get_new_name(f'{name}_len'))
+        scope.insert_variable(shape_var)
+
+        # Check how to unpack elements
+        class_type = orig_var.class_type
+        key_var = Variable(class_type.key_type, scope.get_new_name(name+'_key'))
+        val_var = Variable(class_type.value_type, scope.get_new_name(name+'_val'))
+        key_wrap = self._extract_FunctionDefResult(key_var, orig_func_scope)
+        val_wrap = self._extract_FunctionDefResult(val_var, orig_func_scope)
+
+        # Get storage arrays
+        key_c_class_type = key_wrap['c_result'].new_var.class_type
+        key_ptr_var = Variable(NumpyNDArrayType(key_c_class_type, 1, None), scope.get_new_name(name+'_key_ptr'),
+                            memory_handling='alias')
+        key_bind_var = Variable(BindCPointer(),
+                            scope.get_new_name(f'bound_{name}_key'),
+                            is_const=False, memory_handling='alias')
+        scope.insert_variable(key_ptr_var)
+        scope.insert_variable(key_bind_var)
+
+        val_c_class_type = val_wrap['c_result'].new_var.class_type
+        val_ptr_var = Variable(NumpyNDArrayType(val_c_class_type, 1, None), scope.get_new_name(name+'_val_ptr'),
+                            memory_handling='alias')
+        val_bind_var = Variable(BindCPointer(),
+                            scope.get_new_name(f'bound_{name}_val'),
+                            is_const=False, memory_handling='alias')
+        scope.insert_variable(val_ptr_var)
+        scope.insert_variable(val_bind_var)
+
+        # Define the additional steps necessary to define and fill ptr_var
+        scope.insert_variable(key_wrap['c_result'])
+        scope.insert_variable(val_wrap['c_result'])
+        key_size = PyccelMul(BindCSizeOf(key_wrap['c_result']), shape_var)
+        val_size = PyccelMul(BindCSizeOf(val_wrap['c_result']), shape_var)
+        body = [Assign(shape_var, local_var.shape[0]),
+                Assign(key_bind_var, c_malloc(key_size)),
+                Assign(val_bind_var, c_malloc(val_size)),
+                C_F_Pointer(key_bind_var, key_ptr_var, (shape_var,)),
+                C_F_Pointer(val_bind_var, val_ptr_var, (shape_var,))]
+
+        # Start to construct the result
+        result = {'f_result' : local_var,
+                  'body' : body}
+
+        # Construct the loop which builds the result
+        for_scope = scope.create_new_loop_scope()
+        iterator = DictItems(local_var)
+        idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+        self.scope.insert_variable(idx)
+        iterator.set_loop_counter(idx)
+
+        for_body = [*key_wrap['body'], Assign(IndexedElement(key_ptr_var, PyccelAdd(idx, LiteralInteger(1))), key_wrap['c_result']),
+                    *val_wrap['body'], Assign(IndexedElement(val_ptr_var, PyccelAdd(idx, LiteralInteger(1))), val_wrap['c_result']),
+                    Assign(idx, PyccelAdd(idx, LiteralInteger(1)))]
+        fill_for = For((key_var, val_var), iterator, for_body, scope = for_scope)
+        body.extend([Assign(idx, LiteralInteger(0)), fill_for])
+
+        result_var = Variable(InhomogeneousTupleType(BindCPointer(), BindCPointer(), NumpyInt32Type()),
+                            scope.get_new_name(), shape = (3,))
+        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(0)), key_bind_var)
+        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(1)), val_bind_var)
+        scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(2)), shape_var)
+        result['c_result'] = BindCVariable(result_var, orig_var)
         return result
 
     def _extract_StringType_FunctionDefResult(self, orig_var, orig_func_scope):

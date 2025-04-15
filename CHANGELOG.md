@@ -51,7 +51,7 @@ All notable changes to this project will be documented in this file.
 -   #1744 : Add support for set method `intersection()`.
 -   #1745 : Add support for set method `intersection_update()`.
 -   #1745 : Add support for set method `isdisjoint()`.
--   #2059 : Add C support for returning dictionaries from functions.
+-   #2059 : Add C and Fortran support for returning dictionaries from functions.
 -   #2164 : Add support for dict indexing.
 -   #1880 : Add support for dict method `clear()`.
 -   #1884 : Add support for dict method `items()`.
@@ -146,9 +146,12 @@ All notable changes to this project will be documented in this file.
 -   #1948 : Fix list comprehension does not work in C.
 -   #2245 : Fix internal error when an inhomogeneous tuple appears as an indexed element.
 -   #2258 : Fix missing errors for bad pointer handling in the case of containers with mutable elements.
+-   #2274 : Do not pass include flags to linker (they are useless).
+-   #2274 : Always use the C compiler to build the C wrapper for NumPy arrays (fixes Intel failures).
 
 ### Changed
 
+-   #2282 : Change the order of the function arguments (out arguments are now first).
 -   #2008 : Remove dependency on `astunparse` package.
 -   #1920 : Add a maximum version for NumPy.
 -   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.

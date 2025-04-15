@@ -1416,7 +1416,7 @@ class FCodePrinter(CodePrinter):
         target = self._print(expr.list_obj)
         type_name = self._print(expr.list_obj.class_type)
         self.add_import(self._build_gFTL_extension_module(expr.list_obj.class_type))
-        idx = self._print(expr.index)
+        idx = self._print(self._apply_cast(NumpyInt64Type(), expr.index))
         obj = self._print(expr.object)
         return f'call {type_name}_insert({target}, {idx}, {obj})\n'
 
@@ -2544,6 +2544,7 @@ class FCodePrinter(CodePrinter):
         out_args = [v for v in self.scope.collect_all_tuple_elements(expr.results.var) if v and not v.is_argument]
         args_decs = OrderedDict()
         arguments = expr.arguments
+        class_arg = next((a for a in arguments if a.bound_argument), None)
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
@@ -2586,7 +2587,11 @@ class FCodePrinter(CodePrinter):
         if is_elemental:
             sig = 'elemental {}'.format(sig)
 
-        arg_code  = ', '.join(self._print(i) for i in chain( arguments, out_args ))
+        if class_arg:
+            arg_iter = chain((class_arg,), out_args, arguments[1:])
+        else:
+            arg_iter = chain(out_args, arguments)
+        arg_code  = ', '.join(self._print(i) for i in arg_iter)
 
         arg_decs = ''.join(self._print(i) for i in args_decs.values())
 
@@ -3680,22 +3685,7 @@ class FCodePrinter(CodePrinter):
             if is_function:
                 results_strs = []
             else:
-                # If func body is unknown then we may not know result names
-                use_names = (len(func.body.body) != 0)
-                if use_names:
-                    results_strs = [f'{self._print(n)} = {self._print(r)}'
-                            for n,r in lhs_vars.items()]
-                else:
-                    results_strs = [self._print(r) for r in lhs_vars.values()]
-
-        elif not is_function and len(out_results)!=0:
-            results = [r.clone(name = self.scope.get_new_name()) \
-                        for r in out_results]
-            for var in results:
-                self.scope.insert_variable(var)
-
-            results_strs = [f'{self._print(n)} = {self._print(r)}' \
-                            for n,r in zip(out_results, results)]
+                results_strs = [self._print(r) for r in lhs_vars.values()]
 
         else:
             results_strs = []
@@ -3705,7 +3695,7 @@ class FCodePrinter(CodePrinter):
             code = self._handle_inline_func_call(expr, assign_lhs = results)
         else:
             args_strs = [self._print(a) for a in args if not isinstance(a.value, Nil)]
-            args_code = ', '.join(args_strs+results_strs)
+            args_code = ', '.join(results_strs+args_strs)
             code = f'{f_name}({args_code})'
             if not is_function:
                 code = f'call {code}\n'

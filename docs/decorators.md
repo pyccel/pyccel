@@ -564,26 +564,26 @@ module boo
     integer(i64), intent(out) :: c
     integer(i64), intent(out) :: d
     integer(i64) :: a_0001
+    integer(i64) :: b_0001
+    integer(i64) :: a_0002
     integer(i64) :: b_0002
     integer(i64) :: a_0003
+    integer(i64) :: b_0003
+    integer(i64) :: a_0004
     integer(i64) :: b_0004
-    integer(i64) :: a_0005
-    integer(i64) :: b_0006
-    integer(i64) :: a_0007
-    integer(i64) :: b_0008
 
     a_0001 = 2_i64
-    b_0002 = 4_i64
-    a = a_0001 + b_0002
-    a_0003 = 3_i64
-    b_0004 = 5_i64
-    b = a_0003 + b_0004
-    a_0005 = 6_i64
-    b_0006 = 4_i64
-    c = a_0005 + b_0006
-    a_0007 = 3_i64
-    b_0008 = 5_i64
-    d = a_0007 + b_0008
+    b_0001 = 4_i64
+    a = a_0001 + b_0001
+    a_0002 = 3_i64
+    b_0002 = 5_i64
+    b = a_0002 + b_0002
+    a_0003 = 6_i64
+    b_0003 = 5_i64
+    c = a_0003 + b_0003
+    a_0004 = 3_i64
+    b_0004 = 4_i64
+    d = a_0004 + b_0004
     return
 
   end subroutine f

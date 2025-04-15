@@ -102,6 +102,7 @@ b : dict[int,bool] = {1: False, 4: True}
 c : dict[int,complex] = {}
 ```
 Strings are not yet supported as keys in Fortran.
+Dictionaries can be declared as local variables, or results of functions, but not yet as arguments or class variables.
 
 ## Strings
 
