@@ -1225,7 +1225,9 @@ class PythonCodePrinter(CodePrinter):
         return 'type({})'.format(self._print(expr.arg))
 
     def _print_UnpackManagedMemory(self, expr):
-        return self._print(expr.managed_object)
+        lhs = self._print(expr.out_ptr)
+        rhs = self._print(expr.managed_object)
+        return f'{lhs} = {rhs}\n'
 
     #-----------------Class Printer---------------------------------
 
