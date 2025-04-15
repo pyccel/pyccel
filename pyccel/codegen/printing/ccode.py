@@ -1648,6 +1648,7 @@ class CCodePrinter(CodePrinter):
         if n_results > 1 or isinstance(expr.results.var.class_type, InhomogeneousTupleType):
             ret_type = self.get_c_type(PythonNativeInt())
             if expr.arguments and expr.arguments[0].bound_argument:
+                # Place the first arg_var (the bound class object) first
                 arg_vars = arg_vars[:1] + result_vars + arg_vars[1:]
             else:
                 arg_vars = result_vars + arg_vars
@@ -2309,6 +2310,7 @@ class CCodePrinter(CodePrinter):
                 args.append(arg_val)
 
         if func.arguments and func.arguments[0].bound_argument:
+            # Place the first arg_var (the bound class object) first
             args = args[:1] + self._temporary_args + args[1:]
         else:
             args = self._temporary_args + args
