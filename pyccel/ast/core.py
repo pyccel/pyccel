@@ -374,7 +374,7 @@ class Allocate(PyccelAstNode):
 
         - 'init' refers to direct allocation with predefined data (e.g., `x = [1, 2, 4]`).
         - 'reserve' refers to cases where the container will be appended to.
-        - 'resize' referes to cases where the container is populated via indexed elements.
+        - 'resize' refers to cases where the container is populated via indexed elements.
 
     Notes
     -----

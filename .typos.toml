@@ -2,6 +2,7 @@
 # Don't correct these word (parts)
 ND = "ND"
 arange = "arange"
+iterm = "iterm"
 
 [files]
 extend-exclude = ["pyccel/extensions/*",

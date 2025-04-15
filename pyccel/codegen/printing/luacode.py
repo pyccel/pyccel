@@ -91,7 +91,7 @@ known_functions = {
 #     "": "count_ones",
 #     "": "count_zeros",
 #     "": "leading_zeros",
-#     "": "trainling_zeros",
+#     "": "trailing_zeros",
 #     "": "rotate_left",
 #     "": "rotate_right",
 #     "": "swap_bytes",
