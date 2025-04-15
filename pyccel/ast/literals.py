@@ -238,7 +238,8 @@ class LiteralComplex(Literal):
         Extract the Python value from the input argument.
 
         Extract the Python value from the input argument which can either
-        be a literal or a Python variable.
+        be a literal or a Python variable. The input argument represents
+        either the real or the imaginary part of the complex literal.
 
         Parameters
         ----------
