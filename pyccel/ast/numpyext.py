@@ -610,7 +610,7 @@ def process_dtype(dtype):
 
     Parameters
     ----------
-    dtype : PythonType, PyccelFunctionDef, LiteralString, str
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, VariableTypeAnnotation
         The actual dtype passed to the NumPy function.
 
     Returns
