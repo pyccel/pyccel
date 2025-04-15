@@ -1,4 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import sys
+
 import pytest
 
 from pyccel import epyccel
@@ -162,6 +164,11 @@ def test_bit_and_b_b_i(language, a, b, c):
     assert r1 == r2
     assert type(r1) is type(r2)
 
+@pytest.mark.skipif(
+    sys.version_info >= (3, 16),
+    reason="Bitwise inversion of bools was removed in Python 3.16",
+)
+@pytest.mark.filterwarnings("ignore:.*Bitwise inversion*:DeprecationWarning")
 def test_invert_b(language):
     f1 = bitwise.invert_b
     f2 = epyccel(f1, language=language)
