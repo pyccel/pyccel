@@ -303,33 +303,6 @@ class BasicParser(object):
         else:
             raise TypeError('Expected a symbolic_function')
 
-    def insert_import(self, expr):
-        """."""
-
-        # this method is only used in the syntactic stage
-
-        if not isinstance(expr, Import):
-            raise TypeError('Expecting Import expression')
-        container = self.scope.imports['imports']
-
-        # if source is not specified, imported things are treated as sources
-        if len(expr.target) == 0:
-            if isinstance(expr.source, AsName):
-                name   = expr.source
-                source = expr.source.name
-            else:
-                name   = str(expr.source)
-                source = name
-
-            if not recognised_source(source):
-                container[name] = []
-        else:
-            source = str(expr.source)
-            if not recognised_source(source):
-                if not source in container.keys():
-                    container[source] = []
-                container[source] += expr.target
-
     def create_new_function_scope(self, name, **kwargs):
         """
         Create a new Scope object for a Python function with the given name,

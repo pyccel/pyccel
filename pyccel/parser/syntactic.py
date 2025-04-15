@@ -341,6 +341,40 @@ class SyntaxParser(BasicParser):
                     return new_name
             return self.scope.get_new_name(suggestion, is_temp = True)
 
+    def insert_import(self, expr):
+        """
+        Insert an import into the scope.
+
+        Insert an import into the scope along with the targets that are
+        needed.
+
+        Parameters
+        ----------
+        expr : Import
+            The import to be inserted.
+        """
+
+        assert isinstance(expr, Import)
+        container = self.scope.imports['imports']
+
+        # if source is not specified, imported things are treated as sources
+        if len(expr.target) == 0:
+            if isinstance(expr.source, AsName):
+                name   = expr.source
+                source = expr.source.name
+            else:
+                name   = str(expr.source)
+                source = name
+
+            if not recognised_source(source):
+                container[name] = []
+        else:
+            source = str(expr.source)
+            if not recognised_source(source):
+                if not source in container.keys():
+                    container[source] = []
+                container[source] += expr.target
+
     #====================================================
     #                 _visit functions
     #====================================================
