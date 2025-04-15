@@ -29,6 +29,9 @@ def m(b : int):
 def n(arg : Final[list[int]]) -> None:
     print(arg[0])
 
+def p(a : int | float | complex):
+    return a + 3.0
+
 def high_int_1(function : '(int)(int)', a : int):
     x = function(a)
     return x

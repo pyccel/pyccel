@@ -26,33 +26,45 @@ def h(arg : 'Final[list[int]]') -> None:
     ...
 
 @overload
-def k(a : 'T') -> 'tuple[int, int, int]':
+def k(a : 'int') -> 'tuple[int, int, int]':
     ...
 
 @overload
-def k(a : 'T') -> 'tuple[float, float, float]':
+def k(a : 'float') -> 'tuple[float, float, float]':
     ...
 
 @overload
-def k(a : 'T') -> 'tuple[complex, complex, complex]':
+def k(a : 'complex') -> 'tuple[complex, complex, complex]':
     ...
 
 @overload
-def l(a : 'T') -> 'tuple[int, ...]':
+def l(a : 'int') -> 'tuple[int, ...]':
     ...
 
 @overload
-def l(a : 'T') -> 'tuple[float, ...]':
+def l(a : 'float') -> 'tuple[float, ...]':
     ...
 
 @overload
-def l(a : 'T') -> 'tuple[complex, ...]':
+def l(a : 'complex') -> 'tuple[complex, ...]':
     ...
 
 def m(b : 'int') -> 'int':
     ...
 
 def n(arg : 'Final[list[int]]') -> None:
+    ...
+
+@overload
+def p(a : 'int') -> 'float':
+    ...
+
+@overload
+def p(a : 'float') -> 'float':
+    ...
+
+@overload
+def p(a : 'complex') -> 'complex':
     ...
 
 def high_int_1(function : '(int)(int)', a : 'int') -> 'int':
