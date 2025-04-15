@@ -51,7 +51,8 @@ def test_pop_list_float(language) :
 def test_pop_list_of_lists(stc_language) :
     def pop_last_element():
         a = [[4.6, 3.3], [4.2, 9.1], [2.3, 6.8]]
-        return a.pop()
+        b = a.pop()
+        return a.pop(), b
     epyc_last_element = epyccel(pop_last_element, language = stc_language)
     pyccel_result = epyc_last_element()
     python_result = pop_last_element()
