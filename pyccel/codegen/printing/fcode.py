@@ -3761,13 +3761,21 @@ class FCodePrinter(CodePrinter):
 #=======================================================================================
 
     def _wrap_fortran(self, lines):
-        """Wrap long Fortran lines
+        """
+        Wrap long Fortran lines
 
-           Argument:
-             lines  --  a list of lines (ending with a \\n character)
+        A comment line is split at white space. Code lines are split with a more
+        complex rule to give nice results.
 
-           A comment line is split at white space. Code lines are split with a more
-           complex rule to give nice results.
+        Parameters
+        ----------
+        lines : list[str]
+            A list of lines (ending with a \\n character).
+
+        Returns
+        -------
+        list[str]
+            A list of the new lines.
         """
         # routine to find split point in a code line
         my_alnum = set("_+-." + string.digits + string.ascii_letters)
