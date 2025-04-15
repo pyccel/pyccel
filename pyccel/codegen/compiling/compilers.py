@@ -19,7 +19,7 @@ from pyccel.errors.errors import Errors
 errors = Errors()
 
 if platform.system() == 'Darwin':
-    # Collect version using mac tools to avoid unexpected results on Big Sure
+    # Collect version using mac tools to avoid unexpected results on Big Sur
     # https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
     with subprocess.Popen([shutil.which("sw_vers"), "-productVersion"], stdout=subprocess.PIPE) as p:
         result, err = p.communicate()

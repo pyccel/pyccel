@@ -1,3 +1,7 @@
+[default]
+locale = 'en'
+extend-ignore-re = ["Big Sur"]
+
 [default.extend-words]
 # Don't correct these word (parts)
 ND = "ND"
