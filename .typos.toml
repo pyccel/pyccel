@@ -10,5 +10,7 @@ iterm = "iterm"
 
 [files]
 extend-exclude = ["pyccel/extensions/*",
+                  "*.pyh",
+                  "*.pyi",
                   ]
 
