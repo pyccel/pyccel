@@ -15,7 +15,7 @@
 #$ header function srotmg(float32, float32, float32, float32, float32[:])
 #$ header function drotmg(float64, float64, float64, float64, float64[:])
 
-#$ header function sort(int32, float32 [:], int32, float32 [:], int32, float32, float32)
+#$ header function srot(int32, float32 [:], int32, float32 [:], int32, float32, float32)
 #$ header function drot(int32, float64 [:], int32, float64 [:], int32, float64, float64)
 
 #$ header function srotm(int32, float32 [:], int32, float32 [:], int32, float32 [:])

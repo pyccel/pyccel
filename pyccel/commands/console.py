@@ -23,7 +23,7 @@ class MyParser(argparse.ArgumentParser):
         sys.exit(2)
 
 #==============================================================================
-# TODO - remove output_dir forms args
+# TODO - remove output_dir from args
 #      - remove files from args
 #      but quickstart and build are still calling it for the moment
 def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, compiler=None):
