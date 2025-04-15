@@ -5265,7 +5265,7 @@ def test_numpy_where_array_like_1d_with_condition(language):
     @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
     def get_chosen_elements(arr : 'T'):
         from numpy import where, shape
-        a = where(arr > 5, arr, arr * 2)
+        a = where(arr > 0, arr, arr * 2)
         s = shape(a)
         return len(s), s[0], a[1], a[0]
 
