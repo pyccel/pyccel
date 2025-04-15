@@ -3687,14 +3687,6 @@ class FCodePrinter(CodePrinter):
             else:
                 results_strs = [self._print(r) for r in lhs_vars.values()]
 
-        elif not is_function and len(out_results)!=0:
-            results = [r.clone(name = self.scope.get_new_name()) \
-                        for r in out_results]
-            for var in results:
-                self.scope.insert_variable(var)
-
-            results_strs = [f'{self._print(r)}' for r in results]
-
         else:
             results_strs = []
             results = None
