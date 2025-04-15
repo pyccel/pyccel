@@ -699,8 +699,6 @@ def test_homogenous_list_int_copy(limited_language):
 
     python_out = f1()
     pyccel_out = f2()
-    print(pyccel_out)
-    print(python_out)
 
     assert python_out == pyccel_out
 
@@ -712,8 +710,6 @@ def test_homogenous_list_bool_copy(limited_language):
 
     python_out = f1()
     pyccel_out = f2()
-    print(pyccel_out)
-    print(python_out)
 
     assert python_out == pyccel_out
 
@@ -725,8 +721,6 @@ def test_homogenous_list_float_copy(limited_language):
 
     python_out = f1()
     pyccel_out = f2()
-    print(pyccel_out)
-    print(python_out)
 
     assert python_out == pyccel_out
 
@@ -738,8 +732,6 @@ def test_homogenous_list_int_tuple_copy(limited_language):
 
     python_out = f1()
     pyccel_out = f2()
-    print(pyccel_out)
-    print(python_out)
 
     assert python_out == pyccel_out
 
@@ -753,8 +745,6 @@ def test_homogenous_list_unknown_size_copy(limited_language):
 
     python_out = f1(5)
     pyccel_out = f2(5)
-    print(pyccel_out)
-    print(python_out)
 
     assert python_out == pyccel_out
 
