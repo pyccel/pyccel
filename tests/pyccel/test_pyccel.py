@@ -765,7 +765,7 @@ def test_return_numpy_arrays(language):
     types += [int]*2 # 2 ints for b
     types += [float]*2 # 2 floats for c
     types += [bool]*2 # 2 bools for d
-    types += [complex]*2 # 2 complexs for e
+    types += [complex]*2 # 2 complexes for e
     types += [float]*5 # 5 floats for h
     types += [int]*5 # 5 ints for g
     types += [int]*4 # 4 ints for k
@@ -1145,7 +1145,7 @@ def test_reserved_file_name():
 
 #------------------------------------------------------------------------------
 @pytest.mark.skip(reason="List concatenation not yet implemented")
-def test_concatentation():
+def test_concatenation():
     pyccel_test("scripts/concatenation.py",
                 language = 'fortran',
                 output_dtype=[int]*15+[str])

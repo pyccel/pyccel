@@ -88,7 +88,7 @@ class ErrorInfo:
     Parameters
     ----------
     stage : str
-        The Pyccel stage when the error occured.
+        The Pyccel stage when the error occurred.
 
     filename : str
         The file where the error was detected.

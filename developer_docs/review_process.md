@@ -30,7 +30,7 @@ Finally once you think you have handled all the issues raised in a review please
 
 ### Needs Initial Review
 
-To request the first stage of the review process you should add the label `needs_inital_review` to your pull request. This asks for a review from anyone. The aim is to review the Python code and ensure that it is clean. New developers are encouraged to review any pull requests marked `needs_inital_review` as the process of understanding how developers integrate their improvements into the existing codebase can be quite instructive when getting to grips with the code. Examples of things to look out for in your review are:
+To request the first stage of the review process you should add the label `needs_initial_review` to your pull request. This asks for a review from anyone. The aim is to review the Python code and ensure that it is clean. New developers are encouraged to review any pull requests marked `needs_initial_review` as the process of understanding how developers integrate their improvements into the existing codebase can be quite instructive when getting to grips with the code. Examples of things to look out for in your review are:
 
 -   Unclear comments/docstrings
 -   Missing/Incomplete tests
@@ -38,7 +38,7 @@ To request the first stage of the review process you should add the label `needs
 -   Lack of `__slots__`
 -   Unnecessary code duplication
 
-Once the initial reviewer is happy with the branch they should accept the pull request and change the label from `needs_inital_review` to `Ready_for_review`
+Once the initial reviewer is happy with the branch they should accept the pull request and change the label from `needs_initial_review` to `Ready_for_review`
 
 ### Ready for Review
 

@@ -1474,7 +1474,7 @@ class PythonMax(PyccelFunction):
     Parameters
     ----------
     *x : list, tuple, PythonTuple, PythonList
-        The arguments passed to the funciton.
+        The arguments passed to the function.
     """
     __slots__ = ('_class_type',)
     name   = 'max'
@@ -1511,7 +1511,7 @@ class PythonMin(PyccelFunction):
     Parameters
     ----------
     *x : list, tuple, PythonTuple, PythonList
-        The arguments passed to the funciton.
+        The arguments passed to the function.
     """
     __slots__ = ('_class_type',)
     name   = 'min'

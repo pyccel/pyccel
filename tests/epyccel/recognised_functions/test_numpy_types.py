@@ -250,7 +250,7 @@ def test_numpy_int_scalar(language, function_boundaries):
 
     get_int = function_boundaries[0]
     # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
-    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundries
+    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundaries
     # ffb stands for 'from function_boundaries'
     max_int_ffb = function_boundaries[1]
     min_int_ffb = function_boundaries[2]
@@ -366,7 +366,7 @@ def test_numpy_int_array_like_1d(language, function_boundaries):
 
     get_int = function_boundaries[0]
     # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
-    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundries
+    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundaries
     # ffb stands for 'from function_boundaries'
     max_int_ffb = function_boundaries[1]
     min_int_ffb = function_boundaries[2]
@@ -432,7 +432,7 @@ def test_numpy_int_array_like_2d(language, function_boundaries):
 
     get_int = function_boundaries[0]
     # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
-    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundries
+    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundaries
     # ffb stands for 'from function_boundaries'
     max_int_ffb = function_boundaries[1]
     min_int_ffb = function_boundaries[2]
