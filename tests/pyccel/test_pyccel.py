@@ -2,6 +2,7 @@
 import subprocess
 import json
 import os
+import pathlib
 import platform
 import shutil
 import sys
@@ -1217,11 +1218,6 @@ def test_module_name_containing_conflict(language):
     assert out1 == out2
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c)
-    )
-)
 @pytest.mark.xdist_incompatible
 def test_stubs(language):
     """
@@ -1233,12 +1229,13 @@ def test_stubs(language):
     """
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
-    compile_pyccel(path_dir, get_abs_path("scripts/runtest_stub.py"), options = f"--language={language}")
+    compile_pyccel(path_dir, get_abs_path("scripts/runtest_stub.py"), options = f"--language={language} --output=stub_test")
 
-    with open(get_abs_path(f"scripts/runtest_stub.{language}.pyi"), 'r', encoding="utf-8") as f:
+    with open(get_abs_path(f"scripts/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
         expected_pyi = f.read()
 
-    with open(get_abs_path("scripts/__pyccel__/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
+    with open(get_abs_path("scripts/stub_test/__pyccel__/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
         generated_pyi = f.read()
 
     assert expected_pyi == generated_pyi
+    pathlib.Path.rmdir(get_abs_path("scripts/stub_test"))
