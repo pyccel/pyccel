@@ -19,8 +19,6 @@ from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
 from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import Import, AsName
 
-from pyccel.ast.utilities import recognised_source
-
 from pyccel.ast.variable import DottedName
 
 from pyccel.parser.scope     import Scope
