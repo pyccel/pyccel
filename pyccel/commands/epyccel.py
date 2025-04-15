@@ -135,8 +135,6 @@ def get_source_code_and_context(func_or_class):
         # Save the updated prototype
         lines[prototype_idx] = method_prototype
 
-    print(''.join(lines))
-
     return ''.join(lines), context_dict
 
 #==============================================================================
