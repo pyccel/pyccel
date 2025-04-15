@@ -313,16 +313,6 @@ class UnpackManagedMemory(PyccelAstNode):
         return self._managed_object
 
     @property
-    def memory_handler_assignment(self):
-        """
-        Get the assignement of the memory handler.
-
-        Get an assign node representing the assignment of the object whose memory
-        is being managed to the variable responsible for the management.
-        """
-        return Assign(self._mem_var, self._managed_object)
-
-    @property
     def memory_handler_var(self):
         """
         Get the variable responsible for managing the memory.

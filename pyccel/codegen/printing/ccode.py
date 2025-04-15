@@ -2943,12 +2943,12 @@ class CCodePrinter(CodePrinter):
                 symbol = expr, severity='fatal')
 
     def _print_UnpackManagedMemory(self, expr):
-        assign_node = expr.memory_handler_assignment
-        lhs_code = self._print(assign_node.lhs)
-        rhs_code = self._print(assign_node.rhs)
+        mem_var = expr.memory_handler_var
+        lhs_code = self._print(mem_var)
+        rhs_code = self._print(expr.managed_object)
         if '->get' in rhs_code:
             rhs_code = rhs_code.removesuffix('->get)').removeprefix('(*')
-            class_type = self.get_c_type(assign_node.lhs.class_type)
+            class_type = self.get_c_type(mem_var.class_type)
             rhs_code = f'{class_type}_clone(*{rhs_code})'
         else:
             assert '.get' in rhs_code
