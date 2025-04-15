@@ -341,7 +341,7 @@ class PythonCodePrinter(CodePrinter):
         return f"{lhs_code}.{rhs_code}"
 
     def _print_FunctionDefArgument(self, expr):
-        name = self._print(expr.name)
+        name = self._print(self.scope.get_python_name(expr.name))
         default = ''
 
         if expr.annotation and not self._in_header:
@@ -1192,12 +1192,14 @@ class PythonCodePrinter(CodePrinter):
         self._in_header = True
         mod = expr.module
         variables = mod.variables
-        var_decl = '\n'.join(f"{v.name} : {self._get_type_annotation(v)}" for v in variables if not v.is_temp)
+        var_decl = '\n'.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
+                            for v in variables if not v.is_temp)
         funcs = '\n'.join(self._function_signature(f) for f in mod.funcs)
         classes = ''
         for classDef in mod.classes:
             classes += f"class {classDef.name}:\n"
-            class_body  = '\n'.join(f"{v.name} : {self._get_type_annotation(v)}" for v in classDef.attributes) + '\n\n'
+            class_body  = '\n'.join(f"{classDef.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
+                                    for v in classDef.attributes) + '\n\n'
             for method in classDef.methods:
                 class_body += f"{self._function_signature(method)}\n"
             for interface in classDef.interfaces:
