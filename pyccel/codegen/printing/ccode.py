@@ -1706,7 +1706,7 @@ class CCodePrinter(CodePrinter):
             preface, init = self._init_stack_array(var)
         else:
             preface = ''
-            if isinstance(var.class_type, (HomogeneousContainerType, DictType)) and not expr.external:
+            if isinstance(var.class_type, (HomogeneousContainerType, DictType)) and not expr.external and not var.is_alias:
                 init = ' = {0}'
             elif isinstance(var.class_type, MemoryHandlerType) and not expr.external:
                 managed_mem_lst = var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
