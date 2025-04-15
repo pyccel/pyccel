@@ -29,7 +29,7 @@ from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
-from pyccel.ast.core      import Module, AsName
+from pyccel.ast.core      import Module, AsName, FunctionDef, Return
 
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
 from pyccel.ast.c_concepts import CStackArray, CStrStr
@@ -2378,9 +2378,10 @@ class CCodePrinter(CodePrinter):
                 raise NotImplementedError(f"Can't return {type(res)} from a function")
         decs  = ''.join(self._print(i) for i in decs)
 
-        extra_deallocs = [v for v in expr.local_vars if isinstance(v.class_type, MemoryHandlerType) and \
-                                        v.is_temp]
-        body += ''.join(self._print(Deallocate(v)) for v in extra_deallocs)
+        if len(expr.body.get_attribute_nodes(Return)) == 0:
+            extra_deallocs = [v for v in expr.local_vars if isinstance(v.class_type, MemoryHandlerType) and \
+                                            v.is_temp]
+            body += ''.join(self._print(Deallocate(v)) for v in extra_deallocs)
 
         sep = self._print(SeparatorComment(40))
         if self._additional_args :
@@ -2436,24 +2437,29 @@ class CCodePrinter(CodePrinter):
             return f'{call_code};\n'
 
     def _print_Return(self, expr):
-        code = ''
+        funcs = expr.get_user_nodes(FunctionDef)
+        assert len(funcs) == 1
+        extra_deallocs = [v for v in funcs[0].local_vars if isinstance(v.class_type, MemoryHandlerType) and \
+                                        v.is_temp]
+        code = ''.join(self._print(Deallocate(v)) for v in extra_deallocs)
+
         return_obj = expr.expr
         if return_obj is None:
             args = []
         elif isinstance(return_obj.class_type, InhomogeneousTupleType):
             if expr.stmt:
-                return self._print(expr.stmt)+'return 0;\n'
-            return 'return 0;\n'
+                return code + self._print(expr.stmt)+'return 0;\n'
+            return code + 'return 0;\n'
         else:
             args = [ObjectAddress(return_obj) if self.is_c_pointer(return_obj) else return_obj]
 
         if len(args) == 0:
-            return 'return;\n'
+            return code + 'return;\n'
 
         if len(args) > 1:
             if expr.stmt:
                 return self._print(expr.stmt)+'return 0;\n'
-            return 'return 0;\n'
+            return code + 'return 0;\n'
 
         if expr.stmt:
             # get Assign nodes from the CodeBlock object expr.stmt.
@@ -2464,12 +2470,12 @@ class CCodePrinter(CodePrinter):
             # Check the Assign objects list in case of
             # the user assigns a variable to an object contains IndexedElement object.
             if not last_assign:
-                code = self._print(expr.stmt)
+                code = code + self._print(expr.stmt)
             elif isinstance(last_assign[-1], (AugAssign, AliasAssign)):
                 last_assign[-1].lhs.is_temp = False
-                code = self._print(expr.stmt)
+                code = code + self._print(expr.stmt)
             elif isinstance(last_assign[-1].rhs, PythonTuple):
-                code = self._print(expr.stmt)
+                code = code + self._print(expr.stmt)
                 last_assign[-1].lhs.is_temp = False
             else:
                 # make sure that stmt contains one assign node.
@@ -2478,12 +2484,12 @@ class CCodePrinter(CodePrinter):
                 unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables) and \
                         isinstance(last_assign.lhs, Variable) and not last_assign.lhs.is_ndarray
                 if unneeded_var:
-                    code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
+                    code = code + ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
                     return code + 'return {};\n'.format(self._print(last_assign.rhs))
                 else:
                     if isinstance(last_assign.lhs, Variable):
                         last_assign.lhs.is_temp = False
-                    code = self._print(expr.stmt)
+                    code = code + self._print(expr.stmt)
 
         returned_value = self.scope.collect_tuple_element(args[0])
 
