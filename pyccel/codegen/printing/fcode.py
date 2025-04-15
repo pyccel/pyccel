@@ -1549,20 +1549,24 @@ class FCodePrinter(CodePrinter):
 
         if expr.rank == 0:
             if isinstance(expr.a.dtype.primitive_type, PrimitiveBooleanType):
-                a_code = self._print(PythonInt(expr.a))
+                a_code = self._print(PythonInt(expr.a)) # Convert LOGICAL to INTEGER
             if isinstance(expr.b.dtype.primitive_type, PrimitiveBooleanType):
-                b_code = self._print(PythonInt(expr.b))
-            return 'sum({}*{})'.format(a_code, b_code)
+                b_code = self._print(PythonInt(expr.b)) # Convert LOGICAL to INTEGER
+            code = f'sum({a_code} * {b_code})'
+            if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
+                code = f'{code} /= 0' # Convert INTEGER to LOGICAL
+            return code
+
         if expr.a.order and expr.b.order:
             if expr.a.order != expr.b.order:
                 raise NotImplementedError("Mixed order matmul not supported.")
 
         # Fortran ordering
         if expr.a.order == 'F':
-            return 'matmul({0},{1})'.format(a_code, b_code)
+            return f'matmul({a_code}, {b_code})'
 
         # C ordering
-        return 'matmul({1},{0})'.format(a_code, b_code)
+        return f'matmul({b_code}, {a_code})'
 
     def _print_NumpyEmpty(self, expr):
         errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity='fatal')
@@ -1896,28 +1900,36 @@ class FCodePrinter(CodePrinter):
     
     def _print_NumpyAmax(self, expr):
         array_arg = expr.arg
-        if isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType):
+        is_bool = isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType)
+        if is_bool: # Convert LOGICAL to INTEGER
             array_arg = NumpyInt32(array_arg)
         arg_code = self._get_node_without_gFTL(array_arg)
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             return f'amax({array_arg})'
+        elif is_bool: # Convert INTEGER to LOGICAL
+            zero = self._print(LiteralInteger(0))
+            return f'maxval({arg_code}) /= {zero}'
         else:
             return f'maxval({arg_code})'
     
     def _print_NumpyAmin(self, expr):
         array_arg = expr.arg
-        if isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType):
+        is_bool = isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType)
+        if is_bool: # Convert LOGICAL to INTEGER
             array_arg = NumpyInt32(array_arg)
         arg_code = self._get_node_without_gFTL(array_arg)
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             return f'amin({array_arg})'
+        elif is_bool: # Convert INTEGER to LOGICAL
+            zero = self._print(LiteralInteger(0))
+            return f'minval({arg_code}) /= {zero}'
         else:
             return f'minval({arg_code})'
-        
+
     def _print_PythonMinMax(self, expr):
         arg, = expr.args
         if isinstance(arg, Variable):
