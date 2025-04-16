@@ -73,9 +73,9 @@ def test_tmplt_head_1(modnew):
     x = modnew.tst_tmplt_head_1()
     assert np.array_equal(x, x_expected)
 
-def test_local_overide_1(modnew):
-    x_expected = mod.tst_local_overide_1()
-    x = modnew.tst_local_overide_1()
+def test_local_override_1(modnew):
+    x_expected = mod.tst_local_override_1()
+    x = modnew.tst_local_override_1()
     assert np.array_equal(x, x_expected)
 
 def test_tmplt_tmplt_1(modnew):

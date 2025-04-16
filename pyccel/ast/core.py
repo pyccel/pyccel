@@ -374,7 +374,7 @@ class Allocate(PyccelAstNode):
 
         - 'init' refers to direct allocation with predefined data (e.g., `x = [1, 2, 4]`).
         - 'reserve' refers to cases where the container will be appended to.
-        - 'resize' referes to cases where the container is populated via indexed elements.
+        - 'resize' refers to cases where the container is populated via indexed elements.
 
     Notes
     -----
@@ -627,7 +627,7 @@ class AliasAssign(PyccelAstNode):
 
     Represents aliasing for code generation. An alias is any statement of the
     form `lhs := rhs` where lhs is a pointer and rhs is a local_alias. In other words
-    the contents of `lhs` will change if the contents of `rhs` are modfied.
+    the contents of `lhs` will change if the contents of `rhs` are modified.
 
     Parameters
     ----------

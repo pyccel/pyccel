@@ -2478,7 +2478,7 @@ class CCodePrinter(CodePrinter):
             code = self._print(rhs)
             self._temporary_args = []
             return code
-        # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
+        # Inhomogeneous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
         if isinstance(rhs, (NumpySum, NumpyAmax, NumpyAmin)):
