@@ -1650,16 +1650,16 @@ def arrs_2d_similar_shapes_0():
     from numpy import shape
     dy = 4
     dx = 2
-    pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
-    x = ((dy**2 * (pn[1:shape(pn)[0]-1, 2:] + pn[1:shape(pn)[0]-1, 0:shape(pn)[1]-2]) +
-        dx**2 *(pn[2:, 1:shape(pn)[1]-1] + pn[0:shape(pn)[0]-2, 1:shape(pn)[1]-1])) / (2 * (dx**2 + dy**2)))
+    arr = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
+    x = ((dy**2 * (arr[1:shape(arr)[0]-1, 2:] + arr[1:shape(arr)[0]-1, 0:shape(arr)[1]-2]) +
+        dx**2 *(arr[2:, 1:shape(arr)[1]-1] + arr[0:shape(arr)[0]-2, 1:shape(arr)[1]-1])) / (2 * (dx**2 + dy**2)))
     return x
 
 def arrs_2d_different_shapes_0():
     import numpy as np
-    pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
-    pm = np.array([[1, 1, 1]])
-    x = pn + pm
+    arr1 = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
+    arr2 = np.array([[1, 1, 1]])
+    x = arr1 + arr2
     return x
 
 def arrs_1d_negative_index_1():

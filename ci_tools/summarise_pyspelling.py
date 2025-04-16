@@ -122,13 +122,13 @@ if __name__ == '__main__':
         with open(args.output, 'r', encoding="utf-8") as f:
             md = f.read()
         print(md)
-        json_ouput = {
+        json_output = {
             "title":"Misspelling summary ",
             "summary":md,
             "annotations": annotations
         }
         with open(output_file, 'w', encoding="utf-8") as f:
-            json.dump(json_ouput,f)
+            json.dump(json_output,f)
         sys.exit(1)
     else:
         sys.exit(0)

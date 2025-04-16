@@ -26,7 +26,7 @@ def get_pylint_results(filename):
     Returns
     -------
     dict
-        The dictionary containg the pylint results.
+        The dictionary containing the pylint results.
     """
     with open(filename, 'r', encoding='utf-8') as p_file:
         pylint_output = p_file.readlines()
@@ -58,7 +58,7 @@ def filter_pylint_results(pylint_results, diff):
     Parameters
     ----------
     pylint_results : dict
-        The output of get_pylint_results. A dictionary containg the pylint results.
+        The output of get_pylint_results. A dictionary containing the pylint results.
     diff : dict
         The git diff between this branch and the target.
 
