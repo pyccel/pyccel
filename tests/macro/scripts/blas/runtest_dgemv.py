@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, undefined-variable, unused-import
 # TODO - y must be optional
-#      - t must be optiona, default 0 (map 1 -> 'T' and 0 -> 'N')
+#      - t must be optional, default 0 (map 1 -> 'T' and 0 -> 'N')
 #      - default value for beta must be 0.0 and not 0
 
 from numpy import zeros

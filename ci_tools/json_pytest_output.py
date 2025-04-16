@@ -91,10 +91,10 @@ if __name__ == '__main__':
         summary = summary + mini_md_summary(mini_title, outcome, fails)
 
     print(summary)
-    json_ouput = {
+    json_output = {
         "title":p_args.title,
         "summary":summary
     }
 
     with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(json_ouput,f)
+        json.dump(json_output,f)

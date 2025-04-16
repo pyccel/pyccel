@@ -690,9 +690,9 @@ class SemanticParser(BasicParser):
 
     def _indicate_pointer_target(self, pointer, target, expr):
         """
-        Indicate that a pointer is targetting a specific target.
+        Indicate that a pointer is targeting a specific target.
 
-        Indicate that a pointer is targetting a specific target by adding the pair
+        Indicate that a pointer is targeting a specific target by adding the pair
         to a dictionary in self._pointer_targets (the last dictionary in the list
         should be used as this is the one for the current scope).
 
@@ -838,7 +838,7 @@ class SemanticParser(BasicParser):
 
         else:
             type_name = type(expr).__name__
-            msg = f'Type of Object : {type_name} cannot be infered'
+            msg = f'Type of Object : {type_name} cannot be inferred'
             return errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 severity='fatal')
@@ -1355,7 +1355,7 @@ class SemanticParser(BasicParser):
         self._scope = sc
         self._visit_FunctionDef(old_func, function_call_args=function_call_args)
         new_name = self.scope.get_expected_name(old_func.name)
-        # Retreive the annotated function
+        # Retrieve the annotated function
         func = self.scope.find(new_name, 'functions')
         # Add the Module of the imported function to the new function
         if old_func.is_imported:
@@ -2228,11 +2228,11 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         class_def : ClassDef
-            The class defintion to which the attribute should be added.
+            The class definition to which the attribute should be added.
         self_var : Variable
             The variable representing the 'self' variable of the class instance.
         attrib : Variable
-            The attribute which should be inserted into the class defintion.
+            The attribute which should be inserted into the class definition.
 
         Returns
         -------
@@ -2253,15 +2253,15 @@ class SemanticParser(BasicParser):
 
     def _get_iterable(self, syntactic_iterable):
         """
-        Get an Iterable obect from a syntatic object that is used in an iterable context.
+        Get an Iterable object from a syntactic object that is used in an iterable context.
 
-        Get an Iterable obect from a syntatic object that is used in an iterable context.
+        Get an Iterable object from a syntactic object that is used in an iterable context.
         A typical example of an iterable context is the iterable of a for loop.
 
         Parameters
         ----------
         syntactic_iterable : PyccelAstNode
-            The syntatic object that should be usable as an iterable.
+            The syntactic object that should be usable as an iterable.
 
         Returns
         -------
@@ -3707,7 +3707,7 @@ class SemanticParser(BasicParser):
                     else:
                         return func_call
                 else:
-                    # TODO treate interface case
+                    # TODO treat interface case
                     errors.report(PYCCEL_RESTRICTION_TODO,
                                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                                   severity='fatal')
@@ -3896,7 +3896,7 @@ class SemanticParser(BasicParser):
                 elif l is not r:
                     # Manage a non-tuple assignment
 
-                    # Manage memeory for optionals
+                    # Manage memory for optionals
                     if isinstance(l, Variable) and l.is_optional:
                         if l in self._optional_params:
                             # Collect temporary variable which provides
@@ -4619,7 +4619,7 @@ class SemanticParser(BasicParser):
         used_type_names = set(t for a in arg_annotations for t in a.get_attribute_nodes(PyccelSymbol))
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
-        # Create new temparary templates for the arguments with a Union data type.
+        # Create new temporary templates for the arguments with a Union data type.
         tmp_templates = {}
         new_expr_args = []
         for a in expr.arguments:

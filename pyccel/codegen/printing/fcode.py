@@ -670,7 +670,7 @@ class FCodePrinter(CodePrinter):
                                            MacroUndef('MapIterator'),
                                            *key_undefs, *val_undefs])
             else:
-                raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
+                raise NotImplementedError(f"Unknown gFTL import for type {expr_type}")
 
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
@@ -732,7 +732,7 @@ class FCodePrinter(CodePrinter):
                                         for i in type_module.imports]
                 self.add_import(Import('gFTL_functions/Vector_extensions', Module('_', (), ()), ignore_at_print = True))
             else:
-                raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
+                raise NotImplementedError(f"Unknown gFTL import for type {expr_type}")
 
             module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
                                        is_external = True)
@@ -3773,13 +3773,21 @@ class FCodePrinter(CodePrinter):
 #=======================================================================================
 
     def _wrap_fortran(self, lines):
-        """Wrap long Fortran lines
+        """
+        Wrap long Fortran lines.
 
-           Argument:
-             lines  --  a list of lines (ending with a \\n character)
+        A comment line is split at white space. Code lines are split with a more
+        complex rule to give nice results.
 
-           A comment line is split at white space. Code lines are split with a more
-           complex rule to give nice results.
+        Parameters
+        ----------
+        lines : list[str]
+            A list of lines (ending with a \\n character).
+
+        Returns
+        -------
+        list[str]
+            A list of the new lines.
         """
         # routine to find split point in a code line
         my_alnum = set("_+-." + string.digits + string.ascii_letters)
@@ -3800,7 +3808,7 @@ class FCodePrinter(CodePrinter):
                     return endpos
             return pos
 
-        # split line by line and add the splitted lines to result
+        # split line by line and add the split lines to result
         result = []
         trailing = ' &'
         # trailing with no added space characters in case splitting is within quotes
