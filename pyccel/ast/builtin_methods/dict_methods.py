@@ -451,3 +451,50 @@ class DictGetItem(DictMethod):
         The key that is used to select the element from the dict.
         """
         return self._args[0]
+
+#==============================================================================
+class DictValues(Iterable):
+    """
+    Represents a call to the .values() method.
+
+    Represents a call to the .values() method which iterates over the keys of a
+    dictionary.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+    """
+    __slots__ = ('_dict_obj',)
+    _attribute_nodes = Iterable._attribute_nodes + ("_dict_obj",)
+    _shape = None
+    _class_type = SymbolicType()
+    name = 'keys'
+
+    def __init__(self, dict_obj):
+        self._dict_obj = dict_obj
+        super().__init__(1)
+
+    @property
+    def variable(self):
+        """
+        Get the object representing the dict.
+
+        Get the object representing the dict.
+        """
+        return self._dict_obj
+
+    def get_python_iterable_item(self):
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns two objects that could be a key and a value of the dictionary.
+        These elements are used to determine the types of the loop targets.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        item = DictPopitem(self._dict_obj)
+        return [IndexedElement(item, 1)]

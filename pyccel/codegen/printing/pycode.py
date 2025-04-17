@@ -965,6 +965,11 @@ class PythonCodePrinter(CodePrinter):
 
         return f"{dict_obj}.keys()"
 
+    def _print_DictValues(self, expr):
+        dict_obj = self._print(expr.variable)
+
+        return f"{dict_obj}.values()"
+
     def _print_DictGetItem(self, expr):
         dict_obj = self._print(expr.dict_obj)
         key = self._print(expr.key)

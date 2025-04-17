@@ -26,7 +26,7 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableIterator
 
-from pyccel.ast.builtin_methods.dict_methods import DictItems, DictKeys
+from pyccel.ast.builtin_methods.dict_methods import DictItems, DictKeys, DictValues
 
 from pyccel.ast.builtin_methods.list_methods import ListPop
 
@@ -2773,7 +2773,7 @@ class FCodePrinter(CodePrinter):
         iterable = expr.iterable
         indices = iterable.loop_counters
 
-        if isinstance(iterable, (VariableIterator, DictItems, DictKeys)) and \
+        if isinstance(iterable, (VariableIterator, DictItems, DictKeys, DictValues)) and \
                 isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType)):
             var = iterable.variable
             iterable_type = var.class_type
@@ -2796,6 +2796,9 @@ class FCodePrinter(CodePrinter):
             elif isinstance(iterable, DictKeys):
                 key = self._print(expr.target[0])
                 target_assign = (f'{key} = {iterator} % first()\n')
+            elif isinstance(iterable, DictValues):
+                val = self._print(expr.target[0])
+                target_assign = (f'{val} = {iterator} % second()\n')
             else:
                 target = self._print(expr.target[0])
                 target_assign = f'{target} = {iterator} % of()\n'
