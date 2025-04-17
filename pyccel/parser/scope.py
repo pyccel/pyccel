@@ -236,7 +236,7 @@ class Scope(object):
         Find and return the specified object in the scope.
 
         Find a specified object in the scope and return it.
-        The object is identified by a string contianing its name.
+        The object is identified by a string containing its name.
         If the object cannot be found then None is returned unless
         an error is requested.
 

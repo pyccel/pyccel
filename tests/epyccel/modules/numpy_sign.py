@@ -190,7 +190,7 @@ def literal_float_nul():
 # Arrays tests
 ###################
 
-# Intergers
+# Integers
 
 def array_1d_int8(x : 'int8[:]'):
     import numpy as np
@@ -254,7 +254,7 @@ def array_2d_float64(x : 'float64[:,:]'):
     y = np.sign(x)
     return y
 
-# Complexs
+# Complexes
 
 def array_1d_complex64(x : 'complex64[:]'):
     import numpy as np

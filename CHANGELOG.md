@@ -87,6 +87,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 -   \[DEVELOPER\] Added an environment variable to globally activate developer-mode for errors.
+-   \[DEVELOPER\] Added a spell checker for the code itself.
 
 ### Fixed
 
@@ -149,6 +150,7 @@ All notable changes to this project will be documented in this file.
 -   #2258 : Fix missing errors for bad pointer handling in the case of containers with mutable elements.
 -   #2274 : Do not pass include flags to linker (they are useless).
 -   #2274 : Always use the C compiler to build the C wrapper for NumPy arrays (fixes Intel failures).
+-   #2285 : Reduce number of warnings in unit tests.
 
 ### Changed
 

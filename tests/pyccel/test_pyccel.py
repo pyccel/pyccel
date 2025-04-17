@@ -766,7 +766,7 @@ def test_return_numpy_arrays(language):
     types += [int]*2 # 2 ints for b
     types += [float]*2 # 2 floats for c
     types += [bool]*2 # 2 bools for d
-    types += [complex]*2 # 2 complexs for e
+    types += [complex]*2 # 2 complexes for e
     types += [float]*5 # 5 floats for h
     types += [int]*5 # 5 ints for g
     types += [int]*4 # 4 ints for k
@@ -986,9 +986,9 @@ def get_lang_exit_value(abs_path, language, cwd=None):
     return p.returncode
 
 @pytest.mark.parametrize( "test_file", ["scripts/asserts/valid_assert.py",
-                                        "scripts/asserts/unvalid_assert1.py",
-                                        "scripts/asserts/unvalid_assert2.py",
-                                        "scripts/asserts/unvalid_assert3.py",
+                                        "scripts/asserts/invalid_assert1.py",
+                                        "scripts/asserts/invalid_assert2.py",
+                                        "scripts/asserts/invalid_assert3.py",
                                         ] )
 
 def test_assert(language, test_file):
@@ -1146,7 +1146,7 @@ def test_reserved_file_name():
 
 #------------------------------------------------------------------------------
 @pytest.mark.skip(reason="List concatenation not yet implemented")
-def test_concatentation():
+def test_concatenation():
     pyccel_test("scripts/concatenation.py",
                 language = 'fortran',
                 output_dtype=[int]*15+[str])
