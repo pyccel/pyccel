@@ -184,6 +184,17 @@ def test_pop_item_key(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
+def test_pop_item_unpacking(python_only_language):
+    def pop_item():
+        a = {1:1.0, 2:2.0}
+        b, c = a.popitem()
+        return b, c
+    epyc_default_element = epyccel(pop_item, language = python_only_language)
+    pyccel_result = epyc_default_element()
+    python_result = pop_item()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
 def test_get_element(python_only_language):
     def get_element():
         a = {1:1.0, 2:2.0}
