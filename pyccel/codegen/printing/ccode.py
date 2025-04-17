@@ -725,7 +725,7 @@ class CCodePrinter(CodePrinter):
                     stc_init_elements.append(self._print(mem_var))
                 else:
                     code = self.init_stc_container(e, class_type)
-                    stc_init_elements.append(f'{element_type}_ptr_make({code})')
+                    stc_init_elements.append(f'{element_type}_mem_make({element_type}_ptr_make({code}))')
             return stc_init_elements
         else:
             return [self._print(e) for e in elements]
@@ -893,7 +893,8 @@ class CCodePrinter(CodePrinter):
             decl_line = f'#define i_{tag}pro cstr\n'
         elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             type_decl = self.get_c_type(element_type, not in_arc)
-            decl_line = f'#define i_{tag}pro {type_decl}\n'
+            decl_line = (f'#define i_{tag}class {type_decl}\n'
+                         f'#define i_{tag}from {type_decl}_clone\n')
         else:
             decl_line = ''
             errors.report(f"The declaration of type {element_type} is not yet implemented for containers.",
@@ -1695,9 +1696,6 @@ class CCodePrinter(CodePrinter):
         if isinstance(var.class_type, InhomogeneousTupleType):
             return ''
 
-        if get_managed_memory_object(var) is not var:
-            return ''
-
         declaration_type = self.get_declare_type(var)
 
         init = f' = {self._print(expr.value)}' if expr.value is not None else ''
@@ -1724,7 +1722,7 @@ class CCodePrinter(CodePrinter):
                     if managed_var.memory_handling != 'alias':
                         c_type = self.get_c_type(var.class_type)
                         elem_type = self.get_c_type(var.class_type.element_type)
-                        init = f' = {c_type}_from({elem_type}_init())'
+                        init = f' = {c_type}_make({elem_type}_ptr_from_ptr(&{managed_var.name}))'
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
@@ -1847,7 +1845,7 @@ class CCodePrinter(CodePrinter):
                 if is_mut:
                     code = f"{container_type}_at_mut({list_var}, {index})"
             if base.class_type.rank > 1:
-                return f'(*{code}->get)'
+                return f'(*{code}->get->get)'
             else:
                 return f'(*{code})'
 
@@ -2052,29 +2050,40 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
 
     def _print_Deallocate(self, expr):
-        if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType,
-                                                 DictType, StringType, MemoryHandlerType)):
-            if expr.variable.is_alias:
+        var = expr.variable
+        mgd_var = get_managed_memory_object(var)
+        code = ''
+        if mgd_var != var:
+            variable_address = self._print(ObjectAddress(mgd_var))
+            container_type = self.get_c_type(mgd_var.class_type)
+            code = f'{container_type}_drop({variable_address});\n'
+
+        if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,
+                                                 DictType, StringType)):
+            if var.is_alias:
                 return ''
-            variable_address = self._print(ObjectAddress(expr.variable))
-            container_type = self.get_c_type(expr.variable.class_type)
-            return f'{container_type}_drop({variable_address});\n'
-        if isinstance(expr.variable.class_type, InhomogeneousTupleType):
-            return ''.join(self._print(Deallocate(v)) for v in expr.variable)
-        if isinstance(expr.variable.dtype, CustomDataType):
-            variable_address = self._print(ObjectAddress(expr.variable))
-            Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
-            return f"{Pyccel__del}({variable_address});\n"
-        elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
-            if expr.variable.is_alias:
-                return ''
+            if self.is_c_pointer(var):
+                variable_address = var.name
             else:
-                data_ptr = DottedVariable(VoidType(), 'data', lhs = expr.variable, memory_handling='alias')
+                variable_address = f'&{var.name}'
+            container_type = self.get_c_type(var.class_type)
+            return code + f'{container_type}_drop({variable_address});\n'
+        if isinstance(var.class_type, InhomogeneousTupleType):
+            return code + ''.join(self._print(Deallocate(v)) for v in var)
+        if isinstance(var.dtype, CustomDataType):
+            variable_address = self._print(ObjectAddress(var))
+            Pyccel__del = var.cls_base.scope.find('__del__').name
+            return code + f"{Pyccel__del}({variable_address});\n"
+        elif isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            if var.is_alias:
+                return code
+            else:
+                data_ptr = DottedVariable(VoidType(), 'data', lhs = var, memory_handling='alias')
                 data_ptr_code = self._print(ObjectAddress(data_ptr))
-                return f'free({data_ptr_code});\n{data_ptr_code} = NULL;\n'
+                return code + f'free({data_ptr_code});\n{data_ptr_code} = NULL;\n'
         else:
-            variable_address = self._print(ObjectAddress(expr.variable))
-            return f'free({variable_address});\n'
+            variable_address = self._print(ObjectAddress(var))
+            return code + f'free({variable_address});\n'
 
     def _print_Slice(self, expr):
         start = expr.start
@@ -2847,11 +2856,10 @@ class CCodePrinter(CodePrinter):
             cast_func = DtypePrecisionToCastFunction[expr.dtype]
             return self._print(cast_func(expr.value))
 
-
     def _print_Variable(self, expr):
         managed_mem = get_managed_memory_object(expr)
         if managed_mem is not expr:
-            return f'(*{managed_mem.name}.get)'
+            return f'(*{managed_mem.name}.get->get)'
         elif self.is_c_pointer(expr):
             return '(*{0})'.format(expr.name)
         else:
@@ -2960,13 +2968,12 @@ class CCodePrinter(CodePrinter):
         mem_var = expr.memory_handler_var
         lhs_code = self._print(mem_var)
         rhs_code = self._print(expr.managed_object)
-        if '->get' in rhs_code:
-            rhs_code = rhs_code.removesuffix('->get)').removeprefix('(*')
+        if '.get' in rhs_code:
+            rhs_code = rhs_code.removesuffix('.get->get)').removeprefix('(*')
+        else:
+            rhs_code = rhs_code.removesuffix('->get->get)').removeprefix('(*')
             class_type = self.get_c_type(mem_var.class_type)
             rhs_code = f'{class_type}_clone(*{rhs_code})'
-        else:
-            assert '.get' in rhs_code
-            rhs_code = rhs_code.removesuffix('.get)').removeprefix('(*')
 
         return f'{lhs_code} = {rhs_code};\n'
 
@@ -3212,7 +3219,7 @@ class CCodePrinter(CodePrinter):
                 code = f"(*{container_type}_at_mut({dict_obj_code}, {key}))"
 
         if not isinstance(expr.class_type, FixedSizeNumericType):
-            code = code[:-1] + '->get)'
+            code = code[:-1] + '->get->get)'
 
         return code
 
