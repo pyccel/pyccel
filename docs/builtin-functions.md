@@ -130,7 +130,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `reversed` | No |
 | `setdefault` | Python-only |
 | `update` | No |
-| `values` | No |
+| **`values`** | **Yes** |
 
 ## String methods
 
