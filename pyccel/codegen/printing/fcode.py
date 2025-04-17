@@ -1542,9 +1542,9 @@ class FCodePrinter(CodePrinter):
 
         if expr.default_value is not None:
             default = self._print(expr.default_value)
-            return f'{type_name}_pop_with_default({dict_obj_code},  {key}, {default})'
+            return f'{type_name}_pop_with_default({dict_obj_code}, {key}, {default})'
         else:
-            return f'{type_name}_pop({dict_obj_code},  {key})'
+            return f'{type_name}_pop({dict_obj_code}, {key})'
 
     #========================== String Methods ===============================#
 
