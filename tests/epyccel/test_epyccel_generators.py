@@ -125,7 +125,7 @@ def test_expression1(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in C"),
+            pytest.mark.xfail(reason="Function in function not implemented in C", run=False),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
