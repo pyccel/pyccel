@@ -342,7 +342,10 @@ class PythonCodePrinter(CodePrinter):
         return f"{lhs_code}.{rhs_code}"
 
     def _print_FunctionDefArgument(self, expr):
-        name = self._print(self.scope.get_python_name(expr.name))
+        if self._in_header:
+            name = self._print(self.scope.get_python_name(expr.name))
+        else:
+            name = self._print(expr.name)
         default = ''
 
         if expr.annotation and not self._in_header:
