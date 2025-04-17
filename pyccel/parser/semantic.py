@@ -1533,9 +1533,6 @@ class SemanticParser(BasicParser):
                 d_lhs['memory_handling'] = 'alias'
                 rhs.base.is_target = not rhs.base.is_alias
 
-            elif isinstance(rhs, (ListPop, DictPop)):
-                d_lhs['memory_handling'] = 'alias'
-
             elif isinstance(rhs, IndexedElement) and not rhs.is_slice:
                 d_lhs['memory_handling'] = 'alias'
 
