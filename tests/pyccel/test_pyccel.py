@@ -1229,7 +1229,7 @@ def test_stubs(language):
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
 
-    with open(get_abs_path(f"scripts/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
+    with open(get_abs_path("scripts/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
         expected_pyi = f.read()
 
     wk_dir = get_abs_path("scripts/stub_test")
