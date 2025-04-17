@@ -236,8 +236,6 @@ class PythonCodePrinter(CodePrinter):
             body = '...'
             if result:
                 res = f' -> {self._get_type_annotation(result.var)}'
-                # A return is printed explicitly to preserve the names of the result variables for Fortran
-                res_vars = self.scope.collect_all_tuple_elements(result.var)
             else:
                 res = ' -> None'
             name = self.scope.get_python_name(interface[0].name if interface else func.name)
