@@ -26,6 +26,7 @@ __all__ = ('DictClear',
            'DictPop',
            'DictPopitem',
            'DictSetDefault',
+           'DictValues',
            )
 
 #==============================================================================
