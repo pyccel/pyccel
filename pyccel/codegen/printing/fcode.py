@@ -1561,7 +1561,10 @@ class FCodePrinter(CodePrinter):
 
         key, value = lhs
 
-        return f'call {type_name}_popitem({dict_obj_code}, {key}, {value})\n'
+        key_code = self._print(key)
+        value_code = self._print(value)
+
+        return f'call {type_name}_popitem({dict_obj_code}, {key_code}, {value_code})\n'
 
     #========================== String Methods ===============================#
 
