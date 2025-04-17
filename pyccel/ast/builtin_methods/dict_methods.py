@@ -143,6 +143,9 @@ class DictPopitem(DictMethod):
         self._class_type = InhomogeneousTupleType(dict_type.key_type, dict_type.value_type)
         super().__init__(dict_obj)
 
+    def __iter__(self):
+        return iter((IndexedElement(self, 0), IndexedElement(self, 1)))
+
 #==============================================================================
 class DictGet(DictMethod):
     """
