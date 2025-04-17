@@ -126,7 +126,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **`items`** | **Yes** |
 | **`keys`** | **Yes** |
 | **`pop`** | **Yes** |
-| `popitem` | Python-only |
+| **`popitem`** | **Yes** |
 | `reversed` | No |
 | `setdefault` | Python-only |
 | `update` | No |
