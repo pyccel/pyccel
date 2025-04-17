@@ -265,6 +265,7 @@ import_header_guard_prefix = {
 }
 
 stc_extension_mapping = {
+    'stc/arc': 'STC_Extensions/Arc_extensions',
     'stc/common': 'STC_Extensions/Common_extensions',
     'stc/hmap': 'STC_Extensions/Dict_extensions',
     'stc/hset': 'STC_Extensions/Set_extensions',
@@ -723,12 +724,8 @@ class CCodePrinter(CodePrinter):
                     mem_var = get_managed_memory_object(e)
                     stc_init_elements.append(self._print(mem_var))
                 else:
-                    tmp_mem_var = self.scope.get_temporary_variable(MemoryHandlerType(class_type),
-                                shape = e.shape, memory_handling='heap')
                     code = self.init_stc_container(e, class_type)
-                    tmp_mem_var_code = self._print(tmp_mem_var)
-                    self._additional_code += f'{tmp_mem_var_code} = {arc_type}_from({code});\n'
-                    stc_init_elements.append(tmp_mem_var_code)
+                    stc_init_elements.append(f'{element_type}_ptr_make({code})')
             return stc_init_elements
         else:
             return [self._print(e) for e in elements]
@@ -759,7 +756,8 @@ class CCodePrinter(CodePrinter):
             keyraw = '{' + ', '.join(f'{{{k}, {v}}}' for k,v in zip(keys, values)) + '}'
         else:
             args = self.get_stc_init_elements(class_type.element_type, expr.args, dtype)
-            keyraw = '{' + ', '.join(args) + '}'
+            split = '\n' if any(len(a) > 10 for a in args) else ''
+            keyraw = '{' + split + f',{split}'.join(args) + split + '}'
         return f'c_init({dtype}, {keyraw})'
 
     def rename_imported_methods(self, expr):
@@ -882,18 +880,25 @@ class CCodePrinter(CodePrinter):
             is printed both when including the STC file and when including the
             STC extension.
         """
-        if isinstance(element_type, FixedSizeType):
+        prefix = ''
+        if in_arc:
+            type_decl = self.get_c_type(element_type, not in_arc)
+            prefix = (f'#define i_type {type_decl}_ptr\n'
+                      f'#define i_{tag}class {type_decl}\n'
+                       '#include <STC_Extensions/Managed_memory.h>\n')
+            decl_line = f'#define i_{tag}class {type_decl}_ptr\n'
+        elif isinstance(element_type, FixedSizeType):
             decl_line = f'#define i_{tag} {self.get_c_type(element_type)}\n'
         elif isinstance(element_type, StringType):
             decl_line = f'#define i_{tag}pro cstr\n'
         elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             type_decl = self.get_c_type(element_type, not in_arc)
-            decl_line = f'#define i_{tag}class {type_decl}\n'
+            decl_line = f'#define i_{tag}pro {type_decl}\n'
         else:
             decl_line = ''
             errors.report(f"The declaration of type {element_type} is not yet implemented for containers.",
                     symbol=expr, severity='error')
-        return decl_line
+        return prefix, decl_line
 
     # ============ Elements ============ #
 
@@ -1320,16 +1325,18 @@ class CCodePrinter(CodePrinter):
                            ignore_at_print=True))
 
                 decl_line = f'#define i_type {container_type}\n'
+                prefix = ''
                 if isinstance(class_type, DictType):
-                    key_decl_line = self._get_stc_element_type_decl(class_type.key_type, expr)
-                    val_decl_line = self._get_stc_element_type_decl(class_type.value_type, expr, 'val')
+                    key_prefix, key_decl_line = self._get_stc_element_type_decl(class_type.key_type, expr)
+                    val_prefix, val_decl_line = self._get_stc_element_type_decl(class_type.value_type, expr, 'val')
                     decl_line += (key_decl_line + val_decl_line)
+                    prefix = key_prefix + val_prefix
                 elif isinstance(class_type, (HomogeneousListType, HomogeneousSetType)):
-                    key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr)
+                    prefix, key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr)
                     decl_line += key_decl_line
                 elif isinstance(class_type, MemoryHandlerType):
                     element_type = self.get_c_type(class_type.element_type)
-                    m_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr, in_arc = True)
+                    prefix, m_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr, in_arc = True)
                     decl_line += m_decl_line
                 else:
                     raise NotImplementedError(f"Import not implemented for {container_type}")
@@ -1340,6 +1347,7 @@ class CCodePrinter(CodePrinter):
                 header_guard = f'{header_guard_prefix}_{container_type.upper()}'
                 code += ''.join((f'#ifndef {header_guard}\n',
                                  f'#define {header_guard}\n',
+                                 prefix,
                                  decl_line,
                                  f'#include <{source}.h>\n'))
                 if source in stc_extension_mapping:
@@ -3048,7 +3056,8 @@ class CCodePrinter(CodePrinter):
             code = f'{c_type}_pull({list_obj})'
 
         if not isinstance(expr.class_type, FixedSizeNumericType):
-            code = f'(*{code}.get)'
+            elem_type = self.get_c_type(class_type.element_type, in_container=True)
+            code = f'{elem_type}_release({code})'
 
         return code
 
