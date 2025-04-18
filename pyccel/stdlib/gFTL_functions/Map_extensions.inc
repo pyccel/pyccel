@@ -50,7 +50,7 @@ contains
     type (__map_iterator) :: iter
     type (__map_iterator) :: new_iter
 
-    iter =  my_map%begin()
+    iter =  my_map % begin()
 
     key = iter % first()
     value = iter % second()
