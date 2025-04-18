@@ -35,7 +35,7 @@ contains
 
     iter = my_map % find( key )
 
-    if (iter /= my_map%end()) then
+    if (iter /= my_map % end()) then
       value = iter % second()
       new_iter = my_map % erase( iter )
     else
