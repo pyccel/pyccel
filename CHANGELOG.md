@@ -14,7 +14,6 @@ All notable changes to this project will be documented in this file.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
 -   #1881 : Add Python support for dict method `copy()`.
--   #1887 : Add Python support for dict method `popitem()`.
 -   #1888 : Add Python support for dict method `setdefault()`.
 -   #1885 : Add Python and C support for dict method `get()`.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
@@ -56,7 +55,9 @@ All notable changes to this project will be documented in this file.
 -   #1880 : Add support for dict method `clear()`.
 -   #1884 : Add support for dict method `items()`.
 -   #1884 : Add support for dict method `keys()`.
--   #1886 : Add Python and C support for dict method `pop()`.
+-   #1884 : Add support for dict method `values()`.
+-   #1886 : Add support for dict method `pop()`.
+-   #1887 : Add support for dict method `popitem()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
