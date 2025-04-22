@@ -935,7 +935,11 @@ class PythonCodePrinter(CodePrinter):
         dict_obj = self._print(expr.dict_obj)
         method_args = ', '.join(self._print(a) for a in expr.args)
 
-        return f"{dict_obj}.{method_name}({method_args})\n"
+        code = f"{dict_obj}.{method_name}({method_args})"
+        if isinstance(expr.class_type, VoidType):
+            return f'{code}\n'
+        else:
+            return code
 
     def _print_DictPop(self, expr):
         dict_obj = self._print(expr.dict_obj)
@@ -964,6 +968,11 @@ class PythonCodePrinter(CodePrinter):
         dict_obj = self._print(expr.variable)
 
         return f"{dict_obj}.keys()"
+
+    def _print_DictValues(self, expr):
+        dict_obj = self._print(expr.variable)
+
+        return f"{dict_obj}.values()"
 
     def _print_DictGetItem(self, expr):
         dict_obj = self._print(expr.dict_obj)
