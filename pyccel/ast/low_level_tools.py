@@ -8,7 +8,6 @@ Module to handle low-level language agnostic objects such as macros.
 from pyccel.utilities.metaclasses import ArgumentSingleton
 
 from .basic import PyccelAstNode, TypedAstNode
-from .core import Assign
 from .datatypes import PyccelType
 from .variable import Variable
 
