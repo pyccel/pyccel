@@ -3051,10 +3051,6 @@ class CCodePrinter(CodePrinter):
 
         dict_obj_code = self._print(ObjectAddress(dict_obj))
 
-        assigns = expr.get_direct_user_nodes(lambda u: isinstance(u, Assign))
-        assert len(assigns) == 1
-        lhs = assigns[0].lhs
-
         key, value = self._temporary_args
 
         key_code = self._print(key)
