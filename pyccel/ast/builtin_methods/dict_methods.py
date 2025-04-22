@@ -347,7 +347,8 @@ class DictItems(Iterable):
         """
         Get the object representing the dict.
 
-        Get the object representing the dict.
+        Get the object representing the dict. The name of this method is
+        chosen to match the name of the equivalent method in VariableIterator.
         """
         return self._dict_obj
 
@@ -394,7 +395,8 @@ class DictKeys(Iterable):
         """
         Get the object representing the dict.
 
-        Get the object representing the dict.
+        Get the object representing the dict. The name of this method is
+        chosen to match the name of the equivalent method in VariableIterator.
         """
         return self._dict_obj
 
@@ -481,7 +483,8 @@ class DictValues(Iterable):
         """
         Get the object representing the dict.
 
-        Get the object representing the dict.
+        Get the object representing the dict. The name of this method is
+        chosen to match the name of the equivalent method in VariableIterator.
         """
         return self._dict_obj
 
