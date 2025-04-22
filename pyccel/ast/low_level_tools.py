@@ -194,6 +194,9 @@ class MemoryHandlerType(PyccelType, metaclass=ArgumentSingleton):
         """
         return shape == (() if self.rank else None)
 
+    def __str__(self):
+        return f'MemoryHandler[{self._element_type}]'
+
 #------------------------------------------------------------------------------
 class MacroDefinition(PyccelAstNode):
     """
