@@ -21,28 +21,29 @@ runs:
         echo $EXE
         $BIN_DIR=(Split-Path -Parent ${EXE}) # Find folder containing c compiler
         $MINGW_DIR=(Split-Path -Parent ${BIN_DIR}) # Find the enclosing mingw directory
-        $LIBRARY_DIR="$MINGW_DIR/lib"
-        echo $LIBRARY_DIR | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "LIBRARY_DIR=${LIBRARY_DIR}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo $LIBRARY_ROOT | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "LIBRARY_ROOT=${LIBRARY_ROOT}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
         # Add DLL paths for python imports
         $PYTHON_PREFIX=(python -c "import sys; print(sys.prefix)")
         $PYTHON_SITE_PATH="$PYTHON_PREFIX\lib\site-packages"
-        echo "import os; os.add_dll_directory(r'$LIBRARY_DIR'); os.add_dll_directory(r'$BIN_DIR')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding ascii
+        echo "import os; os.add_dll_directory(r'$LIBRARY_ROOT/lib'); os.add_dll_directory(r'$BIN_DIR')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding ascii
       shell: powershell
     - name: Install Lapack
       run: |
         #
         # Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/
-        $WEB_ADDRESS="https://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64"
-        curl $WEB_ADDRESS/libblas.dll -o ${Env:LIBRARY_DIR}\\libblas.dll
-        curl $WEB_ADDRESS/liblapack.dll -o ${Env:LIBRARY_DIR}\\liblapack.dll
+        wget https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz
+        tar -xf v3.12.1.tar.gz
+        cd lapack-3.12.1
+        cmake -B build -DCMAKE_INSTALL_PREFIX=${Env:LIBRARY_DIR} .
+        cmake --build build -j --target install
         #
         # Microsoft C runtime library: generate static libmsvcr140.a from vcruntime140.dll
-        cd ${Env:LIBRARY_DIR}
-        cp $Env:SystemRoot\\SysWOW64\\vcruntime140.dll .
-        gendef vcruntime140.dll
-        dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
+        #cd ${Env:LIBRARY_DIR}
+        #cp $Env:SystemRoot\\SysWOW64\\vcruntime140.dll .
+        #gendef vcruntime140.dll
+        #dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
         echo "BLAS/LAPACK installed"
       shell: powershell
     - name: Install MS MPI runtime and SDK
