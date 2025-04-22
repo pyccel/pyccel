@@ -1712,9 +1712,8 @@ class CCodePrinter(CodePrinter):
                     managed_mem = managed_mem_lst[0]
                     managed_var = managed_mem.var
                     if managed_var.memory_handling != 'alias':
-                        c_type = self.get_c_type(var.class_type)
                         elem_type = self.get_c_type(var.class_type.element_type, in_container = True)
-                        init = f' = {c_type}_from_ptr(&{managed_var.name})'
+                        init = f' = {elem_type}_from_ptr(&{managed_var.name})'
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
