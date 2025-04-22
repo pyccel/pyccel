@@ -186,6 +186,16 @@ def test_pop_item_key(language):
     pyccel_result = epyc_default_element()
     assert pyccel_result in original_dict
 
+def test_pop_item_expression(language):
+    def pop_item():
+        a = {1:1.0, 2:2.0}
+        return a.popitem()[0] + 4
+
+    possible_results = {5, 6}
+    epyc_default_element = epyccel(pop_item, language = language)
+    pyccel_result = epyc_default_element()
+    assert pyccel_result in possible_results
+
 def test_pop_item_unpacking(language):
     def pop_item():
         a = {1:1.0, 2:2.0}
