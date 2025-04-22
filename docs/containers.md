@@ -111,14 +111,14 @@ double f(void)
     hmap_int64_t_double my_dict = {0};
     int64_t b;
     double result;
-    my_list = c_init(vec_int64_t, {INT64_C(1), INT64_C(2), INT64_C(3), INT64_C(4)});
-    my_set = c_init(hset_int64_t, {INT64_C(1), INT64_C(2), INT64_C(3), INT64_C(4)});
+    my_list = c_init(vec_int64_t, {INT64_C(1),INT64_C(2),INT64_C(3),INT64_C(4)});
+    my_set = c_init(hset_int64_t, {INT64_C(1),INT64_C(2),INT64_C(3),INT64_C(4)});
     my_dict = c_init(hmap_int64_t_double, {{INT64_C(1), 1.0}, {INT64_C(2), 2.0}});
     b = (*vec_int64_t_at(&my_list, INT64_C(0))) + INT64_C(2);
     result = b + hset_int64_t_pop(&my_set) + (*hmap_int64_t_double_at(&my_dict, INT64_C(1)));
-    hmap_int64_t_double_drop(&my_dict);
-    vec_int64_t_drop(&my_list);
     hset_int64_t_drop(&my_set);
+    vec_int64_t_drop(&my_list);
+    hmap_int64_t_double_drop(&my_dict);
     return result;
 }
 ```
@@ -161,19 +161,21 @@ The example above is translated to the following C code:
 ```c
 void f(void)
 {
+    vec_int64_t a = {0};
     vec_vec_int64_t_mem b = {0};
-    vec_int64_t_mem a_mem = vec_int64_t_mem_from(vec_int64_t_init());
+    vec_int64_t_mem a_mem = vec_int64_t_mem_from_ptr(&a);
     vec_int64_t_mem c_mem;
-    vec_int64_t_mem Dummy_0000;
-    (*a_mem.get) = c_init(vec_int64_t, {INT64_C(1), INT64_C(2), INT64_C(3)});
-    Dummy_0000 = vec_int64_t_mem_from(c_init(vec_int64_t, {INT64_C(4), INT64_C(5), INT64_C(6)}));
-    b = c_init(vec_vec_int64_t_mem, {a_mem, Dummy_0000});
-    c_mem = (*vec_vec_int64_t_mem_at(&b, INT64_C(1)));
+    (*a_mem.get) = c_init(vec_int64_t, {INT64_C(1),INT64_C(2),INT64_C(3)});
+    b = c_init(vec_vec_int64_t_mem, {
+        a_mem,
+        vec_int64_t_mem_make(c_init(vec_int64_t, {INT64_C(4),INT64_C(5),INT64_C(6)}))
+    });
+    c_mem = vec_int64_t_mem_clone(vec_vec_int64_t_mem_at(&b, INT64_C(1)));
     (*vec_int64_t_at_mut(&(*a_mem.get), INT64_C(0))) = INT64_C(4);
     (*vec_int64_t_at_mut(c_mem.get, INT64_C(0))) = INT64_C(7);
-    vec_int64_t_mem_drop(&c_mem);
     vec_vec_int64_t_mem_drop(&b);
+    vec_int64_t_mem_drop(&c_mem);
     vec_int64_t_mem_drop(&a_mem);
-    vec_int64_t_mem_drop(&Dummy_0000);
+    vec_int64_t_drop(&a);
 }
 ```
