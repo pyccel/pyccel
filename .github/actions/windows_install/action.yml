@@ -34,7 +34,7 @@ runs:
         #
         # Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/
         ls
-        wget https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz
+        curl https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz -o v3.12.1.tar.gz
         ls
         tar -xf v3.12.1.tar.gz
         ls
