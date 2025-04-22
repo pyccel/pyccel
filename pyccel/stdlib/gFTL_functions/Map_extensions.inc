@@ -48,14 +48,13 @@ contains
     __T_declare_dummy__, intent(out) :: value
 
     type (__map_iterator) :: iter
-    type (__map_iterator) :: new_iter
 
     iter =  my_map % begin()
 
     key = iter % first()
     value = iter % second()
 
-    new_iter = my_map % erase( iter )
+    iter = my_map % erase( iter )
 
   end subroutine __IDENTITY(Map)_popitem
 
