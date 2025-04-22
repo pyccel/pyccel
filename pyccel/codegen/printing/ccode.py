@@ -2473,9 +2473,7 @@ class CCodePrinter(CodePrinter):
             return code + 'return;\n'
 
         if len(args) > 1:
-            if expr.stmt:
-                return self._print(expr.stmt)+'return 0;\n'
-            return code + 'return 0;\n'
+            return code + self._print(expr.stmt) + 'return 0;\n'
 
         if expr.stmt:
             # get Assign nodes from the CodeBlock object expr.stmt.
