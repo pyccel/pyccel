@@ -36,8 +36,10 @@ runs:
         curl https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz -o v3.12.1.tar.gz
         tar -xf v3.12.1.tar.gz
         cd lapack-3.12.1
+        echo "cmake -B build -DCMAKE_INSTALL_PREFIX=${Env:LIBRARY_ROOT} ."
         cmake -B build -DCMAKE_INSTALL_PREFIX=${Env:LIBRARY_ROOT} .
-        cmake --build build -j --target install
+        echo "cmake done"
+        cmake --build build -j 4 --target install
         ls ${Env:LIBRARY_ROOT}
         ls ${Env:LIBRARY_ROOT}/lib
         #
