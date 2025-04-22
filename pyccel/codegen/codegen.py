@@ -214,6 +214,7 @@ class Codegen:
         header_ext = _header_extension_registry[self._language]
 
         header_filename = f'{filename}.{header_ext}'
+        pyi_filename = f'{filename}.pyi'
         filename = f'{filename}.{ext}'
 
         # print module
@@ -222,11 +223,16 @@ class Codegen:
             for line in code:
                 f.write(line)
 
+        module_header = ModuleHeader(self.ast)
         # print module header
         if header_ext is not None:
-            code = self._printer.doprint(ModuleHeader(self.ast))
-            with open(header_filename, 'w') as f:
+            code = self._printer.doprint(module_header)
+            with open(header_filename, 'w', encoding="utf-8") as f:
                 f.write(code)
+
+        code = printer_registry['python'](self.parser.filename).doprint(module_header)
+        with open(pyi_filename, 'w', encoding="utf-8") as f:
+            f.write(code)
 
         # print program
         prog_filename = None
