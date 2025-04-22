@@ -424,3 +424,17 @@ def test_dict_keys_iter(language):
     pyccel_result = epyc_dict_keys()
     python_result = dict_keys()
     assert python_result == pyccel_result
+
+def test_dict_values(language):
+    def dict_values():
+        a = {1:1.0, 2:2.0, 3:3.0, 5:4.7}
+        value_sum = 0.0
+        for value in a.values(): #pylint:disable=consider-iterating-dictionary
+            value_sum += value
+
+        return value_sum
+
+    epyc_dict_values = epyccel(dict_values, language = language)
+    pyccel_result = epyc_dict_values()
+    python_result = dict_values()
+    assert python_result == pyccel_result
