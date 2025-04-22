@@ -56,7 +56,7 @@ All notable changes to this project will be documented in this file.
 -   #1880 : Add support for dict method `clear()`.
 -   #1884 : Add support for dict method `items()`.
 -   #1884 : Add support for dict method `keys()`.
--   #1886 : Add Python and C support for dict method `pop()`.
+-   #1886 : Add support for dict method `pop()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.

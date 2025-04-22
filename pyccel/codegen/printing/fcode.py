@@ -731,6 +731,12 @@ class FCodePrinter(CodePrinter):
                                         if getattr(i, 'source', None) == vector_filename else i \
                                         for i in type_module.imports]
                 self.add_import(Import('gFTL_functions/Vector_extensions', Module('_', (), ()), ignore_at_print = True))
+            elif isinstance(expr_type, DictType):
+                map_filename = LiteralString('map/template.inc')
+                imports_and_macros += [Import(LiteralString('Map_extensions.inc'), Module('_', (), ())) \
+                                        if getattr(i, 'source', None) == map_filename else i \
+                                        for i in type_module.imports]
+                self.add_import(Import('gFTL_functions/Map_extensions', Module('_', (), ()), ignore_at_print = True))
             else:
                 raise NotImplementedError(f"Unknown gFTL import for type {expr_type}")
 
@@ -1523,6 +1529,22 @@ class FCodePrinter(CodePrinter):
         dict_obj = self._print(expr.dict_obj)
         key = self._print(expr.key)
         return f'{dict_obj} % of( {key} )'
+
+    def _print_DictPop(self, expr):
+        dict_obj = expr.dict_obj
+        class_type = dict_obj.class_type
+
+        dict_obj_code = self._print(dict_obj)
+        key = self._print(expr.key)
+
+        type_name = self._print(class_type)
+        self.add_import(self._build_gFTL_extension_module(class_type))
+
+        if expr.default_value is not None:
+            default = self._print(expr.default_value)
+            return f'{type_name}_pop_with_default({dict_obj_code}, {key}, {default})'
+        else:
+            return f'{type_name}_pop({dict_obj_code}, {key})'
 
     #========================== String Methods ===============================#
 
