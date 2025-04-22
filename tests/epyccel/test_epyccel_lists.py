@@ -70,13 +70,27 @@ def test_pop_list_of_lists_var(stc_language) :
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_pop_list_of_lists_ref(stc_language) :
+def test_pop_list_of_lists_ref(stc_language):
     def pop_last_element():
         a = [1, 2]
         b = [3, 4]
         c = [a, b]
         d = c.pop()
         return d[0] + d[1]
+    epyc_last_element = epyccel(pop_last_element, language = stc_language)
+    pyccel_result = epyc_last_element()
+    python_result = pop_last_element()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+
+def test_pop_list_of_lists_ref_2(stc_language):
+    def pop_last_element():
+        a = [1, 2]
+        b = [3, 4]
+        c = [a, b]
+        d = c.pop()
+        e = [d,b]
+        return d[0] + d[1] + e[1][1]
     epyc_last_element = epyccel(pop_last_element, language = stc_language)
     pyccel_result = epyc_last_element()
     python_result = pop_last_element()
@@ -180,13 +194,13 @@ def test_append_multiple(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-def test_append_list(limited_language):
+def test_append_list(stc_language):
     def f():
         a = [[1, 2, 3]]
         a.append([4, 5, 6])
         return len(a)
 
-    epyc_f = epyccel(f, language=limited_language)
+    epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
 
 def test_append_range(language):
