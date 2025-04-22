@@ -3829,6 +3829,15 @@ class SemanticParser(BasicParser):
                     new_expressions.append(Assign(rhs_var, rhs))
                     rhs = rhs_var
                 lhs = PythonTuple(*new_lhs)
+            elif isinstance(rhs, PyccelFunction):
+                assert isinstance(rhs.class_type, InhomogeneousTupleType)
+                r_iter = [self.scope.collect_tuple_element(v) for v in rhs]
+                new_lhs = []
+                for i,(l,r) in enumerate(zip(lhs, r_iter)):
+                    d = self._infer_type(r)
+                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions,
+                                                    arr_in_multirets=r.rank>0 ) )
+                lhs = PythonTuple(*new_lhs)
             else:
                 if isinstance(rhs.class_type, InhomogeneousTupleType):
                     r_iter = [self.scope.collect_tuple_element(v) for v in rhs]

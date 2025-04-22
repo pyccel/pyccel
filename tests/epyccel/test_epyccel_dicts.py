@@ -141,48 +141,72 @@ def test_pop_non_literal_str_keys(stc_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-@pytest.mark.skip("Returning tuples is not yet implemented. See #337")
-def test_pop_item(python_only_language):
+def test_pop_item(language):
     def pop_item():
         a = {1:1.0, 2:2.0}
         return a.popitem()
-    epyc_default_element = epyccel(pop_item, language = python_only_language)
-    pyccel_result = epyc_default_element()
-    python_result = pop_item()
-    assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
 
-def test_pop_item_elements(python_only_language):
+    original_dict = {1:1.0, 2:2.0}
+    epyc_default_element = epyccel(pop_item, language = language)
+    pyccel_result = epyc_default_element()
+    assert pyccel_result[0] in original_dict
+    assert pyccel_result[1] == original_dict[pyccel_result[0]]
+
+def test_pop_item_elements(language):
     def pop_item():
         a = {1:1.0, 2:2.0}
         b = a.popitem()
         return b[0], b[1]
-    epyc_default_element = epyccel(pop_item, language = python_only_language)
-    pyccel_result = epyc_default_element()
-    python_result = pop_item()
-    assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
 
-def test_pop_item_str_keys(python_only_language):
+    original_dict = {1:1.0, 2:2.0}
+    epyc_default_element = epyccel(pop_item, language = language)
+    pyccel_result = epyc_default_element()
+    assert pyccel_result[0] in original_dict
+    assert pyccel_result[1] == original_dict[pyccel_result[0]]
+
+def test_pop_item_str_keys(stc_language):
     def pop_item_str_keys():
         a = {'a':1, 'b':2}
         b = a.popitem()
         return b[0], b[1]
-    epyc_default_element = epyccel(pop_item_str_keys, language = python_only_language)
-    pyccel_result = epyc_default_element()
-    python_result = pop_item_str_keys()
-    assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
 
-def test_pop_item_key(python_only_language):
+    original_dict = {'a':1, 'b':2}
+    epyc_default_element = epyccel(pop_item_str_keys, language = stc_language)
+    pyccel_result = epyc_default_element()
+    assert pyccel_result[0] in original_dict
+    assert pyccel_result[1] == original_dict[pyccel_result[0]]
+
+def test_pop_item_key(language):
     def pop_item():
         a = {1:1.0, 2:2.0}
         return a.popitem()[0]
-    epyc_default_element = epyccel(pop_item, language = python_only_language)
+
+    original_dict = {1:1.0, 2:2.0}
+    epyc_default_element = epyccel(pop_item, language = language)
     pyccel_result = epyc_default_element()
-    python_result = pop_item()
-    assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
+    assert pyccel_result in original_dict
+
+def test_pop_item_expression(language):
+    def pop_item():
+        a = {1:1.0, 2:2.0}
+        return a.popitem()[0] + 4
+
+    possible_results = {5, 6}
+    epyc_default_element = epyccel(pop_item, language = language)
+    pyccel_result = epyc_default_element()
+    assert pyccel_result in possible_results
+
+def test_pop_item_unpacking(language):
+    def pop_item():
+        a = {1:1.0, 2:2.0}
+        b, c = a.popitem()
+        return b, c
+
+    original_dict = {1:1.0, 2:2.0}
+    epyc_default_element = epyccel(pop_item, language = language)
+    pyccel_result = epyc_default_element()
+    assert pyccel_result[0] in original_dict
+    assert pyccel_result[1] == original_dict[pyccel_result[0]]
 
 def test_get_element(python_only_language):
     def get_element():
