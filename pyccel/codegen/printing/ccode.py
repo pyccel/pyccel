@@ -684,7 +684,7 @@ class CCodePrinter(CodePrinter):
 
         return code
 
-    def get_stc_init_elements(self, class_type, elements, current_type):
+    def get_stc_init_elements(self, class_type, elements):
         """
         Get the elements that can be passed to a `c_init` call.
 
@@ -703,8 +703,6 @@ class CCodePrinter(CodePrinter):
             The type of the elements in the `c_init` call.
         elements : list[TypedAstNode]
             The elements that should be printed in the `c_init` call.
-        current_type : str
-            A string describing the type being created by the `c_init` call.
 
         Returns
         -------
@@ -749,11 +747,11 @@ class CCodePrinter(CodePrinter):
         """
         dtype = self.get_c_type(class_type)
         if isinstance(expr, PythonDict):
-            values = self.get_stc_init_elements(class_type.value_type, expr.values, dtype)
-            keys = self.get_stc_init_elements(class_type.key_type, expr.keys, dtype)
+            values = self.get_stc_init_elements(class_type.value_type, expr.values)
+            keys = self.get_stc_init_elements(class_type.key_type, expr.keys)
             keyraw = '{' + ', '.join(f'{{{k}, {v}}}' for k,v in zip(keys, values)) + '}'
         else:
-            args = self.get_stc_init_elements(class_type.element_type, expr.args, dtype)
+            args = self.get_stc_init_elements(class_type.element_type, expr.args)
             split = '\n' if any(len(a) > 10 for a in args) else ''
             keyraw = '{' + split + f',{split}'.join(args) + split + '}'
         return f'c_init({dtype}, {keyraw})'
@@ -3046,7 +3044,7 @@ class CCodePrinter(CodePrinter):
         target = expr.list_obj
         class_type = target.class_type
         c_type = self.get_c_type(class_type)
-        arg = self._print(expr.args[0])
+        arg = self.get_stc_init_elements(class_type.element_type, expr.args)[0]
         list_obj = self._print(ObjectAddress(expr.list_obj))
         return f'{c_type}_push({list_obj}, {arg});\n'
 
