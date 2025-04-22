@@ -36,11 +36,9 @@ runs:
         curl https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz -o v3.12.1.tar.gz
         tar -xf v3.12.1.tar.gz
         cd lapack-3.12.1
-        #New-Item -Name "build" -ItemType "Directory"
-        #cd build
-        #cmake --help
-        #echo "cmake -DCMAKE_INSTALL_PREFIX=${Env:MINGW_DIR} .."
-        cmake -D CMAKE_INSTALL_PREFIX="${Env:MINGW_DIR}" -D CMAKE_C_COMPILER=gcc -D CMAKE_Fortran_COMPILER=gfortran -B build -S .
+        $GCC_EXE=(Get-Command gcc).Path
+        $GFORTRAN_EXE=(Get-Command gfortran).Path
+        cmake -D CMAKE_INSTALL_PREFIX="${Env:MINGW_DIR}" -D CMAKE_C_COMPILER="${Env:GCC_EXE}" -D CMAKE_Fortran_COMPILER="${Env:GFORTRAN_EXE}" -B build -S .
         echo "cmake done"
         cmake --build build -j 4 --target install
         ls ${Env:MINGW_DIR}
