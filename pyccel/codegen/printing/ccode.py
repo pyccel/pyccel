@@ -2057,28 +2057,26 @@ class CCodePrinter(CodePrinter):
                                                  DictType, StringType)):
             if var.is_alias:
                 return code
-            if self.is_c_pointer(var):
-                variable_address = var.name
-            else:
-                variable_address = f'&{var.name}'
+
+            variable_address = self._print(ObjectAddress(var))
             container_type = self.get_c_type(var.class_type)
-            return code + f'{container_type}_drop({variable_address});\n'
+            return f'{container_type}_drop({variable_address});\n' + code
         if isinstance(var.class_type, InhomogeneousTupleType):
-            return code + ''.join(self._print(Deallocate(v)) for v in var)
+            return ''.join(self._print(Deallocate(v)) for v in var)
         if isinstance(var.dtype, CustomDataType):
             variable_address = self._print(ObjectAddress(var))
             Pyccel__del = var.cls_base.scope.find('__del__').name
-            return code + f"{Pyccel__del}({variable_address});\n"
+            return f"{Pyccel__del}({variable_address});\n" + code
         elif isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             if var.is_alias:
                 return code
             else:
                 data_ptr = DottedVariable(VoidType(), 'data', lhs = var, memory_handling='alias')
                 data_ptr_code = self._print(ObjectAddress(data_ptr))
-                return code + f'free({data_ptr_code});\n{data_ptr_code} = NULL;\n'
+                return f'free({data_ptr_code});\n{data_ptr_code} = NULL;\n' + code
         else:
             variable_address = self._print(ObjectAddress(var))
-            return code + f'free({variable_address});\n'
+            return f'free({variable_address});\n' + code
 
     def _print_Slice(self, expr):
         start = expr.start
