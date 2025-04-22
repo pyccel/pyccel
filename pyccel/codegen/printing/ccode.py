@@ -1685,6 +1685,8 @@ class CCodePrinter(CodePrinter):
         var = expr.variable
         if isinstance(var.class_type, InhomogeneousTupleType):
             return ''
+        if var.is_alias and get_managed_memory_object(var) != var:
+            return ''
 
         declaration_type = self.get_declare_type(var)
 
@@ -2051,7 +2053,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,
                                                  DictType, StringType)):
             if var.is_alias:
-                return ''
+                return code
             if self.is_c_pointer(var):
                 variable_address = var.name
             else:
