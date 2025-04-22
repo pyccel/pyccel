@@ -33,16 +33,13 @@ runs:
       run: |
         #
         # Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/
-        ls
         curl https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz -o v3.12.1.tar.gz
-        ls
         tar -xf v3.12.1.tar.gz
-        ls
         cd lapack-3.12.1
-        cmake -B build -DCMAKE_INSTALL_PREFIX=${Env:LIBRARY_DIR} .
+        cmake -B build -DCMAKE_INSTALL_PREFIX=${Env:LIBRARY_ROOT} .
         cmake --build build -j --target install
-        ls ${Env:LIBRARY_DIR}
-        ls ${Env:LIBRARY_DIR}/lib
+        ls ${Env:LIBRARY_ROOT}
+        ls ${Env:LIBRARY_ROOT}/lib
         #
         # Microsoft C runtime library: generate static libmsvcr140.a from vcruntime140.dll
         #cd ${Env:LIBRARY_DIR}
