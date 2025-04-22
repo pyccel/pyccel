@@ -648,7 +648,6 @@ def test_import_syntax_cfail(test_file, language):
         )
     )
 )
-@pytest.mark.xdist_incompatible
 def test_import_syntax_user_as( test_file, language ):
     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py",
             language = language)
