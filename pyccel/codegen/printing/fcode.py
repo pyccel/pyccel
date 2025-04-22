@@ -26,7 +26,7 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableIterator
 
-from pyccel.ast.builtin_methods.dict_methods import DictItems, DictKeys
+from pyccel.ast.builtin_methods.dict_methods import DictItems, DictKeys, DictPopitem
 
 from pyccel.ast.builtin_methods.list_methods import ListPop
 
@@ -1546,6 +1546,26 @@ class FCodePrinter(CodePrinter):
         else:
             return f'{type_name}_pop({dict_obj_code}, {key})'
 
+    def _print_DictPopitem(self, expr):
+        dict_obj = expr.dict_obj
+        class_type = dict_obj.class_type
+
+        dict_obj_code = self._print(dict_obj)
+
+        type_name = self._print(class_type)
+        self.add_import(self._build_gFTL_extension_module(class_type))
+
+        assigns = expr.get_direct_user_nodes(lambda u: isinstance(u, Assign))
+        assert len(assigns) == 1
+        lhs = assigns[0].lhs
+
+        key, value = lhs
+
+        key_code = self._print(key)
+        value_code = self._print(value)
+
+        return f'call {type_name}_popitem({dict_obj_code}, {key_code}, {value_code})\n'
+
     #========================== String Methods ===============================#
 
     def _print_PythonStr(self, expr):
@@ -2221,7 +2241,7 @@ class FCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
-        if isinstance(rhs, (FunctionCall, SetUnion, ListPop)):
+        if isinstance(rhs, (FunctionCall, SetUnion, ListPop, DictPopitem)):
             return self._print(rhs)
 
         lhs_code = self._print(lhs)

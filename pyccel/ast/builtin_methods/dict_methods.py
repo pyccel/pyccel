@@ -143,6 +143,16 @@ class DictPopitem(DictMethod):
         self._class_type = InhomogeneousTupleType(dict_type.key_type, dict_type.value_type)
         super().__init__(dict_obj)
 
+    def __iter__(self):
+        """
+        Iterate over a popitem to get an example of a key and a value.
+
+        Iterate over a popitem to get an example of a key and a value. This
+        is particularly useful in the semantic stage in order to create the
+        variables representing the key and value objects.
+        """
+        return iter((IndexedElement(self, 0), IndexedElement(self, 1)))
+
 #==============================================================================
 class DictGet(DictMethod):
     """
