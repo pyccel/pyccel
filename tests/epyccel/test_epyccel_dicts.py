@@ -70,51 +70,51 @@ def test_dict_kwarg_init(python_only_language):
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_pop_element(stc_language):
+def test_pop_element(language):
     def pop_element():
         a = {1:1.0, 2:2.0}
         return a.pop(1)
-    epyc_element = epyccel(pop_element, language = stc_language)
+    epyc_element = epyccel(pop_element, language = language)
     pyccel_result = epyc_element()
     python_result = pop_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_pop_default_element(stc_language):
+def test_pop_default_element(language):
     def pop_default_element():
         a = {1:True, 2:False}
         return a.pop(3, True)
-    epyc_default_element = epyccel(pop_default_element, language = stc_language)
+    epyc_default_element = epyccel(pop_default_element, language = language)
     pyccel_result = epyc_default_element()
     python_result = pop_default_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_pop_bool_keys(stc_language):
+def test_pop_bool_keys(language):
     def pop_default_element():
         a = {True:1, False:2}
         return a.pop(False)
-    epyc_default_element = epyccel(pop_default_element, language = stc_language)
+    epyc_default_element = epyccel(pop_default_element, language = language)
     pyccel_result = epyc_default_element()
     python_result = pop_default_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_pop_falsy_int_default_element(stc_language):
+def test_pop_falsy_int_default_element(language):
     def pop_falsy_int_default_element():
         a = {1:2, 2:3}
         return a.pop(3, 0)
-    epyc_func = epyccel(pop_falsy_int_default_element, language = stc_language)
+    epyc_func = epyccel(pop_falsy_int_default_element, language = language)
     pyccel_result = epyc_func()
     python_result = pop_falsy_int_default_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-def test_pop_falsy_bool_default_element(stc_language):
+def test_pop_falsy_bool_default_element(language):
     def pop_falsy_bool_default_element():
         a = {1:True, 2:False}
         return a.pop(3, False)
-    epyc_default_element = epyccel(pop_falsy_bool_default_element, language = stc_language)
+    epyc_default_element = epyccel(pop_falsy_bool_default_element, language = language)
     pyccel_result = epyc_default_element()
     python_result = pop_falsy_bool_default_element()
     assert isinstance(python_result, type(pyccel_result))
