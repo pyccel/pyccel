@@ -2968,9 +2968,7 @@ class CCodePrinter(CodePrinter):
         lhs_code = self._print(mem_var)
         rhs_code = self._print(expr.managed_object)
 
-        if rhs_code.endswith('.get)'):
-            rhs_code = rhs_code.removesuffix('.get)').removeprefix('(*')
-        elif rhs_code.endswith('->get)'):
+        if rhs_code.endswith('->get)'):
             rhs_code = rhs_code.removesuffix('->get)').removeprefix('(*')
             class_type = self.get_c_type(mem_var.class_type)
             rhs_code = f'{class_type}_clone(*{rhs_code})'
