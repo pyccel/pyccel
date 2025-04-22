@@ -161,21 +161,19 @@ The example above is translated to the following C code:
 ```c
 void f(void)
 {
-    vec_int64_t a = {0};
     vec_vec_int64_t_mem b = {0};
-    vec_int64_t_mem a_mem = vec_int64_t_mem_from_ptr(&a);
+    vec_int64_t_mem a_mem = vec_int64_t_mem_make(vec_int64_t_init());
     vec_int64_t_mem c_mem;
     (*a_mem.get) = c_init(vec_int64_t, {INT64_C(1),INT64_C(2),INT64_C(3)});
     b = c_init(vec_vec_int64_t_mem, {
-        a_mem,
+        vec_int64_t_mem_clone(a_mem),
         vec_int64_t_mem_make(c_init(vec_int64_t, {INT64_C(4),INT64_C(5),INT64_C(6)}))
     });
-    c_mem = vec_int64_t_mem_clone(vec_vec_int64_t_mem_at(&b, INT64_C(1)));
-    (*vec_int64_t_at_mut(&(*a_mem.get), INT64_C(0))) = INT64_C(4);
+    c_mem = vec_int64_t_mem_clone(*vec_vec_int64_t_mem_at(&b, INT64_C(1)));
+    (*vec_int64_t_at_mut(a_mem.get, INT64_C(0))) = INT64_C(4);
     (*vec_int64_t_at_mut(c_mem.get, INT64_C(0))) = INT64_C(7);
     vec_vec_int64_t_mem_drop(&b);
-    vec_int64_t_mem_drop(&c_mem);
     vec_int64_t_mem_drop(&a_mem);
-    vec_int64_t_drop(&a);
+    vec_int64_t_mem_drop(&c_mem);
 }
 ```
