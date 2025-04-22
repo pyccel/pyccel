@@ -38,6 +38,9 @@ runs:
         cd lapack-3.12.1
         $GCC_EXE=(Get-Command gcc).Path
         $GFORTRAN_EXE=(Get-Command gfortran).Path
+        gcc --version
+        gfortran --version
+        echo "${Env:GCC_EXE}  ${Env:GFORTRAN_EXE}"
         cmake -D CMAKE_INSTALL_PREFIX="${Env:MINGW_DIR}" -D CMAKE_C_COMPILER="${Env:GCC_EXE}" -D CMAKE_Fortran_COMPILER="${Env:GFORTRAN_EXE}" -B build -S .
         echo "cmake done"
         cmake --build build -j 4 --target install
