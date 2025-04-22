@@ -1536,6 +1536,11 @@ class SemanticParser(BasicParser):
             elif isinstance(rhs, IndexedElement) and not rhs.is_slice:
                 d_lhs['memory_handling'] = 'alias'
 
+            elif isinstance(rhs, (DictPop, DictPopitem, ListPop)):
+                target_var = rhs.list_obj if isinstance(rhs, ListPop) else rhs.dict_obj
+                if target_var in self._pointer_targets[-1]:
+                    d_lhs['memory_handling'] = 'alias'
+
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign = False,
             arr_in_multirets=False):
         """
