@@ -404,13 +404,13 @@ class DictKeys(Iterable):
         """
         Get the item of the iterable that will be saved to the loop targets.
 
-        Returns two objects that could be a key and a value of the dictionary.
-        These elements are used to determine the types of the loop targets.
+        Returns an object that could be a key of the dictionary.
+        This element is used to determine the type of the loop target.
 
         Returns
         -------
         list[TypedAstNode]
-            A list of objects that should be assigned to variables.
+            A list containing the object that should be assigned to the target variable.
         """
         class_type = self._dict_obj.class_type.key_type
         return [Variable(class_type, '_', memory_handling = 'heap' if class_type.rank > 0 else 'stack')]
@@ -492,13 +492,13 @@ class DictValues(Iterable):
         """
         Get the item of the iterable that will be saved to the loop targets.
 
-        Returns two objects that could be a key and a value of the dictionary.
-        These elements are used to determine the types of the loop targets.
+        Returns an object that could be a value of the dictionary.
+        This element is used to determine the types of the loop targets.
 
         Returns
         -------
         list[TypedAstNode]
-            A list of objects that should be assigned to variables.
+            A list containing the object that should be assigned to the target variable.
         """
         class_type = self._dict_obj.class_type.value_type
         return [Variable(class_type, '_', memory_handling = 'heap' if class_type.rank > 0 else 'stack')]
