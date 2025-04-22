@@ -42,8 +42,8 @@ STC_INLINE Self _c_MEMB(_from_ptr)(_m_value* ptr) {
     return unowned;
 }
 
-STC_INLINE Self _c_MEMB(_clone)(const Self* self) {
-    return _c_MEMB(_from_ptr)(self->get);
+STC_INLINE Self _c_MEMB(_clone)(const Self self) {
+    return _c_MEMB(_from_ptr)(self.get);
 }
 
 STC_INLINE void _c_MEMB(_drop)(const Self* self) {
