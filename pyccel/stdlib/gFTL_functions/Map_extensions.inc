@@ -16,11 +16,10 @@ contains
     __T_declare_dummy__ :: value
 
     type (__map_iterator) :: iter
-    type (__map_iterator) :: new_iter
 
     iter = my_map % find( key )
     value = iter % second()
-    new_iter = my_map % erase( iter )
+    iter = my_map % erase( iter )
 
   end function __IDENTITY(Map)_pop
 
@@ -31,13 +30,12 @@ contains
 
     __T_declare_dummy__ :: value
     type (__map_iterator) :: iter
-    type (__map_iterator) :: new_iter
 
     iter = my_map % find( key )
 
     if (iter /= my_map % end()) then
       value = iter % second()
-      new_iter = my_map % erase( iter )
+      iter = my_map % erase( iter )
     else
       value = default
     endif
