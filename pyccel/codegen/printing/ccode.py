@@ -2476,9 +2476,6 @@ class CCodePrinter(CodePrinter):
         if len(args) == 0:
             return code + 'return;\n'
 
-        if len(args) > 1:
-            return code + self._print(expr.stmt) + 'return 0;\n'
-
         if expr.stmt:
             # get Assign nodes from the CodeBlock object expr.stmt.
             last_assign = expr.stmt.get_attribute_nodes((Assign, AliasAssign), excluded_nodes=FunctionCall)
