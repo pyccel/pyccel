@@ -537,7 +537,7 @@ class CCodePrinter(CodePrinter):
             c_type = self.get_c_type(lhs.class_type)
             loop_scope = self.scope.create_new_loop_scope()
             iter_var_name = loop_scope.get_new_name()
-            code_init += f'c_each({iter_var_name}, {c_type}, {lhs_code}) {{\n'
+            code_init += f'for (c_each({iter_var_name}, {c_type}, {lhs_code})) {{\n'
             code_init += f'*({iter_var_name}.ref) = {fill_val};\n'
             code_init += '}\n'
         return code_init
@@ -792,7 +792,7 @@ class CCodePrinter(CodePrinter):
             self._additional_code = tmp_additional_code
 
             return prefix + (f'{lhs} = {start};\n'
-                    f'c_each({iter_var_name}, {c_type}, {arg}) {{\n'
+                    f'for (c_each({iter_var_name}, {c_type}, {arg})) {{\n'
                     f'{body}'
                      '}\n')
         else:
@@ -2533,7 +2533,7 @@ class CCodePrinter(CodePrinter):
             counter = Variable(IteratorType(iterable_type), indices[0].name)
             c_type = self.get_c_type(iterable_type)
             iterable_code = self._print(var)
-            for_code = f'c_each ({self._print(counter)}, {c_type}, {iterable_code})'
+            for_code = f'for (c_each ({self._print(counter)}, {c_type}, {iterable_code}))'
             tmp_ref = DottedVariable(VoidType(), 'ref', memory_handling='alias', lhs = counter)
             if isinstance(iterable, DictItems):
                 assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'first', lhs = tmp_ref)),
