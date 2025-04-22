@@ -2870,13 +2870,14 @@ class CCodePrinter(CodePrinter):
 
     def _print_ObjectAddress(self, expr):
         obj_code = self._print(expr.obj)
-        if isinstance(expr.obj, ObjectAddress) or not self.is_c_pointer(expr.obj):
+        if isinstance(expr.obj, ObjectAddress):
+            return f'&{obj_code}'
+        elif obj_code.startswith('(*') and obj_code.endswith(')'):
+            return f'{obj_code[2:-1]}'
+        elif not self.is_c_pointer(expr.obj):
             return f'&{obj_code}'
         else:
-            if obj_code.startswith('(*') and obj_code.endswith(')'):
-                return f'{obj_code[2:-1]}'
-            else:
-                return obj_code
+            return obj_code
 
     def _print_PointerCast(self, expr):
         declare_type = self.get_declare_type(expr.cast_type)
