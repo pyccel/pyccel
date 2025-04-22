@@ -13,7 +13,7 @@ This module contains objects which describe these methods within Pyccel's AST.
 from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType, SymbolicType
 from pyccel.ast.internals import PyccelFunction, Iterable, PyccelArrayShapeElement
 from pyccel.ast.literals  import LiteralInteger
-from pyccel.ast.variable  import IndexedElement
+from pyccel.ast.variable  import IndexedElement, Variable
 
 
 __all__ = ('DictClear',
@@ -412,8 +412,8 @@ class DictKeys(Iterable):
         list[TypedAstNode]
             A list of objects that should be assigned to variables.
         """
-        item = DictPopitem(self._dict_obj)
-        return [IndexedElement(item, 0)]
+        class_type = self._dict_obj.class_type.key_type
+        return [Variable(class_type, '_', memory_handling = 'heap' if class_type.rank > 0 else 'stack')]
 
 #==============================================================================
 class DictGetItem(DictMethod):
@@ -500,5 +500,5 @@ class DictValues(Iterable):
         list[TypedAstNode]
             A list of objects that should be assigned to variables.
         """
-        item = DictPopitem(self._dict_obj)
-        return [IndexedElement(item, 1)]
+        class_type = self._dict_obj.class_type.value_type
+        return [Variable(class_type, '_', memory_handling = 'heap' if class_type.rank > 0 else 'stack')]
