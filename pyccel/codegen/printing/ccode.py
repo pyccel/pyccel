@@ -21,7 +21,7 @@ from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
-from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys, DictValues
+from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys, DictValues, DictPopitem
 
 from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
 from pyccel.ast.core      import FunctionCall, FunctionCallArgument
@@ -2473,7 +2473,7 @@ class CCodePrinter(CodePrinter):
     def _print_Assign(self, expr):
         lhs = expr.lhs
         rhs = expr.rhs
-        if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, InhomogeneousTupleType):
+        if isinstance(rhs, (FunctionCall, DictPopitem)) and isinstance(rhs.class_type, InhomogeneousTupleType):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
             code = self._print(rhs)
             self._temporary_args = []
@@ -3045,6 +3045,20 @@ class CCodePrinter(CodePrinter):
             pop_expr = f"{c_type}_pop({dict_var}, {key})"
 
         return pop_expr
+
+    def _print_DictPopitem(self, expr):
+        dict_obj = expr.dict_obj
+        class_type = dict_obj.class_type
+        c_type = self.get_c_type(class_type)
+
+        dict_obj_code = self._print(ObjectAddress(dict_obj))
+
+        key, value = self._temporary_args
+
+        key_code = self._print(key)
+        value_code = self._print(value)
+
+        return f'{c_type}_popitem({dict_obj_code}, {key_code}, {value_code});\n'
 
     def _print_DictGetItem(self, expr):
         dict_obj = expr.dict_obj

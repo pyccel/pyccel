@@ -26,7 +26,7 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableIterator
 
-from pyccel.ast.builtin_methods.dict_methods import DictItems, DictKeys, DictValues
+from pyccel.ast.builtin_methods.dict_methods import DictItems, DictKeys, DictValues, DictPopitem
 
 from pyccel.ast.builtin_methods.list_methods import ListPop
 
@@ -731,6 +731,12 @@ class FCodePrinter(CodePrinter):
                                         if getattr(i, 'source', None) == vector_filename else i \
                                         for i in type_module.imports]
                 self.add_import(Import('gFTL_functions/Vector_extensions', Module('_', (), ()), ignore_at_print = True))
+            elif isinstance(expr_type, DictType):
+                map_filename = LiteralString('map/template.inc')
+                imports_and_macros += [Import(LiteralString('Map_extensions.inc'), Module('_', (), ())) \
+                                        if getattr(i, 'source', None) == map_filename else i \
+                                        for i in type_module.imports]
+                self.add_import(Import('gFTL_functions/Map_extensions', Module('_', (), ()), ignore_at_print = True))
             else:
                 raise NotImplementedError(f"Unknown gFTL import for type {expr_type}")
 
@@ -1524,6 +1530,42 @@ class FCodePrinter(CodePrinter):
         key = self._print(expr.key)
         return f'{dict_obj} % of( {key} )'
 
+    def _print_DictPop(self, expr):
+        dict_obj = expr.dict_obj
+        class_type = dict_obj.class_type
+
+        dict_obj_code = self._print(dict_obj)
+        key = self._print(expr.key)
+
+        type_name = self._print(class_type)
+        self.add_import(self._build_gFTL_extension_module(class_type))
+
+        if expr.default_value is not None:
+            default = self._print(expr.default_value)
+            return f'{type_name}_pop_with_default({dict_obj_code}, {key}, {default})'
+        else:
+            return f'{type_name}_pop({dict_obj_code}, {key})'
+
+    def _print_DictPopitem(self, expr):
+        dict_obj = expr.dict_obj
+        class_type = dict_obj.class_type
+
+        dict_obj_code = self._print(dict_obj)
+
+        type_name = self._print(class_type)
+        self.add_import(self._build_gFTL_extension_module(class_type))
+
+        assigns = expr.get_direct_user_nodes(lambda u: isinstance(u, Assign))
+        assert len(assigns) == 1
+        lhs = assigns[0].lhs
+
+        key, value = lhs
+
+        key_code = self._print(key)
+        value_code = self._print(value)
+
+        return f'call {type_name}_popitem({dict_obj_code}, {key_code}, {value_code})\n'
+
     #========================== String Methods ===============================#
 
     def _print_PythonStr(self, expr):
@@ -2199,7 +2241,7 @@ class FCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
-        if isinstance(rhs, (FunctionCall, SetUnion, ListPop)):
+        if isinstance(rhs, (FunctionCall, SetUnion, ListPop, DictPopitem)):
             return self._print(rhs)
 
         lhs_code = self._print(lhs)
