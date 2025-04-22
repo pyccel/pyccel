@@ -716,6 +716,18 @@ def test_mutable_multi_level_indexing(stc_language):
     epyc_f = epyccel(f, language=stc_language)
     assert f() == epyc_f()
 
+def test_mutable_multi_level_indexing_2(stc_language):
+    def f():
+        a = [1,2,3,4]
+        b = [a]
+        c = b[0]
+        c[0] = 5
+        c[2] = 6
+        return a[0], a[1], a[2], a[3]
+
+    epyc_f = epyccel(f, language=stc_language)
+    assert f() == epyc_f()
+
 def test_homogenous_list_int_copy(limited_language):
     def homogeneous_list_int():
         return list([1, 2, 3, 4])

@@ -58,6 +58,11 @@ def return_nested_list_element():
     b = a.pop()
     return b
 
+def get_nested_list_element():
+    a = [[1,2,3], [4,5,6]]
+    b = a[0]
+    return b[0]+b[1]+b[2]
+
 if __name__ == '__main__':
     create_nested_list()
     create_nested_list2()
