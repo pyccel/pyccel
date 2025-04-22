@@ -290,7 +290,7 @@ def test_multi_level_inhomogeneous_tuple_in_inline(language):
     assert f() == g()
 
 def test_indexed_template(language):
-    @template(name='T', types=[float, complex])
+    @template(name='T', types=['const float', 'const complex'])
     def my_sum(v: 'T[:]'):
         return v.sum()
 

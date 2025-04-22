@@ -197,15 +197,15 @@ class FortranToCWrapper(Wrapper):
         self._wrapper_names_dict[expr.name] = name
         in_cls = expr.arguments and expr.arguments[0].bound_argument
 
-        # Create the scope
-        func_scope = self.scope.new_child_scope(name)
-        self.scope = func_scope
-
         self._additional_exprs = []
 
         if any(isinstance(a.var, FunctionAddress) for a in expr.arguments):
             warnings.warn("Functions with functions as arguments cannot be wrapped by pyccel")
             return EmptyNode()
+
+        # Create the scope
+        func_scope = self.scope.new_child_scope(name)
+        self.scope = func_scope
 
         # Wrap the arguments and collect the expressions passed as the call argument.
         wrapped_args = [self._extract_FunctionDefArgument(a, expr) for a in expr.arguments]
