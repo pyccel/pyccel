@@ -716,12 +716,12 @@ class CCodePrinter(CodePrinter):
             return [self._print(CStrStr(e)) for e in elements]
         elif class_type.rank > 0:
             stc_init_elements = []
+            element_type = self.get_c_type(class_type, in_container = True)
             for e in elements:
                 if isinstance(e, Variable):
                     mem_var = get_managed_memory_object(e)
-                    stc_init_elements.append(self._print(mem_var))
+                    stc_init_elements.append(f'{element_type}_clone({self._print(mem_var)})')
                 else:
-                    element_type = self.get_c_type(class_type, in_container = True)
                     code = self.init_stc_container(e, class_type)
                     stc_init_elements.append(f'{element_type}_make({code})')
             return stc_init_elements
@@ -1685,7 +1685,7 @@ class CCodePrinter(CodePrinter):
         var = expr.variable
         if isinstance(var.class_type, InhomogeneousTupleType):
             return ''
-        if var.is_alias and get_managed_memory_object(var) != var:
+        if get_managed_memory_object(var) != var and not var.on_stack and not var.is_argument:
             return ''
 
         declaration_type = self.get_declare_type(var)
@@ -1711,9 +1711,13 @@ class CCodePrinter(CodePrinter):
                 if managed_mem_lst:
                     managed_mem = managed_mem_lst[0]
                     managed_var = managed_mem.var
-                    if managed_var.memory_handling != 'alias':
-                        elem_type = self.get_c_type(var.class_type.element_type, in_container = True)
-                        init = f' = {elem_type}_from_ptr(&{managed_var.name})'
+                    if managed_var.on_stack:
+                        mem_type = self.get_c_type(var.class_type.element_type, in_container = True)
+                        init = f' = {mem_type}_from_ptr(&{managed_var.name})'
+                    elif not managed_var.is_alias:
+                        mem_type = self.get_c_type(var.class_type.element_type, in_container = True)
+                        elem_type = self.get_c_type(var.class_type.element_type)
+                        init = f' = {mem_type}_make({elem_type}_init())'
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
@@ -2052,6 +2056,8 @@ class CCodePrinter(CodePrinter):
             variable_address = self._print(ObjectAddress(mgd_var))
             container_type = self.get_c_type(mgd_var.class_type)
             code = f'{container_type}_drop({variable_address});\n'
+            if not var.on_stack and not var.is_argument:
+                return code
 
         if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,
                                                  DictType, StringType)):
@@ -2972,7 +2978,7 @@ class CCodePrinter(CodePrinter):
         elif rhs_code.endswith('->get)'):
             rhs_code = rhs_code.removesuffix('->get)').removeprefix('(*')
             class_type = self.get_c_type(mem_var.class_type)
-            rhs_code = f'{class_type}_clone({rhs_code})'
+            rhs_code = f'{class_type}_clone(*{rhs_code})'
 
         return f'{lhs_code} = {rhs_code};\n'
 
