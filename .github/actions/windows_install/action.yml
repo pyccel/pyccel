@@ -40,7 +40,7 @@ runs:
         #cd build
         #cmake --help
         #echo "cmake -DCMAKE_INSTALL_PREFIX=${Env:MINGW_DIR} .."
-        cmake -D CMAKE_INSTALL_PREFIX="${Env:MINGW_DIR}" -B build -S .
+        cmake -D CMAKE_INSTALL_PREFIX="${Env:MINGW_DIR}" -D CMAKE_C_COMPILER=gcc -D CMAKE_Fortran_COMPILER=gfortran -B build -S .
         echo "cmake done"
         cmake --build build -j 4 --target install
         ls ${Env:MINGW_DIR}
