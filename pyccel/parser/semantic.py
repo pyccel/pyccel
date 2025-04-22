@@ -2511,7 +2511,7 @@ class SemanticParser(BasicParser):
         if not all(isinstance(l, comment_types) for l in init_func_body):
             # If there are any initialisation statements then create an initialisation function
             init_var = Variable(PythonNativeBool(), self.scope.get_new_name('initialised'),
-                                is_private=True)
+                                is_private=True, is_temp = True)
             init_func_name = self.scope.get_new_name(name_suffix+'__init')
             # Ensure that the function is correctly defined within the namespaces
             init_scope = self.create_new_function_scope(init_func_name)
@@ -4607,7 +4607,7 @@ class SemanticParser(BasicParser):
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
         templates = self.scope.find_all('templates')
-        if decorators['template']:
+        if 'template' in decorators:
             # Load templates dict from decorators dict
             templates.update(decorators['template']['template_dict'])
 
@@ -4665,6 +4665,8 @@ class SemanticParser(BasicParser):
         template_combinations = list(product(*[v.type_list for v in templates.values()]))
         template_names = list(templates.keys())
         n_templates = len(template_combinations)
+
+        decorators.setdefault('template', {})['template_dict'] = templates
 
         # this for the case of a function without arguments => no headers
         interface_name = name
@@ -4997,6 +4999,7 @@ class SemanticParser(BasicParser):
             argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
             self.scope.insert_symbol('__init__')
             scope = self.create_new_function_scope('__init__')
+            scope.insert_variable(argument.var)
             init_func = FunctionDef('__init__', [argument], (), cls_name=cls.name, scope=scope)
             self.exit_function_scope()
             self.insert_function(init_func)
@@ -5027,6 +5030,7 @@ class SemanticParser(BasicParser):
             argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
             self.scope.insert_symbol('__del__')
             scope = self.create_new_function_scope('__del__')
+            scope.insert_variable(argument.var)
             del_method = FunctionDef('__del__', [argument], [Pass()], scope=scope)
             self.exit_function_scope()
             self.insert_function(del_method)
