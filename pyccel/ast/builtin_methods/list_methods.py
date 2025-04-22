@@ -125,7 +125,8 @@ class ListPop(ListMethod) :
 
     def __init__(self, list_obj, index_element=None) -> None:
         self._class_type = list_obj.class_type.element_type
-        self._shape = None if self._class_type.rank == 0 else (None,)
+        rank = self._class_type.rank
+        self._shape = None if rank == 0 else (None,)*rank
         super().__init__(list_obj, index_element)
 
     @property
