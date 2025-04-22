@@ -8,7 +8,9 @@
 
 import inspect
 import importlib
+import re
 import sys
+from typing import TypeVar
 import os
 
 from filelock import FileLock, Timeout
@@ -18,28 +20,38 @@ from importlib.machinery import ExtensionFileLoader
 
 from pyccel.utilities.strings  import random_string
 from pyccel.codegen.pipeline   import execute_pyccel
-from pyccel.errors.errors      import ErrorsMode, PyccelError
+from pyccel.errors.errors      import ErrorsMode, PyccelError, Errors
 
-__all__ = ['get_source_function', 'epyccel_seq', 'epyccel']
+errors = Errors()
+
+__all__ = ['get_source_code_and_context', 'epyccel_seq', 'epyccel']
 
 
 #==============================================================================
-def get_source_function(func):
+def get_source_code_and_context(func_or_class):
     """
-    Get the source code from a function.
+    Get the source code and context from a function or a class.
 
     Get a string containing the source code of a function from a function
-    object. Excessive indenting is stripped away.
+    object or the source code of a class from a class object. Excessive
+    indenting is stripped away.
+
+    Additionally retrieve the information about the variables that are
+    available in the calling context. This can allow certain constants such as
+    type hints to be defined outside of the function passed to epyccel.
 
     Parameters
     ----------
-    func : Function
-        A Python function.
+    func_or_class : Function | type
+        A Python function or class.
 
     Returns
     -------
-    str
-        A string containing the source code.
+    code : list[str]
+        A list of strings containing the lines of the source code.
+    context_dict : dict[str, object]
+        A dictionary containing any objects defined in the context
+        which may be useful for the function.
 
     Raises
     ------
@@ -47,15 +59,83 @@ def get_source_function(func):
         A type error is raised if the object passed to the function is not
         callable.
     """
-    if not callable(func):
+    if not callable(func_or_class):
         raise TypeError('Expecting a callable function')
 
-    lines, _ = inspect.getsourcelines(func)
+    lines, _ = inspect.getsourcelines(func_or_class)
     # remove indentation if the first line is indented
-    a = lines[0]
-    leading_spaces = len(a) - len(a.lstrip())
+    unindented_line = lines[0]
+    leading_spaces = len(unindented_line) - len(unindented_line.lstrip())
+    lines = [l[leading_spaces:] for l in lines]
 
-    return ''.join(a[leading_spaces:] for a in lines)
+    # Strip trailing comments (e.g. pylint disable)
+    commentless_lines = []
+    for l in lines:
+        comment = l.rfind('#')
+        # Avoid # in a string
+        if l[:comment].count("'") % 2 == 0 and l[:comment].count("'") % 2 == 0:
+            l = l[:comment] + '\n'
+        commentless_lines.append(l)
+
+    # Search for methods
+    methods = [(func_or_class.__name__, func_or_class)] if isinstance(func_or_class, FunctionType) else \
+                inspect.getmembers(func_or_class, predicate=inspect.isfunction)
+
+    func_name_regex = re.compile(r'^\s*def\s+([a-zA-Z0-9_]+)\s*\(')
+    func_match = [re.match(func_name_regex, l) for l in lines]
+    prototypes = {m[1]: i for i, m in enumerate(func_match) if m}
+
+    if len(methods) == 0:
+        return ''.join(lines), {}
+
+    # Build context dict with globals
+    _, method0 = methods[0]
+    context_dict = method0.__globals__.copy()
+
+    # Sort the methods in reverse order of appearance to preserve line indices
+    # during treatment of methods
+    methods.sort(key = lambda m: prototypes[m[0]], reverse=True)
+
+    for m_name, m in methods:
+        # Update context dict with closure vars
+        context_dict.update(inspect.getclosurevars(m).nonlocals)
+
+        # Print signature (Python has already executed the line with the prototype
+        # so any variables in the line cannot be deduced from the closure vars or
+        # globals, the only way to get a clean version is to reprint the signature)
+        sig = inspect.signature(m)
+        prototype_idx = prototypes[m_name]
+
+        method_prototype = lines[prototype_idx]
+        indent = len(method_prototype) - len(method_prototype.lstrip())
+
+        # Handle multi-line prototypes
+        end_of_prototype_idx = next(i for i, l in enumerate(commentless_lines[prototype_idx:]) if l.strip().endswith(':'))
+        if end_of_prototype_idx > prototype_idx:
+            lines = lines[:prototype_idx+1] + lines[end_of_prototype_idx+1:]
+
+        method_prototype = ' '*indent + f'def {m_name}{sig}:\n'
+
+        # TypeVar in a signature appear as +T, -T or ~T but the associated variable
+        # T will not be available from the closure vars or globals, we therefore
+        # search for TypeVars, put their definition in the context_dict and use the
+        # variable name (e.g. T) in the signature.
+        for p in sig.parameters.values():
+            annot = p.annotation
+            if isinstance(annot, TypeVar):
+                name = annot.__name__
+                if name in context_dict:
+                    if context_dict[name] != annot:
+                        errors.report("Multiple TypeVars found with the same name",
+                                severity='fatal', line=1)
+                else:
+                    context_dict[name] = annot
+                method_prototype = method_prototype.replace(str(annot), name)
+
+        # Save the updated prototype
+        lines[prototype_idx] = method_prototype
+
+    return ''.join(lines), context_dict
 
 #==============================================================================
 def get_unique_name(prefix, path):
@@ -106,7 +186,7 @@ def get_unique_name(prefix, path):
     return module_name, lock
 
 #==============================================================================
-def epyccel_seq(function_or_module, *,
+def epyccel_seq(function_class_or_module, *,
                 language      = None,
                 compiler      = None,
                 fflags        = None,
@@ -133,7 +213,7 @@ def epyccel_seq(function_or_module, *,
 
     Parameters
     ----------
-    function_or_module : function | module | str
+    function_class_or_module : function | class | module | str
         Python function or module to be accelerated.
         If a string is passed then it is assumed to be the code from a module which
         should be accelerated. The module must be capable of running as a standalone
@@ -186,11 +266,11 @@ def epyccel_seq(function_or_module, *,
     # Store current directory
     base_dirpath = os.getcwd()
 
-    if isinstance(function_or_module, (FunctionType, type, str)):
+    if isinstance(function_class_or_module, (FunctionType, type, str)):
         dirpath = os.getcwd()
 
-    elif isinstance(function_or_module, ModuleType):
-        dirpath = os.path.dirname(function_or_module.__file__)
+    elif isinstance(function_class_or_module, ModuleType):
+        dirpath = os.path.dirname(function_class_or_module.__file__)
 
     # Define working directory 'folder'
     if folder is None:
@@ -202,22 +282,24 @@ def epyccel_seq(function_or_module, *,
     epyccel_dirname = '__epyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
     epyccel_dirpath = os.path.join(folder, epyccel_dirname)
 
+    # Define variable for context information
+    context_dict = None
+
     # ... get the module source code
-    if isinstance(function_or_module, (FunctionType, type)):
-        pyfunc = function_or_module
-        code = get_source_function(pyfunc)
+    if isinstance(function_class_or_module, (FunctionType, type)):
+        code, context_dict = get_source_code_and_context(function_class_or_module)
 
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
-    elif isinstance(function_or_module, ModuleType):
-        pymod = function_or_module
+    elif isinstance(function_class_or_module, ModuleType):
+        pymod = function_class_or_module
         lines = inspect.getsourcelines(pymod)[0]
         code = ''.join(lines)
 
         module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
 
-    elif isinstance(function_or_module, str):
-        code = function_or_module
+    elif isinstance(function_class_or_module, str):
+        code = function_class_or_module
 
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
@@ -257,7 +339,8 @@ def epyccel_seq(function_or_module, *,
                            debug           = debug,
                            accelerators    = accelerators,
                            output_name     = module_name,
-                           conda_warnings  = conda_warnings)
+                           conda_warnings  = conda_warnings,
+                           context_dict    = context_dict)
         finally:
             # Change working directory back to starting point
             os.chdir(base_dirpath)
@@ -279,9 +362,9 @@ def epyccel_seq(function_or_module, *,
             if not isinstance(loader, ExtensionFileLoader):
                 raise ImportError('Could not load shared library')
 
-        # If Python object was function, extract it from module
-        if isinstance(function_or_module, (FunctionType, type)):
-            func = getattr(package, pyfunc.__name__)
+        # If Python object was a function or a class, extract it from module
+        if isinstance(function_class_or_module, (FunctionType, type)):
+            func = getattr(package, function_class_or_module.__name__)
         else:
             func = None
     finally:
@@ -291,7 +374,7 @@ def epyccel_seq(function_or_module, *,
     return package, func
 
 #==============================================================================
-def epyccel( python_function_or_module, **kwargs ):
+def epyccel( python_function_class_or_module, **kwargs ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
@@ -301,10 +384,10 @@ def epyccel( python_function_or_module, **kwargs ):
 
     Parameters
     ----------
-    python_function_or_module : function | module | str
+    python_function_class_or_module : function | class | module | str
         Python function or module to be accelerated.
         If a string is passed then it is assumed to be the code from a module which
-        should be accelerated..
+        should be accelerated.
     **kwargs :
         Additional keyword arguments for configuring the compilation and acceleration process.
         Available options are defined in epyccel_seq.
@@ -312,7 +395,7 @@ def epyccel( python_function_or_module, **kwargs ):
     Returns
     -------
     object
-        Accelerated function or module.
+        Accelerated function, class or module.
 
     See Also 
     -------- 
@@ -326,7 +409,7 @@ def epyccel( python_function_or_module, **kwargs ):
     >>> one_f = epyccel(one, language='fortran')
     >>> one_c = epyccel(one, language='c')
     """
-    assert isinstance( python_function_or_module, (FunctionType, type, ModuleType, str) )
+    assert isinstance( python_function_class_or_module, (FunctionType, type, ModuleType, str) )
 
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
@@ -356,10 +439,10 @@ def epyccel( python_function_or_module, **kwargs ):
         # Master process calls epyccel
         if comm.rank == root:
             try:
-                mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+                mod, obj = epyccel_seq( python_function_class_or_module, **kwargs )
                 mod_path = os.path.abspath(mod.__file__)
                 mod_name = mod.__name__
-                fun_name = python_function_or_module.__name__ if fun else None
+                obj_name = python_function_class_or_module.__name__ if obj else None
                 success  = True
             # error handling carried out after broadcast to prevent deadlocks
             except PyccelError as e:
@@ -370,14 +453,14 @@ def epyccel( python_function_or_module, **kwargs ):
 
         # Non-master processes initialize empty variables
         else:
-            mod, fun = None, None
+            mod, obj = None, None
             mod_path = None
             mod_name = None
-            fun_name = None
+            obj_name = None
             exc_info = None
             success  = None
 
-        # Broadcast success state, and raise exception if neeeded
+        # Broadcast success state, and raise exception if needed
         if not comm.bcast(success, root=root):
             raise comm.bcast(exc_info, root=root)
 
@@ -385,7 +468,7 @@ def epyccel( python_function_or_module, **kwargs ):
             # Broadcast Fortran module path/name and function name to all processes
             mod_path = comm.bcast( mod_path, root=root )
             mod_name = comm.bcast( mod_name, root=root )
-            fun_name = comm.bcast( fun_name, root=root )
+            obj_name = comm.bcast( obj_name, root=root )
 
             # Non-master processes import Fortran module directly from its path
             # and extract function if its name is given
@@ -397,14 +480,14 @@ def epyccel( python_function_or_module, **kwargs ):
                 importlib.invalidate_caches()
                 mod = importlib.import_module(mod_name)
                 sys.path.remove(folder)
-                fun = getattr(mod, fun_name) if fun_name else None
+                obj = getattr(mod, obj_name) if obj_name else None
 
     # Serial version
     else:
         try:
-            mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+            mod, obj = epyccel_seq( python_function_class_or_module, **kwargs )
         except PyccelError as e:
             raise type(e)(str(e)) from None
 
     # Return Fortran function (if any), otherwise module
-    return fun or mod
+    return obj or mod

@@ -38,7 +38,7 @@ class FortranNameClashChecker(LanguageNameClashChecker):
             'target', 'use', 'while', 'where', 'elemental', 'forall',
             'pure', 'abstract', 'associate', 'asynchronous', 'bind',
             'class', 'deferred', 'enum', 'enumerator', 'extends',
-            'final', 'flush', 'generic', 'import', 'non_overrideable',
+            'final', 'flush', 'generic', 'import', 'non_overridable',
             'nopass', 'pass', 'protected', 'value', 'volatile',
             'wait', 'codimension', 'concurrent', 'contiguous',
             'critical', 'error', 'submodule', 'sync', 'lock',

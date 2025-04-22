@@ -71,7 +71,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Indicate whether the object is a pointer in C code.
 
         This function extends `CCodePrinter.is_c_pointer` to specify more objects
-        which are always accesed via a C pointer.
+        which are always accessed via a C pointer.
 
         Parameters
         ----------

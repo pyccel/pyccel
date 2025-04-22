@@ -21,7 +21,7 @@ from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
-from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys
+from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys, DictValues, DictPopitem
 
 from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
 from pyccel.ast.core      import FunctionCall, FunctionCallArgument
@@ -1755,7 +1755,11 @@ class CCodePrinter(CodePrinter):
 
         if n_results > 1 or isinstance(expr.results.var.class_type, InhomogeneousTupleType):
             ret_type = self.get_c_type(PythonNativeInt())
-            arg_vars.extend(result_vars)
+            if expr.arguments and expr.arguments[0].bound_argument:
+                # Place the first arg_var (the bound class object) first
+                arg_vars = arg_vars[:1] + result_vars + arg_vars[1:]
+            else:
+                arg_vars = result_vars + arg_vars
             self._additional_args.append(result_vars) # Ensure correct result for is_c_pointer
         elif n_results == 1:
             ret_type = self.get_declare_type(result_vars[0])
@@ -2434,7 +2438,11 @@ class CCodePrinter(CodePrinter):
             else :
                 args.append(arg_val)
 
-        args += self._temporary_args
+        if func.arguments and func.arguments[0].bound_argument:
+            # Place the first arg_var (the bound class object) first
+            args = args[:1] + self._temporary_args + args[1:]
+        else:
+            args = self._temporary_args + args
         self._temporary_args = []
         args = ', '.join(self._print(ai) for a in args for ai in self.scope.collect_all_tuple_elements(a))
 
@@ -2599,12 +2607,12 @@ class CCodePrinter(CodePrinter):
     def _print_Assign(self, expr):
         lhs = expr.lhs
         rhs = expr.rhs
-        if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, InhomogeneousTupleType):
+        if isinstance(rhs, (FunctionCall, DictPopitem)) and isinstance(rhs.class_type, InhomogeneousTupleType):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
             code = self._print(rhs)
             self._temporary_args = []
             return code
-        # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
+        # Inhomogeneous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
         if isinstance(rhs, (NumpySum, NumpyAmax, NumpyAmin)):
@@ -2653,7 +2661,7 @@ class CCodePrinter(CodePrinter):
         iterable = expr.iterable
         indices = iterable.loop_counters
 
-        if isinstance(iterable, (VariableIterator, DictItems, DictKeys)) and \
+        if isinstance(iterable, (VariableIterator, DictItems, DictKeys, DictValues)) and \
                 isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
             var = iterable.variable
             iterable_type = var.class_type
@@ -2667,6 +2675,8 @@ class CCodePrinter(CodePrinter):
                            Assign(expr.target[1], DottedVariable(VoidType(), 'second', lhs = tmp_ref))]
             elif isinstance(iterable, DictKeys):
                 assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'first', lhs = tmp_ref))]
+            elif isinstance(iterable, DictValues):
+                assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'second', lhs = tmp_ref))]
             else:
                 assigns = [Assign(expr.target[0], tmp_ref)]
             additional_assign = CodeBlock(assigns)
@@ -3195,6 +3205,20 @@ class CCodePrinter(CodePrinter):
             pop_expr = f"{c_type}_pop({dict_var}, {key})"
 
         return pop_expr
+
+    def _print_DictPopitem(self, expr):
+        dict_obj = expr.dict_obj
+        class_type = dict_obj.class_type
+        c_type = self.get_c_type(class_type)
+
+        dict_obj_code = self._print(ObjectAddress(dict_obj))
+
+        key, value = self._temporary_args
+
+        key_code = self._print(key)
+        value_code = self._print(value)
+
+        return f'{c_type}_popitem({dict_obj_code}, {key_code}, {value_code});\n'
 
     def _print_DictGetItem(self, expr):
         dict_obj = expr.dict_obj

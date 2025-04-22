@@ -46,7 +46,7 @@ def tmplt_head_1(x : 'z', y : 'z'):
     return x + y
 
 @template('O', types=['int', 'float'])
-def local_overide_1(x : 'O', y : 'O'):
+def local_override_1(x : 'O', y : 'O'):
     return x + y
 
 @template('z', types=['int', 'float'])
@@ -128,9 +128,9 @@ def tst_tmplt_head_1():
     y = tmplt_head_1(5.5, 7.3)
     return x * y
 
-def tst_local_overide_1():
-    x = local_overide_1(5, 4)
-    y = local_overide_1(6.56, 3.3)
+def tst_local_override_1():
+    x = local_override_1(5, 4)
+    y = local_override_1(6.56, 3.3)
     return x * y
 
 def tst_tmplt_tmplt_1():

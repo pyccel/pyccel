@@ -125,12 +125,12 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `get` | Python and C |
 | **`items`** | **Yes** |
 | **`keys`** | **Yes** |
-| `pop` | Python and C |
-| `popitem` | Python-only |
+| **`pop`** | **Yes** |
+| **`popitem`** | **Yes** |
 | `reversed` | No |
 | `setdefault` | Python-only |
 | `update` | No |
-| `values` | No |
+| **`values`** | **Yes** |
 
 ## String methods
 

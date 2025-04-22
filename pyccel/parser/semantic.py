@@ -9,6 +9,9 @@ See the developer docs for more details
 
 from itertools import chain, product
 import os
+from types import ModuleType
+import sys
+import typing
 import warnings
 
 from sympy.utilities.iterables import iterable as sympy_iterable
@@ -75,6 +78,7 @@ from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNative
 from pyccel.ast.datatypes import DataTypeFactory, HomogeneousContainerType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType, HomogeneousSetType, HomogeneousListType
 from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType, DictType, TypeAlias
+from pyccel.ast.datatypes import original_type_to_pyccel_type
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.functionalexpr import MaxLimit, MinLimit
@@ -155,6 +159,9 @@ from pyccel.parser.syntax.headers import types_meta
 from pyccel.utilities.stage import PyccelStage
 
 import pyccel.decorators as def_decorators
+
+if sys.version_info >= (3, 10):
+    from types import UnionType
 #==============================================================================
 
 errors = Errors()
@@ -220,11 +227,15 @@ class SemanticParser(BasicParser):
     d_parsers : list
         A list of parsers describing files imported by this file.
 
+    context_dict : dict, optional
+        A dictionary describing any variables in the context where the translated
+        objected was defined.
+
     **kwargs : dict
         Additional keyword arguments for BasicParser.
     """
 
-    def __init__(self, inputs, *, parents = (), d_parsers = (), **kwargs):
+    def __init__(self, inputs, *, parents = (), d_parsers = (), context_dict = None, **kwargs):
 
         # a Parser can have parents, who are importing it.
         # imports are then its sons.
@@ -267,6 +278,9 @@ class SemanticParser(BasicParser):
         # used to link pointers to their targets. This is important for classes which may
         # contain persistent pointers
         self._pointer_targets = []
+
+        # provides information about the calling context to collect constants
+        self._context_dict = context_dict or {}
 
         #
         self._code = parser._code
@@ -678,9 +692,9 @@ class SemanticParser(BasicParser):
 
     def _indicate_pointer_target(self, pointer, target, expr):
         """
-        Indicate that a pointer is targetting a specific target.
+        Indicate that a pointer is targeting a specific target.
 
-        Indicate that a pointer is targetting a specific target by adding the pair
+        Indicate that a pointer is targeting a specific target by adding the pair
         to a dictionary in self._pointer_targets (the last dictionary in the list
         should be used as this is the one for the current scope).
 
@@ -854,7 +868,7 @@ class SemanticParser(BasicParser):
 
         else:
             type_name = type(expr).__name__
-            msg = f'Type of Object : {type_name} cannot be infered'
+            msg = f'Type of Object : {type_name} cannot be inferred'
             return errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 severity='fatal')
@@ -1371,7 +1385,7 @@ class SemanticParser(BasicParser):
         self._scope = sc
         self._visit_FunctionDef(old_func, function_call_args=function_call_args)
         new_name = self.scope.get_expected_name(old_func.name)
-        # Retreive the annotated function
+        # Retrieve the annotated function
         func = self.scope.find(new_name, 'functions')
         # Add the Module of the imported function to the new function
         if old_func.is_imported:
@@ -2246,11 +2260,11 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         class_def : ClassDef
-            The class defintion to which the attribute should be added.
+            The class definition to which the attribute should be added.
         self_var : Variable
             The variable representing the 'self' variable of the class instance.
         attrib : Variable
-            The attribute which should be inserted into the class defintion.
+            The attribute which should be inserted into the class definition.
 
         Returns
         -------
@@ -2271,15 +2285,15 @@ class SemanticParser(BasicParser):
 
     def _get_iterable(self, syntactic_iterable):
         """
-        Get an Iterable obect from a syntatic object that is used in an iterable context.
+        Get an Iterable object from a syntactic object that is used in an iterable context.
 
-        Get an Iterable obect from a syntatic object that is used in an iterable context.
+        Get an Iterable object from a syntactic object that is used in an iterable context.
         A typical example of an iterable context is the iterable of a for loop.
 
         Parameters
         ----------
         syntactic_iterable : PyccelAstNode
-            The syntatic object that should be usable as an iterable.
+            The syntactic object that should be usable as an iterable.
 
         Returns
         -------
@@ -2972,6 +2986,31 @@ class SemanticParser(BasicParser):
             elif name == '*':
                 return GenericType()
 
+        if var is None and name in self._context_dict:
+            env_var = self._context_dict[name]
+            if env_var in original_type_to_pyccel_type:
+                var = VariableTypeAnnotation(original_type_to_pyccel_type[env_var])
+            elif sys.version_info >= (3, 10) and isinstance(env_var, UnionType): # pylint:disable=possibly-used-before-assignment
+                python_types = typing.get_args(env_var)
+                if all(t in original_type_to_pyccel_type for t in python_types):
+                    var = UnionTypeAnnotation(*[VariableTypeAnnotation(original_type_to_pyccel_type[t]) for t in python_types])
+                else:
+                    errors.report(f"Unrecognised type {env_var} found in global scope.",
+                            severity='error', symbol = self.current_ast_node)
+            elif type(env_var) in original_type_to_pyccel_type:
+                var = convert_to_literal(env_var, dtype = original_type_to_pyccel_type[type(env_var)])
+            elif isinstance(env_var, ModuleType):
+                mod_name = env_var.__name__
+                if recognised_source(mod_name):
+                    pyccel_stage.set_stage('syntactic')
+                    import_node = Import(AsName(mod_name, name))
+                    pyccel_stage.set_stage('semantic')
+                    self._additional_exprs[-1].append(self._visit(import_node))
+                    var = self.scope.find(name)
+                else:
+                    errors.report(f"Unrecognised module {mod_name} imported in global scope. Please import the module locally if it was previously Pyccelised.",
+                            severity='error', symbol = self.current_ast_node)
+
         if var is None:
             if name == '_':
                 errors.report(UNDERSCORE_NOT_A_THROWAWAY,
@@ -3489,6 +3528,12 @@ class SemanticParser(BasicParser):
                 name = _get_name(func.name)
                 args = macro.apply(args)
 
+            if func is None and name in self._context_dict:
+                env_var = self._context_dict[name]
+                func = builtin_functions_dict.get(env_var.__name__, None)
+                if func is not None:
+                    func = PyccelFunctionDef(env_var.__name__, func)
+
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
@@ -3694,7 +3739,7 @@ class SemanticParser(BasicParser):
                     else:
                         return func_call
                 else:
-                    # TODO treate interface case
+                    # TODO treat interface case
                     errors.report(PYCCEL_RESTRICTION_TODO,
                                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                                   severity='fatal')
@@ -3816,6 +3861,15 @@ class SemanticParser(BasicParser):
                     new_expressions.append(Assign(rhs_var, rhs))
                     rhs = rhs_var
                 lhs = PythonTuple(*new_lhs)
+            elif isinstance(rhs, PyccelFunction):
+                assert isinstance(rhs.class_type, InhomogeneousTupleType)
+                r_iter = [self.scope.collect_tuple_element(v) for v in rhs]
+                new_lhs = []
+                for i,(l,r) in enumerate(zip(lhs, r_iter)):
+                    d = self._infer_type(r)
+                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions,
+                                                    arr_in_multirets=r.rank>0 ) )
+                lhs = PythonTuple(*new_lhs)
             else:
                 if isinstance(rhs.class_type, InhomogeneousTupleType):
                     r_iter = [self.scope.collect_tuple_element(v) for v in rhs]
@@ -3883,7 +3937,7 @@ class SemanticParser(BasicParser):
                 elif l is not r:
                     # Manage a non-tuple assignment
 
-                    # Manage memeory for optionals
+                    # Manage memory for optionals
                     if isinstance(l, Variable) and l.is_optional:
                         if l in self._optional_params:
                             # Collect temporary variable which provides
@@ -4612,7 +4666,7 @@ class SemanticParser(BasicParser):
         used_type_names = set(t for a in arg_annotations for t in a.get_attribute_nodes(PyccelSymbol))
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
-        # Create new temparary templates for the arguments with a Union data type.
+        # Create new temporary templates for the arguments with a Union data type.
         tmp_templates = {}
         new_expr_args = []
         for a in expr.arguments:

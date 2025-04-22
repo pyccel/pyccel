@@ -573,7 +573,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                     break
 
             for k in range(j,new_level):
-                # Create new loops until we have the neccesary depth
+                # Create new loops until we have the necessary depth
                 save_spot.append(LoopCollection([], shape[k], set(lhs_vars)))
                 save_spot = save_spot[-1].body
 

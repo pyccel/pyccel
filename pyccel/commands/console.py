@@ -23,7 +23,7 @@ class MyParser(argparse.ArgumentParser):
         sys.exit(2)
 
 #==============================================================================
-# TODO - remove output_dir froms args
+# TODO - remove output_dir from args
 #      - remove files from args
 #      but quickstart and build are still calling it for the moment
 def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, compiler=None):
@@ -136,7 +136,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     group.add_argument('--verbose', action='store_true', \
                         help='enables verbose mode.')
     group.add_argument('--time_execution', action='store_true', \
-                        help='prints the time spent in each section of the exection.')
+                        help='prints the time spent in each section of the execution.')
     group.add_argument('--developer-mode', action='store_true', \
                         help='shows internal messages')
     group.add_argument('--export-compile-info', type=str, default = None, \
@@ -252,7 +252,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     # ...
 
     # ...
-    # this will initialize the singelton ErrorsMode
+    # this will initialize the singleton ErrorsMode
     # making this settings available everywhere
     err_mode = ErrorsMode()
     if args.developer_mode:
