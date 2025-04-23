@@ -40,10 +40,10 @@ runs:
           C:/mingw64/lib/cmake/lapack-3.12.0/lapack-config.cmake
           C:/mingw64/lib/cmake/lapack-3.12.0/lapack-config-version.cmake
           C:/mingw64/lib/pkgconfig/blas.pc
-          C:/mingw64/lib/libblas.a
-          C:/mingw64/lib/liblapack.a
-          C:/mingw64/lib/libblas.dll
-          C:/mingw64/lib/liblapack.dll
+          C:/mingw64/lib/libblas.dll.a
+          C:/mingw64/bin/libblas.dll
+          C:/mingw64/lib/liblapack.dll.a
+          C:/mingw64/bin/liblapack.dll
         key: ${{ runner.os }}-gcc-lapack-v1
         restore-keys: |
           ${{ runner.os }}-gcc-lapack-
@@ -72,10 +72,10 @@ runs:
           C:/mingw64/lib/cmake/lapack-3.12.0/lapack-config.cmake
           C:/mingw64/lib/cmake/lapack-3.12.0/lapack-config-version.cmake
           C:/mingw64/lib/pkgconfig/blas.pc
-          C:/mingw64/lib/libblas.a
-          C:/mingw64/lib/liblapack.a
-          C:/mingw64/lib/libblas.dll
-          C:/mingw64/lib/liblapack.dll
+          C:/mingw64/lib/libblas.dll.a
+          C:/mingw64/bin/libblas.dll
+          C:/mingw64/lib/liblapack.dll.a
+          C:/mingw64/bin/liblapack.dll
         key: ${{ steps.cache-lapack-restore.outputs.cache-primary-key }}
     - name: Install MS MPI runtime and SDK
       run: |
