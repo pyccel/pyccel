@@ -44,7 +44,7 @@ runs:
           C:/mingw64/bin/libblas.dll
           C:/mingw64/lib/liblapack.dll.a
           C:/mingw64/bin/liblapack.dll
-        key: ${{ runner.os }}-gcc-lapack-v1
+        key: ${{ runner.os }}-gcc-lapack-v3.12.1
         restore-keys: |
           ${{ runner.os }}-gcc-lapack-
     - name: Install Lapack
