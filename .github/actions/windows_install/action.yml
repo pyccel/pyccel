@@ -39,7 +39,7 @@ runs:
         $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
         $GFORTRAN_EXE=((Get-Command gfortran).Path -replace '\\', '/')
         echo "$GCC_EXE  $GFORTRAN_EXE  ${Env:MINGW_DIR}"
-        cmake -D CMAKE_INSTALL_PREFIX="${Env:MINGW_DIR}" -D CMAKE_C_COMPILER="$GCC_EXE" -D CMAKE_Fortran_COMPILER="$GFORTRAN_EXE" -B build -S .
+        cmake  -G "MinGW Makefiles" -D CMAKE_INSTALL_PREFIX="${Env:MINGW_DIR}" -D CMAKE_C_COMPILER="$GCC_EXE" -D CMAKE_Fortran_COMPILER="$GFORTRAN_EXE" -B build -S .
         echo "cmake done"
         cmake --build build -j 4 --target install
         ls ${Env:MINGW_DIR}
