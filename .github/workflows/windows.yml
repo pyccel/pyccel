@@ -62,12 +62,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ needs.Python_version_picker.outputs.python_version }}
-      #- name: "Setup"
-      #  if: github.event_name != 'push'
-      #  id: token
-      #  run: |
-      #    pip install jwt requests
-      #    python ci_tools/setup_check_run.py windows
+      - name: "Setup"
+        if: github.event_name != 'push'
+        id: token
+        run: |
+          pip install jwt requests
+          python ci_tools/setup_check_run.py windows
       # Uncomment to examine DLL requirements with 'objdump -x FILE'
       #- name: Install mingw tools
       #  uses: msys2/setup-msys2@v2
@@ -78,10 +78,6 @@ jobs:
             python -m pip install --upgrade pip
             python -m pip install .[test]
         shell: bash
-      - name: Test external first
-        run: |
-          pytest test_external_functions.py -vxs
-        working-directory: ./tests/epyccel
       - name: Fortran/C tests with pytest
         id: f_c_pytest
         timeout-minutes: 60
@@ -94,7 +90,7 @@ jobs:
         id: parallel
         timeout-minutes: 20
         uses: ./.github/actions/pytest_parallel
-      #- name: "Post completed"
-      #  if: always() && github.event_name != 'push'
-      #  run:
-      #    python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }}
+      - name: "Post completed"
+        if: always() && github.event_name != 'push'
+        run:
+          python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }}
