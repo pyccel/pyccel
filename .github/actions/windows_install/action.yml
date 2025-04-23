@@ -29,29 +29,54 @@ runs:
         $PYTHON_SITE_PATH="$PYTHON_PREFIX\lib\site-packages"
         echo "import os; os.add_dll_directory(r'$MINGW_DIR/lib'); os.add_dll_directory(r'$BIN_DIR')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding ascii
       shell: powershell
+    - name: Restore cached Lapack
+      id: cache-lapack-restore
+      uses: actions/cache/restore@v3
+      with:
+        path: |
+          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-targets.cmake
+          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-targets-release.cmake
+          C:/mingw64/lib/pkgconfig/lapack.pc
+          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-config.cmake
+          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-config-version.cmake
+          C:/mingw64/lib/pkgconfig/blas.pc
+          C:/mingw64/lib/libblas.a
+          C:/mingw64/lib/liblapack.a
+          C:/mingw64/lib/libblas.dll
+          C:/mingw64/lib/liblapack.dll
+        key: ${{ runner.os }}-gcc-lapack-v1
+        restore-keys: |
+          ${{ runner.os }}-gcc-lapack-
     - name: Install Lapack
+      if: steps.cache-lapack-restore.outputs.cache-hit != 'true'
       run: |
-        #
-        # Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/
+        # Download and build BLAS and LAPACK from https://github.com/Reference-LAPACK/lapack
         curl https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz -o v3.12.1.tar.gz
         tar -xf v3.12.1.tar.gz
         cd lapack-3.12.1
         $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
         $GFORTRAN_EXE=((Get-Command gfortran).Path -replace '\\', '/')
-        echo "$GCC_EXE  $GFORTRAN_EXE  ${Env:MINGW_DIR}"
-        cmake  -G "MinGW Makefiles" -D CMAKE_INSTALL_PREFIX="${Env:MINGW_DIR}" -D CMAKE_C_COMPILER="$GCC_EXE" -D CMAKE_Fortran_COMPILER="$GFORTRAN_EXE" -B build -S .
-        echo "cmake done"
+        cmake  -G "MinGW Makefiles" -D CMAKE_INSTALL_PREFIX="${Env:MINGW_DIR}" -D CMAKE_C_COMPILER="$GCC_EXE" -D CMAKE_Fortran_COMPILER="$GFORTRAN_EXE" -D BUILD_SHARED_LIBS=ON -B build -S .
         cmake --build build -j 4 --target install
-        ls ${Env:MINGW_DIR}
         ls ${Env:MINGW_DIR}/lib
-        #
-        # Microsoft C runtime library: generate static libmsvcr140.a from vcruntime140.dll
-        #cd ${Env:LIBRARY_DIR}
-        #cp $Env:SystemRoot\\SysWOW64\\vcruntime140.dll .
-        #gendef vcruntime140.dll
-        #dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
         echo "BLAS/LAPACK installed"
       shell: powershell
+    - name: Save Lapack Cache
+      id: cache-lapack-save
+      uses: actions/cache/save@v3
+      with:
+        path: |
+          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-targets.cmake
+          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-targets-release.cmake
+          C:/mingw64/lib/pkgconfig/lapack.pc
+          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-config.cmake
+          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-config-version.cmake
+          C:/mingw64/lib/pkgconfig/blas.pc
+          C:/mingw64/lib/libblas.a
+          C:/mingw64/lib/liblapack.a
+          C:/mingw64/lib/libblas.dll
+          C:/mingw64/lib/liblapack.dll
+        key: ${{ steps.cache-lapack-restore.outputs.cache-primary-key }}
     - name: Install MS MPI runtime and SDK
       run: |
         #
