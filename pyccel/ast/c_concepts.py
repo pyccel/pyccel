@@ -9,7 +9,7 @@ Module representing concepts that are only applicable to C code (e.g. ObjectAddr
 
 from pyccel.utilities.metaclasses import ArgumentSingleton
 from .basic     import TypedAstNode, PyccelAstNode
-from .datatypes import HomogeneousContainerType, FixedSizeType, PrimitiveIntegerType
+from .datatypes import HomogeneousContainerType, FixedSizeType, FixedSizeNumericType, PrimitiveIntegerType
 from .datatypes import CharType
 from .internals import PyccelFunction
 from .literals  import LiteralString
@@ -24,7 +24,7 @@ __all__ = ('CMacro',
 
 #------------------------------------------------------------------------------
 
-class CNativeInt(FixedSizeType):
+class CNativeInt(FixedSizeNumericType):
     """
     Class representing C's native integer type.
 
@@ -33,6 +33,7 @@ class CNativeInt(FixedSizeType):
     __slots__ = ()
     _name = 'int'
     _primitive_type = PrimitiveIntegerType()
+    _precision = None
 
 #------------------------------------------------------------------------------
 

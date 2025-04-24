@@ -292,9 +292,9 @@ class CCodePrinter(CodePrinter):
         'tabwidth': 4,
     }
 
-    dtype_registry = {CNativeInt()    : 'int',
-                      VoidType() : 'void',
+    dtype_registry = {VoidType() : 'void',
                       CharType() : 'char',
+                      (PrimitiveIntegerType(),None) : 'int',
                       (PrimitiveComplexType(),8) : 'double complex',
                       (PrimitiveComplexType(),4) : 'float complex',
                       (PrimitiveFloatingPointType(),8)   : 'double',
