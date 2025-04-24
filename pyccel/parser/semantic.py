@@ -10,7 +10,6 @@ See the developer docs for more details
 from itertools import chain, product
 import os
 from types import ModuleType
-from typing import Final
 import sys
 import typing
 import warnings
@@ -2979,12 +2978,8 @@ class SemanticParser(BasicParser):
                 else:
                     errors.report(f"Unrecognised module {mod_name} imported in global scope. Please import the module locally if it was previously Pyccelised.",
                             severity='error', symbol = self.current_ast_node)
-            elif isinstance(env_var, typing._SpecialForm):
-                if str(env_var) == 'typing.Final':
-                    return PyccelFunctionDef('Final', TypingFinal)
-                else:
-                    errors.report(PYCCEL_RESTRICTION_TODO,
-                            severity='error', symbol = self.current_ast_node)
+            elif env_var is typing.Final:
+                return PyccelFunctionDef('Final', TypingFinal)
 
         if var is None:
             if name == '_':
