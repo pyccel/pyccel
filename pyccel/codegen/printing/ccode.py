@@ -1089,10 +1089,14 @@ class CCodePrinter(CodePrinter):
             lhs_code = self._print(CStrStr(lhs))
             rhs_code = self._print(CStrStr(rhs))
             return f'!strcmp({lhs_code}, {rhs_code})'
-        else:
+        elif isinstance(lhs.class_type, FixedSizeNumericType):
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
             return f'{lhs_code} == {rhs_code}'
+        else:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr, severity = 'error')
+            return ''
 
     def _print_PyccelNe(self, expr):
         lhs, rhs = expr.args
@@ -1100,10 +1104,14 @@ class CCodePrinter(CodePrinter):
             lhs_code = self._print(CStrStr(lhs))
             rhs_code = self._print(CStrStr(rhs))
             return f'strcmp({lhs_code}, {rhs_code})'
-        else:
+        elif isinstance(lhs.class_type, FixedSizeNumericType):
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
             return f'{lhs_code} != {rhs_code}'
+        else:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr, severity = 'error')
+            return ''
 
     def _print_PyccelLt(self, expr):
         lhs = self._print(expr.args[0])
