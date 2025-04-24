@@ -1240,3 +1240,8 @@ def test_stubs(language):
         shutil.rmtree(wk_dir)
 
     assert expected_pyi == generated_pyi
+
+#------------------------------------------------------------------------------
+def test_builtin_container_print(language):
+    pyccel_test("scripts/print_builtin_containers.py", output_dtype = str,
+            language = language)
