@@ -888,11 +888,11 @@ def test_list_equality(language):
     assert list_equality(arg2, arg1) == epyccel_func(arg2, arg1)
     assert list_equality(arg3, arg1) == epyccel_func(arg3, arg1)
 
-def test_list_equality_non_matching_types(language):
+def test_list_equality_non_matching_types(limited_language):
     def list_equality(arg1 : Final[list[int]], arg2 : Final[list[float]]):
         return arg1 == arg2
 
-    epyccel_func = epyccel(list_equality, language = language)
+    epyccel_func = epyccel(list_equality, language = limited_language)
     arg_int1 = [1,2,3,4,5]
     arg_int2 = [4,5,6,7,8]
     arg_int3 = [1,2,3]
