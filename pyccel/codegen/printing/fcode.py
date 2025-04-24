@@ -3327,7 +3327,7 @@ class FCodePrinter(CodePrinter):
         b = rhs.dtype.primitive_type
 
         if all(isinstance(var, PrimitiveBooleanType) for var in (a, b)):
-            return f'{lhs_code} .neqv. {lhs_code}'
+            return f'{lhs_code} .neqv. {rhs_code}'
         elif lhs.class_type is rhs.class_type or \
                 (isinstance(lhs.class_type, FixedSizeNumericType) and isinstance(rhs.class_type, FixedSizeNumericType)):
             return f'{lhs_code} /= {rhs_code}'
