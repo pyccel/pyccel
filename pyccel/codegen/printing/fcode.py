@@ -3303,14 +3303,20 @@ class FCodePrinter(CodePrinter):
         return ' .or. '.join(self._print(a) for a in args)
 
     def _print_PyccelEq(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
-        a = expr.args[0].dtype.primitive_type
-        b = expr.args[1].dtype.primitive_type
+        lhs, rhs = expr.args
+        lhs_code = self._print(lhs)
+        rhs_code = self._print(rhs)
+        a = lhs.dtype.primitive_type
+        b = rhs.dtype.primitive_type
 
         if all(isinstance(var, PrimitiveBooleanType) for var in (a, b)):
-            return '{} .eqv. {}'.format(lhs, rhs)
-        return '{0} == {1}'.format(lhs, rhs)
+            return f'{lhs} .eqv. {rhs}'
+        elif lhs.class_type is rhs.class_type:
+            return f'{lhs} == {rhs}'.format(lhs, rhs)
+        else:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr, severity = 'error')
+            return ''
 
     def _print_PyccelNe(self, expr):
         lhs = self._print(expr.args[0])

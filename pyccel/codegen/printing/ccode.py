@@ -1093,6 +1093,16 @@ class CCodePrinter(CodePrinter):
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
             return f'{lhs_code} == {rhs_code}'
+        elif isinstance(lhs.class_type, HomogeneousListType):
+            if lhs.class_type is rhs.class_type:
+                c_type = self.get_c_type(lhs.class_type)
+                lhs_code = self._print(ObjectAddress(lhs))
+                rhs_code = self._print(ObjectAddress(rhs))
+                return f'{c_type}_eq({lhs_code}, {rhs_code})'
+            else:
+                errors.report(PYCCEL_RESTRICTION_TODO,
+                        symbol = expr, severity = 'error')
+                return ''
         else:
             errors.report(PYCCEL_RESTRICTION_TODO,
                     symbol = expr, severity = 'error')
