@@ -2428,13 +2428,6 @@ def test_array_1d_slice_9(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_10(language):
     a = arrays.a_1d
 
@@ -2444,13 +2437,6 @@ def test_array_1d_slice_10(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_11(language):
     a = arrays.a_1d
 
@@ -2460,13 +2446,6 @@ def test_array_1d_slice_11(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_12(language):
     a = arrays.a_1d
 
@@ -2639,13 +2618,6 @@ def test_array_2d_F_slice_20(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_21(language):
     a = arrays.a_2d_f
 
@@ -2654,13 +2626,6 @@ def test_array_2d_F_slice_21(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_22(language):
     a = arrays.a_2d_f
 
@@ -2669,13 +2634,6 @@ def test_array_2d_F_slice_22(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_23(language):
     a = arrays.a_2d_f
 
@@ -2847,13 +2805,6 @@ def test_array_2d_C_slice_20(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_21(language):
     a = arrays.a_2d_c
 
@@ -2862,13 +2813,6 @@ def test_array_2d_C_slice_21(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_22(language):
     a = arrays.a_2d_c
 
@@ -2877,13 +2821,6 @@ def test_array_2d_C_slice_22(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_23(language):
     a = arrays.a_2d_c
 
@@ -2930,7 +2867,7 @@ def test_array_1d_slice_stride_3(language):
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.xfail(reason="Negative strides in slices are not handled. See #1311"),
             pytest.mark.c]
         )
     )
@@ -3161,7 +3098,7 @@ def test_array_1d_slice_stride_22(language):
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.xfail(reason="Negative strides in slices are not handled. See #1311"),
             pytest.mark.c]
         )
     )
@@ -3938,13 +3875,6 @@ def test_arrs_2d_different_shapes_0(language):
     check_array_equal(f1(), f2())
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Negative start of range does not work in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_arrs_1d_negative_index_1(language):
     f1 = arrays.arrs_1d_negative_index_1
     f2 = epyccel(f1, language = language)
@@ -3988,13 +3918,6 @@ def test_arrs_1d_negative_step_positive_step(language):
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_arrs_2d_negative_index(language):
     f1 = arrays.arrs_2d_negative_index
     f2 = epyccel(f1, language = language)
