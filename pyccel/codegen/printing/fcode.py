@@ -3196,8 +3196,10 @@ class FCodePrinter(CodePrinter):
             else:
                 lines.append(self._print(e))
 
-        if lines[0] == "else\n":
-            return ''.join(lines[1:])
+        if len(lines) == 0:
+            return ''
+        elif lines[0] == "else\n":
+            lines = lines[1:]
         else:
             lines.append("end if\n")
 
