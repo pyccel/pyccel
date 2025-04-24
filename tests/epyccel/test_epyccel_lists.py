@@ -885,7 +885,7 @@ def test_list_equality(language):
     assert list_equality(arg1, arg1) == epyccel_func(arg1, arg1)
     assert list_equality(arg1, arg2) == epyccel_func(arg1, arg2)
     assert list_equality(arg1, arg3) == epyccel_func(arg1, arg3)
-    assert list_equality(arg2, arg1) == epyccel_func(arg2, arg1)
+    assert list_equality(arg2, arg1) == epyccel_func(arg2, arg1) #pylint: disable=arguments-out-of-order
     assert list_equality(arg3, arg1) == epyccel_func(arg3, arg1)
 
 def test_list_equality_non_matching_types(limited_language):
