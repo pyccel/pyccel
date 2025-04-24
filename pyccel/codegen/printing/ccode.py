@@ -1386,26 +1386,30 @@ class CCodePrinter(CodePrinter):
         if len(orig_args) == 0:
             return formatted_args_to_printf(args_format, args, end)
 
-        tuple_start = FunctionCallArgument(LiteralString('('))
-        tuple_sep   = LiteralString(', ')
-        tuple_end   = FunctionCallArgument(LiteralString(')'))
+        container_sep = LiteralString(', ')
+        tuple_tags = (FunctionCallArgument(LiteralString('(')), FunctionCallArgument(LiteralString(')')))
+        list_tags = (FunctionCallArgument(LiteralString('[')), FunctionCallArgument(LiteralString(']')))
+        set_tags = (FunctionCallArgument(LiteralString('{')), FunctionCallArgument(LiteralString('}')))
 
         for i, f in enumerate(orig_args):
             f = f.value
 
             if isinstance(f, (PythonTuple, PythonList, PythonSet)):
+                start_tag, end_tag = tuple_tags if isinstance(f, PythonTuple) else \
+                             list_tags if isinstance(f, PythonList) else \
+                             set_tags
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
                     args = []
-                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                args = [FunctionCallArgument(print_arg) for elem in f for print_arg in (elem, container_sep)][:-1]
                 if len(f) == 1:
                     args.append(FunctionCallArgument(LiteralString(',')))
                 if i + 1 == len(orig_args):
-                    end_of_tuple = FunctionCallArgument(LiteralString(end), 'end')
+                    end_of_block = FunctionCallArgument(LiteralString(end), 'end')
                 else:
-                    end_of_tuple = FunctionCallArgument(LiteralString(sep), 'end')
-                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple]))
+                    end_of_block = FunctionCallArgument(LiteralString(sep), 'end')
+                code += self._print(PythonPrint([start_tag, *args, end_tag, empty_sep, end_of_block]))
                 args = []
                 continue
             if isinstance(f, PythonType):
