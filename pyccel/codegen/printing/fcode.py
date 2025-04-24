@@ -3310,9 +3310,9 @@ class FCodePrinter(CodePrinter):
         b = rhs.dtype.primitive_type
 
         if all(isinstance(var, PrimitiveBooleanType) for var in (a, b)):
-            return f'{lhs} .eqv. {rhs}'
+            return f'{lhs_code} .eqv. {rhs_code}'
         elif lhs.class_type is rhs.class_type:
-            return f'{lhs} == {rhs}'.format(lhs, rhs)
+            return f'{lhs_code} == {rhs_code}'
         else:
             errors.report(PYCCEL_RESTRICTION_TODO,
                     symbol = expr, severity = 'error')
