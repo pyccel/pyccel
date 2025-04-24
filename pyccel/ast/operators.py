@@ -1073,9 +1073,24 @@ class PyccelGt(PyccelComparisonOperator):
         The first argument passed to the operator.
     arg2 : TypedAstNode
         The second argument passed to the operator.
+    simplify : bool
+        True if the expression should be simplified to be as compact/readable as
+        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     op = ">"
+
+    def __new__(cls, arg1 = None, arg2 = None, simplify = False):
+        if all(isinstance(a, Literal) or isinstance(a, PyccelUnarySub) and isinstance(a.args[0], Literal)
+                for a in (arg1, arg2)):
+            arg1_val = arg1.python_value if isinstance(arg1, Literal) else -arg1.args[0].python_value
+            arg2_val = arg2.python_value if isinstance(arg2, Literal) else -arg2.args[0].python_value
+            return convert_to_literal(arg1_val > arg2_val)
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, arg1, arg2, simplify = False):
+        super().__init__(arg1, arg2)
 
 class PyccelGe(PyccelComparisonOperator):
     """
