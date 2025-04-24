@@ -686,9 +686,9 @@ class CCodePrinter(CodePrinter):
 
     def get_stc_init_elements(self, class_type, elements):
         """
-        Get the elements that can be passed to a `c_init` call.
+        Get the elements that can be passed to a `c_make` call.
 
-        Get the elements that can be passed to a `c_init` call. For some
+        Get the elements that can be passed to a `c_make` call. For some
         types this calculation is non-trivial. For example for elements
         that may be pointers an arc type must be created in order to
         ensure correct memory deallocation.
@@ -700,9 +700,9 @@ class CCodePrinter(CodePrinter):
         Parameters
         ----------
         class_type : PyccelType
-            The type of the elements in the `c_init` call.
+            The type of the elements in the `c_make` call.
         elements : list[TypedAstNode]
-            The elements that should be printed in the `c_init` call.
+            The elements that should be printed in the `c_make` call.
 
         Returns
         -------
