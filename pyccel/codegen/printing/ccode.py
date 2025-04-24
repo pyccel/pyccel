@@ -1815,7 +1815,7 @@ class CCodePrinter(CodePrinter):
             start = PyccelMinus(array_size, start.args[0], simplify = True)
         elif allow_negative_index and not isinstance(start, (LiteralInteger, PyccelArrayShapeElement)):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
-                            PyccelMinus(array_size, start, simplify = True), start)
+                            PyccelAdd(array_size, start, simplify = True), start)
         else:
             start = _slice.start
 
@@ -1823,7 +1823,7 @@ class CCodePrinter(CodePrinter):
             stop = PyccelMinus(array_size, stop.args[0], simplify = True)
         elif allow_negative_index and not isinstance(stop, (LiteralInteger, PyccelArrayShapeElement)):
             stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
-                            PyccelMinus(array_size, stop, simplify = True), stop)
+                            PyccelAdd(array_size, stop, simplify = True), stop)
         else:
             stop = _slice.stop
 
