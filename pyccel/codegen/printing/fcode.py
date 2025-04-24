@@ -2416,9 +2416,7 @@ class FCodePrinter(CodePrinter):
             return ''
         elif isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, StringType)):
             var_code = self._print(var)
-            code  = 'if (allocated({})) then\n'.format(var_code)
-            code += '  deallocate({})\n'     .format(var_code)
-            code += 'end if\n'
+            code  = f'if (allocated({var_code})) deallocate({var_code})\n'
             return code
         else:
             errors.report(f"Deallocate not implemented for {class_type}",
