@@ -27,7 +27,7 @@ public :: pyc_gcd, &
 
 private
 
-real(f64), parameter, private :: pi = 4.0_f64 * DATAN(1.0_f64)
+real(f64), parameter :: pi = 4.0_f64 * DATAN(1.0_f64)
 
 interface pyc_gcd
     module procedure pyc_gcd_4
