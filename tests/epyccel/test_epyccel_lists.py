@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import Final
 import pytest
 import numpy as np
 from pyccel import epyccel
@@ -871,3 +872,36 @@ def test_list_arg(stc_language):
     epyccel_func(arg_pyc, n)
     list_arg(arg_pyt, n)
     assert arg_pyc == arg_pyt
+
+def test_list_equality(language):
+    def list_equality(arg1 : Final[list[int]], arg2 : Final[list[int]]):
+        return arg1 == arg2
+
+    epyccel_func = epyccel(list_equality, language = language)
+    arg1 = [1,2,3,4,5]
+    arg2 = [4,5,6,7,8]
+    arg3 = [1,2,3]
+
+    assert list_equality(arg1, arg1) == epyccel_func(arg1, arg1)
+    assert list_equality(arg1, arg2) == epyccel_func(arg1, arg2)
+    assert list_equality(arg1, arg3) == epyccel_func(arg1, arg3)
+    assert list_equality(arg2, arg1) == epyccel_func(arg2, arg1)
+    assert list_equality(arg3, arg1) == epyccel_func(arg3, arg1)
+
+def test_list_equality_non_matching_types(language):
+    def list_equality(arg1 : Final[list[int]], arg2 : Final[list[float]]):
+        return arg1 == arg2
+
+    epyccel_func = epyccel(list_equality, language = language)
+    arg_int1 = [1,2,3,4,5]
+    arg_int2 = [4,5,6,7,8]
+    arg_int3 = [1,2,3]
+    arg_float1 = [1.,2.,3.,4.,5.]
+    arg_float2 = [4.,5.,6.,7.,8.]
+    arg_float3 = [1.,2.,3.]
+
+    assert list_equality(arg_int1, arg_float1) == epyccel_func(arg_int1, arg_float1)
+    assert list_equality(arg_int1, arg_float2) == epyccel_func(arg_int1, arg_float2)
+    assert list_equality(arg_int1, arg_float3) == epyccel_func(arg_int1, arg_float3)
+    assert list_equality(arg_int2, arg_float1) == epyccel_func(arg_int2, arg_float1)
+    assert list_equality(arg_int3, arg_float1) == epyccel_func(arg_int3, arg_float1)
