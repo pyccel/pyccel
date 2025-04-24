@@ -872,6 +872,8 @@ class FCodePrinter(CodePrinter):
         body = '\n'.join(func_strings)
         # ...
 
+        # Don't print contains or private for gFTL extensions
+        private = 'private\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
         imports += ''.join(self._print(i) for i in self._additional_imports.values())
         imports = self.print_constant_imports() + imports
@@ -881,7 +883,7 @@ class FCodePrinter(CodePrinter):
                  imports,
                  implicit_none,
                  public_decs,
-                 'private',
+                 private,
                  decs,
                  interfaces,
                  contains,
