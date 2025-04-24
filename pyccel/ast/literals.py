@@ -4,6 +4,7 @@
 #------------------------------------------------------------------------------------------#
 """ This module contains all literal types
 """
+import numpy as np
 from pyccel.utilities.metaclasses import Singleton
 
 from .basic     import TypedAstNode, PyccelAstNode
@@ -138,9 +139,9 @@ class LiteralInteger(Literal):
 
     def __init__(self, value, dtype = PythonNativeInt()):
         assert value >= 0
-        if not isinstance(value, int):
+        if not isinstance(value, (int, np.integer)):
             raise TypeError("A LiteralInteger can only be created with an integer")
-        self._value = value
+        self._value = int(value)
         self._class_type = dtype
         super().__init__()
 
@@ -174,7 +175,7 @@ class LiteralFloat(Literal):
     __slots__   = ('_value', '_class_type')
 
     def __init__(self, value, dtype = PythonNativeFloat()):
-        if not isinstance(value, (int, float, LiteralFloat)):
+        if not isinstance(value, (int, float, LiteralFloat, np.integer, np.floating)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         if isinstance(value, LiteralFloat):
             self._value = value.python_value
@@ -237,7 +238,8 @@ class LiteralComplex(Literal):
         Extract the Python value from the input argument.
 
         Extract the Python value from the input argument which can either
-        be a literal or a Python variable.
+        be a literal or a Python variable. The input argument represents
+        either the real or the imaginary part of the complex literal.
 
         Parameters
         ----------
@@ -250,9 +252,9 @@ class LiteralComplex(Literal):
             The Python value of the argument.
         """
         if isinstance(arg, Literal):
-            return arg.python_value
-        elif isinstance(arg, (int, float)):
-            return arg
+            return float(arg.python_value)
+        elif isinstance(arg, (int, float, np.integer, np.floating)):
+            return float(arg)
         else:
             raise TypeError(f"LiteralComplex argument must be an int/float/LiteralInt/LiteralFloat not a {type(arg)}")
 
@@ -331,7 +333,6 @@ class LiteralString(Literal):
     """
     __slots__ = ('_string',)
     _class_type = StringType()
-    _static_type = StringType()
     _shape = (None,)
 
     def __init__(self, arg):

@@ -123,9 +123,9 @@ Such type annotations are compatible with mypy and as such are recommended for u
 
 ### Installation
 
-Pyccel's official releases can be downloaded from PyPI (the Python Package Index) using `pip`.
+Pyccel's official releases can be downloaded and installed from PyPI (the Python Package Index) using `pip`.
 To get the latest (trunk) version of Pyccel, one can clone the `git` repository from GitHub and checkout the `devel` branch.
-Detailed installation instructions are found in the [README](https://github.com/pyccel/pyccel/blob/devel/README.md) file.
+Detailed installation instructions are found [here](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
 
 ### Command Line Usage
 
@@ -399,7 +399,7 @@ from mod import f
 f_fast = epyccel(f)
 ```
 In practice `epyccel` copies the contents of `f` into a temporary Python file in the `__epyccel__` directory.
-As a result it is important that all imports are written inside the function when using `epyccel`.
+Although some basic information (scalar literals, type hints, imports of supported libraries) can be deduced from the context, it is important that all other objects are defined inside the function when using `epyccel`.
 Once the file has been copied, `epyccel` calls the `pyccel` command to generate a Python C extension module that contains a single pyccelised function.
 Then finally, it imports this function and returns it to the caller.
 

@@ -27,6 +27,7 @@ from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
 from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
+from .operators import PyccelFloorDiv
 
 from .variable import DottedName, IndexedElement
 from .variable import Variable, AnnotatedPyccelSymbol
@@ -373,7 +374,7 @@ class Allocate(PyccelAstNode):
 
         - 'init' refers to direct allocation with predefined data (e.g., `x = [1, 2, 4]`).
         - 'reserve' refers to cases where the container will be appended to.
-        - 'resize' referes to cases where the container is populated via indexed elements.
+        - 'resize' refers to cases where the container is populated via indexed elements.
 
     Notes
     -----
@@ -626,7 +627,7 @@ class AliasAssign(PyccelAstNode):
 
     Represents aliasing for code generation. An alias is any statement of the
     form `lhs := rhs` where lhs is a pointer and rhs is a local_alias. In other words
-    the contents of `lhs` will change if the contents of `rhs` are modfied.
+    the contents of `lhs` will change if the contents of `rhs` are modified.
 
     Parameters
     ----------
@@ -721,6 +722,7 @@ class AugAssign(Assign):
             '-' : PyccelMinus,
             '*' : PyccelMul,
             '/' : PyccelDiv,
+            '//': PyccelFloorDiv,
             '%' : PyccelMod,
             '|' : PyccelBitOr,
             '&' : PyccelBitAnd,

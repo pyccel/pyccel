@@ -60,3 +60,39 @@ def functional_for_3d_range():
 def unknown_length_functional(x : 'int[:]'):
     a = [i*3 for i in range(len(x)*2)]
     return len(a), a[0], a[-1]
+
+def functional_with_enumerate():
+    a = [x + 1 for x in range(10)]
+    b = [i * j for i,j in enumerate(a)]
+    return len(b), b[0], b[1], b[2]
+
+def functional_with_enumerate_with_start():
+    a = [x - 3  for x in range(10)]
+    b = [i * j for i,j in enumerate(a, start=5)]
+    return len(b), b[0], b[1], b[2]
+
+def functional_with_condition():
+    a = [x if x %2 == 0 else -x for x in range(30)]
+    return len(a), a[0], a[1], a[2], a[3]
+
+def functional_with_zip():
+    a = [x ** 2 for x in range(8)]
+    b = [0, 1, 2]
+    c = [k-y for k,y in zip(a,b)]
+    return len(c), c[0], c[1], c[2]
+
+def functional_with_multiple_zips():
+    a = [x ** 2 for x in range(8)]
+    b = [0, 1, 2]
+    c = [y + 1 for y in range(10)]
+    d = [i + j + k for i, j, k in zip(a, b, c)]
+    return len(d), d[0], d[1], d[2]
+
+def functional_filter_and_transform():
+    a = [x + 1 for x in range(10) if x % 2 == 0]
+    return len(a), a[0], a[1], a[2]
+
+
+def functional_with_multiple_conditions():
+    a = [x + 1 - y for x in range(10) if x % 2 == 0 for y in range(12) if y % 3 == 0]
+    return len(a), a[0], a[1], a[2]

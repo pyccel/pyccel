@@ -128,7 +128,7 @@ These are then placed into the `Scope.imports` dictionary so they can be recogni
 The case of modules supported by Pyccel is somewhat simpler.
 In this case there should be an associated file `pyccel/ast/moduleext.py` (e.g. `numpyext.py`, `itertoolsext.py`) containing all the AST nodes related to this module.
 The file should also contain a [`pyccel.ast.core.Module`](../pyccel/ast/core.py), listing all the objects which are in the file.
-The `Module` object must then be saved in the [`pyccel.ast.utilities.builtin_import_registery`](../pyccel/ast/utilities.py) dictionary.
+The `Module` object must then be saved in the [`pyccel.ast.utilities.builtin_import_registry`](../pyccel/ast/utilities.py) dictionary.
 
 ## Low-level Objects
 

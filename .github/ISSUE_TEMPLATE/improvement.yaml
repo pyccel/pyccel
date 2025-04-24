@@ -1,0 +1,33 @@
+name: Improvement
+title: "[Improvement] "
+description: Suggest an improvement on performance, code quality, user experience, etc.
+labels: [ "improvement" ]
+body:
+
+- type: textarea
+  attributes:
+    label: What would you like to be improved?
+    description: Please describe the problem you see and why it needs improvement.
+    placeholder: |
+      Clearly explain the issue with performance, code quality, or user experience.
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Do you have any suggestions for improvement? (Optional)
+    description: If you have ideas on how to improve this issue, share them here.
+    placeholder: |
+      Provide possible solutions or thoughts on fixing this issue.
+  validations:
+    required: false
+
+- type: checkboxes
+  id: terms
+  attributes:
+    label: Record
+    options:
+    - label: "I have read the [Contributing Guidelines](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)."
+      required: true
+    - label: "I have starred the repository"
+      required: false

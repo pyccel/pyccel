@@ -13,7 +13,7 @@ if __name__ == '__main__':
     print(mod.tst_tmplt_1())
     print(mod.tst_multi_tmplt_1())
     print(mod.tst_tmplt_head_1())
-    print(mod.tst_local_overide_1())
+    print(mod.tst_local_override_1())
     print(mod.tst_tmplt_tmplt_1())
     print(mod.tst_array_elem1())
     print(mod.tst_multi_tmplt_2())

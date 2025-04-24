@@ -9,6 +9,7 @@ import re
 import random
 import pytest
 import numpy as np
+from filelock import FileLock
 from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.ast.utilities import python_builtin_libs
 
@@ -765,7 +766,7 @@ def test_return_numpy_arrays(language):
     types += [int]*2 # 2 ints for b
     types += [float]*2 # 2 floats for c
     types += [bool]*2 # 2 bools for d
-    types += [complex]*2 # 2 complexs for e
+    types += [complex]*2 # 2 complexes for e
     types += [float]*5 # 5 floats for h
     types += [int]*5 # 5 ints for g
     types += [int]*4 # 4 ints for k
@@ -985,9 +986,9 @@ def get_lang_exit_value(abs_path, language, cwd=None):
     return p.returncode
 
 @pytest.mark.parametrize( "test_file", ["scripts/asserts/valid_assert.py",
-                                        "scripts/asserts/unvalid_assert1.py",
-                                        "scripts/asserts/unvalid_assert2.py",
-                                        "scripts/asserts/unvalid_assert3.py",
+                                        "scripts/asserts/invalid_assert1.py",
+                                        "scripts/asserts/invalid_assert2.py",
+                                        "scripts/asserts/invalid_assert3.py",
                                         ] )
 
 def test_assert(language, test_file):
@@ -1145,7 +1146,7 @@ def test_reserved_file_name():
 
 #------------------------------------------------------------------------------
 @pytest.mark.skip(reason="List concatenation not yet implemented")
-def test_concatentation():
+def test_concatenation():
     pyccel_test("scripts/concatenation.py",
                 language = 'fortran',
                 output_dtype=[int]*15+[str])
@@ -1215,3 +1216,27 @@ def test_module_name_containing_conflict(language):
     out2 = get_python_output(test_file)
 
     assert out1 == out2
+
+#------------------------------------------------------------------------------
+def test_stubs(language):
+    """
+    This tests that a stub file is generated and ensures the stub files are
+    still generated with the expected format. However it is not a good test.
+    It prevents any changes being made to the output format and doesn't
+    check that it can be parsed. This test should be replaced once stub files
+    can be read.
+    """
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, "scripts")
+
+    with open(get_abs_path("scripts/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
+        expected_pyi = f.read()
+
+    wk_dir = get_abs_path("scripts/stub_test")
+    with FileLock(wk_dir+'.lock'):
+        compile_pyccel(path_dir, get_abs_path("scripts/runtest_stub.py"), options = f"--language={language} --output=stub_test")
+        with open(get_abs_path(f"scripts/stub_test/__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
+            generated_pyi = f.read()
+        shutil.rmtree(wk_dir)
+
+    assert expected_pyi == generated_pyi

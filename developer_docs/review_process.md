@@ -12,7 +12,7 @@ Once the pull request is opened 9 tests should be triggered they are:
 -   **Codacy** : Runs a static compiler via the [codacy](https://app.codacy.com/gh/pyccel/pyccel/dashboard) platform
 -   **Python Linting** : Runs Pylint on all Python files and reports any errors introduced by the pull request.
 -   **Pyccel Linting** : Runs a small static compiler to ensure that Pyccel coding guidelines are followed
--   **Spellcheck** : Checks whether there are any spelling mistakes in the documentation (if a word is incorrectly flagged as a typo it should be added to the file [.dict_custom.txt](../.dict_custom.txt))
+-   **Spellcheck** : Checks whether there are any spelling mistakes in the documentation (if a word is incorrectly flagged as a typo it should be added to the file [.dict_custom.txt](../.dict_custom.txt) and/or [.typos.toml](../.typos.toml))
 -   **Coverage Checker** : Checks that the code which has been added is used in at least one test. Occasionally this test is overenthusiastic, it may therefore be disabled if an issue is created to find the problem at a later date.
 -   **Doc Coverage** : Runs the [numpydoc](https://numpydoc.readthedocs.io/en/latest/index.html) static compiler to ensure that docstrings are present and correctly formatted. This means that they should respect NumPy's style guide as described [here](https://numpydoc.readthedocs.io/en/latest/format.html).
 
@@ -30,7 +30,7 @@ Finally once you think you have handled all the issues raised in a review please
 
 ### Needs Initial Review
 
-To request the first stage of the review process you should add the label `needs_inital_review` to your pull request. This asks for a review from anyone. The aim is to review the Python code and ensure that it is clean. New developers are encouraged to review any pull requests marked `needs_inital_review` as the process of understanding how developers integrate their improvements into the existing codebase can be quite instructive when getting to grips with the code. Examples of things to look out for in your review are:
+To request the first stage of the review process you should add the label `needs_initial_review` to your pull request. This asks for a review from anyone. The aim is to review the Python code and ensure that it is clean. New developers are encouraged to review any pull requests marked `needs_initial_review` as the process of understanding how developers integrate their improvements into the existing codebase can be quite instructive when getting to grips with the code. Examples of things to look out for in your review are:
 
 -   Unclear comments/docstrings
 -   Missing/Incomplete tests
@@ -38,7 +38,7 @@ To request the first stage of the review process you should add the label `needs
 -   Lack of `__slots__`
 -   Unnecessary code duplication
 
-Once the initial reviewer is happy with the branch they should accept the pull request and change the label from `needs_inital_review` to `Ready_for_review`
+Once the initial reviewer is happy with the branch they should accept the pull request and change the label from `needs_initial_review` to `Ready_for_review`
 
 ### Ready for Review
 

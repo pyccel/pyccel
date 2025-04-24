@@ -1,6 +1,4 @@
 
-use, intrinsic :: ISO_C_Binding, only : b1 => C_BOOL
-
 #include <set/header.inc>
 #define __IDENTITY(x) x
 
@@ -51,6 +49,7 @@ contains
   end subroutine __IDENTITY(Set)_intersection_update
 
   function __IDENTITY(Set)_is_disjoint(this, other_set) result(Out)
+    use, intrinsic :: ISO_C_Binding, only : b1 => C_BOOL
     class(Set), target, intent(in) :: this
     class(Set), target, intent(in) :: other_set
     logical(b1) :: Out

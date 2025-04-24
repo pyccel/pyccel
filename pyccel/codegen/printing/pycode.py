@@ -10,18 +10,22 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
 from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple
-from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
+from pyccel.ast.builtin_methods.list_methods import ListAppend
+from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress, If
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
+from pyccel.ast.core       import Interface, FunctionDefArgument
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType
 from pyccel.ast.functionalexpr import FunctionalFor
+from pyccel.ast.internals  import PyccelSymbol
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
-from pyccel.ast.variable   import DottedName, Variable, IndexedElement
+from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
+from pyccel.ast.variable   import DottedName, Variable, IndexedElement
 
 from pyccel.parser.semantic import magic_method_map
 
@@ -83,6 +87,7 @@ class PythonCodePrinter(CodePrinter):
         self._aliases = {}
         self._ignore_funcs = []
         self._tuple_assigns = []
+        self._in_header = False
 
     def _indent_codestring(self, lines):
         tab = " "*self._default_settings['tabwidth']
@@ -97,25 +102,30 @@ class PythonCodePrinter(CodePrinter):
 
     def _find_functional_expr_and_iterables(self, expr):
         """
+        Extract the central expression and iterables from a FunctionalFor or GeneratorComprehension.
+
         Traverse through the loop representing a FunctionalFor or GeneratorComprehension
-        to extract the central expression and the different iterable objects
+        to extract the central expression and the different iterable objects.
 
         Parameters
         ----------
         expr : FunctionalFor
+               The loop or generator comprehension to be analyzed.
 
         Returns
         -------
         body      : TypedAstNode
-                    The expression inside the for loops
+                    The expression inside the for loops.
         iterables : list of Iterables
-                    The iterables over which the for loops iterate
+                    The iterables over which the for loops iterate.
         """
         dummy_var = expr.index
         iterables = []
-        body = expr.loops[1]
-        while not isinstance(body, Assign):
-            if isinstance(body, CodeBlock):
+        body = expr.loops[-1]
+        while not isinstance(body, (Assign, ListAppend)):
+            if isinstance(body, If):
+                body = body.blocks[0].body.body[0]
+            elif isinstance(body, CodeBlock):
                 body = list(body.body)
                 while isinstance(body[0], FunctionalFor):
                     func_for = body.pop(0)
@@ -168,6 +178,118 @@ class PythonCodePrinter(CodePrinter):
             self.add_import(Import('numpy', [AsName(cls, name)]))
         return name
 
+    def _get_type_annotation(self, obj):
+        """
+        Get the code for the type annotation.
+
+        Get the code for the type annotation of the object passed as argument.
+
+        Parameters
+        ----------
+        obj : TypedAstNode
+            An object for which a type annotation should be printed.
+
+        Returns
+        -------
+        str
+            A string containing the type annotation.
+        """
+        if isinstance(obj, FunctionDefArgument):
+            is_temp_union_name = isinstance(obj.annotation, SyntacticTypeAnnotation) and \
+                                 isinstance(obj.annotation.dtype, PyccelSymbol)
+            if obj.annotation and not is_temp_union_name:
+                type_annotation = self._print(obj.annotation)
+                return f"'{type_annotation}'"
+            else:
+                return self._get_type_annotation(obj.var)
+        elif isinstance(obj, Variable):
+            type_annotation = self._print(obj.class_type)
+            return f"'{type_annotation}'"
+        else:
+            raise NotImplementedError(f"Unexpected object of type {type(obj)}")
+
+    def _function_signature(self, func):
+        """
+        Print the function signature.
+
+        Print the function signature in a .pyi file. This contains arguments,
+        result declarations and type annotations.
+
+        Parameters
+        ----------
+        func : FunctionDef | Interface
+            The function whose signature is of interest.
+
+        Returns
+        -------
+        str
+            The code which describes the function signature.
+        """
+        interface = func.get_direct_user_nodes(lambda x: isinstance(x, Interface))
+        self.add_import(Import('typing', [AsName(FunctionDef('overload', (), ()), 'overload')]))
+        if interface:
+            overload = '@overload\n'
+        else:
+            overload = ''
+        if func.is_inline:
+            return overload + self._print(func)
+        else:
+            self.set_scope(func.scope)
+            args = ', '.join(self._print(a) for a in func.arguments)
+            result = func.results
+            body = '...'
+            if result:
+                res = f' -> {self._get_type_annotation(result.var)}'
+            else:
+                res = ' -> None'
+            name = self.scope.get_python_name(interface[0].name if interface else func.name)
+            self.exit_scope()
+            return overload + f"def {name}({args}){res}:\n"+self._indent_codestring(body)
+
+    def _handle_decorators(self, decorators):
+        """
+        Print decorators for a function.
+
+        Print all decorators for a function in the expected format.
+
+        Parameters
+        ----------
+        decorators : dict
+            A dictionary describing the function templates.
+
+        Returns
+        -------
+        str
+            The code which describes the decorators.
+        """
+        if len(decorators) == 0:
+            return ''
+        dec = ''
+        for name,f in decorators.items():
+            if name in pyccel_decorators:
+                self.add_import(Import(DottedName('pyccel.decorators'), [AsName(decorators_mod[name], name)]))
+            # TODO - All decorators must be stored in a list
+            if name == 'template':
+                f = list(f['template_dict'].items())
+            elif not isinstance(f, list):
+                f = [f]
+            for func in f:
+                if isinstance(func, FunctionCall):
+                    args = ', '.join(self._print(a) for a in func.args)
+                elif func == name:
+                    args = ''
+                elif name == 'template':
+                    args = f"'{func[0]}', (" + ', '.join(f"'{self._print(t)}'" for t in func[1].type_list) + ')'
+                else:
+                    args = ', '.join(self._print(LiteralString(a)) for a in func)
+
+                if args:
+                    dec += f'@{name}({args})\n'
+
+                else:
+                    dec += f'@{name}\n'
+        return dec
+
     #----------------------------------------------------------------------
 
     def _print_dtype_argument(self, expr, init_dtype):
@@ -209,9 +331,6 @@ class PythonCodePrinter(CodePrinter):
         fs = ', '.join(self._print(f) for f in expr)
         return '({0})'.format(fs)
 
-    def _print_FixedSizeType(self, expr):
-        return str(expr)
-
     def _print_Variable(self, expr):
         if isinstance(expr.class_type, InhomogeneousTupleType):
             elems = ', '.join(self._print(self.scope.collect_tuple_element(v)) for v in expr)
@@ -227,14 +346,16 @@ class PythonCodePrinter(CodePrinter):
         return f"{lhs_code}.{rhs_code}"
 
     def _print_FunctionDefArgument(self, expr):
-        name = self._print(expr.name)
+        if self._in_header:
+            name = self._print(self.scope.get_python_name(expr.name))
+        else:
+            name = self._print(expr.name)
         default = ''
 
-        if expr.annotation:
+        if expr.annotation and not self._in_header:
             type_annotation = f"'{self._print(expr.annotation)}'"
         else:
-            var = expr.var
-            type_annotation = f"'{var.class_type}'"
+            type_annotation = self._get_type_annotation(expr)
 
         if expr.has_default:
             if isinstance(expr.value, FunctionDef):
@@ -318,37 +439,8 @@ class PythonCodePrinter(CodePrinter):
 
         code = (f'def {name}({args}){result_annotation}:\n'
                 f'{body}\n')
-        decorators = expr.decorators.copy()
-        if decorators:
-            if decorators['template']:
-                # Eliminate template_dict because it is useless in the printing
-                decorators['template'] = decorators['template']['decorator_list']
-            else:
-                decorators.pop('template')
-            for n,f in decorators.items():
-                if n in pyccel_decorators:
-                    self.add_import(Import(DottedName('pyccel.decorators'), [AsName(decorators_mod[n], n)]))
-                # TODO - All decorators must be stored in a list
-                if not isinstance(f, list):
-                    f = [f]
-                dec = ''
-                for func in f:
-                    if isinstance(func, FunctionCall):
-                        args = func.args
-                    elif func == n:
-                        args = []
-                    else:
-                        args = [LiteralString(a) for a in func]
-                    if n == 'types':
-                        continue
-                    if args:
-                        args = ', '.join(self._print(i) for i in args)
-                        dec += '@{name}({args})\n'.format(name=n, args=args)
-
-                    else:
-                        dec += '@{name}\n'.format(name=n)
-
-                code = '{dec}{code}'.format(dec=dec, code=code)
+        dec = self._handle_decorators(expr.decorators)
+        code = f'{dec}{code}'
         headers = expr.headers
         if headers:
             headers = self._print(headers)
@@ -414,8 +506,11 @@ class PythonCodePrinter(CodePrinter):
 
 
     def _print_AsName(self, expr):
-        name = self._print(expr.name)
         target = self._print(expr.local_alias)
+        if isinstance(expr.object, VariableTypeAnnotation):
+            return target
+
+        name = self._print(expr.name)
         if name == target:
             return name
         else:
@@ -590,15 +685,11 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Import(self, expr):
         mod = expr.source_module
-        init_func_name = ''
-        free_func_name = ''
+        init_func = None
+        free_func = None
         if mod:
             init_func = mod.init_func
-            if init_func:
-                init_func_name = init_func.name
             free_func = mod.free_func
-            if free_func:
-                free_func_name = free_func.name
 
         if isinstance(expr.source, AsName):
             source = self._print(expr.source.name)
@@ -624,14 +715,15 @@ class PythonCodePrinter(CodePrinter):
             target = list(set(target))
             if source in pyccel_builtin_import_registry:
                 self._aliases.update((pyccel_builtin_import_registry[source][t.name].cls_name, t.local_alias) \
-                                        for t in target if t.name != t.local_alias)
+                                        for t in target if not isinstance(t.object, VariableTypeAnnotation) and \
+                                                           t.name != t.local_alias)
 
             if expr.source_module:
                 if expr.source_module.init_func:
                     self._ignore_funcs.append(expr.source_module.init_func)
                 if expr.source_module.free_func:
                     self._ignore_funcs.append(expr.source_module.free_func)
-            target = [self._print(t) for t in target if t.name not in (init_func_name, free_func_name)]
+            target = [self._print(t) for t in target if t.object not in (init_func, free_func)]
             target = ', '.join(target)
             return 'from {source} import {target}\n'.format(source=source, target=target)
 
@@ -660,15 +752,20 @@ class PythonCodePrinter(CodePrinter):
     def _print_FunctionalFor(self, expr):
         body, iterators = self._find_functional_expr_and_iterables(expr)
         lhs = self._print(expr.lhs)
-        body = self._print(body.rhs)
-        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
-                        for idx, iters in zip(expr.indices, iterators)])
+        condition = ''
+        if isinstance(body, Assign):
+            body = self._print(body.rhs)
+        else:
+            assert isinstance(body, ListAppend)
+            body = self._print(body.args[0])
 
-        name = self._aliases.get(type(expr),'array')
-        if name == 'array':
-            self.add_import(Import('numpy', [AsName(NumpyArray, 'array')]))
+        for_loops = ' '.join(f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
+                             for idx, iters, condition in zip(expr.indices, iterators, expr.conditions))
 
-        return '{} = {}([{} {}])\n'.format(lhs, name, body, for_loops)
+        if isinstance(expr.class_type, NumpyNDArrayType):
+            array = self._get_numpy_name(NumpyArray)
+            return f'{lhs} = {array}([{body} {for_loops} {condition}])\n'
+        return f'{lhs} = [{body} {for_loops} {condition}]\n'
 
     def _print_GeneratorComprehension(self, expr):
         body, iterators = self._find_functional_expr_and_iterables(expr)
@@ -684,8 +781,8 @@ class PythonCodePrinter(CodePrinter):
                     rhs = type(body.rhs)(*args)
 
         body = self._print(rhs)
-        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
-                        for idx, iters in zip(expr.indices, iterators)])
+        for_loops = ' '.join(f'for {self._print(idx)} in {self._print(iters)}{" if " + self._print(condition.blocks[0].condition) if condition else ""}'
+                             for idx, iters, condition in zip(expr.indices, iterators, expr.conditions))
 
         if expr.get_user_nodes(FunctionalFor):
             return '{}({} {})'.format(expr.name, body, for_loops)
@@ -924,7 +1021,11 @@ class PythonCodePrinter(CodePrinter):
         dict_obj = self._print(expr.dict_obj)
         method_args = ', '.join(self._print(a) for a in expr.args)
 
-        return f"{dict_obj}.{method_name}({method_args})\n"
+        code = f"{dict_obj}.{method_name}({method_args})"
+        if isinstance(expr.class_type, VoidType):
+            return f'{code}\n'
+        else:
+            return code
 
     def _print_DictPop(self, expr):
         dict_obj = self._print(expr.dict_obj)
@@ -953,6 +1054,11 @@ class PythonCodePrinter(CodePrinter):
         dict_obj = self._print(expr.variable)
 
         return f"{dict_obj}.keys()"
+
+    def _print_DictValues(self, expr):
+        dict_obj = self._print(expr.variable)
+
+        return f"{dict_obj}.values()"
 
     def _print_DictGetItem(self, expr):
         dict_obj = self._print(expr.dict_obj)
@@ -1099,6 +1205,32 @@ class PythonCodePrinter(CodePrinter):
                         body    = body,
                         prog    = prog)
 
+    def _print_ModuleHeader(self, expr):
+        self._in_header = True
+        mod = expr.module
+        variables = mod.variables
+        var_decl = '\n'.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
+                            for v in variables if not v.is_temp)
+        funcs = '\n'.join(self._function_signature(f) for f in mod.funcs)
+        classes = ''
+        for classDef in mod.classes:
+            classes += f"class {classDef.name}:\n"
+            class_body  = '\n'.join(f"{classDef.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
+                                    for v in classDef.attributes) + '\n\n'
+            for method in classDef.methods:
+                class_body += f"{self._function_signature(method)}\n"
+            for interface in classDef.interfaces:
+                for method in interface.functions:
+                    class_body += f"{self._function_signature(method)}\n"
+
+            classes += self._indent_codestring(class_body)
+
+        imports  = ''.join(self._print(i) for i in mod.imports)
+        imports += ''.join(self._print(i) for i in self._additional_imports.values())
+
+        self._in_header = False
+        return '\n'.join((imports, var_decl, classes, funcs))
+
     def _print_AllDeclaration(self, expr):
         values = ',\n           '.join(self._print(v) for v in expr.values)
         return f'__all__ = ({values},)\n'
@@ -1226,7 +1358,10 @@ class PythonCodePrinter(CodePrinter):
         cls_variable = expr.cls_variable
         cls_name = cls_variable.cls_base.name
         args = ', '.join(self._print(arg) for arg in expr.args[1:])
-        return f"{cls_variable} = {cls_name}({args})\n"
+        if expr.get_direct_user_nodes(lambda u: isinstance(u, CodeBlock)):
+            return f"{cls_variable} = {cls_name}({args})\n"
+        else:
+            return f"{cls_name}({args})"
 
     def _print_Del(self, expr):
         return ''.join(f'del {var.variable}\n' for var in expr.variables)
@@ -1257,6 +1392,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_SyntacticTypeAnnotation(self, expr):
         dtype = self._print(expr.dtype)
+        dtype = dtype.replace('::',':')
         order = f"(order={expr.order})" if expr.order else ''
         return f'{dtype}{order}'
 
@@ -1268,6 +1404,57 @@ class PythonCodePrinter(CodePrinter):
             results = ''
         return f"({results})({args})"
 
+    def _print_VariableTypeAnnotation(self, expr):
+        dtype = self._print(expr.class_type)
+        if expr.is_const:
+            dtype = f'const {dtype}'
+        return dtype
+
     def _print_TypingFinal(self, expr):
         annotation = self._print(expr.arg)
         return f'const {annotation}'
+
+    def _print_NumpyNDArrayType(self, expr):
+        dims = ','.join(':'*expr.container_rank)
+        order_str = f'(order={expr.order})' if expr.order else ''
+        return f'{self._print(expr.element_type)}[{dims}]{order_str}'
+
+    def _print_InhomogeneousTupleType(self, expr):
+        args = ', '.join(self._print(t) for t in expr)
+        return f'tuple[{args}]'
+
+    def _print_HomogeneousTupleType(self, expr):
+        return f'tuple[{self._print(expr.element_type)}, ...]'
+
+    def _print_HomogeneousListType(self, expr):
+        return f'list[{self._print(expr.element_type)}]'
+
+    def _print_HomogeneousSetType(self, expr):
+        return f'set[{self._print(expr.element_type)}]'
+
+    def _print_DictType(self, expr):
+        return f'dict[{self._print(expr.key_type)}, {self._print(expr.value_type)}]'
+
+    def _print_PythonNativeBool(self, expr):
+        return 'bool'
+
+    def _print_PythonNativeInt(self, expr):
+        return 'int'
+
+    def _print_PythonNativeFloat(self, expr):
+        return 'float'
+
+    def _print_PythonNativeComplex(self, expr):
+        return 'complex'
+
+    def _print_StringType(self, expr):
+        return 'str'
+
+    def _print_CustomDataType(self, expr):
+        # TODO: Check if CustomDataType is imported from another file
+        return expr.name
+
+    def _print_NumpyNumericType(self, expr):
+        name = str(expr).removeprefix('numpy.')
+        self.add_import(Import('numpy', [AsName(VariableTypeAnnotation(expr), name)]))
+        return name

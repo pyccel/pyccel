@@ -65,7 +65,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `slice` | No |
 | `sorted` | No |
 | `staticmethod` | No |
-| `str` | No |
+| `str` | As a type annotation or with string arguments |
 | **`sum`** | **Yes** |
 | `super` | No |
 | **`tuple`** | **Yes** |
@@ -79,17 +79,17 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | Method | Supported |
 |----------|-----------|
 | **`append`** | **Yes** |
-| `clear` | Python-only |
+| **`clear`** | **Yes** |
 | `copy` | Python-only |
 | `count` | No |
-| `extend` | Python-only |
+| **`extend`** | **Yes** |
 | `index` | No |
-| `insert` | Python-only |
+| **`insert`** | **Yes** |
 | `max` | No |
 | `min` | No |
 | **`pop`** | **Yes** |
 | `remove` | Python-only |
-| `reverse` | No |
+| **`reverse`** | **Yes** |
 | `sort` | Python-only |
 
 ## Set methods
@@ -125,12 +125,12 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `get` | Python and C |
 | **`items`** | **Yes** |
 | **`keys`** | **Yes** |
-| `pop` | Python and C |
-| `popitem` | Python-only |
+| **`pop`** | **Yes** |
+| **`popitem`** | **Yes** |
 | `reversed` | No |
 | `setdefault` | Python-only |
 | `update` | No |
-| `values` | No |
+| **`values`** | **Yes** |
 
 ## String methods
 

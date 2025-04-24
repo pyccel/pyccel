@@ -76,7 +76,7 @@ c_marks = [f[1] for f in tuple_funcs if f[0] in failing_c_tests]
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="function in function is not implemented yet\
-                in C language"),
+                in C language", run=False),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)

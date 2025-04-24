@@ -596,7 +596,7 @@ Interfaces are functions which accept more than one type.
 These functions are handled via multiple functions in the wrapper:
 1.  A function which can be called from Python with the prototype:
     ```c
-    PyObject* func_name(PyObject* self, PyOject* args, PyObject* kwargs);
+    PyObject* func_name(PyObject* self, PyObject* args, PyObject* kwargs);
     ```
 
 2.  A function which determines which combination of types were used in the call

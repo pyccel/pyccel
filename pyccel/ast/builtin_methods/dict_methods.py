@@ -13,7 +13,7 @@ This module contains objects which describe these methods within Pyccel's AST.
 from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType, SymbolicType
 from pyccel.ast.internals import PyccelFunction, Iterable, PyccelArrayShapeElement
 from pyccel.ast.literals  import LiteralInteger
-from pyccel.ast.variable  import IndexedElement
+from pyccel.ast.variable  import IndexedElement, Variable
 
 
 __all__ = ('DictClear',
@@ -26,6 +26,7 @@ __all__ = ('DictClear',
            'DictPop',
            'DictPopitem',
            'DictSetDefault',
+           'DictValues',
            )
 
 #==============================================================================
@@ -59,6 +60,16 @@ class DictMethod(PyccelFunction):
         Get the object representing the dict.
         """
         return self._dict_obj
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return (self._dict_obj,)
 
 #==============================================================================
 class DictPop(DictMethod):
@@ -133,6 +144,16 @@ class DictPopitem(DictMethod):
         self._class_type = InhomogeneousTupleType(dict_type.key_type, dict_type.value_type)
         super().__init__(dict_obj)
 
+    def __iter__(self):
+        """
+        Iterate over a popitem to get an example of a key and a value.
+
+        Iterate over a popitem to get an example of a key and a value. This
+        is particularly useful in the semantic stage in order to create the
+        variables representing the key and value objects.
+        """
+        return iter((IndexedElement(self, 0), IndexedElement(self, 1)))
+
 #==============================================================================
 class DictGet(DictMethod):
     """
@@ -188,6 +209,16 @@ class DictGet(DictMethod):
         The value that should be returned if the key is not present in the dictionary.
         """
         return self._args[1]
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
 
 #==============================================================================
 class DictSetDefault(DictMethod):
@@ -289,6 +320,16 @@ class DictCopy(DictMethod):
         self._shape = dict_obj.shape
         super().__init__(dict_obj)
 
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
+
 #==============================================================================
 class DictItems(Iterable):
     """
@@ -316,7 +357,8 @@ class DictItems(Iterable):
         """
         Get the object representing the dict.
 
-        Get the object representing the dict.
+        Get the object representing the dict. The name of this method is
+        chosen to match the name of the equivalent method in VariableIterator.
         """
         return self._dict_obj
 
@@ -363,7 +405,8 @@ class DictKeys(Iterable):
         """
         Get the object representing the dict.
 
-        Get the object representing the dict.
+        Get the object representing the dict. The name of this method is
+        chosen to match the name of the equivalent method in VariableIterator.
         """
         return self._dict_obj
 
@@ -371,16 +414,16 @@ class DictKeys(Iterable):
         """
         Get the item of the iterable that will be saved to the loop targets.
 
-        Returns two objects that could be a key and a value of the dictionary.
-        These elements are used to determine the types of the loop targets.
+        Returns an object that could be a key of the dictionary.
+        This element is used to determine the type of the loop target.
 
         Returns
         -------
         list[TypedAstNode]
-            A list of objects that should be assigned to variables.
+            A list containing the object that should be assigned to the target variable.
         """
-        item = DictPopitem(self._dict_obj)
-        return [IndexedElement(item, 0)]
+        class_type = self._dict_obj.class_type.key_type
+        return [Variable(class_type, '_', memory_handling = 'heap' if class_type.rank > 0 else 'stack')]
 
 #==============================================================================
 class DictGetItem(DictMethod):
@@ -421,3 +464,51 @@ class DictGetItem(DictMethod):
         The key that is used to select the element from the dict.
         """
         return self._args[0]
+
+#==============================================================================
+class DictValues(Iterable):
+    """
+    Represents a call to the .values() method.
+
+    Represents a call to the .values() method which iterates over the keys of a
+    dictionary.
+
+    Parameters
+    ----------
+    dict_obj : TypedAstNode
+        The object from which the method is called.
+    """
+    __slots__ = ('_dict_obj',)
+    _attribute_nodes = Iterable._attribute_nodes + ("_dict_obj",)
+    _shape = None
+    _class_type = SymbolicType()
+    name = 'keys'
+
+    def __init__(self, dict_obj):
+        self._dict_obj = dict_obj
+        super().__init__(1)
+
+    @property
+    def variable(self):
+        """
+        Get the object representing the dict.
+
+        Get the object representing the dict. The name of this method is
+        chosen to match the name of the equivalent method in VariableIterator.
+        """
+        return self._dict_obj
+
+    def get_python_iterable_item(self):
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns an object that could be a value of the dictionary.
+        This element is used to determine the types of the loop targets.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list containing the object that should be assigned to the target variable.
+        """
+        class_type = self._dict_obj.class_type.value_type
+        return [Variable(class_type, '_', memory_handling = 'heap' if class_type.rank > 0 else 'stack')]
