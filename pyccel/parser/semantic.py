@@ -121,7 +121,7 @@ from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.type_annotations import FunctionTypeAnnotation, typenames_to_dtypes
 
-from pyccel.ast.typingext import TypingFinal
+from pyccel.ast.typingext import TypingFinal, TypingTypeVar
 
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
@@ -3129,7 +3129,7 @@ class SemanticParser(BasicParser):
                         elem = self._visit(syntactic_elem)
                         self.scope.insert_symbolic_alias(IndexedElement(v, i), elem[0])
             else:
-                errors.report(PYCCEL_RESTRICTION_TODO + '\nUnrecoginsed type annotation',
+                errors.report(PYCCEL_RESTRICTION_TODO + '\nUnrecognised type annotation',
                         severity='fatal', symbol=expr)
 
         # An annotated variable must have a type
@@ -3161,7 +3161,7 @@ class SemanticParser(BasicParser):
             if order and order != visited_dtype.class_type.order:
                 visited_dtype = VariableTypeAnnotation(visited_dtype.class_type.swap_order())
             return UnionTypeAnnotation(visited_dtype)
-        elif isinstance(visited_dtype, UnionTypeAnnotation):
+        elif isinstance(visited_dtype, (UnionTypeAnnotation, TypingTypeVar)):
             return visited_dtype
         elif isinstance(visited_dtype, ClassDef):
             # TODO: Improve when #1676 is merged
@@ -3824,6 +3824,10 @@ class SemanticParser(BasicParser):
                 return rhs
             else:
                 raise NotImplementedError("Cannot assign result of a function without a return")
+
+        elif isinstance(rhs, TypingTypeVar):
+            self.scope.insert_symbolic_alias(lhs, rhs)
+            return EmptyNode()
 
         else:
             d_var  = self._infer_type(rhs)
