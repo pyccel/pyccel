@@ -2443,7 +2443,7 @@ class SemanticParser(BasicParser):
             return PyccelFunctionDef('Final', TypingFinal)
         elif isinstance(env_var, typing.TypeVar):
             constraints = [VariableTypeAnnotation(original_type_to_pyccel_type[c]) for c in env_var.__constraints__]
-            var = TypingTypeVar(env_var.__name__, *constraints,
+            return TypingTypeVar(env_var.__name__, *constraints,
                                 covariant = env_var.__covariant__,
                                 contravariant = env_var.__contravariant__)
         elif isinstance(env_var, ModuleType):
