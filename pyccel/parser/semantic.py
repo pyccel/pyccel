@@ -2384,7 +2384,6 @@ class SemanticParser(BasicParser):
         return target, iterable
 
     def env_var_to_pyccel(self, env_var, *, name = None):
-        print(env_var, type(env_var))
         if env_var in original_type_to_pyccel_type:
             return VariableTypeAnnotation(original_type_to_pyccel_type[env_var])
         elif sys.version_info >= (3, 10) and isinstance(env_var, UnionType): # pylint:disable=possibly-used-before-assignment
