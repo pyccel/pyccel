@@ -83,6 +83,10 @@ class TypingTypeVar(TypedAstNode):
         super().__init__()
 
     @property
+    def name(self):
+        return self._name
+
+    @property
     def type_list(self):
         return self._possible_types
 
