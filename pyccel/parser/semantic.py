@@ -4700,10 +4700,10 @@ class SemanticParser(BasicParser):
             if u not in templates:
                 # u_val is None if it is collected from the context
                 u_val = self.scope.find(u, 'symbolic_aliases')
-                if u_val:
-                    templates[u] = self.scope.find(u, 'symbolic_aliases')
-                else:
-                    templates[u] = self._visit(u)
+                if u_val is None:
+                    u_val = self._visit(u)
+                if isinstance(u_val, (VariableTypeAnnotation, UnionTypeAnnotation, TypingTypeVar)):
+                    templates[u] = u_val
 
         # Create new temporary templates for the arguments with a Union data type.
         tmp_templates = {}
@@ -4713,11 +4713,7 @@ class SemanticParser(BasicParser):
             if isinstance(annot, UnionTypeAnnotation):
                 annotation = [aa for a in annot for aa in unpack(a)]
             elif isinstance(annot, SyntacticTypeAnnotation):
-                elem = annot.dtype
-                if isinstance(elem, IndexedElement):
-                    elem = [elem.base] + [a.dtype for a in elem.indices if isinstance(a, SyntacticTypeAnnotation)]
-                else:
-                    elem = [elem]
+                elem = annot.dtype.get_attribute_nodes((SyntacticTypeAnnotation, PyccelSymbol))
                 if all(e not in templates for e in elem):
                     annotation = unpack(self._visit(annot))
                 else:
