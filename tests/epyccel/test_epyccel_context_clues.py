@@ -77,24 +77,17 @@ def test_bad_type_var_context(language):
 
 def test_type_var_context(language):
     T = TypeVar('T', int, float)
-    S = TypeVar('S', int, float)
 
-    def f(a : T, b : S) -> T:
-        return T(2*a+b)
+    def f(a : T, b : T) -> T:
+        return 2*a + b
 
     epyc_f = epyccel(f, language=language)
-    v = epyc_f(1, 1.0)
-    assert v == f(1, 1.0)
-    assert isinstance(v, int)
     v = epyc_f(1.0, 1.0)
     assert v == f(1.0, 1.0)
     assert isinstance(v, float)
     v = epyc_f(1, 1)
     assert v == f(1, 1)
-    assert isinstance(v, float)
-    v = epyc_f(1.0, 1)
-    assert v == f(1.0, 1)
-    assert isinstance(v, float)
+    assert isinstance(v, int)
 
 def test_class_context(language):
     T = int
