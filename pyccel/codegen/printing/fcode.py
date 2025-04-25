@@ -231,11 +231,11 @@ iso_c_binding_shortcut_mapping = {
     'C_BOOL'                : 'b1'
 }
 
-inc_keyword = (r'do\b', r'if\b',
+inc_keyword = (r'do\b', r'if \(.*?\) then$',
                r'else\b', r'type\b\s*[^\(]',
                r'(elemental )?(pure )?(recursive )?((subroutine)|(function))\b',
                r'interface\b',r'module\b(?! *procedure)',r'program\b')
-inc_regex = re.compile('|'.join('({})'.format(i) for i in inc_keyword))
+inc_regex = re.compile('|'.join(f'({i})' for i in inc_keyword))
 
 end_keyword = ('do', 'if', 'type', 'function',
                'subroutine', 'interface','module','program')
