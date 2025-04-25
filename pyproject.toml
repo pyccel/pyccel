@@ -32,6 +32,7 @@ test = [
     "scipy >= 1.5.0",
     "tblib >= 1.7.0",
     "numpydoc >= 1.8.0",
+    "tomli >= 1.1.0 ; python_version < '3.11'"
 ]
 
 [project.scripts]

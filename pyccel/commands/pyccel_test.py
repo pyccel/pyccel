@@ -25,42 +25,60 @@ def pyccel_test():
 
     """
 
+    import sys
+    import importlib
+
+    # Pyccel must be installed
     try:
-        import pytest
+        import pyccel
     except ImportError:
-        print("pytest is not installed. Installing pytest...")
-        os.system('pip install pytest')
-        import pytest
+        print("pyccel is not installed. Please install pyccel before running the pyccel-test command.")
+        raise
+
+    # Find the path to the pyccel module
+    # TODO: verify, improve
+    pyccel_path = os.path.dirname(os.path.abspath(pyccel.__file__))
+
+    # Find path to pyproject.toml from the installed pyccel
+    # TODO: improve this
+    pyproject_path = pyccel_path + '/../pyproject.toml'
+
+    # Import tomllib for reading pyproject.toml
+    if sys.version_info >= (3, 11):
+        import tomllib
+    else:
+        import tomli as tomllib
+
+    # Install the optional dependencies if not already installed
+    # TODO: verify and improve
+    with open(pyproject_path, 'rb') as f:
+        pyproject_data = tomllib.load(f)
+        packages = pyproject_data['project']['optional-dependencies']['test']
+        packages_dict = {p.split()[0] : p for p in packages}
+        # TODO: change name 'pytest-xdist' to 'xdist'
+        # TODO: remove print
+        print(packages_dict)
+        for name, full in packages_dict.items():
+            try:
+                importlib.import_module(name)
+            except ImportError:
+                print(f"{name} is not installed. Installing {name}...")
+                subprocess.run(['pip', 'install', full])
 
 #    try:
-#        import coverage
+#        import xdist
 #    except ImportError:
-#        print("coverage is not installed. Installing coverage...")
-#        os.system('pip install coverage')
-#        import coverage
-#
-#    try:
-#        import pytest_cov
-#    except ImportError:
-#        print("pytest_cov is not installed. Installing pytest_cov...")
-#        os.system('pip install pytest_cov')
-#        import pytest_cov
-
-    try:
-        import xdist
-    except ImportError:
-        print("pytest-xdist is not installed. Installing pytest_xdist...")
-        os.system('pip install pytest-xdist')
-        import xdist
+#        print("pytest-xdist is not installed. Installing pytest_xdist...")
+#        os.system('pip install pytest-xdist')
+#        import xdist
 
 #    subprocess.run(['curl', '-JLO', 'https://github.com/pyccel/pyccel/archive/refs/heads/devel.zip'])
 #    subprocess.run(['unzip', '-o', 'pyccel-devel.zip'])
 
-    # Download our dependencies if needed with `pip install "pyccel[test]"`
-
-    # Determine the version of Pyccel that we are using
+    # TODO: Determine the version of Pyccel that we are using
 
     # Download the test files
+    # TODO: use the correct version of the test files
     from urllib.request import urlretrieve
     print("Downloading the test files from GitHub...")
     filepath = urlretrieve('https://github.com/pyccel/pyccel/archive/refs/heads/devel.zip', filename='pyccel.zip')
@@ -77,11 +95,15 @@ def pyccel_test():
     print("Changing into the test directory...")
     os.chdir('pyccel-devel/tests')
 
-    print("Run the single-process tests which must be run one at a time")
-    retcode = pytest.main(['-ra', '-m (not parallel and xdist_incompatible)'])
+    import pytest
 
-    print("Run the single-process tests which can be run in parallel")
+    print("Run the single-process tests which must be run one at a time...")
+    retcode = pytest.main(['-ra', '-m (not parallel and xdist_incompatible)'])
+    print(f"refcode = {retcode}")
+
+    print("Run the single-process tests which can be run in parallel...")
     retcode = pytest.main(['-ra', '-m (not parallel and not xdist_incompatible)', '-n', 'auto'])
+    print(f"refcode = {retcode}")
 
 #    return retcode
 
