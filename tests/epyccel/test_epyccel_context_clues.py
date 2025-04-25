@@ -144,3 +144,38 @@ def test_container_type_alias_context_2(language):
     epyc_f = epyccel(f, language=language)
     assert f(a) == epyc_f(a)
     assert isinstance(f(a), type(epyc_f(a)))
+
+def test_type_var_container_1(language):
+    T = TypeVar('T', int, float)
+
+    def f(a : Final[list[T]]) -> T:
+        return a[0]
+
+    a = [3,2,1]
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+    a = [3.5,2.5,1.5]
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+def test_type_var_container_2(language):
+    T = TypeVar('T', list[int], set[int])
+
+    def f(a : Final[T]) -> int:
+        my_sum = 0
+        for ai in a:
+            my_sum += ai
+        return my_sum
+
+    a = [3,2,1, 6, 19]
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+    a = {1, 4, 10, 22, 5}
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
