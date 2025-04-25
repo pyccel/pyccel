@@ -115,9 +115,10 @@ def test_container_type_alias_context_1(language):
     def f(a : Final[T]):
         return a[0]
 
+    b = [4,5,6]
     epyc_f = epyccel(f, language=language)
-    assert f(3) == epyc_f(3)
-    assert isinstance(f(2), type(epyc_f(2)))
+    assert f(b) == epyc_f(b)
+    assert isinstance(f(b), type(epyc_f(b)))
 
 def test_container_type_alias_context_2(language):
     T = Final[list[int]]
@@ -125,6 +126,7 @@ def test_container_type_alias_context_2(language):
     def f(a : T):
         return a[0]
 
+    a = [3,2,1]
     epyc_f = epyccel(f, language=language)
-    assert f(3) == epyc_f(3)
-    assert isinstance(f(2), type(epyc_f(2)))
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
