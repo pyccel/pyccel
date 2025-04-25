@@ -3187,7 +3187,7 @@ class FCodePrinter(CodePrinter):
             if i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
                 lines.append("else\n")
             elif i == 0:
-                lines.append("if (%s) then\n" % self._print(c))
+                lines.append(f"if ({self._print(c)}) then\n" )
             else:
                 lines.append("else if (%s) then\n" % self._print(c))
 
