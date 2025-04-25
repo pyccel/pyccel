@@ -2441,6 +2441,11 @@ class SemanticParser(BasicParser):
             return convert_to_literal(env_var, dtype = original_type_to_pyccel_type[type(env_var)])
         elif env_var is typing.Final:
             return PyccelFunctionDef('Final', TypingFinal)
+        elif isinstance(env_var, typing.TypeVar):
+            constraints = [VariableTypeAnnotation(original_type_to_pyccel_type[c]) for c in env_var.__constraints__]
+            var = TypingTypeVar(env_var.__name__, *constraints,
+                                covariant = env_var.__covariant__,
+                                contravariant = env_var.__contravariant__)
         elif isinstance(env_var, ModuleType):
             mod_name = env_var.__name__
             if recognised_source(mod_name):
@@ -4674,7 +4679,8 @@ class SemanticParser(BasicParser):
             templates.update(decorators['template']['template_dict'])
 
         for t,v in templates.items():
-            templates[t] = UnionTypeAnnotation(*[self._visit(vi) for vi in v])
+            templates[t] = TypingTypeVar(t, *[self._visit(vi) for vi in v])
+        type_var_templates = expr.get_attribute_nodes(TypingTypeVar)
 
         def unpack(ann):
             if isinstance(ann, UnionTypeAnnotation):
@@ -4689,6 +4695,15 @@ class SemanticParser(BasicParser):
                 if isinstance(annot, (SyntacticTypeAnnotation, TypingFinal))]
         used_type_names = set(t for a in arg_annotations for t in a.get_attribute_nodes(PyccelSymbol))
         templates = {t: v for t,v in templates.items() if t in used_type_names}
+        # Add TypeVar objects
+        for u in used_type_names:
+            if u not in templates:
+                # u_val is None if it is collected from the context
+                u_val = self.scope.find(u, 'symbolic_aliases')
+                if u_val:
+                    templates[u] = self.scope.find(u, 'symbolic_aliases')
+                else:
+                    templates[u] = self._visit(u)
 
         # Create new temporary templates for the arguments with a Union data type.
         tmp_templates = {}
@@ -4757,8 +4772,6 @@ class SemanticParser(BasicParser):
             assert len(arguments) == len(expr.arguments)
             arg_dict  = {a.name:a.var for a in arguments}
             annotated_args.append(arguments)
-            for n in template_names:
-                self.scope.symbolic_aliases.pop(n)
 
             if function_call_args is not None:
                 is_compatible = self._check_argument_compatibility(function_call_args, arguments, expr, is_elemental, raise_error=False)
