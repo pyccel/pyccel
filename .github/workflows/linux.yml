@@ -77,36 +77,47 @@ jobs:
       - name: Install Pyccel with tests
         run: |
           python -m pip install --upgrade pip
-          python -m pip install .[test] "numpy<2.0"
-        shell: bash
-      - name: Coverage install
-        uses: ./.github/actions/coverage_install
-      - name: Fortran/C tests with pytest
-        id: f_c_pytest
+          python -m pip install .[test]
+      - name: Run tests with the pyccel-test command
+        id: pyccel-test
         timeout-minutes: 60
-        uses: ./.github/actions/pytest_run
-      - name: Python tests with pytest
-        id: python_pytest
-        timeout-minutes: 20
-        uses: ./.github/actions/pytest_run_python
-      - name: Parallel tests with pytest
-        id: parallel
-        timeout-minutes: 20
-        uses: ./.github/actions/pytest_parallel
-      - name: Test with valgrind for memory leaks
-        id: valgrind
-        uses: ./.github/actions/valgrind_run
-      - name: Collect coverage information
-        continue-on-error: True
-        uses: ./.github/actions/coverage_collection
-      - name: Save code coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-artifact-${{ matrix.python_version }}
-          path: .coverage
-          retention-days: 3
-          include-hidden-files: true
-      - name: "Post completed"
-        if: always() && github.event_name != 'push'
-        run:
-          python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }} ${{ steps.valgrind.outcome }}
+        run: |
+          pyccel-test
+        shell: bash
+
+#      - name: Install Pyccel with tests
+#        run: |
+#          python -m pip install --upgrade pip
+#          python -m pip install .[test] "numpy<2.0"
+#        shell: bash
+#      - name: Coverage install
+#        uses: ./.github/actions/coverage_install
+#      - name: Fortran/C tests with pytest
+#        id: f_c_pytest
+#        timeout-minutes: 60
+#        uses: ./.github/actions/pytest_run
+#      - name: Python tests with pytest
+#        id: python_pytest
+#        timeout-minutes: 20
+#        uses: ./.github/actions/pytest_run_python
+#      - name: Parallel tests with pytest
+#        id: parallel
+#        timeout-minutes: 20
+#        uses: ./.github/actions/pytest_parallel
+#      - name: Test with valgrind for memory leaks
+#        id: valgrind
+#        uses: ./.github/actions/valgrind_run
+#      - name: Collect coverage information
+#        continue-on-error: True
+#        uses: ./.github/actions/coverage_collection
+#      - name: Save code coverage report
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: coverage-artifact-${{ matrix.python_version }}
+#          path: .coverage
+#          retention-days: 3
+#          include-hidden-files: true
+#      - name: "Post completed"
+#        if: always() && github.event_name != 'push'
+#        run:
+#          python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }} ${{ steps.valgrind.outcome }}
