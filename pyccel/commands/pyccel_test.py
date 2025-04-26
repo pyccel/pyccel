@@ -6,67 +6,57 @@
 """ Module containing scripts to run the unit tests of Pyccel
 """
 import os
-import subprocess
+#import subprocess
 from argparse import ArgumentParser
 
+install_msg = """
+In order to run the tests, Pyccel must be installed with the optional [test] dependencies.
+You can do this by running one of the following commands:
+  1. Standard install, from PyPI   : pip install "pyccel[test]"
+  2. Standard install, from sources: pip install ".[test]"
+  3. Editable install, from sources: pip install ".[test]" --editable
+"""
 
 def pyccel_test():
     """
     Run the unit tests of Pyccel.
 
     This function runs the unit tests of Pyccel using pytest.
-    It first checks if pytest is installed, and if not, it
-    installs it using pip. Then, it runs the tests using
-    pytest and generates a coverage report. The function
-    also checks if the tests are run in a virtual environment,
-    and if so, it generates a coverage report for the virtual
-    environment. Finally, it cleans up the temporary files
-    generated during the test run.
+    If pytest is not installed, it will print an error message
+    and exit. It also downloads the test files from GitHub
+    and unzips them into the current directory. The function
+    then changes into the test directory and runs the tests
+    using pytest. The tests are run in two stages: first, the
+    single-process tests which must be run one at a time
+    are run, and then the single-process tests which can be
+    run in parallel are run. The function returns the return
+    code of the pytest command.
 
     """
 
     import sys
-    import importlib
 
     # Pyccel must be installed
     try:
         import pyccel
     except ImportError:
-        print("pyccel is not installed. Please install pyccel before running the pyccel-test command.")
-        raise
+        print()
+        print('ERROR: It appears that Pyccel is not installed.')
+        print(install_msg)
+        sys.exit(1)
+
+    # Pytest must be installed
+    try:
+        import pytest
+    except ImportError:
+        print()
+        print('ERROR: It appears that pytest is not installed.')
+        print(install_msg)
+        sys.exit(1)
 
     # Find the path to the pyccel module
     # TODO: verify, improve
-    pyccel_path = os.path.dirname(os.path.abspath(pyccel.__file__))
-
-    # Find path to pyproject.toml from the installed pyccel
-    # TODO: improve this
-    pyproject_path = pyccel_path + '/../pyproject.toml'
-
-    # Import tomllib for reading pyproject.toml
-    if sys.version_info >= (3, 11):
-        import tomllib
-    else:
-        import tomli as tomllib
-
-    # Install the optional dependencies if not already installed
-    with open(pyproject_path, 'rb') as pyproject_file:
-        pyproject_data = tomllib.load(pyproject_file)
-        packages = pyproject_data['project']['optional-dependencies']['test']
-        packages_dict = {p.split()[0] : p for p in packages}
-        # Change key name 'pytest-xdist' to 'xdist'
-        if 'pytest-xdist' in packages_dict:
-            packages_dict['xdist'] = packages_dict['pytest-xdist']
-            del packages_dict['pytest-xdist']
-        # Install the packages
-        if packages_dict:
-            print("Installing the optional dependencies...")
-        for name, full in packages_dict.items():
-            try:
-                importlib.import_module(name)
-            except ImportError:
-                print(f"{name} is not installed. Installing {name}...")
-                subprocess.run(['pip', 'install', full])
+#    pyccel_path = os.path.dirname(os.path.abspath(pyccel.__file__))
 
 #    subprocess.run(['curl', '-JLO', 'https://github.com/pyccel/pyccel/archive/refs/heads/devel.zip'])
 #    subprocess.run(['unzip', '-o', 'pyccel-devel.zip'])
@@ -91,8 +81,6 @@ def pyccel_test():
     print("Changing into the test directory...")
     os.chdir('pyccel-devel/tests')
 
-    import pytest
-
     print("Run the single-process tests which must be run one at a time...")
     retcode = pytest.main(['-ra', '-m (not parallel and xdist_incompatible)'])
     print(f"refcode = {retcode}")
@@ -101,7 +89,8 @@ def pyccel_test():
     retcode = pytest.main(['-ra', '-m (not parallel and not xdist_incompatible)', '-n', 'auto'])
     print(f"refcode = {retcode}")
 
-#    return retcode
+    # TODO: run the parallel tests
+    return retcode
 
 
 def pyccel_test_command():
@@ -123,7 +112,7 @@ def pyccel_test_command():
 
     args = parser.parse_args()
 
-    pyccel_test()
+    return pyccel_test()
 
 
 if __name__ == "__main__":
