@@ -17,6 +17,8 @@ on:
         type: string
   push:
     branches: [devel, main]
+  pull_request:
+    branches: [devel]
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -34,6 +36,11 @@ jobs:
     steps:
     - id: push-matrix
       if: github.event_name == 'push'
+      run: |
+        echo "matrix=['3.9', '3.10', '3.11', '3.12', '3.13']" >> $GITHUB_ENV
+      shell: bash
+    - id: pull-matrix
+      if: github.event_name == 'pull_request'
       run: |
         echo "matrix=['3.9', '3.13']" >> $GITHUB_ENV
       shell: bash
