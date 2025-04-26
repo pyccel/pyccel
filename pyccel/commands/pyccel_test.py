@@ -50,27 +50,23 @@ def pyccel_test():
         import tomli as tomllib
 
     # Install the optional dependencies if not already installed
-    # TODO: verify and improve
-    with open(pyproject_path, 'rb') as f:
-        pyproject_data = tomllib.load(f)
+    with open(pyproject_path, 'rb') as pyproject_file:
+        pyproject_data = tomllib.load(pyproject_file)
         packages = pyproject_data['project']['optional-dependencies']['test']
         packages_dict = {p.split()[0] : p for p in packages}
-        # TODO: change name 'pytest-xdist' to 'xdist'
-        # TODO: remove print
-        print(packages_dict)
+        # Change key name 'pytest-xdist' to 'xdist'
+        if 'pytest-xdist' in packages_dict:
+            packages_dict['xdist'] = packages_dict['pytest-xdist']
+            del packages_dict['pytest-xdist']
+        # Install the packages
+        if packages_dict:
+            print("Installing the optional dependencies...")
         for name, full in packages_dict.items():
             try:
                 importlib.import_module(name)
             except ImportError:
                 print(f"{name} is not installed. Installing {name}...")
                 subprocess.run(['pip', 'install', full])
-
-#    try:
-#        import xdist
-#    except ImportError:
-#        print("pytest-xdist is not installed. Installing pytest_xdist...")
-#        os.system('pip install pytest-xdist')
-#        import xdist
 
 #    subprocess.run(['curl', '-JLO', 'https://github.com/pyccel/pyccel/archive/refs/heads/devel.zip'])
 #    subprocess.run(['unzip', '-o', 'pyccel-devel.zip'])
