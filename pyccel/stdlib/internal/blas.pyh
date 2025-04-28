@@ -23,30 +23,49 @@
 
 #$ header function sswap(int32, float32 [:], int32, float32 [:], int32)
 #$ header function dswap(int32, float64 [:], int32, float64 [:], int32)
+#$ header function cswap(int32, complex64 [:], int32, complex64 [:], int32)
+#$ header function zswap(int32, complex128 [:], int32, complex128 [:], int32)
 
 #$ header function sscal(int32, float32, float32 [:], int32)
 #$ header function dscal(int32, float64, float64 [:], int32)
+#$ header function cscal(int32, complex64, complex64 [:], int32)
+#$ header function zscal(int32, complex128, complex128 [:], int32)
 
 #$ header function sasum(int32, float32 [:], int32) results(float32) 
 #$ header function dasum(int32, float64 [:], int32) results(float64) 
+#$ header function scasum(int32, complex64 [:], int32) results(float32) 
+#$ header function dzasum(int32, complex128 [:], int32) results(float64) 
 
 #$ header function isamax(int32, float32 [:], int32) results(int32) 
 #$ header function idamax(int32, float64 [:], int32) results(int32)
+#$ header function icamax(int32, complex64 [:], int32) results(int32)
+#$ header function izamax(int32, complex128 [:], int32) results(int32)
 
 #$ header function saxpy(int32, float32, float32 [:], int32, float32 [:], int32)
 #$ header function daxpy(int32, float64, float64 [:], int32, float64 [:], int32)
+#$ header function caxpy(int32, complex64, complex64 [:], int32, complex64 [:], int32)
+#$ header function zaxpy(int32, complex128, complex128 [:], int32, complex128 [:], int32)
 
 #$ header function scopy(int32, float32 [:], int32, float32 [:], int32)
 #$ header function dcopy(int32, float64 [:], int32, float64 [:], int32)
+#$ header function ccopy(int32, complex64 [:], int32, complex64 [:], int32)
+#$ header function zcopy(int32, complex128 [:], int32, complex128 [:], int32)
 
 #$ header function sdot(int32, float32 [:], int32, float32 [:], int32) results(float32) 
 #$ header function ddot(int32, float64 [:], int32, float64 [:], int32) results(float64) 
 
+#$ header function cdotc(int32, complex64 [:], int32, complex64 [:], int32) results(complex64) 
+#$ header function zdotc(int32, complex128 [:], int32, complex128 [:], int32) results(complex128) 
+#$ header function cdotu(int32, complex64 [:], int32, complex64 [:], int32) results(complex64) 
+#$ header function zdotu(int32, complex128 [:], int32, complex128 [:], int32) results(complex128) 
+
 #$ header function sdsdot(int32, float32, float32 [:], int32, float32 [:], int32) results(float32)
-#$ header function dsdot(int32, float64 [:], int32, float64 [:], int32)  results(float64) 
+#$ header function dsdot(int32, float32 [:], int32, float32 [:], int32)  results(float64) 
 
 #$ header function snrm2(int32, float32 [:], int32) results(float32) 
 #$ header function dnrm2(int32, float64 [:], int32) results(float64)
+#$ header function scnrm2(int32, complex64 [:], int32) results(float32)
+#$ header function dznrm2(int32, complex128 [:], int32) results(float64)
 # .......................................
 
 # .......................................
@@ -54,9 +73,22 @@
 # .......................................
 #$ header function sgemv (str, int32, int32, float32, float32[:,:](order=F), int32, float32[:], int32, float32, float32[:], int32)
 #$ header function dgemv (str, int32, int32, float64, float64[:,:](order=F), int32, float64[:], int32, float64, float64[:], int32)
+#$ header function cgemv (str, int32, int32, complex64, complex64[:,:](order=F), int32, complex64[:], int32, complex64, complex64[:], int32)
+#$ header function zgemv (str, int32, int32, complex128, complex128[:,:](order=F), int32, complex128[:], int32, complex128, complex128[:], int32)
 
 #$ header function sgbmv (str, int32, int32, int32, int32, float32, float32[:,:](order=F), int32, float32[:], int32, float32, float32[:], int32)
 #$ header function dgbmv (str, int32, int32, int32, int32, float64, float64[:,:](order=F), int32, float64[:], int32, float64, float64[:], int32)
+#$ header function cgbmv (str, int32, int32, int32, int32, complex64, complex64[:,:](order=F), int32, complex64[:], int32, complex64, complex64[:], int32)
+#$ header function zgbmv (str, int32, int32, int32, int32, complex128, complex128[:,:](order=F), int32, complex128[:], int32, complex128, complex128[:], int32)
+
+#$ header function chemv (str, int32, complex64, complex64[:,:](order=F), int32, complex64[:], int32, complex64, complex64[:], int32)
+#$ header function zhemv (str, int32, complex128, complex128[:,:](order=F), int32, complex128[:], int32, complex128, complex128[:], int32)
+
+#$ header function chbmv (str, int32, int32, complex64, complex64[:,:](order=F), int32, complex64[:], int32, complex64, complex64[:], int32)
+#$ header function zhbmv (str, int32, int32, complex128, complex128[:,:](order=F), int32, complex128[:], int32, complex128, complex128[:], int32)
+
+#$ header function chpmv (str, int32, complex64, complex64[:], complex64[:], int32, complex64, complex64[:], int32)
+#$ header function zhpmv (str, int32, complex128, complex128[:], complex128[:], int32, complex128, complex128[:], int32)
 
 #$ header function ssymv (str, int32, float32, float32[:,:](order=F), int32, float32[:], int32, float32, float32[:], int32)
 #$ header function dsymv (str, int32, float64, float64[:,:](order=F), int32, float64[:], int32, float64, float64[:], int32)
@@ -64,41 +96,71 @@
 #$ header function ssbmv (str, int32, int32, float32, float32[:,:](order=F), int32, float32[:], int32, float32, float32[:], int32)
 #$ header function dsbmv (str, int32, int32, float64, float64[:,:](order=F), int32, float64[:], int32, float64, float64[:], int32)
 
-#$ header function sspmv (str, int32, float32, float32[:,:](order=F), float32[:], int32, float32, float32[:], int32)
-#$ header function dspmv (str, int32, float64, float64[:,:](order=F), float64[:], int32, float64, float64[:], int32)
+#$ header function sspmv (str, int32, float32, float32[:], float32[:], int32, float32, float32[:], int32)
+#$ header function dspmv (str, int32, float64, float64[:], float64[:], int32, float64, float64[:], int32)
  
 #$ header function strmv (str,str,str, int32, float32[:,:](order=F), int32, float32[:], int32)
 #$ header function dtrmv (str,str,str, int32, float64[:,:](order=F), int32, float64[:], int32)
+#$ header function ctrmv (str,str,str, int32, complex64[:,:](order=F), int32, complex64[:], int32)
+#$ header function ztrmv (str,str,str, int32, complex128[:,:](order=F), int32, complex128[:], int32)
 
 #$ header function stbmv (str,str,str, int32, int32, float32[:,:](order=F), int32, float32[:], int32)
 #$ header function dtbmv (str,str,str, int32, int32, float64[:,:](order=F), int32, float64[:], int32)
+#$ header function ctbmv (str,str,str, int32, int32, complex64[:,:](order=F), int32, complex64[:], int32)
+#$ header function ztbmv (str,str,str, int32, int32, complex128[:,:](order=F), int32, complex128[:], int32)
 
-#$ header function stpmv (str,str,str, int32, float32[:,:](order=F), float32[:], int32)
-#$ header function dtpmv (str,str,str, int32, float64[:,:](order=F), float64[:], int32)
+#$ header function stpmv (str,str,str, int32, float32[:], float32[:], int32)
+#$ header function dtpmv (str,str,str, int32, float64[:], float64[:], int32)
+#$ header function ctpmv (str,str,str, int32, complex64[:], complex64[:], int32)
+#$ header function ztpmv (str,str,str, int32, complex128[:], complex128[:], int32)
 
 #$ header function strsv (str,str,str, int32, float32[:,:](order=F), int32, float32[:], int32)
 #$ header function dtrsv (str,str,str, int32, float64[:,:](order=F), int32, float64[:], int32)
+#$ header function ctrsv (str,str,str, int32, complex64[:,:](order=F), int32, complex64[:], int32)
+#$ header function ztrsv (str,str,str, int32, complex128[:,:](order=F), int32, complex128[:], int32)
 
 #$ header function stbsv (str,str,str, int32, int32, float32[:,:](order=F), int32, float32[:], int32)
 #$ header function dtbsv (str,str,str, int32, int32, float64[:,:](order=F), int32, float64[:], int32)
+#$ header function ctbsv (str,str,str, int32, int32, complex64[:,:](order=F), int32, complex64[:], int32)
+#$ header function ztbsv (str,str,str, int32, int32, complex128[:,:](order=F), int32, complex128[:], int32)
 
-#$ header function stpsv (str,str,str, int32, float32[:,:](order=F), float32[:], int32)
-#$ header function dtpsv (str,str,str, int32, float64[:,:](order=F), float64[:], int32)
+#$ header function stpsv (str,str,str, int32, float32[:], float32[:], int32)
+#$ header function dtpsv (str,str,str, int32, float64[:], float64[:], int32)
+#$ header function ctpsv (str,str,str, int32, complex64[:], complex64[:], int32)
+#$ header function ztpsv (str,str,str, int32, complex128[:], complex128[:], int32)
 
 #$ header function sger (int32, int32, float32, float32[:], int32, float32[:], int32, float32[:,:](order=F), int32)
 #$ header function dger (int32, int32, float64, float64[:], int32, float64[:], int32, float64[:,:](order=F), int32)
 
+#$ header function cgeru (int32, int32, complex64, complex64[:], int32, complex64[:], int32, complex64[:,:](order=F), int32)
+#$ header function zgeru (int32, int32, complex128, complex128[:], int32, complex128[:], int32, complex128[:,:](order=F), int32)
+
+#$ header function cgerc (int32, int32, complex64, complex64[:], int32, complex64[:], int32, complex64[:,:](order=F), int32)
+#$ header function zgerc (int32, int32, complex128, complex128[:], int32, complex128[:], int32, complex128[:,:](order=F), int32)
+
+#$ header function cher (str, int32, float32, complex64[:], int32, complex64[:,:](order=F), int32)
+#$ header function zher (str, int32, float64, complex128[:], int32, complex128[:,:](order=F), int32)
+
+#$ header function chpr (str, int32, float32, complex64[:], int32, complex64[:])
+#$ header function zhpr (str, int32, float64, complex128[:], int32, complex128[:])
+
+#$ header function cher2 (str, int32, complex64, complex64[:], int32, complex64[:], int32, complex64[:,:](order=F), int32)
+#$ header function zher2 (str, int32, complex128, complex128[:], int32, complex128[:], int32, complex128[:,:](order=F), int32)
+
+#$ header function chpr2 (str, int32, complex64, complex64[:], int32, complex64[:], int32, complex64[:])
+#$ header function zhpr2 (str, int32, complex128, complex128[:], int32, complex128[:], int32, complex128[:])
+
 #$ header function ssyr (str, int32, float32, float32[:], int32, float32[:,:](order=F), int32)
 #$ header function dsyr (str, int32, float64, float64[:], int32, float64[:,:](order=F), int32)
 
-#$ header function sspr (str, int32, float32, float32[:], int32, float32[:,:](order=F))
-#$ header function dspr (str, int32, float64, float64[:], int32, float64[:,:](order=F))
+#$ header function sspr (str, int32, float32, float32[:], int32, float32[:])
+#$ header function dspr (str, int32, float64, float64[:], int32, float64[:])
 
-#$ header function ssyr2 (str, int32, float32, float32[:], int32, float32[:], int32, float32[:], int32)
-#$ header function dsyr2 (str, int32, float64, float64[:], int32, float64[:], int32, float64[:], int32)
+#$ header function ssyr2 (str, int32, float32, float32[:], int32, float32[:], int32, float32[:,:](order=F), int32)
+#$ header function dsyr2 (str, int32, float64, float64[:], int32, float64[:], int32, float64[:,:](order=F), int32)
 
-#$ header function sspr2 (str, int32, float32, float32[:], int32, float32[:], int32, float32[:], int32)
-#$ header function dspr2 (str, int32, float64, float64[:], int32, float64[:], int32, float64[:], int32)
+#$ header function sspr2 (str, int32, float32, float32[:], int32, float32[:], int32, float32[:])
+#$ header function dspr2 (str, int32, float64, float64[:], int32, float64[:], int32, float64[:])
 # .......................................
 
 # .......................................
@@ -106,19 +168,40 @@
 # .......................................
 #$ header function sgemm (str,str, int32, int32, int32, float32, float32[:,:](order=F), int32, float32[:,:](order=F), int32, float32, float32[:,:](order=F), int32)
 #$ header function dgemm (str,str, int32, int32, int32, float64, float64[:,:](order=F), int32, float64[:,:](order=F), int32, float64, float64[:,:](order=F), int32)
+#$ header function cgemm (str,str, int32, int32, int32, complex64, complex64[:,:](order=F), int32, complex64[:,:](order=F), int32, complex64, complex64[:,:](order=F), int32)
+#$ header function zgemm (str,str, int32, int32, int32, complex128, complex128[:,:](order=F), int32, complex128[:,:](order=F), int32, complex128, complex128[:,:](order=F), int32)
 
 #$ header function ssymm (str,str, int32, int32, float32, float32[:,:](order=F), int32, float32[:,:](order=F), int32, float32, float32[:,:](order=F), int32)
 #$ header function dsymm (str,str, int32, int32, float64, float64[:,:](order=F), int32, float64[:,:](order=F), int32, float64, float64[:,:](order=F), int32)
+#$ header function csymm (str,str, int32, int32, complex64, complex64[:,:](order=F), int32, complex64[:,:](order=F), int32, complex64, complex64[:,:](order=F), int32)
+#$ header function zsymm (str,str, int32, int32, complex128, complex128[:,:](order=F), int32, complex128[:,:](order=F), int32, complex128, complex128[:,:](order=F), int32)
+
+#$ header function chemm (str,str, int32, int32, complex64, complex64[:,:](order=F), int32, complex64[:,:](order=F), int32, complex64, complex64[:,:](order=F), int32)
+#$ header function zhemm (str,str, int32, int32, complex128, complex128[:,:](order=F), int32, complex128[:,:](order=F), int32, complex128, complex128[:,:](order=F), int32)
 
 #$ header function ssyrk (str,str, int32, int32, float32, float32[:,:](order=F), int32, float32, float32[:,:](order=F), int32)
 #$ header function dsyrk (str,str, int32, int32, float64, float64[:,:](order=F), int32, float64, float64[:,:](order=F), int32)
+#$ header function csyrk (str,str, int32, int32, complex64, complex64[:,:](order=F), int32, complex64, complex64[:,:](order=F), int32)
+#$ header function zsyrk (str,str, int32, int32, complex128, complex128[:,:](order=F), int32, complex128, complex128[:,:](order=F), int32)
 
 #$ header function ssyr2k (str,str, int32, int32, float32, float32[:,:](order=F), int32, float32[:,:](order=F), int32, float32, float32[:,:](order=F), int32)
 #$ header function dsyr2k (str,str, int32, int32, float64, float64[:,:](order=F), int32, float64[:,:](order=F), int32, float64, float64[:,:](order=F), int32)
+#$ header function csyr2k (str,str, int32, int32, complex64, complex64[:,:](order=F), int32, complex64[:,:](order=F), int32, complex64, complex64[:,:](order=F), int32)
+#$ header function zsyr2k (str,str, int32, int32, complex128, complex128[:,:](order=F), int32, complex128[:,:](order=F), int32, complex128, complex128[:,:](order=F), int32)
+
+#$ header function cherk (str,str, int32, int32, complex64, complex64[:,:](order=F), int32, complex64, complex64[:,:](order=F), int32)
+#$ header function zherk (str,str, int32, int32, complex128, complex128[:,:](order=F), int32, complex128, complex128[:,:](order=F), int32)
+
+#$ header function cher2k (str,str, int32, int32, complex64, complex64[:,:](order=F), int32, complex64[:,:](order=F), int32, complex64, complex64[:,:](order=F), int32)
+#$ header function zher2k (str,str, int32, int32, complex128, complex128[:,:](order=F), int32, complex128[:,:](order=F), int32, complex128, complex128[:,:](order=F), int32)
 
 #$ header function strmm  (str,str,str,str, int32, int32, float32, float32[:,:](order=F), int32, float32[:,:](order=F), int32)
 #$ header function dtrmm  (str,str,str,str, int32, int32, float64, float64[:,:](order=F), int32, float64[:,:](order=F), int32)
+#$ header function ctrmm  (str,str,str,str, int32, int32, complex64, complex64[:,:](order=F), int32, complex64[:,:](order=F), int32)
+#$ header function ztrmm  (str,str,str,str, int32, int32, complex128, complex128[:,:](order=F), int32, complex128[:,:](order=F), int32)
 
 #$ header function strsm  (str,str,str,str, int32, int32, float32, float32[:,:](order=F), int32, float32[:,:](order=F), int32)
 #$ header function dtrsm  (str,str,str,str, int32, int32, float64, float64[:,:](order=F), int32, float64[:,:](order=F), int32)
+#$ header function ctrsm  (str,str,str,str, int32, int32, complex64, complex64[:,:](order=F), int32, complex64[:,:](order=F), int32)
+#$ header function ztrsm  (str,str,str,str, int32, int32, complex128, complex128[:,:](order=F), int32, complex128[:,:](order=F), int32)
 # .......................................
