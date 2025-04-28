@@ -47,9 +47,9 @@ def types(*args, results = None):
     decorator
         The identity decorator which will not modify the function.
     """
-    warnings.warn("The @types decorator will be removed in a future version of " +
-                  "Pyccel. Please use type hints. The @template decorator can be " +
-                  "used to specify multiple types. See the documentation at " +
+    warnings.warn("The @types decorator will be removed in version 2.0 of Pyccel. " +
+                  "Please use type hints. TypeVar from Python's typing module can " +
+                  "be used to specify multiple types. See the documentation at " +
                   "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
                   "for examples.", FutureWarning)
     def identity(f):
@@ -60,6 +60,11 @@ def template(name, types=()):
     """template decorator."""
     def identity(f):
         return f
+    warnings.warn("The @template decorator will be removed in version 2.0 of Pyccel. " +
+                  "Please use type hints. TypeVar from Python's typing module can " +
+                  "be used to specify multiple types. See the documentation at " +
+                  "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
+                  "for examples.", FutureWarning)
     return identity
 
 def pure(f):
