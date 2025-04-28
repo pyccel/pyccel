@@ -84,10 +84,20 @@ class TypingTypeVar(TypedAstNode):
 
     @property
     def name(self):
+        """
+        The name that is printed to represent the TypeVar.
+
+        The name that is printed to represent the TypeVar.
+        """
         return self._name
 
     @property
     def type_list(self):
+        """
+        Get the list of types which this TypeVar can take.
+
+        Get the list of types which this TypeVar can take (stored in a tuple).
+        """
         return self._possible_types
 
 #==============================================================================
