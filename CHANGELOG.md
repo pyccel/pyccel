@@ -157,6 +157,7 @@ All notable changes to this project will be documented in this file.
 -   #2285 : Reduce number of warnings in unit tests.
 -   #2295 : Fix wrapper handling of constant array arguments.
 -   #2097 : Fix printing of an empty list.
+-   #2235 : Fix negative numbers in slice indices when translating to C.
 
 ### Changed
 
