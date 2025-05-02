@@ -845,7 +845,7 @@ class FCodePrinter(CodePrinter):
         # ...
         public_decs = ''.join(f'public :: {n}\n' for n in chain(
                                       (c.name for c in expr.classes),
-                                      (i.name for i in expr.interfaces),
+                                      (i.name for i in expr.interfaces if not i.is_inline),
                                       (f.name for f in expr.funcs if not f.is_private and not f.is_inline),
                                       (v.name for v in expr.variables if not v.is_private)))
 
