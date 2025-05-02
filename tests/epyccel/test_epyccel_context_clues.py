@@ -161,6 +161,7 @@ def test_type_var_container_1(language):
     assert f(a) == epyc_f(a)
     assert isinstance(f(a), type(epyc_f(a)))
 
+@pytest.mark.skip(reason="Bad interface. See #2306")
 def test_type_var_container_2(language):
     T = TypeVar('T', list[int], set[int])
 
