@@ -35,7 +35,7 @@ from pyccel.ast.builtin_methods.set_methods import SetUnion
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall, ClassDef
-from pyccel.ast.core import FunctionCallArgument, Interface
+from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Return, Module, For, If, IfSection
 from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
