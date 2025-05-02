@@ -155,6 +155,7 @@ All notable changes to this project will be documented in this file.
 -   #2274 : Do not pass include flags to linker (they are useless).
 -   #2274 : Always use the C compiler to build the C wrapper for NumPy arrays (fixes Intel failures).
 -   #2285 : Reduce number of warnings in unit tests.
+-   #2295 : Fix wrapper handling of constant array arguments.
 
 ### Changed
 
