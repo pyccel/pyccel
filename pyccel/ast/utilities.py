@@ -353,7 +353,11 @@ def insert_index(expr, pos, index_var):
             if indices[pos].step is not None:
                 index_var = PyccelMul(index_var, indices[pos].step, simplify=True)
             if indices[pos].start is not None:
-                index_var = PyccelAdd(index_var, indices[pos].start, simplify=True)
+                if is_literal_integer(indices[pos].start) and int(indices[pos].start) < 0:
+                    index_var = PyccelAdd(PyccelAdd(base.shape[pos], indices[pos].start, simplify=True),
+                                          index_var, simplify=True)
+                else:
+                    index_var = PyccelAdd(index_var, indices[pos].start, simplify=True)
 
         # Update index
         indices[pos] = index_var
