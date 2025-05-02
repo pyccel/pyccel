@@ -2465,9 +2465,8 @@ class SemanticParser(BasicParser):
             try:
                 annotation = types_meta.model_from_str(env_var.__forward_arg__)
             except TextXSyntaxError as e:
-                errors.report(f"Invalid header. {e.message}",
-                        symbol = stmt, column = e.col,
-                        severity='fatal')
+                errors.report(f"Invalid annotation. {e.message}",
+                        symbol = self.current_ast_node, severity='fatal')
             annot = annotation.expr
             pyccel_stage.set_stage('semantic')
             return self._visit(annot)
@@ -4715,7 +4714,7 @@ class SemanticParser(BasicParser):
                 # u_val is None if it is collected from the context
                 u_val = self.scope.find(u, 'symbolic_aliases')
                 if u_val is None:
-                    u_val = self._visit(u)
+                    u_val = self._visit(SyntacticTypeAnnotation(u))
                 if isinstance(u_val, (VariableTypeAnnotation, UnionTypeAnnotation, TypingTypeVar)):
                     templates[u] = u_val
 
