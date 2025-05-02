@@ -7,13 +7,17 @@ Module to handle low-level language agnostic objects such as macros.
 """
 from pyccel.utilities.metaclasses import ArgumentSingleton
 
-from .basic import PyccelAstNode
+from .basic import PyccelAstNode, TypedAstNode
 from .datatypes import PyccelType
+from .variable import Variable
 
 __all__ = ('IteratorType',
            'PairType',
            'MacroDefinition',
-           'MacroUndef')
+           'MacroUndef',
+           'ManagedMemory',
+           'MemoryHandlerType',
+           'UnpackManagedMemory')
 
 #------------------------------------------------------------------------------
 class IteratorType(PyccelType, metaclass=ArgumentSingleton):
@@ -121,6 +125,79 @@ class PairType(PyccelType, metaclass=ArgumentSingleton):
         return f'pair[{self._key_type}, {self._value_type}]'
 
 #------------------------------------------------------------------------------
+class MemoryHandlerType(PyccelType, metaclass=ArgumentSingleton):
+    """
+    The type of an object which can hold a pointer and manage its memory.
+
+    The type of an object which can hold a pointer and manage its memory by
+    choosing whether or not to deallocate. This class may be used notably
+    for list elements and dictionary values.
+
+    Parameters
+    ----------
+    element_type : PyccelType
+        The type of the element whose memory is being managed.
+    """
+    __slots__ = ('_element_type',)
+
+    def __init__(self, element_type):
+        self._element_type = element_type
+        super().__init__()
+
+    @property
+    def element_type(self):
+        """
+        The type of the element whose memory is being managed.
+
+        The type of the element whose memory is being managed.
+        """
+        return self._element_type
+
+    @property
+    def container_rank(self):
+        """
+        Number of dimensions of the memory handler object.
+
+        Number of dimensions of the memory handler object.
+        This is the number of indices that can be used to
+        directly index the object.
+        """
+        return 0
+
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. This is equal to the
+        number of dimensions of the element whose memory is being
+        managed.
+        """
+        return self._element_type.rank
+
+    def shape_is_compatible(self, shape):
+        """
+        Check if the provided shape is compatible with the datatype.
+
+        Check if the provided shape is compatible with the format expected for
+        this datatype.
+
+        Parameters
+        ----------
+        shape : Any
+            The proposed shape.
+
+        Returns
+        -------
+        bool
+            True if the shape is acceptable, False otherwise.
+        """
+        return shape == (() if self.rank else None)
+
+    def __str__(self):
+        return f'MemoryHandler[{self._element_type}]'
+
+#------------------------------------------------------------------------------
 class MacroDefinition(PyccelAstNode):
     """
     A class for defining a macro in a file.
@@ -190,3 +267,104 @@ class MacroUndef(PyccelAstNode):
         """
         return self._macro_name
 
+#------------------------------------------------------------------------------
+class UnpackManagedMemory(PyccelAstNode):
+    """
+    Assign a pointer to a managed memory block.
+
+    A class representing the operation whereby an object whose memory is managed
+    by a MemoryHandlerType is assigned as the target of a pointer.
+
+    Parameters
+    ----------
+    out_ptr : Variable
+        The variable which will point at this memory block.
+    managed_object : TypedAstNode
+        The object whose memory is being managed.
+    mem_var : Variable
+        The variable responsible for managing the memory.
+    """
+    _attribute_nodes = ('_managed_object','_mem_var', '_out_ptr')
+    __slots__ = ('_managed_object','_mem_var', '_out_ptr')
+
+    def __init__(self, out_ptr, managed_object, mem_var):
+        assert isinstance(out_ptr, Variable)
+        assert isinstance(managed_object, TypedAstNode)
+        assert isinstance(mem_var, Variable)
+        self._managed_object = managed_object
+        self._mem_var = mem_var
+        self._out_ptr = out_ptr
+        super().__init__()
+
+    @property
+    def out_ptr(self):
+        """
+        Get the variable which will point at the managed memory block.
+
+        Get the variable which will point at the managed memory block.
+        """
+        return self._out_ptr
+
+    @property
+    def managed_object(self):
+        """
+        Get the object whose memory is being managed.
+
+        Get the object whose memory is being managed.
+        """
+        return self._managed_object
+
+    @property
+    def memory_handler_var(self):
+        """
+        Get the variable responsible for managing the memory.
+
+        Get the variable responsible for managing the memory.
+        """
+        return self._mem_var
+
+#------------------------------------------------------------------------------
+class ManagedMemory(PyccelAstNode):
+    """
+    A class which links a variable to the variable which manages its memory.
+
+    A class which links a variable to the variable which manages its memory.
+    This class does not need to appear in the AST description of the file.
+    Simply creating an instance will add it to the AST tree which will ensure
+    that it is found when examining the variable.
+
+    Parameters
+    ----------
+    var : Variable
+        The variable whose memory is being managed.
+    mem_var : Variable
+        The variable responsible for managing the memory.
+    """
+    __slots__ = ('_var', '_mem_var')
+    _attribute_nodes = ('_var', '_mem_var')
+
+    def __init__(self, var, mem_var):
+        assert isinstance(var, Variable)
+        assert isinstance(mem_var, Variable)
+        assert isinstance(mem_var.class_type, MemoryHandlerType)
+        self._var = var
+        self._mem_var = mem_var
+        super().__init__()
+
+    @property
+    def var(self):
+        """
+        Get the variable whose memory is being managed.
+
+        Get the variable whose memory is being managed.
+        """
+        return self._var
+
+    @property
+    def mem_var(self):
+        """
+        Get the variable responsible for managing the memory.
+
+        Get the variable responsible for managing the memory.
+        """
+        return self._mem_var

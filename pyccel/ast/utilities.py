@@ -25,6 +25,7 @@ from .datatypes     import StringType
 from .internals     import PyccelFunction, Slice, PyccelArrayShapeElement
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
+from .low_level_tools import UnpackManagedMemory, ManagedMemory
 from .mathext       import math_mod
 from .numpyext      import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace
 from .numpyext      import get_shape_of_multi_level_container
@@ -424,7 +425,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
     if result is None:
         result = []
     current_level = 0
-    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet)
+    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet, UnpackManagedMemory)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
                                 or (isinstance(f, PyccelFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
                                     and not isinstance(f, (NumpyTranspose))))
@@ -846,4 +847,26 @@ def is_literal_integer(expr):
     return isinstance(expr, (int, LiteralInteger)) or \
         isinstance(expr, PyccelUnarySub) and isinstance(expr.args[0], (int, LiteralInteger))
 
+#==============================================================================
+def get_managed_memory_object(maybe_managed_var):
+    """
+    Get the variable responsible for managing the memory of the object passed as argument.
 
+    Get the variable responsible for managing the memory of the object passed as argument.
+    This may be the variable itself or a different variable of type MemoryHandlerType.
+
+    Parameters
+    ----------
+    maybe_managed_var : Variable
+        The variable whose management we are interested in.
+
+    Returns
+    -------
+    Variable
+        The variable responsible for managing the memory of the object.
+    """
+    managed_mem = maybe_managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+    if managed_mem:
+        return managed_mem[0].mem_var
+    else:
+        return maybe_managed_var
