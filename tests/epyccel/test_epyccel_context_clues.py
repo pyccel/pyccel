@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-class-docstring, missing-module-docstring
 import sys
-from typing import TypeVar
+from typing import TypeVar, Final
 import numpy as np
 import pytest
 from pyccel import epyccel
@@ -108,3 +108,25 @@ def test_numpy_cast_context(language):
 
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
+
+def test_container_type_alias_context_1(language):
+    T = list[int]
+
+    def f(a : Final[T]):
+        return a[0]
+
+    b = [4,5,6]
+    epyc_f = epyccel(f, language=language)
+    assert f(b) == epyc_f(b)
+    assert isinstance(f(b), type(epyc_f(b)))
+
+def test_container_type_alias_context_2(language):
+    T = Final[list[int]]
+
+    def f(a : T):
+        return a[0]
+
+    a = [3,2,1]
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
