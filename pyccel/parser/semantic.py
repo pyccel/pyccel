@@ -95,6 +95,8 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil, LiteralString, LiteralImaginaryUnit
 from pyccel.ast.literals import Literal, convert_to_literal, LiteralEllipsis
 
+from pyccel.ast.low_level_tools import MemoryHandlerType, UnpackManagedMemory, ManagedMemory
+
 from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
 
 from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
@@ -124,7 +126,7 @@ from pyccel.ast.typingext import TypingFinal
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import split_positional_keyword_arguments
-from pyccel.ast.utilities import recognised_source, is_literal_integer
+from pyccel.ast.utilities import recognised_source, is_literal_integer, get_managed_memory_object
 
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
@@ -714,6 +716,26 @@ class SemanticParser(BasicParser):
         assert pointer != target
         assert not isinstance(pointer.class_type, (StringType, FixedSizeNumericType))
 
+        pointing_at_container_element = (isinstance(pointer.class_type, (HomogeneousSetType, HomogeneousListType)) \
+                                        and (target.class_type is pointer.class_type.element_type)) or \
+                                        (isinstance(pointer.class_type, DictType) \
+                                        and (target.class_type is pointer.class_type.value_type))
+        container_pointing_at_element = (isinstance(target.class_type, (HomogeneousSetType, HomogeneousListType)) \
+                                        and (pointer.class_type is target.class_type.element_type)) or \
+                                        (isinstance(target.class_type, DictType) \
+                                        and (pointer.class_type is target.class_type.value_type))
+
+        if pointing_at_container_element or container_pointing_at_element:
+            managed_var = target if target.rank < pointer.rank else pointer
+            if isinstance(managed_var, Variable):
+                managed_mem = managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+                if not managed_mem:
+                    mem_var = Variable(MemoryHandlerType(managed_var.class_type),
+                                       self.scope.get_new_name(f'{managed_var.name}_mem'),
+                                       shape=None, memory_handling='heap')
+                    self.scope.insert_variable(mem_var)
+                    ManagedMemory(managed_var, mem_var)
+
         # The class itself should also be aware of the target for freeing
         if isinstance(pointer, DottedVariable):
             self._indicate_pointer_target(pointer.lhs, target, expr)
@@ -752,6 +774,14 @@ class SemanticParser(BasicParser):
                 self._pointer_targets[-1].setdefault(pointer, []).extend((t[0], expr) for t in sub_targets)
             elif isinstance(pointer, Variable):
                 self._allocs[-1].add(pointer)
+            if isinstance(pointer, Variable):
+                managed_mem = pointer.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+                if not managed_mem:
+                    mem_var = Variable(MemoryHandlerType(pointer.class_type),
+                                       self.scope.get_new_name(f'{pointer.name}_mem'),
+                                       shape=None, memory_handling='heap')
+                    self.scope.insert_variable(mem_var)
+                    ManagedMemory(pointer, mem_var)
         elif isinstance(target, PythonDict):
             if not isinstance(target.class_type.value_type, (StringType, FixedSizeNumericType)):
                 for v in target.values:
@@ -1517,11 +1547,13 @@ class SemanticParser(BasicParser):
                 d_lhs['memory_handling'] = 'alias'
                 rhs.base.is_target = not rhs.base.is_alias
 
-            elif isinstance(rhs, (ListPop, DictPop)):
-                d_lhs['memory_handling'] = 'alias'
-
             elif isinstance(rhs, IndexedElement) and not rhs.is_slice:
                 d_lhs['memory_handling'] = 'alias'
+
+            elif isinstance(rhs, (DictPop, DictPopitem, ListPop)):
+                target_var = rhs.list_obj if isinstance(rhs, ListPop) else rhs.dict_obj
+                if target_var in self._pointer_targets[-1]:
+                    d_lhs['memory_handling'] = 'alias'
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign = False,
             arr_in_multirets=False):
@@ -1741,7 +1773,7 @@ class SemanticParser(BasicParser):
             # Variable already exists
             else:
 
-                self._ensure_inferred_type_matches_existing(class_type, d_var, var, is_augassign, new_expressions, rhs)
+                self._ensure_inferred_type_matches_existing(class_type, d_lhs, var, is_augassign, new_expressions, rhs)
 
                 # in the case of elemental, lhs is not of the same class_type as
                 # var.
@@ -3961,14 +3993,20 @@ class SemanticParser(BasicParser):
                 new_expr = Assign(l, r)
 
                 if is_pointer_i:
-                    new_expr = AliasAssign(l, r)
                     if isinstance(r, FunctionCall):
                         funcdef = r.funcdef
                         target_r_idx = funcdef.result_pointer_map[funcdef.results.var]
                         for ti in target_r_idx:
                             self._indicate_pointer_target(l, r.args[ti].value, expr)
+                        new_expr = AliasAssign(l, r)
                     else:
                         self._indicate_pointer_target(l, r, expr)
+
+                        if not isinstance(r.class_type, NumpyNDArrayType) and not isinstance(r, Variable):
+                            mem_var = get_managed_memory_object(l)
+                            new_expr = UnpackManagedMemory(l, r, mem_var)
+                        else:
+                            new_expr = AliasAssign(l, r)
 
                 elif isinstance(l.class_type, SymbolicType):
                     errors.report(PYCCEL_RESTRICTION_TODO,
