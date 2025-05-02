@@ -37,7 +37,7 @@ from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall, ClassDef
 from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import FunctionAddress
-from pyccel.ast.core import Return, Module, For
+from pyccel.ast.core import Return, Module, For, If, IfSection
 from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
@@ -1023,16 +1023,20 @@ class FCodePrinter(CodePrinter):
         separator = self._print(sep)
 
 
-        tuple_start = FunctionCallArgument(LiteralString('('))
-        tuple_sep   = LiteralString(', ')
-        tuple_end   = FunctionCallArgument(LiteralString(')'))
+        container_sep = LiteralString(', ')
+        tuple_tags = (FunctionCallArgument(LiteralString('(')), FunctionCallArgument(LiteralString(')')))
+        list_tags = (FunctionCallArgument(LiteralString('[')), FunctionCallArgument(LiteralString(']')))
+        set_tags = (FunctionCallArgument(LiteralString('{')), FunctionCallArgument(LiteralString('}')))
 
         for i, f in enumerate(orig_args):
             if f.keyword:
                 continue
             else:
                 f = f.value
-            if isinstance(f, (PythonTuple, PythonList, str)):
+            if isinstance(f, (PythonTuple, PythonList, PythonSet, str)):
+                start_tag, end_tag = set_tags if isinstance(f, PythonSet) else \
+                             list_tags if isinstance(f, PythonList) else \
+                             tuple_tags
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
@@ -1041,10 +1045,10 @@ class FCodePrinter(CodePrinter):
                     end_of_tuple = empty_end
                 else:
                     end_of_tuple = FunctionCallArgument(sep, 'end')
-                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, container_sep)][:-1]
                 if len(f) == 1:
                     args.append(FunctionCallArgument(LiteralString(',')))
-                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple], file=expr.file))
+                code += self._print(PythonPrint([start_tag, *args, end_tag, empty_sep, end_of_tuple], file=expr.file))
                 args = []
             elif isinstance(f, PythonType):
                 args_format.append('A')
@@ -1069,11 +1073,14 @@ class FCodePrinter(CodePrinter):
                 for_end = FunctionCallArgument(for_end_char,
                                                keyword='end')
 
+                if_body = [PythonPrint([FunctionCallArgument(f[max_index]), empty_end], file=expr.file)]
+                if_block = If(IfSection(PyccelGt(f.shape[0], LiteralInteger(0), simplify = True), if_body))
+
                 body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end],
                                                 file=expr.file),
                                   for_loop,
-                                  PythonPrint([FunctionCallArgument(f[max_index]), for_end],
-                                                file=expr.file)],
+                                  if_block,
+                                  PythonPrint([for_end], file=expr.file)],
                                  unravelled=True)
                 code += self._print(body)
             else:
@@ -3175,10 +3182,10 @@ class FCodePrinter(CodePrinter):
 
         for i, (c, e) in enumerate(expr.blocks):
 
-            if i == 0:
-                lines.append("if (%s) then\n" % self._print(c))
-            elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
+            if i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
                 lines.append("else\n")
+            elif i == 0:
+                lines.append(f"if ({self._print(c)}) then\n" )
             else:
                 lines.append("else if (%s) then\n" % self._print(c))
 
@@ -3187,7 +3194,12 @@ class FCodePrinter(CodePrinter):
             else:
                 lines.append(self._print(e))
 
-        lines.append("end if\n")
+        if len(lines) == 0:
+            return ''
+        elif lines[0] == "else\n":
+            lines = lines[1:]
+        else:
+            lines.append("end if\n")
 
         return ''.join(lines)
 
