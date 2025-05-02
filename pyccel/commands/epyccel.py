@@ -132,7 +132,7 @@ def get_source_code_and_context(func_or_class):
                 else:
                     context_dict[name] = annot
                 method_prototype = method_prototype.replace(str(annot), name)
-            elif isinstance(annot, typing.GenericAlias) or annot.__name__ == 'Final':
+            elif isinstance(annot, typing.GenericAlias) or getattr(annot, '__origin__', None) is typing.Final:
                 params.update(typing.get_args(annot))
 
         # Save the updated prototype
