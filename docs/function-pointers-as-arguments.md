@@ -309,9 +309,7 @@ program prog_prog_boo
   a = 1_i64
   b = 4_i64
   Dummy_0001 = func1(a, b, foo)
-  if (allocated(a)) then
-    deallocate(a)
-  end if
+  if (allocated(a)) deallocate(a)
 
 end program prog_prog_boo
 ```
@@ -414,9 +412,7 @@ program prog_prog_boo
   a = 1_i64
   b = 4_i64
   Dummy_0001 = func1(a, b, foo)
-  if (allocated(a)) then
-    deallocate(a)
-  end if
+  if (allocated(a))  deallocate(a)
 
 end program prog_prog_boo
 ```
