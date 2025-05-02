@@ -156,11 +156,11 @@ class MemoryHandlerType(PyccelType, metaclass=ArgumentSingleton):
     @property
     def container_rank(self):
         """
-        Number of dimensions of the object.
+        Number of dimensions of the memory handler object.
 
-        Number of dimensions of the object. This is equal to the
-        number of dimensions of the element whose memory is being
-        managed.
+        Number of dimensions of the memory handler object.
+        This is the number of indices that can be used to
+        directly index the object.
         """
         return 0
 
