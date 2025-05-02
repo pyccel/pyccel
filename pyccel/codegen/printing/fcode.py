@@ -231,11 +231,11 @@ iso_c_binding_shortcut_mapping = {
     'C_BOOL'                : 'b1'
 }
 
-inc_keyword = (r'do\b', r'if\b',
+inc_keyword = (r'do\b', r'if \(.*?\) then$',
                r'else\b', r'type\b\s*[^\(]',
                r'(elemental )?(pure )?(recursive )?((subroutine)|(function))\b',
                r'interface\b',r'module\b(?! *procedure)',r'program\b')
-inc_regex = re.compile('|'.join('({})'.format(i) for i in inc_keyword))
+inc_regex = re.compile('|'.join(f'({i})' for i in inc_keyword))
 
 end_keyword = ('do', 'if', 'type', 'function',
                'subroutine', 'interface','module','program')
@@ -2423,9 +2423,7 @@ class FCodePrinter(CodePrinter):
             return ''
         elif isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, StringType)):
             var_code = self._print(var)
-            code  = 'if (allocated({})) then\n'.format(var_code)
-            code += '  deallocate({})\n'     .format(var_code)
-            code += 'end if\n'
+            code  = f'if (allocated({var_code})) deallocate({var_code})\n'
             return code
         else:
             errors.report(f"Deallocate not implemented for {class_type}",
