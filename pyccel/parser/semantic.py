@@ -4716,7 +4716,10 @@ class SemanticParser(BasicParser):
             if isinstance(annot, UnionTypeAnnotation):
                 annotation = [aa for a in annot for aa in unpack(a)]
             elif isinstance(annot, SyntacticTypeAnnotation):
-                elem = annot.dtype.get_attribute_nodes((SyntacticTypeAnnotation, PyccelSymbol))
+                if isinstance(annot.dtype, PyccelSymbol):
+                    elem = [annot.dtype]
+                else:
+                    elem = annot.dtype.get_attribute_nodes((SyntacticTypeAnnotation, PyccelSymbol))
                 if all(e not in templates for e in elem):
                     annotation = unpack(self._visit(annot))
                 else:
