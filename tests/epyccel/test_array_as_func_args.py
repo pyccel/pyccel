@@ -135,3 +135,14 @@ def test_array_complex_2d_scalar_add(language):
         f2(x2, a, d1, d2)
 
         assert np.array_equal( x1, x2 )
+
+def test_array_final(language):
+    def array_final(x : 'const float[:]'):
+        return x[0]
+
+    f1 = array_final
+    f2 = epyccel(f1, language=language)
+
+    d = randint(1, 15)
+    x1 = uniform(np.finfo(float).max, size=(d))
+    assert f1(x1) == f2(x1)
