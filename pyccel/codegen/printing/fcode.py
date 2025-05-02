@@ -1461,7 +1461,7 @@ class FCodePrinter(CodePrinter):
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
         # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
-        return f'{type_name}_pop({var_code})\n'
+        return f'{type_name}_pop({var_code})'
 
     def _print_SetCopy(self, expr):
         var_code = self._print(expr.set_variable)
