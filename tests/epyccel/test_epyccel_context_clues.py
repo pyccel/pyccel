@@ -180,3 +180,22 @@ def test_type_var_container_2(language):
     epyc_f = epyccel(f, language=language)
     assert f(a) == epyc_f(a)
     assert isinstance(f(a), type(epyc_f(a)))
+
+def test_type_var_container_3(language):
+    T = TypeVar('T', 'int[:]', 'float[:]')
+
+    def f(a : T):
+        my_sum = 0.0
+        for ai in a:
+            my_sum += ai
+        return my_sum
+
+    a = np.arange(5)
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+    a = np.arange(5) + 0.5
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
