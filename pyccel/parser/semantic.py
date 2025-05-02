@@ -4693,7 +4693,6 @@ class SemanticParser(BasicParser):
 
         for t,v in templates.items():
             templates[t] = TypingTypeVar(t, *[self._visit(vi) for vi in v])
-        type_var_templates = expr.get_attribute_nodes(TypingTypeVar)
 
         def unpack(ann):
             if isinstance(ann, UnionTypeAnnotation):
