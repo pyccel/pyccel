@@ -88,9 +88,7 @@ module boo
     !////////////////////////
     allocate(array_in_heap(0:2_i64))
     array_in_heap = [1_i64, 2_i64, 3_i64]
-    if (allocated(array_in_heap)) then
-      deallocate(array_in_heap)
-    end if
+    if (allocated(array_in_heap)) deallocate(array_in_heap)
 
   end subroutine fun1
   !........................................
@@ -190,12 +188,8 @@ module boo
     allocate(b(0:5_i64))
     b = [1_i64, 2_i64, 3_i64, 4_i64, 5_i64, 6_i64]
     print *, b(i - j)
-    if (allocated(a)) then
-      deallocate(a)
-    end if
-    if (allocated(b)) then
-      deallocate(b)
-    end if
+    if (allocated(a)) deallocate(a)
+    if (allocated(b)) deallocate(b)
 
   end subroutine fun1
   !........................................
@@ -302,12 +296,8 @@ module boo
     a = 1.0_f64
     allocate(Dummy_0001(0:4_i64))
     Dummy_0001 = square(a)
-    if (allocated(a)) then
-      deallocate(a)
-    end if
-    if (allocated(Dummy_0001)) then
-      deallocate(Dummy_0001)
-    end if
+    if (allocated(a)) deallocate(a)
+    if (allocated(Dummy_0001)) deallocate(Dummy_0001)
 
   end subroutine square_in_array
   !........................................
@@ -472,9 +462,7 @@ module boo
     end do
     pi = 3.14_f64
     print *, a, pi
-    if (allocated(a)) then
-      deallocate(a)
-    end if
+    if (allocated(a)) deallocate(a)
 
   end subroutine f
   !........................................
