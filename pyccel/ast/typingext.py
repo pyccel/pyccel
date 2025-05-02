@@ -14,6 +14,7 @@ from .datatypes import TypeAlias
 __all__ = (
     'TypingFinal',
     'TypingTypeAlias',
+    'TypingTypeVar',
     'typing_mod'
 )
 
@@ -67,6 +68,19 @@ class TypingTypeVar(TypedAstNode):
 
     Class representing a call to the typing.TypeVar construct. This object
     is a type annotation.
+
+    Parameters
+    ----------
+    name : str
+        The name which will be used to identify the TypeVar.
+    *constraints : PyccelAstNode
+        The possible annotations that this TypeVar can represent.
+    bound : PyccelAstNode
+        The superclass from which the type must inherit.
+    covariant : bool
+        Indicates if the TypeVar can represent superclasses of the constraints.
+    contravariant : bool
+        Indicates if the TypeVar can represent subclasses of the constraints.
     """
     __slots__ = ('_name', '_possible_types')
     _attribute_nodes = ()
@@ -74,8 +88,8 @@ class TypingTypeVar(TypedAstNode):
     _shape = None
 
     def __init__(self, name, *constraints, bound=None, covariant=False, contravariant=False):
-        if covariant or contravariant:
-            raise TypeError("Covariant and contravariant types are not currently supported")
+        if covariant or contravariant or bound:
+            raise TypeError("Covariant, contravariant and bound types are not currently supported")
         if len(constraints) == 0:
             raise TypeError(f"The possible types for {name} must be specified")
         self._name = name
