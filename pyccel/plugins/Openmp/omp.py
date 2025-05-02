@@ -155,7 +155,7 @@ class OmpConstruct(PyccelAstNode):
 
 class OmpDirective(OmpAnnotatedComment):
     """
-    Represents an every OpenMP Directive.
+    Represents an OpenMP Directive.
 
     Parameters
     ----------

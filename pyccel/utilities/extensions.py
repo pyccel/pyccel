@@ -1,41 +1,54 @@
+import os
+import importlib.util
+import inspect
+from abc import ABC, abstractmethod
 from pyccel.utilities.metaclasses import Singleton
 
-class Extensions(metaclass=Singleton):
-    def __init__(self):
-        from pyccel.extensions.Openmp.extension import Openmp
-        self._extensions = [Openmp()]
 
-    def set_options(self, **options):
-        for e in self._extensions:
-            e.set_options(**options)
-
-    def extend_syntax_parser(self, cls):
-        extended = cls
-        for e in self._extensions:
-            extended = e.extend_syntax_parser(extended)
-        return extended
-
-    def extend_semantic_parser(self, cls):
-        extended = cls
-        for e in self._extensions:
-            extended = e.extend_semantic_parser(extended)
-        return extended
-
-    def extend_printer(self, cls):
-        extended = cls
-        for e in self._extensions:
-            extended = e.extend_printer(extended)
-        return extended
-
-class Extension():
-    def extend_syntax_parser(self, cls):
-        return cls
-
-    def extend_semantic_parser(self, cls):
-        return cls
-
-    def extend_printer(self, cls):
-        return cls
-
-    def set_options(self):
+class Extension(ABC):
+    @abstractmethod
+    def load(self, options):
         pass
+
+class Extensions(metaclass=Singleton):
+    def __init__(self, plugins_dir=None):
+        if plugins_dir is None:
+            current_dir = os.path.dirname(__file__)
+            plugins_dir = os.path.abspath(os.path.join(current_dir, "..", "plugins"))
+
+        folders = [d for d in os.listdir(plugins_dir)
+                          if os.path.isdir(os.path.join(plugins_dir, d)) and not d.startswith('_')]
+        self._plugins = []
+
+
+        for f in folders:
+            plugin_path = os.path.join(plugins_dir, f, "plugin.py")
+
+            if not os.path.exists(plugin_path):
+                raise ValueError(f"Plugin {f} not found at {plugin_path}")
+
+            module_name = f"{f}_pyccel_plugin"
+            spec = importlib.util.spec_from_file_location(module_name, plugin_path)
+
+            if spec is None or spec.loader is None:
+                raise ImportError(f"Cannot load plugin: {plugin_path}")
+
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+
+            plugin_class = None
+            for name, obj in inspect.getmembers(module):
+                if inspect.isclass(obj) and issubclass(obj, Extension) and obj.__module__ == module.__name__:
+                    plugin_class = obj
+                    break
+
+            if plugin_class is None:
+                raise ValueError(f"No valid plugin class found in {plugin_path}")
+
+            plugin_instance = plugin_class()
+            self._plugins.append(plugin_instance)
+
+    def load(self, options):
+        """Load all available extensions"""
+        for plugin in self._plugins:
+            plugin.load(options)

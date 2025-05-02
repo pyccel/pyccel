@@ -122,7 +122,7 @@ def execute_pyccel(fname, *,
         This can allow certain constants to be defined outside of the function passed to epyccel.
     """
     extensions = Extensions()
-    extensions.set_options(accelerators=accelerators, omp_version=omp_version, language=language)
+    extensions.load({'accelerators':accelerators, 'omp_version':omp_version, 'language':language})
 
     start = time.time()
     timers = {}

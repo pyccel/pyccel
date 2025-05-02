@@ -1,21 +1,24 @@
+from os.path import join, dirname
+from textx.metamodel import metamodel_from_file
+from textx import metamodel_for_language
+
 from .openmp_4_5 import SyntaxParser as PSyntaxParser
 from .openmp_4_5 import SemanticParser as PSemanticParser
 from .openmp_4_5 import CCodePrinter as PCCodePrinter
 from .openmp_4_5 import FCodePrinter as PFCodePrinter
 from .openmp_4_5 import PythonCodePrinter as PPythonCodePrinter
 from .omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger, OmpList
-from os.path import join, dirname
-from textx.metamodel import metamodel_from_file
-from textx import metamodel_for_language
 
 class SyntaxParser(PSyntaxParser):
     """Openmp 5.0 syntax parser"""
-    def __init__(self):
+    _version = 5.0
+    @classmethod
+    def setup(cls, options, method):
         this_folder = dirname(__file__)
         # Get metamodel from language description
         grammar = join(this_folder, "grammar/openmp.tx")
         omp_classes = [OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger, OmpList]
-        self._omp_metamodel = metamodel_from_file(grammar, classes=omp_classes)
+        cls._omp_metamodel = metamodel_from_file(grammar, classes=omp_classes)
 
         # object processors: are registered for particular classes (grammar rules)
         # and are called when the objects of the given class is instantiated.
@@ -34,25 +37,28 @@ class SyntaxParser(PSyntaxParser):
             'TRUE': lambda _: True,
             'OMP_VERSION': lambda _: 5.0,
         })
-        self._omp_metamodel.register_obj_processors(obj_processors)
-        self._pending_directives = []
-        self._skip_stmts_count = 0
+        cls._omp_metamodel.register_obj_processors(obj_processors)
+        def setup(instance, *args, **kwargs):
+            if cls._version != options.get('omp_version', None) or not 'openmp' in options.get('accelerators'):
+                method(instance, *args, **kwargs)
+                return
+            instance._skip_stmts_count = 0
+            method(instance, *args, **kwargs)
+        return setup
 
 
 class SemanticParser(PSemanticParser):
     """Openmp 5.0 semantic parser"""
-    pass
-
+    _version = 5.0
 
 class CCodePrinter(PCCodePrinter):
     """Openmp 5.0 C printer"""
-
-    pass
+    _version = 5.0
 
 class FCodePrinter(PFCodePrinter):
     """Openmp 5.0 fortran printer"""
-    pass
+    _version = 5.0
 
 class PythonCodePrinter(PPythonCodePrinter):
     """Openmp 5.0 python printer"""
-    pass
+    _version = 5.0

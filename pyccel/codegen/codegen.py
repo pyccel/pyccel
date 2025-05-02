@@ -69,7 +69,7 @@ class Codegen:
 
         # instantiate code_printer
         try:
-            CodePrinterSubclass = extensions.extend_printer(printer_registry[language])
+            CodePrinterSubclass = printer_registry[language]
         except KeyError as err:
             raise ValueError(f'{language} language is not available') from err
 

@@ -158,7 +158,7 @@ class Parser(object):
         if self._syntax_parser:
             return self._syntax_parser.ast
 
-        parser             = extensions.extend_syntax_parser(SyntaxParser)(self._filename, **self._kwargs)
+        parser             = SyntaxParser(self._filename, **self._kwargs)
         self.syntax_parser = parser
         parser.ast        = parser.ast
 
@@ -196,7 +196,7 @@ class Parser(object):
         self._annotate_sons(verbose=verbose)
 
         # Create a new semantic parser and store it in object
-        parser = extensions.extend_semantic_parser(SemanticParser)(self._syntax_parser,
+        parser = SemanticParser(self._syntax_parser,
                                 d_parsers = self.d_parsers,
                                 parents = self.parents,
                                 context_dict = self._context_dict,
