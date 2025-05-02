@@ -521,9 +521,7 @@ class PyccelBinaryOperator(PyccelOperator):
             assert len(other) == 0
             shape = None
         elif any(isinstance(a.class_type, NumpyNDArrayType) for a in (arg1, arg2)):
-            s = broadcast(arg1.shape, arg2.shape)
-
-            shape = s
+            shape = broadcast(arg1.shape, arg2.shape)
         else:
             shape = None
         return shape
