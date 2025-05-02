@@ -4713,7 +4713,8 @@ class SemanticParser(BasicParser):
                 # u_val is None if it is collected from the context
                 u_val = self.scope.find(u, 'symbolic_aliases')
                 if u_val is None:
-                    u_val = self._visit(SyntacticTypeAnnotation(u))
+                    syntactic_u = SyntacticTypeAnnotation(u) if isinstance(u, PyccelSymbol) else u
+                    u_val = self._visit(syntactic_u)
                 if isinstance(u_val, (VariableTypeAnnotation, UnionTypeAnnotation, TypingTypeVar)):
                     templates[u] = u_val
 
