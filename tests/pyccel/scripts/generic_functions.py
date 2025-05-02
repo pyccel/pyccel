@@ -12,7 +12,7 @@ Y = TypeVar('Y', int, float)
 Z = TypeVar('Z', int, float)
 K : type = int
 G = TypeVar('G', int, float)
-J = TypeVar('G', int, int)
+J = TypeVar('J', int, int)
 
 def gen_1(a : float) -> float:
     return a * 10
