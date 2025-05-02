@@ -57,7 +57,23 @@ def types(*args, results = None):
     return identity
 
 def template(name, types=()):
-    """template decorator."""
+    """
+    Template decorator.
+
+    Decorator to replace with TypeVar.
+
+    Parameters
+    ----------
+    name : str
+        The name.
+    types : iterable
+        The constraints.
+
+    Returns
+    -------
+    func
+        Fake decorator.
+    """
     def identity(f):
         return f
     warnings.warn("The @template decorator will be removed in version 2.0 of Pyccel. " +
