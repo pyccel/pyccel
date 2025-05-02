@@ -796,6 +796,9 @@ class PythonList(TypedAstNode):
         args = ', '.join(str(a) for a in self)
         return f'PythonList({args})'
 
+    def __len__(self):
+        return len(self._args)
+
     @property
     def args(self):
         """
@@ -900,6 +903,9 @@ class PythonSet(TypedAstNode):
 
     def __iter__(self):
         return self._args.__iter__()
+
+    def __len__(self):
+        return len(self._args)
 
     @property
     def args(self):
