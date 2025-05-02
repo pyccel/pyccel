@@ -2405,13 +2405,6 @@ class SemanticParser(BasicParser):
         """
         if env_var in original_type_to_pyccel_type:
             return VariableTypeAnnotation(original_type_to_pyccel_type[env_var])
-        elif sys.version_info >= (3, 10) and isinstance(env_var, UnionType): # pylint:disable=possibly-used-before-assignment
-            python_types = typing.get_args(env_var)
-            if all(t in original_type_to_pyccel_type for t in python_types):
-                return UnionTypeAnnotation(*[VariableTypeAnnotation(original_type_to_pyccel_type[t]) for t in python_types])
-            else:
-                errors.report(f"Unrecognised type {env_var} found in global scope.",
-                        severity='error', symbol = self.current_ast_node)
         elif type(env_var) in original_type_to_pyccel_type:
             return convert_to_literal(env_var, dtype = original_type_to_pyccel_type[type(env_var)])
         elif env_var is typing.Final:
