@@ -25,7 +25,7 @@ from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys, DictVa
 
 from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
 from pyccel.ast.core      import FunctionCall, FunctionCallArgument
-from pyccel.ast.core      import Deallocate
+from pyccel.ast.core      import Deallocate, If, IfSection
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
@@ -1046,6 +1046,9 @@ class CCodePrinter(CodePrinter):
         for i, (c, b) in enumerate(expr.blocks):
             body = self._print(b)
             if i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
+                if i == 0:
+                    lines.append(body)
+                    break
                 lines.append("else\n")
             else:
                 # Print condition
@@ -1383,26 +1386,30 @@ class CCodePrinter(CodePrinter):
         if len(orig_args) == 0:
             return formatted_args_to_printf(args_format, args, end)
 
-        tuple_start = FunctionCallArgument(LiteralString('('))
-        tuple_sep   = LiteralString(', ')
-        tuple_end   = FunctionCallArgument(LiteralString(')'))
+        container_sep = LiteralString(', ')
+        tuple_tags = (FunctionCallArgument(LiteralString('(')), FunctionCallArgument(LiteralString(')')))
+        list_tags = (FunctionCallArgument(LiteralString('[')), FunctionCallArgument(LiteralString(']')))
+        set_tags = (FunctionCallArgument(LiteralString('{')), FunctionCallArgument(LiteralString('}')))
 
         for i, f in enumerate(orig_args):
             f = f.value
 
-            if isinstance(f, PythonTuple):
+            if isinstance(f, (PythonTuple, PythonList, PythonSet)):
+                start_tag, end_tag = tuple_tags if isinstance(f, PythonTuple) else \
+                             list_tags if isinstance(f, PythonList) else \
+                             set_tags
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
                     args = []
-                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                args = [FunctionCallArgument(print_arg) for elem in f for print_arg in (elem, container_sep)][:-1]
                 if len(f) == 1:
                     args.append(FunctionCallArgument(LiteralString(',')))
                 if i + 1 == len(orig_args):
-                    end_of_tuple = FunctionCallArgument(LiteralString(end), 'end')
+                    end_of_block = FunctionCallArgument(LiteralString(end), 'end')
                 else:
-                    end_of_tuple = FunctionCallArgument(LiteralString(sep), 'end')
-                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple]))
+                    end_of_block = FunctionCallArgument(LiteralString(sep), 'end')
+                code += self._print(PythonPrint([start_tag, *args, end_tag, empty_sep, end_of_block]))
                 args = []
                 continue
             if isinstance(f, PythonType):
@@ -1437,11 +1444,14 @@ class CCodePrinter(CodePrinter):
                 for_loop  = For((for_index,), for_range, for_body, scope=for_scope)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
+                if_body = [PythonPrint([FunctionCallArgument(f[max_index]), empty_end], file=expr.file)]
+                if_block = If(IfSection(PyccelGt(f.shape[0], LiteralInteger(0), simplify = True), if_body))
+
                 body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end],
                                                 file=expr.file),
                                   for_loop,
-                                  PythonPrint([ FunctionCallArgument(f[max_index]), for_end],
-                                                file=expr.file)],
+                                  if_block,
+                                  PythonPrint([for_end], file=expr.file)],
                                  unravelled = True)
                 code += self._print(body)
             elif isinstance(f, LiteralString):
