@@ -1831,13 +1831,13 @@ class CCodePrinter(CodePrinter):
         explicit_step = _slice.step or LiteralInteger(1)
 
         # negative step in slice
-        if explicit_step and isinstance(explicit_step, PyccelUnarySub) and isinstance(explicit_step.args[0], LiteralInteger):
+        if isinstance(explicit_step, PyccelUnarySub) and isinstance(explicit_step.args[0], LiteralInteger):
             start = PyccelMinus(array_size, LiteralInteger(1), simplify = True) if _slice.start is None else start
             stop = LiteralInteger(0) if _slice.stop is None else stop
             raise NotImplementedError("Negative step not yet handled")
 
         # variable step in slice
-        elif explicit_step and allow_negative_index and explicit_step and not isinstance(explicit_step, LiteralInteger):
+        elif allow_negative_index and not isinstance(explicit_step, LiteralInteger):
             start = IfTernaryOperator(PyccelGt(explicit_step, LiteralInteger(0)), explicit_start,
                                       PyccelMinus(explicit_stop, LiteralInteger(1), simplify = True))
             stop = IfTernaryOperator(PyccelGt(explicit_step, LiteralInteger(0)), explicit_stop, explicit_start)
