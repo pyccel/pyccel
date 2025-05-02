@@ -87,6 +87,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
+-   \[INTERNALS\] Add a simplify method to `PyccelGt` for literals.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 -   \[DEVELOPER\] Added an environment variable to globally activate developer-mode for errors.
 -   \[DEVELOPER\] Added a spell checker for the code itself.
@@ -153,6 +154,8 @@ All notable changes to this project will be documented in this file.
 -   #2274 : Do not pass include flags to linker (they are useless).
 -   #2274 : Always use the C compiler to build the C wrapper for NumPy arrays (fixes Intel failures).
 -   #2285 : Reduce number of warnings in unit tests.
+-   #2295 : Fix wrapper handling of constant array arguments.
+-   #2097 : Fix printing of an empty list.
 
 ### Changed
 
@@ -169,6 +172,7 @@ All notable changes to this project will be documented in this file.
 -   #2234 : Print all constant C variables with `const` specifier.
 -   #2249 : Improve installation docs and recommend virtual environment.
 -   #2242 : Change format of compiler info files.
+-   #2302 : Print the deallocation in a 1 line if statement.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.

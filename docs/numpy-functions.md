@@ -335,9 +335,7 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
           20_i64 - 1_i64), f64)), linspace_index = 0_i64,19_i64)]
       x(19_i64) = 10.0_f64
       print *, x
-      if (allocated(x)) then
-        deallocate(x)
-      end if
+      if (allocated(x)) deallocate(x)
 
     end program prog_prog_test
     ```
