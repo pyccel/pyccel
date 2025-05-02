@@ -1025,7 +1025,7 @@ class PyccelLt(PyccelComparisonOperator):
     I.e:
         a < b
     is equivalent to:
-        PyccelEq(a, b)
+        PyccelLt(a, b)
 
     Parameters
     ----------
@@ -1045,7 +1045,7 @@ class PyccelLe(PyccelComparisonOperator):
     I.e:
         a <= b
     is equivalent to:
-        PyccelEq(a, b)
+        PyccelLe(a, b)
 
     Parameters
     ----------
@@ -1065,7 +1065,7 @@ class PyccelGt(PyccelComparisonOperator):
     I.e:
         a > b
     is equivalent to:
-        PyccelEq(a, b)
+        PyccelGt(a, b)
 
     Parameters
     ----------
@@ -1100,7 +1100,7 @@ class PyccelGe(PyccelComparisonOperator):
     I.e:
         a >= b
     is equivalent to:
-        PyccelEq(a, b)
+        PyccelGe(a, b)
 
     Parameters
     ----------
@@ -1508,4 +1508,3 @@ class IfTernaryOperator(PyccelOperator):
 
 #==============================================================================
 Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, PyccelIs, PyccelIsNot)
-
