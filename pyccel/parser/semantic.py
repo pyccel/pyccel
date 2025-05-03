@@ -4721,7 +4721,7 @@ class SemanticParser(BasicParser):
                     syntactic_u = SyntacticTypeAnnotation(u) if isinstance(u, PyccelSymbol) else u
                     pyccel_stage.set_stage('semantic')
                     u_val = self._visit(syntactic_u)
-                if isinstance(u_val, (VariableTypeAnnotation, UnionTypeAnnotation, TypingTypeVar)):
+                if isinstance(u_val, TypingTypeVar):
                     templates[u] = u_val
 
         # Create new temporary templates for the arguments with a Union data type.
