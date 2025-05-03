@@ -162,11 +162,6 @@ if __name__ == '__main__':
                 for item in updated_disabled:
                     statements, num = item
                     strings_list = list(statements)
-                    if 'reimported' in strings_list:
-                        strings_list.remove('reimported')
-                        disabled.discard(item)
-                        if strings_list:
-                            disabled.update([(tuple(strings_list), num)])
         if disabled:
             first_iteration = True
             if file_changed:
