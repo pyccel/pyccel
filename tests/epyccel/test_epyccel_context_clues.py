@@ -199,3 +199,19 @@ def test_type_var_container_3(language):
     epyc_f = epyccel(f, language=language)
     assert f(a) == epyc_f(a)
     assert isinstance(f(a), type(epyc_f(a)))
+
+def test_type_var_container_4(language):
+    T = TypeVar('T', int, float)
+
+    def f(a : tuple[T, ...]) -> T:
+        return a[0]
+
+    a = (3,2,1)
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+    a = (3.5,2.5,1.5)
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
