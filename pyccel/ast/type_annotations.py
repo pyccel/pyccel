@@ -16,7 +16,7 @@ from .bitwise_operators import PyccelBitOr
 from .core import FunctionDefArgument, FunctionDefResult
 
 from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
-from .datatypes import VoidType, GenericType, StringType
+from .datatypes import VoidType, GenericType, StringType, PyccelType
 
 from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
 
@@ -41,7 +41,7 @@ class VariableTypeAnnotation(PyccelAstNode):
 
     Parameters
     ----------
-    class_type : DataType
+    class_type : PyccelType
         The requested Python type of the variable.
 
     is_const : bool, default=False
@@ -49,9 +49,10 @@ class VariableTypeAnnotation(PyccelAstNode):
     """
     __slots__ = ('_class_type', '_is_const')
     _attribute_nodes = ()
-    def __init__(self, class_type : 'DataType', is_const : bool = False):
+    def __init__(self, class_type : PyccelType, is_const : bool = False):
         self._class_type = class_type
         self._is_const = is_const
+        assert isinstance(class_type, PyccelType)
 
         super().__init__()
 
@@ -282,6 +283,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
         self._dtype = dtype
         self._order = order
         super().__init__()
+        assert self.pyccel_staging == 'syntactic'
 
     @property
     def dtype(self):
