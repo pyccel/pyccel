@@ -2456,10 +2456,10 @@ class SemanticParser(BasicParser):
             else:
                 errors.report(f"Unrecognised module {mod_name} imported in global scope. Please import the module locally if it was previously Pyccelised.",
                         severity='error', symbol = self.current_ast_node)
-        elif isinstance(env_var, typing.ForwardRef):
+        elif isinstance(env_var, (typing.ForwardRef, str)):
             pyccel_stage.set_stage('syntactic')
             try:
-                annotation = types_meta.model_from_str(env_var.__forward_arg__)
+                annotation = types_meta.model_from_str(getattr(env_var, '__forward_arg__', env_var))
             except TextXSyntaxError as e:
                 errors.report(f"Invalid annotation. {e.message}",
                         symbol = self.current_ast_node, severity='fatal')
