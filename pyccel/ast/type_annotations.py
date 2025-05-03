@@ -52,7 +52,6 @@ class VariableTypeAnnotation(PyccelAstNode):
     def __init__(self, class_type : PyccelType, is_const : bool = False):
         self._class_type = class_type
         self._is_const = is_const
-        assert isinstance(class_type, PyccelType)
 
         super().__init__()
 
