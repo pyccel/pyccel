@@ -3553,6 +3553,13 @@ class SemanticParser(BasicParser):
                 func = builtin_functions_dict.get(env_var.__name__, None)
                 if func is not None:
                     func = PyccelFunctionDef(env_var.__name__, func)
+                mod_name = env_var.__module__
+                if recognised_source(mod_name):
+                    pyccel_stage.set_stage('syntactic')
+                    import_node = Import(mod_name, name)
+                    pyccel_stage.set_stage('semantic')
+                    self._additional_exprs[-1].append(self._visit(import_node))
+                    func = self.scope.find(name)
 
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,
