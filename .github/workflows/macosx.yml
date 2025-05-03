@@ -75,6 +75,11 @@ jobs:
             python -m pip install --upgrade pip
             python -m pip install .[test]
         shell: bash
+      - name: Test
+        run: |
+          pytest test_epyccel_context_clues.py::test_type_var_container_3 -m c --developer-mode
+        shell: bash
+        working-directory: ./tests/epyccel
       - name: Fortran/C tests with pytest
         id: f_c_pytest
         timeout-minutes: 60
