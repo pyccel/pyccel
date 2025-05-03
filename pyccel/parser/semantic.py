@@ -3073,6 +3073,7 @@ class SemanticParser(BasicParser):
 
         # Get the semantic type annotation (should be UnionTypeAnnotation)
         types = self._visit(expr.annotation)
+        assert not isinstance(types, TypingTypeVar)
 
         if len(types.type_list) == 0:
             errors.report(MISSING_TYPE_ANNOTATIONS,
@@ -4713,7 +4714,9 @@ class SemanticParser(BasicParser):
                 # u_val is None if it is collected from the context
                 u_val = self.scope.find(u, 'symbolic_aliases')
                 if u_val is None:
+                    pyccel_stage.set_stage('syntactic')
                     syntactic_u = SyntacticTypeAnnotation(u) if isinstance(u, PyccelSymbol) else u
+                    pyccel_stage.set_stage('semantic')
                     u_val = self._visit(syntactic_u)
                 if isinstance(u_val, (VariableTypeAnnotation, UnionTypeAnnotation, TypingTypeVar)):
                     templates[u] = u_val
