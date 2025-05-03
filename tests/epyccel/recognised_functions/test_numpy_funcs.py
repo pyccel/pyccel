@@ -2315,13 +2315,13 @@ def test_rand_expr_array(language):
 )
 def test_randint_basic(language):
     def create_rand():
-        return randint(-10, 10)
+        return np.random.randint(-10, 10)
 
     def create_val(high : 'int'):
-        return randint(high)
+        return np.random.randint(high)
 
     def create_val_low(low : 'int', high : 'int'):
-        return randint(low, high)
+        return np.random.randint(low, high)
 
     f0 = epyccel(create_rand, language = language)
     y = [f0() for i in range(10)]
@@ -2355,11 +2355,11 @@ def test_randint_basic(language):
 )
 def test_randint_expr(language):
     def create_val(high : 'int'):
-        x = 2*randint(high)
+        x = 2*np.random.randint(high)
         return x
 
     def create_val_low(low : 'int', high : 'int'):
-        x = 2*randint(low, high)
+        x = 2*np.random.randint(low, high)
         return x
 
     f1 = epyccel(create_val, language = language)
