@@ -2315,15 +2315,12 @@ def test_rand_expr_array(language):
 )
 def test_randint_basic(language):
     def create_rand():
-        from numpy.random import randint # pylint: disable=reimported
         return randint(-10, 10)
 
     def create_val(high : 'int'):
-        from numpy.random import randint # pylint: disable=reimported
         return randint(high)
 
     def create_val_low(low : 'int', high : 'int'):
-        from numpy.random import randint # pylint: disable=reimported
         return randint(low, high)
 
     f0 = epyccel(create_rand, language = language)
@@ -2358,12 +2355,10 @@ def test_randint_basic(language):
 )
 def test_randint_expr(language):
     def create_val(high : 'int'):
-        from numpy.random import randint # pylint: disable=reimported
         x = 2*randint(high)
         return x
 
     def create_val_low(low : 'int', high : 'int'):
-        from numpy.random import randint # pylint: disable=reimported
         x = 2*randint(low, high)
         return x
 
