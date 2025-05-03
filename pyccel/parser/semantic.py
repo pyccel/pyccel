@@ -2210,31 +2210,29 @@ class SemanticParser(BasicParser):
 
         if not any(isinstance(a, Slice) for a in args):
             if isinstance(base, PyccelFunctionDef):
-                dtype_cls = base.cls_name
+                dtype_cls = base.cls_name.static_type()
+            elif isinstance(base, VariableTypeAnnotation):
+                dtype_cls = base.class_type
             else:
                 raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
             if (len(args) == 2 and args[1] is LiteralEllipsis()) or \
-                    (len(args) == 1 and dtype_cls is not PythonTupleFunction):
+                    (len(args) == 1 and dtype_cls is not TupleType):
                 syntactic_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
                 internal_datatypes = self._visit(syntactic_annotation)
-                if dtype_cls in type_container:
-                    class_type = type_container[dtype_cls]
-                else:
-                    raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
-                            severity='fatal', symbol=expr)
+                class_type = HomogeneousTupleType if dtype_cls is TupleType else dtype_cls
                 type_annotations = [VariableTypeAnnotation(class_type(u.class_type), u.is_const)
                                     for u in internal_datatypes.type_list]
                 return UnionTypeAnnotation(*type_annotations)
-            elif len(args) == 2 and dtype_cls is PythonDictFunction:
+            elif len(args) == 2 and dtype_cls is DictType:
                 syntactic_key_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
                 syntactic_val_annotation = self._convert_syntactic_object_to_type_annotation(args[1])
                 key_types = self._visit(syntactic_key_annotation)
                 val_types = self._visit(syntactic_val_annotation)
-                type_annotations = [VariableTypeAnnotation(DictType(k.class_type, v.class_type)) \
+                type_annotations = [VariableTypeAnnotation(dtype_cls(k.class_type, v.class_type)) \
                                     for k,v in zip(key_types.type_list, val_types.type_list)]
                 return UnionTypeAnnotation(*type_annotations)
-            elif dtype_cls is PythonTupleFunction:
+            elif dtype_cls is TupleType:
                 syntactic_annotations = [self._convert_syntactic_object_to_type_annotation(a) for a in args]
                 types = [self._visit(a).type_list for a in syntactic_annotations]
                 internal_datatypes = list(product(*types))
