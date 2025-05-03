@@ -23,8 +23,8 @@ from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
 __all__ = (
         'FunctionTypeAnnotation',
         'SyntacticTypeAnnotation',
-        'VariableTypeAnnotation',
         'UnionTypeAnnotation',
+        'VariableTypeAnnotation',
         'typenames_to_dtypes',
         )
 
