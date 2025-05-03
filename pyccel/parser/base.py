@@ -10,6 +10,7 @@ Module containing aspects of a parser which are in common over all stages.
 
 import importlib
 import os
+import pathlib
 import re
 
 #==============================================================================
@@ -40,22 +41,22 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 # Useful for very coarse version differentiation.
 
 #==============================================================================
-def get_filename_from_import(module_name, input_folder=''):
+def get_filename_from_import(module_name, input_folder_name):
     """
     Get the absolute path of a module_name, searching in a given folder.
 
     Return a valid filename with an absolute path, that corresponds to the
     definition of module_name.
     The priority order is:
-        - header files (extension == pyh)
         - python files (extension == py)
+        - header files (extension == pyi)
 
     Parameters
     ----------
     module_name : str | AsName
         Name of the module_name of interest.
 
-    input_folder : str
+    input_folder_name : str
         Relative path of the folder which should be searched for the module_name.
 
     Returns
@@ -72,54 +73,32 @@ def get_filename_from_import(module_name, input_folder=''):
     if (isinstance(module_name, AsName)):
         module_name = str(module_name.name)
 
-    # Remove first '.' as it doesn't represent a folder change
-    if module_name[0] == '.':
-        module_name = module_name[1:]
-    filename = module_name.replace('.','/')
+    print("importing : ", module_name)
 
-    # relative imports
-    folder_above = '../'
-    while filename.startswith('/'):
-        filename = folder_above + filename[1:]
+    in_project = module_name[0] == '.'
 
-    filename_pyh = f'{filename}.pyh'
-    filename_py  = f'{filename}.py'
+    input_folder = pathlib.Path(input_folder_name)
 
-    poss_filename_pyh = os.path.join( input_folder, filename_pyh )
-    poss_filename_py  = os.path.join( input_folder, filename_py  )
-    if is_valid_filename_pyh(poss_filename_pyh):
-        return os.path.abspath(poss_filename_pyh)
-    if is_valid_filename_py(poss_filename_py):
-        return os.path.abspath(poss_filename_py)
+    if in_project:
+        project_depth = next(i for i, c in enumerate(module_name) if c != '.')
+        if project_depth == 1:
+            project_dir = input_folder
+        else:
+            project_dir = input_folder.parents[project_depth-2]
+        module_path = module_name[project_depth:].split('.')
+        filename_stem = project_dir.joinpath(*module_path)
+    else:
+        filename_stem = pathlib.Path(input_folder).joinpath(*module_name.split('.'))
 
-    source = module_name
-    if len(module_name.split(""".""")) > 1:
-
-        # we remove the last entry, since it can be a pyh file
-
-        source = """.""".join(i for i in module_name.split(""".""")[:-1])
-        _module = module_name.split(""".""")[-1]
-        filename_pyh = f'{_module}.pyh'
-        filename_py  = f'{_module}.py'
-
-    try:
-        package = importlib.import_module(source)
-        package_dir = str(package.__path__[0])
-    except ImportError:
+    filename_py = filename_stem.with_suffix('.py')
+    if filename_py.exists():
+        return str(filename_py.absolute())
+    elif filename_stem.with_suffix('.pyh').exists():
+        return str(filename_stem.with_suffix('.pyh').absolute())
+    else:
         errors = Errors()
-        errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=source,
+        raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
                       severity='fatal')
-
-    filename_pyh = os.path.join(package_dir, filename_pyh)
-    filename_py = os.path.join(package_dir, filename_py)
-    if os.path.isfile(filename_pyh):
-        return filename_pyh
-    elif os.path.isfile(filename_py):
-        return filename_py
-
-    errors = Errors()
-    raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
-                  severity='fatal')
 
 #==============================================================================
 class BasicParser(object):
