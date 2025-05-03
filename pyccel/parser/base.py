@@ -40,42 +40,42 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 # Useful for very coarse version differentiation.
 
 #==============================================================================
-def get_filename_from_import(module, input_folder=''):
+def get_filename_from_import(module_name, input_folder=''):
     """
-    Get the absolute path of a module, searching in a given folder.
+    Get the absolute path of a module_name, searching in a given folder.
 
     Return a valid filename with an absolute path, that corresponds to the
-    definition of module.
+    definition of module_name.
     The priority order is:
         - header files (extension == pyh)
         - python files (extension == py)
 
     Parameters
     ----------
-    module : str | AsName
-        Name of the module of interest.
+    module_name : str | AsName
+        Name of the module_name of interest.
 
     input_folder : str
-        Relative path of the folder which should be searched for the module.
+        Relative path of the folder which should be searched for the module_name.
 
     Returns
     -------
     str
-        Absolute path of the given module.
+        Absolute path of the given module_name.
 
     Raises
     ------
     PyccelError
-        Error raised when the module cannot be found.
+        Error raised when the module_name cannot be found.
     """
 
-    if (isinstance(module, AsName)):
-        module = str(module.name)
+    if (isinstance(module_name, AsName)):
+        module_name = str(module_name.name)
 
     # Remove first '.' as it doesn't represent a folder change
-    if module[0] == '.':
-        module = module[1:]
-    filename = module.replace('.','/')
+    if module_name[0] == '.':
+        module_name = module_name[1:]
+    filename = module_name.replace('.','/')
 
     # relative imports
     folder_above = '../'
@@ -92,13 +92,13 @@ def get_filename_from_import(module, input_folder=''):
     if is_valid_filename_py(poss_filename_py):
         return os.path.abspath(poss_filename_py)
 
-    source = module
-    if len(module.split(""".""")) > 1:
+    source = module_name
+    if len(module_name.split(""".""")) > 1:
 
         # we remove the last entry, since it can be a pyh file
 
-        source = """.""".join(i for i in module.split(""".""")[:-1])
-        _module = module.split(""".""")[-1]
+        source = """.""".join(i for i in module_name.split(""".""")[:-1])
+        _module = module_name.split(""".""")[-1]
         filename_pyh = f'{_module}.pyh'
         filename_py  = f'{_module}.py'
 
@@ -118,7 +118,7 @@ def get_filename_from_import(module, input_folder=''):
         return filename_py
 
     errors = Errors()
-    raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
+    raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
                   severity='fatal')
 
 #==============================================================================
