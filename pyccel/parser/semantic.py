@@ -2211,8 +2211,6 @@ class SemanticParser(BasicParser):
         if not any(isinstance(a, Slice) for a in args):
             if isinstance(base, PyccelFunctionDef):
                 dtype_cls = base.cls_name.static_type()
-            elif isinstance(base, VariableTypeAnnotation):
-                dtype_cls = base.class_type
             else:
                 raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
@@ -3172,13 +3170,8 @@ class SemanticParser(BasicParser):
 
         if isinstance(visited_dtype, PyccelFunctionDef):
             dtype_cls = visited_dtype.cls_name
-            if dtype_cls is TypingFinal:
-                return visited_dtype
             class_type = dtype_cls.static_type()
-            if isinstance(class_type, PyccelType):
-                return UnionTypeAnnotation(VariableTypeAnnotation(class_type))
-            else:
-                return class_type
+            return UnionTypeAnnotation(VariableTypeAnnotation(class_type))
         elif isinstance(visited_dtype, VariableTypeAnnotation):
             if order and order != visited_dtype.class_type.order:
                 visited_dtype = VariableTypeAnnotation(visited_dtype.class_type.swap_order())
