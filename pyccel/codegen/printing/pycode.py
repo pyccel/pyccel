@@ -20,7 +20,7 @@ from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.internals  import PyccelSymbol
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.low_level_tools import UnpackManagedMemory
-from pyccel.ast.numpyext   import numpy_target_swap
+from pyccel.ast.numpyext   import numpy_target_swap, numpy_linalg_mod, numpy_random_mod
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
@@ -176,7 +176,12 @@ class PythonCodePrinter(CodePrinter):
         type_name = expr.name
         name = self._aliases.get(cls, type_name)
         if name == type_name and cls not in (PythonBool, PythonInt, PythonFloat, PythonComplex):
-            self.add_import(Import('numpy', [AsName(cls, name)]))
+            if type_name in numpy_linalg_mod:
+                self.add_import(Import('numpy.linalg', [AsName(cls, name)]))
+            elif type_name in numpy_random_mod:
+                self.add_import(Import('numpy.random', [AsName(cls, name)]))
+            else:
+                self.add_import(Import('numpy', [AsName(cls, name)]))
         return name
 
     def _get_type_annotation(self, obj):
@@ -965,19 +970,18 @@ class PythonCodePrinter(CodePrinter):
             return f"{name}({args})"
 
     def _print_NumpyRandint(self, expr):
-        name = self._aliases.get(type(expr), expr.name)
+        name = self._get_numpy_name(expr)
+        args = []
         if expr.low:
-            args = "{}, ".format(self._print(expr.low))
-        else:
-            args = ""
-        args += "{}".format(self._print(expr.high))
+            args.append(self._print(expr.low))
+        args.append(self._print(expr.high))
         if expr.rank != 0:
             size = self._print(expr.shape)
-            args += ", size = {}".format(size)
-        return "{}({})".format(name, args)
+            args.append(f"size = {size}")
+        return f"{name}({', '.join(args)})"
 
     def _print_NumpyNorm(self, expr):
-        name = self._aliases.get(type(expr), expr.name)
+        name = self._get_numpy_name(expr)
         axis = self._print(expr.axis) if expr.axis else None
         if axis:
             return  "{name}({arg},axis={axis})".format(name = name, arg  = self._print(expr.python_arg), axis=axis)
