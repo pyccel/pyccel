@@ -4696,7 +4696,8 @@ class SemanticParser(BasicParser):
             templates.update(decorators['template']['template_dict'])
 
         for t,v in templates.items():
-            templates[t] = TypingTypeVar(t, *[self._visit(vi) for vi in v])
+            if not isinstance(v, TypingTypeVar):
+                templates[t] = TypingTypeVar(t, *[self._visit(vi) for vi in v])
 
         def unpack(ann):
             if isinstance(ann, UnionTypeAnnotation):
@@ -4711,18 +4712,12 @@ class SemanticParser(BasicParser):
                 if isinstance(annot, (SyntacticTypeAnnotation, TypingFinal))]
         used_type_names = set(t for a in arg_annotations for t in a.get_attribute_nodes(PyccelSymbol))
         templates = {t: v for t,v in templates.items() if t in used_type_names}
-        # Add TypeVar objects
-        for u in used_type_names:
-            if u not in templates:
-                # u_val is None if it is collected from the context
-                u_val = self.scope.find(u, 'symbolic_aliases')
-                if u_val is None:
-                    pyccel_stage.set_stage('syntactic')
-                    syntactic_u = SyntacticTypeAnnotation(u) if isinstance(u, PyccelSymbol) else u
-                    pyccel_stage.set_stage('semantic')
-                    u_val = self._visit(syntactic_u)
-                if isinstance(u_val, TypingTypeVar):
-                    templates[u] = u_val
+        for n in used_type_names:
+            t = self.scope.find(n, 'symbolic_aliases')
+            if t is None and n in self._context_dict:
+                t = self.env_var_to_pyccel(self._context_dict[n])
+            if isinstance(t, TypingTypeVar):
+                templates[n] = t
 
         # Create new temporary templates for the arguments with a Union data type.
         tmp_templates = {}
