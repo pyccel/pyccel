@@ -356,7 +356,7 @@ class CCodePrinter(CodePrinter):
                     + 0.5*(i.source == 'STC_Extensions/Managed_memory'),
                  # Additionally sort by the source file
                  str(i.source),
-                 # Finally sort by type name for reproducability
+                 # Finally sort by type name for reproducibility
                  next(iter(i.target)).local_alias))
 
         non_stc_imports = [i for i in imports if i not in stc_imports]
