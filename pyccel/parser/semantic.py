@@ -3554,7 +3554,7 @@ class SemanticParser(BasicParser):
                 if func is not None:
                     func = PyccelFunctionDef(env_var.__name__, func)
                 mod_name = env_var.__module__
-                if func is None and recognised_source(mod_name):
+                if func is None and mod_name and recognised_source(mod_name):
                     pyccel_stage.set_stage('syntactic')
                     import_node = Import(mod_name, name)
                     pyccel_stage.set_stage('semantic')
