@@ -3172,6 +3172,8 @@ class SemanticParser(BasicParser):
 
         if isinstance(visited_dtype, PyccelFunctionDef):
             dtype_cls = visited_dtype.cls_name
+            if dtype_cls is TypingFinal:
+                return visited_dtype
             class_type = dtype_cls.static_type()
             if isinstance(class_type, PyccelType):
                 return UnionTypeAnnotation(VariableTypeAnnotation(class_type))
