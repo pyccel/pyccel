@@ -11,7 +11,7 @@ from pyccel.ast.core      import ClassDef
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.headers   import FunctionHeader, MethodHeader
-from pyccel.ast.internals import PyccelSymbol
+from pyccel.ast.internals import PyccelSymbol, PyccelFunction
 from pyccel.ast.variable  import Variable, DottedName, AnnotatedPyccelSymbol
 from pyccel.ast.variable  import IndexedElement, DottedVariable
 
@@ -236,7 +236,7 @@ class Scope(object):
         Find and return the specified object in the scope.
 
         Find a specified object in the scope and return it.
-        The object is identified by a string contianing its name.
+        The object is identified by a string containing its name.
         If the object cannot be found then None is returned unless
         an error is requested.
 
@@ -892,7 +892,8 @@ class Scope(object):
         PyccelError
             An error is raised if the tuple element has not yet been added to the scope.
         """
-        if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.class_type, InhomogeneousTupleType):
+        if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.class_type, InhomogeneousTupleType) \
+                and not isinstance(tuple_elem.base, PyccelFunction):
             if isinstance(tuple_elem.base, DottedVariable):
                 class_var = tuple_elem.base.lhs
                 base = tuple_elem.base.clone(tuple_elem.base.name, Variable)

@@ -8,7 +8,6 @@ from pyccel import epyccel
 
 # ==============================================================================
 @pytest.mark.fortran
-@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
 def test_dnrm2_1():
     blas_dnrm2 = epyccel( mod.blas_dnrm2, language = 'fortran' )
 
@@ -25,7 +24,6 @@ def test_dnrm2_1():
 
 # ==============================================================================
 @pytest.mark.fortran
-@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
 def test_dasum_1():
     blas_dasum = epyccel( mod.blas_dasum, language = 'fortran' )
 
@@ -42,7 +40,6 @@ def test_dasum_1():
 
 # ==============================================================================
 @pytest.mark.fortran
-@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
 def test_ddot_1():
     blas_ddot = epyccel( mod.blas_ddot, language = 'fortran' )
 
@@ -60,7 +57,6 @@ def test_ddot_1():
 
 # ==============================================================================
 @pytest.mark.fortran
-@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
 def test_ddot_2():
     blas_ddot = epyccel( mod.blas_ddot_in_func, language = 'fortran' )
 
@@ -78,7 +74,6 @@ def test_ddot_2():
 
 # ==============================================================================
 @pytest.mark.fortran
-@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
 def test_idamax_1():
     blas_idamax = epyccel( mod.blas_idamax, language = 'fortran' )
 

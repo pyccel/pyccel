@@ -249,8 +249,8 @@ def test_numpy_int_scalar(language, function_boundaries):
     integer64 = randint(min_int8, max_int8, dtype=np.int64)
 
     get_int = function_boundaries[0]
-    # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
-    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundries
+    # Modifying a global variable in a scope will change it to a local variable, so it needs to be initialized.
+    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundaries
     # ffb stands for 'from function_boundaries'
     max_int_ffb = function_boundaries[1]
     min_int_ffb = function_boundaries[2]
@@ -365,8 +365,8 @@ def test_numpy_int_array_like_1d(language, function_boundaries):
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
     get_int = function_boundaries[0]
-    # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
-    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundries
+    # Modifying a global variable in a scope will change it to a local variable, so it needs to be initialized.
+    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundaries
     # ffb stands for 'from function_boundaries'
     max_int_ffb = function_boundaries[1]
     min_int_ffb = function_boundaries[2]
@@ -431,8 +431,8 @@ def test_numpy_int_array_like_2d(language, function_boundaries):
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
     get_int = function_boundaries[0]
-    # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
-    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundries
+    # Modifying a global variable in a scope will change it to a local variable, so it needs to be initialized.
+    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundaries
     # ffb stands for 'from function_boundaries'
     max_int_ffb = function_boundaries[1]
     min_int_ffb = function_boundaries[2]
@@ -830,11 +830,10 @@ def test_numpy_complex_scalar(language, get_complex):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
+    fl   = uniform(min_float32 / 2, max_float32 / 2)
     fl32 = uniform(min_float32 / 2, max_float32 / 2)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
-
+    fl64 = uniform(min_float32 / 2, max_float32 / 2)
 
     epyccel_func = epyccel(get_complex, language=language)
 

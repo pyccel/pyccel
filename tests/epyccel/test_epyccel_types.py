@@ -13,7 +13,7 @@ def test_int_default(language):
     a = randint(low = -1e9, high = 0, dtype = int) # negative
     b = randint(low = 0, high = 1e9, dtype = int) # positive
 
-    assert f1(a) == f2(a) #add type comparaison when https://github.com/pyccel/pyccel/issues/735 is solved
+    assert f1(a) == f2(a) #add type comparison when https://github.com/pyccel/pyccel/issues/735 is solved
     assert f1(b) == f2(b)
 
 

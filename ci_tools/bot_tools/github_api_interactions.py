@@ -608,9 +608,9 @@ class GitHubAPIInteractions:
 
     def get_pr_events(self, pr_id):
         """
-        Get a list of all events which occured on this pull request.
+        Get a list of all events which occurred on this pull request.
 
-        Use the API to get a list of all events which occured on this pull
+        Use the API to get a list of all events which occurred on this pull
         request as described here:
         https://docs.github.com/en/rest/issues/events?apiVersion=2022-11-28#list-issue-events
 
@@ -700,7 +700,7 @@ class GitHubAPIInteractions:
 
     def get_events(self, pr_id, page = 1):
         """
-        Get a timeline of events which occured on a given pull request.
+        Get a timeline of events which occurred on a given pull request.
 
         Use the API to get a list of events on a pull request as described
         here:

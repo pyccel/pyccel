@@ -63,6 +63,10 @@ jobs:
         run: |
           FILES=$(echo -e "import yaml\nfor f in yaml.safe_load(open('.pyspelling.yml'))['matrix'][0]['sources']:\n    print(f)" | python3)
           python ci_tools/check_python_capitalisation.py $GITHUB_STEP_SUMMARY $FILES
+      - name: Code spell check
+        uses: crate-ci/typos@v1.29.10
+        with:
+          config: ./.typos.toml
       - name: "Post completed"
         if: always()
         run:

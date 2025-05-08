@@ -44,7 +44,7 @@ def test_func_no_return_1(language):
     c_func = epyccel(p_func, language=language)
     x = np.random.randint(100)
     assert c_func(x) == p_func(x)
-    # Test type return sould be NoneType
+    # Test type return should be NoneType
     x = np.random.randint(100)
     assert isinstance(c_func(x), type(p_func(x)))
 

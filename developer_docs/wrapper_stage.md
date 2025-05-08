@@ -90,9 +90,7 @@ module tmp
     implicit none
 
     if (initialised) then
-      if (allocated(x)) then
-        deallocate(x)
-      end if
+      if (allocated(x)) deallocate(x)
       initialised = .False._b4
     end if
 
@@ -319,9 +317,7 @@ is translated to the following Fortran code:
       Out_0001 = x + 3_i64
       return
     end if
-    if (allocated(Out_0001)) then
-      deallocate(Out_0001)
-    end if
+    if (allocated(Out_0001)) deallocate(Out_0001)
 
   end subroutine f
 ```
@@ -596,7 +592,7 @@ Interfaces are functions which accept more than one type.
 These functions are handled via multiple functions in the wrapper:
 1.  A function which can be called from Python with the prototype:
     ```c
-    PyObject* func_name(PyObject* self, PyOject* args, PyObject* kwargs);
+    PyObject* func_name(PyObject* self, PyObject* args, PyObject* kwargs);
     ```
 
 2.  A function which determines which combination of types were used in the call

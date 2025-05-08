@@ -72,7 +72,7 @@ a : list[int] = [1, 2]
 b : list[bool] = [False, True]
 c : list[float] = []
 ```
-So far lists can be declared as local variables or as results of functions.
+So far lists can be declared as local variables or as arguments or results of functions.
 
 ## Sets
 
@@ -102,6 +102,7 @@ b : dict[int,bool] = {1: False, 4: True}
 c : dict[int,complex] = {}
 ```
 Strings are not yet supported as keys in Fortran.
+Dictionaries can be declared as local variables, or results of functions, but not yet as arguments or class variables.
 
 ## Strings
 

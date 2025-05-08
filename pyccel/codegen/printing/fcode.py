@@ -26,7 +26,7 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableIterator
 
-from pyccel.ast.builtin_methods.dict_methods import DictItems, DictKeys
+from pyccel.ast.builtin_methods.dict_methods import DictItems, DictKeys, DictValues, DictPopitem
 
 from pyccel.ast.builtin_methods.list_methods import ListPop
 
@@ -37,7 +37,7 @@ from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall, ClassDef
 from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import FunctionAddress
-from pyccel.ast.core import Return, Module, For
+from pyccel.ast.core import Return, Module, For, If, IfSection
 from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
@@ -231,11 +231,11 @@ iso_c_binding_shortcut_mapping = {
     'C_BOOL'                : 'b1'
 }
 
-inc_keyword = (r'do\b', r'if\b',
+inc_keyword = (r'do\b', r'if \(.*?\) then$',
                r'else\b', r'type\b\s*[^\(]',
                r'(elemental )?(pure )?(recursive )?((subroutine)|(function))\b',
                r'interface\b',r'module\b(?! *procedure)',r'program\b')
-inc_regex = re.compile('|'.join('({})'.format(i) for i in inc_keyword))
+inc_regex = re.compile('|'.join(f'({i})' for i in inc_keyword))
 
 end_keyword = ('do', 'if', 'type', 'function',
                'subroutine', 'interface','module','program')
@@ -670,7 +670,7 @@ class FCodePrinter(CodePrinter):
                                            MacroUndef('MapIterator'),
                                            *key_undefs, *val_undefs])
             else:
-                raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
+                raise NotImplementedError(f"Unknown gFTL import for type {expr_type}")
 
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
@@ -731,8 +731,14 @@ class FCodePrinter(CodePrinter):
                                         if getattr(i, 'source', None) == vector_filename else i \
                                         for i in type_module.imports]
                 self.add_import(Import('gFTL_functions/Vector_extensions', Module('_', (), ()), ignore_at_print = True))
+            elif isinstance(expr_type, DictType):
+                map_filename = LiteralString('map/template.inc')
+                imports_and_macros += [Import(LiteralString('Map_extensions.inc'), Module('_', (), ())) \
+                                        if getattr(i, 'source', None) == map_filename else i \
+                                        for i in type_module.imports]
+                self.add_import(Import('gFTL_functions/Map_extensions', Module('_', (), ()), ignore_at_print = True))
             else:
-                raise NotImplementedError(f"Unkown gFTL import for type {expr_type}")
+                raise NotImplementedError(f"Unknown gFTL import for type {expr_type}")
 
             module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
                                        is_external = True)
@@ -1017,16 +1023,20 @@ class FCodePrinter(CodePrinter):
         separator = self._print(sep)
 
 
-        tuple_start = FunctionCallArgument(LiteralString('('))
-        tuple_sep   = LiteralString(', ')
-        tuple_end   = FunctionCallArgument(LiteralString(')'))
+        container_sep = LiteralString(', ')
+        tuple_tags = (FunctionCallArgument(LiteralString('(')), FunctionCallArgument(LiteralString(')')))
+        list_tags = (FunctionCallArgument(LiteralString('[')), FunctionCallArgument(LiteralString(']')))
+        set_tags = (FunctionCallArgument(LiteralString('{')), FunctionCallArgument(LiteralString('}')))
 
         for i, f in enumerate(orig_args):
             if f.keyword:
                 continue
             else:
                 f = f.value
-            if isinstance(f, (PythonTuple, PythonList, str)):
+            if isinstance(f, (PythonTuple, PythonList, PythonSet, str)):
+                start_tag, end_tag = set_tags if isinstance(f, PythonSet) else \
+                             list_tags if isinstance(f, PythonList) else \
+                             tuple_tags
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
@@ -1035,10 +1045,10 @@ class FCodePrinter(CodePrinter):
                     end_of_tuple = empty_end
                 else:
                     end_of_tuple = FunctionCallArgument(sep, 'end')
-                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, container_sep)][:-1]
                 if len(f) == 1:
                     args.append(FunctionCallArgument(LiteralString(',')))
-                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple], file=expr.file))
+                code += self._print(PythonPrint([start_tag, *args, end_tag, empty_sep, end_of_tuple], file=expr.file))
                 args = []
             elif isinstance(f, PythonType):
                 args_format.append('A')
@@ -1063,11 +1073,14 @@ class FCodePrinter(CodePrinter):
                 for_end = FunctionCallArgument(for_end_char,
                                                keyword='end')
 
+                if_body = [PythonPrint([FunctionCallArgument(f[max_index]), empty_end], file=expr.file)]
+                if_block = If(IfSection(PyccelGt(f.shape[0], LiteralInteger(0), simplify = True), if_body))
+
                 body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end],
                                                 file=expr.file),
                                   for_loop,
-                                  PythonPrint([FunctionCallArgument(f[max_index]), for_end],
-                                                file=expr.file)],
+                                  if_block,
+                                  PythonPrint([for_end], file=expr.file)],
                                  unravelled=True)
                 code += self._print(body)
             else:
@@ -1412,6 +1425,14 @@ class FCodePrinter(CodePrinter):
             self._additional_code += code
             return lhs_code
 
+    def _print_ListInsert(self, expr):
+        target = self._print(expr.list_obj)
+        type_name = self._print(expr.list_obj.class_type)
+        self.add_import(self._build_gFTL_extension_module(expr.list_obj.class_type))
+        idx = self._print(self._apply_cast(NumpyInt64Type(), expr.index))
+        obj = self._print(expr.object)
+        return f'call {type_name}_insert({target}, {idx}, {obj})\n'
+
     def _print_ListClear(self, expr):
         target = self._print(expr.list_obj)
         return f'call {target} % clear()\n'
@@ -1440,7 +1461,7 @@ class FCodePrinter(CodePrinter):
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
         # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
-        return f'{type_name}_pop({var_code})\n'
+        return f'{type_name}_pop({var_code})'
 
     def _print_SetCopy(self, expr):
         var_code = self._print(expr.set_variable)
@@ -1516,6 +1537,42 @@ class FCodePrinter(CodePrinter):
         key = self._print(expr.key)
         return f'{dict_obj} % of( {key} )'
 
+    def _print_DictPop(self, expr):
+        dict_obj = expr.dict_obj
+        class_type = dict_obj.class_type
+
+        dict_obj_code = self._print(dict_obj)
+        key = self._print(expr.key)
+
+        type_name = self._print(class_type)
+        self.add_import(self._build_gFTL_extension_module(class_type))
+
+        if expr.default_value is not None:
+            default = self._print(expr.default_value)
+            return f'{type_name}_pop_with_default({dict_obj_code}, {key}, {default})'
+        else:
+            return f'{type_name}_pop({dict_obj_code}, {key})'
+
+    def _print_DictPopitem(self, expr):
+        dict_obj = expr.dict_obj
+        class_type = dict_obj.class_type
+
+        dict_obj_code = self._print(dict_obj)
+
+        type_name = self._print(class_type)
+        self.add_import(self._build_gFTL_extension_module(class_type))
+
+        assigns = expr.get_direct_user_nodes(lambda u: isinstance(u, Assign))
+        assert len(assigns) == 1
+        lhs = assigns[0].lhs
+
+        key, value = lhs
+
+        key_code = self._print(key)
+        value_code = self._print(value)
+
+        return f'call {type_name}_popitem({dict_obj_code}, {key_code}, {value_code})\n'
+
     #========================== String Methods ===============================#
 
     def _print_PythonStr(self, expr):
@@ -1541,20 +1598,24 @@ class FCodePrinter(CodePrinter):
 
         if expr.rank == 0:
             if isinstance(expr.a.dtype.primitive_type, PrimitiveBooleanType):
-                a_code = self._print(PythonInt(expr.a))
+                a_code = self._print(PythonInt(expr.a)) # Convert LOGICAL to INTEGER
             if isinstance(expr.b.dtype.primitive_type, PrimitiveBooleanType):
-                b_code = self._print(PythonInt(expr.b))
-            return 'sum({}*{})'.format(a_code, b_code)
+                b_code = self._print(PythonInt(expr.b)) # Convert LOGICAL to INTEGER
+            code = f'sum({a_code} * {b_code})'
+            if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
+                code = f'{code} /= 0' # Convert INTEGER to LOGICAL
+            return code
+
         if expr.a.order and expr.b.order:
             if expr.a.order != expr.b.order:
                 raise NotImplementedError("Mixed order matmul not supported.")
 
         # Fortran ordering
         if expr.a.order == 'F':
-            return 'matmul({0},{1})'.format(a_code, b_code)
+            return f'matmul({a_code}, {b_code})'
 
         # C ordering
-        return 'matmul({1},{0})'.format(a_code, b_code)
+        return f'matmul({b_code}, {a_code})'
 
     def _print_NumpyEmpty(self, expr):
         errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity='fatal')
@@ -1888,28 +1949,36 @@ class FCodePrinter(CodePrinter):
     
     def _print_NumpyAmax(self, expr):
         array_arg = expr.arg
-        if isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType):
+        is_bool = isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType)
+        if is_bool: # Convert LOGICAL to INTEGER
             array_arg = NumpyInt32(array_arg)
         arg_code = self._get_node_without_gFTL(array_arg)
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             return f'amax({array_arg})'
+        elif is_bool: # Convert INTEGER to LOGICAL
+            zero = self._print(LiteralInteger(0))
+            return f'maxval({arg_code}) /= {zero}'
         else:
             return f'maxval({arg_code})'
     
     def _print_NumpyAmin(self, expr):
         array_arg = expr.arg
-        if isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType):
+        is_bool = isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType)
+        if is_bool: # Convert LOGICAL to INTEGER
             array_arg = NumpyInt32(array_arg)
         arg_code = self._get_node_without_gFTL(array_arg)
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             return f'amin({array_arg})'
+        elif is_bool: # Convert INTEGER to LOGICAL
+            zero = self._print(LiteralInteger(0))
+            return f'minval({arg_code}) /= {zero}'
         else:
             return f'minval({arg_code})'
-        
+
     def _print_PythonMinMax(self, expr):
         arg, = expr.args
         if isinstance(arg, Variable):
@@ -2179,7 +2248,7 @@ class FCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
-        if isinstance(rhs, (FunctionCall, SetUnion, ListPop)):
+        if isinstance(rhs, (FunctionCall, SetUnion, ListPop, DictPopitem)):
             return self._print(rhs)
 
         lhs_code = self._print(lhs)
@@ -2354,9 +2423,7 @@ class FCodePrinter(CodePrinter):
             return ''
         elif isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, StringType)):
             var_code = self._print(var)
-            code  = 'if (allocated({})) then\n'.format(var_code)
-            code += '  deallocate({})\n'     .format(var_code)
-            code += 'end if\n'
+            code  = f'if (allocated({var_code})) deallocate({var_code})\n'
             return code
         else:
             errors.report(f"Deallocate not implemented for {class_type}",
@@ -2536,6 +2603,7 @@ class FCodePrinter(CodePrinter):
         out_args = [v for v in self.scope.collect_all_tuple_elements(expr.results.var) if v and not v.is_argument]
         args_decs = OrderedDict()
         arguments = expr.arguments
+        class_arg = next((a for a in arguments if a.bound_argument), None)
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
@@ -2578,7 +2646,11 @@ class FCodePrinter(CodePrinter):
         if is_elemental:
             sig = 'elemental {}'.format(sig)
 
-        arg_code  = ', '.join(self._print(i) for i in chain( arguments, out_args ))
+        if class_arg:
+            arg_iter = chain((class_arg,), out_args, arguments[1:])
+        else:
+            arg_iter = chain(out_args, arguments)
+        arg_code  = ', '.join(self._print(i) for i in arg_iter)
 
         arg_decs = ''.join(self._print(i) for i in args_decs.values())
 
@@ -2748,7 +2820,7 @@ class FCodePrinter(CodePrinter):
         iterable = expr.iterable
         indices = iterable.loop_counters
 
-        if isinstance(iterable, (VariableIterator, DictItems, DictKeys)) and \
+        if isinstance(iterable, (VariableIterator, DictItems, DictKeys, DictValues)) and \
                 isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType)):
             var = iterable.variable
             iterable_type = var.class_type
@@ -2771,6 +2843,9 @@ class FCodePrinter(CodePrinter):
             elif isinstance(iterable, DictKeys):
                 key = self._print(expr.target[0])
                 target_assign = (f'{key} = {iterator} % first()\n')
+            elif isinstance(iterable, DictValues):
+                val = self._print(expr.target[0])
+                target_assign = (f'{val} = {iterator} % second()\n')
             else:
                 target = self._print(expr.target[0])
                 target_assign = f'{target} = {iterator} % of()\n'
@@ -3107,10 +3182,10 @@ class FCodePrinter(CodePrinter):
 
         for i, (c, e) in enumerate(expr.blocks):
 
-            if i == 0:
-                lines.append("if (%s) then\n" % self._print(c))
-            elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
+            if i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
                 lines.append("else\n")
+            elif i == 0:
+                lines.append(f"if ({self._print(c)}) then\n" )
             else:
                 lines.append("else if (%s) then\n" % self._print(c))
 
@@ -3119,7 +3194,12 @@ class FCodePrinter(CodePrinter):
             else:
                 lines.append(self._print(e))
 
-        lines.append("end if\n")
+        if len(lines) == 0:
+            return ''
+        elif lines[0] == "else\n":
+            lines = lines[1:]
+        else:
+            lines.append("end if\n")
 
         return ''.join(lines)
 
@@ -3233,24 +3313,38 @@ class FCodePrinter(CodePrinter):
         return ' .or. '.join(self._print(a) for a in args)
 
     def _print_PyccelEq(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
-        a = expr.args[0].dtype.primitive_type
-        b = expr.args[1].dtype.primitive_type
+        lhs, rhs = expr.args
+        lhs_code = self._print(lhs)
+        rhs_code = self._print(rhs)
+        a = lhs.dtype.primitive_type
+        b = rhs.dtype.primitive_type
 
         if all(isinstance(var, PrimitiveBooleanType) for var in (a, b)):
-            return '{} .eqv. {}'.format(lhs, rhs)
-        return '{0} == {1}'.format(lhs, rhs)
+            return f'{lhs_code} .eqv. {rhs_code}'
+        elif lhs.class_type is rhs.class_type or \
+                (isinstance(lhs.class_type, FixedSizeNumericType) and isinstance(rhs.class_type, FixedSizeNumericType)):
+            return f'{lhs_code} == {rhs_code}'
+        else:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr, severity = 'error')
+            return ''
 
     def _print_PyccelNe(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
-        a = expr.args[0].dtype.primitive_type
-        b = expr.args[1].dtype.primitive_type
+        lhs, rhs = expr.args
+        lhs_code = self._print(lhs)
+        rhs_code = self._print(rhs)
+        a = lhs.dtype.primitive_type
+        b = rhs.dtype.primitive_type
 
         if all(isinstance(var, PrimitiveBooleanType) for var in (a, b)):
-            return '{} .neqv. {}'.format(lhs, rhs)
-        return '{0} /= {1}'.format(lhs, rhs)
+            return f'{lhs_code} .neqv. {rhs_code}'
+        elif lhs.class_type is rhs.class_type or \
+                (isinstance(lhs.class_type, FixedSizeNumericType) and isinstance(rhs.class_type, FixedSizeNumericType)):
+            return f'{lhs_code} /= {rhs_code}'
+        else:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr, severity = 'error')
+            return ''
 
     def _print_PyccelLt(self, expr):
         args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
@@ -3672,22 +3766,7 @@ class FCodePrinter(CodePrinter):
             if is_function:
                 results_strs = []
             else:
-                # If func body is unknown then we may not know result names
-                use_names = (len(func.body.body) != 0)
-                if use_names:
-                    results_strs = [f'{self._print(n)} = {self._print(r)}'
-                            for n,r in lhs_vars.items()]
-                else:
-                    results_strs = [self._print(r) for r in lhs_vars.values()]
-
-        elif not is_function and len(out_results)!=0:
-            results = [r.clone(name = self.scope.get_new_name()) \
-                        for r in out_results]
-            for var in results:
-                self.scope.insert_variable(var)
-
-            results_strs = [f'{self._print(n)} = {self._print(r)}' \
-                            for n,r in zip(out_results, results)]
+                results_strs = [self._print(r) for r in lhs_vars.values()]
 
         else:
             results_strs = []
@@ -3697,7 +3776,7 @@ class FCodePrinter(CodePrinter):
             code = self._handle_inline_func_call(expr, assign_lhs = results)
         else:
             args_strs = [self._print(a) for a in args if not isinstance(a.value, Nil)]
-            args_code = ', '.join(args_strs+results_strs)
+            args_code = ', '.join(results_strs+args_strs)
             code = f'{f_name}({args_code})'
             if not is_function:
                 code = f'call {code}\n'
@@ -3763,13 +3842,21 @@ class FCodePrinter(CodePrinter):
 #=======================================================================================
 
     def _wrap_fortran(self, lines):
-        """Wrap long Fortran lines
+        """
+        Wrap long Fortran lines.
 
-           Argument:
-             lines  --  a list of lines (ending with a \\n character)
+        A comment line is split at white space. Code lines are split with a more
+        complex rule to give nice results.
 
-           A comment line is split at white space. Code lines are split with a more
-           complex rule to give nice results.
+        Parameters
+        ----------
+        lines : list[str]
+            A list of lines (ending with a \\n character).
+
+        Returns
+        -------
+        list[str]
+            A list of the new lines.
         """
         # routine to find split point in a code line
         my_alnum = set("_+-." + string.digits + string.ascii_letters)
@@ -3790,7 +3877,7 @@ class FCodePrinter(CodePrinter):
                     return endpos
             return pos
 
-        # split line by line and add the splitted lines to result
+        # split line by line and add the split lines to result
         result = []
         trailing = ' &'
         # trailing with no added space characters in case splitting is within quotes
