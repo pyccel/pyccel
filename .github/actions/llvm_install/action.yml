@@ -1,0 +1,42 @@
+name: 'LLVM installation commands'
+
+runs:
+  using: "composite"
+  steps:
+    - name: update the package list
+      run:
+        sudo apt-get update
+      shell: bash
+
+    - name: Restore cached LLVM
+      id: cache-llvm-restore
+      uses: actions/cache/restore@v3
+      with:
+        path: |
+          /usr/lib/llvm/
+        key: ${{ runner.os }}-llvm-16
+        restore-keys: |
+          ${{ runner.os }}-llvm-
+
+    - name: Install LLVM and Clang
+      if: steps.cache-llvm-restore.outputs.cache-hit != 'true'
+      run: |
+        apt-get install -y clang flang
+      shell: bash
+
+    - name: Save LLVM Cache
+      id: cache-llvm-save
+      uses: actions/cache/save@v3
+      with:
+        path: |
+          /usr/lib/llvm/
+        key: ${{ steps.cache-llvm-restore.outputs.cache-primary-key }}
+
+    - name: Install LaPack
+      run:
+        sudo apt-get install libblas-dev liblapack-dev
+      shell: bash
+    - name: Install Valgrind
+      run:
+        sudo apt-get install valgrind
+      shell: bash
