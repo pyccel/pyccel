@@ -18,7 +18,7 @@ runs:
         restore-keys: |
           ${{ runner.os }}-llvm-
 
-    - name: Install LLVM and Clang
+    - name: Install clang and flang
       if: steps.cache-llvm-restore.outputs.cache-hit != 'true'
       run: |
         apt-get install -y clang flang
