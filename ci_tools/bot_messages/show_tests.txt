@@ -14,5 +14,6 @@ The following is a list of keywords which can be used to run tests. Tests in bol
 - anaconda_linux : Runs the unit tests on a linux system using anaconda for python.
 - anaconda_windows : Runs the unit tests on a windows system using anaconda for python.
 - intel : Runs the unit tests on a linux system using the intel compiler.
+- llvm : Runs the unit tests on a linux system using the LLVM compiler.
 
 These tests can be run with the command `/bot run X` (multiple tests can be specified separated by spaces), or with `try V X` to test on Python version V.
