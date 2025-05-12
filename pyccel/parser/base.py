@@ -96,6 +96,13 @@ def get_filename_from_import(module_name, input_folder_name):
     filename_pyi = filename_stem.with_suffix('.pyi')
     filename_pyh = filename_stem.with_suffix('.pyh')
     if filename_py.exists():
+        stashed_file = filename_stem.parent / '__pyccel__' / filename_pyi.name
+        if not stashed_file.exists():
+            errors.report("Imported files must be pyccelised before they can be used.",
+                    symbol=module_name, severity='fatal')
+        if stashed_file.stat().st_mtime <= filename_py.stat().st_mtime:
+            errors.report(f"File {module_name} has been modified since Pyccel was last run on this file.",
+                    symbol=module_name, severity='fatal')
         return str(filename_py.absolute())
     elif filename_pyi.exists():
         return str(filename_pyi.absolute())
