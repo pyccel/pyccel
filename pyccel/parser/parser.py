@@ -13,12 +13,10 @@ import os
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.parser.semantic  import SemanticParser
-from pyccel.utilities.extensions import Extensions
 
 # TODO [AR, 18.11.2018] to be modified as a function
 # TODO [YG, 28.01.2020] maybe pass filename to the parse method?
 
-extensions = Extensions()
 
 class Parser(object):
     """
