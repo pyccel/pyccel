@@ -220,6 +220,10 @@ class SyntaxParser(Commons):
         return self._visit_for_directive(expr)
 
     @staticmethod
+    def _visit_target_teams_distribute_parallel_for_directive(self, expr, cls=None, method=None):
+        return self._visit_for_directive(expr)
+
+    @staticmethod
     def _visit_OmpClause(self, expr, cls=None, method=None):
         omp_exprs = tuple(self._visit(e) for e in expr.omp_exprs)
         return OmpClause.from_clause(expr, omp_exprs=omp_exprs)
@@ -359,6 +363,10 @@ class SemanticParser(Commons):
 
     @staticmethod
     def _visit_parallel_for_construct(self, expr, cls=None, method=None):
+        return self._visit_for_construct(expr)
+
+    @staticmethod
+    def _visit_target_teams_distribute_parallel_for_construct(self, expr, cls=None, method=None):
         return self._visit_for_construct(expr)
 
     @staticmethod
@@ -502,6 +510,10 @@ class FCodePrinter(Commons):
 
     @staticmethod
     def _print_parallel_for_simd_construct(self, expr, cls=None, method=None):
+        return self._print_for_construct(expr)
+
+    @staticmethod
+    def _print_target_teams_distribute_parallel_for_construct(self, expr, cls=None, method=None):
         return self._print_for_construct(expr)
 
     @staticmethod
