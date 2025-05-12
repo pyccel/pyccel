@@ -9,7 +9,7 @@ See the developer docs for more details
 
 from itertools import chain, product
 import os
-from types import ModuleType
+from types import ModuleType, BuiltinFunctionType
 import sys
 import typing
 import warnings
@@ -3554,7 +3554,19 @@ class SemanticParser(BasicParser):
                 if func is not None:
                     func = PyccelFunctionDef(env_var.__name__, func)
                 mod_name = env_var.__module__
-                if func is None and mod_name and recognised_source(mod_name):
+                if mod_name:
+                    recognised_mod = recognised_source(mod_name)
+                elif mod_name is None and isinstance(env_var, BuiltinFunctionType):
+                    # Handling of BuiltinFunctionType is necessary for Python 3.9 (NumPy 1.* doesn't specify __module__)
+                    mod_name = env_var.__str__().split(' of ')[-1].split(' object ')[0]
+                    while mod_name and not recognised_source(mod_name):
+                        mod_name = mod_name.rsplit('.', 1)[0]
+
+                    recognised_mod = len(mod_name) != 0
+                else:
+                    recognised_mod = False
+
+                if func is None and recognised_mod:
                     pyccel_stage.set_stage('syntactic')
                     import_node = Import(mod_name, name)
                     pyccel_stage.set_stage('semantic')
