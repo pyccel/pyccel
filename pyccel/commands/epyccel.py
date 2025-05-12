@@ -204,7 +204,7 @@ def epyccel_seq(function_class_or_module, *,
                 comm          = None,
                 root          = None,
                 bcast         = None,
-                omp_version   = 4.5):
+                omp_version   = None):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
