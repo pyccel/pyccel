@@ -18,6 +18,7 @@ OmpDirective:
     | name='taskwait'
     | name='taskgroup'
     | name='task' _tx_clauses*=TaskClauses is_construct=TRUE
+    | name=/target\s+teams\s+distribute\s+parallel\s+for/ _tx_clauses *=TargetTeamsDistributeParallelForClauses is_construct=TRUE
     | name='target' _tx_clauses*=TargetClauses is_construct=TRUE
     | name='teams' _tx_clauses*=TeamsClauses is_construct=TRUE
     | name='distribute' _tx_clauses*=DistributeClauses
@@ -35,6 +36,21 @@ OmpDirective:
 ////////////////////////////////////////////////////
 //      Clauses for Constructs and Directives
 ////////////////////////////////////////////////////
+
+TargetTeamsDistributeParallelForClauses:
+    TargetClauses
+    | TeamsDistributeParallelForClauses
+;
+
+TeamsDistributeParallelForClauses:
+    TeamsClauses
+    | DistributeParallelForClauses
+;
+
+DistributeParallelForClauses:
+    DistributeClauses
+    | ParallelForClauses
+;
 
 ParallelForClauses:
     ParallelClauses
@@ -333,7 +349,7 @@ device_clause: name='device' '('(
              )')';
 
 map_clause: name='map' '('(
-                   VERSION=OMP_4_5 ((map_type_modifier=MapTypeModifier (',')?)? map_type=MapType)? omp_exprs=OmpList
+                   VERSION=OMP_4_5 ((map_type_modifier=MapTypeModifier (',')?)? map_type=MapType ':')? omp_exprs=OmpList
              )')';
 
 is_device_ptr_clause: name='is_device_ptr' '('(
@@ -341,7 +357,7 @@ is_device_ptr_clause: name='is_device_ptr' '('(
              )')';
 
 defaultmap_clause: name='defaultmap' '('(
-                   VERSION=OMP_4_5 'tofrom' ':' omp_exprs=OmpScalarExpr
+                   VERSION=OMP_4_5 implicit_behavior=DefaultMapImplicitBehavior ':' variable_category=DefaultMapVariableCategory
              )')';
 
 num_teams_clause: name='num_teams' '('(
@@ -398,7 +414,9 @@ lastprivate_modifier: 'conditional';
 ScheduleModifier: 'monotonic' | 'nonmonotonic' | 'simd';
 ScheduleKind: 'static' | 'dynamic' | 'guided' | 'auto' | 'runtime';
 DependenceType: 'in' | 'out' | 'inout';
-MapType: 'to' | 'from' | 'tofrom' | 'alloc' | 'release' | 'delete';
+MapType: 'tofrom' | 'to' | 'from' | 'alloc' | 'release' | 'delete';
+DefaultMapImplicitBehavior: 'tofrom';
+DefaultMapVariableCategory: 'scalar' | 'aggregate' | 'pointer';
 MapTypeModifier: 'always';
 ConstructTypeClause: 'parallel' | 'sections' | 'for' | 'taskgroup';
 ParenthesisContent: '(' (InnerContent | ParenthesisContent | QuotedString)* ')';
