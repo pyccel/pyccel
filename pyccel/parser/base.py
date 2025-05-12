@@ -109,7 +109,6 @@ def get_filename_from_import(module_name, input_folder_name):
     elif filename_pyh.exists():
         return str(filename_pyh.absolute())
     else:
-        errors = Errors()
         raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
                       severity='fatal')
 
