@@ -345,11 +345,11 @@ defaultmap_clause: name='defaultmap' '('(
              )')';
 
 num_teams_clause: name='num_teams' '('(
-                   VERSION=OMP_4_5 'num_teams' ':' omp_exprs=OmpIntegerExpr
+                   VERSION=OMP_4_5 omp_exprs=OmpIntegerExpr
              )')';
 
 thread_limit_clause: name='thread_limit' '('(
-                   VERSION=OMP_4_5 'num_teams' ':' omp_exprs=OmpIntegerExpr
+                   VERSION=OMP_4_5 omp_exprs=OmpIntegerExpr
              )')';
 
 dist_schedule_clause: name='dist_schedule' '('(
