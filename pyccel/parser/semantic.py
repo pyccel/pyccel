@@ -553,7 +553,10 @@ class SemanticParser(BasicParser):
                               bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                               severity='fatal')
         else:
-            container = self.scope.imports
+            current_scope = self.scope
+            while current_scope.is_loop:
+                current_scope = current_scope.parent_scope
+            container = current_scope.imports
             container['imports'][storage_name] = Import(source, target, True)
 
 
@@ -3227,11 +3230,13 @@ class SemanticParser(BasicParser):
                     pyccel_stage.set_stage('syntactic')
                     syntactic_call = FunctionCall(func, args)
                     pyccel_stage.set_stage('semantic')
+                    self.insert_import(first.name, AsName(func, rhs_name))
                     return self._handle_function(syntactic_call, func, args)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
                     if new_name != rhs_name:
                         var.name = new_name
+                    self.insert_import(first.name, AsName(var, rhs_name))
                     return var
                 else:
                     # If object is something else (eg. dict)
