@@ -25,7 +25,7 @@ from pyccel.utilities.stage        import PyccelStage
 from pyccel.ast.utilities          import python_builtin_libs
 from pyccel.parser.scope           import Scope
 
-from pyccel.utilities.extensions import Extensions
+from pyccel.utilities.plugins import Plugins
 
 from .compiling.basic     import CompileObj
 from .compiling.compilers import Compiler, get_condaless_search_path
@@ -62,7 +62,7 @@ def execute_pyccel(fname, *,
                    compiler_export_file = None,
                    conda_warnings  = 'basic',
                    context_dict    = None,
-                   omp_version = 4.5):
+                   omp_version = None):
     """
     Run Pyccel on the provided code.
 
@@ -121,8 +121,8 @@ def execute_pyccel(fname, *,
         A dictionary containing any variables that are available in the calling context.
         This can allow certain constants to be defined outside of the function passed to epyccel.
     """
-    extensions = Extensions()
-    extensions.load({'accelerators':accelerators, 'omp_version':omp_version, 'language':language})
+    plugins = Plugins()
+    plugins.handle_loading({'accelerators':accelerators, 'omp_version':omp_version, 'language':language})
 
     start = time.time()
     timers = {}
