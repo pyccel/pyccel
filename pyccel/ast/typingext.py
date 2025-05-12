@@ -125,11 +125,16 @@ class TypingTypeVar(TypedAstNode):
         return self._possible_types
 
 #==============================================================================
+class TypingOverload(TypedAstNode):
+    __slots__ = ()
+
+#==============================================================================
 
 typing_funcs = {
         'Final': PyccelFunctionDef('Final', TypingFinal),
         'TypeAlias': PyccelFunctionDef('TypeAlias', TypingTypeAlias),
         'TypeVar' : PyccelFunctionDef('TypeVar', TypingTypeVar),
+        'overload': PyccelFunctionDef('overload', TypingOverload)
     }
 
 typing_mod = Module('typing',
