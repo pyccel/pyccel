@@ -3,11 +3,12 @@ import importlib.util
 import inspect
 from abc import ABC, abstractmethod
 from pyccel.utilities.metaclasses import Singleton
+from pyccel.compilers.default_compilers import available_compilers
 
 
 class Extension(ABC):
     @abstractmethod
-    def load(self, options):
+    def handle_loading(self, options, clear=False):
         pass
 
 class Extensions(metaclass=Singleton):
@@ -48,7 +49,8 @@ class Extensions(metaclass=Singleton):
             plugin_instance = plugin_class()
             self._plugins.append(plugin_instance)
 
-    def load(self, options):
+    def handle_loading(self, options, clear=False):
         """Load all available extensions"""
+
         for plugin in self._plugins:
-            plugin.load(options)
+            plugin.handle_loading(options, clear=clear)
