@@ -3,8 +3,8 @@ OmpStatement:
 ;
 
 OmpDirective:
-    name=/parallel\s+for\s+simd/ _tx_clauses*=ParallelForSimdClauses
-    | name=/parallel\s+for/ _tx_clauses*=ParallelForClauses
+    name=/parallel\s+for\s+simd/ _tx_clauses*=ParallelForSimdClauses is_construct=TRUE
+    | name=/parallel\s+for/ _tx_clauses*=ParallelForClauses is_construct=TRUE
     | name=/parallel\s+sections/ _tx_clauses*=ParallelSectionsClauses is_construct=TRUE
     | name=/for\s+simd/ _tx_clauses*=ForSimdClauses is_construct=TRUE
     | name='parallel' _tx_clauses*=ParallelClauses _invalid_clauses*=AllOmpClauses is_construct=TRUE
