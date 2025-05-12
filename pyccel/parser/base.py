@@ -73,13 +73,12 @@ def get_filename_from_import(module_name, input_folder_name):
     if (isinstance(module_name, AsName)):
         module_name = str(module_name.name)
 
-    print("importing : ", module_name)
-
-    in_project = module_name[0] == '.'
+    relative_project_path = module_name[0] == '.'
+    in_project = '.' in module_name
 
     input_folder = pathlib.Path(input_folder_name)
 
-    if in_project:
+    if relative_project_path:
         project_depth = next(i for i, c in enumerate(module_name) if c != '.')
         if project_depth == 1:
             project_dir = input_folder
@@ -87,14 +86,21 @@ def get_filename_from_import(module_name, input_folder_name):
             project_dir = input_folder.parents[project_depth-2]
         module_path = module_name[project_depth:].split('.')
         filename_stem = project_dir.joinpath(*module_path)
+    elif in_project:
+        package = importlib.import_module(module_name)
+        filename_stem = pathlib.Path(package.__file__).parent / module_name.split('.')[-1]
     else:
         filename_stem = pathlib.Path(input_folder).joinpath(*module_name.split('.'))
 
     filename_py = filename_stem.with_suffix('.py')
+    filename_pyi = filename_stem.with_suffix('.pyi')
+    filename_pyh = filename_stem.with_suffix('.pyh')
     if filename_py.exists():
         return str(filename_py.absolute())
-    elif filename_stem.with_suffix('.pyh').exists():
-        return str(filename_stem.with_suffix('.pyh').absolute())
+    elif filename_pyi.exists():
+        return str(filename_pyi.absolute())
+    elif filename_pyh.exists():
+        return str(filename_pyh.absolute())
     else:
         errors = Errors()
         raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
