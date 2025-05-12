@@ -3231,13 +3231,15 @@ class SemanticParser(BasicParser):
                     pyccel_stage.set_stage('syntactic')
                     syntactic_call = FunctionCall(func, args)
                     pyccel_stage.set_stage('semantic')
-                    self.insert_import(first.name, AsName(func, func.name))
+                    if first.__module__.startswith('pyccel.'):
+                        self.insert_import(first.name, AsName(func, func.name))
                     return self._handle_function(syntactic_call, func, args)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
                     if new_name != rhs_name:
                         var.name = new_name
-                    self.insert_import(first.name, AsName(var, var.name))
+                    if first.__module__.startswith('pyccel.'):
+                        self.insert_import(first.name, AsName(var, var.name))
                     return var
                 else:
                     # If object is something else (eg. dict)
