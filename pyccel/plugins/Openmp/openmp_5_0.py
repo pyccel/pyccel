@@ -1,6 +1,7 @@
 from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 from textx import metamodel_for_language
+import functools
 
 from .openmp_4_5 import SyntaxParser as PSyntaxParser
 from .openmp_4_5 import SemanticParser as PSemanticParser
@@ -12,8 +13,12 @@ from .omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger, OmpL
 class SyntaxParser(PSyntaxParser):
     """Openmp 5.0 syntax parser"""
     _version = 5.0
+    _method_registry = {}
     @classmethod
-    def setup(cls, options, method):
+    def setup(cls, options, method=None, clear=False):
+        if options.get('clear', False):
+            return cls._method_registry[method.__name__]
+        cls._method_registry[method.__name__] = method
         this_folder = dirname(__file__)
         # Get metamodel from language description
         grammar = join(this_folder, "grammar/openmp.tx")
@@ -38,6 +43,7 @@ class SyntaxParser(PSyntaxParser):
             'OMP_VERSION': lambda _: 5.0,
         })
         cls._omp_metamodel.register_obj_processors(obj_processors)
+        @functools.wraps(method)
         def setup(instance, *args, **kwargs):
             if cls._version != options.get('omp_version', None) or not 'openmp' in options.get('accelerators'):
                 method(instance, *args, **kwargs)
@@ -46,19 +52,22 @@ class SyntaxParser(PSyntaxParser):
             method(instance, *args, **kwargs)
         return setup
 
-
 class SemanticParser(PSemanticParser):
     """Openmp 5.0 semantic parser"""
     _version = 5.0
+    _method_registry = {}
 
 class CCodePrinter(PCCodePrinter):
     """Openmp 5.0 C printer"""
     _version = 5.0
+    _method_registry = {}
 
 class FCodePrinter(PFCodePrinter):
     """Openmp 5.0 fortran printer"""
     _version = 5.0
+    _method_registry = {}
 
 class PythonCodePrinter(PPythonCodePrinter):
     """Openmp 5.0 python printer"""
     _version = 5.0
+    _method_registry = {}

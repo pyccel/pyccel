@@ -3,15 +3,15 @@ import importlib.util
 import inspect
 from abc import ABC, abstractmethod
 from pyccel.utilities.metaclasses import Singleton
-from pyccel.compilers.default_compilers import available_compilers
 
 
-class Extension(ABC):
+class Plugin(ABC):
     @abstractmethod
-    def handle_loading(self, options, clear=False):
+    def handle_loading(self, options):
         pass
 
-class Extensions(metaclass=Singleton):
+
+class Plugins(metaclass=Singleton):
     def __init__(self, plugins_dir=None):
         if plugins_dir is None:
             current_dir = os.path.dirname(__file__)
@@ -39,7 +39,7 @@ class Extensions(metaclass=Singleton):
 
             plugin_class = None
             for name, obj in inspect.getmembers(module):
-                if inspect.isclass(obj) and issubclass(obj, Extension) and obj.__module__ == module.__name__:
+                if inspect.isclass(obj) and issubclass(obj, Plugin) and obj.__module__ == module.__name__:
                     plugin_class = obj
                     break
 
@@ -49,8 +49,8 @@ class Extensions(metaclass=Singleton):
             plugin_instance = plugin_class()
             self._plugins.append(plugin_instance)
 
-    def handle_loading(self, options, clear=False):
+    def handle_loading(self, options):
         """Load all available extensions"""
 
         for plugin in self._plugins:
-            plugin.handle_loading(options, clear=clear)
+            plugin.handle_loading(options)
