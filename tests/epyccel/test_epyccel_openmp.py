@@ -505,6 +505,12 @@ def test_omp_get_set_schedule(language):
     else:
         assert result == 16*3
 
+@pytest.mark.external
+def test_omp_target_teams_distribute_parallel_for(language):
+    f1 = openmp.test_omp_target_teams_distribute_parallel_for
+    f2 = epyccel(f1, fflags = '-Wall', accelerators=['openmp'], language=language)
+    assert(f2(1.0) == f1(1.0))
+
 @pytest.mark.parametrize( 'language', (
     pytest.param('fortran', marks = pytest.mark.fortran),
     pytest.param("c", marks = [

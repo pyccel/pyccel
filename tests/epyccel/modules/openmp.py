@@ -209,6 +209,12 @@ def test_omp_get_initial_device():
     #$ omp end target
     return host_device
 
+def test_omp_target_teams_distribute_parallel_for(x : 'float'):
+    #$ omp target teams distribute parallel for map(always,tofrom:x)
+    for i in range(10):
+        x += 1.0
+    return x
+
 def test_omp_get_set_schedule():
     import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_schedule, omp_set_schedule
