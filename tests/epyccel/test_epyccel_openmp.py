@@ -9,10 +9,17 @@ import modules.openmp as openmp
 from numpy import random
 from numpy import matmul
 from pyccel import epyccel
+from pyccel.utilities.plugins import Plugins
 #==============================================================================
 
 
 #==============================================================================
+@pytest.fixture(scope="module", autouse=True)
+def plugin_unload():
+    yield
+    # clear all the plugins
+    plugins = Plugins()
+    plugins.handle_loading({'clear':True})
 
 @pytest.mark.external
 def test_directive_in_else(language):
