@@ -292,6 +292,7 @@ class Scope(object):
             result = {}
 
         result.update(self._locals[category])
+        result.update(self._imports[category])
 
         return result
 

@@ -538,7 +538,8 @@ class SemanticParser(BasicParser):
         """
         source = _get_name(name)
         if storage_name is None:
-            storage_name = source
+            storage_name = next((n for n, imp in self.scope.find_all('imports').items()
+                                if imp.source == source), None)
         imp = self.scope.find(source, 'imports')
         if imp is None:
             imp = self.scope.find(storage_name, 'imports')
