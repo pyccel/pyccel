@@ -58,7 +58,12 @@ class Openmp(Plugin):
             return
         if not self._options.get('omp_version', None):
             self._options['omp_version'] = float(os.environ.get('PYCCEL_OMP_VERSION', self._default_version))
-        if self._loaded or 'openmp' not in self._options['accelerators'] or self._options['omp_version'] not in self._versions:
+        if self._options['omp_version'] not in self._versions:
+            errors.report(
+                f"OPENMP {self._options['omp_version']} is not supported. defaulting to OPENMP {self._default_version} instead.",
+                severity='warning')
+            self._options['omp_version'] = self._default_version
+        if self._loaded or 'openmp' not in self._options['accelerators']:
             return
         self._loaded = True
         for omp_version in self._versions:
