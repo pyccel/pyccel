@@ -198,9 +198,15 @@ class SyntaxParser(BasicParser):
         pyccel.ast.basic.PyccelAstNode
             The treated object as a Pyccel ast node.
         """
+        txt = line[1:].lstrip()
+        expr = Comment(txt)
         if line.startswith('#$'):
             env = line[2:].lstrip()
-            if env.startswith('acc'):
+            if env.startswith('omp'):
+                errors.report("OpenMP support is disabled. To enable it, please re-run the program with the --openmp flag (or epyccel with accelerators=['openmp']).",
+                              symbol = stmt,
+                              severity='warning')
+            elif env.startswith('acc'):
                 try:
                     expr = acc_parse(stmts=line)
                 except TextXSyntaxError as e:
@@ -225,15 +231,6 @@ class SyntaxParser(BasicParser):
 
                     self._metavars[str(expr.name)] = expr.value
                     expr = EmptyNode()
-            else:
-                errors.report(PYCCEL_INVALID_HEADER,
-                              symbol = stmt,
-                              severity='fatal')
-
-        else:
-            txt = line[1:].lstrip()
-            expr = Comment(txt)
-
         expr.set_current_ast(stmt)
         return expr
 
