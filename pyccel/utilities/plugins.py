@@ -1,7 +1,7 @@
 import importlib.util
-import os
-import inspect
 import importlib.util
+import inspect
+import os
 from abc import ABC, abstractmethod
 
 from pyccel.errors.errors import Errors

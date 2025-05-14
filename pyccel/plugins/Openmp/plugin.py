@@ -1,15 +1,15 @@
 import inspect
 import os
 
-from pyccel.errors.errors import Errors
-from pyccel.utilities.plugins import Plugin
-from pyccel.plugins.Openmp import openmp_4_5
-from pyccel.plugins.Openmp import openmp_5_0
-from pyccel.parser.syntactic import SyntaxParser
-from pyccel.parser.semantic import SemanticParser
 from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.codegen.printing.fcode import FCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
+from pyccel.errors.errors import Errors
+from pyccel.parser.semantic import SemanticParser
+from pyccel.parser.syntactic import SyntaxParser
+from pyccel.plugins.Openmp import openmp_4_5
+from pyccel.plugins.Openmp import openmp_5_0
+from pyccel.utilities.plugins import Plugin
 
 errors = Errors()
 

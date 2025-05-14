@@ -3,22 +3,23 @@
 Module containing the grammar rules for the OpenMP 4.5 specification,
 """
 import ast
+import functools
 import re
 from os.path import join, dirname
-import functools
-from textx.metamodel import metamodel_from_file
-from textx import metamodel_for_language
 
-from pyccel.ast.core import FunctionCall
-from pyccel.ast.variable import Variable
-from pyccel.parser.extend_tree import extend_tree
-from pyccel.ast.datatypes import PythonNativeInt
+from textx import metamodel_for_language
+from textx.metamodel import metamodel_from_file
+
 from pyccel.ast.core import CodeBlock
+from pyccel.ast.core import EmptyNode
+from pyccel.ast.core import FunctionCall
+from pyccel.ast.datatypes import PythonNativeInt
+from pyccel.ast.variable import Variable
 from pyccel.errors.errors import Errors
+from pyccel.errors.messages import PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX
+from pyccel.parser.extend_tree import extend_tree
 from pyccel.plugins.Openmp.omp import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpExpr, OmpList
 from pyccel.plugins.Openmp.omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger
-from pyccel.ast.core import EmptyNode
-from pyccel.errors.messages import PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX
 
 errors = Errors()
 
