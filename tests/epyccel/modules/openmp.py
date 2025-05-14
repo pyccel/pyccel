@@ -210,9 +210,9 @@ def test_omp_get_initial_device():
     return host_device
 
 def test_omp_target_teams_distribute_parallel_for(x : 'float'):
-    #$ omp target teams distribute parallel for map(always,tofrom:x)
+    #$ omp target teams distribute parallel for reduction(+:x) map(always,tofrom:x)
     for i in range(10):
-        x += 1.0
+        x += i
     return x
 
 def test_omp_get_set_schedule():

@@ -18,9 +18,9 @@ from pyccel.errors.errors import Errors
 from pyccel.plugins.Openmp.omp import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpExpr, OmpList
 from pyccel.plugins.Openmp.omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger
 from pyccel.ast.core import EmptyNode
+from pyccel.errors.messages import PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX
 
 errors = Errors()
-from pyccel.errors.messages import *
 
 class ConfigMixin:
     """
@@ -119,8 +119,27 @@ class SyntaxParser(ConfigMixin):
             instance._skip_stmts_count = 0
             method(instance, *args, **kwargs)
         return setup
+
+    @classmethod
+    def _helper_parse_expr(cls, expr):
+        """Parses an expression and returns the equivalent node."""
+        fst = extend_tree(expr.value)
+        if (
+                not isinstance(fst, ast.Module)
+                or len(fst.body) != 1
+                or not isinstance(fst.body[0], ast.Expr)
+        ):
+            errors.report(
+                "Invalid expression",
+                symbol=expr,
+                line=expr.line,
+                column=expr.position[0],
+                severity="fatal",
+            )
+        return fst.body[0].value
+
     @staticmethod
-    def _treat_comment_line(instance, line, expr, cls=None, method=None):
+    def _treat_comment_line(instance, line, expr, method, cls=None):
         """
         Parse a comment line.
 
@@ -151,11 +170,11 @@ class SyntaxParser(ConfigMixin):
             except TextXError as e:
                 errors.report(e.message, severity="fatal", symbol=expr)
                 return None
-        elif method:
+        else:
             return method(instance, line, expr)
 
     @staticmethod
-    def _visit(instance, stmt, cls=None, method=None):
+    def _visit(instance, stmt, method, cls=None):
         """Visit a statement and determine if it should be skipped."""
         if instance._skip_stmts_count:
             instance._skip_stmts_count -= 1
@@ -164,21 +183,21 @@ class SyntaxParser(ConfigMixin):
             return method(instance, stmt)
 
     @staticmethod
-    def _visit_OmpDirective(self, stmt, cls=None, method=None):
-        if hasattr(self, f"_visit_{stmt.name.replace(' ', '_')}_directive"):
-            return getattr(self, f"_visit_{stmt.name.replace(' ', '_')}_directive")(stmt)
-        clauses = tuple(self._visit(clause) for clause in stmt.clauses)
+    def _visit_OmpDirective(instance, stmt, cls=None, method=None):
+        if hasattr(instance, f"_visit_{stmt.name.replace(' ', '_')}_directive"):
+            return getattr(instance, f"_visit_{stmt.name.replace(' ', '_')}_directive")(stmt)
+        clauses = tuple(instance._visit(clause) for clause in stmt.clauses)
         directive = OmpDirective.from_directive(stmt, clauses=clauses)
         if stmt.is_construct:
             body = []
             end = None
             container = None
-            for el in self._context[::-1]:
+            for el in instance._context[::-1]:
                 if isinstance(el, list):
-                    container = el[el.index(self._context[-2]) + 1:].copy()
+                    container = el[el.index(instance._context[-2]) + 1:].copy()
                     break
             for line in container:
-                expr =  self._visit(line)
+                expr =  instance._visit(line)
                 if isinstance(expr, OmpEndDirective) and stmt.name == expr.name:
                     end = expr
                     break
@@ -189,160 +208,143 @@ class SyntaxParser(ConfigMixin):
                     symbol=stmt,
                     severity="fatal",
                 )
-            self._skip_stmts_count = len(body) + 1
+            instance._skip_stmts_count = len(body) + 1
             body = CodeBlock(body=body)
             return OmpConstruct(start=directive, end=end, body=body)
         return directive
 
     @staticmethod
-    def _visit_for_directive(self, stmt, cls=None, method=None):
+    def _visit_for_directive(instance, stmt, cls=None, method=None):
         loop = None
-        for el in self._context[::-1]:
+        for el in instance._context[::-1]:
             if isinstance(el, list):
-                loop_pos = el.index(self._context[-2]) + 1
+                loop_pos = el.index(instance._context[-2]) + 1
                 if len(el) < loop_pos + 1 or not isinstance(el[loop_pos], ast.For):
                     errors.report(
                         f"{stmt.name} directive should be followed by a for loop",
                         symbol=stmt,
                         severity="fatal",
                     )
-                loop = self._visit(el[loop_pos])
+                loop = instance._visit(el[loop_pos])
                 break
-        clauses = tuple(self._visit(clause) for clause in stmt.clauses)
+        clauses = tuple(instance._visit(clause) for clause in stmt.clauses)
         directive = OmpDirective.from_directive(stmt, clauses=clauses)
-        self._skip_stmts_count = 1
+        instance._skip_stmts_count = 1
         body = CodeBlock(body=[loop])
         return OmpConstruct(start=directive, end=None, body=body)
 
     @staticmethod
-    def _visit_simd_directive(self, expr, cls=None, method=None):
-        return self._visit_for_directive(expr)
+    def _visit_simd_directive(instance, expr, cls=None, method=None):
+        return instance._visit_for_directive(expr)
 
     @staticmethod
-    def _visit_parallel_for_directive(self, expr, cls=None, method=None):
-        return self._visit_for_directive(expr)
+    def _visit_parallel_for_directive(instance, expr, cls=None, method=None):
+        return instance._visit_for_directive(expr)
 
     @staticmethod
-    def _visit_parallel_for_simd_directive(self, expr, cls=None, method=None):
-        return self._visit_for_directive(expr)
+    def _visit_parallel_for_simd_directive(instance, expr, cls=None, method=None):
+        return instance._visit_for_directive(expr)
 
     @staticmethod
-    def _visit_target_teams_distribute_parallel_for_directive(self, expr, cls=None, method=None):
-        return self._visit_for_directive(expr)
+    def _visit_target_teams_distribute_parallel_for_directive(instance, expr, cls=None, method=None):
+        return instance._visit_for_directive(expr)
 
     @staticmethod
-    def _visit_OmpClause(self, expr, cls=None, method=None):
-        omp_exprs = tuple(self._visit(e) for e in expr.omp_exprs)
+    def _visit_OmpClause(instance, expr, cls=None, method=None):
+        omp_exprs = tuple(instance._visit(e) for e in expr.omp_exprs)
         return OmpClause.from_clause(expr, omp_exprs=omp_exprs)
 
     @staticmethod
-    def _visit_OmpEndDirective(self, expr, cls=None, method=None):
-        clauses = [self._visit(clause) for clause in expr.clauses]
+    def _visit_OmpEndDirective(instance, expr, cls=None, method=None):
+        clauses = [instance._visit(clause) for clause in expr.clauses]
         end = OmpEndDirective.from_directive(expr, clauses=clauses)
         return end
 
-    @classmethod
-    def _helper_parse_expr(cls, expr):
-        """Parses an expression and returns the equivalent node."""
-        fst = extend_tree(expr.value)
-        if (
-                not isinstance(fst, ast.Module)
-                or len(fst.body) != 1
-                or not isinstance(fst.body[0], ast.Expr)
-        ):
-            errors.report(
-                "Invalid expression",
-                symbol=expr,
-                line=expr.line,
-                column=expr.position[0],
-                severity="fatal",
-            )
-        return fst.body[0].value
 
     @staticmethod
-    def _visit_OmpScalarExpr(self, expr, cls=None, method=None):
+    def _visit_OmpScalarExpr(instance, expr, cls=None, method=None):
         fst = cls._helper_parse_expr(expr)
-        return OmpScalarExpr.from_omp_expr(expr, value=self._visit(fst))
+        return OmpScalarExpr.from_omp_expr(expr, value=instance._visit(fst))
 
     @staticmethod
-    def _visit_OmpIntegerExpr(self, expr, cls=None, method=None):
+    def _visit_OmpIntegerExpr(instance, expr, cls=None, method=None):
         fst = cls._helper_parse_expr(expr)
-        return OmpIntegerExpr.from_omp_expr(expr, value=self._visit(fst))
+        return OmpIntegerExpr.from_omp_expr(expr, value=instance._visit(fst))
 
     @staticmethod
-    def _visit_OmpConstantPositiveInteger(self, expr, cls=None, method=None):
+    def _visit_OmpConstantPositiveInteger(instance, expr, cls=None, method=None):
         fst = cls._helper_parse_expr(expr)
-        return OmpConstantPositiveInteger.from_omp_expr(expr, value=self._visit(fst))
+        return OmpConstantPositiveInteger.from_omp_expr(expr, value=instance._visit(fst))
 
     @staticmethod
-    def _visit_OmpList(self, expr, cls=None, method=None):
+    def _visit_OmpList(instance, expr, cls=None, method=None):
         fst = cls._helper_parse_expr(expr)
-        return OmpList.from_omp_expr(expr, value=self._visit(fst))
+        return OmpList.from_omp_expr(expr, value=instance._visit(fst))
 
     @staticmethod
-    def _visit_OmpExpr(self, expr, cls=None, method=None):
+    def _visit_OmpExpr(instance, expr, cls=None, method=None):
         fst = cls._helper_parse_expr(expr)
-        return OmpExpr.from_omp_expr(expr, value=self._visit(fst))
+        return OmpExpr.from_omp_expr(expr, value=instance._visit(fst))
 
 
 class SemanticParser(ConfigMixin):
     """Openmp 4.5 semantic parser"""
     _version = 4.5
     @staticmethod
-    def _visit_OmpDirective(self, expr, cls=None, method=None):
-        if hasattr(self, f"_visit_{expr.name.replace(' ', '_')}_directive"):
-            return getattr(self, f"_visit_{expr.name.replace(' ', '_')}_directive")(expr)
-        clauses = tuple(self._visit(clause) for clause in expr.clauses)
+    def _visit_OmpDirective(instance, expr, cls=None, method=None):
+        if hasattr(instance, f"_visit_{expr.name.replace(' ', '_')}_directive"):
+            return getattr(instance, f"_visit_{expr.name.replace(' ', '_')}_directive")(expr)
+        clauses = tuple(instance._visit(clause) for clause in expr.clauses)
         directive = OmpDirective.from_directive(expr, clauses=clauses)
         return directive
 
     @staticmethod
-    def _visit_OmpConstruct(self, expr, cls=None, method=None):
-        if hasattr(self, f"_visit_{expr.start.name.replace(' ', '_')}_construct"):
-            return getattr(self, f"_visit_{expr.start.name.replace(' ', '_')}_construct")(expr)
+    def _visit_OmpConstruct(instance, expr, cls=None, method=None):
+        if hasattr(instance, f"_visit_{expr.start.name.replace(' ', '_')}_construct"):
+            return getattr(instance, f"_visit_{expr.start.name.replace(' ', '_')}_construct")(expr)
 
-        body = self._visit(expr.body)
-        start = self._visit(expr.start)
-        end = self._visit(expr.end) if expr.end else None
+        body = instance._visit(expr.body)
+        start = instance._visit(expr.start)
+        end = instance._visit(expr.end) if expr.end else None
         return OmpConstruct(start=start, end=end, body=body)
 
     @staticmethod
-    def _visit_for_construct(self, expr, cls=None, method=None):
-        body = self._visit(expr.body)
-        start = self._visit(expr.start)
+    def _visit_for_construct(instance, expr, cls=None, method=None):
+        body = instance._visit(expr.body)
+        start = instance._visit(expr.start)
         return OmpConstruct(start=start, end=None, body=body)
 
     @staticmethod
-    def _visit_simd_construct(self, expr, cls=None, method=None):
-        return self._visit_for_construct(expr)
+    def _visit_simd_construct(instance, expr, cls=None, method=None):
+        return instance._visit_for_construct(expr)
 
     @staticmethod
-    def _visit_parallel_for_simd_construct(self, expr, cls=None, method=None):
-        return self._visit_for_construct(expr)
+    def _visit_parallel_for_simd_construct(instance, expr, cls=None, method=None):
+        return instance._visit_for_construct(expr)
 
     @staticmethod
-    def _visit_parallel_for_construct(self, expr, cls=None, method=None):
-        return self._visit_for_construct(expr)
+    def _visit_parallel_for_construct(instance, expr, cls=None, method=None):
+        return instance._visit_for_construct(expr)
 
     @staticmethod
-    def _visit_target_teams_distribute_parallel_for_construct(self, expr, cls=None, method=None):
-        return self._visit_for_construct(expr)
+    def _visit_target_teams_distribute_parallel_for_construct(instance, expr, cls=None, method=None):
+        return instance._visit_for_construct(expr)
 
     @staticmethod
-    def _visit_OmpEndDirective(self, expr, cls=None, method=None):
-        clauses = [self._visit(clause) for clause in expr.clauses]
+    def _visit_OmpEndDirective(instance, expr, cls=None, method=None):
+        clauses = [instance._visit(clause) for clause in expr.clauses]
         return OmpEndDirective(name=expr.name, clauses=clauses, raw=expr.raw, parent=expr.parent)
 
     @staticmethod
-    def _visit_OmpScalarExpr(self, expr, cls=None, method=None):
-        value = self._visit(expr.value)
+    def _visit_OmpScalarExpr(instance, expr, cls=None, method=None):
+        value = instance._visit(expr.value)
         if (
                 not hasattr(value, "dtype")
                 or (isinstance(value, FunctionCall) and not value.funcdef.results)
         ):
             errors.report(
                 "expression needs to be a scalar expression",
-                symbol=self,
+                symbol=instance,
                 line=expr.line,
                 column=expr.position[0],
                 severity="fatal",
@@ -350,12 +352,12 @@ class SemanticParser(ConfigMixin):
         return OmpScalarExpr.from_omp_expr(expr, value=value)
 
     @staticmethod
-    def _visit_OmpIntegerExpr(self, expr, cls=None, method=None):
-        value = self._visit(expr.value)
+    def _visit_OmpIntegerExpr(instance, expr, cls=None, method=None):
+        value = instance._visit(expr.value)
         if not hasattr(value, "dtype") or not isinstance(value.dtype, PythonNativeInt):
             errors.report(
                 "expression must be an integer expression",
-                symbol=self,
+                symbol=instance,
                 line=expr.line,
                 column=expr.position[0],
                 severity="fatal",
@@ -363,13 +365,13 @@ class SemanticParser(ConfigMixin):
         return OmpIntegerExpr.from_omp_expr(expr, value=value)
 
     @staticmethod
-    def _visit_OmpConstantPositiveInteger(self, expr, cls=None, method=None):
-        value = self._visit(expr.value)
+    def _visit_OmpConstantPositiveInteger(instance, expr, cls=None, method=None):
+        value = instance._visit(expr.value)
         return OmpConstantPositiveInteger.from_omp_expr(expr, value=value)
 
     @staticmethod
-    def _visit_OmpList(self, expr, cls=None, method=None):
-        items = tuple(self._visit(var) for var in expr.value)
+    def _visit_OmpList(instance, expr, cls=None, method=None):
+        items = tuple(instance._visit(var) for var in expr.value)
         for i in items:
             if not isinstance(i, Variable):
                 errors.report(
@@ -382,8 +384,8 @@ class SemanticParser(ConfigMixin):
         return OmpList.from_omp_expr(expr, value=items)
 
     @staticmethod
-    def _visit_OmpClause(self, expr, cls=None, method=None):
-        omp_exprs = tuple(self._visit(e) for e in expr.omp_exprs)
+    def _visit_OmpClause(instance, expr, cls=None, method=None):
+        omp_exprs = tuple(instance._visit(e) for e in expr.omp_exprs)
         return OmpClause.from_clause(expr, omp_exprs=omp_exprs)
 
 
@@ -391,19 +393,19 @@ class CCodePrinter(ConfigMixin):
     """Openmp 4.5 C code printer parser"""
     _version = 4.5
     @staticmethod
-    def _print_OmpConstruct(self, expr, cls=None, method=None):
-        body = self._print(expr.body)
+    def _print_OmpConstruct(instance, expr, cls=None, method=None):
+        body = instance._print(expr.body)
         if expr.end:
-            return f"{self._print(expr.start)}\n{{\n{body}\n}}\n{self._print(expr.end)}\n"
+            return f"{instance._print(expr.start)}\n{{\n{body}\n}}\n{instance._print(expr.end)}\n"
         else:
-            return f"{self._print(expr.start)}\n{body}\n"
+            return f"{instance._print(expr.start)}\n{body}\n"
 
     @staticmethod
-    def _print_OmpDirective(self, expr, cls=None, method=None):
+    def _print_OmpDirective(instance, expr, cls=None, method=None):
         return f"#pragma omp {expr.raw}\n"
 
     @staticmethod
-    def _print_OmpEndDirective(self, expr, cls=None, method=None):
+    def _print_OmpEndDirective(instance, expr, cls=None, method=None):
         if expr.parent.start.is_construct:
             return ""
         else:
@@ -429,22 +431,22 @@ class FCodePrinter(ConfigMixin):
         return start, end
 
     @staticmethod
-    def _print_OmpConstruct(self, expr, cls=None, method=None):
-        if hasattr(self, f"_print_{expr.start.name.replace(' ', '_')}_construct"):
-            return getattr(self, f"_print_{expr.start.name.replace(' ', '_')}_construct")(expr)
-        body = self._print(expr.body)
-        start = self._print(expr.start)
+    def _print_OmpConstruct(instance, expr, cls=None, method=None):
+        if hasattr(instance, f"_print_{expr.start.name.replace(' ', '_')}_construct"):
+            return getattr(instance, f"_print_{expr.start.name.replace(' ', '_')}_construct")(expr)
+        body = instance._print(expr.body)
+        start = instance._print(expr.start)
         if expr.end:
-            end = self._print(expr.end)
+            end = instance._print(expr.end)
             return f"{start}\n{body}\n{end}\n"
         else:
             return f"{start}\n{body}\n"
 
     @staticmethod
-    def _print_for_construct(self, expr, cls=None, method=None):
+    def _print_for_construct(instance, expr, cls=None, method=None):
         start, end = cls._helper_delay_clauses_printing(expr.start, expr.end, ['nowait'])
         start = re.sub(r'\bfor\b', 'do', start)
-        body = self._print(expr.body)
+        body = instance._print(expr.body)
         if end:
             end = re.sub(r'\bfor\b', 'do', end)
             return f"{start}\n{body}\n{end}\n"
@@ -452,44 +454,44 @@ class FCodePrinter(ConfigMixin):
             return f"{start}\n{body}\n"
 
     @staticmethod
-    def _print_single_construct(self, expr, cls=None, method=None):
+    def _print_single_construct(instance, expr, cls=None, method=None):
         start, end = cls._helper_delay_clauses_printing(expr.start, expr.end, ['nowait', 'copyprivate'])
-        body = self._print(expr.body)
+        body = instance._print(expr.body)
         if end:
             return f"{start}\n{body}\n{end}\n"
         else:
             return f"{start}\n{body}\n"
 
     @staticmethod
-    def _print_simd_construct(self, expr, cls=None, method=None):
-        return self._print_for_construct(expr)
+    def _print_simd_construct(instance, expr, cls=None, method=None):
+        return instance._print_for_construct(expr)
 
     @staticmethod
-    def _print_parallel_for_construct(self, expr, cls=None, method=None):
-        return self._print_for_construct(expr)
+    def _print_parallel_for_construct(instance, expr, cls=None, method=None):
+        return instance._print_for_construct(expr)
 
     @staticmethod
-    def _print_parallel_for_simd_construct(self, expr, cls=None, method=None):
-        return self._print_for_construct(expr)
+    def _print_parallel_for_simd_construct(instance, expr, cls=None, method=None):
+        return instance._print_for_construct(expr)
 
     @staticmethod
-    def _print_target_teams_distribute_parallel_for_construct(self, expr, cls=None, method=None):
-        return self._print_for_construct(expr)
+    def _print_target_teams_distribute_parallel_for_construct(instance, expr, cls=None, method=None):
+        return instance._print_for_construct(expr)
 
     @staticmethod
-    def _print_OmpDirective(self, expr, cls=None, method=None):
-        if hasattr(self, f"_print_{expr.name.replace(' ', '_')}_directive"):
-            return getattr(self, f"_print_{expr.name.replace(' ', '_')}_directive")(expr)
+    def _print_OmpDirective(instance, expr, cls=None, method=None):
+        if hasattr(instance, f"_print_{expr.name.replace(' ', '_')}_directive"):
+            return getattr(instance, f"_print_{expr.name.replace(' ', '_')}_directive")(expr)
         return f"!$omp {expr.raw}\n"
 
     @staticmethod
-    def _print_OmpEndDirective(self, expr, cls=None, method=None):
-        if hasattr(self, f"_print_end_{expr.name.replace(' ', '_')}_directive"):
-            return getattr(self, f"_print_end_{expr.name.replace(' ', '_')}_directive")(expr)
+    def _print_OmpEndDirective(instance, expr, cls=None, method=None):
+        if hasattr(instance, f"_print_end_{expr.name.replace(' ', '_')}_directive"):
+            return getattr(instance, f"_print_end_{expr.name.replace(' ', '_')}_directive")(expr)
         return f"!$omp end {expr.raw}\n"
 
     @staticmethod
-    def _print_end_section_directive(self, expr, cls=None, method=None):
+    def _print_end_section_directive(instance, expr, cls=None, method=None):
         return ""
 
 
@@ -497,19 +499,19 @@ class PythonCodePrinter(ConfigMixin):
     """Openmp 4.5 python code printer parser"""
     _version = 4.5
     @staticmethod
-    def _print_OmpConstruct(self, expr, cls=None, method=None):
-        body = self._print(expr.body)
-        start = self._print(expr.start)
+    def _print_OmpConstruct(instance, expr, cls=None, method=None):
+        body = instance._print(expr.body)
+        start = instance._print(expr.start)
         if expr.end:
-            end = self._print(expr.end)
+            end = instance._print(expr.end)
             return f"{start}\n{body}\n{end}\n"
         else:
             return f"{start}\n{body}\n"
 
     @staticmethod
-    def _print_OmpDirective(self, expr, cls=None, method=None):
+    def _print_OmpDirective(instance, expr, cls=None, method=None):
         return f"#$ omp {expr.raw}\n"
 
     @staticmethod
-    def _print_OmpEndDirective(self, expr, cls=None, method=None):
+    def _print_OmpEndDirective(instance, expr, cls=None, method=None):
         return f"#$ omp end {expr.raw}\n"

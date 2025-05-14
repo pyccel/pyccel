@@ -85,7 +85,7 @@ class OmpAnnotatedComment(PyccelAstNode):
         """
         omp_user_nodes = self.get_user_nodes((OmpClause, OmpDirective, OmpConstruct),
                                              excluded_nodes=(OmpEndDirective,))
-        return omp_user_nodes[0] if len(omp_user_nodes) else self._parent
+        return omp_user_nodes[0] if len(omp_user_nodes) > 0 else self._parent
 
     @property
     def position(self):
@@ -162,9 +162,6 @@ class OmpConstruct(PyccelAstNode):
 
     end : OmpEndDirective, optional
         The directive that marks the end of the construct, if applicable.
-
-    omp_version : float
-        The OpenMP version chosen by the user.
     """
     __slots__ = ("_start", "_end", "_body", "_omp_version")
     _attribute_nodes = ("_start", "_end", "_body")
@@ -419,8 +416,6 @@ class OmpClause(OmpAnnotatedComment):
 
 
 class OmpExpr(OmpAnnotatedComment):
-    """Parent class of omp object that should represent a python expression"""
-
     """
     Parent class of omp object that should represent a python expression
 
