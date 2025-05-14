@@ -429,7 +429,7 @@ def test_omp_taskloop(language):
 
 @pytest.mark.parametrize( 'language', [
             pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Nested functions not handled for C !"),
+            pytest.mark.xfail(reason="Nested functions not handled for C !", run=False),
             pytest.mark.c]),
             pytest.param("fortran", marks = pytest.mark.fortran)
     ]

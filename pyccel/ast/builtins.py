@@ -796,6 +796,9 @@ class PythonList(TypedAstNode):
         args = ', '.join(str(a) for a in self)
         return f'PythonList({args})'
 
+    def __len__(self):
+        return len(self._args)
+
     @property
     def args(self):
         """
@@ -900,6 +903,9 @@ class PythonSet(TypedAstNode):
 
     def __iter__(self):
         return self._args.__iter__()
+
+    def __len__(self):
+        return len(self._args)
 
     @property
     def args(self):
@@ -1474,7 +1480,7 @@ class PythonMax(PyccelFunction):
     Parameters
     ----------
     *x : list, tuple, PythonTuple, PythonList
-        The arguments passed to the funciton.
+        The arguments passed to the function.
     """
     __slots__ = ('_class_type',)
     name   = 'max'
@@ -1511,7 +1517,7 @@ class PythonMin(PyccelFunction):
     Parameters
     ----------
     *x : list, tuple, PythonTuple, PythonList
-        The arguments passed to the funciton.
+        The arguments passed to the function.
     """
     __slots__ = ('_class_type',)
     name   = 'min'

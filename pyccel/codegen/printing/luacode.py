@@ -18,7 +18,7 @@ complete source code files.
 
 # TODO: find a solution when using math functions. For example, for the moment, we are using
 #       math.pow rather than first declaring pow as local and then calling
-#       immediatly pow.
+#       immediately pow.
 
 # Possible Improvement
 #
@@ -91,7 +91,7 @@ known_functions = {
 #     "": "count_ones",
 #     "": "count_zeros",
 #     "": "leading_zeros",
-#     "": "trainling_zeros",
+#     "": "trailing_zeros",
 #     "": "rotate_left",
 #     "": "rotate_right",
 #     "": "swap_bytes",

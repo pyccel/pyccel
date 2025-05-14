@@ -2192,7 +2192,7 @@ class CToPythonWrapper(Wrapper):
         assert not bound_argument
         if arg_var is None:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
-                                    is_argument = False)
+                                    is_argument = False, is_const = False)
             self.scope.insert_variable(arg_var, orig_var.name)
 
         dtype = orig_var.dtype
@@ -2343,15 +2343,18 @@ class CToPythonWrapper(Wrapper):
             return {'body': body, 'args': [arg_var], 'default_init': default_body}
 
         arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False, is_optional=False,
-                                memory_handling='alias', new_class = Variable)
+                                memory_handling='alias', new_class = Variable, allows_negative_indexes = False,
+                                is_const = False)
         self.scope.insert_variable(arg_var)
         if orig_var.is_optional:
             sliced_arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False,
-                                    is_optional=False, memory_handling='alias', new_class = Variable)
+                                    is_optional=False, memory_handling='alias', new_class = Variable,
+                                    allows_negative_indexes = False, is_const = False)
             self.scope.insert_variable(sliced_arg_var)
         else:
             sliced_arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
-                                    is_optional=False, memory_handling='alias', new_class = Variable)
+                                    is_optional=False, memory_handling='alias', new_class = Variable,
+                                    allows_negative_indexes = False, is_const = False)
             self.scope.insert_variable(sliced_arg_var, orig_var.name)
 
         original_size = tuple(PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems))

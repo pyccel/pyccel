@@ -27,7 +27,7 @@ def get_code_file_and_lines(obj, pyccel_folder, mod_name = None):
     Get the file and the relevant lines for the object.
 
     From a string (or two strings) describing an object and its module,
-    get the file and the relvant lines where annotations should be
+    get the file and the relevant lines where annotations should be
     printed.
 
     Parameters

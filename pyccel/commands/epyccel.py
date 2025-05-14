@@ -462,7 +462,7 @@ def epyccel( python_function_class_or_module, **kwargs ):
             exc_info = None
             success  = None
 
-        # Broadcast success state, and raise exception if neeeded
+        # Broadcast success state, and raise exception if needed
         if not comm.bcast(success, root=root):
             raise comm.bcast(exc_info, root=root)
 

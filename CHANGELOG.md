@@ -14,7 +14,6 @@ All notable changes to this project will be documented in this file.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
 -   #1881 : Add Python support for dict method `copy()`.
--   #1887 : Add Python support for dict method `popitem()`.
 -   #1888 : Add Python support for dict method `setdefault()`.
 -   #1885 : Add Python and C support for dict method `get()`.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
@@ -36,6 +35,7 @@ All notable changes to this project will be documented in this file.
 -   #1695 : Add C and Fortran support for list method `reverse()`.
 -   #2256 : Add C and Fortran support for list method `clear()`.
 -   #2259 : Add C and Fortran support for list method `insert()`.
+-   #2298 : Add support for `list.__eq__`.
 -   #1663 : Add C and Fortran support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
@@ -56,7 +56,9 @@ All notable changes to this project will be documented in this file.
 -   #1880 : Add support for dict method `clear()`.
 -   #1884 : Add support for dict method `items()`.
 -   #1884 : Add support for dict method `keys()`.
--   #1886 : Add Python and C support for dict method `pop()`.
+-   #1884 : Add support for dict method `values()`.
+-   #1886 : Add support for dict method `pop()`.
+-   #1887 : Add support for dict method `popitem()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
@@ -80,12 +82,16 @@ All notable changes to this project will be documented in this file.
 -   #2194 : Add support for strings as arguments.
 -   #2192 : Add support for the floor division assignment operator.
 -   #2279 : Allow scalar literals (including Type hints) and recognised modules to be deduced from a function's context.
+-   #2210 : Add preliminary support for containers of containers (e.g. lists of lists).
+-   Generate stub files to allow double compilation to potentially be bypassed.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
+-   \[INTERNALS\] Add a simplify method to `PyccelGt` for literals.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 -   \[DEVELOPER\] Added an environment variable to globally activate developer-mode for errors.
+-   \[DEVELOPER\] Added a spell checker for the code itself.
 
 ### Fixed
 
@@ -148,6 +154,10 @@ All notable changes to this project will be documented in this file.
 -   #2258 : Fix missing errors for bad pointer handling in the case of containers with mutable elements.
 -   #2274 : Do not pass include flags to linker (they are useless).
 -   #2274 : Always use the C compiler to build the C wrapper for NumPy arrays (fixes Intel failures).
+-   #2285 : Reduce number of warnings in unit tests.
+-   #2295 : Fix wrapper handling of constant array arguments.
+-   #2097 : Fix printing of an empty list.
+-   #2235 : Fix negative numbers in slice indices when translating to C.
 
 ### Changed
 
@@ -164,6 +174,7 @@ All notable changes to this project will be documented in this file.
 -   #2234 : Print all constant C variables with `const` specifier.
 -   #2249 : Improve installation docs and recommend virtual environment.
 -   #2242 : Change format of compiler info files.
+-   #2302 : Print the deallocation in a 1 line if statement.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.

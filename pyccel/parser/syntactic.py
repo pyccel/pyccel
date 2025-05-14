@@ -60,6 +60,7 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil, LiteralEllipsis
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
+from pyccel.ast.utilities import recognised_source
 from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelFunction
@@ -328,6 +329,40 @@ class SyntaxParser(BasicParser):
                 if new_name not in forbidden_names and new_name in valid_names:
                     return new_name
             return self.scope.get_new_name(suggestion, is_temp = True)
+
+    def insert_import(self, expr):
+        """
+        Insert an import into the scope.
+
+        Insert an import into the scope along with the targets that are
+        needed.
+
+        Parameters
+        ----------
+        expr : Import
+            The import to be inserted.
+        """
+
+        assert isinstance(expr, Import)
+        container = self.scope.imports['imports']
+
+        # if source is not specified, imported things are treated as sources
+        if len(expr.target) == 0:
+            if isinstance(expr.source, AsName):
+                name   = expr.source
+                source = expr.source.name
+            else:
+                name   = str(expr.source)
+                source = name
+
+            if not recognised_source(source):
+                container[name] = []
+        else:
+            source = str(expr.source)
+            if not recognised_source(source):
+                if not source in container.keys():
+                    container[source] = []
+                container[source] += expr.target
 
     #====================================================
     #                 _visit functions
@@ -872,9 +907,6 @@ class SyntaxParser(BasicParser):
             # Make template decorator list accessible from decorators dict
             template['decorator_list'] = decorators['template']
             decorators['template'] = template
-
-        if not template['template_dict']:
-            decorators['template'] = None
 
         argument_annotations = [a.annotation for a in arguments]
         result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))

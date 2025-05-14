@@ -1,0 +1,19 @@
+[default]
+locale = 'en'
+extend-ignore-re = ["Big Sur"]
+
+[default.extend-words]
+# Don't correct these word (parts)
+ND = "ND"
+arange = "arange"
+iterm = "iterm"
+
+# Correct these words
+scop = "scope"
+
+[files]
+extend-exclude = ["pyccel/extensions/*",
+                  "*.pyh",
+                  "*.pyi",
+                  ]
+
