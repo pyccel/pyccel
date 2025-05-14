@@ -1,4 +1,4 @@
-import openmp_4_5
+from . import openmp_4_5
 
 class SyntaxParser(openmp_4_5.SyntaxParser):
     """Openmp 5.0 syntax parser"""
